@@ -21,15 +21,15 @@ package org.apache.sling.query.function;
 
 import java.util.Iterator;
 
-import org.apache.sling.query.IteratorUtils;
 import org.apache.sling.query.api.Predicate;
 import org.apache.sling.query.api.SearchStrategy;
 import org.apache.sling.query.api.TreeProvider;
-import org.apache.sling.query.api.function.ElementToIteratorFunction;
-import org.apache.sling.query.api.function.IteratorToIteratorFunction;
-import org.apache.sling.query.api.function.Option;
+import org.apache.sling.query.api.internal.ElementToIteratorFunction;
+import org.apache.sling.query.api.internal.IteratorToIteratorFunction;
+import org.apache.sling.query.api.internal.Option;
 import org.apache.sling.query.iterator.EmptyElementFilter;
 import org.apache.sling.query.selector.SelectorFunction;
+import org.apache.sling.query.util.IteratorUtils;
 
 public class HasFunction<T> implements ElementToIteratorFunction<T> {
 

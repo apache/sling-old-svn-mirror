@@ -22,8 +22,8 @@ package org.apache.sling.query.iterator;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.sling.query.api.function.IteratorToIteratorFunction;
-import org.apache.sling.query.api.function.Option;
+import org.apache.sling.query.api.internal.IteratorToIteratorFunction;
+import org.apache.sling.query.api.internal.Option;
 
 /**
  * This iterator returns all elements of the input list which are mapped to non-empty values by the input

@@ -25,7 +25,7 @@ import java.util.List;
 
 import org.apache.sling.query.api.SearchStrategy;
 import org.apache.sling.query.api.TreeProvider;
-import org.apache.sling.query.api.function.ElementToIteratorFunction;
+import org.apache.sling.query.api.internal.ElementToIteratorFunction;
 import org.apache.sling.query.iterator.WarningIterator;
 import org.apache.sling.query.iterator.tree.BfsTreeIterator;
 import org.apache.sling.query.iterator.tree.DfsTreeIterator;

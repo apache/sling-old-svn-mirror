@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.sling.query;
+package org.apache.sling.query.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
