@@ -21,8 +21,8 @@ package org.apache.sling.query.iterator;
 
 import java.util.Iterator;
 
-import org.apache.sling.query.api.function.ElementToIteratorFunction;
-import org.apache.sling.query.api.function.Option;
+import org.apache.sling.query.api.internal.ElementToIteratorFunction;
+import org.apache.sling.query.api.internal.Option;
 
 /**
  * This iterator evaluates each element from the source iterator, expanding it using given function.

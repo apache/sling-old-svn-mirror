@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.sling.query.api.function;
+package org.apache.sling.query.api.internal;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;

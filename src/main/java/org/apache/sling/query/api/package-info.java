@@ -1,4 +1,4 @@
-/*-
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,22 +17,8 @@
  * under the License.
  */
 
+@Version("3.0.0")
 package org.apache.sling.query.api;
 
-/**
- * Function can transform one value into another.
- * 
- * @author Tomasz Rękawek
- * 
- * @param <F> Input type
- * @param <T> Output type
- */
-public interface Function<F, T> {
-	/**
-	 * Take input F and transform it into output T.
-	 * 
-	 * @param input Input value
-	 * @return Output value
-	 */
-	T apply(F input);
-}
+import aQute.bnd.annotation.Version;
+

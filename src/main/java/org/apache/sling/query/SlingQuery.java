@@ -28,11 +28,14 @@ import org.apache.sling.query.api.SearchStrategy;
 import org.apache.sling.query.iterator.AdaptToIterator;
 import org.apache.sling.query.resource.ResourceTreeProvider;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * SlingQuery is a Sling resource tree traversal tool inspired by the jQuery.
  * 
  * @author Tomasz Rękawek
  */
+@ProviderType
 public class SlingQuery extends AbstractQuery<Resource, SlingQuery> {
 
 	private SlingQuery(AbstractQuery<Resource, SlingQuery> original, SearchStrategy strategy) {
