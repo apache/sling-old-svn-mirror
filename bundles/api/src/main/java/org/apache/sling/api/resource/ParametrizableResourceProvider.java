@@ -16,9 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-@Version("2.8.0")
 package org.apache.sling.api.resource;
 
-import aQute.bnd.annotation.Version;
+import java.util.Map;
 
+import aQute.bnd.annotation.ConsumerType;
+
+/**
+ * This extension allows resource provider implementations to support
+ * semicolon-separated parameters added to the URI, eg.: {@code /content/test;v='1.0'}.
+ * 
+ * @since 2.8.0
+ */
+@ConsumerType
+public interface ParametrizableResourceProvider {
+
+    /**
+     * @see ResourceProvider#getResource(ResourceResolver, String)
+     */
+    Resource getResource(ResourceResolver resourceResolver, String path, Map<String, String> parameters);
+}

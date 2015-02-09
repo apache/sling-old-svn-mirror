@@ -37,6 +37,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
+import org.apache.sling.resourceresolver.impl.tree.params.ParsedParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -123,6 +124,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
      *
      * @param path
      *            The path to the resource to return.
+     * @param parameters 
      * @return The resource for the path or <code>null</code> if no resource can
      *         be found.
      * @throws org.apache.sling.api.SlingException
@@ -131,8 +133,9 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
     public Resource getResource(final ResourceResolverContext ctx,
             final ResourceResolver resourceResolver,
             final String path,
+            final Map<String, String> parameters,
             final boolean isResolve) {
-        return getInternalResource(ctx, resourceResolver, path, isResolve);
+        return getInternalResource(ctx, resourceResolver, path, parameters, isResolve);
     }
 
     // ------------------ Map methods, here so that we can delegate 2 maps
@@ -299,11 +302,13 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
      * @param ctx The resource resolver context
      * @param resourceResolver the ResourceResolver.
      * @param fullPath the Full path
+     * @param parameters 
      * @return null if no resource was found, a resource if one was found.
      */
     private Resource getInternalResource(final ResourceResolverContext ctx,
             final ResourceResolver resourceResolver,
             final String fullPath,
+            final Map<String, String> parameters,
             final boolean isResolve) {
         try {
 
@@ -323,7 +328,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
                 for (final ProviderHandler rp : rps) {
 
                     boolean foundFallback = false;
-                    final Resource resource = rp.getResource(ctx, resourceResolver, fullPath);
+                    final Resource resource = rp.getResource(ctx, resourceResolver, fullPath, parameters);
                     if (resource != null) {
                         if ( resource.getResourceMetadata() != null && resource.getResourceMetadata().get(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING) != null ) {
                             if ( logger.isDebugEnabled() ) {
@@ -347,7 +352,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
             }
 
             // resolve against this one
-            final Resource resource = getResourceFromProviders(ctx, resourceResolver, fullPath);
+            final Resource resource = getResourceFromProviders(ctx, resourceResolver, fullPath, parameters);
             if (resource != null) {
                 return resource;
             }
@@ -383,13 +388,14 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
 
     public Resource getResourceFromProviders(final ResourceResolverContext ctx,
             final ResourceResolver resourceResolver,
-            final String fullPath) {
+            final String fullPath,
+            final Map<String, String> parameters) {
         Resource fallbackResource = null;
         final ProviderHandler[] rps = getResourceProviders();
         for (final ProviderHandler rp : rps) {
             boolean foundFallback = false;
 
-            final Resource resource = rp.getResource(ctx, resourceResolver, fullPath);
+            final Resource resource = rp.getResource(ctx, resourceResolver, fullPath, parameters);
             if (resource != null) {
                 if ( resource.getResourceMetadata() != null && resource.getResourceMetadata().get(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING) != null ) {
                     logger.debug("Resolved Base {} using {} - continue resolving flag is set!", fullPath, rp);
