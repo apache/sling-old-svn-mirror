@@ -59,7 +59,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.servlets.post;version=2.2.0
+                            org.apache.sling.servlets.post;version=2.3.0
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.servlets.post.impl.*
