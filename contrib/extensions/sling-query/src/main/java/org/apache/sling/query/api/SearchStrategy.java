@@ -19,6 +19,9 @@
 
 package org.apache.sling.query.api;
 
+import aQute.bnd.annotation.ProviderType;
+
+@ProviderType
 public enum SearchStrategy {
 	BFS, DFS, QUERY;
 }

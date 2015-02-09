@@ -17,11 +17,25 @@
  * under the License.
  */
 
-package org.apache.sling.query.api.function;
+package org.apache.sling.query.api.internal;
 
-import java.util.Iterator;
+import aQute.bnd.annotation.ConsumerType;
 
-import org.apache.sling.query.api.Function;
-
-public interface IteratorToIteratorFunction<T> extends Function<Iterator<Option<T>>, Iterator<Option<T>>> {
+/**
+ * Function can transform one value into another.
+ * 
+ * @author Tomasz Rękawek
+ * 
+ * @param <F> Input type
+ * @param <T> Output type
+ */
+@ConsumerType
+public interface Function<F, T> {
+	/**
+	 * Take input F and transform it into output T.
+	 * 
+	 * @param input Input value
+	 * @return Output value
+	 */
+	T apply(F input);
 }

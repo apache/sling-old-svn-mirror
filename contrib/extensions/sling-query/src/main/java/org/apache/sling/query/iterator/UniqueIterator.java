@@ -22,7 +22,7 @@ package org.apache.sling.query.iterator;
 import java.util.Iterator;
 
 import org.apache.sling.query.api.TreeProvider;
-import org.apache.sling.query.api.function.Option;
+import org.apache.sling.query.api.internal.Option;
 
 public class UniqueIterator<T> extends AbstractIterator<Option<T>> {
 
