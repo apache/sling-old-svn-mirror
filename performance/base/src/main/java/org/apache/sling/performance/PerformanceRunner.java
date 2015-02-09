@@ -23,10 +23,14 @@ import org.apache.sling.performance.annotation.PerformanceTestFactory;
 import org.apache.sling.performance.annotation.PerformanceTestSuite;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.runner.notification.Failure;
+import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.TestClass;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
@@ -50,80 +54,117 @@ import java.util.List;
 
 
 public class PerformanceRunner extends BlockJUnit4ClassRunner {
-	protected LinkedList<FrameworkMethod> tests = new LinkedList<FrameworkMethod>();
-	private List<PerformanceSuiteState> suitesState = new ArrayList<PerformanceSuiteState>();
-	public ReportLevel reportLevel = ReportLevel.ClassLevel;
-	
-	public static enum ReportLevel{
-		ClassLevel,
-		MethodLevel
-	}
-	
-	@Retention(RetentionPolicy.RUNTIME)
-	@Target(ElementType.TYPE)
-	public @interface Parameters {
-		public ReportLevel reportLevel() default ReportLevel.ClassLevel;
-	}
-	
-	public PerformanceRunner(Class<?> clazz) throws InitializationError {
-		super(clazz);
-		
-		// set the report level for the tests that are run with the PerformanceRunner
-		// by default set to class level for legacy tests compatibility
-		if (clazz.getAnnotation(Parameters.class) != null){
-			reportLevel = clazz.getAnnotation(Parameters.class).reportLevel();
-		}
-		
-		try {
-			computeTests();
-		} catch (Exception e) {
-			throw new InitializationError(e);
-		}
-	}
+    private static final Logger logger = LoggerFactory.getLogger(ReportLogger.class);
 
-	/**
-	 * Compute the tests that will be run
-	 * 
-	 * @throws Exception
-	 */
-	protected void computeTests() throws Exception {
-		// add normal JUnit tests
-		tests.addAll(super.computeTestMethods());
+    protected LinkedList<FrameworkMethod> tests = new LinkedList<FrameworkMethod>();
+    private List<PerformanceSuiteState> suitesState = new ArrayList<PerformanceSuiteState>();
+    public ReportLevel reportLevel = ReportLevel.ClassLevel;
+    public String referenceMethod = null;
 
-		// add the performance tests
-		tests.addAll(computePerformanceTests());
+    public static enum ReportLevel{
+        ClassLevel,
+        MethodLevel
+    }
 
-		// This is called here to ensure the test class constructor is called at
-		// least
-		// once during testing.
-		createTest();
-	}
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE)
+    public @interface Parameters {
+        public ReportLevel reportLevel() default ReportLevel.ClassLevel;
+        /** This is the name of the reference method used to compute statistics */
+        public String referenceMethod() default "";
+    }
 
-	/**
-	 * Compute performance tests
-	 * 
-	 * @return the list containing the performance test methods
-	 * @throws Exception
-	 */
-	protected Collection<? extends FrameworkMethod> computePerformanceTests()
-			throws Exception {
-		List<FrameworkMethod> tests = new LinkedList<FrameworkMethod>();
+    public PerformanceRunner(Class<?> clazz) throws InitializationError {
+        super(clazz);
 
-		List<Object> testObjects = new ArrayList<Object>();
-		List<Object> testObjectsTmp = new ArrayList<Object>();
+        // set the report level for the tests that are run with the PerformanceRunner
+        // by default set to class level for legacy tests compatibility
+        if (clazz.getAnnotation(Parameters.class) != null){
+            reportLevel = clazz.getAnnotation(Parameters.class).reportLevel();
+            referenceMethod = clazz.getAnnotation(Parameters.class).referenceMethod();
+            if ("".equals(referenceMethod)) {
+                referenceMethod = null;
+            } else {
+                boolean found = false;
+                for (Method method : clazz.getMethods()) {
+                    if (method.getName().equals(referenceMethod) && method.getParameterTypes().length == 0) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    referenceMethod = null;
+                }
+            }
+        }
+
+        try {
+            computeTests();
+        } catch (Exception e) {
+            throw new InitializationError(e);
+        }
+    }
+
+    @Override
+    public void run(RunNotifier notifier) {
+        super.run(notifier);
+        try {
+            ReportLogger.writeAllResults();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+        try {
+            for (Failure failure : ReportLogger.checkAllThresholds()) {
+                notifier.fireTestFailure(failure);
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Compute the tests that will be run
+     *
+     * @throws Exception
+     */
+    protected void computeTests() throws Exception {
+        // add normal JUnit tests
+        tests.addAll(super.computeTestMethods());
+
+        // add the performance tests
+        tests.addAll(computePerformanceTests());
+
+        // This is called here to ensure the test class constructor is called at
+        // least
+        // once during testing.
+        createTest();
+    }
+
+    /**
+     * Compute performance tests
+     *
+     * @return the list containing the performance test methods
+     * @throws Exception
+     */
+    protected Collection<? extends FrameworkMethod> computePerformanceTests()
+            throws Exception {
+        List<FrameworkMethod> tests = new LinkedList<FrameworkMethod>();
+
+        List<Object> testObjects = new ArrayList<Object>();
+        List<Object> testObjectsTmp = new ArrayList<Object>();
 
 
-		ParameterizedTestList testCenter = new ParameterizedTestList();
+        ParameterizedTestList testCenter = new ParameterizedTestList();
 
-		// Retrieve the test objects included in the Performance test suite
-		for (FrameworkMethod method : getTestClass().getAnnotatedMethods(
-				PerformanceTestSuite.class)) {
-			Object targetObject = getTestClass().getJavaClass().newInstance();
-			if (method.getMethod().getReturnType()
-					.equals(ParameterizedTestList.class)) {
-				testCenter = (ParameterizedTestList) method.getMethod().invoke(
-						targetObject);
-				testObjectsTmp = testCenter.getTestObjectList();
+        // Retrieve the test objects included in the Performance test suite
+        for (FrameworkMethod method : getTestClass().getAnnotatedMethods(
+                PerformanceTestSuite.class)) {
+            Object targetObject = getTestClass().getJavaClass().newInstance();
+            if (method.getMethod().getReturnType()
+                    .equals(ParameterizedTestList.class)) {
+                testCenter = (ParameterizedTestList) method.getMethod().invoke(
+                        targetObject);
+                testObjectsTmp = testCenter.getTestObjectList();
 
                 // Iterate through all the test cases and see if they have a factory
                 for (Object testObject : testObjectsTmp) {
@@ -156,138 +197,138 @@ public class PerformanceRunner extends BlockJUnit4ClassRunner {
                         testObjects.add(testObject);
                     }
                 }
-			} else {
-				throw new InitializationError(
-						"Wrong signature for the @PerformanceTestSuite method");
-			}
-		}
+            } else {
+                throw new InitializationError(
+                        "Wrong signature for the @PerformanceTestSuite method");
+            }
+        }
 
-		// Retrieve the methods before running the methods from the test suite
-		List<FrameworkMethod> beforeSuiteMethods = getTestClass()
-				.getAnnotatedMethods(BeforeSuite.class);
-		if (beforeSuiteMethods.size() > 1) {
-			throw new InitializationError(
-					"Only one @BeforeSuite method is allowed for a @PerformanceSuite");
-		}
+        // Retrieve the methods before running the methods from the test suite
+        List<FrameworkMethod> beforeSuiteMethods = getTestClass()
+                .getAnnotatedMethods(BeforeSuite.class);
+        if (beforeSuiteMethods.size() > 1) {
+            throw new InitializationError(
+                    "Only one @BeforeSuite method is allowed for a @PerformanceSuite");
+        }
 
-		// Retrieve the methods before running the methods from the test suite
-		List<FrameworkMethod> afterSuiteMethods = getTestClass()
-				.getAnnotatedMethods(AfterSuite.class);
-		if (afterSuiteMethods.size() > 1) {
-			throw new InitializationError(
-					"Only one @AfterSuite method is allowed for a @PerformanceSuite");
-		}
+        // Retrieve the methods before running the methods from the test suite
+        List<FrameworkMethod> afterSuiteMethods = getTestClass()
+                .getAnnotatedMethods(AfterSuite.class);
+        if (afterSuiteMethods.size() > 1) {
+            throw new InitializationError(
+                    "Only one @AfterSuite method is allowed for a @PerformanceSuite");
+        }
 
-		PerformanceSuiteState current = null;
-		boolean suiteAlreadyRegistered = false;
+        PerformanceSuiteState current = null;
+        boolean suiteAlreadyRegistered = false;
 
-		for (PerformanceSuiteState suiteState : suitesState) {
-			if (suiteState.testSuiteName.equals(testCenter.getTestSuiteName())) {
-				suiteAlreadyRegistered = true;
-				suiteState.incrementNumberOfTestMethodsInSuite();
-				current = suiteState;
-				break;
-			}
-		}
+        for (PerformanceSuiteState suiteState : suitesState) {
+            if (suiteState.testSuiteName.equals(testCenter.getTestSuiteName())) {
+                suiteAlreadyRegistered = true;
+                suiteState.incrementNumberOfTestMethodsInSuite();
+                current = suiteState;
+                break;
+            }
+        }
 
-		// Create a new PerformanceSuiteState object
-		PerformanceSuiteState newSuite = new PerformanceSuiteState(
-				testCenter.getTestSuiteName());
+        // Create a new PerformanceSuiteState object
+        PerformanceSuiteState newSuite = new PerformanceSuiteState(
+                testCenter.getTestSuiteName());
 
-		if (!suiteAlreadyRegistered) {
-			if (beforeSuiteMethods.size() == 1) {
-				newSuite.setBeforeSuiteMethod(beforeSuiteMethods.get(0).getMethod());
-			}
-			if (afterSuiteMethods.size() == 1) {
-				newSuite.setAfterSuiteMethod(afterSuiteMethods.get(0).getMethod());
-			}
+        if (!suiteAlreadyRegistered) {
+            if (beforeSuiteMethods.size() == 1) {
+                newSuite.setBeforeSuiteMethod(beforeSuiteMethods.get(0).getMethod());
+            }
+            if (afterSuiteMethods.size() == 1) {
+                newSuite.setAfterSuiteMethod(afterSuiteMethods.get(0).getMethod());
+            }
 
-			current = newSuite;
-			newSuite.setTargetObjectSuite(getTestClass().getJavaClass().newInstance());
+            current = newSuite;
+            newSuite.setTargetObjectSuite(getTestClass().getJavaClass().newInstance());
 
-		}
+        }
 
-		// In case there are any objects retrieved from the Performance Suite
-		// we should add them to the tests that will be run and increase the
-		// number of methods
-		// contained in the PerformanceSuite
-		if (!testObjects.isEmpty()) {
-			for (Object testObject : testObjects) {
+        // In case there are any objects retrieved from the Performance Suite
+        // we should add them to the tests that will be run and increase the
+        // number of methods
+        // contained in the PerformanceSuite
+        if (!testObjects.isEmpty()) {
+            for (Object testObject : testObjects) {
 
-				// retrieve the test methods from the test classes
-				Method[] testMethods = getSpecificMethods(testObject.getClass(), PerformanceTest.class);
+                // retrieve the test methods from the test classes
+                Method[] testMethods = getSpecificMethods(testObject.getClass(), PerformanceTest.class);
 
-				for (Method method : testMethods) {
-					FrameworkPerformanceMethod performaceTestMethod =
-                            new FrameworkPerformanceMethod(method, testObject, current, reportLevel);
-					tests.add(performaceTestMethod);
-				}
+                for (Method method : testMethods) {
+                    FrameworkPerformanceMethod performaceTestMethod =
+                            new FrameworkPerformanceMethod(method, testObject, current, reportLevel, referenceMethod);
+                    tests.add(performaceTestMethod);
+                }
 
                 if (!suiteAlreadyRegistered) {
-					newSuite.incrementNumberOfTestMethodsInSuite();
-				}
-			}
+                    newSuite.incrementNumberOfTestMethodsInSuite();
+                }
+            }
 
-			// add the new suite to the list of suites
-			suitesState.add(newSuite);
-		}
+            // add the new suite to the list of suites
+            suitesState.add(newSuite);
+        }
 
-		// Retrieve the performance tests in the case we don't have a
-		// performance test suite
-		for (FrameworkMethod method : getTestClass().getAnnotatedMethods(PerformanceTest.class)) {
-			Object targetObject = getTestClass().getJavaClass().newInstance();
-			FrameworkPerformanceMethod performanceTestMethod = new FrameworkPerformanceMethod(
-					method.getMethod(), targetObject, current, reportLevel);
-			tests.add(performanceTestMethod);
-		}
+        // Retrieve the performance tests in the case we don't have a
+        // performance test suite
+        for (FrameworkMethod method : getTestClass().getAnnotatedMethods(PerformanceTest.class)) {
+            Object targetObject = getTestClass().getJavaClass().newInstance();
+            FrameworkPerformanceMethod performanceTestMethod = new FrameworkPerformanceMethod(
+                    method.getMethod(), targetObject, current, reportLevel, referenceMethod);
+            tests.add(performanceTestMethod);
+        }
 
-		return tests;
-	}
+        return tests;
+    }
 
 
-		/**
-	 * Retrieve specific method from test class
-	 * 
-	 * @param testClass
-	 *            the test class that we need to search in
-	 * @param annotation
-	 *            the annotation that we should look for
-	 * @return the list with the methods that have the specified annotation
-	 */
-	@SuppressWarnings({ "rawtypes" })
-	private Method[] getSpecificMethods(Class testClass,
-			Class<? extends Annotation> annotation) {
-		Method[] allMethods = testClass.getDeclaredMethods();
+        /**
+     * Retrieve specific method from test class
+     *
+     * @param testClass
+     *            the test class that we need to search in
+     * @param annotation
+     *            the annotation that we should look for
+     * @return the list with the methods that have the specified annotation
+     */
+    @SuppressWarnings({ "rawtypes" })
+    private Method[] getSpecificMethods(Class testClass,
+            Class<? extends Annotation> annotation) {
+        Method[] allMethods = testClass.getDeclaredMethods();
 
-		List<Method> methodListResult = new ArrayList<Method>();
+        List<Method> methodListResult = new ArrayList<Method>();
 
-		for (Method testMethod : allMethods) {
-			if (testMethod.isAnnotationPresent(annotation)) {
-				methodListResult.add(testMethod);
-			}
-		}
-		return methodListResult.toArray(new Method[] {});
-	}
+        for (Method testMethod : allMethods) {
+            if (testMethod.isAnnotationPresent(annotation)) {
+                methodListResult.add(testMethod);
+            }
+        }
+        return methodListResult.toArray(new Method[] {});
+    }
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see org.junit.runners.BlockJUnit4ClassRunner#computeTestMethods()
-	 */
-	@Override
-	protected List<FrameworkMethod> computeTestMethods() {
-		return tests;
-	}
+    /**
+     * {@inheritDoc}
+     *
+     * @see org.junit.runners.BlockJUnit4ClassRunner#computeTestMethods()
+     */
+    @Override
+    protected List<FrameworkMethod> computeTestMethods() {
+        return tests;
+    }
 
-	/**
-	 * Need to override method otherwise the validation will fail because of
-	 * some hardcoded conditions in JUnit
-	 */
-	@Override
-	protected void validateInstanceMethods(List<Throwable> errors) {
-		validatePublicVoidNoArgMethods(After.class, false, errors);
-		validatePublicVoidNoArgMethods(Before.class, false, errors);
-		validateTestMethods(errors);
-	}
+    /**
+     * Need to override method otherwise the validation will fail because of
+     * some hardcoded conditions in JUnit
+     */
+    @Override
+    protected void validateInstanceMethods(List<Throwable> errors) {
+        validatePublicVoidNoArgMethods(After.class, false, errors);
+        validatePublicVoidNoArgMethods(Before.class, false, errors);
+        validateTestMethods(errors);
+    }
 
 }
