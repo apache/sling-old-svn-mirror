@@ -22,7 +22,7 @@ package org.apache.sling.query.function;
 import java.util.Iterator;
 
 import org.apache.sling.query.api.TreeProvider;
-import org.apache.sling.query.api.function.ElementToIteratorFunction;
+import org.apache.sling.query.api.internal.ElementToIteratorFunction;
 
 public class ChildrenFunction<T> implements ElementToIteratorFunction<T> {
 

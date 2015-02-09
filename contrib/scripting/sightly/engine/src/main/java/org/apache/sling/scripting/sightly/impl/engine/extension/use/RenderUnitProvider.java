@@ -76,9 +76,8 @@ public class RenderUnitProvider implements UseProvider {
     }
 
     private Resource locateResource(Bindings bindings, String script, RenderContext renderContext) {
-        ResourceResolver adminResolver = RenderContextImpl.getScriptResourceResolver(renderContext);
         SlingHttpServletRequest request = (SlingHttpServletRequest) bindings.get(SlingBindings.REQUEST);
-        Resource resource = ResourceResolution.getResourceForRequest(adminResolver, request);
+        Resource resource = ResourceResolution.getResourceForRequest(renderContext.getScriptResourceResolver(), request);
         return ResourceResolution.getResourceFromSearchPath(resource, script);
     }
 }

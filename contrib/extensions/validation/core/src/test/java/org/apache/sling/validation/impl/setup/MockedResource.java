@@ -47,18 +47,11 @@ public class MockedResource extends SyntheticResource {
     private Session session;
 
     public MockedResource(MockedResourceResolver resourceResolver, Node node) throws RepositoryException {
-        super(resourceResolver, node.getPath(), node.getProperty("./sling:resourceType").getString() != null ? node.getProperty("./" +
+        super(resourceResolver, node.getPath(), node.hasProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY) && node.getProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY).getString() != null ? node.getProperty(
                 JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY).getString() : node.getProperty(JcrConstants.JCR_PRIMARYTYPE).getString
                 ());
         mockedResourceResolver = resourceResolver;
 
-    }
-
-    public MockedResource(MockedResourceResolver resourceResolver, String path,
-                          String resourceType) {
-        super(resourceResolver, path, resourceType);
-        mockedResourceResolver = resourceResolver;
-        resourceResolver.register(this);
     }
 
     private Session getSession() {
@@ -71,23 +64,6 @@ public class MockedResource extends SyntheticResource {
                 }
             }
             return session;
-        }
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-        close();
-        super.finalize();
-    }
-
-    public void close() {
-        synchronized (this) {
-            if (session != null) {
-                if (session.isLive()) {
-                    session.logout();
-                }
-                session = null;
-            }
         }
     }
 

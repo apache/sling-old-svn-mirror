@@ -21,13 +21,16 @@ package org.apache.sling.distribution.resources.impl;
 
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.agent.DistributionAgentException;
+import org.apache.sling.distribution.agent.DistributionAgentState;
 import org.apache.sling.distribution.component.impl.DistributionComponent;
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.component.impl.DistributionComponentProvider;
+import org.apache.sling.distribution.log.DistributionLog;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
+import org.apache.sling.distribution.queue.DistributionQueueState;
 import org.apache.sling.distribution.resources.DistributionResourceTypes;
 import org.apache.sling.distribution.resources.impl.common.SimplePathInfo;
 
@@ -42,6 +45,10 @@ import java.util.Map;
 public class ExtendedDistributionServiceResourceProvider extends DistributionServiceResourceProvider {
 
     private static final String QUEUES_PATH = "queues";
+    private static final String LOG_PATH = "log";
+    private static final String STATUS_PATH = "status";
+
+
     private static final int MAX_QUEUE_DEPTH = 100;
 
 
@@ -58,12 +65,27 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
         if (kind.equals(DistributionComponentKind.AGENT)) {
             DistributionAgent agent = (DistributionAgent) component.getService();
 
-            if (agent != null) {
+            if (agent != null && childResourceName != null) {
                 if (childResourceName.startsWith(QUEUES_PATH)) {
                     SimplePathInfo queuePathInfo = SimplePathInfo.parsePathInfo(QUEUES_PATH, childResourceName);
                     Map<String, Object> result = getQueueProperties(agent, queuePathInfo);
                     return result;
+                } else if (childResourceName.startsWith(LOG_PATH)) {
+                    Map<String, Object> result = new HashMap<String, Object>();
+                    result.put(SLING_RESOURCE_TYPE, DistributionResourceTypes.LOG_RESOURCE_TYPE);
+                    DistributionLog distributionLog = agent.getLog();
+
+                    result.put(ADAPTABLE_PROPERTY_NAME, distributionLog);
+
+                    return result;
+                } else if (childResourceName.startsWith(STATUS_PATH)) {
+                    Map<String, Object> result = new HashMap<String, Object>();
+                    DistributionAgentState agentState = agent.getState();
+
+                    result.put("state", agentState.name());
+                    return result;
                 }
+
             }
         }
         return null;
@@ -80,6 +102,9 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
                 if (childResourceName == null) {
                     List<String> nameList = new ArrayList<String>();
                     nameList.add(QUEUES_PATH);
+                    nameList.add(LOG_PATH);
+                    nameList.add(STATUS_PATH);
+
                     return nameList;
                 }
             }
@@ -106,8 +131,17 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
             try {
                 DistributionQueue queue = agent.getQueue(queueName);
 
+                DistributionAgentState agentState = agent.getState();
+
                 result.put(SLING_RESOURCE_TYPE, DistributionResourceTypes.AGENT_QUEUE_RESOURCE_TYPE);
-                result.put("state", queue.getState().name());
+
+                // if the agent is paused report also the queues as paused.
+                // TODO: to this at java API level
+                if (DistributionAgentState.PAUSED.equals(agentState)) {
+                    result.put("state", DistributionQueueState.PAUSED.name());
+                } else {
+                    result.put("state", queue.getState().name());
+                }
                 result.put("empty", queue.isEmpty());
                 result.put("itemsCount", queue.getItemsCount());
 
@@ -119,6 +153,7 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
                 result.put(ADAPTABLE_PROPERTY_NAME, queue);
 
             } catch (DistributionAgentException e) {
+                // do nothing
 
             }
 
@@ -149,8 +184,10 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
 
                 }
             } catch (DistributionAgentException e) {
+                // do nothing
 
             } catch (DistributionQueueException e) {
+                // do nothing
             }
             return result;
         }

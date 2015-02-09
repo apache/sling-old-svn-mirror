@@ -68,27 +68,9 @@ public class UseProviderUtils {
      * @return the script resource if found, {@code null} otherwise
      */
     public static Resource locateScriptResource(ResourceResolver resourceResolver, SlingScriptHelper sling, String script) {
-        Resource result = null;
-        if (script.startsWith("/")) {
-            result = resourceResolver.getResource(script);
-        }
-        if (result == null) {
-            Resource componentResource = ResourceResolution.getResourceForRequest(resourceResolver, sling.getRequest());
-            result = ResourceResolution.getResourceFromSearchPath(componentResource, script);
-        }
-        if (result != null) {
-            checkSearchPath(result, resourceResolver);
-        }
+        Resource componentResource = ResourceResolution.getResourceForRequest(resourceResolver, sling.getRequest());
+        Resource result = ResourceResolution.getResourceFromSearchPath(componentResource, script);
         return result;
     }
 
-    private static void checkSearchPath(Resource resource, ResourceResolver resourceResolver) {
-        String resourcePath = resource.getPath();
-        for (String path : resourceResolver.getSearchPath()) {
-            if (resourcePath.startsWith(path)) {
-                return;
-            }
-        }
-        throw new SightlyException("Use plugin cannot access path: " + resource.getPath());
-    }
 }

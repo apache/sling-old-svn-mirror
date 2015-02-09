@@ -71,6 +71,7 @@ final class ContextResourceResolverFactory {
         Session session = resolver.adaptTo(Session.class);
         NamespaceRegistry namespaceRegistry = session.getWorkspace().getNamespaceRegistry();
         namespaceRegistry.registerNamespace("sling", "http://sling.apache.org/jcr/sling/1.0");
+        resolver.close();
     }
 
     private static void initializeJcrJackrabbit(ResourceResolverFactory factory) {

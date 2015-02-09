@@ -20,10 +20,15 @@ package org.apache.sling.models.impl.injectors;
 
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.models.annotations.Path;
@@ -36,12 +41,16 @@ import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProc
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor2;
 import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 import org.osgi.framework.Constants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 2500)
 public class ResourcePathInjector extends AbstractInjector implements Injector, AcceptsNullName,
         StaticInjectAnnotationProcessorFactory {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ResourcePathInjector.class);
 
     @Override
     public String getName() {
@@ -51,36 +60,92 @@ public class ResourcePathInjector extends AbstractInjector implements Injector, 
     @Override
     public Object getValue(Object adaptable, String name, Type declaredType, AnnotatedElement element,
             DisposalCallbackRegistry callbackRegistry) {
-        String resourcePath = null;
+        String[] resourcePaths = null;
         Path pathAnnotation = element.getAnnotation(Path.class);
+        ResourcePath resourcePathAnnotation = element.getAnnotation(ResourcePath.class);
         if (pathAnnotation != null) {
-            resourcePath = pathAnnotation.value();
+            resourcePaths = getPathsFromAnnotation(pathAnnotation);
+        } else if (resourcePathAnnotation != null) {
+            resourcePaths = getPathsFromAnnotation(resourcePathAnnotation);
+        }
+        if (ArrayUtils.isEmpty(resourcePaths) && name != null) {
+            // try the valuemap
+            ValueMap map = getValueMap(adaptable);
+            if (map != null) {
+                resourcePaths = map.get(name, String[].class);
+            }
+        }
+        if (ArrayUtils.isEmpty(resourcePaths)) {
+            // could not find a path to inject
+            return null;
+        }
+
+        ResourceResolver resolver = getResourceResolver(adaptable);
+        if (resolver == null) {
+            return null;
+        }
+        List<Resource> resources = getResources(resolver, resourcePaths, name);
+
+        if (resources == null || resources.isEmpty()) {
+            return null;
+        }
+        // unwrap if necessary
+        if (isDeclaredTypeCollection(declaredType)) {
+            return resources;
+        } else if (resources.size() == 1) {
+            return resources.get(0);
         } else {
-            ResourcePath resourcePathAnnotation = element.getAnnotation(ResourcePath.class);
-            if (resourcePathAnnotation != null) {
-                resourcePath = resourcePathAnnotation.path();
-                if (resourcePath.isEmpty()) {
-                    resourcePath = null;
-                }
-            }
-
-            if (resourcePath == null && name != null) {
-                // try to get from value map
-                ValueMap map = getValueMap(adaptable);
-                if (map != null) {
-                    resourcePath = map.get(name, String.class);
-                }
-            }
+            // multiple resources to inject, but field is not a list
+            LOG.warn("Cannot inject multiple resources into field {} since it is not declared as a list", name);
+            return null;
         }
 
-        if (resourcePath != null) {
-            ResourceResolver resolver = getResourceResolver(adaptable);
-            if (resolver != null) {
-                return resolver.getResource(resourcePath);
+    }
+
+    private List<Resource> getResources(ResourceResolver resolver, String[] paths, String fieldName) {
+        List<Resource> resources = new ArrayList<Resource>();
+        for (String path : paths) {
+            Resource resource = resolver.getResource(path);
+            if (resource != null) {
+                resources.add(resource);
+            } else {
+                LOG.warn("Could not retrieve resource at path {} for field {}. Since it is required it won't be injected.",
+                        path, fieldName);
+                // all resources should've been injected. we stop
+                return null;
             }
         }
+        return resources;
+    }
 
-        return null;
+    /**
+     * Obtains the paths from the annotations
+     * @param annotation
+     * @return
+     */
+    private String[] getPathsFromAnnotation(Path pathAnnotation) {
+        String[] resourcePaths = null;
+        if (StringUtils.isNotEmpty(pathAnnotation.value())) {
+            resourcePaths = new String[] { pathAnnotation.value() };
+        } else {
+            resourcePaths = pathAnnotation.paths();
+        }
+        return resourcePaths;
+    }
+
+    /**
+     * Obtains the paths from the annotations
+     * @param annotation
+     * @return
+     */
+    private String[] getPathsFromAnnotation(ResourcePath resourcePathAnnotation) {
+        String[] resourcePaths = null;
+        if (StringUtils.isNotEmpty(resourcePathAnnotation.path())) {
+            resourcePaths = new String[] { resourcePathAnnotation.path() };
+        } else {
+            resourcePaths = resourcePathAnnotation.paths();
+        }
+        return resourcePaths;
     }
 
     @Override
@@ -103,8 +168,8 @@ public class ResourcePathInjector extends AbstractInjector implements Injector, 
 
         @Override
         public String getName() {
-            // since null is not allowed as default value in annotations, the empty string means, the default should be
-            // used!
+            // since null is not allowed as default value in annotations, the
+            // empty string means, the default should be used!
             if (annotation.name().isEmpty()) {
                 return null;
             }

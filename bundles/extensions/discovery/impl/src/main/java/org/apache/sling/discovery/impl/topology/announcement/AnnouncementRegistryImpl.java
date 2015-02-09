@@ -444,8 +444,63 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                 it.remove();
                 
                 final String instanceId = entry.getKey();
-                logger.info("checkExpiredAnnouncements: topology connector of "+instanceId+" has expired.");
+                logger.info("checkExpiredAnnouncements: topology connector of "+instanceId+
+                        " (to me="+settingsService.getSlingId()+
+                        ", inherited="+entry.getValue().getAnnouncement().isInherited()+") has expired.");
                 deleteAnnouncementsOf(instanceId);
+            }
+        }
+        //SLING-4139 : also make sure there are no stale announcements
+        //             in the repository (from a crash or any other action).
+        //             The ownAnnouncementsCache is the authorative set
+        //             of announcements that are registered to this
+        //             instance's registry - and the repository must not
+        //             contain any additional announcements
+        final String instanceId = settingsService.getSlingId();
+        ResourceResolver resourceResolver = null;
+        try {
+            resourceResolver = resourceResolverFactory
+                    .getAdministrativeResourceResolver(null);
+            final Resource announcementsResource = ResourceHelper
+                    .getOrCreateResource(
+                            resourceResolver,
+                            config.getClusterInstancesPath()
+                                    + "/"
+                                    + instanceId
+                                    + "/announcements");
+            final Iterator<Resource> it = announcementsResource.getChildren().iterator();
+            while(it.hasNext()) {
+            	final Resource res = it.next();
+            	final String ownerId = res.getName();
+            	// ownerId is the slingId of the owner of the announcement (ie of the peer of the connector).
+            	// let's check if the we have that owner's announcement in the cache
+            	
+            	if (ownAnnouncementsCache.containsKey(ownerId)) {
+            		// fine then, we'll leave this announcement untouched
+            		continue;
+            	}
+            	// otherwise this announcement is likely from an earlier incarnation
+            	// of this instance - hence stale - hence we must remove it now
+            	//  (SLING-4139)
+            	ResourceHelper.deleteResource(resourceResolver, 
+            			res.getPath());
+            }
+            resourceResolver.commit();
+            resourceResolver.close();
+            resourceResolver = null;
+        } catch (LoginException e) {
+            logger.error(
+                    "checkExpiredAnnouncements: could not log in administratively when checking "
+                    + "for expired announcements of instanceId="+instanceId+": " + e, e);
+        } catch (PersistenceException e) {
+            logger.error(
+                    "checkExpiredAnnouncements: got PersistenceException when checking "
+                    + "for expired announcements of instanceId="+instanceId+": " + e, e);
+        } finally {
+            if (resourceResolver!=null) {
+                resourceResolver.revert();
+                resourceResolver.close();
+                resourceResolver = null;
             }
         }
     }

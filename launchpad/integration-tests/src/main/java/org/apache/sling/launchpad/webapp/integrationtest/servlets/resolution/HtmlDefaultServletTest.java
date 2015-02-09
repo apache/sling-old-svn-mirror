@@ -38,10 +38,18 @@ public class HtmlDefaultServletTest extends ResolutionTestBase {
 
     @Override
     protected void tearDown() throws Exception {
-        // disable the HtmlDefaultServlet before testing
+        // disable the HtmlDefaultServlet after testing
         changeComponent(
             "org.apache.sling.launchpad.testservices.servlets.HtmlDefaultServlet",
             "disable");
+        // we need to wait a little bit as starting with version 1.1.12 of
+        // org.apache.sling.resourceresolver, unregistering a resource provider
+        // forces an async reregistration of the resource resolver factory
+        try {
+            Thread.sleep(3000);
+        } catch ( final InterruptedException ie ) {
+            // ignore
+        }
         super.tearDown();
     }
 

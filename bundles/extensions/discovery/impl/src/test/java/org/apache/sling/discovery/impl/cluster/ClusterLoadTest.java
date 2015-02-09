@@ -61,7 +61,7 @@ public class ClusterLoadTest {
 
     @Test
     public void testFramework() throws Exception {
-		Instance firstInstance = Instance.newStandaloneInstance("/var/discovery/impl/ClusterLoadTest/testFramework/", "firstInstance", false, 2, 0);
+		Instance firstInstance = Instance.newStandaloneInstance("/var/discovery/impl/ClusterLoadTest/testFramework/", "firstInstance", false, 3, 0);
 		instances.add(firstInstance);
     	Thread.sleep(2000);
     	// without any heartbeat action, the discovery service reports its local instance
@@ -77,10 +77,11 @@ public class ClusterLoadTest {
                 .getClusterViewService().getClusterView().getInstances().get(0)
                 .getClass());
 
-        Instance secondInstance = Instance.newClusterInstance("/var/discovery/impl/ClusterLoadTest/testFramework/", "secondInstance", firstInstance, false, 2, 0);
+        Instance secondInstance = Instance.newClusterInstance("/var/discovery/impl/ClusterLoadTest/testFramework/", "secondInstance", firstInstance, false, 3, 0);
         instances.add(secondInstance);
         secondInstance.startHeartbeats(1);
         Thread.sleep(4000);
+        firstInstance.dumpRepo();
         assertEquals(firstInstance.getClusterViewService().getClusterView().getInstances().size(), 2);
         assertEquals(secondInstance.getClusterViewService().getClusterView().getInstances().size(), 2);
     }
@@ -141,11 +142,11 @@ public class ClusterLoadTest {
 		if (size<2) {
 			fail("can only test 2 or more instances");
 		}
-		Instance firstInstance = Instance.newStandaloneInstance("/var/discovery/impl/ClusterLoadTest/doTest-"+size+"-"+loopCnt+"/", "firstInstance", false, 2, 0);
+		Instance firstInstance = Instance.newStandaloneInstance("/var/discovery/impl/ClusterLoadTest/doTest-"+size+"-"+loopCnt+"/", "firstInstance", false, 3, 0);
 		firstInstance.startHeartbeats(1);
 		instances.add(firstInstance);
 		for(int i=1; i<size; i++) {
-			Instance subsequentInstance = Instance.newClusterInstance("/var/discovery/impl/ClusterLoadTest/doTest-"+size+"-"+loopCnt+"/", "subsequentInstance-"+i, firstInstance, false, 2, 0);
+			Instance subsequentInstance = Instance.newClusterInstance("/var/discovery/impl/ClusterLoadTest/doTest-"+size+"-"+loopCnt+"/", "subsequentInstance-"+i, firstInstance, false, 3, 0);
 			instances.add(subsequentInstance);
 			subsequentInstance.startHeartbeats(1);
 		}

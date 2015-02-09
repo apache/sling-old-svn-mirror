@@ -36,11 +36,11 @@ public class SlingFilterChainHelperTest {
     @Test public void testOrdering() {
         final SlingFilterChainHelper chain = new SlingFilterChainHelper();
 
-        chain.addFilter(context.mock(Filter.class, "A"), 1L, 100, "1:100");
-        chain.addFilter(context.mock(Filter.class, "B"), 2L, 100, "2:100");
-        chain.addFilter(context.mock(Filter.class, "C"), 3L, -100, "3:-100");
-        chain.addFilter(context.mock(Filter.class, "D"), 4L, -1000, "4:-1000");
-        chain.addFilter(context.mock(Filter.class, "E"), 5L, 1000, "5:1000");
+        chain.addFilter(context.mock(Filter.class, "A"), null, 1L, 100, "1:100");
+        chain.addFilter(context.mock(Filter.class, "B"), null, 2L, 100, "2:100");
+        chain.addFilter(context.mock(Filter.class, "C"), null, 3L, -100, "3:-100");
+        chain.addFilter(context.mock(Filter.class, "D"), null, 4L, -1000, "4:-1000");
+        chain.addFilter(context.mock(Filter.class, "E"), null, 5L, 1000, "5:1000");
 
         final FilterHandle[] entries = chain.getFilters();
         assertEquals(5, entries.length);

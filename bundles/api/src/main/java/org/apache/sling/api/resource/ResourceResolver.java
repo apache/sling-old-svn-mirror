@@ -86,6 +86,12 @@ import aQute.bnd.annotation.ProviderType;
  * To check whether a Resource Resolver can still be used, the {@link #isLive()}
  * method can be called.
  * <p>
+ * A <code>ResourceResolver</code> is only valid for as long as the
+ * <code>ResourceResolverFactory</code> that created this instance exists. The
+ * same applies in general to all objects returned by this instance,
+ * especially for all resources. If the <code>ResourceResolverFactory</code>
+ * does not exist anymore, the resource resolver instances becomes invalid.
+ * <p>
  * <b>Resource Resolver Attributes</b>
  * <p>
  * The authentication info properties provided to the

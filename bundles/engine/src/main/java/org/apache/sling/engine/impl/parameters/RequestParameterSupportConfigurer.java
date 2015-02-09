@@ -26,8 +26,6 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.ReferenceStrategy;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.service.component.ComponentContext;
@@ -39,11 +37,6 @@ import org.slf4j.LoggerFactory;
         name = RequestParameterSupportConfigurer.PID,
         label = "Apache Sling Request Parameter Handling",
         description = "Configures Sling's request parameter handling.")
-@Reference(
-        name = "SlingSetting",
-        referenceInterface = SlingSettingsService.class,
-        policy = ReferencePolicy.DYNAMIC,
-        strategy = ReferenceStrategy.LOOKUP)
 public class RequestParameterSupportConfigurer {
 
     static final String PID = "org.apache.sling.engine.parameters";
@@ -96,6 +89,9 @@ public class RequestParameterSupportConfigurer {
             description = "The maximum size allowed for multipart/form-data requests. The default is -1, which means unlimited.")
     private static final String PROP_MAX_REQUEST_SIZE = "request.max";
 
+    @Reference
+    private SlingSettingsService settignsService;
+
     @Activate
     @Deactivate
     private void configure(ComponentContext context) {
@@ -128,8 +124,7 @@ public class RequestParameterSupportConfigurer {
         if (fileLocation != null) {
             File file = new File(fileLocation);
             if (!file.isAbsolute()) {
-                final SlingSettingsService settings = (SlingSettingsService) context.locateService("SlingSettings");
-                file = new File(settings.getSlingHomePath(), fileLocation);
+                file = new File(this.settignsService.getSlingHomePath(), fileLocation);
                 fileLocation = file.getAbsolutePath();
             }
             if (file.exists()) {

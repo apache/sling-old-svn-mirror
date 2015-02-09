@@ -22,10 +22,10 @@ package org.apache.sling.query.iterator;
 import java.util.Iterator;
 import java.util.ListIterator;
 
-import org.apache.sling.query.IteratorUtils;
-import org.apache.sling.query.LazyList;
 import org.apache.sling.query.api.Predicate;
 import org.apache.sling.query.api.TreeProvider;
+import org.apache.sling.query.util.IteratorUtils;
+import org.apache.sling.query.util.LazyList;
 
 public class SiblingsIterator<T> extends AbstractIterator<T> {
 

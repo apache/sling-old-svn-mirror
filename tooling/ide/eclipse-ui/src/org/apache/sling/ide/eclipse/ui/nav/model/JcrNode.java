@@ -34,8 +34,6 @@ import javax.jcr.PropertyType;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.util.ISO9075;
@@ -92,10 +90,7 @@ import org.eclipse.ui.part.ResourceTransfer;
 import org.eclipse.ui.views.properties.IPropertySource;
 import org.eclipse.ui.views.properties.tabbed.ITabbedPropertySheetPageContributor;
 import org.eclipse.wst.server.core.IServer;
-import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
 
 import de.pdark.decentxml.Attribute;
 import de.pdark.decentxml.Document;
@@ -107,32 +102,6 @@ import de.pdark.decentxml.XMLTokenizer.Type;
 
 /** WIP: model object for a jcr node shown in the content package view in project explorer **/
 public class JcrNode implements IAdaptable {
-
-    private final class JcrRootHandler extends DefaultHandler {
-		boolean firstElement = true;
-		boolean isVaultFile = false;
-
-		public boolean isVaultFile() {
-			return isVaultFile;
-		}
-
-		@Override
-		public void startElement(String uri, String localName,
-				String qName, Attributes attributes)
-				throws SAXException {
-			if (!firstElement) {
-				return;
-			}
-			firstElement = false;
-			if ("jcr:root".equals(qName)) {
-				String ns = attributes.getValue("xmlns:jcr");
-				if (ns!=null && ns.startsWith("http://www.jcp.org/jcr")) {
-					// then this is a vault file with a jcr:root at the beginning
-					isVaultFile = true;
-				}
-			}
-		}
-	}
 
 	private final static WorkbenchLabelProvider workbenchLabelProvider = new WorkbenchLabelProvider();
 	
@@ -437,28 +406,10 @@ public class JcrNode implements IAdaptable {
         return res.getType() == IResource.FILE && res.getName().equals(".vlt");
     }
 
-    private boolean isVaultFile(IResource iResource)
-			throws ParserConfigurationException, SAXException, IOException,
-			CoreException {
-		if (iResource.getName().endsWith(".xml")) {
-			// then it could potentially be a vlt file. 
-			// let's check if it contains a jcr:root element with the appropriate namespace
-			
-			IFile file = (IFile)iResource;
-			
-		    SAXParserFactory factory = SAXParserFactory.newInstance();
-		    SAXParser saxParser = factory.newSAXParser();
+    private boolean isVaultFile(IResource iResource) {
 
-		    JcrRootHandler h = new JcrRootHandler();
-			InputStream contents = file.getContents();
-            try {
-                saxParser.parse(new InputSource(contents), h);
-                return h.isVaultFile();
-            } finally {
-                IOUtils.closeQuietly(contents);
-            }
-		}
-		return false;
+        return Activator.getDefault().getSerializationManager()
+                .isSerializationFile(iResource.getLocation().toOSString());
 	}
 
 	public void setResource(IResource resource) {
@@ -479,12 +430,7 @@ public class JcrNode implements IAdaptable {
 		typeFile |= (resource!=null && primaryType==null);
 		boolean typeUnstructured = primaryType!=null && ((primaryType.equals("nt:unstructured")));
 		
-		boolean isVaultFile = false;
-		try {
-			isVaultFile = resource!=null && isVaultFile(resource);
-		} catch (Exception e) {
-			// this empty catch is okay
-		}
+        boolean isVaultFile = resource != null && isVaultFile(resource);
 		
 		String mimeType = null;
 		mimeType = getJcrContentProperty("jcr:mimeType");

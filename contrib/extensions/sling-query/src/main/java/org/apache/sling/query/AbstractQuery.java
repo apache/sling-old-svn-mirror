@@ -24,12 +24,12 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.sling.query.api.Function;
 import org.apache.sling.query.api.Predicate;
 import org.apache.sling.query.api.SearchStrategy;
 import org.apache.sling.query.api.TreeProvider;
-import org.apache.sling.query.api.function.IteratorToIteratorFunction;
-import org.apache.sling.query.api.function.Option;
+import org.apache.sling.query.api.internal.Function;
+import org.apache.sling.query.api.internal.IteratorToIteratorFunction;
+import org.apache.sling.query.api.internal.Option;
 import org.apache.sling.query.function.AddFunction;
 import org.apache.sling.query.function.ChildrenFunction;
 import org.apache.sling.query.function.ClosestFunction;
@@ -54,7 +54,11 @@ import org.apache.sling.query.iterator.OptionStrippingIterator;
 import org.apache.sling.query.predicate.IterableContainsPredicate;
 import org.apache.sling.query.predicate.RejectingPredicate;
 import org.apache.sling.query.selector.SelectorFunction;
+import org.apache.sling.query.util.LazyList;
 
+import aQute.bnd.annotation.ProviderType;
+
+@ProviderType
 public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements Iterable<T> {
 
 	protected final List<Function<?, ?>> functions = new ArrayList<Function<?, ?>>();

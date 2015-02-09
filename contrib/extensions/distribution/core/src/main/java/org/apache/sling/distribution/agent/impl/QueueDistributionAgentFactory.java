@@ -23,14 +23,17 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
+import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
+import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.impl.exporter.LocalDistributionPackageExporter;
 import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
@@ -38,7 +41,6 @@ import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.distribution.queue.impl.SingleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.settings.SlingSettingsService;
@@ -65,7 +67,14 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Property(label = "Name", description = "The name of the agent.")
-    public static final String NAME = DistributionComponentUtils.PN_NAME;
+    public static final String NAME = DistributionComponentConstants.PN_NAME;
+
+    @Property(label = "Title", description = "The display friendly title of the agent.")
+    public static final String TITLE = "title";
+
+    @Property(label = "Details", description = "The display friendly details of the agent.")
+    public static final String DETAILS = "details";
+
 
     @Property(boolValue = true, label = "Enabled", description = "Whether or not to start the distribution agent.")
     private static final String ENABLED = "enabled";
@@ -73,6 +82,19 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
 
     @Property(label = "Service Name", description = "The name of the service used to access the repository.")
     public static final String SERVICE_NAME = "serviceName";
+
+    @Property(options = {
+            @PropertyOption(name = "debug", value = "debug"), @PropertyOption(name = "info", value = "info"),  @PropertyOption(name = "warn", value = "warn"),
+            @PropertyOption(name = "error", value = "error")},
+            value = "info",
+            label = "Log Level", description = "The log level recorded in the transient log accessible via http."
+    )
+    public static final String LOG_LEVEL = AbstractDistributionAgentFactory.LOG_LEVEL;
+
+
+
+    @Property(label = "Allowed root", description = "If set the agent will allow only distribution requests under the specified root.")
+    private static final String ALLOWED_ROOT = "allowed.root";
 
 
     @Property(name = "requestAuthorizationStrategy.target", label = "Request Authorization Strategy", description = "The target reference for the DistributionRequestAuthorizationStrategy used to authorize the access to distribution process," +
@@ -125,15 +147,18 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
     }
 
     @Override
-    protected SimpleDistributionAgent createAgent(String agentName, BundleContext context, Map<String, Object> config) {
+    protected SimpleDistributionAgent createAgent(String agentName, BundleContext context, Map<String, Object> config, DefaultDistributionLog distributionLog) {
 
         String serviceName = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
+        String allowedRoot = PropertiesUtil.toString(config.get(ALLOWED_ROOT), null);
         DistributionQueueProvider queueProvider =  new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
         DistributionQueueDispatchingStrategy dispatchingStrategy = new SingleQueueDispatchingStrategy();
         DistributionPackageExporter packageExporter = new LocalDistributionPackageExporter(packageBuilder);
+        DistributionRequestType[] allowedRequests = new DistributionRequestType[] { DistributionRequestType.ADD, DistributionRequestType.DELETE };
+
 
         return new SimpleDistributionAgent(agentName, false, serviceName,
                 null, packageExporter, requestAuthorizationStrategy,
-                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory);
+                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory, distributionLog, allowedRequests, allowedRoot);
     }
 }

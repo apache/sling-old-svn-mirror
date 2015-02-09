@@ -192,12 +192,12 @@
                     <dependency>
                         <groupId>org.apache.sling</groupId>
                         <artifactId>org.apache.sling.launchpad.base</artifactId>
-                        <version>4.4.1-2.5.2</version>
+                        <version>4.6.0-2.5.6</version>
                     </dependency>
                     <dependency>
                         <groupId>org.apache.sling</groupId>
                         <artifactId>org.apache.sling.launchpad.base</artifactId>
-                        <version>4.4.1-2.5.2</version>
+                        <version>4.6.0-2.5.6</version>
                         <classifier>app</classifier>
                     </dependency>
                 </dependencies>
@@ -271,9 +271,10 @@
                                 <launchpad.webdav.server.url>http://${test.host}:${http.port}/${webdav.workspace.path}</launchpad.webdav.server.url>
                                 <HttpTestBase.readyTimeoutSeconds>${HttpTestBase.readyTimeoutSeconds}</HttpTestBase.readyTimeoutSeconds>
                                 
-                                <!-- Additional readyness checks, SLING-3235 -->
+                                <!-- Additional readyness checks, SLING-3235 and SLING-4261 -->
                                 <launchpad.ready.1>GET:/system/console/status-Configurations/configuration-status-20131115-101714.txt:200:config.comment.*setup the JSP engine for running tests</launchpad.ready.1>
                                 <launchpad.ready.2>GET:/.EXPORTED_PACKAGES.txt?package=org.apache.sling.api:200:PACKAGE FOUND.*org.apache.sling.api</launchpad.ready.2>
+                                <launchpad.ready.3>GET:/system/sling/junit/org.apache.sling.launchpad.testservices.serversidetests.WriteableResourcesTest.json:200:WriteableResourcesTest</launchpad.ready.3>
                             </systemPropertyVariables>
                         </configuration>
                     </plugin>
@@ -482,7 +483,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad.base</artifactId>
-            <version>4.4.1-2.5.2</version>
+            <version>4.6.0-2.5.6</version>
             <classifier>app</classifier>
         </dependency>
 

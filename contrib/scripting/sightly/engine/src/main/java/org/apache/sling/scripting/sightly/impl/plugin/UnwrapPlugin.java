@@ -22,15 +22,16 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.scripting.sightly.impl.compiler.common.DefaultPluginInvoke;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.Expression;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.ExpressionNode;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.node.BooleanConstant;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.node.StringConstant;
+import org.apache.sling.scripting.sightly.impl.compiler.frontend.CompilerContext;
 import org.apache.sling.scripting.sightly.impl.compiler.ris.Command;
 import org.apache.sling.scripting.sightly.impl.compiler.ris.command.Conditional;
+import org.apache.sling.scripting.sightly.impl.compiler.ris.command.Patterns;
 import org.apache.sling.scripting.sightly.impl.compiler.ris.command.VariableBinding;
-import org.apache.sling.scripting.sightly.impl.compiler.common.DefaultPluginInvoke;
-import org.apache.sling.scripting.sightly.impl.compiler.frontend.CompilerContext;
 import org.apache.sling.scripting.sightly.impl.compiler.util.stream.PushStream;
 
 /**
@@ -50,30 +51,44 @@ public class UnwrapPlugin extends PluginComponent {
 
             private final String variable = compilerContext.generateVariable("unwrapCondition");
             private final Command unwrapTest = new Conditional.Start(variable, false);
+            private boolean isSlyTag = false;
 
             @Override
             public void beforeElement(PushStream stream, String tagName) {
+                isSlyTag = "sly".equals(tagName.toLowerCase());
                 stream.emit(new VariableBinding.Start(variable, testNode()));
             }
 
             @Override
             public void beforeTagOpen(PushStream stream) {
+                if (isSlyTag) {
+                    Patterns.endStreamIgnore(stream);
+                }
                 stream.emit(unwrapTest);
             }
 
             @Override
             public void afterTagOpen(PushStream stream) {
                 stream.emit(Conditional.END);
+                if (isSlyTag) {
+                    Patterns.beginStreamIgnore(stream);
+                }
             }
 
             @Override
             public void beforeTagClose(PushStream stream, boolean isSelfClosing) {
+                if (isSlyTag) {
+                    Patterns.endStreamIgnore(stream);
+                }
                 stream.emit(unwrapTest);
             }
 
             @Override
             public void afterTagClose(PushStream stream, boolean isSelfClosing) {
                 stream.emit(Conditional.END);
+                if (isSlyTag) {
+                    Patterns.beginStreamIgnore(stream);
+                }
             }
 
             @Override

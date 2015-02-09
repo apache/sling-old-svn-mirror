@@ -134,7 +134,7 @@ public class ClusterViewServiceImpl implements ClusterViewService {
 
             View view = ViewHelper.getEstablishedView(resourceResolver, config);
             if (view == null) {
-                logger.debug("getEstablishedView: no view established at the moment. isolated mode");
+                logger.debug("getClusterView: no view established at the moment. isolated mode");
                 return getIsolatedClusterView();
             }
 
@@ -152,7 +152,7 @@ public class ClusterViewServiceImpl implements ClusterViewService {
             if (foundLocal) {
                 return clusterViewImpl;
             } else {
-                logger.info("getEstablishedView: the existing established view does not incude the local instance yet! Assuming isolated mode. "
+                logger.info("getClusterView: the existing established view does not incude the local instance ("+getSlingId()+") yet! Assuming isolated mode. "
                         + "If this occurs at runtime - other than at startup - it could cause a pseudo-network-partition, see SLING-3432. "
                         + "Consider increasing heartbeatTimeout then!");
                 return getIsolatedClusterView();

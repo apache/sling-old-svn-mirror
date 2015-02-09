@@ -73,9 +73,12 @@ body
 	background: -o-linear-gradient(-45deg,  rgba(0,0,0,0.4) 0%,rgba(0,0,0,0.7) 100%); /* Opera 11.10+ */
 	background: -ms-linear-gradient(-45deg,  rgba(0,0,0,0.4) 0%,rgba(0,0,0,0.7) 100%); /* IE10+ */
 	background: linear-gradient(-45deg,  rgba(0,0,0,0.4) 0%,rgba(0,0,0,0.7) 100%); /* W3C */
-	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a0000000', endColorstr='#c9000000',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
 }
 
+.ie9filter-plate-div {
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a0000000', endColorstr='#c9000000',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+	height: 100%;
+}
 .plate-box-shadow {
     box-shadow: 5px 5px 5px #888;
     -moz-box-shadow: 5px 5px 5px #888;
@@ -101,7 +104,7 @@ body
 .plate {
 	.plate-background;
 	.plate-box-shadow;
-	.rounded;
+	border-radius: 7px;
 	.plate-text-shadow;
 	
 	overflow: hidden;
@@ -305,4 +308,43 @@ input.jstree-rename-input{
 .jstree-default .jstree-anchor {
     height: 22px;
     line-height: 20px;
+}
+
+.info-content-container {
+	padding: 15px;
+	text-shadow: none;
+}
+
+#addNodeDialog .info-icon {
+	margin-right: 10px;
+	margin-top: 4px;
+}
+#tree-info-icon {
+	margin-right: 10px;
+	margin-top: 5px;
+}
+
+.info-icon {
+    height: 15px;
+    width: 16px;
+    display: inline-block;
+}
+.info-icon-dark {
+	background-image: url(../img/info_darkgray.png);
+}
+.info-icon-dark:hover {
+	background-image: url(../img/info_black.png);
+}
+
+.info-icon-lightgray {
+	background-image: url(../img/info_lightgray.png);
+}
+.info-icon-lightgray:hover {
+	background-image: url(../img/info_black.png);
+}
+.modal-body.vertical-form .form-group {
+	margin-bottom: 10px;
+}
+#addNodeDialog .form-group label a{
+	font-weight: normal;
 }

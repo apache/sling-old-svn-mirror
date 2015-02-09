@@ -60,7 +60,7 @@ public class LocalDistributionPackageImporter implements DistributionPackageImpo
                 log.info("Distribution package read and installed for path(s) {}", Arrays.toString(distributionPackage.getInfo().getPaths()));
 
             } else {
-                log.warn("could not read a distribution package");
+                log.warn("could not install distribution package {}", distributionPackage.getId());
             }
         } catch (Exception e) {
             log.error("cannot import a package from the given stream of type {}", distributionPackage.getType());

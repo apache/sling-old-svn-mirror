@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
 import javax.inject.Qualifier;
 
 /**
- * Provide a path on an @Inject. Not necessarily tied to the Resource Path injector (thus no
+ * Provide path(s) on an @Inject. Not necessarily tied to the Resource Path injector (thus no
  * @Source annotation), may be reused for other injector types.
  */
 @Target({ ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER })
@@ -32,6 +32,7 @@ import javax.inject.Qualifier;
 @Qualifier
 public @interface Path {
 
-    public String value();
+    public String value() default "";
+    public String[] paths() default {};
 
 }
