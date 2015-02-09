@@ -17,25 +17,9 @@
  * under the License.
  */
 
-package org.apache.sling.query.function;
+package org.apache.sling.query.api.internal;
 
 import java.util.Iterator;
 
-import org.apache.sling.query.api.internal.IteratorToIteratorFunction;
-import org.apache.sling.query.api.internal.Option;
-import org.apache.sling.query.iterator.ReverseIterator;
-
-public class NotFunction<T> implements IteratorToIteratorFunction<T> {
-
-	private IteratorToIteratorFunction<T> function;
-
-	public NotFunction(IteratorToIteratorFunction<T> function) {
-		this.function = function;
-	}
-
-	@Override
-	public Iterator<Option<T>> apply(Iterator<Option<T>> input) {
-		return new ReverseIterator<T>(function, input);
-	}
-
+public interface ElementToIteratorFunction<T> extends Function<T, Iterator<T>> {
 }

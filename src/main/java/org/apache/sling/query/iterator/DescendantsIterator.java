@@ -22,9 +22,9 @@ package org.apache.sling.query.iterator;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import org.apache.sling.query.LazyList;
 import org.apache.sling.query.api.TreeProvider;
-import org.apache.sling.query.api.function.Option;
+import org.apache.sling.query.api.internal.Option;
+import org.apache.sling.query.util.LazyList;
 
 public class DescendantsIterator<T> extends AbstractIterator<Option<T>> {
 

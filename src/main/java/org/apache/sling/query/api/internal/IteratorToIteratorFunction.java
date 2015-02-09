@@ -17,27 +17,9 @@
  * under the License.
  */
 
-package org.apache.sling.query;
+package org.apache.sling.query.api.internal;
 
-import java.util.Arrays;
 import java.util.Iterator;
 
-public final class IteratorUtils {
-
-	private IteratorUtils() {
-	}
-
-	public static <T> Iterator<T> arrayIterator(T... elements) {
-		return Arrays.asList(elements).iterator();
-	}
-
-	@SuppressWarnings("unchecked")
-	public static <T> Iterator<T> singleElementIterator(T element) {
-		return Arrays.asList(element).iterator();
-	}
-
-	@SuppressWarnings("unchecked")
-	public static <T> Iterator<T> emptyIterator() {
-		return Arrays.<T> asList().iterator();
-	}
+public interface IteratorToIteratorFunction<T> extends Function<Iterator<Option<T>>, Iterator<Option<T>>> {
 }
