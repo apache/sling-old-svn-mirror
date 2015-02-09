@@ -53,10 +53,11 @@ class JcrPropertyResource extends JcrItemResource<Property> { // this should be 
 
     public JcrPropertyResource(final ResourceResolver resourceResolver,
                                final String path,
+                               final String version,
                                final Property property,
                                final PathMapper pathMapper)
     throws RepositoryException {
-        super(resourceResolver, path, property, new ResourceMetadata(), pathMapper);
+        super(resourceResolver, path, version, property, new ResourceMetadata(), pathMapper);
         this.resourceType = getResourceTypeForNode(property.getParent())
                 + "/" + property.getName();
         if (PropertyType.BINARY != getProperty().getType()) {
