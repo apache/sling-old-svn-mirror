@@ -211,7 +211,7 @@ class MergingResourceProvider implements ResourceProvider {
                 // check parent for hiding
                 // SLING 3521 : if parent is not readable, nothing is hidden
                 final Resource parent = resource.getParent();
-                final boolean hidden = new ParentHidingHandler(parent).isHidden(holder.name);
+                final boolean hidden = (parent == null ? false : new ParentHidingHandler(parent).isHidden(holder.name));
                 if (hidden) {
                     holder.resources.clear();
                 } else if (!ResourceUtil.isNonExistingResource(resource)) {
