@@ -34,7 +34,7 @@
 
     <name>Apache Sling (Builder)</name>
     <description>
-        Pseudo project to build the complete Sling project
+        Pseudo project to build the complete Apache Sling project.
     </description>
 
     <inceptionYear>2007</inceptionYear>
