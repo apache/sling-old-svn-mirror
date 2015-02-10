@@ -354,7 +354,7 @@ public class ClusterTest {
                 success = true;
                 logger.info("testConnectorSwitching4139: successfully switched all pings to instance2 after "+i+" rounds.");
                 if (i<20) {
-                    logger.info("testDuplicateInstance3726: min loop cnt not yet reached: i="+i);
+                    logger.info("testConnectorSwitching4139: min loop cnt not yet reached: i="+i);
                     Thread.sleep(500); // 20x500ms = 10sec max - (vs 5sec timeout) - should be enough for timing out
                     continue;
                 }
@@ -402,6 +402,11 @@ public class ClusterTest {
             final ClusterView i3Cluster = i3.getClusterView();
             final int i3ClusterSize = i3Cluster.getInstances().size();
             if (i3ClusterSize==1) {
+                if (i<20) {
+                    logger.info("testConnectorSwitching4139: [2] min loop cnt not yet reached: i="+i);
+                    Thread.sleep(500); // 20x500ms = 10sec max - (vs 5sec timeout) - should be enough for timing out
+                    continue;
+                }
                 success = true;
                 break;
             }
