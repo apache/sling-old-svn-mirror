@@ -209,7 +209,7 @@ public class XSSAPIImpl implements XSSAPI {
     /** http://www.w3.org/TR/css-syntax-3/#ident-token-diagram */
     private static final String IDENTIFIER = "-?[a-z_" + NON_ASCII + "][\\w_\\-" + NON_ASCII + "]*";
     /** http://www.w3.org/TR/css-syntax-3/#string-token-diagram */
-    private static final String STRING = "\"(?:[^\"^\\\\^\\n]|(?:\\\\\"))*\"|'(?:[^'^\\\\^\\n]|(?:\\\\'))*'";
+    private static final String STRING = "\"(?:(?!javascript\\s?:)[^\"^\\\\^\\n]|(?:\\\\\"))*\"|'(?:(?!javascript\\s?:)[^'^\\\\^\\n]|(?:\\\\'))*'";
     /** http://www.w3.org/TR/css-syntax-3/#dimension-token-diagram */
     private static final String DIMENSION = NUMBER + IDENTIFIER;
     /** http://www.w3.org/TR/css-syntax-3/#percentage-token-diagram */
