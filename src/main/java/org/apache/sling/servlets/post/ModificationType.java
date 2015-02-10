@@ -68,5 +68,11 @@ public enum ModificationType {
     /**
      * A Node has been checked in. The source path provides the path of the node.
      */
-    CHECKIN
+    CHECKIN,
+    
+    /**
+     * A Node has been restored to a given version. The soruce path provides the
+     * path of the node and the destination describes the target version.
+     */
+    RESTORE
 }

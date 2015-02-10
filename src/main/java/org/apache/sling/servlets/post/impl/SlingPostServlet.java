@@ -68,6 +68,7 @@ import org.apache.sling.servlets.post.impl.operations.ImportOperation;
 import org.apache.sling.servlets.post.impl.operations.ModifyOperation;
 import org.apache.sling.servlets.post.impl.operations.MoveOperation;
 import org.apache.sling.servlets.post.impl.operations.NopOperation;
+import org.apache.sling.servlets.post.impl.operations.RestoreOperation;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -400,6 +401,8 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
             SlingPostConstants.OPERATION_CHECKIN, new CheckinOperation()));
         providedServices.add(registerOperation(bundleContext,
             SlingPostConstants.OPERATION_CHECKOUT, new CheckoutOperation()));
+        providedServices.add(registerOperation(bundleContext,
+                SlingPostConstants.OPERATION_RESTORE, new RestoreOperation()));
         providedServices.add(registerOperation(bundleContext,
             SlingPostConstants.OPERATION_IMPORT, importOperation));
 
