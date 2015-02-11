@@ -540,6 +540,9 @@ public class SlingAuthenticator implements Authenticator,
                                     + holder + ", access forbidden", ioe);
                             done = true;
                         }
+                        if (done) {
+                            break;
+                        }
                     }
                 }
             }
