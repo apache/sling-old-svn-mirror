@@ -86,6 +86,7 @@ public class SlingLogPanel extends HttpServlet {
             Level.INFO.levelStr,
             Level.DEBUG.levelStr,
             Level.TRACE.levelStr,
+            Level.OFF.levelStr
     };
 
     private static final String PACKAGE_SEPARATOR = ".";

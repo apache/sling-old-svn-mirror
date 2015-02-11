@@ -460,7 +460,7 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
      * {@link LogConfigManager#LOG_PATTERN_DEFAULT} is used.</dd>
      * <dt>{@link LogConfigManager#LOG_LEVEL}</dt>
      * <dd>The log level to use for log message limitation. The supported values
-     * are <code>trace</code>, <code>debug</code>, <code>info</code>,
+     * are <code>off</code>, <code>trace</code>, <code>debug</code>, <code>info</code>,
      * <code>warn</code> and <code>error</code>. Case does not matter. If this
      * property is missing a <code>ConfigurationException</code> is thrown and
      * this logger configuration is not used.</dd>
