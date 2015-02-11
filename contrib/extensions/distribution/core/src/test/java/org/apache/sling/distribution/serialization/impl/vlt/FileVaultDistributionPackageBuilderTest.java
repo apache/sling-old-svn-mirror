@@ -130,6 +130,7 @@ public class FileVaultDistributionPackageBuilderTest {
         when(resourceResolver.adaptTo(Session.class)).thenReturn(session);
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         when(distributionPackage.getId()).thenReturn(tempFile.getAbsolutePath());
+        when(distributionPackage.getType()).thenReturn("filevlt");
         DistributionPackageInfo info = new DistributionPackageInfo();
         info.setRequestType(DistributionRequestType.ADD);
         info.setPaths(new String[]{"/something"});
@@ -160,6 +161,7 @@ public class FileVaultDistributionPackageBuilderTest {
         when(resourceResolver.adaptTo(Session.class)).thenReturn(session);
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         when(distributionPackage.getId()).thenReturn(tempFile.getAbsolutePath());
+        when(distributionPackage.getType()).thenReturn("filevlt");
         DistributionPackageInfo info = new DistributionPackageInfo();
         info.setRequestType(DistributionRequestType.ADD);
         info.setPaths(new String[]{"/something"});

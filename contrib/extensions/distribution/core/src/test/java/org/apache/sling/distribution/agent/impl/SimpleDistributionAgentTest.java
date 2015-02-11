@@ -239,7 +239,7 @@ public class SimpleDistributionAgentTest {
                 false, "serviceName", packageImporter,
                 packageExporter, packageExporterStrategy,
                 queueProvider, queueDistributionStrategy,
-                distributionEventFactory, resolverFactory, mock(DefaultDistributionLog.class), null, "/content");
+                distributionEventFactory, resolverFactory, mock(DefaultDistributionLog.class), null, new String[] { "/content" });
 
         DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, "/content");
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
@@ -278,7 +278,7 @@ public class SimpleDistributionAgentTest {
                 false, "serviceName", packageImporter,
                 packageExporter, packageExporterStrategy,
                 queueProvider, queueDistributionStrategy,
-                distributionEventFactory, resolverFactory, mock(DefaultDistributionLog.class), null, "/content");
+                distributionEventFactory, resolverFactory, mock(DefaultDistributionLog.class), null, new String[] { "/content" });
 
         DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, "/home");
         DistributionPackage distributionPackage = mock(DistributionPackage.class);

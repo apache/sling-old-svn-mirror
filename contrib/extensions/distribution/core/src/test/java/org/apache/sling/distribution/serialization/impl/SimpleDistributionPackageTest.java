@@ -39,7 +39,7 @@ public class SimpleDistributionPackageTest {
     public void testCreatedAndReadPackagesEquality() throws Exception {
         DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.DELETE, "/abc");
         SimpleDistributionPackage createdPackage = new SimpleDistributionPackage(request, "VOID");
-        SimpleDistributionPackage readPackage = SimpleDistributionPackage.fromStream(new ByteArrayInputStream(("DSTRPCK:DELETE|/abc|VOID").getBytes()));
+        SimpleDistributionPackage readPackage = SimpleDistributionPackage.fromStream(new ByteArrayInputStream(("DSTRPCK:DELETE|/abc").getBytes()), "VOID");
         assertEquals(createdPackage.getType(), readPackage.getType());
         assertEquals(createdPackage.getInfo().getRequestType(), readPackage.getInfo().getRequestType());
         assertEquals(Arrays.toString(createdPackage.getInfo().getPaths()), Arrays.toString(readPackage.getInfo().getPaths()));

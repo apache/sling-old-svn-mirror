@@ -83,7 +83,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         if (!stream.markSupported()) {
             stream = new BufferedInputStream(stream);
         }
-        distributionPackage = SimpleDistributionPackage.fromStream(stream);
+        distributionPackage = SimpleDistributionPackage.fromStream(stream, type);
 
 
         stream.mark(-1);
@@ -98,6 +98,11 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
     public boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageReadingException {
 
         DistributionRequestType actionType = distributionPackage.getInfo().getRequestType();
+
+        if (!type.equals(distributionPackage.getType())) {
+            throw new DistributionPackageReadingException("not supported package type" + distributionPackage.getType());
+        }
+
         boolean installed = false;
         if (DistributionRequestType.DELETE.equals(actionType)) {
             installed = installDeletePackage(resourceResolver, distributionPackage);
@@ -134,8 +139,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
     }
 
     public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String id) {
-        DistributionPackage distributionPackage = SimpleDistributionPackage.fromIdString(id);
-
+        DistributionPackage distributionPackage = SimpleDistributionPackage.fromIdString(id, type);
 
         // not a simple package
         if (distributionPackage == null) {

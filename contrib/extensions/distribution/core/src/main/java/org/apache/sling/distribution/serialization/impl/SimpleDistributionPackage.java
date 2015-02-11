@@ -84,14 +84,10 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
             }
         }
 
-        b.append(DELIM);
-        b.append(type);
-
-
         return b.toString();
     }
 
-    public static SimpleDistributionPackage fromIdString(String id) {
+    public static SimpleDistributionPackage fromIdString(String id, String type) {
         if (!id.startsWith(PACKAGE_START)) {
             return null;
         }
@@ -101,21 +97,22 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
 
         String[] parts = id.split(Pattern.quote(DELIM));
 
-        if (parts.length < 3) return null;
+        if (parts.length < 1 || parts.length > 2)  {
+            return null;
+        }
 
         String actionString = parts[0];
-        String pathsString = parts[1];
-        String typeString = parts[2];
+        String pathsString = parts.length < 2 ? null : parts[1];
 
 
         DistributionRequestType distributionRequestType = DistributionRequestType.fromName(actionString);
 
         SimpleDistributionPackage distributionPackage = null;
         if (distributionRequestType != null) {
-            String[] paths = pathsString.split(PATH_DELIM);
+            String[] paths = pathsString == null ? null :  pathsString.split(PATH_DELIM);
 
             DistributionRequest request = new SimpleDistributionRequest(distributionRequestType, paths);
-            distributionPackage = new SimpleDistributionPackage(request, typeString);
+            distributionPackage = new SimpleDistributionPackage(request, type);
         }
 
         return distributionPackage;
@@ -146,7 +143,7 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
         return id;
     }
 
-    public static SimpleDistributionPackage fromStream(InputStream stream)  {
+    public static SimpleDistributionPackage fromStream(InputStream stream, String type)  {
 
         try {
             int size = SimpleDistributionPackage.PACKAGE_START.getBytes("UTF-8").length;
@@ -159,7 +156,7 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
             if (bytesRead > 0 && buffer[0] > 0 && s.startsWith(SimpleDistributionPackage.PACKAGE_START)) {
                 String streamString = IOUtils.toString(stream, "UTF-8");
 
-                return fromIdString(streamString);
+                return fromIdString(streamString, type);
             }
         } catch (IOException e) {
             log.error("cannot read stream", e);
