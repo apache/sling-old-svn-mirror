@@ -66,7 +66,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     private final Logger logger = LoggerFactory.getLogger(ResourceResolverImpl.class);
 
     private static final Map<String, String> EMPTY_PARAMETERS = Collections.emptyMap();
-    
+
     private static final String MANGLE_NAMESPACE_IN_SUFFIX = "_";
 
     private static final String MANGLE_NAMESPACE_IN_PREFIX = "/_";
@@ -104,6 +104,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final ResourceResolverContext ctx) {
         this.factory = factory;
         this.context = ctx;
+        this.factory.add(this, ctx);
     }
 
     /**
@@ -148,17 +149,6 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             this.context.close();
             this.factory.closed(this);
         }
-    }
-
-    /**
-     * Calls the {@link #close()} method to ensure the resolver is properly
-     * cleaned up before it is being collected by the garbage collector because
-     * it is not referred to any more.
-     */
-    @Override
-    protected void finalize() throws Throwable {
-        close();
-        super.finalize();
     }
 
     /**
@@ -317,8 +307,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         for (int i = 0; res == null && i < realPathList.length; i++) {
             final ParsedParameters parsedPath = new ParsedParameters(realPathList[i]);
             final String realPath = parsedPath.getRawPath();
-            
-            
+
+
             // first check whether the requested resource is a StarResource
             if (StarResource.appliesTo(realPath)) {
                 logger.debug("resolve: Mapped path {} is a Star Resource", realPath);
@@ -624,7 +614,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * Methods concatenates two paths. If the first path contains parameters separated semicolon, they are
      * moved at the end of the result.
-     * 
+     *
      * @param pathWithParameters
      * @param segmentToAppend
      * @return
