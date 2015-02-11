@@ -18,12 +18,17 @@
  */
 package org.apache.sling.resourceresolver.impl;
 
+import java.lang.ref.ReferenceQueue;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Stack;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.collections.BidiMap;
@@ -61,12 +66,40 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     /**
      * Thread local holding the resource resolver stack
      */
-    private ThreadLocal<Stack<ResourceResolver>> resolverStackHolder = new ThreadLocal<Stack<ResourceResolver>>();
+    private ThreadLocal<Stack<WeakReference<ResourceResolver>>> resolverStackHolder = new ThreadLocal<Stack<WeakReference<ResourceResolver>>>();
 
     private final AtomicBoolean isActive = new AtomicBoolean(true);
 
+    private final ReferenceQueue<ResourceResolver> resolverReferenceQueue = new ReferenceQueue<ResourceResolver>();
+
+    private final Set<ResolverWeakReference> refs = new ConcurrentSkipListSet<CommonResourceResolverFactoryImpl.ResolverWeakReference>();
+
+    private final Thread refQueueThread;
+
     public CommonResourceResolverFactoryImpl(final ResourceResolverFactoryActivator activator) {
         this.activator = activator;
+        this.refQueueThread = new Thread("Apache Sling Resource Resolver Finalizer Thread") {
+
+            @Override
+            public void run() {
+                while ( isActive.get() ) {
+                    try {
+                        final ResolverWeakReference ref = (ResolverWeakReference) resolverReferenceQueue.remove();
+                        ref.close();
+                        refs.remove(ref);
+                    } catch ( final InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+                for(final ResolverWeakReference ref : refs) {
+                    ref.close();
+                }
+                refs.clear();
+            }
+
+        };
+        this.refQueueThread.setDaemon(true);
+        this.refQueueThread.start();
     }
 
     // ---------- Resource Resolver Factory ------------------------------------
@@ -111,12 +144,12 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         }
 
         final ResourceResolver result = getResourceResolverInternal(authenticationInfo, false);
-        Stack<ResourceResolver> resolverStack = resolverStackHolder.get();
+        Stack<WeakReference<ResourceResolver>> resolverStack = resolverStackHolder.get();
         if ( resolverStack == null ) {
-            resolverStack = new Stack<ResourceResolver>();
+            resolverStack = new Stack<WeakReference<ResourceResolver>>();
             resolverStackHolder.set(resolverStack);
         }
-        resolverStack.push(result);
+        resolverStack.push(new WeakReference<ResourceResolver>(result));
         return result;
     }
 
@@ -130,9 +163,14 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         }
 
         ResourceResolver result = null;
-        final Stack<ResourceResolver> resolverStack = resolverStackHolder.get();
-        if ( resolverStack != null && !resolverStack.isEmpty() ) {
-            result = resolverStack.peek();
+        final Stack<WeakReference<ResourceResolver>> resolverStack = resolverStackHolder.get();
+        if ( resolverStack != null) {
+            while ( result == null && !resolverStack.isEmpty() ) {
+                result = resolverStack.peek().get();
+                if ( result == null ) {
+                    resolverStack.pop();
+                }
+            }
         }
         return result;
     }
@@ -146,11 +184,20 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     public void closed(final ResourceResolverImpl resourceResolverImpl) {
         // on shutdown, the factory might already be closed before the resolvers close
         // therefore we have to check for null
-        final ThreadLocal<Stack<ResourceResolver>> tl = resolverStackHolder;
+        final ThreadLocal<Stack<WeakReference<ResourceResolver>>> tl = resolverStackHolder;
         if ( tl != null ) {
-            final Stack<ResourceResolver> resolverStack = tl.get();
+            final Stack<WeakReference<ResourceResolver>> resolverStack = tl.get();
             if ( resolverStack != null ) {
-                resolverStack.remove(resourceResolverImpl);
+                final Iterator<WeakReference<ResourceResolver>> i = resolverStack.iterator();
+                while ( i.hasNext() ) {
+                    final WeakReference<ResourceResolver> ref = i.next();
+                    if ( ref.get() == null || ref.get() == resourceResolverImpl ) {
+                        i.remove();
+                    }
+                }
+                if ( resolverStack.isEmpty() ) {
+                    tl.remove();
+                }
             }
         }
     }
@@ -205,6 +252,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
      */
     protected void deactivate() {
         isActive.set(false);
+        this.refQueueThread.interrupt();
         if (plugin != null) {
             plugin.dispose();
             plugin = null;
@@ -304,5 +352,30 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
 
     public boolean isLive() {
         return this.isActive.get();
+    }
+
+    public void add(final ResourceResolver resolver, final ResourceResolverContext ctx) {
+        // create new weak reference
+        refs.add(new ResolverWeakReference(resolver, this.resolverReferenceQueue, ctx));
+    }
+
+    private static final class ResolverWeakReference extends WeakReference<ResourceResolver> implements Comparable<ResolverWeakReference>{
+
+        private final ResourceResolverContext context;
+
+        public ResolverWeakReference(final ResourceResolver referent,
+                final ReferenceQueue<? super ResourceResolver> q,
+                final ResourceResolverContext ctx) {
+            super(referent, q);
+            this.context = ctx;
+        }
+
+        public void close() {
+            this.context.close();
+        }
+
+        public int compareTo(final ResolverWeakReference o) {
+            return context.hashCode() - o.hashCode();
+        }
     }
 }
