@@ -110,10 +110,10 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
                 }
 
                 Content content = response.returnContent();
-                log.info("distribution content of type {} for {} delivered: {}", new Object[]{
+                log.info("delivered package {} of type {} with paths {}", new Object[]{
+                        distributionPackage.getId(),
                         distributionPackage.getType(),
                         Arrays.toString(distributionPackage.getInfo().getPaths()),
-                        content
                 });
             } catch (Exception ex) {
                 throw new DistributionTransportException(ex);

@@ -93,8 +93,8 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
 
 
 
-    @Property(label = "Allowed root", description = "If set the agent will allow only distribution requests under the specified root.")
-    private static final String ALLOWED_ROOT = "allowed.root";
+    @Property(label = "Allowed roots", description = "If set the agent will allow only distribution requests under the specified roots.")
+    private static final String ALLOWED_ROOTS = "allowed.roots";
 
 
     @Property(name = "requestAuthorizationStrategy.target", label = "Request Authorization Strategy", description = "The target reference for the DistributionRequestAuthorizationStrategy used to authorize the access to distribution process," +
@@ -150,7 +150,7 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
     protected SimpleDistributionAgent createAgent(String agentName, BundleContext context, Map<String, Object> config, DefaultDistributionLog distributionLog) {
 
         String serviceName = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
-        String allowedRoot = PropertiesUtil.toString(config.get(ALLOWED_ROOT), null);
+        String[] allowedRoots = PropertiesUtil.toStringArray(config.get(ALLOWED_ROOTS), null);
         DistributionQueueProvider queueProvider =  new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
         DistributionQueueDispatchingStrategy dispatchingStrategy = new SingleQueueDispatchingStrategy();
         DistributionPackageExporter packageExporter = new LocalDistributionPackageExporter(packageBuilder);
@@ -159,6 +159,6 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
 
         return new SimpleDistributionAgent(agentName, false, serviceName,
                 null, packageExporter, requestAuthorizationStrategy,
-                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory, distributionLog, allowedRequests, allowedRoot);
+                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory, distributionLog, allowedRequests, allowedRoots);
     }
 }

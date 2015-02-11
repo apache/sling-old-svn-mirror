@@ -89,7 +89,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
     private boolean active = false;
     private final DefaultDistributionLog log;
     private final DistributionRequestType[] allowedRequests;
-    private final String allowedRoot;
+    private final String[] allowedRoots;
 
     public SimpleDistributionAgent(String name,
                                    boolean queueProcessingEnabled,
@@ -103,10 +103,10 @@ public class SimpleDistributionAgent implements DistributionAgent {
                                    ResourceResolverFactory resourceResolverFactory,
                                    DefaultDistributionLog log,
                                    DistributionRequestType[] allowedRequests,
-                                   String allowedRoot) {
+                                   String[] allowedRoots) {
         this.log = log;
         this.allowedRequests = allowedRequests;
-        this.allowedRoot = allowedRoot;
+        this.allowedRoots = allowedRoots;
 
         // check configuration is valid
         if (name == null
@@ -439,7 +439,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
     }
 
     boolean isAcceptedRequestRoot(DistributionRequest request) {
-        if (allowedRoot == null || !allowedRoot.startsWith("/")) {
+        if (allowedRoots == null || allowedRoots.length == 0) {
             return true;
         }
 
@@ -448,7 +448,15 @@ public class SimpleDistributionAgent implements DistributionAgent {
         }
 
         for (String path : request.getPaths()) {
-            if(!path.startsWith(allowedRoot)) {
+            boolean allowed = false;
+            for (String allowedRoot: allowedRoots) {
+                if(allowedRoot != null && allowedRoot.trim().length() != 0
+                        && path.startsWith(allowedRoot)) {
+                    allowed = true;
+                }
+            }
+
+            if (!allowed) {
                 return false;
             }
         }
