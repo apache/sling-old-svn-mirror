@@ -106,7 +106,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             final ResourceResolverContext ctx) {
         this.factory = factory;
         this.context = ctx;
-        this.factory.addToFinalizeList(this, ctx);
+        this.factory.register(this, ctx);
     }
 
     /**
@@ -148,7 +148,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     public void close() {
         if ( this.isClosed.compareAndSet(false, true)) {
             this.context.close();
-            this.factory.closed(this);
+            this.factory.unregister(this);
         }
     }
 
