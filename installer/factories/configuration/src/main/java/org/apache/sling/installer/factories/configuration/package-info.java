@@ -17,7 +17,7 @@
  * under the License.
  */
 
-@Version("1.1.0")
+@Version("1.1.2")
 package org.apache.sling.installer.factories.configuration;
 
 import aQute.bnd.annotation.Version;
