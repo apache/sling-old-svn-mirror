@@ -80,10 +80,6 @@
                             <directory>${basedir}</directory>
                             <includes>
                                 <include>derby.log</include>
-                                <include>cachedir</include>
-                                <include>sling/**</include>
-                                <include>jackrabbit</include>
-                                <include>coverage.ec</include>
                             </includes>
                         </fileset>
                     </filesets>
@@ -169,6 +165,7 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <slingHome>${project.build.directory}/sling</slingHome>
                     <httpPort>${http.port}</httpPort>
                     <controlHost>${test.host}</controlHost>
                     <controlPort>${sling.control.port}</controlPort>
