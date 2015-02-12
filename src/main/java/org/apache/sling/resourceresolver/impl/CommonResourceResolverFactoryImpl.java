@@ -376,7 +376,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         }
 
         public int compareTo(final ResolverWeakReference o) {
-            return context.hashCode() - o.hashCode();
+            return context.hashCode() - o.context.hashCode();
         }
     }
 }
