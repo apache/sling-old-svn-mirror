@@ -354,7 +354,8 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         return this.isActive.get();
     }
 
-    public void add(final ResourceResolver resolver, final ResourceResolverContext ctx) {
+    public void addToFinalizeList(final ResourceResolver resolver,
+            final ResourceResolverContext ctx) {
         // create new weak reference
         refs.add(new ResolverWeakReference(resolver, this.resolverReferenceQueue, ctx));
     }
