@@ -48,7 +48,7 @@ import org.thymeleaf.processor.IProcessor;
     @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
     @Property(name = Constants.SERVICE_DESCRIPTION, value = "Sling dialect for Sling Scripting Thymeleaf")
 })
-public class SlingDialect extends AbstractDialect {
+public final class SlingDialect extends AbstractDialect {
 
     public static final String PREFIX = "sling";
 
