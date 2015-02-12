@@ -32,6 +32,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.sightly.ResourceResolution;
+import org.apache.sling.scripting.sightly.impl.compiler.CompilerException;
 import org.apache.sling.scripting.sightly.impl.compiler.SightlyJavaCompilerService;
 import org.apache.sling.scripting.sightly.pojo.Use;
 import org.apache.sling.scripting.sightly.render.RenderContext;
@@ -63,16 +64,15 @@ import org.slf4j.LoggerFactory;
 })
 public class PojoUseProvider implements UseProvider {
 
-    private final Logger LOG = LoggerFactory.getLogger(PojoUseProvider.class);
-
-    private static final Pattern javaPattern = Pattern.compile("([[\\p{L}&&[^\\p{Lu}]]_$][\\p{L}\\p{N}_$]*\\.)*[\\p{Lu}_$][\\p{L}\\p{N}_$]*");
+    private static final Logger LOG = LoggerFactory.getLogger(PojoUseProvider.class);
+    private static final Pattern JAVA_PATTERN = Pattern.compile("([[\\p{L}&&[^\\p{Lu}]]_$][\\p{L}\\p{N}_$]*\\.)*[\\p{Lu}_$][\\p{L}\\p{N}_$]*");
 
     @Reference
     private SightlyJavaCompilerService sightlyJavaCompilerService = null;
 
     @Override
     public ProviderOutcome provide(String identifier, RenderContext renderContext, Bindings arguments) {
-        if (!javaPattern.matcher(identifier).matches()) {
+        if (!JAVA_PATTERN.matcher(identifier).matches()) {
             LOG.debug("Identifier {} does not match a Java class name pattern.", identifier);
             return ProviderOutcome.failure();
         }
@@ -87,9 +87,13 @@ public class PojoUseProvider implements UseProvider {
             if (result instanceof Use) {
                 ((Use) result).init(bindings);
             }
-            return ProviderOutcome.notNullOrFailure(result);
+            return ProviderOutcome.success(result);
         } catch (Exception e) {
-            return ProviderOutcome.failure(e);
+            if (e instanceof CompilerException) {
+                return ProviderOutcome.failure(e);
+            } else {
+                return ProviderOutcome.failure();
+            }
         }
     }
 }

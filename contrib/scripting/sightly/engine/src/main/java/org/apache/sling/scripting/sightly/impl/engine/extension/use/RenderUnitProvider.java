@@ -70,7 +70,7 @@ public class RenderUnitProvider implements UseProvider {
             Bindings globalBindings = renderContext.getBindings();
             Resource renderUnitResource = locateResource(globalBindings, identifier, renderContext);
             RenderUnit renderUnit = unitLoader.createUnit(renderUnitResource, globalBindings, (RenderContextImpl) renderContext);
-            return ProviderOutcome.notNullOrFailure(renderUnit);
+            return ProviderOutcome.success(renderUnit);
         }
         return ProviderOutcome.failure();
     }

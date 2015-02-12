@@ -24,6 +24,9 @@ package org.apache.sling.scripting.sightly.use;
  */
 public final class ProviderOutcome {
 
+    // a generic failure without a cause returned by #failure()
+    private static final ProviderOutcome GENERIC_FAILURE = new ProviderOutcome(false, null, null);
+
     // whether this is a success or failure
     private final boolean success;
 
@@ -33,8 +36,18 @@ public final class ProviderOutcome {
     // the reason for failure in case of failure (may be null)
     private final Throwable cause;
 
-    // a generic failure without a cause returned by #failure()
-    private static final ProviderOutcome GENERIC_FAILURE = new ProviderOutcome(false, null, null);
+    /**
+     * Creates an outcome instance
+     *
+     * @param success {@code true} to indicate success or {@code false} to indicate failure
+     * @param result  optional result value in case of success, may be {@code null}
+     * @param cause   optional cause in case of failure, may be {@code null}
+     */
+    private ProviderOutcome(boolean success, Object result, Throwable cause) {
+        this.success = success;
+        this.result = result;
+        this.cause = cause;
+    }
 
     /**
      * Create a successful outcome
@@ -47,7 +60,9 @@ public final class ProviderOutcome {
     }
 
     /**
-     * Create a failed outcome without a specific {@link #getCause() cause}
+     * Create a failed outcome without a specific {@link #getCause() cause}. This method must be used for creating outcomes that don't
+     * signal an error but rather the fact that the {@link UseProvider} is not capable of fulfilling the request.
+     *
      * @return a failed outcome
      */
     public static ProviderOutcome failure() {
@@ -55,10 +70,10 @@ public final class ProviderOutcome {
     }
 
     /**
-     * Create a failed outcome with the given {@link #getCause() cause}
+     * Create a failed outcome with the given {@link #getCause() cause}. This method must be used when the {@link UseProvider} is
+     * capable of fulfilling the request but an error condition prevents the provider from doing so.
      *
      * @param cause The reason for this failure, which may be {@code null}
-     *
      * @return a failed outcome
      */
     public static ProviderOutcome failure(Throwable cause) {
@@ -66,30 +81,14 @@ public final class ProviderOutcome {
     }
 
     /**
-     * If the given obj is not {@code null} return a {@link #success(Object)
-     * successful outcome}, with the given result. Otherwise, return
-     * {@link #failure()}
+     * If the given obj is not {@code null} return a {@link #success(Object) successful outcome}, with the given result. Otherwise, return
+     * {@link #failure()}.
      *
      * @param obj the result
      * @return an outcome based on whether the parameter is null or not
      */
     public static ProviderOutcome notNullOrFailure(Object obj) {
         return (obj == null) ? failure() : success(obj);
-    }
-
-    /**
-     * Creates an outcome instance
-     *
-     * @param success {@code true} to indicate success or {@code false} to
-     *            indicate failure
-     * @param result optional result value in case of success, may be
-     *            {@code null}
-     * @param cause optional cause in case of failure, may be {@code null}
-     */
-    private ProviderOutcome(boolean success, Object result, Throwable cause) {
-        this.success = success;
-        this.result = result;
-        this.cause = cause;
     }
 
     /**
@@ -111,7 +110,7 @@ public final class ProviderOutcome {
     }
 
     /**
-     * Get the result in this outcome
+     * Get the result in this outcome.
      *
      * @return the result of the container
      * @throws IllegalStateException if the outcome is a failure
@@ -124,8 +123,7 @@ public final class ProviderOutcome {
     }
 
     /**
-     * Returns the cause for this failure outcome or {@code null} if this
-     * outcome is a success or no cause has been defined with the
+     * Returns the cause for this failure outcome or {@code null} if this outcome is a success or no cause has been defined with the
      * {@link #failure(Throwable)} method.
      *
      * @return the cause for this failure outcome.
