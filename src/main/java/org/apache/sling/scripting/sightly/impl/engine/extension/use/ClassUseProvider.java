@@ -21,6 +21,7 @@ package org.apache.sling.scripting.sightly.impl.engine.extension.use;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import javax.script.Bindings;
 import javax.servlet.ServletRequest;
@@ -38,6 +39,8 @@ import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.use.ProviderOutcome;
 import org.apache.sling.scripting.sightly.use.UseProvider;
 import org.osgi.framework.Constants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Interprets the identifier as a class name and tries to load that class
@@ -62,8 +65,15 @@ import org.osgi.framework.Constants;
 })
 public class ClassUseProvider implements UseProvider {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ClassUseProvider.class);
+    private static final Pattern JAVA_PATTERN = Pattern.compile("([[\\p{L}&&[^\\p{Lu}]]_$][\\p{L}\\p{N}_$]*\\.)*[\\p{Lu}_$][\\p{L}\\p{N}_$]*");
+
     @Override
     public ProviderOutcome provide(String identifier, RenderContext renderContext, Bindings arguments) {
+        if (!JAVA_PATTERN.matcher(identifier).matches()) {
+            LOG.debug("Identifier {} does not match a Java class name pattern.", identifier);
+            return ProviderOutcome.failure();
+        }
         Bindings globalBindings = renderContext.getBindings();
         Bindings bindings = UseProviderUtils.merge(globalBindings, arguments);
         SlingScriptHelper sling = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
@@ -79,12 +89,12 @@ public class ClassUseProvider implements UseProvider {
             if (obj == null) {
                 obj = request.adaptTo(cls);
             }
+            return ProviderOutcome.success(obj);
         } catch (ClassNotFoundException e) {
-            obj = null;
+            return ProviderOutcome.failure(e);
         } finally {
             resetRequestAttribute(request, overrides);
         }
-        return ProviderOutcome.notNullOrFailure(obj);
     }
 
     private Map<String, Object> setRequestAttributes(ServletRequest request, Bindings arguments) {

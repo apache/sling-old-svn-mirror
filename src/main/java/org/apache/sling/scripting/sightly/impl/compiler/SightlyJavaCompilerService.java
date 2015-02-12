@@ -220,16 +220,14 @@ public class SightlyJavaCompilerService {
     private Object loadObject(String className) {
         try {
             readLock.lock();
-            try {
-                if (classLoaderWriter != null) {
-                    return classLoaderWriter.getClassLoader().loadClass(className).newInstance();
-                }
-            } finally {
-                readLock.unlock();
+            if (classLoaderWriter != null) {
+                return classLoaderWriter.getClassLoader().loadClass(className).newInstance();
             }
             return Class.forName(className).newInstance();
-        } catch (Exception e) {
-            throw new CompilerException(CompilerException.CompilerExceptionCause.COMPILER_ERRORS, e);
+        } catch (Throwable t) {
+            throw new CompilerException(CompilerException.CompilerExceptionCause.COMPILER_ERRORS, t);
+        } finally {
+            readLock.unlock();
         }
     }
 
@@ -256,6 +254,8 @@ public class SightlyJavaCompilerService {
                 LOG.debug("compilation took {}ms", end - start);
             }
             return compilationResult.loadCompiledClass(compilationUnit.getMainClassName()).newInstance();
+        } catch (Throwable t) {
+            throw new CompilerException(CompilerException.CompilerExceptionCause.COMPILER_ERRORS, t);
         } finally {
             writeLock.unlock();
         }
