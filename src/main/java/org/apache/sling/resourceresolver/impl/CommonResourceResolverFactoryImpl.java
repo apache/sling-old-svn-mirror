@@ -181,7 +181,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
      * Inform about a closed resource resolver.
      * Make sure to remove it from the current thread context.
      */
-    public void closed(final ResourceResolverImpl resourceResolverImpl) {
+    public void unregister(final ResourceResolverImpl resourceResolverImpl) {
         // on shutdown, the factory might already be closed before the resolvers close
         // therefore we have to check for null
         final ThreadLocal<Stack<WeakReference<ResourceResolver>>> tl = resolverStackHolder;
@@ -354,7 +354,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         return this.isActive.get();
     }
 
-    public void addToFinalizeList(final ResourceResolver resolver,
+    public void register(final ResourceResolver resolver,
             final ResourceResolverContext ctx) {
         // create new weak reference
         refs.add(new ResolverWeakReference(resolver, this.resolverReferenceQueue, ctx));
