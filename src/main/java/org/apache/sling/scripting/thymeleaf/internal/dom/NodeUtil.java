@@ -20,7 +20,7 @@ package org.apache.sling.scripting.thymeleaf.internal.dom;
 
 import org.thymeleaf.dom.Node;
 
-public class NodeUtil {
+public final class NodeUtil {
 
     public static <T> T getNodeProperty(final Node node, final String name, final Class<T> clazz) {
         final Object nodeProperty = node.getNodeProperty(name);
