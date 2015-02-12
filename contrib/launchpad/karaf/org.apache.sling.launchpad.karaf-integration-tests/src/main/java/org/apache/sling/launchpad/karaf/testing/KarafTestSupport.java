@@ -61,7 +61,7 @@ public abstract class KarafTestSupport {
 
     public static final String KARAF_ARTIFACT_ID = "apache-karaf";
 
-    public static final String KARAF_VERSION = "3.0.2";
+    public static final String KARAF_VERSION = "3.0.3";
 
     public static final String KARAF_NAME = "Apache Karaf";
 
