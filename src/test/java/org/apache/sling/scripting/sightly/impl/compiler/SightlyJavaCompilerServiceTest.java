@@ -19,6 +19,8 @@
 package org.apache.sling.scripting.sightly.impl.compiler;
 
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -36,22 +38,26 @@ import org.mockito.stubbing.Answer;
 import org.powermock.reflect.Whitebox;
 
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class SightlyJavaCompilerServiceTest {
 
     private SightlyJavaCompilerService compiler;
+    private UnitChangeMonitor ucm;
 
     @Before
     public void setUp() throws Exception {
         compiler = new SightlyJavaCompilerService();
-        UnitChangeMonitor ucm = new UnitChangeMonitor();
+        ucm = spy(new UnitChangeMonitor());
         Whitebox.setInternalState(compiler, "unitChangeMonitor", ucm);
     }
 
     @After
     public void tearDown() throws Exception {
         compiler = null;
+        ucm = null;
     }
 
     @Test
@@ -73,6 +79,18 @@ public class SightlyJavaCompilerServiceTest {
         String pojoPath = "/apps/myproject/testcomponents/a/Pojo.java";
         String className = "apps.myproject.testcomponents.a.Pojo";
         getInstancePojoTest(pojoPath, className);
+    }
+
+    @Test
+    public void testGetInstanceForCachedPojoFromRepo() throws Exception {
+        final String pojoPath = "/apps/my-project/test_components/a/Pojo.java";
+        String className = "apps.my_project.test_components.a.Pojo";
+        Map<String, Long> slyJavaUseMap = new ConcurrentHashMap<String, Long>() {{
+            put(pojoPath, System.currentTimeMillis());
+        }};
+        Whitebox.setInternalState(ucm, "slyJavaUseMap", slyJavaUseMap);
+        getInstancePojoTest(pojoPath, className);
+        verify(ucm).clearJavaUseObject(pojoPath);
     }
 
     private void getInstancePojoTest(String pojoPath, String className) throws Exception {

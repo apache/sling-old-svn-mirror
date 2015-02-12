@@ -69,8 +69,8 @@ import org.slf4j.LoggerFactory;
 public class UnitLoader {
 
     public static final String DEFAULT_REPO_BASE_PATH = "/var/classes";
+    public static final String CLASS_NAME_PREFIX = "SightlyJava_";
     private static final Logger log = LoggerFactory.getLogger(UnitLoader.class);
-    private static final String CLASS_NAME_PREFIX = "SightlyJava_";
     private static final String MAIN_TEMPLATE_PATH = "templates/compiled_unit_template.txt";
     private static final String CHILD_TEMPLATE_PATH = "templates/subtemplate.txt";
 
