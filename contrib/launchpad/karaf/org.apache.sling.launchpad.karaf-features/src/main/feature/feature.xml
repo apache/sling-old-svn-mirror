@@ -72,15 +72,6 @@
     <feature version="${project.version}">sling</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.auth.form/1.0.6</bundle>
   </feature>
-  <feature name="sling-auth-openid" version="${project.version}">
-    <feature version="${project.version}">sling</feature>
-    <bundle>mvn:org.apache.sling/org.apache.sling.auth.openid/1.0.4</bundle>
-  </feature>
-  <feature name="sling-auth-selector" version="${project.version}">
-    <feature version="${project.version}">sling-auth-form</feature>
-    <feature version="${project.version}">sling-auth-openid</feature>
-    <bundle>mvn:org.apache.sling/org.apache.sling.auth.selector/1.0.6</bundle>
-  </feature>
   <!-- Apache Sling Extensions -->
   <feature name="sling-extension-adapter" version="${project.version}">
     <feature version="${project.version}">sling</feature>
@@ -303,6 +294,15 @@
     <bundle dependency="true">mvn:org.apache.tika/tika-core/1.7</bundle>
   </feature>
   <!-- Apache Sling Auth (contrib) -->
+  <feature name="sling-auth-openid" version="${project.version}">
+    <feature version="${project.version}">sling</feature>
+    <bundle>mvn:org.apache.sling/org.apache.sling.auth.openid/1.0.4</bundle>
+  </feature>
+  <feature name="sling-auth-selector" version="${project.version}">
+    <feature version="${project.version}">sling-auth-form</feature>
+    <feature version="${project.version}">sling-auth-openid</feature>
+    <bundle>mvn:org.apache.sling/org.apache.sling.auth.selector/1.0.6</bundle>
+  </feature>
   <feature name="sling-auth-xing-login" version="0.0.2">
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-jcr</feature>
