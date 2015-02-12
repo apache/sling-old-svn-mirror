@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -93,7 +94,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     private final CommonResourceResolverFactoryImpl factory;
 
     /** Closed marker. */
-    private volatile boolean closed = false;
+    private final AtomicBoolean isClosed = new AtomicBoolean(false);
 
     /** Resource resolver context. */
     private final ResourceResolverContext context;
@@ -101,10 +102,11 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * The resource resolver context.
      */
-    public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final ResourceResolverContext ctx) {
+    public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory,
+            final ResourceResolverContext ctx) {
         this.factory = factory;
         this.context = ctx;
-        this.factory.add(this, ctx);
+        this.factory.addToFinalizeList(this, ctx);
     }
 
     /**
@@ -137,15 +139,14 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      * @see org.apache.sling.api.resource.ResourceResolver#isLive()
      */
     public boolean isLive() {
-        return !this.closed && this.context.isLive() && this.factory.isLive();
+        return !this.isClosed.get() && this.context.isLive() && this.factory.isLive();
     }
 
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#close()
      */
     public void close() {
-        if (!this.closed) {
-            this.closed = true;
+        if ( this.isClosed.compareAndSet(false, true)) {
             this.context.close();
             this.factory.closed(this);
         }
@@ -158,7 +159,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      *             If the resolver is already closed
      */
     private void checkClosed() {
-        if (this.closed) {
+        if (this.isClosed.get()) {
             throw new IllegalStateException("Resource resolver is already closed.");
         }
     }
