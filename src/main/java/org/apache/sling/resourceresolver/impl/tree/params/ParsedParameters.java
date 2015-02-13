@@ -28,8 +28,6 @@ import java.util.Map;
  * Parameters should be added immedietaly before or after selectors and extension:
  * {@code /content/test;v='1.0'.html} or {@code /content/test.html;v=1.0}. Quotes can be used to escape the
  * parameter value (it is necessary if the value contains dot and parameter is added before extension).
- * 
- * @author Tomasz Rekawek
  */
 public class ParsedParameters {
 
