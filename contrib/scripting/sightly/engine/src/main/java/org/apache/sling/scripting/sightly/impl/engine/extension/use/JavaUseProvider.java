@@ -16,21 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-
 package org.apache.sling.scripting.sightly.impl.engine.extension.use;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
-
 import javax.script.Bindings;
+import javax.servlet.ServletRequest;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.scripting.sightly.ResourceResolution;
 import org.apache.sling.scripting.sightly.impl.compiler.CompilerException;
 import org.apache.sling.scripting.sightly.impl.compiler.SightlyJavaCompilerService;
@@ -42,14 +46,10 @@ import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Provider which instantiates POJOs.
- */
 @Component(
         metatype = true,
-        label = "Apache Sling Scripting Sightly POJO Use Provider",
-        description = "The POJO Use Provider is responsible for instantiating Use-API objects that optionally can implement the org" +
-                ".apache.sling.scripting.sightly.use.Use interface."
+        label = "Apache Sling Scripting Sightly Java Use Provider",
+        description = "The Java Use Provider is responsible for instantiating Java Use-API objects."
 )
 @Service(UseProvider.class)
 @Properties({
@@ -62,13 +62,16 @@ import org.slf4j.LoggerFactory;
                 propertyPrivate = false
         )
 })
-public class PojoUseProvider implements UseProvider {
+public class JavaUseProvider implements UseProvider {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PojoUseProvider.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JavaUseProvider.class);
     private static final Pattern JAVA_PATTERN = Pattern.compile("([[\\p{L}&&[^\\p{Lu}]]_$][\\p{L}\\p{N}_$]*\\.)*[\\p{Lu}_$][\\p{L}\\p{N}_$]*");
 
     @Reference
     private SightlyJavaCompilerService sightlyJavaCompilerService = null;
+
+    @Reference
+    private DynamicClassLoaderManager dynamicClassLoaderManager = null;
 
     @Override
     public ProviderOutcome provide(String identifier, RenderContext renderContext, Bindings arguments) {
@@ -80,6 +83,42 @@ public class PojoUseProvider implements UseProvider {
         Bindings globalBindings = renderContext.getBindings();
         Bindings bindings = UseProviderUtils.merge(globalBindings, arguments);
         SlingScriptHelper sling = UseProviderUtils.getHelper(bindings);
+        Resource resource = (Resource) bindings.get(SlingBindings.RESOURCE);
+        final SlingHttpServletRequest request = (SlingHttpServletRequest) bindings.get(SlingBindings.REQUEST);
+        Map<String, Object> overrides = setRequestAttributes(request, arguments);
+
+        Object result;
+        try {
+            Class<?> cls = dynamicClassLoaderManager.getDynamicClassLoader().loadClass(identifier);
+            result = resource.adaptTo(cls);
+            if (result == null) {
+                result = request.adaptTo(cls);
+            }
+            if (result != null) {
+                return ProviderOutcome.success(result);
+            } else {
+                /**
+                 * the object was cached by the classloader but it's not adaptable from {@link Resource} or {@link
+                 * SlingHttpServletRequest}; attempt to load it like a regular POJO that optionally could implement {@link Use}
+                 */
+                result = cls.newInstance();
+                if (result instanceof Use) {
+                    ((Use) result).init(bindings);
+                }
+                return ProviderOutcome.notNullOrFailure(result);
+            }
+        } catch (ClassNotFoundException e) {
+            // this object might not be exported from a bundle; let's try to load it from the repository
+            return getPOJOFromRepository(renderContext, sling, identifier, bindings);
+        } catch (Exception e) {
+            // any other exception is an error
+            return ProviderOutcome.failure(e);
+        } finally {
+            resetRequestAttribute(request, overrides);
+        }
+    }
+
+    private ProviderOutcome getPOJOFromRepository(RenderContext renderContext, SlingScriptHelper sling, String identifier, Bindings bindings) {
         try {
             ResourceResolver adminResolver = renderContext.getScriptResourceResolver();
             Resource resource = ResourceResolution.getResourceForRequest(adminResolver, sling.getRequest());
@@ -96,4 +135,34 @@ public class PojoUseProvider implements UseProvider {
             }
         }
     }
+
+    private Map<String, Object> setRequestAttributes(ServletRequest request, Bindings arguments) {
+        Map<String, Object> overrides = new HashMap<String, Object>();
+        for (Map.Entry<String, Object> entry : arguments.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            Object oldValue = request.getAttribute(key);
+            if (oldValue != null) {
+                overrides.put(key, oldValue);
+            } else {
+                overrides.put(key, NULL);
+            }
+            request.setAttribute(key, value);
+        }
+        return overrides;
+    }
+
+    private void resetRequestAttribute(ServletRequest request, Map<String, Object> overrides) {
+        for (Map.Entry<String, Object> entry : overrides.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            if (value == NULL) {
+                request.removeAttribute(key);
+            } else {
+                request.setAttribute(key, value);
+            }
+        }
+    }
+
+    private static final Object NULL = new Object();
 }
