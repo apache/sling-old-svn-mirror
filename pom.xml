@@ -118,6 +118,7 @@
                 <configuration>
                     <includes>
                         <include>%regex[.*LaunchpadReadyIT.*]</include>
+                        <include>%regex[.*SlingSpecificsSightlyIT.*]</include>
                         <include>%regex[.*TestsRunner.*]</include>
                     </includes>
                     <dependenciesToScan>
