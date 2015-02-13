@@ -25,7 +25,7 @@ import org.apache.sling.api.resource.ValueMap;
 /**
  * A value map wrapper which implements deep reading of properties
  * based on the resource tree.
- * @since 2.5
+ * @since 2.5 (Sling API Bundle 2.7.0)
  */
 public class DeepReadValueMapDecorator extends ValueMapDecorator {
 

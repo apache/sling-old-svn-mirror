@@ -40,7 +40,7 @@ public interface RequestParameter {
 
     /**
      * @return the name of this {@code RequestParameter}
-     * @since 2.4 (bundle version 2.6)
+     * @since 2.4 (Sling API Bundle 2.6)
      */
     String getName();
 

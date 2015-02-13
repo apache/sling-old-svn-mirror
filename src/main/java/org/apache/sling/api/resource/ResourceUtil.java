@@ -184,7 +184,7 @@ public class ResourceUtil {
      * @throws IllegalArgumentException If the path cannot be normalized by the
      *             {@link #normalize(String)} method or if <code>level</code> < 0.
      * @throws NullPointerException If <code>path</code> is <code>null</code>.
-     * @since 2.2
+     * @since 2.2 (Sling API Bundle 2.2.0)
      */
     public static String getParent(final String path, final int level) {
         if ( level < 0 ) {
@@ -377,7 +377,7 @@ public class ResourceUtil {
      *
      * @param type The resource type to be converted into a path
      * @return The resource type as a path.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
     public static String resourceTypeToPath(final String type) {
         return type.replace(':', '/');
@@ -401,7 +401,7 @@ public class ResourceUtil {
      * @return the super type of the <code>resourceType</code> or
      *         <code>null</code> if the resource type does not exists or returns
      *         <code>null</code> for its super type.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      * @deprecated Use {@link ResourceResolver#getParentResourceType(String)}
      */
     @Deprecated
@@ -420,7 +420,7 @@ public class ResourceUtil {
      * @param resource The resource to return the resource super type for.
      * @return the super type of the <code>resource</code> or <code>null</code>
      *         if no super type could be computed.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      * @deprecated Use {@link ResourceResolver#getParentResourceType(Resource)}
      */
     @Deprecated
@@ -442,7 +442,7 @@ public class ResourceUtil {
      *         Otherwise returns the result of calling
      *         {@link Resource#isResourceType(String)} with the given
      *         <code>resourceType</code>.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      * @deprecated Use {@link ResourceResolver#isResourceType(Resource, String)}
      */
     @Deprecated
@@ -463,7 +463,7 @@ public class ResourceUtil {
      *
      * @param iterator A resource iterator.
      * @param <T> The adapted type
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
     public static <T> Iterator<T> adaptTo(final Iterator<Resource> iterator,
             final Class<T> type) {
@@ -507,7 +507,7 @@ public class ResourceUtil {
      * @param resourceType The optional resource type of the final resource to create
      * @param intermediateResourceType THe optional resource type of all intermediate resources
      * @param autoCommit If set to true, a commit is performed after each resource creation.
-     * @since 2.3.0
+     * @since 2.3.0  (Sling API Bundle 2.4.0)
      */
     public static Resource getOrCreateResource(
                             final ResourceResolver resolver,
@@ -536,7 +536,7 @@ public class ResourceUtil {
      * @param resourceProperties The optional resource properties of the final resource to create
      * @param intermediateResourceType THe optional resource type of all intermediate resources
      * @param autoCommit If set to true, a commit is performed after each resource creation.
-     * @since 2.3.0
+     * @since 2.3.0  (Sling API Bundle 2.4.0)
      */
     public static Resource getOrCreateResource(
             final ResourceResolver resolver,
@@ -658,7 +658,7 @@ public class ResourceUtil {
      *
      * @throws PersistenceException if it can not find unique name for child resource.
      * @throws NullPointerException if <code>parent</code> is null
-     * @since 2.5.0
+     * @since 2.5 (Sling API Bundle 2.7.0)
      */
     public static String createUniqueChildName(final Resource parent, final String name)
     throws PersistenceException {
@@ -686,7 +686,7 @@ public class ResourceUtil {
      * Unwrap the resource and return the wrapped implementation.
      * @param rsrc The resource to unwrap
      * @return The unwrapped resource
-     * @since 2.5
+     * @since 2.5  (Sling API Bundle 2.7.0)
      */
     public static Resource unwrap(final Resource rsrc) {
         Resource result = rsrc;
@@ -702,7 +702,7 @@ public class ResourceUtil {
      * trees are deleted resource by resource starting with the deepest children first.
      * Once all resources have been passed to the batch resource remover, a final
      * commit needs to be called on the resource resolver.
-     * @since 2.6
+     * @since 2.6  (Sling API Bundle 2.8.0)
      */
     public static class BatchResourceRemover {
 

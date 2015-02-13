@@ -30,7 +30,7 @@ import java.util.Map;
  * using their own knowledge of adapters and should call this base class
  * implementation to fall back for other types.
  *
- * @since 2.2
+ * @since 2.2 (Sling API Bundle 2.2.0)
  */
 public abstract class SlingAdaptable implements Adaptable {
 

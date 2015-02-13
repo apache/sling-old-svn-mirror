@@ -58,7 +58,7 @@ import aQute.bnd.annotation.ConsumerType;
  * A modifiable value map must not support deep writes. A call of a modification method
  * with a path should result in an IllegalArgumentException.
  *
- * @since 2.2
+ * @since 2.2  (Sling API Bundle 2.2.0)
  */
 @ConsumerType
 public interface ModifiableValueMap extends ValueMap {
