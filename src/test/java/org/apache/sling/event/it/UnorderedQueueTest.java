@@ -50,10 +50,10 @@ import org.osgi.service.event.EventHandler;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
-public class RoundRobinQueueTest extends AbstractJobHandlingTest {
+public class UnorderedQueueTest extends AbstractJobHandlingTest {
 
-    private static final String QUEUE_NAME = "roundrobintest";
-    private static final String TOPIC = "sling/roundrobintest";
+    private static final String QUEUE_NAME = "unorderedtestqueue";
+    private static final String TOPIC = "sling/unorderedtest";
     private static int MAX_PAR = 5;
     private static int NUM_JOBS = 300;
 
@@ -68,7 +68,7 @@ public class RoundRobinQueueTest extends AbstractJobHandlingTest {
         final org.osgi.service.cm.Configuration rrConfig = this.configAdmin.createFactoryConfiguration("org.apache.sling.event.jobs.QueueConfiguration", null);
         final Dictionary<String, Object> rrProps = new Hashtable<String, Object>();
         rrProps.put(ConfigurationConstants.PROP_NAME, QUEUE_NAME);
-        rrProps.put(ConfigurationConstants.PROP_TYPE, QueueConfiguration.Type.TOPIC_ROUND_ROBIN.name());
+        rrProps.put(ConfigurationConstants.PROP_TYPE, QueueConfiguration.Type.UNORDERED.name());
         rrProps.put(ConfigurationConstants.PROP_TOPICS, TOPIC + "/*");
         rrProps.put(ConfigurationConstants.PROP_RETRIES, 2);
         rrProps.put(ConfigurationConstants.PROP_RETRY_DELAY, 2000L);
@@ -87,7 +87,7 @@ public class RoundRobinQueueTest extends AbstractJobHandlingTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testRoundRobinQueue() throws Exception {
+    public void testUnorderedQueue() throws Exception {
         final JobManager jobManager = this.getJobManager();
 
         final Barrier cb = new Barrier(2);
