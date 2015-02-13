@@ -26,9 +26,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Stack;
-import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.collections.BidiMap;
@@ -68,14 +67,21 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
      */
     private ThreadLocal<Stack<WeakReference<ResourceResolver>>> resolverStackHolder = new ThreadLocal<Stack<WeakReference<ResourceResolver>>>();
 
+    /** Flag indicating whether this factory is still active. */
     private final AtomicBoolean isActive = new AtomicBoolean(true);
 
+    /** The reference queue to handle disposing of resource resolver instances. */
     private final ReferenceQueue<ResourceResolver> resolverReferenceQueue = new ReferenceQueue<ResourceResolver>();
 
-    private final Set<ResolverWeakReference> refs = new ConcurrentSkipListSet<CommonResourceResolverFactoryImpl.ResolverWeakReference>();
+    /** All weak references for the resource resolver instances. */
+    private final Map<Integer, ResolverWeakReference> refs = new ConcurrentHashMap<Integer, CommonResourceResolverFactoryImpl.ResolverWeakReference>();
 
+    /** Background thread handling disposing of resource resolver instances. */
     private final Thread refQueueThread;
 
+    /**
+     * Create a new common resource resolver factory.
+     */
     public CommonResourceResolverFactoryImpl(final ResourceResolverFactoryActivator activator) {
         this.activator = activator;
         this.refQueueThread = new Thread("Apache Sling Resource Resolver Finalizer Thread") {
@@ -86,12 +92,12 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
                     try {
                         final ResolverWeakReference ref = (ResolverWeakReference) resolverReferenceQueue.remove();
                         ref.close();
-                        refs.remove(ref);
+                        refs.remove(ref.context.hashCode());
                     } catch ( final InterruptedException ie) {
                         Thread.currentThread().interrupt();
                     }
                 }
-                for(final ResolverWeakReference ref : refs) {
+                for(final ResolverWeakReference ref : refs.values()) {
                     ref.close();
                 }
                 refs.clear();
@@ -178,10 +184,31 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     // ---------- Implementation helpers --------------------------------------
 
     /**
+     * Inform about a new resource resolver instance.
+     * We create a weak reference to be able to close the resolver if close on the
+     * resource resolver is never called.
+     * @param resolver The resource resolver
+     * @param ctx The resource resolver context
+     */
+    public void register(final ResourceResolver resolver,
+            final ResourceResolverContext ctx) {
+        // create new weak reference
+        refs.put(ctx.hashCode(), new ResolverWeakReference(resolver, this.resolverReferenceQueue, ctx));
+    }
+
+    /**
      * Inform about a closed resource resolver.
      * Make sure to remove it from the current thread context.
+     * @param resolver The resource resolver
+     * @param ctx The resource resolver context
      */
-    public void unregister(final ResourceResolverImpl resourceResolverImpl) {
+    public void unregister(final ResourceResolver resourceResolverImpl,
+            final ResourceResolverContext ctx) {
+        // close the context
+        ctx.close();
+        // remove it from the set of weak references.
+        refs.remove(ctx.hashCode());
+
         // on shutdown, the factory might already be closed before the resolvers close
         // therefore we have to check for null
         final ThreadLocal<Stack<WeakReference<ResourceResolver>>> tl = resolverStackHolder;
@@ -350,17 +377,18 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         return configs;
     }
 
+    /**
+     * Is this factory still alive?
+     */
     public boolean isLive() {
         return this.isActive.get();
     }
 
-    public void register(final ResourceResolver resolver,
-            final ResourceResolverContext ctx) {
-        // create new weak reference
-        refs.add(new ResolverWeakReference(resolver, this.resolverReferenceQueue, ctx));
-    }
-
-    private static final class ResolverWeakReference extends WeakReference<ResourceResolver> implements Comparable<ResolverWeakReference>{
+    /**
+     * Extension of a weak reference to be able to get the context object
+     * that is used for cleaning up.
+     */
+    private static final class ResolverWeakReference extends WeakReference<ResourceResolver> {
 
         private final ResourceResolverContext context;
 
@@ -373,10 +401,6 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
 
         public void close() {
             this.context.close();
-        }
-
-        public int compareTo(final ResolverWeakReference o) {
-            return context.hashCode() - o.context.hashCode();
         }
     }
 }

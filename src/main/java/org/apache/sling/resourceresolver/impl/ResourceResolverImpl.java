@@ -147,8 +147,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      */
     public void close() {
         if ( this.isClosed.compareAndSet(false, true)) {
-            this.context.close();
-            this.factory.unregister(this);
+            this.factory.unregister(this, this.context);
         }
     }
 
