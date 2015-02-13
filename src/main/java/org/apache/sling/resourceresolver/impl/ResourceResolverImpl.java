@@ -332,10 +332,6 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
                 }
             }
-            if (res != null) {
-                res.getResourceMetadata().setParameterMap(parsedPath.getParameters());
-            }
-
         }
 
         // if no resource has been found, use a NonExistingResource
@@ -858,6 +854,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             final String rpi = absPath.substring(curPath.length());
             resource.getResourceMetadata().setResolutionPath(absPath.substring(0, curPath.length()));
             resource.getResourceMetadata().setResolutionPathInfo(rpi);
+            resource.getResourceMetadata().setParameterMap(parameters);
 
             logger.debug("resolveInternal: Found resource {} with path info {} for {}", new Object[] { resource, rpi, absPath });
 
@@ -908,6 +905,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
                 resource.getResourceMetadata().setResolutionPath(path);
                 resource.getResourceMetadata().setResolutionPathInfo(pathInfo);
+                resource.getResourceMetadata().setParameterMap(parameters);
 
                 logger.debug("resolveInternal: Found resource {} with path info {} for {}", new Object[] { resource, pathInfo,
                         absPath });
@@ -990,6 +988,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         final Resource resource = this.factory.getRootProviderEntry().getResource(this.context, this, path, parameters, isResolve);
         if (resource != null) {
             resource.getResourceMetadata().setResolutionPath(path);
+            resource.getResourceMetadata().setParameterMap(parameters);
             return resource;
         }
 
