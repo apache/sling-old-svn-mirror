@@ -61,7 +61,7 @@ import org.slf4j.LoggerFactory;
                 label = "Service Ranking",
                 description = "The Service Ranking value acts as the priority with which this Use Provider is queried to return an " +
                         "Use-object. A higher value represents a higher priority.",
-                intValue = 90,
+                intValue = 80,
                 propertyPrivate = false
         )
 })
