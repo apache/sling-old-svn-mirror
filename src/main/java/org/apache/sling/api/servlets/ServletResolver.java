@@ -88,7 +88,7 @@ public interface ServletResolver {
      *             while trying to find an appropriate servlet to handle the
      *             request or if no servlet could be resolved to handle the
      *             request.
-     * @since 2.1
+     * @since 2.1 (Sling API Bundle 2.1.0)
      */
     Servlet resolveServlet(Resource resource, String scriptName);
 
@@ -115,7 +115,7 @@ public interface ServletResolver {
      *             while trying to find an appropriate servlet to handle the
      *             request or if no servlet could be resolved to handle the
      *             request.
-     * @since 2.1
+     * @since 2.1 (Sling API Bundle 2.1.0)
      */
     Servlet resolveServlet(ResourceResolver resolver, String scriptName);
 

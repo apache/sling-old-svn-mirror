@@ -36,7 +36,7 @@ import org.apache.sling.api.wrappers.ValueMapDecorator;
  * always be able to support new methods that might be introduced in the
  * {@link Resource} interface in the future.
  *
- * @since 2.1.0
+ * @since 2.1.0 (Sling API Bundle 2.1.0)
  */
 public abstract class AbstractResource
     extends SlingAdaptable

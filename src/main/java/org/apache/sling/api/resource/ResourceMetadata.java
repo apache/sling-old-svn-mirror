@@ -64,7 +64,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * This property is optional. If missing, it should be assumed equal to an
      * empty string.
      *
-     * @since 2.0.4
+     * @since 2.0.4 (Sling API Bundle 2.0.4)
      */
     public static final String RESOLUTION_PATH_INFO = "sling.resolutionPathInfo";
 
@@ -123,7 +123,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * This flag should never be manipulated by application code!
      * The value of this property has no meaning, the resource resolver
      * just checks whether this flag is set or not.
-     * @since 2.2
+     * @since 2.2 (Sling API Bundle 2.2.0)
      */
     public static final String INTERNAL_CONTINUE_RESOLVING = ":org.apache.sling.resource.internal.continue.resolving";
 
@@ -330,7 +330,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
     /**
      * Make this object read-only. All method calls trying to modify this object
      * result in an exception!
-     * @since 2.3
+     * @since 2.3 (Sling API Bundle 2.4.0)
      */
     public void lock() {
         this.isReadOnly = true;

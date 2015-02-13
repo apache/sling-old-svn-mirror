@@ -63,7 +63,7 @@ public interface ResourceProvider {
      * no other providers are asked for resources under this root if this
      * provider does not have a resource. (value is "provider.ownsRoots").
      *
-     * @since 2.2
+     * @since 2.2 (Sling API Bundle 2.2.0)
      */
     String OWNS_ROOTS = "provider.ownsRoots";
 
@@ -75,7 +75,7 @@ public interface ResourceProvider {
      * the underlying storage already provides it.
      * The default for this value is <code>false</code>.
      * (value is "provider.useResourceAccessSecurity")
-     * @since 2.4
+     * @since 2.4 (Sling API Bundle 2.5.0)
      */
     String USE_RESOURCE_ACCESS_SECURITY = "provider.useResourceAccessSecurity";
 

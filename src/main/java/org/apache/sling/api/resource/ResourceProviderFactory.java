@@ -32,7 +32,7 @@ import aQute.bnd.annotation.ConsumerType;
  * If the resource provider is not used anymore and implements the
  * {@link DynamicResourceProvider} interface, the close method should be called.
  *
- * @since 2.2.0
+ * @since 2.2.0 (Sling API Bundle 2.2.0)
  */
 @ConsumerType
 public interface ResourceProviderFactory {
@@ -61,7 +61,7 @@ public interface ResourceProviderFactory {
      * The type of this property, if present, is
      * <code>org.osgi.framework.Bundle</code>.
      *
-     * @since 2.4 (bundle version 2.5.0)
+     * @since 2.4 (Sling API Bundle 2.5.0)
      */
     String SERVICE_BUNDLE = "sling.service.bundle";
 
