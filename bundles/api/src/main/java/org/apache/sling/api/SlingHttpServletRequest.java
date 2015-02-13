@@ -152,7 +152,7 @@ public interface SlingHttpServletRequest extends HttpServletRequest, Adaptable {
      *
      * @return The list of {@link RequestParameter} in request declaration
      *         order.
-     * @since 2.3 (bundle version 2.6)
+     * @since 2.3  (Sling API Bundle 2.6.0)
      */
     List<RequestParameter> getRequestParameterList();
 

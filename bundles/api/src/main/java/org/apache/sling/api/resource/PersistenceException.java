@@ -78,7 +78,7 @@ public class PersistenceException extends IOException {
     /**
      * Get the resource path related to this exception.
      * @return The resource path or <code>null</code>
-     * @since 2.2
+     * @since 2.2  (Sling API Bundle 2.2.0)
      */
     public String getResourcePath() {
         return this.resourcePath;
@@ -87,7 +87,7 @@ public class PersistenceException extends IOException {
     /**
      * Get the property name related to this exception.
      * @return The property name or <code>null</code>
-     * @since 2.2
+     * @since 2.2  (Sling API Bundle 2.2.0)
      */
     public String getPropertyName() {
         return this.propertyName;

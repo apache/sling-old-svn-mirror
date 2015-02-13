@@ -215,7 +215,7 @@ public interface RequestPathInfo {
      * {@link org.apache.sling.api.resource.ResourceResolver#getResource(String)}
      * method.
      *
-     * @since 2.3 (Sling API 2.3.2)
+     * @since 2.3 (Sling API Bundle 2.3.2)
      */
     Resource getSuffixResource();
 }

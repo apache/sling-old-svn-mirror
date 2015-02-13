@@ -60,7 +60,7 @@ public class ResourceWrapper implements Resource {
      * Returns the value of calling <code>getName</code> on the
      * {@link #getResource() wrapped resource}.
      *
-     * @since 2.1.0
+     * @since 2.1.0 (Sling API Bundle 2.1.0)
      */
     public String getName() {
         return getResource().getName();
@@ -70,7 +70,7 @@ public class ResourceWrapper implements Resource {
      * Returns the value of calling <code>getParent</code> on the
      * {@link #getResource() wrapped resource}.
      *
-     * @since 2.1.0
+     * @since 2.1.0 (Sling API Bundle 2.1.0)
      */
     public Resource getParent() {
         return getResource().getParent();
@@ -80,7 +80,7 @@ public class ResourceWrapper implements Resource {
      * Returns the value of calling <code>getChild</code> on the
      * {@link #getResource() wrapped resource}.
      *
-     * @since 2.1.0
+     * @since 2.1.0 (Sling API Bundle 2.1.0)
      */
     public Resource getChild(String relPath) {
         return getResource().getChild(relPath);
@@ -90,7 +90,7 @@ public class ResourceWrapper implements Resource {
      * Returns the value of calling <code>listChildren</code> on the
      * {@link #getResource() wrapped resource}.
      *
-     * @since 2.1.0
+     * @since 2.1.0 (Sling API Bundle 2.1.0)
      */
     public Iterator<Resource> listChildren() {
         return getResource().listChildren();
@@ -139,7 +139,7 @@ public class ResourceWrapper implements Resource {
      * Returns the value of calling <code>hasChildren</code> on the
      * {@link #getResource() wrapped resource}.
      *
-     * @since 2.4.4
+     * @since 2.4.4  (Sling API Bundle 2.5.0)
      */
 	public boolean hasChildren() {
 		return getResource().hasChildren();
@@ -149,7 +149,7 @@ public class ResourceWrapper implements Resource {
      * Returns the value of calling <code>isResourceType</code> on the
      * {@link #getResource() wrapped resource}.
      *
-     * @since 2.1.0
+     * @since 2.1.0 (Sling API Bundle 2.1.0)
      */
     public boolean isResourceType(final String resourceType) {
         return getResource().isResourceType(resourceType);
