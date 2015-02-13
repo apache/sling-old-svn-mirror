@@ -123,6 +123,7 @@
                 <configuration>
                     <instructions>
                         <Sling-Initial-Content>SLING-INF;overwrite=true</Sling-Initial-Content>
+                        <Sling-Model-Packages>org.apache.sling.scripting.sightly.testing.models</Sling-Model-Packages>
                     </instructions>
                 </configuration>
             </plugin>
@@ -152,7 +153,38 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+                <dependencies>
+                    <dependency>
+                        <groupId>javax.jcr</groupId>
+                        <artifactId>jcr</artifactId>
+                        <version>2.0</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
         </plugins>
     </build>
+
+    <dependencies>
+        <!-- Test bundle dependencies -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.models.api</artifactId>
+            <version>1.1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.api</artifactId>
+            <version>2.1.0</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
 
 </project>
