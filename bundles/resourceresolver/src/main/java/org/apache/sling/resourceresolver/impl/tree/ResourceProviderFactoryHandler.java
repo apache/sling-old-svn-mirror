@@ -22,9 +22,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.collections.MapUtils;
 import org.apache.sling.api.resource.LoginException;
-import org.apache.sling.api.resource.ParametrizableResourceProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceProviderFactory;
@@ -103,16 +101,10 @@ public class ResourceProviderFactoryHandler extends ProviderHandler {
     /**
      * @see ResourceProvider#getResource(ResourceResolver, String)
      */
-    public Resource getResource(final ResourceResolverContext ctx, final ResourceResolver resourceResolver, final String path, final Map<String, String> parameters) {
+    public Resource getResource(final ResourceResolverContext ctx, final ResourceResolver resourceResolver, final String path) {
         final ResourceProvider rp = this.getResourceProvider(ctx);
         if ( rp != null ) {
-            final Resource resource;
-            if (MapUtils.isNotEmpty(parameters) && rp instanceof ParametrizableResourceProvider) {
-                resource = ((ParametrizableResourceProvider) rp).getResource(resourceResolver, path, parameters);
-            } else {
-                resource = rp.getResource(resourceResolver, path);
-            }
-            return getReadableResource(ctx, resource);
+            return getReadableResource(ctx, rp.getResource(resourceResolver, path) );
         }
         return null;
     }

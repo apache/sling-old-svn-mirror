@@ -341,7 +341,7 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
     /**
      * @see ResourceProvider#getResource(ResourceResolver, String)
      */
-    public abstract Resource getResource(final ResourceResolverContext ctx, final ResourceResolver resourceResolver, final String path, final Map<String, String> parameters);
+    public abstract Resource getResource(final ResourceResolverContext ctx, final ResourceResolver resourceResolver, final String path);
 
     /**
      * @see ResourceProvider#listChildren(Resource)

@@ -19,7 +19,6 @@
 package org.apache.sling.resourceresolver.impl.helper;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -219,7 +218,7 @@ public class ResourceIterator implements Iterator<Resource> {
                     if (!visited.contains(resPath)) {
                         final ResourceResolver rr = parentResource.getResourceResolver();
                         final Resource res = rpw.getResourceFromProviders(this.resourceResolverContext, rr,
-                                resPath, Collections.<String,String>emptyMap());
+                                resPath);
                         if (res == null) {
                             if (!delayed.containsKey(resPath)) {
                                 delayed.put(
