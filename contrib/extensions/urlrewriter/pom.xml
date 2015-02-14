@@ -124,8 +124,6 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Bundle-Category>sling</Bundle-Category>
-            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Export-Package/>
             <Embed-Dependency>
               org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/PropertiesUtil.*"
