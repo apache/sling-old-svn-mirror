@@ -37,6 +37,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Properties;
@@ -59,7 +60,8 @@ import org.xml.sax.helpers.DefaultHandler;
     label = "Apache Sling URL Rewriter",
     description = "multi-purpose service for altering HTTP requests/responses based on Tuckey's UrlRewriteFilter",
     immediate = true,
-    metatype = true
+    metatype = true,
+    policy = ConfigurationPolicy.REQUIRE
 )
 @Service
 @Properties({
@@ -68,7 +70,7 @@ import org.xml.sax.helpers.DefaultHandler;
     @Property(name = Constants.SERVICE_RANKING, intValue = 0, propertyPrivate = false),
     @Property(name = EngineConstants.SLING_FILTER_SCOPE, value = {EngineConstants.FILTER_SCOPE_REQUEST, EngineConstants.FILTER_SCOPE_FORWARD})
 })
-public class SlingUrlRewriteFilter implements Filter {
+public final class SlingUrlRewriteFilter implements Filter {
 
     private UrlRewriter rewriter;
 
@@ -101,7 +103,7 @@ public class SlingUrlRewriteFilter implements Filter {
         clearRewriter();
     }
 
-    private synchronized void configure(final ComponentContext context) {
+    private void configure(final ComponentContext context) {
         logger.info("configuring URL rewriter");
         final Dictionary properties = context.getProperties();
         final String rules = PropertiesUtil.toString(properties.get(REWRITE_RULES_PARAMETER), DEFAULT_REWRITE_RULES);
