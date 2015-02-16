@@ -54,6 +54,7 @@
                 <configuration>
                     <instructions>
                         <Sling-Initial-Content>SLING-INF;overwrite=true</Sling-Initial-Content>
+                        <Require-Capability>io.sightly; filter:="(&amp;(version>=1.0)(!(version>=2.0)))"</Require-Capability>
                     </instructions>
                 </configuration>
             </plugin>
