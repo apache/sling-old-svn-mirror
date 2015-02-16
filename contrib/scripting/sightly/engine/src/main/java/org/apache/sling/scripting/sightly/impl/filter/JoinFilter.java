@@ -49,13 +49,14 @@ public class JoinFilter extends FilterComponent implements RuntimeExtension {
     public static final String JOIN_FUNCTION = "join";
 
     @Override
-    public Expression apply(Expression expression) {
-        if (!expression.containsOption(JOIN_OPTION)) {
+    public Expression apply(Expression expression, ExpressionContext expressionContext) {
+        if (!expression.containsOption(JOIN_OPTION) || expressionContext == ExpressionContext.PLUGIN_DATA_SLY_USE || expressionContext
+                == ExpressionContext.PLUGIN_DATA_SLY_TEMPLATE || expressionContext == ExpressionContext.PLUGIN_DATA_SLY_CALL) {
             return expression;
         }
         ExpressionNode argumentNode = expression.getOption(JOIN_OPTION);
         ExpressionNode joinResult = new RuntimeCall(JOIN_FUNCTION, expression.getRoot(), argumentNode);
-        return expression.withNode(joinResult).removeOptions(JOIN_OPTION);
+        return expression.withNode(joinResult).withRemovedOptions(JOIN_OPTION);
     }
 
     @Override

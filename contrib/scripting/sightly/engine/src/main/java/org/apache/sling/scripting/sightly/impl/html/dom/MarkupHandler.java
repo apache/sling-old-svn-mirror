@@ -32,6 +32,7 @@ import org.apache.sling.scripting.sightly.impl.compiler.frontend.ExpressionWrapp
 import org.apache.sling.scripting.sightly.impl.compiler.frontend.Fragment;
 import org.apache.sling.scripting.sightly.impl.compiler.frontend.Interpolation;
 import org.apache.sling.scripting.sightly.impl.compiler.ris.command.Patterns;
+import org.apache.sling.scripting.sightly.impl.filter.ExpressionContext;
 import org.apache.sling.scripting.sightly.impl.filter.Filter;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.Expression;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.ExpressionNode;
@@ -173,7 +174,7 @@ public class MarkupHandler {
         // Simplified algorithm for attribute output, which works when the interpolation is not of size 1. In this
         // case we are certain that the attribute value cannot be the boolean value true, so we can skip this test
         // altogether
-        Expression expression = expressionWrapper.transform(interpolation, getAttributeMarkupContext(name));
+        Expression expression = expressionWrapper.transform(interpolation, getAttributeMarkupContext(name), ExpressionContext.ATTRIBUTE);
         String attrContent = symbolGenerator.next("attrContent");
         String shouldDisplayAttr = symbolGenerator.next("shouldDisplayAttr");
         stream.emit(new VariableBinding.Start(attrContent, expression.getRoot()));
@@ -200,7 +201,7 @@ public class MarkupHandler {
     }
 
     private void emitSingleFragment(String name, Interpolation interpolation, PluginInvoke invoke) {
-        Expression valueExpression = expressionWrapper.transform(interpolation, null); //raw expression
+        Expression valueExpression = expressionWrapper.transform(interpolation, null, ExpressionContext.ATTRIBUTE); //raw expression
         String attrValue = symbolGenerator.next("attrValue"); //holds the raw attribute value
         String attrContent = symbolGenerator.next("attrContent"); //holds the escaped attribute value
         String isTrueVar = symbolGenerator.next("isTrueAttr"); // holds the comparison (attrValue == true)
@@ -209,7 +210,8 @@ public class MarkupHandler {
         Expression contentExpression = valueExpression.withNode(new Identifier(attrValue));
         ExpressionNode node = valueExpression.getRoot();
         stream.emit(new VariableBinding.Start(attrValue, node)); //attrContent = <expr>
-        stream.emit(new VariableBinding.Start(attrContent, expressionWrapper.adjustToContext(contentExpression, markupContext).getRoot()));
+        stream.emit(new VariableBinding.Start(attrContent, expressionWrapper.adjustToContext(contentExpression, markupContext,
+                ExpressionContext.ATTRIBUTE).getRoot()));
         stream.emit(
                 new VariableBinding.Start(
                         shouldDisplayAttr,
@@ -309,7 +311,7 @@ public class MarkupHandler {
         if (text != null) {
             out(text);
         } else {
-            outExprNode(expressionWrapper.transform(interpolation, context).getRoot());
+            outExprNode(expressionWrapper.transform(interpolation, context, ExpressionContext.TEXT).getRoot());
         }
     }
 
@@ -383,8 +385,8 @@ public class MarkupHandler {
         PluginCallInfo callInfo = Syntax.parsePluginAttribute(name);
         if (callInfo != null) {
             Plugin plugin = obtainPlugin(callInfo.getName());
-            Expression expr = expressionWrapper.transform(
-                    expressionParser.parseInterpolation(value), null);
+            ExpressionContext expressionContext = ExpressionContext.getContextForPlugin(plugin.name());
+            Expression expr = expressionWrapper.transform(expressionParser.parseInterpolation(value), null, expressionContext);
             PluginInvoke invoke = plugin.invoke(expr, callInfo, compilerContext);
             context.addPlugin(invoke, plugin.priority());
             context.addPluginCall(name, callInfo, expr);

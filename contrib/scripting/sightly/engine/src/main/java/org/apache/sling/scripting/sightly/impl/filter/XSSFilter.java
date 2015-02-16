@@ -39,7 +39,11 @@ public class XSSFilter extends FilterComponent {
     public static final String FUNCTION_NAME = "xss";
 
     @Override
-    public Expression apply(Expression expression) {
+    public Expression apply(Expression expression, ExpressionContext expressionContext) {
+        if (expressionContext == ExpressionContext.PLUGIN_DATA_SLY_USE || expressionContext == ExpressionContext.PLUGIN_DATA_SLY_TEMPLATE
+                || expressionContext == ExpressionContext.PLUGIN_DATA_SLY_CALL) {
+            return expression;
+        }
         ExpressionNode node = expression.getRoot();
         Map<String, ExpressionNode> options = expression.getOptions();
         ExpressionNode context = options.get(Syntax.CONTEXT_OPTION);

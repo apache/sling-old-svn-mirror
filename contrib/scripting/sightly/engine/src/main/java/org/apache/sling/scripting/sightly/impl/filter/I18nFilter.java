@@ -42,14 +42,15 @@ public class I18nFilter extends FilterComponent {
     public static final String LOCALE_OPTION = "locale";
 
     @Override
-    public Expression apply(Expression expression) {
-        if (!expression.containsOption(I18N_OPTION)) {
+    public Expression apply(Expression expression, ExpressionContext expressionContext) {
+        if (!expression.containsOption(I18N_OPTION) || expressionContext == ExpressionContext.PLUGIN_DATA_SLY_USE || expressionContext
+                == ExpressionContext.PLUGIN_DATA_SLY_TEMPLATE || expressionContext == ExpressionContext.PLUGIN_DATA_SLY_CALL) {
             return expression;
         }
         ExpressionNode hint = option(expression, HINT_OPTION);
         ExpressionNode locale = option(expression, LOCALE_OPTION);
         ExpressionNode translation = new RuntimeCall(FUNCTION, expression.getRoot(), locale, hint);
-        return expression.withNode(translation).removeOptions(HINT_OPTION, LOCALE_OPTION);
+        return expression.withNode(translation).withRemovedOptions(HINT_OPTION, LOCALE_OPTION);
     }
 
     private ExpressionNode option(Expression expression, String optionName) {

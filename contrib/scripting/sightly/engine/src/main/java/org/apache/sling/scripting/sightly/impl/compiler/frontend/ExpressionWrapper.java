@@ -23,15 +23,15 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.sling.scripting.sightly.impl.compiler.Syntax;
-import org.apache.sling.scripting.sightly.impl.filter.Filter;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.Expression;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.ExpressionNode;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.node.BinaryOperation;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.node.BinaryOperator;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.node.StringConstant;
+import org.apache.sling.scripting.sightly.impl.filter.ExpressionContext;
+import org.apache.sling.scripting.sightly.impl.filter.Filter;
 import org.apache.sling.scripting.sightly.impl.plugin.MarkupContext;
 
 /**
@@ -48,7 +48,7 @@ public class ExpressionWrapper {
         Collections.sort(this.filters);
     }
 
-    public Expression transform(Interpolation interpolation, MarkupContext markupContext) {
+    public Expression transform(Interpolation interpolation, MarkupContext markupContext, ExpressionContext expressionContext) {
         ArrayList<ExpressionNode> nodes = new ArrayList<ExpressionNode>();
         HashMap<String, ExpressionNode> options = new HashMap<String, ExpressionNode>();
         for (Fragment fragment : interpolation.getFragments()) {
@@ -56,8 +56,8 @@ public class ExpressionWrapper {
                 nodes.add(new StringConstant(fragment.getText()));
             } else {
                 Expression expression = fragment.getExpression();
+                nodes.add(adjustToContext(expression, markupContext, expressionContext).getRoot());
                 options.putAll(expression.getOptions());
-                nodes.add(transformExpr(expression, markupContext).getRoot());
             }
         }
         ExpressionNode root = join(nodes);
@@ -68,51 +68,29 @@ public class ExpressionWrapper {
         return new Expression(root, options);
     }
 
-    private Expression applyFilters(Expression expression) {
+    private Expression applyFilters(Expression expression, ExpressionContext expressionContext) {
         Expression result = expression;
         for (Filter filter : filters) {
-            result = filter.apply(result);
+            result = filter.apply(result, expressionContext);
         }
         return result;
     }
 
-    public Expression adjustToContext(Expression expression, MarkupContext markupContext) {
-        if (expression.containsOption(Syntax.CONTEXT_OPTION)) {
-            return expression;
+    public Expression adjustToContext(Expression expression, MarkupContext context, ExpressionContext expressionContext) {
+        if (context != null && !expression.containsOption(Syntax.CONTEXT_OPTION)) {
+            expression.getOptions().put(Syntax.CONTEXT_OPTION, new StringConstant(context.getName()));
         }
-        Map<String, ExpressionNode> opt = addDefaultContext(Collections.<String, ExpressionNode>emptyMap(), markupContext);
-        Expression result = applyFilters(new Expression(expression.getRoot(), opt));
-        return expression.withNode(result.getRoot());
+        return applyFilters(expression, expressionContext);
     }
 
     private ExpressionNode join(List<ExpressionNode> nodes) {
         if (nodes.isEmpty()) {
             return StringConstant.EMPTY;
         }
-        ExpressionNode root = nodes.get(0);
-        for (int i = 1; i < nodes.size(); i++) {
-            ExpressionNode node = nodes.get(i);
+        ExpressionNode root = nodes.remove(0);
+        for (ExpressionNode node : nodes) {
             root = new BinaryOperation(BinaryOperator.CONCATENATE, root, node);
         }
         return root;
     }
-
-    private Expression transformExpr(Expression expression, MarkupContext markupContext) {
-        expression = addDefaultContext(expression, markupContext);
-        return applyFilters(expression);
-    }
-
-    private Expression addDefaultContext(Expression expression, MarkupContext context) {
-        return new Expression(expression.getRoot(), addDefaultContext(expression.getOptions(), context));
-    }
-
-    private Map<String, ExpressionNode> addDefaultContext(Map<String, ExpressionNode> options, MarkupContext context) {
-        if (context == null || options.containsKey(Syntax.CONTEXT_OPTION)) {
-            return options;
-        }
-        HashMap<String, ExpressionNode> newOptions = new HashMap<String, ExpressionNode>(options);
-        newOptions.put(Syntax.CONTEXT_OPTION, new StringConstant(context.getName()));
-        return newOptions;
-    }
-
 }

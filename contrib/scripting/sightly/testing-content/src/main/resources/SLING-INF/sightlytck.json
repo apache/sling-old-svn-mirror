@@ -10,6 +10,10 @@
             "jcr:primaryType": "nt:unstructured",
             "sling:resourceType": "/sightlytck/scripts/exprlang/filters"
         },
+        "filteroptions": {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "/sightlytck/scripts/exprlang/filteroptions"
+        },
         "strings": {
             "jcr:primaryType": "nt:unstructured",
             "sling:resourceType": "/sightlytck/scripts/exprlang/strings"

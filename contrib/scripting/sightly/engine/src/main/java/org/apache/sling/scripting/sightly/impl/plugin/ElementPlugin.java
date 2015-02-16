@@ -32,6 +32,7 @@ import org.apache.sling.scripting.sightly.impl.compiler.ris.command.VariableBind
 import org.apache.sling.scripting.sightly.impl.compiler.common.DefaultPluginInvoke;
 import org.apache.sling.scripting.sightly.impl.compiler.frontend.CompilerContext;
 import org.apache.sling.scripting.sightly.impl.compiler.util.stream.PushStream;
+import org.apache.sling.scripting.sightly.impl.filter.ExpressionContext;
 
 /**
  * Implementation for the {@code data-sly-element} plugin.
@@ -50,7 +51,8 @@ public class ElementPlugin extends PluginComponent {
 
         return new DefaultPluginInvoke() {
 
-            private final ExpressionNode node = compilerContext.adjustToContext(expression, MarkupContext.ELEMENT_NAME).getRoot();
+            private final ExpressionNode node = compilerContext.adjustToContext(expression, MarkupContext.ELEMENT_NAME, ExpressionContext
+                    .ELEMENT).getRoot();
             private String tagVar = compilerContext.generateVariable("tagVar");
 
             @Override
