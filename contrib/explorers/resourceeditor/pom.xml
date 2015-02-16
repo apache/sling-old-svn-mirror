@@ -21,7 +21,7 @@
         </parent>
 
 	<groupId>org.apache.sling</groupId>
-	<artifactId>resource-editor</artifactId>
+	<artifactId>org.apache.sling.resource-editor</artifactId>
 	<packaging>bundle</packaging>
 	<version>1.0.1-SNAPSHOT</version>
 	<name>Apache Sling Resource Editor</name>
