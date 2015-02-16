@@ -1,0 +1,24 @@
+{
+  "ntWithPropertyDefs": {
+    "declaredPropertyDefinitions": [
+      {
+        "defaultValues": [
+          {
+            "double": 2.2,
+            "type": "Double"
+          }
+        ],
+        "requiredType": "Double",
+        "valueConstraints": [
+          "[,5]"
+        ],
+        "multiple": true,
+        "autoCreated": true,
+        "mandatory": true,
+        "protected": true,
+        "onParentVersion": "VERSION",
+        "name": "doublePropertyDef"
+      }
+    ]
+  }
+}

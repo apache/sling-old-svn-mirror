@@ -1,0 +1,32 @@
+{
+  "ntWithChildNodeDefs": {
+    "declaredChildNodeDefinitions": [
+      {
+        "allowsSameNameSiblings": true,
+        "defaultPrimaryType": "requiredPrimaryType1",
+        "requiredPrimaryTypes": [
+          "requiredPrimaryType1",
+          "requiredPrimaryType2"
+        ],
+        "autoCreated": true,
+        "mandatory": true,
+        "protected": true,
+        "onParentVersion": "VERSION",
+        "name": "childNodeDef1"
+      },
+      {
+        "allowsSameNameSiblings": true,
+        "defaultPrimaryType": "requiredPrimaryType1",
+        "requiredPrimaryTypes": [
+          "requiredPrimaryType1",
+          "requiredPrimaryType2"
+        ],
+        "autoCreated": true,
+        "mandatory": true,
+        "protected": true,
+        "onParentVersion": "VERSION",
+        "name": "childNodeDef2"
+      }
+    ]
+  }
+}

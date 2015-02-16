@@ -1,0 +1,20 @@
+{
+  "ntWithChildNodeDefs": {
+    "declaredChildNodeDefinitions": [
+      {
+        "requiredPrimaryTypes": [
+          "requiredPrimaryType1",
+          "requiredPrimaryType2"
+        ],
+        "name": "childNodeDef1"
+      },
+      {
+        "requiredPrimaryTypes": [
+          "requiredPrimaryType1",
+          "requiredPrimaryType2"
+        ],
+        "name": "childNodeDef2"
+      }
+    ]
+  }
+}

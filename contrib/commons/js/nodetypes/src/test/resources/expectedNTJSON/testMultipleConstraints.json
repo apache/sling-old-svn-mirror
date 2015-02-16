@@ -1,0 +1,18 @@
+{
+  "ntWithPropertyDefs": {
+    "declaredPropertyDefinitions": [
+      {
+        "valueConstraints": [
+          "banana",
+          "apple"
+        ],
+        "multiple": true,
+        "autoCreated": true,
+        "mandatory": true,
+        "protected": true,
+        "onParentVersion": "VERSION",
+        "name": "stringProp"
+      }
+    ]
+  }
+}

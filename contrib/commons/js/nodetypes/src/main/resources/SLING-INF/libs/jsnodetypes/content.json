@@ -1,0 +1,9 @@
+{
+	"primaryNodeType": "nt:unstructured",
+	"nodetypes" : {
+		"sling:resourceType" : "jsnodetypes"
+	},
+	"documentation" : {
+		"sling:resourceType" : "jsnodetypes/documentation"
+	}
+}

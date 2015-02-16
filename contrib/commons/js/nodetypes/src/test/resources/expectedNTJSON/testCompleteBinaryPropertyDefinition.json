@@ -1,0 +1,24 @@
+{
+  "ntWithPropertyDefs": {
+    "declaredPropertyDefinitions": [
+      {
+        "defaultValues": [
+          {
+            "binary": "/ntName/stringPropertyDef/Binary/true/true/true/true/VERSION/0.default_binary_value.bin",
+            "type": "Binary"
+          }
+        ],
+        "requiredType": "Binary",
+        "valueConstraints": [
+          "[,1024]"
+        ],
+        "multiple": true,
+        "autoCreated": true,
+        "mandatory": true,
+        "protected": true,
+        "onParentVersion": "VERSION",
+        "name": "stringPropertyDef"
+      }
+    ]
+  }
+}

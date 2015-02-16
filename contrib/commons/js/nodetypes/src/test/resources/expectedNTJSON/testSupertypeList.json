@@ -1,0 +1,9 @@
+{
+  "testNodeType": {
+    "declaredSupertypes": [
+      "superType1",
+      "superType2",
+      "superType3"
+    ]
+  }
+}

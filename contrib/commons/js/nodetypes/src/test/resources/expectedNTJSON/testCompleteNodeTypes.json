@@ -1,0 +1,56 @@
+{
+  "testNodeType": {
+    "declaredSupertypes": [
+      "superType1",
+      "superType2",
+      "superType3"
+    ],
+    "declaredPropertyDefinitions": [
+      {
+        "defaultValues": [
+          {
+            "string": "Default-String",
+            "type": "String"
+          }
+        ],
+        "valueConstraints": [
+          ".*"
+        ],
+        "multiple": true,
+        "autoCreated": true,
+        "mandatory": true,
+        "protected": true,
+        "onParentVersion": "VERSION",
+        "name": "stringPropertyDef"
+      }
+    ],
+    "declaredChildNodeDefinitions": [
+      {
+        "allowsSameNameSiblings": true,
+        "defaultPrimaryType": "requiredPrimaryType1",
+        "requiredPrimaryTypes": [
+          "requiredPrimaryType1",
+          "requiredPrimaryType2"
+        ],
+        "autoCreated": true,
+        "mandatory": true,
+        "protected": true,
+        "onParentVersion": "VERSION",
+        "name": "childNodeDef1"
+      },
+      {
+        "allowsSameNameSiblings": true,
+        "defaultPrimaryType": "requiredPrimaryType1",
+        "requiredPrimaryTypes": [
+          "requiredPrimaryType1",
+          "requiredPrimaryType2"
+        ],
+        "autoCreated": true,
+        "mandatory": true,
+        "protected": true,
+        "onParentVersion": "VERSION",
+        "name": "childNodeDef2"
+      }
+    ]
+  }
+}

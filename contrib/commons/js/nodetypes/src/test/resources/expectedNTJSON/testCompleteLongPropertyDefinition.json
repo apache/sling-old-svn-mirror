@@ -1,0 +1,24 @@
+{
+  "ntWithPropertyDefs": {
+    "declaredPropertyDefinitions": [
+      {
+        "defaultValues": [
+          {
+            "long": 2,
+            "type": "Long"
+          }
+        ],
+        "requiredType": "Long",
+        "valueConstraints": [
+          "[,55]"
+        ],
+        "multiple": true,
+        "autoCreated": true,
+        "mandatory": true,
+        "protected": true,
+        "onParentVersion": "VERSION",
+        "name": "longPropertyDef"
+      }
+    ]
+  }
+}

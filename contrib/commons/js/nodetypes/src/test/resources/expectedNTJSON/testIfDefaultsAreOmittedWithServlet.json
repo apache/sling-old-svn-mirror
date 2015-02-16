@@ -1,0 +1,12 @@
+{
+  "testNodeType": {
+    "declaredPropertyDefinitions": [{
+        "name": "stringPropertyDef"
+      }
+    ],
+    "declaredChildNodeDefinitions": [{
+        "name": "childNodeDef"
+      }
+    ]
+  }
+}

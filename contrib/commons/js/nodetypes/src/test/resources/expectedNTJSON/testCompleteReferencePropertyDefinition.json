@@ -1,0 +1,24 @@
+{
+  "ntWithPropertyDefs": {
+    "declaredPropertyDefinitions": [
+      {
+        "defaultValues": [
+          {
+            "reference": "nt:unstructured",
+            "type": "Reference"
+          }
+        ],
+        "requiredType": "Reference",
+        "valueConstraints": [
+          "nt:unstructured"
+        ],
+        "multiple": true,
+        "autoCreated": true,
+        "mandatory": true,
+        "protected": true,
+        "onParentVersion": "VERSION",
+        "name": "referencePropertyDef"
+      }
+    ]
+  }
+}

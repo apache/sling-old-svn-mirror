@@ -1,0 +1,27 @@
+{
+  "ntWithPropertyDefs": {
+    "declaredPropertyDefinitions": [
+      {
+        "defaultValues": [
+          {
+            "string": "Default-String",
+            "type": "String"
+          },
+          {
+            "string": "Default-String2",
+            "type": "String"
+          }
+        ],
+        "valueConstraints": [
+          ".*"
+        ],
+        "multiple": true,
+        "autoCreated": true,
+        "mandatory": true,
+        "protected": true,
+        "onParentVersion": "VERSION",
+        "name": "stringProp"
+      }
+    ]
+  }
+}
