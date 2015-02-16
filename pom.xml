@@ -124,6 +124,7 @@
                     <instructions>
                         <Sling-Initial-Content>SLING-INF;overwrite=true</Sling-Initial-Content>
                         <Sling-Model-Packages>org.apache.sling.scripting.sightly.testing.models</Sling-Model-Packages>
+                        <Require-Capability>io.sightly; filter:="(&amp;(version>=1.0)(!(version>=2.0)))"</Require-Capability>
                     </instructions>
                 </configuration>
             </plugin>
