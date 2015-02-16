@@ -201,6 +201,10 @@ public class RenderContextImpl implements RenderContext {
         if (obj instanceof Iterator) {
             return fromIterator((Iterator<Object>) obj);
         }
+        if (obj instanceof Iterable) {
+            Iterable iterable = (Iterable) obj;
+            return fromIterator(iterable.iterator());
+        }
         return Collections.emptyList();
     }
 
