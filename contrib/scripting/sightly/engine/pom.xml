@@ -80,6 +80,7 @@
                         <Embed-Dependency>antlr4-runtime,org.abego.treelayout.core</Embed-Dependency>
                         <ScriptEngine-Name>${project.name}</ScriptEngine-Name>
                         <ScriptEngine-Version>${project.version}</ScriptEngine-Version>
+                        <Provide-Capability>io.sightly; version:Version=1.0, io.sightly; version:Version=1.1</Provide-Capability>
                     </instructions>
                 </configuration>
             </plugin>
