@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -141,6 +142,14 @@ public class RenderContextImpl implements RenderContext {
     public Map toMap(Object object) {
         if (object instanceof Map) {
             return (Map) object;
+        } else if (object instanceof Record) {
+            Map<String, Object> map = new HashMap<String, Object>();
+            Record record = (Record) object;
+            Set<String> properties = record.getPropertyNames();
+            for (String property : properties) {
+                map.put(property, record.getProperty(property));
+            }
+            return map;
         }
         return Collections.emptyMap();
     }

@@ -33,7 +33,7 @@ public interface Filter extends Comparable<Filter> {
      * @return a transformed expression. If the filter is not applicable
      * to the given expression, then the original expression shall be returned
      */
-    Expression apply(Expression expression);
+    Expression apply(Expression expression, ExpressionContext expressionContext);
 
     /**
      * The priority with which filters are applied. This establishes order between filters. Filters with

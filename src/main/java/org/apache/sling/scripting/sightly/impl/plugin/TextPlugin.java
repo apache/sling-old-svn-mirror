@@ -29,6 +29,7 @@ import org.apache.sling.scripting.sightly.impl.compiler.ris.command.VariableBind
 import org.apache.sling.scripting.sightly.impl.compiler.common.DefaultPluginInvoke;
 import org.apache.sling.scripting.sightly.impl.compiler.frontend.CompilerContext;
 import org.apache.sling.scripting.sightly.impl.compiler.util.stream.PushStream;
+import org.apache.sling.scripting.sightly.impl.filter.ExpressionContext;
 
 /**
  * The {@code data-sly-text} plugin.
@@ -49,7 +50,7 @@ public class TextPlugin extends PluginComponent {
             public void beforeChildren(PushStream stream) {
                 String variable = compilerContext.generateVariable("textContent");
                 stream.emit(new VariableBinding.Start(variable,
-                        compilerContext.adjustToContext(expression, MarkupContext.TEXT).getRoot()));
+                        compilerContext.adjustToContext(expression, MarkupContext.TEXT, ExpressionContext.TEXT).getRoot()));
                 stream.emit(new OutVariable(variable));
                 stream.emit(VariableBinding.END);
                 Patterns.beginStreamIgnore(stream);

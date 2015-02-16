@@ -47,6 +47,7 @@ import org.apache.sling.scripting.sightly.impl.compiler.ris.command.VariableBind
 import org.apache.sling.scripting.sightly.impl.compiler.common.DefaultPluginInvoke;
 import org.apache.sling.scripting.sightly.impl.compiler.frontend.CompilerContext;
 import org.apache.sling.scripting.sightly.impl.compiler.util.stream.PushStream;
+import org.apache.sling.scripting.sightly.impl.filter.ExpressionContext;
 import org.apache.sling.scripting.sightly.impl.html.MarkupUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -351,6 +352,6 @@ public class AttributePlugin extends PluginComponent {
             //todo: this is not the indicated way to escape via XSS. Correct after modifying the compiler context API
             return new RuntimeCall("xss", node, new StringConstant(markupContext.getName()), hint);
         }
-        return compilerContext.adjustToContext(new Expression(node), markupContext).getRoot();
+        return compilerContext.adjustToContext(new Expression(node), markupContext, ExpressionContext.ATTRIBUTE).getRoot();
     }
 }

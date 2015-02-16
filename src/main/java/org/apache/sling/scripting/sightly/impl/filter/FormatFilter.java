@@ -50,15 +50,16 @@ public class FormatFilter extends FilterComponent implements RuntimeExtension {
     private static final Pattern PLACEHOLDER_REGEX = Pattern.compile("\\{\\d}");
 
     @Override
-    public Expression apply(Expression expression) {
+    public Expression apply(Expression expression, ExpressionContext expressionContext) {
         //todo: if the expression is a string constant, we can produce the transformation at
         //compile time, with no need of a runtime function
-        if (!expression.containsOption(FORMAT_OPTION)) {
+        if (!expression.containsOption(FORMAT_OPTION) || expressionContext == ExpressionContext.PLUGIN_DATA_SLY_USE || expressionContext
+                == ExpressionContext.PLUGIN_DATA_SLY_TEMPLATE || expressionContext == ExpressionContext.PLUGIN_DATA_SLY_CALL) {
             return expression;
         }
         ExpressionNode argNode = expression.getOption(FORMAT_OPTION);
         ExpressionNode formattedNode = new RuntimeCall(FORMAT_FUNCTION, expression.getRoot(), argNode);
-        return expression.withNode(formattedNode).removeOptions(FORMAT_OPTION);
+        return expression.withNode(formattedNode).withRemovedOptions(FORMAT_OPTION);
     }
 
     @Override

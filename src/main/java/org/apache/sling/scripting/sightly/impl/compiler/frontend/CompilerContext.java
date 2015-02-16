@@ -20,6 +20,7 @@ package org.apache.sling.scripting.sightly.impl.compiler.frontend;
 
 import org.apache.sling.scripting.sightly.impl.compiler.Syntax;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.Expression;
+import org.apache.sling.scripting.sightly.impl.filter.ExpressionContext;
 import org.apache.sling.scripting.sightly.impl.plugin.MarkupContext;
 import org.apache.sling.scripting.sightly.impl.compiler.util.SymbolGenerator;
 
@@ -42,9 +43,9 @@ public class CompilerContext {
         return symbolGenerator.next(hint);
     }
 
-    public Expression adjustToContext(Expression expression, MarkupContext context) {
+    public Expression adjustToContext(Expression expression, MarkupContext context, ExpressionContext expressionContext) {
         if (!expression.getOptions().containsKey(Syntax.CONTEXT_OPTION)) {
-            return expressionWrapper.adjustToContext(expression, context);
+            return expressionWrapper.adjustToContext(expression, context, expressionContext);
         }
         return expression;
     }

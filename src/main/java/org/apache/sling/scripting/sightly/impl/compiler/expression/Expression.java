@@ -44,7 +44,7 @@ public class Expression {
      * @return - the expression options
      */
     public Map<String, ExpressionNode> getOptions() {
-        return Collections.unmodifiableMap(options);
+        return options;
     }
 
     /**
@@ -70,12 +70,33 @@ public class Expression {
      * @param removedOptions the options to be removed
      * @return a copy where the mention options are no longer present
      */
-    public Expression removeOptions(String ... removedOptions) {
+    public Expression withRemovedOptions(String... removedOptions) {
         HashMap<String, ExpressionNode> newOptions = new HashMap<String, ExpressionNode>(options);
         for (String option : removedOptions) {
             newOptions.remove(option);
         }
         return new Expression(root, newOptions);
+    }
+
+    /**
+     * Removes the given options from this expression.
+     *
+     * @param removedOptions the options to be removed
+     */
+    public void removeOptions(String... removedOptions) {
+        for (String option : removedOptions) {
+            options.remove(option);
+        }
+    }
+
+    /**
+     * Removes the given option from this expression.
+     *
+     * @param option the option to be removed
+     * @return the option, or {@code null} if the option doesn't exist
+     */
+    public ExpressionNode removeOption(String option) {
+        return options.remove(option);
     }
 
     /**
