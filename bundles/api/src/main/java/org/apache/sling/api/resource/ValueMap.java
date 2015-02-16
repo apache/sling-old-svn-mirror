@@ -81,5 +81,5 @@ public interface ValueMap extends Map<String, Object> {
      * @return Return named value converted to type T or the default value if
      *         non existing or can't be converted.
      */
-    @CheckForNull <T> T get(@Nonnull String name, T defaultValue);
+    <T> T get(@Nonnull String name, T defaultValue);
 }
