@@ -22,6 +22,8 @@ import java.io.PrintWriter;
 import java.io.Reader;
 import java.util.HashMap;
 
+import javax.annotation.CheckForNull;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
@@ -195,7 +197,7 @@ public class SlingBindings extends HashMap<String, Object> {
      * <code>org.slf4j.Logger</code> instance. Otherwise <code>null</code>
      * is returned.
      */
-    public Logger getLog() {
+    public @CheckForNull Logger getLog() {
         return this.get(LOG, Logger.class);
     }
 
@@ -212,7 +214,7 @@ public class SlingBindings extends HashMap<String, Object> {
      * <code>PrintWriter</code> instance. Otherwise <code>null</code> is
      * returned.
      */
-    public PrintWriter getOut() {
+    public @CheckForNull PrintWriter getOut() {
         return this.get(OUT, PrintWriter.class);
     }
 
@@ -229,7 +231,7 @@ public class SlingBindings extends HashMap<String, Object> {
      * <code>SlingHttpServletRequest</code> instance. Otherwise
      * <code>null</code> is returned.
      */
-    public SlingHttpServletRequest getRequest() {
+    public @CheckForNull SlingHttpServletRequest getRequest() {
         return this.get(REQUEST, SlingHttpServletRequest.class);
     }
 
@@ -246,7 +248,7 @@ public class SlingBindings extends HashMap<String, Object> {
      * <code>Reader</code> instance. Otherwise <code>null</code> is
      * returned.
      */
-    public Reader getReader() {
+    public @CheckForNull Reader getReader() {
         return this.get(READER, Reader.class);
     }
 
@@ -263,7 +265,7 @@ public class SlingBindings extends HashMap<String, Object> {
      * <code>Resource</code> instance. Otherwise <code>null</code> is
      * returned.
      */
-    public Resource getResource() {
+    public @CheckForNull Resource getResource() {
         return this.get(RESOURCE, Resource.class);
     }
 
@@ -280,7 +282,7 @@ public class SlingBindings extends HashMap<String, Object> {
      * <code>SlingHttpServletResponse</code> instance. Otherwise
      * <code>null</code> is returned.
      */
-    public SlingHttpServletResponse getResponse() {
+    public @CheckForNull SlingHttpServletResponse getResponse() {
         return this.get(RESPONSE, SlingHttpServletResponse.class);
     }
 
@@ -297,7 +299,7 @@ public class SlingBindings extends HashMap<String, Object> {
      * <code>SlingScriptHelper</code> instance. Otherwise <code>null</code>
      * is returned.
      */
-    public SlingScriptHelper getSling() {
+    public @CheckForNull SlingScriptHelper getSling() {
         return this.get(SLING, SlingScriptHelper.class);
     }
 }
