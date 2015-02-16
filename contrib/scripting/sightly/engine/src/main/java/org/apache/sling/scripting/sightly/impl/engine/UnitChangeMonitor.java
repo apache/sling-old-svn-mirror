@@ -66,6 +66,9 @@ public class UnitChangeMonitor {
      * @return the script's last modified date or 0 if there's no information about the script
      */
     public long getLastModifiedDateForScript(String script) {
+        if (script == null) {
+            return 0;
+        }
         Long date = slyScriptsMap.get(script);
         return date != null ? date : 0;
     }
@@ -77,6 +80,9 @@ public class UnitChangeMonitor {
      * @return the file's last modified date or 0 if there's no information about the file
      */
     public long getLastModifiedDateForJavaSourceFile(String file) {
+        if (file == null) {
+            return 0;
+        }
         Long date = slySourcesMap.get(file);
         return date != null ? date : 0;
     }
@@ -88,6 +94,9 @@ public class UnitChangeMonitor {
      * @return the Java Use-API file's last modified date or 0 if there's no information about this file
      */
     public long getLastModifiedDateForJavaUseObject(String path) {
+        if (path == null) {
+            return 0;
+        }
         Long date = slyJavaUseMap.get(path);
         return date != null ? date : 0;
     }
@@ -98,7 +107,9 @@ public class UnitChangeMonitor {
     }
 
     public void clearJavaUseObject(String path) {
-        slyJavaUseMap.remove(path);
+        if (path != null) {
+            slyJavaUseMap.remove(path);
+        }
     }
 
     @Activate

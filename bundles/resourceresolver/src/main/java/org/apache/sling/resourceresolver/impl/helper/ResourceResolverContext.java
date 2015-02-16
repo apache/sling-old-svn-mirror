@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.sling.api.resource.DynamicResourceProvider;
 import org.apache.sling.api.resource.LoginException;
@@ -67,6 +68,9 @@ public class ResourceResolverContext {
 
     /** Resource type resource resolver (admin resolver) */
     private ResourceResolver resourceTypeResourceResolver;
+
+    /** Flag for handling multiple calls to close. */
+    private final AtomicBoolean isClosed = new AtomicBoolean(false);
 
     /**
      * Create a new resource resolver context.
@@ -136,15 +140,17 @@ public class ResourceResolverContext {
      * Close all dynamic resource providers.
      */
     public void close() {
-        for (final DynamicResourceProvider provider : this.dynamicProviders) {
-            provider.close();
-        }
-        this.dynamicProviders.clear();
-        this.providers.clear();
-        this.refreshableProviders.clear();
-        if ( this.resourceTypeResourceResolver != null ) {
-            this.resourceTypeResourceResolver.close();
-            this.resourceTypeResourceResolver = null;
+        if ( this.isClosed.compareAndSet(false, true)) {
+            for (final DynamicResourceProvider provider : this.dynamicProviders) {
+                provider.close();
+            }
+            this.dynamicProviders.clear();
+            this.providers.clear();
+            this.refreshableProviders.clear();
+            if ( this.resourceTypeResourceResolver != null ) {
+                this.resourceTypeResourceResolver.close();
+                this.resourceTypeResourceResolver = null;
+            }
         }
     }
 

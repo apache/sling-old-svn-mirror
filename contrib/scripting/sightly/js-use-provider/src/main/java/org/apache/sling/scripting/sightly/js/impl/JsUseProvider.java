@@ -27,11 +27,14 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.scripting.SlingScriptHelper;
+import org.apache.sling.scripting.sightly.SightlyException;
+import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.js.impl.async.AsyncContainer;
 import org.apache.sling.scripting.sightly.js.impl.async.AsyncExtractor;
 import org.apache.sling.scripting.sightly.js.impl.jsapi.SlyBindingsValuesProvider;
@@ -58,7 +61,7 @@ import org.slf4j.LoggerFactory;
                 label = "Service Ranking",
                 description = "The Service Ranking value acts as the priority with which this Use Provider is queried to return an " +
                         "Use-object. A higher value represents a higher priority.",
-                intValue = 90,
+                intValue = 80,
                 propertyPrivate = false
         )
 })
@@ -73,9 +76,6 @@ public class JsUseProvider implements UseProvider {
     private ScriptEngineManager scriptEngineManager = null;
 
     @Reference
-    private ResourceResolverFactory rrf = null;
-
-    @Reference
     private SlyBindingsValuesProvider slyBindingsValuesProvider = null;
 
     @Override
@@ -85,46 +85,17 @@ public class JsUseProvider implements UseProvider {
         if (!Utils.isJsScript(identifier)) {
             return ProviderOutcome.failure();
         }
-        ScriptEngine jsEngine = obtainEngine();
+        ScriptEngine jsEngine = scriptEngineManager.getEngineByName(JS_ENGINE_NAME);
         if (jsEngine == null) {
-            log.warn("No JavaScript engine defined");
-            return ProviderOutcome.failure();
+            return ProviderOutcome.failure(new SightlyException("No JavaScript engine was defined."));
         }
         SlingScriptHelper scriptHelper = Utils.getHelper(globalBindings);
-        JsEnvironment environment = null;
-        ResourceResolver adminResolver = null;
-        try {
-            environment = new JsEnvironment(jsEngine);
-            environment.initialize();
-            String callerPath = scriptHelper.getScript().getScriptResource().getPath();
-            boolean allowedExecutablePath = false;
-            adminResolver = rrf.getAdministrativeResourceResolver(null);
-            for (String path : adminResolver.getSearchPath()) {
-                if (callerPath.startsWith(path)) {
-                    allowedExecutablePath = true;
-                    break;
-                }
-            }
-            if (allowedExecutablePath) {
-                Resource caller = adminResolver.getResource(callerPath);
-                AsyncContainer asyncContainer = environment.run(caller, identifier, globalBindings, arguments);
-                return ProviderOutcome.success(jsValueAdapter.adapt(asyncContainer));
-            }
-            return ProviderOutcome.failure();
-        } catch (LoginException e) {
-            log.error("Unable to load JS script " + identifier, e);
-        } finally {
-            if (environment != null) {
-                environment.cleanup();
-            }
-            if (adminResolver != null) {
-                adminResolver.close();
-            }
-        }
-        return ProviderOutcome.failure();
-    }
-
-    private ScriptEngine obtainEngine() {
-        return scriptEngineManager.getEngineByName(JS_ENGINE_NAME);
+        JsEnvironment environment = new JsEnvironment(jsEngine);
+        environment.initialize();
+        String callerPath = scriptHelper.getScript().getScriptResource().getPath();
+        ResourceResolver adminResolver = renderContext.getScriptResourceResolver();
+        Resource caller = adminResolver.getResource(callerPath);
+        AsyncContainer asyncContainer = environment.run(caller, identifier, globalBindings, arguments);
+        return ProviderOutcome.success(jsValueAdapter.adapt(asyncContainer));
     }
 }

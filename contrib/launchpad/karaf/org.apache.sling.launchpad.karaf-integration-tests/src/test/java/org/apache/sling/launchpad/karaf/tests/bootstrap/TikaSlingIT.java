@@ -19,6 +19,7 @@
 package org.apache.sling.launchpad.karaf.tests.bootstrap;
 
 import org.apache.sling.launchpad.karaf.testing.KarafTestSupport;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -44,6 +45,7 @@ public class TikaSlingIT extends KarafTestSupport {
     }
 
     @Test
+    @Ignore
     public void testOrgApacheTikaBundle() {
         final Bundle bundle = findBundle("org.apache.tika.bundle");
         assertNotNull(bundle);

@@ -51,15 +51,15 @@ import org.xml.sax.ContentHandler;
  */
 class MockSession implements Session {
 
-    private final Repository repository;
+    private final MockRepository repository;
     private final Workspace workspace;
     private final Map<String, ItemData> items;
     private final String userId;
 
-    public MockSession(Repository repository, Map<String,ItemData> items,
+    public MockSession(MockRepository repository, Map<String,ItemData> items,
             String userId, String workspaceName) {
         this.repository = repository;
-        this.workspace = new MockWorkspace(this, workspaceName);
+        this.workspace = new MockWorkspace(repository, this, workspaceName);
         this.items = items;
         this.userId = userId;
     }

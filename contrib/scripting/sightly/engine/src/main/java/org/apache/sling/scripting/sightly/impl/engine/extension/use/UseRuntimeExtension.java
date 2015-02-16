@@ -44,6 +44,8 @@ import org.apache.sling.scripting.sightly.use.ProviderOutcome;
 import org.apache.sling.scripting.sightly.use.UseProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Runtime extension for the USE plugin
@@ -60,6 +62,8 @@ import org.osgi.framework.ServiceReference;
         cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE
 )
 public class UseRuntimeExtension implements RuntimeExtension {
+
+    private static final Logger LOG = LoggerFactory.getLogger(UseRuntimeExtension.class);
 
     private final Map<ServiceReference, UseProvider> providersMap = new ConcurrentSkipListMap<ServiceReference, UseProvider>();
 
@@ -83,11 +87,12 @@ public class UseRuntimeExtension implements RuntimeExtension {
             ProviderOutcome outcome = provider.provide(identifier, renderContext, useArguments);
             if (outcome.isSuccess()) {
                 return outcome.getResult();
-            } else if (outcome.getCause() != null) {
-                failureCause = outcome.getCause();
+            } else if ((failureCause = outcome.getCause()) != null) {
+                throw new SightlyException("Identifier " + identifier + " cannot be correctly instantiated by the Use API", failureCause);
             }
         }
-        throw new SightlyException("No use provider could resolve identifier: " + identifier, failureCause);
+        LOG.error("No use provider could resolve identifier " + identifier);
+        return null;
     }
 
     // OSGi ################################################################################################################################

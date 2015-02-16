@@ -21,6 +21,7 @@ package org.apache.sling.scripting.thymeleaf.internal.templatemodehandler;
 import java.util.Dictionary;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
@@ -35,7 +36,8 @@ import org.thymeleaf.templatewriter.XhtmlHtml5TemplateWriter;
     label = "Apache Sling Scripting Thymeleaf “Validating XHTML Template Mode Handler”",
     description = "validating XHTML template mode handler for Sling Scripting Thymeleaf",
     immediate = true,
-    metatype = true
+    metatype = true,
+    policy = ConfigurationPolicy.REQUIRE
 )
 @Service
 @Properties({
@@ -46,18 +48,16 @@ public class ValidatingXhtmlTemplateModeHandler extends AbstractTemplateModeHand
 
     public static final String TEMPLATE_MODE_NAME = "VALIDXHTML";
 
-    public static final String DEFAULT_PATTERN = "*.xhtml";
-
-    @Property(value = {DEFAULT_PATTERN}, unbounded = PropertyUnbounded.ARRAY)
+    @Property(unbounded = PropertyUnbounded.ARRAY)
     public static final String PATTERNS_PARAMETER = "org.apache.sling.scripting.thymeleaf.internal.templatemodehandler.ValidatingXhtmlTemplateModeHandler.patterns";
 
     public ValidatingXhtmlTemplateModeHandler() {
         super(TEMPLATE_MODE_NAME, new XhtmlAndHtml5NonValidatingSAXTemplateParser(poolSize()), new XhtmlHtml5TemplateWriter());
     }
 
-    protected synchronized void configure(final ComponentContext componentContext) {
+    protected void configure(final ComponentContext componentContext) {
         final Dictionary properties = componentContext.getProperties();
-        final String[] strings = PropertiesUtil.toStringArray(properties.get(PATTERNS_PARAMETER), new String[]{DEFAULT_PATTERN});
+        final String[] strings = PropertiesUtil.toStringArray(properties.get(PATTERNS_PARAMETER), new String[]{});
         configurePatternSpec(strings);
     }
 

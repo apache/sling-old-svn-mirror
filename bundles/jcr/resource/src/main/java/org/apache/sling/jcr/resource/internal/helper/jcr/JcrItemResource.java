@@ -47,7 +47,9 @@ abstract class JcrItemResource<T extends Item> // this should be package private
 
     private final ResourceResolver resourceResolver;
 
-    private String path;
+    protected final String path;
+
+    protected final String version;
 
     private final T item;
 
@@ -57,12 +59,14 @@ abstract class JcrItemResource<T extends Item> // this should be package private
 
     protected JcrItemResource(final ResourceResolver resourceResolver,
                               final String path,
+                              final String version,
                               final T item,
                               final ResourceMetadata metadata,
                               final PathMapper pathMapper) {
 
         this.resourceResolver = resourceResolver;
         this.path = path;
+        this.version = version;
         this.item = item;
         this.metadata = metadata;
         this.pathMapper = pathMapper;
@@ -79,7 +83,13 @@ abstract class JcrItemResource<T extends Item> // this should be package private
      * @see org.apache.sling.api.resource.Resource#getPath()
      */
     public String getPath() {
-        return path;
+        if (version == null) {
+            return path;
+        } else if (version.contains(".")) {
+            return String.format("%s;v='%s'", path, version);
+        } else {
+            return String.format("%s;v=%s", path, version);
+        }
     }
 
     /**

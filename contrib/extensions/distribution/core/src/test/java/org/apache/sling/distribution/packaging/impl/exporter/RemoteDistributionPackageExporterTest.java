@@ -24,6 +24,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
+import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
@@ -45,7 +46,7 @@ public class RemoteDistributionPackageExporterTest {
         DistributionTransportSecretProvider distributionTransportSecretProvider = mock(DistributionTransportSecretProvider.class);
         String[] endpoints = new String[0];
         for (TransportEndpointStrategyType strategy : TransportEndpointStrategyType.values()) {
-            RemoteDistributionPackageExporter remotedistributionPackageExporter = new RemoteDistributionPackageExporter(
+            RemoteDistributionPackageExporter remotedistributionPackageExporter = new RemoteDistributionPackageExporter(mock(DefaultDistributionLog.class),
                     packageBuilder, distributionTransportSecretProvider, endpoints, strategy, 1);
             ResourceResolver resourceResolver = mock(ResourceResolver.class);
             DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");

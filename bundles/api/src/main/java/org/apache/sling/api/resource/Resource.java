@@ -70,7 +70,7 @@ public interface Resource extends Adaptable {
      * Returns the name of this resource. The name of a resource is the last
      * segment of the {@link #getPath() path}.
      *
-     * @since 2.1.0
+     * @since 2.1 (Sling API Bundle 2.2.0)
      */
     String getName();
 
@@ -78,7 +78,7 @@ public interface Resource extends Adaptable {
      * Returns the parent resource or <code>null</code> if this resource
      * represents the root of the resource tree.
      *
-     * @since 2.1.0
+     * @since 2.1 (Sling API Bundle 2.1.0)
      */
     @CheckForNull Resource getParent();
 
@@ -88,7 +88,7 @@ public interface Resource extends Adaptable {
      * This method is a convenience and returns exactly the same resources as
      * calling <code>getResourceResolver().listChildren(resource)</code>.
      *
-     * @since 2.1.0
+     * @since 2.1 (Sling API Bundle 2.1.0)
      * @see ResourceResolver#listChildren(Resource)
      */
     Iterator<Resource> listChildren();
@@ -99,7 +99,7 @@ public interface Resource extends Adaptable {
      * This method is a convenience and returns exactly the same resources as
      * calling <code>getResourceResolver().getChildren(resource)</code>.
      *
-     * @since 2.2.0
+     * @since 2.2 (Sling API Bundle 2.2.0)
      * @see ResourceResolver#getChildren(Resource)
      */
     Iterable<Resource> getChildren();
@@ -111,7 +111,7 @@ public interface Resource extends Adaptable {
      * This method is a convenience and returns exactly the same resources as
      * calling <code>getResourceResolver().getResource(resource, relPath)</code>.
      *
-     * @since 2.1.0
+     * @since 2.1 (Sling API Bundle 2.1.0)
      * @see ResourceResolver#getResource(Resource, String)
      */
     @CheckForNull Resource getChild(String relPath);
@@ -143,7 +143,7 @@ public interface Resource extends Adaptable {
      * Checks if the resource has any child resources.
      *
      * @return <code>true</code> if the resource has any child resources
-     * @since 2.4.4
+     * @since 2.4.4 (Sling API Bundle 2.5.0)
      */
     boolean hasChildren();
 
@@ -156,7 +156,7 @@ public interface Resource extends Adaptable {
      *         super type(s) equals the given resource type. <code>false</code>
      *         is also returned if <code>resourceType</code> is
      *         <code>null</code>.
-     * @since 2.1.0
+     * @since 2.1.0 (Sling API Bundle 2.1.0)
      */
     boolean isResourceType(@CheckForNull String resourceType);
 
@@ -181,7 +181,7 @@ public interface Resource extends Adaptable {
      * Returns a value map for this resource.
      * The value map allows to read the properties of the resource.
      * @return A value map
-     * @since 2.5
+     * @since 2.5 (Sling API Bundle 2.7.0)
      */
     ValueMap getValueMap();
 }

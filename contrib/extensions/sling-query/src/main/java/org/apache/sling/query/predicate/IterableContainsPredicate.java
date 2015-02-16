@@ -19,9 +19,9 @@
 
 package org.apache.sling.query.predicate;
 
-import org.apache.sling.query.LazyList;
 import org.apache.sling.query.api.Predicate;
 import org.apache.sling.query.api.TreeProvider;
+import org.apache.sling.query.util.LazyList;
 
 public class IterableContainsPredicate<T> implements Predicate<T> {
 

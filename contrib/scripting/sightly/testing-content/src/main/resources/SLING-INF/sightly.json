@@ -1,0 +1,8 @@
+{
+    "jcr:primaryType": "sling:Folder",
+    "use": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "/apps/sightly/scripts/use",
+        "jcr:title": "SUCCESS"
+    }
+}

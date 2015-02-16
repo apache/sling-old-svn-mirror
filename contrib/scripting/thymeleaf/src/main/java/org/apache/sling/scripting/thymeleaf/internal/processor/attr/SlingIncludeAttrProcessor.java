@@ -127,7 +127,7 @@ public class SlingIncludeAttrProcessor extends AbstractAttrProcessor {
 
         try {
             // create a dispatcher for the resource or path
-            RequestDispatcher dispatcher;
+            final RequestDispatcher dispatcher;
             if (resource != null) {
                 dispatcher = slingHttpServletRequest.getRequestDispatcher(resource, options);
             } else {

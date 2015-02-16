@@ -21,9 +21,9 @@ package org.apache.sling.query.function;
 
 import java.util.Iterator;
 
-import org.apache.sling.query.IteratorUtils;
 import org.apache.sling.query.api.TreeProvider;
-import org.apache.sling.query.api.function.ElementToIteratorFunction;
+import org.apache.sling.query.api.internal.ElementToIteratorFunction;
+import org.apache.sling.query.util.IteratorUtils;
 
 public class SiblingsFunction<T> implements ElementToIteratorFunction<T> {
 

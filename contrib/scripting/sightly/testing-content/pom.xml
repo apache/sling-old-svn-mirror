@@ -85,7 +85,7 @@
                                 <artifactItem>
                                     <groupId>io.sightly</groupId>
                                     <artifactId>io.sightly.tck</artifactId>
-                                    <version>1.0.2</version>
+                                    <version>1.1.0</version>
                                     <type>jar</type>
                                     <outputDirectory>${project.build.directory}/sightlytck/</outputDirectory>
                                     <includes>**/*.html,**/*.js,**/*.java</includes>
@@ -123,6 +123,7 @@
                 <configuration>
                     <instructions>
                         <Sling-Initial-Content>SLING-INF;overwrite=true</Sling-Initial-Content>
+                        <Sling-Model-Packages>org.apache.sling.scripting.sightly.testing.models</Sling-Model-Packages>
                     </instructions>
                 </configuration>
             </plugin>
@@ -133,7 +134,57 @@
                     <failOnError>true</failOnError>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>jslint-maven-plugin</artifactId>
+                <version>1.0.1</version>
+                <configuration>
+                    <sourceJsFolder>${basedir}/src/main/resources/SLING-INF</sourceJsFolder>
+                    <includes>
+                        <include>**/*.json</include>
+                    </includes>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>jslint</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+                <dependencies>
+                    <dependency>
+                        <groupId>javax.jcr</groupId>
+                        <artifactId>jcr</artifactId>
+                        <version>2.0</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
         </plugins>
     </build>
+
+    <dependencies>
+        <!-- Test bundle dependencies -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.models.api</artifactId>
+            <version>1.1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.api</artifactId>
+            <version>2.1.0</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
 
 </project>

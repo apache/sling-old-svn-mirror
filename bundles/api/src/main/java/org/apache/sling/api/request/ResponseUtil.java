@@ -27,7 +27,7 @@ import java.io.Writer;
  * This class is not intended to be extended or instantiated because it just
  * provides static utility methods not intended to be overwritten.
  *
- * @since 2.1
+ * @since 2.1 (Sling API Bundle 2.1.0)
  */
 public class ResponseUtil {
 

@@ -430,7 +430,11 @@ public class XSSAPIImplTest {
 
                 // no javascript:
                 {"javascript:alert(1)"              , RUBBISH},
+                {"'javascript:alert(1)'"            , RUBBISH},
+                {"\"javascript:alert('XSS')\""      , RUBBISH},
                 {"url(javascript:alert(1))"         , RUBBISH},
+                {"url('javascript:alert(1)')"       , RUBBISH},
+                {"url(\"javascript:alert('XSS')\")" , RUBBISH},
 
                 // no expression
                 {"expression(alert(1))"             , RUBBISH},

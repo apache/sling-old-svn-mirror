@@ -222,4 +222,11 @@ public class SlingCrudResourceResolverTest {
         assertEquals(STRING_VALUE, propValue);
     }
 
+    @Test
+    public void testGetRootResourceByNullPath() {
+        Resource rootResource = this.resourceResolver.resolve((String)null);
+        assertNotNull(rootResource);
+        assertEquals("/", rootResource.getPath());
+    }
+
 }

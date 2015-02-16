@@ -29,7 +29,7 @@ import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
+import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.slf4j.Logger;
@@ -48,7 +48,7 @@ public class UserCredentialsDistributionTransportSecretProvider implements
      * name of this component.
      */
     @Property(label = "Name")
-    public static final String NAME = DistributionComponentUtils.PN_NAME;
+    public static final String NAME = DistributionComponentConstants.PN_NAME;
 
     @Property(label = "User Name", description = "The name of the user used to perform remote actions.")
     public final static String USERNAME = "username";

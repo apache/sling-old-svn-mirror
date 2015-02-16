@@ -46,6 +46,7 @@ import org.apache.sling.jcr.compiler.JcrJavaCompiler;
 import org.apache.sling.scripting.sightly.ResourceResolution;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.impl.engine.UnitChangeMonitor;
+import org.apache.sling.scripting.sightly.impl.engine.UnitLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,7 +92,7 @@ public class SightlyJavaCompilerService {
      */
     public Object getInstance(ResourceResolver resolver, Resource callingScript, String className) {
         if (className.contains(".")) {
-            String pojoPath = getPathFromJavaName(className);
+            String pojoPath = getPathFromJavaName(resolver, className);
             if (unitChangeMonitor.getLastModifiedDateForJavaUseObject(pojoPath) > 0) {
                 // it looks like the POJO comes from the repo and it was changed since it was last loaded
                 Resource pojoResource = resolver.getResource(pojoPath);
@@ -108,12 +109,9 @@ public class SightlyJavaCompilerService {
                     return loadObject(className);
                 } catch (CompilerException cex) {
                     // the object definitely doesn't come from a bundle so we should attempt to compile it from the repo
-                    Set<String> possiblePaths = getPossiblePojoPaths(pojoPath);
-                    for (String possiblePath : possiblePaths) {
-                        Resource pojoResource = resolver.getResource(possiblePath);
-                        if (pojoResource != null) {
-                            return compileSource(pojoResource, className);
-                        }
+                    Resource pojoResource = resolver.getResource(pojoPath);
+                    if (pojoResource != null) {
+                        return compileSource(pojoResource, className);
                     }
                 }
             }
@@ -222,16 +220,14 @@ public class SightlyJavaCompilerService {
     private Object loadObject(String className) {
         try {
             readLock.lock();
-            try {
-                if (classLoaderWriter != null) {
-                    return classLoaderWriter.getClassLoader().loadClass(className).newInstance();
-                }
-            } finally {
-                readLock.unlock();
+            if (classLoaderWriter != null) {
+                return classLoaderWriter.getClassLoader().loadClass(className).newInstance();
             }
             return Class.forName(className).newInstance();
-        } catch (Exception e) {
-            throw new CompilerException(CompilerException.CompilerExceptionCause.COMPILER_ERRORS, e);
+        } catch (Throwable t) {
+            throw new CompilerException(CompilerException.CompilerExceptionCause.COMPILER_ERRORS, t);
+        } finally {
+            readLock.unlock();
         }
     }
 
@@ -258,6 +254,8 @@ public class SightlyJavaCompilerService {
                 LOG.debug("compilation took {}ms", end - start);
             }
             return compilationResult.loadCompiledClass(compilationUnit.getMainClassName()).newInstance();
+        } catch (Throwable t) {
+            throw new CompilerException(CompilerException.CompilerExceptionCause.COMPILER_ERRORS, t);
         } finally {
             writeLock.unlock();
         }
@@ -284,10 +282,25 @@ public class SightlyJavaCompilerService {
         return path.substring(1).replace("/", ".").replace("-", "_");
     }
 
-    private String getPathFromJavaName(String className) {
+    private String getPathFromJavaName(ResourceResolver resolver, String className) {
+        boolean sightlyGeneratedClass = false;
+        if (className.contains("." + UnitLoader.CLASS_NAME_PREFIX)) {
+            sightlyGeneratedClass = true;
+        }
         String packageName = className.substring(0, className.lastIndexOf('.'));
         String shortClassName = className.substring(packageName.length() + 1);
-        return "/" + packageName.replace(".", "/").replace("_", "-") + "/" + shortClassName + ".java";
+        String path = "/" + packageName.replace(".", "/").replace("_", "-") + "/" + shortClassName + ".java";
+        if (sightlyGeneratedClass) {
+            return path;
+        } else {
+            Set<String> possiblePaths = getPossiblePojoPaths(path);
+            for (String possiblePath : possiblePaths) {
+                if (resolver.getResource(possiblePath) != null) {
+                    return possiblePath;
+                }
+            }
+            return path;
+        }
     }
 
     private String createErrorMsg(List<CompilerMessage> errors) {

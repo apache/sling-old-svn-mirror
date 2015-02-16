@@ -31,8 +31,7 @@ import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.DistributionRequestType;
-import org.apache.sling.distribution.component.impl.DistributionComponentKind;
-import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
+import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
@@ -74,7 +73,7 @@ public class SyncDistributionAgentFactory extends AbstractDistributionAgentFacto
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Property(label = "Name", description = "The name of the agent.")
-    public static final String NAME = DistributionComponentUtils.PN_NAME;
+    public static final String NAME = DistributionComponentConstants.PN_NAME;
 
     @Property(label = "Title", description = "The display friendly title of the agent.")
     public static final String TITLE = "title";
@@ -200,19 +199,19 @@ public class SyncDistributionAgentFactory extends AbstractDistributionAgentFacto
             java.util.Set<String> var = importerEndpointsMap.keySet();
             String[] queueNames = var.toArray(new String[var.size()]);
             dispatchingStrategy = new MultipleQueueDispatchingStrategy(queueNames);
-            packageImporter = new RemoteDistributionPackageImporter(transportSecretProvider, importerEndpointsMap, TransportEndpointStrategyType.One);
+            packageImporter = new RemoteDistributionPackageImporter(distributionLog, transportSecretProvider, importerEndpointsMap, TransportEndpointStrategyType.One);
         } else {
             dispatchingStrategy = new SingleQueueDispatchingStrategy();
-            packageImporter = new RemoteDistributionPackageImporter(transportSecretProvider, importerEndpointsMap, TransportEndpointStrategyType.All);
+            packageImporter = new RemoteDistributionPackageImporter(distributionLog, transportSecretProvider, importerEndpointsMap, TransportEndpointStrategyType.All);
         }
 
-        DistributionPackageExporter packageExporter = new RemoteDistributionPackageExporter(packageBuilder, transportSecretProvider, exporterEndpoints, TransportEndpointStrategyType.All, 1);
+        DistributionPackageExporter packageExporter = new RemoteDistributionPackageExporter(distributionLog, packageBuilder, transportSecretProvider, exporterEndpoints, TransportEndpointStrategyType.All, 1);
         DistributionQueueProvider queueProvider =  new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
         DistributionRequestType[] allowedRequests = new DistributionRequestType[] { DistributionRequestType.PULL };
 
         return new SimpleDistributionAgent(agentName, queueProcessingEnabled, serviceName,
                 packageImporter, packageExporter, requestAuthorizationStrategy,
-                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory, distributionLog, allowedRequests);
+                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory, distributionLog, allowedRequests, null);
 
     }
 }

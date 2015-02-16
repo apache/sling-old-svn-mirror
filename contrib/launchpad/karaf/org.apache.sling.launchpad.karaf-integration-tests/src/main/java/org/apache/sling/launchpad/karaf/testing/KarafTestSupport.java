@@ -61,7 +61,7 @@ public abstract class KarafTestSupport {
 
     public static final String KARAF_ARTIFACT_ID = "apache-karaf";
 
-    public static final String KARAF_VERSION = "3.0.2";
+    public static final String KARAF_VERSION = "3.0.3";
 
     public static final String KARAF_NAME = "Apache Karaf";
 
@@ -152,7 +152,7 @@ public abstract class KarafTestSupport {
             editConfigurationFilePut("etc/org.apache.karaf.shell.cfg", "sshPort", Integer.toString(sshPort)),
             editConfigurationFilePut("etc/org.ops4j.pax.web.cfg", "org.osgi.service.http.port", Integer.toString(httpPort)),
             mavenBundle().groupId("org.ops4j.pax.tinybundles").artifactId("tinybundles").version("2.1.0"),
-            mavenBundle().groupId("biz.aQute.bnd").artifactId("bndlib").version("2.4.0"),
+            mavenBundle().groupId("biz.aQute.bnd").artifactId("biz.aQute.bndlib").version("2.4.1"),
             karafTestSupportBundle()
         );
     }

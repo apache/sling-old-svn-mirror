@@ -28,7 +28,7 @@ import aQute.bnd.annotation.ConsumerType;
  *   based on the resource path)
  * - add metadata
  *
- * @since 2.1
+ * @since 2.1 (Sling API Bundle 2.1.0)
  */
 @ConsumerType
 public interface ResourceDecorator {

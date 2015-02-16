@@ -18,7 +18,7 @@
  */
 package org.apache.sling.scripting.thymeleaf.internal.processor.attr;
 
-public class SlingPathAttrProcessor extends SlingNodePropertyAttrProcessor {
+public final class SlingPathAttrProcessor extends SlingNodePropertyAttrProcessor {
 
     public static final int ATTR_PRECEDENCE = 99;
 

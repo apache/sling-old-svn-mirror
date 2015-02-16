@@ -31,7 +31,7 @@ import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.DistributionRequestType;
-import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
+import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
@@ -73,7 +73,7 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Property(label = "Name", description = "The name of the agent.")
-    public static final String NAME = DistributionComponentUtils.PN_NAME;
+    public static final String NAME = DistributionComponentConstants.PN_NAME;
 
     @Property(label = "Title", description = "The display friendly title of the agent.")
     public static final String TITLE = "title";
@@ -96,6 +96,10 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
             label = "Log Level", description = "The log level recorded in the transient log accessible via http."
     )
     public static final String LOG_LEVEL = AbstractDistributionAgentFactory.LOG_LEVEL;
+
+
+    @Property(label = "Allowed roots", description = "If set the agent will allow only distribution requests under the specified roots.")
+    private static final String ALLOWED_ROOTS = "allowed.roots";
 
 
     @Property(boolValue = true, label = "Queue Processing Enabled", description = "Whether or not the distribution agent should process packages in the queues.")
@@ -175,6 +179,8 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
     @Override
     protected SimpleDistributionAgent createAgent(String agentName, BundleContext context, Map<String, Object> config, DefaultDistributionLog distributionLog) {
         String serviceName = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
+        String[] allowedRoots = PropertiesUtil.toStringArray(config.get(ALLOWED_ROOTS), null);
+
         boolean queueProcessingEnabled = PropertiesUtil.toBoolean(config.get(QUEUE_PROCESSING_ENABLED), true);
 
 
@@ -191,10 +197,10 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
             java.util.Set<String> var = importerEndpointsMap.keySet();
             String[] queueNames = var.toArray(new String[var.size()]);
             dispatchingStrategy = new MultipleQueueDispatchingStrategy(queueNames);
-            packageImporter = new RemoteDistributionPackageImporter(transportSecretProvider, importerEndpointsMap, TransportEndpointStrategyType.One);
+            packageImporter = new RemoteDistributionPackageImporter(distributionLog, transportSecretProvider, importerEndpointsMap, TransportEndpointStrategyType.One);
         } else {
             dispatchingStrategy = new SingleQueueDispatchingStrategy();
-            packageImporter = new RemoteDistributionPackageImporter(transportSecretProvider, importerEndpointsMap, TransportEndpointStrategyType.All);
+            packageImporter = new RemoteDistributionPackageImporter(distributionLog, transportSecretProvider, importerEndpointsMap, TransportEndpointStrategyType.All);
         }
 
         DistributionRequestType[] allowedRequests = new DistributionRequestType[] { DistributionRequestType.ADD, DistributionRequestType.DELETE };
@@ -202,7 +208,7 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
 
         return new SimpleDistributionAgent(agentName, queueProcessingEnabled, serviceName,
                 packageImporter, packageExporter, requestAuthorizationStrategy,
-                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory, distributionLog, allowedRequests);
+                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory, distributionLog, allowedRequests, allowedRoots);
 
 
     }

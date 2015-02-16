@@ -23,8 +23,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.sling.query.TestUtils;
-import org.apache.sling.query.api.function.IteratorToIteratorFunction;
-import org.apache.sling.query.api.function.Option;
+import org.apache.sling.query.api.internal.IteratorToIteratorFunction;
+import org.apache.sling.query.api.internal.Option;
 import org.apache.sling.query.function.IdentityFunction;
 import org.apache.sling.query.function.SliceFunction;
 import org.apache.sling.query.iterator.ReverseIterator;

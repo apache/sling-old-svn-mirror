@@ -104,15 +104,6 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Export-Package>
-                            org.apache.sling.engine;version=2.2;provide:=true,
-                            org.apache.sling.engine.servlets;version=2.0.6;provide:=true,
-                            org.apache.sling.engine.jmx;version=1.0;provide:=true
-                        </Export-Package>
-                        <Private-Package>
-                            org.apache.sling.engine.impl,
-                            org.apache.sling.engine.impl.*
-                        </Private-Package>
                         <Import-Package>
                             javax.servlet;javax.servlet.http;version="[2.3,4)",
                             javax.servlet.descriptor;version="[2.6,4)";resolution:=optional,

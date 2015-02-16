@@ -31,7 +31,7 @@ import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.DistributionRequestType;
-import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
+import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
@@ -41,7 +41,6 @@ import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.distribution.queue.impl.SingleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.settings.SlingSettingsService;
@@ -68,7 +67,7 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Property(label = "Name", description = "The name of the agent.")
-    public static final String NAME = DistributionComponentUtils.PN_NAME;
+    public static final String NAME = DistributionComponentConstants.PN_NAME;
 
     @Property(label = "Title", description = "The display friendly title of the agent.")
     public static final String TITLE = "title";
@@ -91,6 +90,11 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
             label = "Log Level", description = "The log level recorded in the transient log accessible via http."
     )
     public static final String LOG_LEVEL = AbstractDistributionAgentFactory.LOG_LEVEL;
+
+
+
+    @Property(label = "Allowed roots", description = "If set the agent will allow only distribution requests under the specified roots.")
+    private static final String ALLOWED_ROOTS = "allowed.roots";
 
 
     @Property(name = "requestAuthorizationStrategy.target", label = "Request Authorization Strategy", description = "The target reference for the DistributionRequestAuthorizationStrategy used to authorize the access to distribution process," +
@@ -146,6 +150,7 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
     protected SimpleDistributionAgent createAgent(String agentName, BundleContext context, Map<String, Object> config, DefaultDistributionLog distributionLog) {
 
         String serviceName = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
+        String[] allowedRoots = PropertiesUtil.toStringArray(config.get(ALLOWED_ROOTS), null);
         DistributionQueueProvider queueProvider =  new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
         DistributionQueueDispatchingStrategy dispatchingStrategy = new SingleQueueDispatchingStrategy();
         DistributionPackageExporter packageExporter = new LocalDistributionPackageExporter(packageBuilder);
@@ -154,6 +159,6 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
 
         return new SimpleDistributionAgent(agentName, false, serviceName,
                 null, packageExporter, requestAuthorizationStrategy,
-                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory, distributionLog, allowedRequests);
+                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory, distributionLog, allowedRequests, allowedRoots);
     }
 }

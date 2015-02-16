@@ -300,18 +300,20 @@ public class ClusterTest {
 
         tearDown(); // reset any setup that was done - we start with a different setup than the default one
         
-        instance1 = Instance.newStandaloneInstance("/var/discovery/clusterA/", "instance1", true, 5 /* sec*/, MIN_EVENT_DELAY);
+        instance1 = Instance.newStandaloneInstance("/var/discovery/clusterA/", "instance1", true, 5 /* sec*/, 999, MIN_EVENT_DELAY);
         instance2 = Instance.newClusterInstance("/var/discovery/clusterA/", "instance2", instance1,
-                false, 5 /* sec*/, MIN_EVENT_DELAY);
+                false, 5 /* sec*/, 999, MIN_EVENT_DELAY);
         // now launch the remote instance
-        instance3 = Instance.newStandaloneInstance("/var/discovery/clusterB/", "instance3", false, 5 /* sec*/, MIN_EVENT_DELAY);
+        instance3 = Instance.newStandaloneInstance("/var/discovery/clusterB/", "instance3", false, 5 /* sec*/, 999, MIN_EVENT_DELAY);
         instance4 = Instance.newClusterInstance("/var/discovery/clusterB/", "instance4", instance3,
-                false, 5 /* sec*/, MIN_EVENT_DELAY);
-        instance5 = Instance.newStandaloneInstance("/var/discovery/clusterC/", "instance5", false, 5 /* sec*/, MIN_EVENT_DELAY);
+                false, 5 /* sec*/, 999, MIN_EVENT_DELAY);
+        instance5 = Instance.newStandaloneInstance("/var/discovery/clusterC/", "instance5", false, 5 /* sec*/, 999, MIN_EVENT_DELAY);
 
         // join the instances to form a cluster by sending out heartbeats
         runHeartbeatOnceWith(instance1, instance2, instance3, instance4, instance5);
+        Thread.sleep(250);
         runHeartbeatOnceWith(instance1, instance2, instance3, instance4, instance5);
+        Thread.sleep(250);
 
         assertSameTopology(new SimpleClusterView(instance1, instance2));
         assertSameTopology(new SimpleClusterView(instance3, instance4));
@@ -322,9 +324,11 @@ public class ClusterTest {
         runHeartbeatOnceWith(instance1, instance2, instance3, instance4, instance5);
         pingConnector(instance3, instance1);
         pingConnector(instance5, instance1);
+        Thread.sleep(250);
         runHeartbeatOnceWith(instance1, instance2, instance3, instance4, instance5);
         pingConnector(instance3, instance1);
         pingConnector(instance5, instance1);
+        Thread.sleep(250);
         
         // make asserts on the topology
         logger.info("testConnectorSwitching4139: instance1.slingId="+instance1.slingId);
@@ -350,7 +354,7 @@ public class ClusterTest {
                 success = true;
                 logger.info("testConnectorSwitching4139: successfully switched all pings to instance2 after "+i+" rounds.");
                 if (i<20) {
-                    logger.info("testDuplicateInstance3726: min loop cnt not yet reached: i="+i);
+                    logger.info("testConnectorSwitching4139: min loop cnt not yet reached: i="+i);
                     Thread.sleep(500); // 20x500ms = 10sec max - (vs 5sec timeout) - should be enough for timing out
                     continue;
                 }
@@ -373,6 +377,7 @@ public class ClusterTest {
                 new SimpleClusterView(instance5));
 
         // restart instance1, crash instance4
+        instance4.stopHeartbeats();
         instance1Restarted = Instance.newClusterInstance("/var/discovery/clusterA/", "instance1", instance2,
                 false, Integer.MAX_VALUE /* no timeout */, 1, instance1.slingId);
         runHeartbeatOnceWith(instance1Restarted, instance2, instance3, instance5);
@@ -397,6 +402,11 @@ public class ClusterTest {
             final ClusterView i3Cluster = i3.getClusterView();
             final int i3ClusterSize = i3Cluster.getInstances().size();
             if (i3ClusterSize==1) {
+                if (i<20) {
+                    logger.info("testConnectorSwitching4139: [2] min loop cnt not yet reached: i="+i);
+                    Thread.sleep(500); // 20x500ms = 10sec max - (vs 5sec timeout) - should be enough for timing out
+                    continue;
+                }
                 success = true;
                 break;
             }
@@ -668,6 +678,7 @@ public class ClusterTest {
         logger.info("instance3.slingId="+instance3.slingId);
         final String instance1SlingId = instance1.slingId;
         instance1.stopHeartbeats(); // and have instance3 no longer pinging instance1
+        instance1.stop(); // otherwise it will have itself still registered with the observation manager and fiddle with future events..
         instance1 = null; // set to null to early fail if anyone still assumes (original) instance1 is up form now on
         instance2.getConfig().setHeartbeatTimeout(1); // set instance2's heartbeatTimeout to 1 sec to time out instance1 quickly!
         instance3.getConfig().setHeartbeatTimeout(1); // set instance3's heartbeatTimeout to 1 sec to time out instance1 quickly!

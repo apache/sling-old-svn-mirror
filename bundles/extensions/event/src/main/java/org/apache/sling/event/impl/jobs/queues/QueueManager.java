@@ -221,10 +221,10 @@ public class QueueManager
                 queue = null;
             }
             if ( queue == null ) {
-                if ( config.getType() == QueueConfiguration.Type.ORDERED
-                  || config.getType() == QueueConfiguration.Type.TOPIC_ROUND_ROBIN ) {
+                if ( config.getType() == QueueConfiguration.Type.ORDERED ) {
                     queue = new OrderedJobQueue(queueInfo.queueName, config, queueServices, topics);
-                } else if ( config.getType() == QueueConfiguration.Type.UNORDERED ) {
+                } else if ( config.getType() == QueueConfiguration.Type.UNORDERED
+                    || config.getType() == QueueConfiguration.Type.TOPIC_ROUND_ROBIN ) {
                     queue = new ParallelJobQueue(queueInfo.queueName, config, queueServices, topics);
                 }
                 // this is just a sanity check, actually we always have a queue instance here

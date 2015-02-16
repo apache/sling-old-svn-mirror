@@ -26,13 +26,26 @@ import org.osgi.framework.BundleContext;
  */
 public class Activator implements BundleActivator {
 
+    /** Property for bundle location default. */
+    private static final String PROP_LOCATION_DEFAULT = "sling.installer.config.useMulti";
+
     /** Services listener. */
     private ServicesListener listener;
+
+    public static String DEFAULT_LOCATION;
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
     public void start(final BundleContext context) throws Exception {
+        String locationDefault = null;
+        if ( context.getProperty(PROP_LOCATION_DEFAULT) != null ) {
+            final Boolean bool = Boolean.valueOf(context.getProperty(PROP_LOCATION_DEFAULT).toString());
+            if ( bool.booleanValue() ) {
+                locationDefault = "?";
+            }
+        }
+        DEFAULT_LOCATION = locationDefault;
         this.listener = new ServicesListener(context);
     }
 
