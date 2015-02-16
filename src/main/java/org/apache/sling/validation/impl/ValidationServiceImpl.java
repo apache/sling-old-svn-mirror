@@ -94,8 +94,11 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
     // ValidationService ###################################################################################################################
     @Override
     public ValidationModel getValidationModel(String validatedResourceType, String resourcePath) {
-        if (validatedResourceType == null || resourcePath == null) {
-            throw new IllegalArgumentException("ValidationService.getValidationModel - cannot accept null parameters");
+        if (resourcePath == null) {
+            throw new IllegalArgumentException("ValidationService.getValidationModel - cannot accept null as resource path");
+        }
+        if (validatedResourceType == null) {
+            throw new IllegalArgumentException("ValidationService.getValidationModel - cannot accept null as resource type. Resource path was: " + resourcePath);
         }
         validatedResourceType = getRelativeResourceType(validatedResourceType);
         ValidationModel model = null;
