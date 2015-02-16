@@ -169,7 +169,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.event</artifactId>
-            <version>3.5.0</version>
+            <version>3.5.2</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
