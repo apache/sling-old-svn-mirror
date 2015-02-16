@@ -69,6 +69,7 @@
                 <configuration>
                     <instructions>
                         <Sling-Bundle-Resources>/libs/sling/sightly/js;path:=/SLING-INF/libs/sling/sightly/js</Sling-Bundle-Resources>
+                        <Require-Capability>io.sightly; filter:="(&amp;(version>=1.0)(!(version>=2.0)))"</Require-Capability>
                     </instructions>
                 </configuration>
             </plugin>
