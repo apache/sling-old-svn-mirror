@@ -18,9 +18,7 @@
  */
 
 @Version("2.2.1")
-@ParametersAreNonnullByDefault
 package org.apache.sling.api.adapter;
 
 import aQute.bnd.annotation.Version;
-import javax.annotation.ParametersAreNonnullByDefault;
 

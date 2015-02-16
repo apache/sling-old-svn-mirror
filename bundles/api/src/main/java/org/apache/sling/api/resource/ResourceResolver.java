@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.adapter.Adaptable;
@@ -170,7 +171,7 @@ public interface ResourceResolver extends Adaptable {
      *             {@link #close() closed}.
      * @since 2.0.4 (Sling API Bundle 2.0.4)
      */
-    Resource resolve(HttpServletRequest request, String absPath);
+    @Nonnull Resource resolve(@Nonnull HttpServletRequest request, @Nonnull String absPath);
 
     /**
      * Resolves the resource from the given absolute path. Returns a
@@ -198,7 +199,7 @@ public interface ResourceResolver extends Adaptable {
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      */
-    Resource resolve(String absPath);
+    @Nonnull Resource resolve(@Nonnull String absPath);
 
     /**
      * Resolves the resource from the given <code>HttpServletRequest</code>.
@@ -226,7 +227,7 @@ public interface ResourceResolver extends Adaptable {
      *             instead.
      */
     @Deprecated
-    Resource resolve(HttpServletRequest request);
+    @Nonnull Resource resolve(@Nonnull HttpServletRequest request);
 
     /**
      * Returns a path mapped from the (resource) path applying the reverse
@@ -249,7 +250,7 @@ public interface ResourceResolver extends Adaptable {
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      */
-    String map(String resourcePath);
+    @CheckForNull String map(String resourcePath);
 
     /**
      * Returns an URL mapped from the (resource) path applying the reverse
@@ -278,7 +279,7 @@ public interface ResourceResolver extends Adaptable {
      *             {@link #close() closed}.
      * @since 2.0.4 (Sling API Bundle 2.0.4)
      */
-    String map(HttpServletRequest request, String resourcePath);
+    @CheckForNull String map(@Nonnull HttpServletRequest request, @Nonnull String resourcePath);
 
     /**
      * Returns a {@link Resource} object for data located at the given path.
@@ -305,7 +306,7 @@ public interface ResourceResolver extends Adaptable {
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      */
-    @CheckForNull Resource getResource(String path);
+    @CheckForNull Resource getResource(@Nonnull String path);
 
     /**
      * Returns a {@link Resource} object for data located at the given path.
@@ -335,7 +336,7 @@ public interface ResourceResolver extends Adaptable {
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      */
-    @CheckForNull Resource getResource(@CheckForNull Resource base, String path);
+    @CheckForNull Resource getResource(Resource base, @Nonnull String path);
 
     /**
      * Returns the search path used by the {@link #getResource(String)} method
@@ -358,7 +359,7 @@ public interface ResourceResolver extends Adaptable {
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      */
-    String[] getSearchPath();
+    @Nonnull String[] getSearchPath();
 
     /**
      * Returns an <code>Iterator</code> of {@link Resource} objects loaded from
@@ -378,7 +379,7 @@ public interface ResourceResolver extends Adaptable {
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      */
-    Iterator<Resource> listChildren(Resource parent);
+    @Nonnull Iterator<Resource> listChildren(@Nonnull Resource parent);
 
     /**
      * Returns an <code>Iterable</code> of {@link Resource} objects loaded from
@@ -399,7 +400,7 @@ public interface ResourceResolver extends Adaptable {
      *             {@link #close() closed}.
      * @since 2.2 (Sling API Bundle 2.2.0)
      */
-    Iterable<Resource> getChildren(Resource parent);
+    @Nonnull Iterable<Resource> getChildren(@Nonnull Resource parent);
 
     /**
      * Searches for resources using the given query formulated in the given
@@ -426,7 +427,7 @@ public interface ResourceResolver extends Adaptable {
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      */
-    Iterator<Resource> findResources(String query, String language);
+    @Nonnull Iterator<Resource> findResources(@Nonnull String query, String language);
 
     /**
      * Queries the storage using the given query formulated in the given
@@ -456,7 +457,7 @@ public interface ResourceResolver extends Adaptable {
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      */
-    Iterator<Map<String, Object>> queryResources(String query, String language);
+    @Nonnull Iterator<Map<String, Object>> queryResources(@Nonnull String query, String language);
 
     /**
      * Checks if the specified resource has any direct child resources.
@@ -466,7 +467,7 @@ public interface ResourceResolver extends Adaptable {
      * @return <code>true</code> if the resource has any child resources
      * @since 2.4.4 (Sling API Bundle 2.5.0)
      */
-    boolean hasChildren(Resource resource);
+    boolean hasChildren(@Nonnull Resource resource);
 
     /**
      * Returns a new <code>ResourceResolver</code> instance based on the given
@@ -496,7 +497,7 @@ public interface ResourceResolver extends Adaptable {
      *             {@link #close() closed}.
      * @since 2.1 (Sling API Bundle 2.1.0)
      */
-    ResourceResolver clone(Map<String, Object> authenticationInfo)
+    @Nonnull ResourceResolver clone(Map<String, Object> authenticationInfo)
             throws LoginException;
 
     /**
@@ -535,7 +536,7 @@ public interface ResourceResolver extends Adaptable {
      *             {@link #close() closed}.
      * @since 2.1 (Sling API Bundle 2.1.0)
      */
-    String getUserID();
+    @CheckForNull String getUserID();
 
     /**
      * Returns an iterator of attribute names whose value can be retrieved
@@ -546,7 +547,7 @@ public interface ResourceResolver extends Adaptable {
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      */
-    Iterator<String> getAttributeNames();
+    @Nonnull Iterator<String> getAttributeNames();
 
     /**
      * Returns the value of the given resource resolver attribute or
@@ -561,7 +562,7 @@ public interface ResourceResolver extends Adaptable {
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      */
-    Object getAttribute(String name);
+    @CheckForNull Object getAttribute(@Nonnull String name);
 
     /**
      * Delete the resource
@@ -576,7 +577,7 @@ public interface ResourceResolver extends Adaptable {
      * @throws PersistenceException If the operation fails.
      * @since 2.2 (Sling API Bundle 2.2.0)
      */
-    void delete(Resource resource)
+    void delete(@Nonnull Resource resource)
     throws PersistenceException;
 
     /**
@@ -593,7 +594,7 @@ public interface ResourceResolver extends Adaptable {
      * @throws PersistenceException If the operation fails.
      * @since 2.2 (Sling API Bundle 2.2.0)
      */
-    Resource create(Resource parent, String name, Map<String, Object> properties)
+    @Nonnull Resource create(@Nonnull Resource parent, @Nonnull String name, Map<String, Object> properties)
     throws PersistenceException;
 
     /**
@@ -658,7 +659,7 @@ public interface ResourceResolver extends Adaptable {
      *         are <code>null</code>.
      * @since 2.3 (Sling API Bundle 2.4.0)
      */
-    boolean isResourceType(@CheckForNull final Resource resource, final String resourceType);
+    boolean isResourceType(final Resource resource, final String resourceType);
 
     /**
      * The resolver is updated to reflect the latest state.

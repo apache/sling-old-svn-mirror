@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 
@@ -43,7 +44,7 @@ public class ResourceUtil {
      * Returns null if not possible (.. points above root) or if path is not
      * absolute.
      */
-    public static String normalize(String path) {
+    public static @CheckForNull String normalize(@Nonnull String path) {
 
         // don't care for empty paths
         if (path.length() == 0) {
@@ -127,7 +128,7 @@ public class ResourceUtil {
      *             {@link #normalize(String)} method.
      * @throws NullPointerException If <code>path</code> is <code>null</code>.
      */
-    public static @CheckForNull String getParent(String path) {
+    public static @CheckForNull String getParent(@Nonnull String path) {
         if ("/".equals(path)) {
             return null;
         }
@@ -210,7 +211,7 @@ public class ResourceUtil {
      * @deprecated since 2.1.0, use {@link Resource#getParent()} instead
      */
     @Deprecated
-    public static @CheckForNull Resource getParent(Resource rsrc) {
+    public static @CheckForNull Resource getParent(@Nonnull Resource rsrc) {
         return rsrc.getParent();
     }
 
@@ -221,7 +222,7 @@ public class ResourceUtil {
      * @deprecated since 2.1.0, use {@link Resource#getName()} instead
      */
     @Deprecated
-    public static String getName(Resource rsrc) {
+    public static @Nonnull String getName(@Nonnull Resource rsrc) {
         /*
          * Same as AbstractResource.getName() implementation to prevent problems
          * if there are implementations of the pre-2.1.0 Resource interface in
@@ -243,7 +244,7 @@ public class ResourceUtil {
      *             {@link #normalize(String)} method.
      * @throws NullPointerException If <code>path</code> is <code>null</code>.
      */
-    public static String getName(String path) {
+    public static @Nonnull String getName(@Nonnull String path) {
         if ("/".equals(path)) {
             return "";
         }
@@ -272,7 +273,7 @@ public class ResourceUtil {
      *         <code>null</code> or not an instance of the
      *         <code>org.apache.sling.resource.SyntheticResource</code> class.
      */
-    public static boolean isSyntheticResource(Resource res) {
+    public static boolean isSyntheticResource(@Nonnull Resource res) {
         if (res instanceof SyntheticResource) {
             return true;
         }
@@ -306,7 +307,7 @@ public class ResourceUtil {
      *         resource.
      * @throws NullPointerException if <code>res</code> is <code>null</code>.
      */
-    public static boolean isStarResource(Resource res) {
+    public static boolean isStarResource(@Nonnull Resource res) {
         return res.getPath().endsWith("/*");
     }
 
@@ -324,7 +325,7 @@ public class ResourceUtil {
      *         non-existing resource.
      * @throws NullPointerException if <code>res</code> is <code>null</code>.
      */
-    public static boolean isNonExistingResource(Resource res) {
+    public static boolean isNonExistingResource(@Nonnull Resource res) {
         return Resource.RESOURCE_TYPE_NON_EXISTING.equals(res.getResourceType());
     }
 
@@ -344,7 +345,7 @@ public class ResourceUtil {
      * @deprecated since 2.1.0, use {@link Resource#listChildren()} instead
      */
     @Deprecated
-    public static Iterator<Resource> listChildren(Resource parent) {
+    public static @Nonnull Iterator<Resource> listChildren(@Nonnull Resource parent) {
         /*
          * Same as AbstractResource.listChildren() implementation to prevent
          * problems if there are implementations of the pre-2.1.0 Resource
@@ -364,7 +365,7 @@ public class ResourceUtil {
      * @param res The <code>Resource</code> to adapt to the value map.
      * @return A value map.
      */
-    public static ValueMap getValueMap(final Resource res) {
+    public static @Nonnull ValueMap getValueMap(@Nonnull final Resource res) {
         if ( res == null ) {
             // use empty map
             return new ValueMapDecorator(new HashMap<String, Object>());
@@ -381,7 +382,7 @@ public class ResourceUtil {
      * @return The resource type as a path.
      * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
-    public static String resourceTypeToPath(final String type) {
+    public static @Nonnull String resourceTypeToPath(@Nonnull final String type) {
         return type.replace(':', '/');
     }
 
@@ -408,7 +409,7 @@ public class ResourceUtil {
      */
     @Deprecated
     public static @CheckForNull String getResourceSuperType(
-            final ResourceResolver resourceResolver, final String resourceType) {
+            final @Nonnull ResourceResolver resourceResolver, final String resourceType) {
         return resourceResolver.getParentResourceType(resourceType);
     }
 
@@ -426,7 +427,7 @@ public class ResourceUtil {
      * @deprecated Use {@link ResourceResolver#getParentResourceType(Resource)}
      */
     @Deprecated
-    public static @CheckForNull String findResourceSuperType(final Resource resource) {
+    public static @CheckForNull String findResourceSuperType(@Nonnull final Resource resource) {
         if ( resource == null ) {
             return null;
         }
@@ -448,7 +449,7 @@ public class ResourceUtil {
      * @deprecated Use {@link ResourceResolver#isResourceType(Resource, String)}
      */
     @Deprecated
-    public static boolean isA(final Resource resource, final String resourceType) {
+    public static boolean isA(@Nonnull final Resource resource, final String resourceType) {
         if ( resource == null ) {
             return false;
         }
@@ -467,7 +468,7 @@ public class ResourceUtil {
      * @param <T> The adapted type
      * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
-    public static <T> Iterator<T> adaptTo(final Iterator<Resource> iterator,
+    public static @Nonnull <T> Iterator<T> adaptTo(final @Nonnull Iterator<Resource> iterator,
             final Class<T> type) {
         return new Iterator<T>() {
 
@@ -511,9 +512,9 @@ public class ResourceUtil {
      * @param autoCommit If set to true, a commit is performed after each resource creation.
      * @since 2.3.0  (Sling API Bundle 2.4.0)
      */
-    public static Resource getOrCreateResource(
-                            final ResourceResolver resolver,
-                            final String path,
+    public static @Nonnull Resource getOrCreateResource(
+                            final @Nonnull ResourceResolver resolver,
+                            final @Nonnull String path,
                             final String resourceType,
                             final String intermediateResourceType,
                             final boolean autoCommit)
@@ -540,9 +541,9 @@ public class ResourceUtil {
      * @param autoCommit If set to true, a commit is performed after each resource creation.
      * @since 2.3.0  (Sling API Bundle 2.4.0)
      */
-    public static Resource getOrCreateResource(
-            final ResourceResolver resolver,
-            final String path,
+    public static @Nonnull Resource getOrCreateResource(
+            final @Nonnull ResourceResolver resolver,
+            final @Nonnull String path,
             final Map<String, Object> resourceProperties,
             final String intermediateResourceType,
             final boolean autoCommit)
@@ -690,7 +691,7 @@ public class ResourceUtil {
      * @return The unwrapped resource
      * @since 2.5  (Sling API Bundle 2.7.0)
      */
-    public static Resource unwrap(final Resource rsrc) {
+    public static @Nonnull Resource unwrap(final @Nonnull Resource rsrc) {
         Resource result = rsrc;
         while ( result instanceof ResourceWrapper ) {
             result = ((ResourceWrapper)result).getResource();
@@ -716,7 +717,7 @@ public class ResourceUtil {
             this.max = (batchSize < 1 ? 50 : batchSize);
         }
 
-        public void delete(final Resource rsrc)
+        public void delete(@Nonnull final Resource rsrc)
         throws PersistenceException {
             final ResourceResolver resolver = rsrc.getResourceResolver();
             for(final Resource child : rsrc.getChildren()) {
@@ -743,7 +744,7 @@ public class ResourceUtil {
      * @return A new batch resource remover.
      * Since 2.6
      */
-    public static BatchResourceRemover getBatchResourceRemover(final int threshold) {
+    public static @Nonnull BatchResourceRemover getBatchResourceRemover(final int threshold) {
         return new BatchResourceRemover(threshold);
     }
 }

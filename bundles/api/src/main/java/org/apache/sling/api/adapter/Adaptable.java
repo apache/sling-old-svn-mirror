@@ -19,6 +19,7 @@
 package org.apache.sling.api.adapter;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 
 import aQute.bnd.annotation.ConsumerType;
 
@@ -51,6 +52,6 @@ public interface Adaptable {
      * @return The adapter target or <code>null</code> if the resource cannot
      *         adapt to the requested type
      */
-    @CheckForNull <AdapterType> AdapterType adaptTo(Class<AdapterType> type);
+    @CheckForNull <AdapterType> AdapterType adaptTo(@Nonnull Class<AdapterType> type);
 
 }
