@@ -98,6 +98,7 @@ import de.pdark.decentxml.Element;
 import de.pdark.decentxml.Namespace;
 import de.pdark.decentxml.Node;
 import de.pdark.decentxml.Text;
+import de.pdark.decentxml.XMLParseException;
 import de.pdark.decentxml.XMLTokenizer.Type;
 
 /** WIP: model object for a jcr node shown in the content package view in project explorer **/
@@ -347,10 +348,16 @@ public class JcrNode implements IAdaptable {
                             continue;
                         }
 						if (isVaultFile(iResource)) {
-							GenericJcrRootFile gjrf = new GenericJcrRootFile(this, (IFile)iResource);
+							GenericJcrRootFile gjrf;
+                            try {
+                                gjrf = new GenericJcrRootFile(this, (IFile)iResource);
+                                // gjrf.getChildren();
+                                gjrf.pickResources(membersList);
+                            } catch (XMLParseException e) {
+                                // don't try to parse it
+                                // errors will be reported by the XML validation infrastructure
+                            }
 							it.remove();
-							//gjrf.getChildren();
-							gjrf.pickResources(membersList);
 							
 							// as this might have added some new children, go through the children again and
 							// add them if they're not already added
