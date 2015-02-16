@@ -75,7 +75,7 @@
 					<instructions>
 						<Sling-Initial-Content>SLING-INF/libs/sling/resource-editor-static-content;overwrite:=true;path:=/libs/sling/resource-editor-static-content,SLING-INF/libs/sling/resource-editor;overwrite:=true;path:=/libs/sling/resource-editor</Sling-Initial-Content>
 						<Import-Package>!org.slf4j.impl,*,
-							de.sandroboehme.jsnodetypes.javascript,
+							org.apache.sling.commons.js.nodetypes.javascript,
 							javax.el,
 							javax.naming,
 							javax.servlet.jsp,
