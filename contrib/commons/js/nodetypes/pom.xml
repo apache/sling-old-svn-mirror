@@ -77,8 +77,8 @@
 				<configuration>
 					<instructions>
 						<Sling-Initial-Content>SLING-INF/libs/jsnodetypes;overwrite:=true;path:=/libs/jsnodetypes;uninstall:=true,SLING-INF/libs/jsnodetypes/documentation;overwrite:=true;path:=/libs/jsnodetypes/documentation;ignoreImportProviders:=json;uninstall:=true,SLING-INF/libs/jsnodetypes/js;overwrite:=true;path:=/libs/jsnodetypes/js;ignoreImportProviders:=json;uninstall:=true</Sling-Initial-Content>
-						<Export-Package>de.sandroboehme.jsnodetypes.javascript</Export-Package>
-						<Provide-Capability>${project.artifactId}; version:Version=1.0.7</Provide-Capability>
+						<Export-Package>org.apache.sling.commons.js.nodetypes.javascript</Export-Package>
+						<Provide-Capability>${project.artifactId}; version:Version=0.1.0</Provide-Capability>
 					</instructions>
 				</configuration>
 			</plugin>

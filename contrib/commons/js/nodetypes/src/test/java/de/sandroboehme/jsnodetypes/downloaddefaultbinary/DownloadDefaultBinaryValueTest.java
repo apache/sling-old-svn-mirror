@@ -45,12 +45,12 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.HttpConstants;
+import org.apache.sling.commons.js.nodetypes.downloaddefaultbinary.DownloadDefaultBinaryValueServlet;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import de.sandroboehme.jsnodetypes.GenerationConstants;
-import de.sandroboehme.jsnodetypes.downloaddefaultbinary.DownloadDefaultBinaryValueServlet;
 import de.sandroboehme.jsnodetypes.mock.MockPropertyDefGenerator;
 
 /**

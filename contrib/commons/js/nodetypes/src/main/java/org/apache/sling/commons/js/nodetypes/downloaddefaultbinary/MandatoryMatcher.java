@@ -16,21 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package de.sandroboehme.jsnodetypes.downloaddefaultbinary;
+package org.apache.sling.commons.js.nodetypes.downloaddefaultbinary;
 
-/**
- * Makes it possible to specify the array and index but retrieving it on demand lazily. 
- */
-public class AbstractPropertyMatcher {
-	
-	protected String[] idFields;
-	protected int index;
+import javax.jcr.nodetype.PropertyDefinition;
 
-	public String getArrayValue(String[] idFields, int index) {
-		if (index <= idFields.length-1){
-			return idFields[index];
-		}
-		return null;
+public class MandatoryMatcher extends AbstractPropertyMatcher implements PropertyMatcher{
+
+	public MandatoryMatcher(String[] idFields, int index){
+		super.idFields = idFields;
+		super.index = index;
 	}
-
+	
+	@Override
+	public boolean match(PropertyDefinition propertyDefinition) {
+		String arrayValue = super.getArrayValue(idFields, index);
+		if (arrayValue!=null){
+			boolean isMandatory = Boolean.parseBoolean(arrayValue);
+			return isMandatory == propertyDefinition.isMandatory();
+		}
+		return false;
+	}
+	
 }

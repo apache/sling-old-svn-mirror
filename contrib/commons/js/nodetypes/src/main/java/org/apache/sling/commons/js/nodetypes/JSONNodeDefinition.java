@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package de.sandroboehme.jsnodetypes;
+package org.apache.sling.commons.js.nodetypes;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package de.sandroboehme.jsnodetypes.downloaddefaultbinary;
+package org.apache.sling.commons.js.nodetypes.downloaddefaultbinary;
 
 import java.io.BufferedReader;
 import java.io.IOException;

@@ -48,11 +48,11 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.HttpConstants;
+import org.apache.sling.commons.js.nodetypes.NodeTypesJSONServlet;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.json.JSONTokener;
 
-import de.sandroboehme.jsnodetypes.NodeTypesJSONServlet;
 import de.sandroboehme.jsnodetypes.test.JSONAssert;
 
 /**

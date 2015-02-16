@@ -16,13 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package de.sandroboehme.jsnodetypes.downloaddefaultbinary;
+package org.apache.sling.commons.js.nodetypes.downloaddefaultbinary;
 
 import javax.jcr.nodetype.PropertyDefinition;
+import javax.jcr.version.OnParentVersionAction;
 
-public class PropertyNameMatcher extends AbstractPropertyMatcher implements PropertyMatcher{
+/**
+ * The names are not case sensitive.
+ *
+ */
+public class OnParentVersionMatcher extends AbstractPropertyMatcher implements PropertyMatcher{
 
-	public PropertyNameMatcher(String[] idFields, int index){
+	public OnParentVersionMatcher(String[] idFields, int index){
 		super.idFields = idFields;
 		super.index = index;
 	}
@@ -31,8 +36,8 @@ public class PropertyNameMatcher extends AbstractPropertyMatcher implements Prop
 	public boolean match(PropertyDefinition propertyDefinition) {
 		String arrayValue = super.getArrayValue(idFields, index);
 		if (arrayValue!=null){
-			String propName = propertyDefinition.getName();
-			return arrayValue.equals(propName);
+			int onParentVersion = OnParentVersionAction.valueFromName(arrayValue.toUpperCase());
+			return onParentVersion == propertyDefinition.getOnParentVersion();
 		}
 		return false;
 	}
