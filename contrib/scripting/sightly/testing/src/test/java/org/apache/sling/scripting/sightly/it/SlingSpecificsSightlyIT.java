@@ -31,6 +31,7 @@ public class SlingSpecificsSightlyIT {
     private static Client client;
     private static String launchpadURL;
     private static final String SLING_USE = "/sightly/use.html";
+    private static final String SLING_RESOURCE = "/sightly/resource.html";
 
     @BeforeClass
     public static void init() {
@@ -53,6 +54,16 @@ public class SlingSpecificsSightlyIT {
         String pageContent = client.getStringContent(url, 200);
         assertEquals("SUCCESS", HTMLExtractor.innerHTML(url, pageContent, "#resadapt"));
         assertEquals("SUCCESS", HTMLExtractor.innerHTML(url, pageContent, "#reqadapt"));
+    }
+
+    @Test
+    public void testDataSlyResourceArraySelectors() {
+        String url = launchpadURL + SLING_RESOURCE;
+        String pageContent = client.getStringContent(url, 200);
+        assertEquals("selectors: a.b", HTMLExtractor.innerHTML(url, pageContent, "#selectors span.selectors"));
+        assertEquals("selectors: a.b", HTMLExtractor.innerHTML(url, pageContent, "#selectors-remove-c span.selectors"));
+        assertEquals("selectors: a.c", HTMLExtractor.innerHTML(url, pageContent, "#removeselectors-remove-b span.selectors"));
+        assertEquals("selectors: a.b.c", HTMLExtractor.innerHTML(url, pageContent, "#addselectors span.selectors"));
     }
 
 }

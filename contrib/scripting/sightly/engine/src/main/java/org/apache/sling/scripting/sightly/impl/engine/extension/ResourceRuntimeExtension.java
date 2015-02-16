@@ -20,8 +20,11 @@ package org.apache.sling.scripting.sightly.impl.engine.extension;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.script.Bindings;
 import javax.servlet.RequestDispatcher;
@@ -76,80 +79,131 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
 
     private String provideResource(final RenderContext renderContext, Object pathObj, Map<String, Object> options) {
         Map<String, Object> opts = new HashMap<String, Object>(options);
-        String path = buildPath(pathObj, opts);
-        String resourceType = getAndRemoveOption(opts, OPTION_RESOURCE_TYPE);
+        PathInfo pathInfo = new PathInfo(coerceString(pathObj));
+        String path = pathInfo.path;
+        String finalPath = buildPath(path, opts);
+        String resourceType = coerceString(getAndRemoveOption(opts, OPTION_RESOURCE_TYPE));
         final Bindings bindings = renderContext.getBindings();
-        handleSelectors(bindings, path, opts);
-        String dispatcherOptions = createDispatcherOptions(opts);
+        Map<String, String> dispatcherOptionsMap = handleSelectors(bindings, pathInfo.selectors, opts);
+        String dispatcherOptions = createDispatcherOptions(dispatcherOptionsMap);
         StringWriter writer = new StringWriter();
         PrintWriter printWriter = new PrintWriter(writer);
-        includeResource(bindings, printWriter, path, dispatcherOptions, resourceType);
+        includeResource(bindings, printWriter, finalPath, dispatcherOptions, resourceType);
         return writer.toString();
     }
 
-    private void handleSelectors(final Bindings bindings, String path, Map<String, Object> options) {
-        String selectors = getAndRemoveOption(options, OPTION_SELECTORS);
-        if (StringUtils.isNotEmpty(selectors)) {
-            // handle the selectors option
-            options.put(OPTION_ADD_SELECTORS, selectors);
-            options.put(OPTION_REPLACE_SELECTORS, " ");
-        } else {
-            if (options.containsKey(OPTION_REMOVE_SELECTORS)) {
-                String removeSelectors = getAndRemoveOption(options, OPTION_REMOVE_SELECTORS);
-                if (StringUtils.isEmpty(removeSelectors)) {
-                    options.put(OPTION_REPLACE_SELECTORS, " ");
-                } else {
-                    String currentSelectors = getSelectorsFromPath(path);
-                    if (StringUtils.isEmpty(currentSelectors)) {
-                        currentSelectors = ((SlingHttpServletRequest) bindings.get(SlingBindings.REQUEST)).getRequestPathInfo()
-                                .getSelectorString();
-                    }
-                    if (StringUtils.isNotEmpty(currentSelectors)) {
-                        options.put(OPTION_REPLACE_SELECTORS, " ");
-                        String addSelectors = currentSelectors.replace(removeSelectors, "").replaceAll("\\.\\.", "\\.");
-                        if (addSelectors.startsWith(".")) {
-                            addSelectors = addSelectors.substring(1);
-                        }
-                        if (addSelectors.endsWith(".")) {
-                            addSelectors = addSelectors.substring(0, addSelectors.length() - 1);
-                        }
-                        options.put(OPTION_ADD_SELECTORS, addSelectors);
+    private Map<String, String> handleSelectors(Bindings bindings, Set<String> selectors, Map<String, Object> options) {
+        if (selectors.isEmpty()) {
+            SlingHttpServletRequest request = (SlingHttpServletRequest) bindings.get(SlingBindings.REQUEST);
+            selectors.addAll(Arrays.asList(request.getRequestPathInfo().getSelectors()));
+        }
+        Map<String, String> dispatcherOptionsMap = new HashMap<String, String>();
+        if (options.containsKey(OPTION_SELECTORS)) {
+            Object selectorsObject = getAndRemoveOption(options, OPTION_SELECTORS);
+            selectors.clear();
+            if (selectorsObject instanceof String) {
+                String selectorString = (String) selectorsObject;
+                String[] parts = selectorString.split("\\.");
+                selectors.addAll(Arrays.asList(parts));
+            } else if (selectorsObject instanceof Object[]) {
+                for (Object s : (Object[]) selectorsObject) {
+                    String selector = coerceString(s);
+                    if (StringUtils.isNotEmpty(selector)) {
+                        selectors.add(selector);
                     }
                 }
             }
+            dispatcherOptionsMap.put(OPTION_ADD_SELECTORS, getSelectorString(selectors));
+            dispatcherOptionsMap.put(OPTION_REPLACE_SELECTORS, " ");
         }
+        if (options.containsKey(OPTION_ADD_SELECTORS)) {
+            Object selectorsObject = getAndRemoveOption(options, OPTION_ADD_SELECTORS);
+            if (selectorsObject instanceof String) {
+                String selectorString = (String) selectorsObject;
+                String[] parts = selectorString.split("\\.");
+                for (String s : parts) {
+                    selectors.add(s);
+                }
+            } else if (selectorsObject instanceof Object[]) {
+                for (Object s : (Object[]) selectorsObject) {
+                    String selector = coerceString(s);
+                    if (StringUtils.isNotEmpty(selector)) {
+                        selectors.add(selector);
+                    }
+                }
+            }
+            dispatcherOptionsMap.put(OPTION_ADD_SELECTORS, getSelectorString(selectors));
+            dispatcherOptionsMap.put(OPTION_REPLACE_SELECTORS, " ");
+        }
+        if (options.containsKey(OPTION_REMOVE_SELECTORS)) {
+            Object selectorsObject = getAndRemoveOption(options, OPTION_REMOVE_SELECTORS);
+            if (selectorsObject instanceof String) {
+                String selectorString = (String) selectorsObject;
+                String[] parts = selectorString.split("\\.");
+                for (String s : parts) {
+                    selectors.remove(s);
+                }
+            } else if (selectorsObject instanceof Object[]) {
+                for (Object s : (Object[]) selectorsObject) {
+                    String selector = coerceString(s);
+                    if (StringUtils.isNotEmpty(selector)) {
+                        selectors.remove(selector);
+                    }
+                }
+            } else if (selectorsObject == null) {
+                selectors.clear();
+            }
+            String selectorString = getSelectorString(selectors);
+            if (StringUtils.isEmpty(selectorString)) {
+                dispatcherOptionsMap.put(OPTION_REPLACE_SELECTORS, " ");
+            } else {
+                dispatcherOptionsMap.put(OPTION_ADD_SELECTORS, getSelectorString(selectors));
+                dispatcherOptionsMap.put(OPTION_REPLACE_SELECTORS, " ");
+            }
+        }
+        return dispatcherOptionsMap;
     }
 
     private String buildPath(Object pathObj, Map<String, Object> options) {
-        String path = coerceString(pathObj);
-        String prependPath = getAndRemoveOption(options, OPTION_PREPEND_PATH);
-        String appendPath = getAndRemoveOption(options, OPTION_APPEND_PATH);
-        if (StringUtils.isEmpty(path)) {
-            path = getOption(options, OPTION_PATH);
+        String prependPath = getOption(OPTION_PREPEND_PATH, options, StringUtils.EMPTY);
+        if (prependPath == null) {
+            prependPath = StringUtils.EMPTY;
         }
         if (StringUtils.isNotEmpty(prependPath)) {
-            path = prependPath + "/" + path;
+            if (!prependPath.startsWith("/")) {
+                prependPath = "/" + prependPath;
+            }
+            if (!prependPath.endsWith("/")) {
+                prependPath += "/";
+            }
+        }
+        String path = coerceString(pathObj);
+        path = getOption(OPTION_PATH, options, StringUtils.isNotEmpty(path) ? path : StringUtils.EMPTY);
+        String appendPath = getOption(OPTION_APPEND_PATH, options, StringUtils.EMPTY);
+        if (appendPath == null) {
+            appendPath = StringUtils.EMPTY;
         }
         if (StringUtils.isNotEmpty(appendPath)) {
-            path = path + "/" + appendPath;
+            if (!appendPath.startsWith("/")) {
+                appendPath = "/" + appendPath;
+            }
         }
-
-        return path;
+        return ResourceUtil.normalize(prependPath + path + appendPath);
     }
 
-    private String createDispatcherOptions(Map<String, Object> options) {
+    private String createDispatcherOptions(Map<String, String> options) {
         if (options == null || options.isEmpty()) {
             return null;
         }
         StringBuilder buffer = new StringBuilder();
         boolean hasPreceding = false;
-        for (Map.Entry<String, Object> option : options.entrySet()) {
+        for (Map.Entry<String, String> option : options.entrySet()) {
             if (hasPreceding) {
                 buffer.append(", ");
             }
             String key = option.getKey();
             buffer.append(key).append("=");
-            String strVal = coerceString(option.getValue());
+            String strVal = option.getValue();
             if (strVal == null) {
                 strVal = "";
             }
@@ -170,31 +224,15 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
         return (String) options.get(property);
     }
 
-    private String getAndRemoveOption(Map<String, Object> options, String property) {
-        return (String) options.remove(property);
+    private String getOption(String option, Map<String, Object> options, String defaultValue) {
+        if (options.containsKey(option)) {
+            return (String) options.get(option);
+        }
+        return defaultValue;
     }
 
-    private String getSelectorsFromPath(String path) {
-        String filePath;
-        if (path.contains("/")) {
-            filePath = path.substring(path.lastIndexOf('/') + 1, path.length());
-        } else {
-            filePath = path;
-        }
-        String[] parts = filePath.split("\\.");
-        if (parts.length > 2) {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 1; i < parts.length - 1; i++) {
-                sb.append(parts[i]);
-                if (i != parts.length - 2) {
-                    sb.append(".");
-                }
-            }
-            if (sb.length() > 0) {
-                return sb.toString();
-            }
-        }
-        return null;
+    private Object getAndRemoveOption(Map<String, Object> options, String property) {
+        return options.remove(property);
     }
 
     private void includeResource(final Bindings bindings, PrintWriter out, String script, String dispatcherOptions, String resourceType) {
@@ -228,5 +266,51 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
             path = request.getResource().getPath() + "/" + path;
         }
         return ResourceUtil.normalize(path);
+    }
+
+    private class PathInfo {
+        private String path;
+        private Set<String> selectors;
+
+        PathInfo(String path) {
+            selectors = getSelectorsFromPath(path);
+            String selectorString = getSelectorString(selectors);
+            if (StringUtils.isNotEmpty(selectorString)) {
+                this.path = path.substring(0, path.length() - selectorString.length() - 1);
+            } else {
+                this.path = path;
+            }
+        }
+    }
+
+    private Set<String> getSelectorsFromPath(String path) {
+        Set<String> selectors = new LinkedHashSet<String>();
+        if (path != null) {
+            String processingPath = path;
+            int lastSlashPos = path.lastIndexOf('/');
+            if (lastSlashPos > -1) {
+                processingPath = path.substring(lastSlashPos + 1, path.length());
+            }
+            int dotPos = processingPath.indexOf('.');
+            if (dotPos > -1) {
+                String selectorString = processingPath.substring(dotPos + 1, processingPath.length());
+                String[] selectorParts = selectorString.split("\\.");
+                selectors.addAll(Arrays.asList(selectorParts));
+            }
+        }
+        return selectors;
+    }
+
+    private String getSelectorString(Set<String> selectors) {
+        StringBuilder sb = new StringBuilder();
+        int i = 0;
+        for (String s : selectors) {
+            sb.append(s);
+            if (i < selectors.size() - 1) {
+                sb.append(".");
+                i++;
+            }
+        }
+        return sb.toString();
     }
 }
