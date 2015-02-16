@@ -250,7 +250,7 @@ public interface ResourceResolver extends Adaptable {
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      */
-    @CheckForNull String map(String resourcePath);
+    @Nonnull String map(@Nonnull String resourcePath);
 
     /**
      * Returns an URL mapped from the (resource) path applying the reverse
