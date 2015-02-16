@@ -50,8 +50,8 @@ public class DistributionPackageImporterServlet extends SlingAllMethodsServlet {
                 .adaptTo(DistributionPackageImporter.class);
 
         final long start = System.currentTimeMillis();
-        response.setContentType("text/plain");
-        response.setCharacterEncoding("utf-8");
+        response.setContentType("application/json");
+
 
         InputStream stream = request.getInputStream();
         ResourceResolver resourceResolver = request.getResourceResolver();
@@ -60,14 +60,13 @@ public class DistributionPackageImporterServlet extends SlingAllMethodsServlet {
             if (distributionPackage != null) {
                 log.info("Package {} imported successfully", distributionPackage);
                 distributionPackage.delete();
+                ServletJsonUtils.writeJson(response, 200, "package imported successfully");
             } else {
                 log.warn("Cannot import distribution package from request {}", request);
-                response.setStatus(400);
-                response.getWriter().print("error: could not import a package from the request stream");
+                ServletJsonUtils.writeJson(response, 400, "could not import a package from the request stream");
             }
         } catch (final Throwable e) {
-            response.setStatus(400);
-            response.getWriter().print("error: " + e.toString());
+            ServletJsonUtils.writeJson(response, 400, "an unexpected error has occurred during distribution import");
             log.error("Error during distribution import", e);
         } finally {
             long end = System.currentTimeMillis();

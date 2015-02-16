@@ -27,7 +27,6 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.distribution.agent.DistributionAgent;
-import org.apache.sling.distribution.agent.DistributionAgentException;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionResponse;
 import org.apache.sling.distribution.resources.DistributionResourceTypes;
@@ -60,27 +59,17 @@ public class DistributionAgentServlet extends SlingAllMethodsServlet {
         if (agent != null) {
             try {
                 DistributionResponse distributionResponse = agent.execute(resourceResolver, distributionRequest);
-                switch (distributionResponse.getState()) {
-                    case DISTRIBUTED:
-                        response.setStatus(200);
-                        break;
-                    case DROPPED:
-                        response.setStatus(400);
-                        break;
-                    case ACCEPTED:
-                        response.setStatus(202);
-                        break;
-                }
-                response.getWriter().append(distributionResponse.toString());
+
+                ServletJsonUtils.writeJson(response, distributionResponse);
 
                 log.debug("distribution response : {}", distributionResponse);
             } catch (Throwable e) {
-                response.setStatus(503);
-                response.getWriter().append("an error has occured");
+                log.error("an unexpected error has occurred", e);
+                ServletJsonUtils.writeJson(response, 503, "an unexpected error has occurred");
             }
         } else {
-            response.setStatus(404);
-            response.getWriter().append("agent not found");
+            ServletJsonUtils.writeJson(response, 404, "agent not found");
         }
     }
+
 }

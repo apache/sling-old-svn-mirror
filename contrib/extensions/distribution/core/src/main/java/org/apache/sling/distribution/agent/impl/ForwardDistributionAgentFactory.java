@@ -98,7 +98,7 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
     public static final String LOG_LEVEL = AbstractDistributionAgentFactory.LOG_LEVEL;
 
 
-    @Property(label = "Allowed roots", description = "If set the agent will allow only distribution requests under the specified roots.")
+    @Property(cardinality = 100, label = "Allowed roots", description = "If set the agent will allow only distribution requests under the specified roots.")
     private static final String ALLOWED_ROOTS = "allowed.roots";
 
 
