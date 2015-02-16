@@ -37,7 +37,6 @@ import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-
 import aQute.bnd.annotation.ProviderType;
 
 /**

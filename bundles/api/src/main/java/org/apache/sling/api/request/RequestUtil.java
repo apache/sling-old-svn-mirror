@@ -27,9 +27,8 @@ import javax.annotation.Nonnull;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.servlets.HttpConstants;
+import org.apache.sling.api.SlingHttpServletRequest;
 
 /**
  * Request related utility methods.

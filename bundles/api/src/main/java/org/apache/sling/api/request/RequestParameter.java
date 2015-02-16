@@ -91,7 +91,7 @@ public interface RequestParameter {
      *         file.
      * @throws IOException if an error occurs.
      */
-    @Nonnull InputStream getInputStream() throws IOException;
+    @CheckForNull InputStream getInputStream() throws IOException;
 
     /**
      * Returns the original filename in the client's filesystem, as provided by

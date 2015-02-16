@@ -19,6 +19,7 @@
 package org.apache.sling.api.adapter;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 
 import aQute.bnd.annotation.ConsumerType;
 
@@ -84,7 +85,7 @@ public interface AdapterFactory {
      * @return The adapted object or <code>null</code> if this factory instance
      *         cannot adapt the object.
      */
-    @CheckForNull <AdapterType> AdapterType getAdapter(Object adaptable,
-            Class<AdapterType> type);
+    @CheckForNull <AdapterType> AdapterType getAdapter(@Nonnull Object adaptable,
+            @Nonnull Class<AdapterType> type);
 
 }

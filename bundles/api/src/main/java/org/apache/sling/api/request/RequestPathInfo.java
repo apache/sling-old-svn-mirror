@@ -184,7 +184,7 @@ public interface RequestPathInfo {
      *
      * @see #getSelectors()
      */
-    @Nullable String getSelectorString();
+    @CheckForNull String getSelectorString();
 
     /**
      * Returns the selectors decoded from the request URL as an array of
