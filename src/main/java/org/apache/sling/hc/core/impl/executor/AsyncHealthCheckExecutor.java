@@ -51,10 +51,10 @@ import org.slf4j.LoggerFactory;
 /**
  * Runs health checks that are configured with a cron expression for asynchronous
  * execution. Used by HealthCheckExecutor.
- * 
+ *
  */
 @Service({ AsyncHealthCheckExecutor.class })
-@Component(label = "Sling Async Health Check Executor",
+@Component(label = "Apache Sling Async Health Check Executor",
         description = "Runs async health checks",
         metatype = true, immediate = true)
 public class AsyncHealthCheckExecutor implements ServiceListener {
@@ -69,8 +69,8 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
     private Map<HealthCheckMetadata, HealthCheckAsyncJob> registeredJobs = new HashMap<HealthCheckMetadata, HealthCheckAsyncJob>();
 
     private BundleContext bundleContext;
-    
-    
+
+
 
     @Activate
     protected final void activate(final ComponentContext componentContext) {
@@ -129,11 +129,11 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
     }
 
     private boolean scheduleHealthCheck(HealthCheckMetadata descriptor) {
-        
+
         if(!isAsync(descriptor)) {
             return false;
         }
-        
+
         try {
             HealthCheckAsyncJob healthCheckAsyncJob = new HealthCheckAsyncJob(descriptor);
             LOG.debug("Scheduling job {} with cron expression {}", healthCheckAsyncJob, descriptor.getAsyncCronExpression());
@@ -150,10 +150,10 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
 
     private boolean unscheduleHealthCheck(HealthCheckMetadata descriptor) {
 
-        // here no check for isAsync must be used to ensure previously 
+        // here no check for isAsync must be used to ensure previously
         // scheduled async checks are correctly unscheduled if they have
         // changed from async to sync.
-        
+
         HealthCheckAsyncJob job = registeredJobs.remove(descriptor);
         try {
             if (job != null) {
@@ -199,7 +199,7 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
             LOG.debug("Updated result for async hc {} with {}", result.getHealthCheckMetadata(), result);
         }
     }
-    
+
     private boolean isAsync(HealthCheckMetadata healthCheckMetadata) {
         return StringUtils.isNotBlank(healthCheckMetadata.getAsyncCronExpression());
     }
