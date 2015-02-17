@@ -51,6 +51,7 @@
 
     <properties>
         <site.jira.version.id>12314252</site.jira.version.id>
+        <sling.java.version>6</sling.java.version>
     </properties>
 
     <dependencies>
@@ -71,6 +72,12 @@
             <scope>provided</scope>
         </dependency>
         
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>3.0.0</version>
+            <scope>provided</scope>
+        </dependency>
         <!-- Testing -->
         <dependency>
             <groupId>junit</groupId>
@@ -90,6 +97,13 @@
 
     <build>
         <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
             <!-- Create the bundle of the Sling API -->
             <plugin>
                 <groupId>org.apache.felix</groupId>
