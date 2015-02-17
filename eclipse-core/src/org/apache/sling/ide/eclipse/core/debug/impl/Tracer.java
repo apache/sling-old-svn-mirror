@@ -32,9 +32,12 @@ import org.eclipse.osgi.util.NLS;
  */
 public class Tracer implements DebugOptionsListener, Logger {
 
+    private static final long PERF_IGNORE_THRESHOLD = 50;
+
     private final Plugin plugin;
     private boolean debugEnabled;
     private boolean consoleEnabled;
+    private boolean performanceEnabled;
     private DebugTrace trace;
     
     public Tracer(Plugin plugin) {
@@ -48,6 +51,7 @@ public class Tracer implements DebugOptionsListener, Logger {
 
         debugEnabled = options.getBooleanOption(pluginId + "/debug", false);
         consoleEnabled = options.getBooleanOption(pluginId + "/debug/console", false) && debugEnabled;
+        performanceEnabled = options.getBooleanOption(pluginId + "/debug/performance", false) && debugEnabled;
         trace = options.newDebugTrace(pluginId, getClass());
     }
     
@@ -103,6 +107,26 @@ public class Tracer implements DebugOptionsListener, Logger {
     @Override
     public void error(String message, Throwable cause) {
         logInternal(IStatus.ERROR, message, cause);
+    }
+
+    @Override
+    public void tracePerformance(String message, long duration, Object... arguments) {
+        if (!performanceEnabled)
+            return;
+
+        if (duration < PERF_IGNORE_THRESHOLD) {
+            return;
+        }
+
+        if (arguments.length > 0)
+            message = NLS.bind(message, arguments);
+
+        String fullMessage = message + " took " + duration + " ms";
+
+        trace.trace("/debug/performance", fullMessage);
+
+        if (consoleEnabled)
+            writeToConsole(fullMessage, null);
     }
 
     private void logInternal(int statusCode, String message, Throwable cause) {
