@@ -522,4 +522,25 @@ public class XSSAPIImplTest {
             }
         }
     }
+
+    @Test
+    public void TestGetValidMultiLineComment() {
+        String[][] testData = {
+                //Source            Expected Result
+
+                {null               , RUBBISH},
+                {"blah */ hack"     , RUBBISH},
+
+                {"Valid comment"    , "Valid comment"}
+        };
+        for (String[] aTestData : testData) {
+            String source = aTestData[0];
+            String expected = aTestData[1];
+
+            String result = xssAPI.getValidMultiLineComment(source, RUBBISH);
+            if (!result.equals(expected)) {
+                fail("Validating multiline comment '" + source + "', expecting '" + expected + "', but got '" + result + "'");
+            }
+        }
+    }
 }
