@@ -265,6 +265,16 @@ public class XSSAPIImpl implements XSSAPI {
         return defaultColor;
     }
 
+    /**
+     * @see org.apache.sling.xss.XSSAPI#getValidMultiLineComment(String, String)
+     */
+    public String getValidMultiLineComment(String comment, String defaultComment) {
+        if (comment != null && !comment.contains("*/")) {
+            return comment;
+        }
+        return defaultComment;
+    }
+
     // =============================================================================================
     // ENCODERS
     //
