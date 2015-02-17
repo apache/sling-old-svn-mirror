@@ -386,12 +386,6 @@ public class JcrNode implements IAdaptable {
 						newNodes.add(node);
 						it.remove();
 					}
-					for (Iterator<JcrNode> it = newNodes.iterator(); it
-							.hasNext();) {
-						JcrNode jcrNode = it.next();
-						// load the children - to make sure we get vault files loaded too
-						jcrNode.initChildren();
-					}
 				}
 			}
 			resourceChildrenAdded = true;
