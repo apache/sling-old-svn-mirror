@@ -1,2 +1,3 @@
 org.apache.sling.ide.eclipse-ui/debug=false
 org.apache.sling.ide.eclipse-ui/debug/console=false
+org.apache.sling.ide.eclipse-ui/debug/performance=false
