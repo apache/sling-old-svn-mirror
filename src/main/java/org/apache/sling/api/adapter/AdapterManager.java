@@ -18,6 +18,9 @@
  */
 package org.apache.sling.api.adapter;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+
 import aQute.bnd.annotation.ProviderType;
 
 /**
@@ -57,7 +60,7 @@ public interface AdapterManager {
      *         or if the <code>adaptable</code> cannot be adapted for any other
      *         reason.
      */
-    <AdapterType> AdapterType getAdapter(Object adaptable,
-            Class<AdapterType> type);
+    @CheckForNull <AdapterType> AdapterType getAdapter(@Nonnull Object adaptable,
+            @Nonnull Class<AdapterType> type);
 
 }

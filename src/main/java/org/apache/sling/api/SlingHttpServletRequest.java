@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -67,7 +69,7 @@ public interface SlingHttpServletRequest extends HttpServletRequest, Adaptable {
      *
      * @return The <code>Resource</code> object of this request.
      */
-    Resource getResource();
+    @Nonnull Resource getResource();
 
     /**
      * Returns the {@link ResourceResolver} which resolved the
@@ -75,14 +77,14 @@ public interface SlingHttpServletRequest extends HttpServletRequest, Adaptable {
      *
      * @return The resource resolver
      */
-    ResourceResolver getResourceResolver();
+    @Nonnull ResourceResolver getResourceResolver();
 
     /**
      * Returns the {@link RequestPathInfo} pertaining to this request.
      *
      * @return the request path info.
      */
-    RequestPathInfo getRequestPathInfo();
+    @Nonnull RequestPathInfo getRequestPathInfo();
 
     /**
      * Returns the value of a request parameter as a {@link RequestParameter},
@@ -106,7 +108,7 @@ public interface SlingHttpServletRequest extends HttpServletRequest, Adaptable {
      * @see RequestParameterMap#getValue(String)
      * @throws IllegalArgumentException if name is <code>null</code>.
      */
-    RequestParameter getRequestParameter(String name);
+    @CheckForNull RequestParameter getRequestParameter(@Nonnull String name);
 
     /**
      * Returns an array of {@link RequestParameter} objects containing all of
@@ -126,7 +128,7 @@ public interface SlingHttpServletRequest extends HttpServletRequest, Adaptable {
      * @see RequestParameterMap#getValues(String)
      * @throws IllegalArgumentException if name is <code>null</code>.
      */
-    RequestParameter[] getRequestParameters(String name);
+    @CheckForNull RequestParameter[] getRequestParameters(@Nonnull String name);
 
     /**
      * Returns a <code>Map</code> of the parameters of this request.
@@ -142,7 +144,7 @@ public interface SlingHttpServletRequest extends HttpServletRequest, Adaptable {
      *         parameter map are of type String. The values in the parameter map
      *         are of type {@link RequestParameter} array (<code>RequestParameter[]</code>).
      */
-    RequestParameterMap getRequestParameterMap();
+   @Nonnull RequestParameterMap getRequestParameterMap();
 
     /**
      * Returns the request parameters as instances of the
@@ -154,7 +156,7 @@ public interface SlingHttpServletRequest extends HttpServletRequest, Adaptable {
      *         order.
      * @since 2.3  (Sling API Bundle 2.6.0)
      */
-    List<RequestParameter> getRequestParameterList();
+    @Nonnull List<RequestParameter> getRequestParameterList();
 
     /**
      * Returns a <code>RequestDispatcher</code> object that acts as a wrapper
@@ -173,7 +175,7 @@ public interface SlingHttpServletRequest extends HttpServletRequest, Adaptable {
      *         for the <code>resource</code> or <code>null</code> if an
      *         error occurs preparing the dispatcher.
      */
-    RequestDispatcher getRequestDispatcher(String path,
+    @CheckForNull RequestDispatcher getRequestDispatcher(@Nonnull String path,
             RequestDispatcherOptions options);
 
     /**
@@ -192,14 +194,14 @@ public interface SlingHttpServletRequest extends HttpServletRequest, Adaptable {
      *         for the <code>resource</code> or <code>null</code> if an
      *         error occurs preparing the dispatcher.
      */
-    RequestDispatcher getRequestDispatcher(Resource resource,
+    @CheckForNull RequestDispatcher getRequestDispatcher(@Nonnull Resource resource,
             RequestDispatcherOptions options);
 
     /**
      * Same as {@link #getRequestDispatcher(Resource,RequestDispatcherOptions)}
      * but using empty options.
      */
-    RequestDispatcher getRequestDispatcher(Resource resource);
+    @CheckForNull RequestDispatcher getRequestDispatcher(@Nonnull Resource resource);
 
     /**
      * Returns the named cookie from the HTTP request or <code>null</code> if
@@ -208,7 +210,7 @@ public interface SlingHttpServletRequest extends HttpServletRequest, Adaptable {
      * @param name The name of the cookie to return.
      * @return The named cookie or <code>null</code> if no such cookie exists.
      */
-    Cookie getCookie(String name);
+    @CheckForNull Cookie getCookie(String name);
 
     /**
      * Returns the framework preferred content type for the response. The
@@ -220,7 +222,7 @@ public interface SlingHttpServletRequest extends HttpServletRequest, Adaptable {
      *
      * @return preferred MIME type of the response
      */
-    String getResponseContentType();
+    @CheckForNull String getResponseContentType();
 
     /**
      * Gets a list of content types which the framework accepts for the
@@ -235,7 +237,7 @@ public interface SlingHttpServletRequest extends HttpServletRequest, Adaptable {
      *
      * @return ordered list of MIME types for the response
      */
-    Enumeration<String> getResponseContentTypes();
+    @Nonnull Enumeration<String> getResponseContentTypes();
 
     /**
      * Returns the resource bundle for the given locale.
@@ -245,7 +247,7 @@ public interface SlingHttpServletRequest extends HttpServletRequest, Adaptable {
      *            {@link #getLocale()} is used to select the resource bundle.
      * @return the resource bundle for the given locale
      */
-    ResourceBundle getResourceBundle(Locale locale);
+    @CheckForNull ResourceBundle getResourceBundle(Locale locale);
 
     /**
      * Returns the resource bundle of the given base name for the given locale.
@@ -259,10 +261,10 @@ public interface SlingHttpServletRequest extends HttpServletRequest, Adaptable {
      *            {@link #getLocale()} is used to select the resource bundle.
      * @return the resource bundle for the given locale
      */
-    ResourceBundle getResourceBundle(String baseName, Locale locale);
+    @CheckForNull ResourceBundle getResourceBundle(String baseName, Locale locale);
 
     /**
      * Returns the {@link RequestProgressTracker} of this request.
      */
-    RequestProgressTracker getRequestProgressTracker();
+    @Nonnull RequestProgressTracker getRequestProgressTracker();
 }
