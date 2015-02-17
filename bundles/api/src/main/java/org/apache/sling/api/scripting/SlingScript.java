@@ -18,6 +18,8 @@
  */
 package org.apache.sling.api.scripting;
 
+import javax.annotation.Nonnull;
+
 import org.apache.sling.api.resource.Resource;
 
 import aQute.bnd.annotation.ConsumerType;
@@ -39,7 +41,7 @@ public interface SlingScript {
     /**
      * Returns the Resource providing the script source code.
      */
-    Resource getScriptResource();
+    @Nonnull Resource getScriptResource();
 
     /**
      * Evaluates this script using the bound variables as global variables to
@@ -54,7 +56,7 @@ public interface SlingScript {
      *             script or preparing the script execution. The cause of the
      *             evaluation execption is available as the exception cause.
      */
-    Object eval(SlingBindings props);
+    Object eval(@Nonnull SlingBindings props);
 
     /**
      * Evaluates this script using the bound variables as global variables to
@@ -71,5 +73,5 @@ public interface SlingScript {
      *             script or preparing the script execution. The cause of the
      *             evaluation execption is available as the exception cause.
      */
-    Object call(SlingBindings props, String method, Object... args);
+    Object call(@Nonnull SlingBindings props, @Nonnull String method, Object... args);
 }

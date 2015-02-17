@@ -18,6 +18,9 @@ package org.apache.sling.api.resource;
 
 import java.util.Iterator;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+
 import org.apache.sling.api.adapter.Adaptable;
 
 import aQute.bnd.annotation.ProviderType;
@@ -62,7 +65,7 @@ public interface Resource extends Adaptable {
     /**
      * Returns the absolute path of this resource in the resource tree.
      */
-    String getPath();
+    @Nonnull String getPath();
 
     /**
      * Returns the name of this resource. The name of a resource is the last
@@ -70,7 +73,7 @@ public interface Resource extends Adaptable {
      *
      * @since 2.1 (Sling API Bundle 2.2.0)
      */
-    String getName();
+    @Nonnull String getName();
 
     /**
      * Returns the parent resource or <code>null</code> if this resource
@@ -78,7 +81,7 @@ public interface Resource extends Adaptable {
      *
      * @since 2.1 (Sling API Bundle 2.1.0)
      */
-    Resource getParent();
+    @CheckForNull Resource getParent();
 
     /**
      * Returns an iterator of the direct children of this resource.
@@ -89,7 +92,7 @@ public interface Resource extends Adaptable {
      * @since 2.1 (Sling API Bundle 2.1.0)
      * @see ResourceResolver#listChildren(Resource)
      */
-    Iterator<Resource> listChildren();
+    @Nonnull Iterator<Resource> listChildren();
 
     /**
      * Returns an iterable of the direct children of this resource.
@@ -100,7 +103,7 @@ public interface Resource extends Adaptable {
      * @since 2.2 (Sling API Bundle 2.2.0)
      * @see ResourceResolver#getChildren(Resource)
      */
-    Iterable<Resource> getChildren();
+    @Nonnull Iterable<Resource> getChildren();
 
     /**
      * Returns the child at the given relative path of this resource or
@@ -112,7 +115,7 @@ public interface Resource extends Adaptable {
      * @since 2.1 (Sling API Bundle 2.1.0)
      * @see ResourceResolver#getResource(Resource, String)
      */
-    Resource getChild(String relPath);
+    @CheckForNull Resource getChild(@Nonnull String relPath);
 
     /**
      * The resource type is meant to point to rendering/processing scripts,
@@ -125,7 +128,7 @@ public interface Resource extends Adaptable {
      * If the resource instance represents a resource which is not actually
      * existing, this method returns {@link #RESOURCE_TYPE_NON_EXISTING}.
      */
-    String getResourceType();
+    @Nonnull String getResourceType();
 
     /**
      * Returns the super type of the resource if the resource defines its
@@ -135,7 +138,7 @@ public interface Resource extends Adaptable {
      * If a client is interested in the effective resource super type
      * of a resource, it should call {@link ResourceResolver#getParentResourceType(Resource)}.
      */
-    String getResourceSuperType();
+    @CheckForNull String getResourceSuperType();
 
     /**
      * Checks if the resource has any child resources.
@@ -167,13 +170,13 @@ public interface Resource extends Adaptable {
      *
      * @see ResourceMetadata
      */
-    ResourceMetadata getResourceMetadata();
+    @Nonnull ResourceMetadata getResourceMetadata();
 
     /**
      * Returns the {@link ResourceResolver} from which this resource has been
      * retrieved.
      */
-    ResourceResolver getResourceResolver();
+    @Nonnull ResourceResolver getResourceResolver();
 
     /**
      * Returns a value map for this resource.
@@ -181,5 +184,5 @@ public interface Resource extends Adaptable {
      * @return A value map
      * @since 2.5 (Sling API Bundle 2.7.0)
      */
-    ValueMap getValueMap();
+    @Nonnull ValueMap getValueMap();
 }
