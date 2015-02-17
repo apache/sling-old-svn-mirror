@@ -109,7 +109,6 @@ public class XSSRuntimeExtension implements RuntimeExtension {
             case URI:
                 return xssapi.getValidHref(text);
             case SCRIPT_TOKEN:
-            case SCRIPT_COMMENT:
                 return xssapi.getValidJSToken(text, "");
             case STYLE_TOKEN:
                 return xssapi.getValidStyleToken(text, "");
@@ -117,6 +116,9 @@ public class XSSRuntimeExtension implements RuntimeExtension {
                 return xssapi.encodeForJSString(text);
             case STYLE_STRING:
                 return xssapi.encodeForCSSString(text);
+            case SCRIPT_COMMENT:
+            case STYLE_COMMENT:
+                return xssapi.getValidMultiLineComment(text, "");
             case ELEMENT_NAME:
                 return escapeElementName(text);
             case HTML:
