@@ -108,13 +108,13 @@ public class JcrNode implements IAdaptable {
 	
 	final GenericJcrRootFile underlying;
 
-	JcrNode parent;
+    JcrNode parent;
 	
-	DirNode dirSibling;
+    DirNode dirSibling;
 
 	final List<JcrNode> children = new LinkedList<JcrNode>();
 
-	Element domElement;
+    Element domElement;
 
 	private IResource resource;
 	
@@ -351,13 +351,14 @@ public class JcrNode implements IAdaptable {
 							GenericJcrRootFile gjrf;
                             try {
                                 gjrf = new GenericJcrRootFile(this, (IFile)iResource);
+                                it.remove();
                                 // gjrf.getChildren();
                                 gjrf.pickResources(membersList);
                             } catch (XMLParseException e) {
                                 // don't try to parse it
                                 // errors will be reported by the XML validation infrastructure
+                                it.remove();
                             }
-							it.remove();
 							
 							// as this might have added some new children, go through the children again and
 							// add them if they're not already added
