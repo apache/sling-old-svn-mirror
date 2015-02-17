@@ -30,6 +30,7 @@ import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.distribution.trigger.DistributionTriggerException;
+import org.apache.sling.event.dea.DEAConstants;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
@@ -85,6 +86,8 @@ public class ResourceEventDistributionTrigger implements DistributionTrigger {
         log.info("trigger agent {} on path '{}'", requestHandler, path);
 
         properties.put(EventConstants.EVENT_FILTER, "(path=" + path + "/*)");
+        properties.put(EventConstants.EVENT_FILTER, "(!(" + DEAConstants.PROPERTY_APPLICATION + "=*))");
+
         ServiceRegistration triggerPathEventRegistration = bundleContext.registerService(EventHandler.class.getName(),
                 new TriggerAgentEventListener(requestHandler), properties);
         if (triggerPathEventRegistration != null) {

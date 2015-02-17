@@ -89,6 +89,8 @@ public class RemoteEventDistributionTrigger implements DistributionTrigger {
 
             ScheduleOptions options = scheduler.NOW();
             options.name(getJobName(requestHandler));
+            options.canRunConcurrently(false);
+            options.onLeaderOnly(true);
             scheduler.schedule(new EventBasedDistribution(requestHandler), options);
         } catch (Exception e) {
             throw new DistributionTriggerException("unable to register handler " + requestHandler, e);
