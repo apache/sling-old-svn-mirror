@@ -20,6 +20,8 @@ package org.apache.sling.api.resource;
 
 import java.util.Iterator;
 
+import javax.annotation.Nonnull;
+
 /**
  * The <code>ResourceWrapper</code> is a wrapper for any <code>Resource</code>
  * delegating all method calls to the wrapped resource by default. Extensions of
@@ -35,7 +37,7 @@ public class ResourceWrapper implements Resource {
      * Creates a new wrapper instance delegating all method calls to the given
      * <code>resource</code>.
      */
-    public ResourceWrapper(final Resource resource) {
+    public ResourceWrapper(@Nonnull final Resource resource) {
         this.resource = resource;
     }
 
