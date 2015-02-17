@@ -164,5 +164,5 @@ public interface ResourceProvider {
      * @throws SlingException
      *             If any error occurs acquiring the child resource iterator.
      */
-    @Nonnull Iterator<Resource> listChildren(@Nonnull Resource parent);
+    @CheckForNull Iterator<Resource> listChildren(@Nonnull Resource parent);
 }
