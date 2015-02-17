@@ -29,17 +29,12 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 
 public class JcrCellLabelProvider extends CellLabelProvider {
 
     private final TableViewer viewer;
-    private Font italic;
-    private Font normal;
-    private Font bold;
     private Color greyColor;
     private Color normalColor;
 
@@ -47,25 +42,16 @@ public class JcrCellLabelProvider extends CellLabelProvider {
         this.viewer = viewer;
 
         Display display = viewer.getControl().getDisplay();
-        
-        FontData fontData = viewer.getTable().getFont().getFontData()[0];
-        italic = new Font(display, new FontData(fontData.getName(), fontData
-                .getHeight(), SWT.ITALIC));
-        normal = new Font(display, new FontData(fontData.getName(), fontData
-                .getHeight(), SWT.NORMAL));
-        bold = new Font(display, new FontData(fontData.getName(), fontData
-                .getHeight(), SWT.BOLD));
-        greyColor = new Color(display, 100, 100, 100);
+
+        greyColor = display.getSystemColor(SWT.COLOR_DARK_GRAY);
         normalColor = viewer.getTable().getForeground();
     }
     
     @Override
     public void update(ViewerCell cell) {
         int index = cell.getColumnIndex();
-        if (isNewRow(cell)) {
-//            cell.setFont(italic);
-        } else {
-            cell.setFont(normal);
+
+        if (!isNewRow(cell)) {
             if (canEdit(cell)) {
                 cell.setForeground(normalColor);
             } else {
@@ -216,5 +202,4 @@ public class JcrCellLabelProvider extends CellLabelProvider {
             cell.setText(String.valueOf(element));
         }
     }
-
 }
