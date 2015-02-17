@@ -38,6 +38,7 @@ public enum MarkupContext {
     SCRIPT_REGEXP("scriptRegExp"),
     STYLE_TOKEN("styleToken"),
     STYLE_STRING("styleString"),
+    STYLE_COMMENT("styleComment"),
     COMMENT("comment"),
     NUMBER("number"),
     UNSAFE("unsafe");

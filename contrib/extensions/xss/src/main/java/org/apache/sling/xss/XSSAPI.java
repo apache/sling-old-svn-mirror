@@ -119,6 +119,16 @@ public interface XSSAPI {
     @Nullable
     public String getValidCSSColor(@Nullable String color, @Nullable String defaultColor);
 
+    /**
+     * Validate multiline comment to be used inside a <script>...</script> or <style>...</style> block. Multiline
+     * comment end block is disallowed
+     *
+     * @param comment           the comment to be used
+     * @param defaultComment    a default value to use if the comment is {@code null} or not valid.
+     * @return a valid multiline comment
+     */
+    public String getValidMultiLineComment(@Nullable String comment, @Nullable String defaultComment);
+
     // =============================================================================================
     // ENCODERS
     //
