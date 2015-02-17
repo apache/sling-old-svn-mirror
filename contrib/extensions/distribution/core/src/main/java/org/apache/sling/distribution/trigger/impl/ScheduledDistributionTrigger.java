@@ -79,6 +79,7 @@ public class ScheduledDistributionTrigger implements DistributionTrigger {
 
             options.name(jobName);
             options.canRunConcurrently(false);
+            options.onLeaderOnly(true);
             boolean success = scheduler.schedule(new ScheduledDistribution(requestHandler), options);
 
             if (success) {
