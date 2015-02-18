@@ -37,7 +37,6 @@ import org.apache.sling.models.impl.injectors.ChildResourceInjector;
 import org.apache.sling.models.impl.injectors.OSGiServiceInjector;
 import org.apache.sling.models.impl.injectors.RequestAttributeInjector;
 import org.apache.sling.models.impl.injectors.ResourcePathInjector;
-import org.apache.sling.models.impl.injectors.ResourceResolverInjector;
 import org.apache.sling.models.impl.injectors.SelfInjector;
 import org.apache.sling.models.impl.injectors.SlingObjectInjector;
 import org.apache.sling.models.impl.injectors.ValueMapInjector;
@@ -127,7 +126,6 @@ public class SlingContextImpl extends OsgiContextImpl {
         registerService(Injector.class, osgiServiceInjector);
         registerService(Injector.class, new RequestAttributeInjector());
         registerService(Injector.class, new ResourcePathInjector());
-        registerService(Injector.class, new ResourceResolverInjector());
         registerService(Injector.class, new SelfInjector());
         registerService(Injector.class, new SlingObjectInjector());
         registerService(Injector.class, new ValueMapInjector());
