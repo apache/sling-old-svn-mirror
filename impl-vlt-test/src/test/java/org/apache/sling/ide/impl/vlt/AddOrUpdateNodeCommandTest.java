@@ -16,6 +16,7 @@
  */
 package org.apache.sling.ide.impl.vlt;
 
+import static org.apache.sling.ide.transport.Repository.CommandExecutionFlag.CREATE_ONLY_WHEN_MISSING;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 
@@ -241,5 +242,91 @@ public class AddOrUpdateNodeCommandTest {
         ResourceProxy resource = new ResourceProxy(path);
         resource.addProperty("jcr:primaryType", primaryType);
         return resource;
+    }
+
+    @Test
+    public void createIfRequiredFlagSkipsExistingResources() throws Exception {
+
+        File out = new File(new File("target"), "jackrabbit");
+        TransientRepository repo = new TransientRepository(new File(out, "repository.xml"), new File(out, "repository"));
+        SimpleCredentials credentials = new SimpleCredentials("admin", "admin".toCharArray());
+        Session session = repo.login(credentials);
+
+        try {
+            Node content = session.getRootNode().addNode("content", "nt:folder");
+
+            session.save();
+
+            ResourceProxy resource = newResource("/content", "nt:unstructured");
+
+            AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo, credentials, null, resource, logger,
+                    CREATE_ONLY_WHEN_MISSING);
+            cmd.execute().get();
+
+            session.refresh(false);
+
+            content = session.getRootNode().getNode("content");
+            assertThat(content.getPrimaryNodeType().getName(), equalTo("nt:folder"));
+
+        } finally {
+            session.removeItem("/content");
+            session.save();
+            session.logout();
+        }
+    }
+
+    @Test
+    public void createIfRequiredFlagCreatesNeededResources() throws Exception {
+
+        File out = new File(new File("target"), "jackrabbit");
+        TransientRepository repo = new TransientRepository(new File(out, "repository.xml"), new File(out, "repository"));
+        SimpleCredentials credentials = new SimpleCredentials("admin", "admin".toCharArray());
+        Session session = repo.login(credentials);
+
+        try {
+            ResourceProxy resource = newResource("/content", "nt:unstructured");
+
+            AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo, credentials, null, resource, logger,
+                    CREATE_ONLY_WHEN_MISSING);
+            cmd.execute().get();
+
+            session.refresh(false);
+
+            Node content = session.getRootNode().getNode("content");
+            assertThat(content.getPrimaryNodeType().getName(), equalTo("nt:unstructured"));
+
+        } finally {
+            session.removeItem("/content");
+            session.save();
+            session.logout();
+        }
+    }
+
+    @Test
+    public void createIfRequiredFlagCreatesNeededResourcesEvenWhenPrimaryTypeIsMissing() throws Exception {
+
+        File out = new File(new File("target"), "jackrabbit");
+        TransientRepository repo = new TransientRepository(new File(out, "repository.xml"), new File(out, "repository"));
+        SimpleCredentials credentials = new SimpleCredentials("admin", "admin".toCharArray());
+        Session session = repo.login(credentials);
+
+        try {
+            ResourceProxy resource = new ResourceProxy("/content");
+
+            AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo, credentials, null, resource, logger,
+                    CREATE_ONLY_WHEN_MISSING);
+            cmd.execute().get();
+
+            session.refresh(false);
+
+            Node content = session.getRootNode().getNode("content");
+            assertThat(content.getPrimaryNodeType().getName(), equalTo("nt:unstructured"));
+
+        } finally {
+            if (session.itemExists("/content"))
+                session.removeItem("/content");
+            session.save();
+            session.logout();
+        }
     }
 }

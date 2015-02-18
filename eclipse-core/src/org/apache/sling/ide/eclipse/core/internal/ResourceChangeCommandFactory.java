@@ -92,6 +92,11 @@ public class ResourceChangeCommandFactory {
             return null;
         }
 
+        if (rai.isOnlyWhenMissing()) {
+            return repository.newAddOrUpdateNodeCommand(rai.getInfo(), rai.getResource(),
+                    Repository.CommandExecutionFlag.CREATE_ONLY_WHEN_MISSING);
+        }
+
         return repository.newAddOrUpdateNodeCommand(rai.getInfo(), rai.getResource());
     }
 
@@ -193,11 +198,21 @@ public class ResourceChangeCommandFactory {
 
         FilterResult filterResult = getFilterResult(resource, resourceProxy, filter);
 
-        if (filterResult != FilterResult.ALLOW) {
-            return null;
-        }
+        switch (filterResult) {
 
-        return new ResourceAndInfo(resourceProxy, info);
+            case ALLOW:
+                return new ResourceAndInfo(resourceProxy, info);
+            case PREREQUISITE:
+                // never try to 'create' the root node, we assume it exists
+                if (!resourceProxy.getPath().equals("/")) {
+                    // we don't explicitly set the primary type, which will allow the the repository to choose the best
+                    // suited one ( typically nt:unstructured )
+                    return new ResourceAndInfo(new ResourceProxy(resourceProxy.getPath()), null, true);
+                }
+            case DENY: // falls through
+            default:
+                return null;
+        }
     }
 
     private FileInfo createFileInfo(IResource resource) throws CoreException {
@@ -555,7 +570,7 @@ public class ResourceChangeCommandFactory {
         try {
             ResourceAndInfo rai = buildResourceAndInfo(res, repository);
 
-            if (rai == null) {
+            if (rai == null || rai.isOnlyWhenMissing()) {
                 return null;
             }
 
