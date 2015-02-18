@@ -290,9 +290,8 @@
   </feature>
   <!-- Apache Tika -->
   <feature name="tika-sling" version="${project.version}">
-    <!-- TODO get rid of tika-bundle's junit dependency -->
-    <!-- <bundle dependency="true">mvn:org.apache.tika/tika-bundle/1.7</bundle> -->
     <bundle dependency="true">mvn:org.apache.tika/tika-core/1.7</bundle>
+    <bundle dependency="true">mvn:org.apache.tika/tika-parsers/1.7</bundle>
   </feature>
   <!-- Apache Sling Auth (contrib) -->
   <feature name="sling-auth-openid" version="${project.version}">
