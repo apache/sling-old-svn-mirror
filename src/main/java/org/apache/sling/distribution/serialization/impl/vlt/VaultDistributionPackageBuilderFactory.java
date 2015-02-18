@@ -43,7 +43,7 @@ import org.apache.sling.distribution.serialization.DistributionPackageReadingExc
 import org.apache.sling.distribution.serialization.impl.ResourceSharedDistributionPackageBuilder;
 
 @Component(metatype = true,
-        label = "Sling Distribution Packaging - Vault Package Builder Factory",
+        label = "Apache Sling Distribution Packaging - Vault Package Builder Factory",
         description = "OSGi configuration for vault package builders",
         configurationFactory = true,
         specVersion = "1.1",

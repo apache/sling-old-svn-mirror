@@ -39,7 +39,7 @@ import javax.annotation.Nonnull;
 import java.util.Map;
 
 @Component(metatype = true,
-        label = "Sling Distribution Trigger - Scheduled Triggers Factory",
+        label = "Apache Sling Distribution Trigger - Scheduled Triggers Factory",
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE

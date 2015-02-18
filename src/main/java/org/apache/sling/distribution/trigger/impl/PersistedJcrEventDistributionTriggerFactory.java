@@ -37,7 +37,7 @@ import javax.annotation.Nonnull;
 import java.util.Map;
 
 @Component(metatype = true,
-        label = "Sling Distribution Trigger - Persisted Jcr Event Triggers Factory",
+        label = "Apache Sling Distribution Trigger - Persisted Jcr Event Triggers Factory",
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE

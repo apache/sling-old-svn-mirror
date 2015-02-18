@@ -33,7 +33,7 @@ import org.apache.sling.distribution.component.impl.DistributionComponentConstan
 import org.osgi.framework.BundleContext;
 
 @Component(metatype = true,
-        label = "Sling Distribution Request Authorization - Privilege Request Authorization Strategy",
+        label = "Apache Sling Distribution Request Authorization - Privilege Request Authorization Strategy",
         description = "OSGi configuration for request based authorization strategy based on privileges",
         configurationFactory = true,
         specVersion = "1.1",

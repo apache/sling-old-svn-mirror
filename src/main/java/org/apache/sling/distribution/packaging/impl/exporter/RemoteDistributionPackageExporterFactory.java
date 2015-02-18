@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Default implementation of {@link org.apache.sling.distribution.packaging.DistributionPackageExporter}
  */
-@Component(label = "Sling Distribution Exporter - Remote Package Exporter Factory",
+@Component(label = "Apache Sling Distribution Exporter - Remote Package Exporter Factory",
         metatype = true,
         configurationFactory = true,
         specVersion = "1.1",

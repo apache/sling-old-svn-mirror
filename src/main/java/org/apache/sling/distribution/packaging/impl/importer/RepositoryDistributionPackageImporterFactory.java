@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Factory for {@link org.apache.sling.distribution.packaging.impl.importer.RepositoryDistributionPackageImporter}s
  */
-@Component(label = "Sling Distribution Importer - Repository Package Importer Factory",
+@Component(label = "Apache Sling Distribution Importer - Repository Package Importer Factory",
         metatype = true,
         configurationFactory = true,
         specVersion = "1.1",

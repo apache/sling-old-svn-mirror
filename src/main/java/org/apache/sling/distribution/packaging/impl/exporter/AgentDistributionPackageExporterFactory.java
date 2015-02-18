@@ -40,7 +40,7 @@ import org.apache.sling.distribution.serialization.DistributionPackageBuilderPro
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(label = "Sling Distribution Exporter - Agent Based Package Exporter",
+@Component(label = "Apache Sling Distribution Exporter - Agent Based Package Exporter",
         metatype = true,
         configurationFactory = true,
         specVersion = "1.1",
