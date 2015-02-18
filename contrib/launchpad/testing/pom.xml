@@ -152,7 +152,7 @@
                         </goals>
                         <configuration>
                             <defaultBundleList>
-                                <version>7-SNAPSHOT</version>
+                                <version>7</version>
                             </defaultBundleList>
                         </configuration>
                     </execution>
