@@ -25,6 +25,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.sling.ide.eclipse.core.internal.Activator;
 import org.apache.sling.ide.transport.CommandExecutionProperties;
+import org.apache.sling.ide.transport.Repository.CommandExecutionFlag;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -141,7 +142,13 @@ public class FailOnModificationEventsRule implements EventHandler, TestRule {
 
         if ("AddOrUpdateNodeCommand".equals(type) || "ReorderChildNodesCommand".equals(type)
                 || "DeleteNodeCommand".equals(type)) {
-            unexpectedEvents.add(event);
+            String flags = (String) event.getProperty(CommandExecutionProperties.ACTION_FLAGS);
+
+            // it's OK to create prerequisites if needed
+            if (flags == null || !CommandExecutionFlag.CREATE_ONLY_WHEN_MISSING.toString().equals(flags)) {
+                unexpectedEvents.add(event);
+            }
+
         }
     }
 
