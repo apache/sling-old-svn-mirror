@@ -32,6 +32,7 @@ import javax.jcr.RepositoryException;
 
 import org.apache.sling.ide.test.impl.helpers.DisableDebugStatusHandlers;
 import org.apache.sling.ide.test.impl.helpers.ExternalSlingLaunchpad;
+import org.apache.sling.ide.test.impl.helpers.FailOnUnsuccessfulEventsRule;
 import org.apache.sling.ide.test.impl.helpers.LaunchpadConfig;
 import org.apache.sling.ide.test.impl.helpers.Poller;
 import org.apache.sling.ide.test.impl.helpers.ProjectAdapter;
@@ -69,6 +70,9 @@ public class JcrPartialCoverageAggregatesDeploymentTest {
 
     @Rule
     public DisableDebugStatusHandlers disableDebugHandlers = new DisableDebugStatusHandlers();
+
+    @Rule
+    public FailOnUnsuccessfulEventsRule failOnEventsRule = new FailOnUnsuccessfulEventsRule();
 
     @Test
     public void deploySlingFolder() throws Exception {

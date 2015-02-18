@@ -48,6 +48,7 @@ public class TracingCommand<T> implements Command<T> {
         if (eventAdmin != null) {
             Map<String, Object> props = new HashMap<String, Object>();
             props.put(CommandExecutionProperties.RESULT_TEXT, result.toString());
+            props.put(CommandExecutionProperties.RESULT_STATUS, result.isSuccess());
             try {
                 result.get();
             } catch (RepositoryException e) {

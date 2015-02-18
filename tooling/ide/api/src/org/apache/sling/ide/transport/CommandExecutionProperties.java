@@ -28,6 +28,7 @@ public final class CommandExecutionProperties {
     public static final String ACTION_FLAGS = "action.flags";
     public static final String ACTION_TARGET = "action.target";
     public static final String RESULT_TEXT = "result.txt";
+    public static final String RESULT_STATUS = "result.status";
     public static final String RESULT_THROWABLE = "result.throwable";
 
     private CommandExecutionProperties() {

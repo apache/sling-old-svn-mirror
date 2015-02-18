@@ -85,6 +85,7 @@ public class ListTreeCommand extends JcrCommand<ResourceProxy> {
     private void log(String text, long start, long end) {
         Map<String, Object> props = new HashMap<String, Object>();
         props.put(CommandExecutionProperties.RESULT_TEXT, text);
+        props.put(CommandExecutionProperties.RESULT_STATUS, Boolean.TRUE);
         props.put(CommandExecutionProperties.ACTION_TYPE, getClass().getSimpleName());
         props.put(CommandExecutionProperties.ACTION_TARGET, getPath());
         props.put(CommandExecutionProperties.TIMESTAMP_START, start);
