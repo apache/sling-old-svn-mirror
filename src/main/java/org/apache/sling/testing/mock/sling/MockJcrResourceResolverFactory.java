@@ -29,7 +29,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory;
-import org.apache.sling.jcr.resource.internal.helper.jcr.PathMapper;
 import org.apache.sling.resourceresolver.impl.CommonResourceResolverFactoryImpl;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
@@ -68,7 +67,6 @@ class MockJcrResourceResolverFactory implements ResourceResolverFactory {
 
         // setup mocked JCR environment
         bundleContext.registerService(SlingRepository.class.getName(), this.slingRepository, null);
-        bundleContext.registerService(PathMapper.class.getName(), new PathMapper(), null);
 
         // setup real sling JCR resource provider implementation for use in
         // mocked context
@@ -127,9 +125,9 @@ class MockJcrResourceResolverFactory implements ResourceResolverFactory {
         return getResourceResolverInternal(authenticationInfo, true);
     }
 
-    @Override
+    // part of Sling API 2.8
     public ResourceResolver getThreadResourceResolver() {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
 }
