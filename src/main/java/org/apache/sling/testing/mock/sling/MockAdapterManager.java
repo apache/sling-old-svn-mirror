@@ -45,8 +45,7 @@ class MockAdapterManager implements AdapterManager {
         // iterate over all adapter factories and try to adapt the object
         if (this.bundleContext != null) {
             try {
-                ServiceReference[] references = bundleContext
-                        .getServiceReferences(AdapterFactory.class.getName(), null);
+                ServiceReference[] references = bundleContext.getServiceReferences(AdapterFactory.class.getName(), null);
                 for (ServiceReference serviceReference : references) {
                     AdapterFactory adapterFactory = (AdapterFactory) bundleContext.getService(serviceReference);
                     AdapterType instance = adapterFactory.getAdapter(adaptable, type);
