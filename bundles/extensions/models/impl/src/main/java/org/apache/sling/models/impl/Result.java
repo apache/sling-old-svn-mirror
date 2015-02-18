@@ -31,11 +31,11 @@ import org.slf4j.Logger;
 public class Result<ModelType> {
 
     public enum FailureType {
-        ADAPTABLE_DOES_NOT_MATCH("Adaptable is not acceptable for the model class"),
+        ADAPTABLE_DOES_NOT_MATCH("Adaptable is not acceptable for the model class: %s"),
         FAILED_CALLING_POST_CONSTRUCT("Failure calling post-construct method"),
-        NO_MODEL_ANNOTATION("Provided Adapter class does not have a Model annotation"),
-        NO_USABLE_CONSTRUCTOR("Unable to find a useable constructor"),
-        OTHER("Unclassified problem"),
+        NO_MODEL_ANNOTATION("Provided Adapter class does not have a Model annotation: %s"),
+        NO_USABLE_CONSTRUCTOR("Unable to find a useable constructor: %s"),
+        OTHER("Unclassified problem: %s"),
         MISSING_METHODS("Required methods %s on model %s were not able to be injected."),
         MISSING_FIELDS("Required fields %s on model %s were not able to be injected."),
         MISSING_CONSTRUCTOR_PARAMS("Required constructor parameters %s on model %s were not able to be injected."), 
@@ -81,6 +81,14 @@ public class Result<ModelType> {
                 case MISSING_FIELDS:
                 case MISSING_METHODS:
                     log.error(String.format(failureType.message, missingElements, clazz));
+                    break;
+                case ADAPTABLE_DOES_NOT_MATCH:
+                case NO_MODEL_ANNOTATION:
+                case NO_USABLE_CONSTRUCTOR:
+                    log.error(String.format(failureType.message, clazz));
+                    break;
+                case OTHER:
+                    log.error(String.format(failureType.message, failureMessage));
                     break;
                 default:
                     log.error(getMessage(), failureException);
