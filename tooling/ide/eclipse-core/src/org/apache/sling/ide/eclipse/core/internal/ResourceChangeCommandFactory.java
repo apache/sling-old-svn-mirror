@@ -55,6 +55,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.ui.statushandlers.StatusManager;
 
 /**
  * The <tt>ResourceChangeCommandFactory</tt> creates new {@link #Command commands} correspoding to resource addition,
@@ -171,7 +172,9 @@ public class ResourceChangeCommandFactory {
                 }
 
             } catch (IOException e) {
-                Activator.getDefault().getPluginLogger().warn(e.getMessage(), e);
+                Status s = new Status(Status.WARNING, Activator.PLUGIN_ID, "Failed reading file at "
+                        + resource.getFullPath(), e);
+                StatusManager.getManager().handle(s, StatusManager.LOG | StatusManager.SHOW);
                 return null;
             } finally {
                 IOUtils.closeQuietly(contents);
