@@ -74,10 +74,22 @@ public interface Repository {
 	public static String JCR_ROOT_VERSION= "jcr:rootVersion";
 	public static String JCR_VERSION_LABELS= "jcr:versionLabels";
 	public static String JCR_CHILD_VERSION_HISTORY= "jcr:childVersionHistory";
+
+    public enum CommandExecutionFlag {
+
+        /**
+         * Signal the command to only create the nodes when they are missing
+         * 
+         * <p>
+         * If nodes exist, they will not be touched
+         */
+        CREATE_ONLY_WHEN_MISSING;
+    }
  	
     RepositoryInfo getRepositoryInfo();
 
-    Command<Void> newAddOrUpdateNodeCommand(FileInfo fileInfo, ResourceProxy resourceProxy);
+    Command<Void> newAddOrUpdateNodeCommand(FileInfo fileInfo, ResourceProxy resourceProxy,
+            CommandExecutionFlag... flags);
 
     /**
      * Reorder the child nodes under the specified resource

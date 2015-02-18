@@ -57,6 +57,7 @@ import org.apache.jackrabbit.vault.util.JcrConstants;
 import org.apache.jackrabbit.vault.util.Text;
 import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.transport.FileInfo;
+import org.apache.sling.ide.transport.Repository.CommandExecutionFlag;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.util.PathUtil;
 
@@ -66,9 +67,9 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
     private FileInfo fileInfo;
 
     public AddOrUpdateNodeCommand(Repository jcrRepo, Credentials credentials, FileInfo fileInfo,
-            ResourceProxy resource, Logger logger) {
+            ResourceProxy resource, Logger logger, CommandExecutionFlag... flags) {
 
-        super(jcrRepo, credentials, resource.getPath(), logger);
+        super(jcrRepo, credentials, resource.getPath(), logger, flags);
 
         this.fileInfo = fileInfo;
         this.resource = resource;

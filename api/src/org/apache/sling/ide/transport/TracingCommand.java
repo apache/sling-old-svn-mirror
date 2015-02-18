@@ -18,7 +18,9 @@ package org.apache.sling.ide.transport;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.sling.ide.transport.Repository.CommandExecutionFlag;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 
@@ -52,6 +54,16 @@ public class TracingCommand<T> implements Command<T> {
                 props.put(CommandExecutionProperties.RESULT_THROWABLE, e);
             }
             props.put(CommandExecutionProperties.ACTION_TYPE, command.getClass().getSimpleName());
+            Set<CommandExecutionFlag> flags = command.getFlags();
+            if (!flags.isEmpty()) {
+                StringBuilder flagsString = new StringBuilder();
+                for (CommandExecutionFlag flag : flags) {
+                    flagsString.append(flag).append(',');
+                }
+                flagsString.deleteCharAt(flagsString.length() - 1);
+                props.put(CommandExecutionProperties.ACTION_FLAGS, flagsString.toString());
+            }
+
             props.put(CommandExecutionProperties.ACTION_TARGET, command.getPath());
             props.put(CommandExecutionProperties.TIMESTAMP_START, start);
             props.put(CommandExecutionProperties.TIMESTAMP_END, end);
@@ -64,6 +76,11 @@ public class TracingCommand<T> implements Command<T> {
 
     public String getPath() {
         return command.getPath();
+    }
+
+    @Override
+    public Set<CommandExecutionFlag> getFlags() {
+        return command.getFlags();
     }
 
 }

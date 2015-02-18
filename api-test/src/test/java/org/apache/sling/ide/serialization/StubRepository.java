@@ -47,7 +47,8 @@ public class StubRepository implements Repository {
     }
 
     @Override
-    public Command<Void> newAddOrUpdateNodeCommand(FileInfo fileInfo, ResourceProxy resourceInfo) {
+    public Command<Void> newAddOrUpdateNodeCommand(FileInfo fileInfo, ResourceProxy resourceInfo,
+            CommandExecutionFlag... flags) {
         return null;
     }
 
