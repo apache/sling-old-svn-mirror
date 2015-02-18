@@ -16,124 +16,16 @@
  */
 package org.apache.sling.ide.test.impl.helpers;
 
-import static org.junit.Assert.fail;
-
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-
-import org.apache.sling.ide.eclipse.core.internal.Activator;
 import org.apache.sling.ide.transport.CommandExecutionProperties;
 import org.apache.sling.ide.transport.Repository.CommandExecutionFlag;
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
-import org.osgi.service.event.EventHandler;
 
 /**
  * The <tt>FailOnModificationEventsRule</tt> registers an event listener and fails the test under execution if
  * modification events are fired, whether they are successful or not
  *
  */
-public class FailOnModificationEventsRule implements EventHandler, TestRule {
-
-    /**
-     * 
-     */
-    private static final int SETTLE_TIMEOUT_MILLIS = 100;
-    private ServiceRegistration<EventHandler> registration;
-    private List<Event> unexpectedEvents = new CopyOnWriteArrayList<Event>();
-
-    public Statement apply(Statement base, Description description) {
-        return statement(base);
-    }
-
-    private Statement statement(final Statement base) {
-        return new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                before();
-                try {
-                    base.evaluate();
-                } finally {
-                    after();
-                }
-            }
-        };
-    }
-
-    protected void before() {
-
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put("event.topics", "org/apache/sling/ide/transport");
-        registration = Activator.getDefault().getBundle().getBundleContext()
-                .registerService(EventHandler.class, this, props);
-
-    }
-
-    protected void after() throws InterruptedException {
-
-        if (registration != null) {
-            registration.unregister();
-        }
-
-        waitForEventsToSettle();
-
-        if (unexpectedEvents.isEmpty()) {
-            return;
-        }
-
-        StringBuilder desc = new StringBuilder();
-        desc.append("Unexpected events captured during import : ");
-        for (Event event : unexpectedEvents) {
-
-            String flags = (String) event.getProperty(CommandExecutionProperties.ACTION_FLAGS);
-
-            desc.append('\n');
-            desc.append(event.getProperty(CommandExecutionProperties.ACTION_TYPE));
-            if (flags != null && flags.length() > 0) {
-                desc.append(" (").append(flags).append(")");
-            }
-            desc.append(" -> ");
-            desc.append(event.getProperty(CommandExecutionProperties.ACTION_TARGET));
-            desc.append(" : ");
-            desc.append(event.getProperty(CommandExecutionProperties.RESULT_TEXT));
-        }
-
-        fail(desc.toString());
-    }
-
-    /**
-     * Clears the list of unexpected events after the event firing settles
-     * 
-     * <p>
-     * This can be useful for instance when you want to validate that no import events take place after a certain point
-     * in time.
-     * </p>
-     * 
-     * <p>
-     * Event firing settling is defined as no unexpected events being recorded for {@value #SETTLE_TIMEOUT_MILLIS}
-     * milliseconds
-     * </p>
-     */
-    public void clearUnexpectedEventsAfterSettling() throws InterruptedException {
-
-        waitForEventsToSettle();
-
-        unexpectedEvents.clear();
-    }
-
-    private void waitForEventsToSettle() throws InterruptedException {
-
-        int currentSize;
-        do {
-            currentSize = unexpectedEvents.size();
-            Thread.sleep(SETTLE_TIMEOUT_MILLIS);
-        } while (currentSize != unexpectedEvents.size());
-    }
+public class FailOnModificationEventsRule extends AbstractFailOnUnexpectedEventsRule {
 
     @Override
     public void handleEvent(Event event) {
@@ -146,9 +38,8 @@ public class FailOnModificationEventsRule implements EventHandler, TestRule {
 
             // it's OK to create prerequisites if needed
             if (flags == null || !CommandExecutionFlag.CREATE_ONLY_WHEN_MISSING.toString().equals(flags)) {
-                unexpectedEvents.add(event);
+                addUnexpectedEvent(event);
             }
-
         }
     }
 
