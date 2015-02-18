@@ -88,8 +88,14 @@ public class FailOnModificationEventsRule implements EventHandler, TestRule {
         StringBuilder desc = new StringBuilder();
         desc.append("Unexpected events captured during import : ");
         for (Event event : unexpectedEvents) {
+
+            String flags = (String) event.getProperty(CommandExecutionProperties.ACTION_FLAGS);
+
             desc.append('\n');
             desc.append(event.getProperty(CommandExecutionProperties.ACTION_TYPE));
+            if (flags != null && flags.length() > 0) {
+                desc.append(" (").append(flags).append(")");
+            }
             desc.append(" -> ");
             desc.append(event.getProperty(CommandExecutionProperties.ACTION_TARGET));
             desc.append(" : ");

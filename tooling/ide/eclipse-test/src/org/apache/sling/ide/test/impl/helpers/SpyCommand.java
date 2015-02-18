@@ -16,10 +16,15 @@
  */
 package org.apache.sling.ide.test.impl.helpers;
 
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.Set;
+
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.transport.Result;
+import org.apache.sling.ide.transport.Repository.CommandExecutionFlag;
 
 /**
  * The <tt>SpyCommand</tt> records the arguments passed to it and can be used to verify that the invocation is made with
@@ -37,12 +42,16 @@ public class SpyCommand<T> implements Command<T> {
     private final FileInfo fileInfo;
     private final String path;
     private final SpyCommand.Kind kind;
+    private final EnumSet<CommandExecutionFlag> flags;
 
-    public SpyCommand(ResourceProxy resourceProxy, FileInfo fileInfo, String path, SpyCommand.Kind kind) {
+    public SpyCommand(ResourceProxy resourceProxy, FileInfo fileInfo, String path, SpyCommand.Kind kind,
+            CommandExecutionFlag... flags) {
         this.resourceProxy = resourceProxy;
         this.fileInfo = fileInfo;
         this.path = path;
         this.kind = kind;
+        this.flags = EnumSet.noneOf(CommandExecutionFlag.class);
+        this.flags.addAll(Arrays.asList(flags));
     }
 
     @Override
@@ -53,6 +62,11 @@ public class SpyCommand<T> implements Command<T> {
     @Override
     public String getPath() {
         return path;
+    }
+
+    @Override
+    public Set<CommandExecutionFlag> getFlags() {
+        return flags;
     }
 
     public FileInfo getFileInfo() {

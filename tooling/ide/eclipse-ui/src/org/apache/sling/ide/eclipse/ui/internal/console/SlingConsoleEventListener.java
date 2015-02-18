@@ -128,14 +128,18 @@ public class SlingConsoleEventListener implements EventHandler {
             Long start = (Long) event.getProperty(CommandExecutionProperties.TIMESTAMP_START);
             Long end = (Long) event.getProperty(CommandExecutionProperties.TIMESTAMP_END);
             String type = (String) event.getProperty(CommandExecutionProperties.ACTION_TYPE);
+            String flags = (String) event.getProperty(CommandExecutionProperties.ACTION_FLAGS);
             String target = (String) event.getProperty(CommandExecutionProperties.ACTION_TARGET);
             String result = (String) event.getProperty(CommandExecutionProperties.RESULT_TEXT);
             Throwable t = (Throwable) event.getProperty(CommandExecutionProperties.RESULT_THROWABLE);
 
             StringBuilder message = new StringBuilder();
             DateFormat format = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
-            message.append("[").append(format.format(new Date(start))).append("] ").append(type).append(" -> ")
-                    .append(target);
+            message.append("[").append(format.format(new Date(start))).append("] ").append(type);
+            if (flags != null && flags.length() > 0) {
+                message.append(" (").append(flags).append(")");
+            }
+            message.append(" -> ").append(target);
             message.append(" : ").append(result).append(" (").append(end - start).append(" ms)").append('\n');
 
             messageStream.write(message.toString());

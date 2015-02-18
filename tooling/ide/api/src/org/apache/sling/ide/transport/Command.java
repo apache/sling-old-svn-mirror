@@ -16,9 +16,15 @@
  */
 package org.apache.sling.ide.transport;
 
+import java.util.Set;
+
+import org.apache.sling.ide.transport.Repository.CommandExecutionFlag;
+
 public interface Command<T> {
 
 	Result<T> execute();
 
     String getPath();
+
+    Set<CommandExecutionFlag> getFlags();
 }

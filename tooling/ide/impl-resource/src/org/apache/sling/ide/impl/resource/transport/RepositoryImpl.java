@@ -64,7 +64,11 @@ public class RepositoryImpl implements Repository {
 	}
 	
 	@Override
-    public Command<Void> newAddOrUpdateNodeCommand(final FileInfo fileInfo, ResourceProxy resource) {
+    public Command<Void> newAddOrUpdateNodeCommand(final FileInfo fileInfo, ResourceProxy resource,
+            CommandExecutionFlag... flags) {
+        if (flags.length != 0) {
+            throw new UnsupportedOperationException("This implementation does not support any flags");
+        }
 		
         return wrap(new UpdateContentCommand(repositoryInfo, httpClient, fileInfo.getRelativeLocation(),
                 resource.getProperties(), fileInfo));
