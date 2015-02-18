@@ -43,6 +43,7 @@ import java.util.Map;
 @Component(metatype = true,
         label = "Apache Sling Distribution Resources - Configuration Resource Provider Factory",
         description = "Distribution Configuration Resource Provider Factory",
+        configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE)
 @Service(value = ResourceProviderFactory.class)
