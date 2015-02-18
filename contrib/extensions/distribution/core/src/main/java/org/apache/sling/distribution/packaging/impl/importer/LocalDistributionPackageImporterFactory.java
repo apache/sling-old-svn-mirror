@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
  * {@link org.apache.sling.distribution.packaging.DistributionPackageImporter} implementation which imports a FileVault
  * based {@link org.apache.sling.distribution.packaging.DistributionPackage} locally.
  */
-@Component(label = "Sling Distribution Importer - Local Package Importer Factory",
+@Component(label = "Apache Sling Distribution Importer - Local Package Importer Factory",
         metatype = true,
         configurationFactory = true,
         specVersion = "1.1",

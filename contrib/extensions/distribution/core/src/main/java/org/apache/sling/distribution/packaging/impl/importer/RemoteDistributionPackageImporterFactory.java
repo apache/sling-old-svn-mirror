@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Remote implementation of {@link org.apache.sling.distribution.packaging.DistributionPackageImporter}
  */
-@Component(label = "Sling Distribution Importer - Remote Package Importer Factory",
+@Component(label = "Apache Sling Distribution Importer - Remote Package Importer Factory",
         metatype = true,
         configurationFactory = true,
         specVersion = "1.1",

@@ -58,7 +58,7 @@ import java.util.Map;
  * An OSGi service factory for {@link org.apache.sling.distribution.agent.DistributionAgent}s which references already existing OSGi services.
  */
 @Component(metatype = true,
-        label = "Sling Distribution Agent - Reverse Agents Factory",
+        label = "Apache Sling Distribution Agent - Reverse Agents Factory",
         description = "OSGi configuration factory for reverse agents",
         configurationFactory = true,
         specVersion = "1.1",

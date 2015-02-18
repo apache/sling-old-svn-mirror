@@ -43,7 +43,8 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServletRequest;
 
 
-@Component(label = "Sling Distribution Resources - Service Resource Provider Factory",
+@Component(metatype = true,
+        label = "Apache Sling Distribution Resources - Service Resource Provider Factory",
         description = "Distribution Service Resource Provider Factory",
         configurationFactory = true,
         specVersion = "1.1",

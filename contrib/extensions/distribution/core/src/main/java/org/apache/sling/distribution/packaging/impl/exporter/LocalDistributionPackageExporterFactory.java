@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * {@link org.apache.sling.distribution.packaging.DistributionPackageExporter} implementation which creates a FileVault based
  * {@link org.apache.sling.distribution.packaging.DistributionPackage} locally.
  */
-@Component(label = "Sling Distribution Exporter - Local Package Exporter Factory",
+@Component(label = "Apache Sling Distribution Exporter - Local Package Exporter Factory",
         metatype = true,
         configurationFactory = true,
         specVersion = "1.1",

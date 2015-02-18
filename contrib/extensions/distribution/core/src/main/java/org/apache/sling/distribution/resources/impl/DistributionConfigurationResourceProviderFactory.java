@@ -40,7 +40,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 
 
-@Component(label = "Sling Distribution Resources - Configuration Resource Provider Factory",
+@Component(metatype = true,
+        label = "Apache Sling Distribution Resources - Configuration Resource Provider Factory",
         description = "Distribution Configuration Resource Provider Factory",
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE)
