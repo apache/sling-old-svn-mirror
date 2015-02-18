@@ -66,10 +66,8 @@ public final class MockModelAdapterFactory extends ModelAdapterFactory {
         bundleContext = componentContext.getBundleContext();
 
         // register service listener to collect injectors
-        // this allows detecting injectors even if they are registered after
-        // this bundle
-        // (which is otherwise currently not supported in the osgi mock
-        // environment)
+        // this allows detecting injectors even if they are registered after this bundle
+        // (which is otherwise currently not supported in the osgi mock environment)
         bundleContext.addServiceListener(new InjectorServiceListener());
 
         // activate service in simulated OSGi environment
