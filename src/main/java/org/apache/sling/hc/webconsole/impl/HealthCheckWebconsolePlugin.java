@@ -49,7 +49,7 @@ import org.apache.sling.hc.api.execution.HealthCheckExecutor;
 @Service(Servlet.class)
 @SuppressWarnings("serial")
 @Properties({
-    @Property(name=org.osgi.framework.Constants.SERVICE_DESCRIPTION, value="Sling Health Check Web Console Plugin"),
+    @Property(name=org.osgi.framework.Constants.SERVICE_DESCRIPTION, value="Apache Sling Health Check Web Console Plugin"),
     @Property(name="felix.webconsole.label", value=HealthCheckWebconsolePlugin.LABEL),
     @Property(name="felix.webconsole.title", value=HealthCheckWebconsolePlugin.TITLE),
     @Property(name="felix.webconsole.category", value=HealthCheckWebconsolePlugin.CATEGORY),
