@@ -162,9 +162,9 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         Node parent = session.getNode(parentLocation);
         String childName = PathUtil.getName(resource.getPath());
         if (primaryType == null) {
-            return parent.addNode(childName, primaryType);
-        } else {
             return parent.addNode(childName);
+        } else {
+            return parent.addNode(childName, primaryType);
         }
     }
 
