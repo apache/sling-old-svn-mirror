@@ -30,7 +30,9 @@ import aQute.bnd.annotation.ConsumerType;
  * semicolon-separated parameters added to the URI, eg.: {@code /content/test;v='1.0'}.
  *
  * If a {@code ResourceProvider} implements this interface, the {@link #getResource(ResourceResolver, String, Map)}
- * method is called instead of {@link ResourceProvider#getResource(ResourceResolver, String)}.
+ * method is called instead of {@link ResourceProvider#getResource(ResourceResolver, String)}
+ * if such parameters are available. If no map (or an empty map) is available,
+ * {@link ResourceProvider#getResource(ResourceResolver, String)} is called.
  *
  * @since 2.8.0 (Sling API Bundle 2.9.0)
  */
@@ -51,7 +53,7 @@ public interface ParametrizableResourceProvider {
      * @param resourceResolver
      *            The {@link ResourceResolver} to which the returned {@link Resource} is attached.
      * @param path The full path of the resource.
-     * @param parameters A map of additional parameters, the map might be empty.
+     * @param parameters A map of additional parameters, the map contains at least one parameter.
      * @return <code>null</code> If this provider does not have a resource for
      *         the path.
      * @throws org.apache.sling.api.SlingException
