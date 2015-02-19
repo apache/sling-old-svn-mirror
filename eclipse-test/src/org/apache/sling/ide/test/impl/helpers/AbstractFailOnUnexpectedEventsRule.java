@@ -39,7 +39,7 @@ import org.osgi.service.event.EventHandler;
  */
 public abstract class AbstractFailOnUnexpectedEventsRule implements EventHandler, TestRule {
 
-    private static final int SETTLE_TIMEOUT_MILLIS = 100;
+    private static final int SETTLE_TIMEOUT_MILLIS = 500;
     private ServiceRegistration<EventHandler> registration;
     private final List<Event> unexpectedEvents = new CopyOnWriteArrayList<Event>();
 
