@@ -128,11 +128,7 @@ public class JavaUseProvider implements UseProvider {
             }
             return ProviderOutcome.success(result);
         } catch (Exception e) {
-            if (e instanceof CompilerException) {
-                return ProviderOutcome.failure(e);
-            } else {
-                return ProviderOutcome.failure();
-            }
+            return ProviderOutcome.failure(e);
         }
     }
 
