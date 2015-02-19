@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -310,15 +311,22 @@ final class OsgiServiceUtil {
         }
 
         // try to invoke bind method
-        String bindMethodName = reference.getBind();
-        if (StringUtils.isNotEmpty(bindMethodName)) {
+        for (ServiceInfo matchingService : matchingServices) {
+            invokeBindUnbindMethod(reference, target, matchingService, true);
+        }
+    }
+    
+    private static void invokeBindUnbindMethod(Reference reference, Object target, ServiceInfo serviceInfo, boolean bind) {
+        Class<?> targetClass = target.getClass();
+
+        // try to invoke bind method
+        String methodName = bind ? reference.getBind() : reference.getUnbind();
+        if (StringUtils.isNotEmpty(methodName)) {
             
             // 1. ServiceReference
-            Method bindMethod = getMethod(targetClass, bindMethodName, new Class<?>[] { ServiceReference.class });
-            if (bindMethod != null) {
-                for (ServiceInfo matchingService : matchingServices) {
-                    invokeMethod(target, bindMethod, new Object[] { matchingService.getServiceReference() });
-                }
+            Method method = getMethod(targetClass, methodName, new Class<?>[] { ServiceReference.class });
+            if (method != null) {
+                invokeMethod(target, method, new Object[] { serviceInfo.getServiceReference() });
                 return;
             }
             
@@ -329,26 +337,42 @@ final class OsgiServiceUtil {
             } catch (ClassNotFoundException e) {
                 throw new RuntimeException("Service reference type not found: " + reference.getInterfaceType());
             }
-            bindMethod = getMethodWithAssignableTypes(targetClass, bindMethodName, new Class<?>[] { interfaceType });
-            if (bindMethod != null) {
-                for (ServiceInfo matchingService : matchingServices) {
-                    invokeMethod(target, bindMethod, new Object[] { matchingService.getServiceInstance() });
-                }
+            method = getMethodWithAssignableTypes(targetClass, methodName, new Class<?>[] { interfaceType });
+            if (method != null) {
+                invokeMethod(target, method, new Object[] { serviceInfo.getServiceInstance() });
                 return;
             }
             
             // 3. assignable from service instance plus map
-            bindMethod = getMethodWithAssignableTypes(targetClass, bindMethodName, new Class<?>[] { interfaceType, Map.class });
-            if (bindMethod != null) {
-                for (ServiceInfo matchingService : matchingServices) {
-                    invokeMethod(target, bindMethod, new Object[] { matchingService.getServiceInstance(), matchingService.getServiceConfig() });
-                }
+            method = getMethodWithAssignableTypes(targetClass, methodName, new Class<?>[] { interfaceType, Map.class });
+            if (method != null) {
+                invokeMethod(target, method, new Object[] { serviceInfo.getServiceInstance(), serviceInfo.getServiceConfig() });
                 return;
             }
         }
 
-        throw new RuntimeException("Bind method with name " + bindMethodName + " not found "
+        throw new RuntimeException((bind ? "Bind" : "Unbind") + "method with name " + methodName + " not found "
                 + "for reference '" + reference.getName() + "' for class {}" +  targetClass.getName());
+    }
+
+    /**
+     * Directly invoke bind method on service for the given reference.
+     * @param reference Reference metadata
+     * @param target Target object for reference
+     * @param serviceInfo Service on which to invoke the method
+     */
+    public static void invokeBindMethod(Reference reference, Object target, ServiceInfo serviceInfo) {
+        invokeBindUnbindMethod(reference,  target, serviceInfo, true);
+    }
+    
+    /**
+     * Directly invoke unbind method on service for the given reference.
+     * @param reference Reference metadata
+     * @param target Target object for reference
+     * @param serviceInfo Service on which to invoke the method
+     */
+    public static void invokeUnbindMethod(Reference reference, Object target, ServiceInfo serviceInfo) {
+        invokeBindUnbindMethod(reference,  target, serviceInfo, false);
     }
     
     private static List<ServiceInfo> getMatchingServices(Class<?> type, BundleContext bundleContext) {
@@ -372,7 +396,31 @@ final class OsgiServiceUtil {
         return matchingServices;
     }
 
-    private static class ServiceInfo {
+    /**
+     * Collects all references of any registered service that match with any of the exported interfaces of the given service registration.
+     * @param registeredServices Registered Services
+     * @param registration Service registration
+     * @return List of references
+     */
+    public static List<ReferenceInfo> getMatchingReferences(SortedSet<MockServiceRegistration> registeredServices,
+            MockServiceRegistration registration) {
+        List<ReferenceInfo> references = new ArrayList<ReferenceInfo>();
+        for (MockServiceRegistration existingRegistration : registeredServices) {
+            OsgiMetadata metadata = OsgiMetadataUtil.getMetadata(existingRegistration.getService().getClass());
+            if (metadata != null) {
+                for (Reference reference : metadata.getReferences()) {
+                    for (String serviceInterface : registration.getClasses()) {
+                        if (StringUtils.equals(serviceInterface, reference.getInterfaceType())) {
+                            references.add(new ReferenceInfo(existingRegistration, reference));
+                        }
+                    }
+                }
+            }
+        }
+        return references;
+    }
+            
+    static class ServiceInfo {
 
         private final Object serviceInstance;
         private final Map<String, Object> serviceConfig;
@@ -382,6 +430,12 @@ final class OsgiServiceUtil {
             this.serviceInstance = serviceInstance;
             this.serviceConfig = serviceConfig;
             this.serviceReference = serviceReference;
+        }
+
+        public ServiceInfo(MockServiceRegistration registration) {
+            this.serviceInstance = registration.getService();
+            this.serviceConfig = MapUtil.toMap(registration.getProperties());
+            this.serviceReference = registration.getReference();
         }
 
         public Object getServiceInstance() {
@@ -394,6 +448,26 @@ final class OsgiServiceUtil {
 
         public ServiceReference getServiceReference() {
             return serviceReference;
+        }
+
+    }
+
+    static class ReferenceInfo {
+
+        private final MockServiceRegistration serviceRegistration;
+        private final Reference reference;
+        
+        public ReferenceInfo(MockServiceRegistration serviceRegistration, Reference reference) {
+            this.serviceRegistration = serviceRegistration;
+            this.reference = reference;
+        }
+
+        public MockServiceRegistration getServiceRegistration() {
+            return serviceRegistration;
+        }
+
+        public Reference getReference() {
+            return reference;
         }
 
     }
