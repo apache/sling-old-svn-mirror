@@ -128,6 +128,7 @@ public interface ResourceProvider {
      *
      * @param resourceResolver
      *            The {@link ResourceResolver} to which the returned {@link Resource} is attached.
+     * @param path The full path of the resource.
      * @return <code>null</code> If this provider does not have a resource for
      *         the path.
      * @throws org.apache.sling.api.SlingException
