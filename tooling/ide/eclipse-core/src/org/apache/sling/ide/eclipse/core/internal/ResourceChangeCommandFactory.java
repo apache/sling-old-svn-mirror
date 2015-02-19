@@ -543,23 +543,21 @@ public class ResourceChangeCommandFactory {
         String resourceLocation = getRepositoryPathForDeletedResource(resource,
                 ProjectUtil.getSyncDirectoryFile(resource.getProject()));
         
-        // make sure that a 'plain' folder being deleted does not signal that the content structure
+        // verify whether a resource being deleted does not signal that the content structure
         // was rearranged under a covering parent aggregate
-        if (resource.getType() == IResource.FOLDER) {
-            IPath serializationFilePath = Path.fromOSString(serializationManager.getSerializationFilePath(
-                    resourceLocation, SerializationKind.FOLDER));
+        IPath serializationFilePath = Path.fromOSString(serializationManager.getSerializationFilePath(resourceLocation,
+                SerializationKind.FOLDER));
 
-            ResourceProxy coveringParentData = findSerializationDataFromCoveringParent(resource, syncDirectory,
-                    resourceLocation, serializationFilePath);
-            if (coveringParentData != null) {
-                Activator
-                        .getDefault()
-                        .getPluginLogger()
-                        .trace("Found covering resource data for resource at {0},  skipping deletion and performing an update instead",
-                                resource.getFullPath());
-                FileInfo info = createFileInfo(resource);
-                return repository.newAddOrUpdateNodeCommand(info, coveringParentData);
-            }
+        ResourceProxy coveringParentData = findSerializationDataFromCoveringParent(resource, syncDirectory,
+                resourceLocation, serializationFilePath);
+        if (coveringParentData != null) {
+            Activator
+                    .getDefault()
+                    .getPluginLogger()
+                    .trace("Found covering resource data ( repository path = {0} ) for resource at {1},  skipping deletion and performing an update instead",
+                            coveringParentData.getPath(), resource.getFullPath());
+            FileInfo info = createFileInfo(resource);
+            return repository.newAddOrUpdateNodeCommand(info, coveringParentData);
         }
         
         return repository.newDeleteNodeCommand(serializationManager.getRepositoryPath(resourceLocation));
