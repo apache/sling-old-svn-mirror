@@ -23,7 +23,6 @@ import java.util.Set;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -32,6 +31,7 @@ import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.models.impl.FirstImplementationPicker;
+import org.apache.sling.models.impl.ModelAdapterFactory;
 import org.apache.sling.models.impl.injectors.BindingsInjector;
 import org.apache.sling.models.impl.injectors.ChildResourceInjector;
 import org.apache.sling.models.impl.injectors.OSGiServiceInjector;
@@ -41,7 +41,6 @@ import org.apache.sling.models.impl.injectors.SelfInjector;
 import org.apache.sling.models.impl.injectors.SlingObjectInjector;
 import org.apache.sling.models.impl.injectors.ValueMapInjector;
 import org.apache.sling.models.spi.ImplementationPicker;
-import org.apache.sling.models.spi.Injector;
 import org.apache.sling.settings.SlingSettingsService;
 import org.apache.sling.testing.mock.osgi.context.OsgiContextImpl;
 import org.apache.sling.testing.mock.sling.MockSling;
@@ -49,7 +48,6 @@ import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.builder.ContentBuilder;
 import org.apache.sling.testing.mock.sling.loader.ContentLoader;
 import org.apache.sling.testing.mock.sling.services.MockMimeTypeService;
-import org.apache.sling.testing.mock.sling.services.MockModelAdapterFactory;
 import org.apache.sling.testing.mock.sling.services.MockSlingSettingService;
 import org.apache.sling.testing.mock.sling.servlet.MockRequestPathInfo;
 import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletRequest;
@@ -72,7 +70,6 @@ public class SlingContextImpl extends OsgiContextImpl {
     static final Set<String> DEFAULT_RUN_MODES = ImmutableSet.<String> builder().add("publish").build();
 
     protected ResourceResolverFactory resourceResolverFactory;
-    protected MockModelAdapterFactory modelAdapterFactory;
     protected ResourceResolverType resourceResolverType;
     protected ResourceResolver resourceResolver;
     protected MockSlingHttpServletRequest request;
@@ -115,20 +112,17 @@ public class SlingContextImpl extends OsgiContextImpl {
         registerService(ResourceResolverFactory.class, this.resourceResolverFactory);
         
         // adapter factories
-        modelAdapterFactory = new MockModelAdapterFactory(componentContext());
-        registerService(AdapterFactory.class, modelAdapterFactory);
+        registerInjectActivateService(new ModelAdapterFactory());
 
         // sling models injectors
-        registerService(Injector.class, new BindingsInjector());
-        registerService(Injector.class, new ChildResourceInjector());
-        OSGiServiceInjector osgiServiceInjector = new OSGiServiceInjector();
-        osgiServiceInjector.activate(componentContext());
-        registerService(Injector.class, osgiServiceInjector);
-        registerService(Injector.class, new RequestAttributeInjector());
-        registerService(Injector.class, new ResourcePathInjector());
-        registerService(Injector.class, new SelfInjector());
-        registerService(Injector.class, new SlingObjectInjector());
-        registerService(Injector.class, new ValueMapInjector());
+        registerInjectActivateService(new BindingsInjector());
+        registerInjectActivateService(new ChildResourceInjector());
+        registerInjectActivateService(new OSGiServiceInjector());
+        registerInjectActivateService(new RequestAttributeInjector());
+        registerInjectActivateService(new ResourcePathInjector());
+        registerInjectActivateService(new SelfInjector());
+        registerInjectActivateService(new SlingObjectInjector());
+        registerInjectActivateService(new ValueMapInjector());
 
         // sling models implementation pickers
         registerService(ImplementationPicker.class, new FirstImplementationPicker());
@@ -156,7 +150,6 @@ public class SlingContextImpl extends OsgiContextImpl {
             }
         }
 
-        this.modelAdapterFactory = null;
         this.componentContext = null;
         this.resourceResolver = null;
         this.request = null;
@@ -296,7 +289,7 @@ public class SlingContextImpl extends OsgiContextImpl {
      * @param packageName Java package name
      */
     public final void addModelsForPackage(String packageName) {
-        this.modelAdapterFactory.addModelsForPackage(packageName);
+        ModelAdapterFactoryUtil.addModelsForPackage(packageName, bundleContext());
     }
 
     /**

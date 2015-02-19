@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.testing.mock.sling.services;
+package org.apache.sling.testing.mock.sling.context;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -25,50 +25,27 @@ import static org.junit.Assert.assertNull;
 import javax.inject.Inject;
 
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.models.annotations.Model;
-import org.apache.sling.models.impl.FirstImplementationPicker;
-import org.apache.sling.models.impl.injectors.OSGiServiceInjector;
-import org.apache.sling.models.impl.injectors.RequestAttributeInjector;
-import org.apache.sling.models.spi.ImplementationPicker;
-import org.apache.sling.models.spi.Injector;
-import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.sling.MockSling;
+import org.apache.sling.testing.mock.sling.junit.SlingContext;
+import org.apache.sling.testing.mock.sling.services.MockMimeTypeService;
 import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletRequest;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.osgi.framework.BundleContext;
-import org.osgi.service.component.ComponentContext;
 
-public class MockModelAdapterFactoryTest {
+public class ModelAdapterFactoryUtilTest {
 
-    private ComponentContext componentContext;
-    private BundleContext bundleContext;
-
+    @Rule
+    public SlingContext context = new SlingContext();
+    
     @Before
     public void setUp() throws Exception {
-        componentContext = MockOsgi.newComponentContext();
-        bundleContext = componentContext.getBundleContext();
-        MockSling.setAdapterManagerBundleContext(bundleContext);
-
-        // register sling models adapter factory
-        MockModelAdapterFactory mockModelAdapterFactory = new MockModelAdapterFactory(componentContext);
-        bundleContext.registerService(AdapterFactory.class.getName(), mockModelAdapterFactory, null);
-
-        // register some injectors
-        bundleContext.registerService(Injector.class.getName(), new RequestAttributeInjector(), null);
-        OSGiServiceInjector osgiServiceInjector = new OSGiServiceInjector();
-        osgiServiceInjector.activate(componentContext);
-        bundleContext.registerService(Injector.class.getName(), osgiServiceInjector, null);
-
-        // register implementation pickers
-        bundleContext.registerService(ImplementationPicker.class.getName(), new FirstImplementationPicker(), null);
-
         // scan for @Model classes
-        mockModelAdapterFactory.addModelsForPackage("org.apache.sling.testing.mock.sling.services");
+        context.addModelsForPackage("org.apache.sling.testing.mock.sling.context");
     }
 
     @After
@@ -87,7 +64,7 @@ public class MockModelAdapterFactoryTest {
 
     @Test
     public void testOsgiService() {
-        bundleContext.registerService(MimeTypeService.class.getName(), new MockMimeTypeService(), null);
+        context.registerService(MimeTypeService.class, new MockMimeTypeService(), null);
 
         ResourceResolver resolver = MockSling.newResourceResolver();
         OsgiServiceModel model = resolver.adaptTo(OsgiServiceModel.class);
