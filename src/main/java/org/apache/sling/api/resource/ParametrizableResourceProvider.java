@@ -20,19 +20,45 @@ package org.apache.sling.api.resource;
 
 import java.util.Map;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+
 import aQute.bnd.annotation.ConsumerType;
 
 /**
  * This extension allows resource provider implementations to support
  * semicolon-separated parameters added to the URI, eg.: {@code /content/test;v='1.0'}.
- * 
- * @since 2.8.0
+ *
+ * If a {@code ResourceProvider} implements this interface, the {@link #getResource(ResourceResolver, String, Map)}
+ * method is called instead of {@link ResourceProvider#getResource(ResourceResolver, String)}.
+ *
+ * @since 2.8.0 (Sling API Bundle 2.9.0)
  */
 @ConsumerType
 public interface ParametrizableResourceProvider {
 
     /**
+     * Returns a resource from this resource provider or <code>null</code> if
+     * the resource provider cannot find it. The path should have one of the {@link #ROOTS}
+     * strings as its prefix.
+     *
+     * The resource provider must not return cached instances for a resource as
+     * the resource resolver will update the resource metadata of the resource
+     * at the end of the resolution process and this metadata might be different
+     * depending on the full path of resource resolution passed into the
+     * resource resolver.
+     *
+     * @param resourceResolver
+     *            The {@link ResourceResolver} to which the returned {@link Resource} is attached.
+     * @param path The full path of the resource.
+     * @param parameters A map of additional parameters, the map might be empty.
+     * @return <code>null</code> If this provider does not have a resource for
+     *         the path.
+     * @throws org.apache.sling.api.SlingException
+     *             may be thrown in case of any problem creating the <code>Resource</code> instance.
      * @see ResourceProvider#getResource(ResourceResolver, String)
      */
-    Resource getResource(ResourceResolver resourceResolver, String path, Map<String, String> parameters);
+    @CheckForNull Resource getResource(@Nonnull ResourceResolver resourceResolver,
+            @Nonnull String path,
+            @Nonnull Map<String, String> parameters);
 }
