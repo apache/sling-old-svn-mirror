@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.DocumentBuilder;
@@ -46,6 +47,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
@@ -68,6 +72,25 @@ final class OsgiMetadataUtil {
     static {
         NAMESPACES.put("scr", "http://www.osgi.org/xmlns/scr/v1.1.0");
     }
+    
+    private static final OsgiMetadata NULL_METADATA = new OsgiMetadata();
+    
+    /*
+     * The OSGI metadata XML files do not change during the unit test runs because static part of classpath.
+     * So we can cache the parsing step if we need them multiple times.
+     */
+    private static final LoadingCache<Class, OsgiMetadata> METADATA_CACHE = CacheBuilder.newBuilder().build(new CacheLoader<Class, OsgiMetadata>() {
+        @Override
+        public OsgiMetadata load(Class clazz) throws Exception {
+            Document metadataDocument = OsgiMetadataUtil.getMetadataDocument(clazz);
+            if (metadataDocument == null) {
+                return NULL_METADATA;
+            }
+            else {
+                return new OsgiMetadata(clazz, metadataDocument);
+            }
+        }
+    });
 
     private OsgiMetadataUtil() {
         // static methods only
@@ -95,12 +118,27 @@ final class OsgiMetadataUtil {
     }
 
     /**
-     * Try to read OSGI-metadata from /OSGI-INF and read all implemented
-     * interfaces and service properties
+     * Try to read OSGI-metadata from /OSGI-INF and read all implemented interfaces and service properties.
+     * The metadata is cached after initial read, so it's no problem to call this method multiple time for the same class.
      * @param clazz OSGi service implementation class
-     * @return Metadata document or null
+     * @return Metadata object or null if no metadata present in classpath
      */
-    public static Document getMetadata(Class clazz) {
+    public static OsgiMetadata getMetadata(Class clazz) {
+        try {
+            OsgiMetadata metadata = METADATA_CACHE.get(clazz);
+            if (metadata == NULL_METADATA) {
+                return null;
+            }
+            else {
+                return metadata;
+            }
+        }
+        catch (ExecutionException ex) {
+            throw new RuntimeException("Error loading OSGi metadata from loader cache.", ex);
+        }
+    }
+
+    private static Document getMetadataDocument(Class clazz) {
         String metadataPath = getMetadataPath(clazz);
         InputStream metadataStream = clazz.getResourceAsStream(metadataPath);
         if (metadataStream == null) {
@@ -126,7 +164,7 @@ final class OsgiMetadataUtil {
         }
     }
 
-    public static Set<String> getServiceInterfaces(Class clazz, Document metadata) {
+    private static Set<String> getServiceInterfaces(Class clazz, Document metadata) {
         Set<String> serviceInterfaces = new HashSet<String>();
         String query = "/components/component[@name='" + clazz.getName() + "']/service/provide[@interface!='']";
         NodeList nodes = queryNodes(metadata, query);
@@ -142,7 +180,7 @@ final class OsgiMetadataUtil {
         return serviceInterfaces;
     }
 
-    public static Map<String, Object> getProperties(Class clazz, Document metadata) {
+    private static Map<String, Object> getProperties(Class clazz, Document metadata) {
         Map<String, Object> props = new HashMap<String, Object>();
         String query = "/components/component[@name='" + clazz.getName() + "']/property[@name!='' and @value!='']";
         NodeList nodes = queryNodes(metadata, query);
@@ -162,7 +200,7 @@ final class OsgiMetadataUtil {
         return props;
     }
 
-    public static List<Reference> getReferences(Class clazz, Document metadata) {
+    private static List<Reference> getReferences(Class clazz, Document metadata) {
         List<Reference> references = new ArrayList<Reference>();
         String query = "/components/component[@name='" + clazz.getName() + "']/reference[@name!='']";
         NodeList nodes = queryNodes(metadata, query);
@@ -173,18 +211,6 @@ final class OsgiMetadataUtil {
             }
         }
         return references;
-    }
-
-    public static String getActivateMethodName(Class clazz, Document metadata) {
-        return getLifecycleMethodName(clazz, metadata, "activate");
-    }
-
-    public static String getDeactivateMethodName(Class clazz, Document metadata) {
-        return getLifecycleMethodName(clazz, metadata, "deactivate");
-    }
-
-    public static String getModifiedMethodName(Class clazz, Document metadata) {
-        return getLifecycleMethodName(clazz, metadata, "modified");
     }
 
     private static String getLifecycleMethodName(Class clazz, Document metadata, String methodName) {
@@ -225,7 +251,60 @@ final class OsgiMetadataUtil {
         }
     }
 
-    public static class Reference {
+    static class OsgiMetadata {
+        
+        private final Set<String> serviceInterfaces;
+        private final Map<String, Object> properties;
+        private final List<Reference> references;
+        private final String activateMethodName;
+        private final String deactivateMethodName;
+        private final String modifiedMethodName;
+        
+        private OsgiMetadata(Class clazz, Document metadataDocument) {
+            this.serviceInterfaces = OsgiMetadataUtil.getServiceInterfaces(clazz, metadataDocument);
+            this.properties = OsgiMetadataUtil.getProperties(clazz, metadataDocument);
+            this.references = OsgiMetadataUtil.getReferences(clazz, metadataDocument);
+            this.activateMethodName = OsgiMetadataUtil.getLifecycleMethodName(clazz, metadataDocument, "activate");
+            this.deactivateMethodName = OsgiMetadataUtil.getLifecycleMethodName(clazz, metadataDocument, "deactivate");
+            this.modifiedMethodName = OsgiMetadataUtil.getLifecycleMethodName(clazz, metadataDocument, "modified");
+        }
+
+        private OsgiMetadata() {
+            this.serviceInterfaces = null;
+            this.properties = null;
+            this.references = null;
+            this.activateMethodName = null;
+            this.deactivateMethodName = null;
+            this.modifiedMethodName = null;
+        }
+        
+        public Set<String> getServiceInterfaces() {
+            return serviceInterfaces;
+        }
+
+        public Map<String, Object> getProperties() {
+            return properties;
+        }
+
+        public List<Reference> getReferences() {
+            return references;
+        }
+
+        public String getActivateMethodName() {
+            return activateMethodName;
+        }
+
+        public String getDeactivateMethodName() {
+            return deactivateMethodName;
+        }
+
+        public String getModifiedMethodName() {
+            return modifiedMethodName;
+        }
+        
+    }
+
+    static class Reference {
 
         private final String name;
         private final String interfaceType;
@@ -233,7 +312,7 @@ final class OsgiMetadataUtil {
         private final String bind;
         private final String unbind;
 
-        public Reference(Node node) {
+        private Reference(Node node) {
             this.name = getAttributeValue(node, "name");
             this.interfaceType = getAttributeValue(node, "interface");
             this.cardinality = toCardinality(getAttributeValue(node, "cardinality"));
