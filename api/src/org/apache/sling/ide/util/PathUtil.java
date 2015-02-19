@@ -37,4 +37,23 @@ public class PathUtil {
 
         return path.substring(path.lastIndexOf('/') + 1);
     }
+
+    public static String getParent(String path) {
+
+        if (path == null || path.length() == 0 || path.charAt(0) != '/' || path.indexOf('/') == -1) {
+            throw new IllegalArgumentException("No a valid or absolut path: " + path);
+        }
+
+        if (path.equals("/")) {
+            return null;
+        }
+        
+
+        if (path.lastIndexOf('/') == 0) {
+            return "/";
+        }
+
+        return path.substring(0, path.lastIndexOf('/'));
+
+    }
 }
