@@ -58,6 +58,16 @@ public final class MockSling {
      * @return Resource resolver factory instance
      */
     public static ResourceResolverFactory newResourceResolverFactory(final ResourceResolverType type) {
+        return newResourceResolverFactory(type, MockOsgi.newBundleContext());
+    }
+    
+    /**
+     * Creates new sling resource resolver factory instance.
+     * @param type Type of underlying repository.
+     * @return Resource resolver factory instance
+     */
+    public static ResourceResolverFactory newResourceResolverFactory(final ResourceResolverType type,
+            final BundleContext bundleContext) {
         ResourceResolverTypeAdapter adapter = getResourceResolverTypeAdapter(type);
         ResourceResolverFactory factory = adapter.newResourceResolverFactory();
         if (factory == null) {
@@ -65,7 +75,7 @@ public final class MockSling {
             if (repository == null) {
                 throw new RuntimeException("Adapter neither provides resource resolver factory nor sling repository.");
             }
-            factory = new MockJcrResourceResolverFactory(repository);
+            factory = new MockJcrResourceResolverFactory(repository, bundleContext);
         }
         return factory;
     }

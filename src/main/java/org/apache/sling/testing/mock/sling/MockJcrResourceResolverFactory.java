@@ -19,6 +19,7 @@
 package org.apache.sling.testing.mock.sling;
 
 import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
@@ -36,7 +37,6 @@ import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 
 import com.google.common.collect.ImmutableMap;
@@ -49,15 +49,14 @@ import com.google.common.collect.ImmutableMap;
 class MockJcrResourceResolverFactory implements ResourceResolverFactory {
 
     private final SlingRepository slingRepository;
+    private final BundleContext bundleContext;
 
-    public MockJcrResourceResolverFactory(final SlingRepository repository) {
+    public MockJcrResourceResolverFactory(final SlingRepository repository, BundleContext bundleContext) {
         this.slingRepository = repository;
+        this.bundleContext = bundleContext;
     }
 
     private ResourceResolver getResourceResolverInternal(Map<String, Object> authenticationInfo, boolean isAdmin) throws LoginException {
-        // setup mock OSGi environment
-        BundleContext bundleContext = MockOsgi.newBundleContext();
-
         Dictionary<String, Object> resourceProviderFactoryFactoryProps = new Hashtable<String, Object>();
         resourceProviderFactoryFactoryProps.put(Constants.SERVICE_VENDOR, "sling-mock");
         resourceProviderFactoryFactoryProps.put(Constants.SERVICE_DESCRIPTION, "sling-mock");
@@ -66,7 +65,9 @@ class MockJcrResourceResolverFactory implements ResourceResolverFactory {
         ComponentContext resourceProviderComponentContext = MockOsgi.newComponentContext(bundleContext, resourceProviderFactoryFactoryProps);
 
         // setup mocked JCR environment
-        bundleContext.registerService(SlingRepository.class.getName(), this.slingRepository, null);
+        if (bundleContext.getServiceReference(SlingRepository.class.getName()) == null) {
+            bundleContext.registerService(SlingRepository.class.getName(), this.slingRepository, null);
+        }
 
         // setup real sling JCR resource provider implementation for use in
         // mocked context
@@ -84,14 +85,10 @@ class MockJcrResourceResolverFactory implements ResourceResolverFactory {
 
         Dictionary<Object, Object> resourceProviderProps = new Hashtable<Object, Object>();
         resourceProviderProps.put(ResourceProvider.ROOTS, new String[] { "/" });
-        bundleContext.registerService(ResourceProvider.class.getName(), resourceProvider, resourceProviderProps);
-        ServiceReference resourceProviderServiceReference = bundleContext.getServiceReference(ResourceProvider.class.getName());
 
-        // setup real sling resource resolver implementation for use in mocked
-        // context
+        // setup real sling resource resolver implementation for use in mocked context
         MockResourceResolverFactoryActivator activator = new MockResourceResolverFactoryActivator();
-        activator.bindResourceProvider(resourceProvider,
-                getServiceReferenceProperties(resourceProviderServiceReference));
+        activator.bindResourceProvider(resourceProvider, toMap(resourceProviderProps));
         activator.activate(resourceProviderComponentContext);
         CommonResourceResolverFactoryImpl commonFactoryImpl = new CommonResourceResolverFactoryImpl(activator);
         ResourceResolverContext context = new ResourceResolverContext(true, authenticationInfo, new ResourceAccessSecurityTracker());
@@ -99,15 +96,16 @@ class MockJcrResourceResolverFactory implements ResourceResolverFactory {
         return resourceResolver;
     }
 
-    private Map<String, Object> getServiceReferenceProperties(final ServiceReference serviceReference) {
-        Map<String, Object> props = new HashMap<String, Object>();
-        String[] keys = serviceReference.getPropertyKeys();
-        for (String key : keys) {
-            props.put(key, serviceReference.getProperty(key));
+    private static Map<String, Object> toMap(Dictionary<Object, Object> dictionary) {
+        Map<String,Object> map = new HashMap<String, Object>();
+        Enumeration<Object> keys = dictionary.keys();
+        while (keys.hasMoreElements()) {
+            String key = keys.nextElement().toString();
+            map.put(key, dictionary.get(key));
         }
-        return props;
+        return map;
     }
-
+    
     @Override
     public ResourceResolver getResourceResolver(final Map<String, Object> authenticationInfo) throws LoginException {
         return getResourceResolverInternal(authenticationInfo, false);
