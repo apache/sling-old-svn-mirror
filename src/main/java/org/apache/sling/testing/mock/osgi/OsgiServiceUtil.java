@@ -299,14 +299,14 @@ final class OsgiServiceUtil {
             boolean isOptional = (reference.getCardinality() == ReferenceCardinality.OPTIONAL_UNARY || reference
                     .getCardinality() == ReferenceCardinality.OPTIONAL_MULTIPLE);
             if (!isOptional) {
-                throw new RuntimeException("Unable to inject mandatory reference '" + reference.getName() + "' for class " + targetClass.getName());
+                throw new ReferenceViolationException("Unable to inject mandatory reference '" + reference.getName() + "' for class " + targetClass.getName());
             }
         }
 
         // multiple references found? check if reference is not multiple
         if (matchingServices.size() > 1
                 && (reference.getCardinality() == ReferenceCardinality.MANDATORY_UNARY || reference.getCardinality() == ReferenceCardinality.OPTIONAL_UNARY)) {
-            throw new RuntimeException("Multiple matches found for unary reference '" + reference.getName() + "' for class "+ targetClass.getName());
+            throw new ReferenceViolationException("Multiple matches found for unary reference '" + reference.getName() + "' for class "+ targetClass.getName());
         }
 
         // try to invoke bind method
@@ -350,7 +350,7 @@ final class OsgiServiceUtil {
         throw new RuntimeException("Bind method with name " + bindMethodName + " not found "
                 + "for reference '" + reference.getName() + "' for class {}" +  targetClass.getName());
     }
-
+    
     private static List<ServiceInfo> getMatchingServices(Class<?> type, BundleContext bundleContext) {
         List<ServiceInfo> matchingServices = new ArrayList<ServiceInfo>();
         try {

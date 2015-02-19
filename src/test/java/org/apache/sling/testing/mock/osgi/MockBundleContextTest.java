@@ -21,6 +21,7 @@ package org.apache.sling.testing.mock.osgi;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -50,12 +51,12 @@ public class MockBundleContextTest {
 
     @Before
     public void setUp() {
-        this.bundleContext = MockOsgi.newBundleContext();
+        bundleContext = MockOsgi.newBundleContext();
     }
 
     @Test
     public void testBundle() {
-        assertNotNull(this.bundleContext.getBundle());
+        assertNotNull(bundleContext.getBundle());
     }
 
     @Test
@@ -64,48 +65,64 @@ public class MockBundleContextTest {
         String clazz1 = String.class.getName();
         Object service1 = new Object();
         Dictionary properties1 = getServiceProperties(null);
-        ServiceRegistration reg1 = this.bundleContext.registerService(clazz1, service1, properties1);
+        ServiceRegistration reg1 = bundleContext.registerService(clazz1, service1, properties1);
 
         String[] clazzes2 = new String[] { String.class.getName(), Integer.class.getName() };
         Object service2 = new Object();
         Dictionary properties2 = getServiceProperties(null);
-        ServiceRegistration reg2 = this.bundleContext.registerService(clazzes2, service2, properties2);
+        ServiceRegistration reg2 = bundleContext.registerService(clazzes2, service2, properties2);
 
         String clazz3 = Integer.class.getName();
         Object service3 = new Object();
         Dictionary properties3 = getServiceProperties(100L);
-        ServiceRegistration reg3 = this.bundleContext.registerService(clazz3, service3, properties3);
+        ServiceRegistration reg3 = bundleContext.registerService(clazz3, service3, properties3);
 
         // test get service references
-        ServiceReference refString = this.bundleContext.getServiceReference(String.class.getName());
+        ServiceReference refString = bundleContext.getServiceReference(String.class.getName());
         assertSame(reg1.getReference(), refString);
 
-        ServiceReference refInteger = this.bundleContext.getServiceReference(Integer.class.getName());
+        ServiceReference refInteger = bundleContext.getServiceReference(Integer.class.getName());
         assertSame(reg3.getReference(), refInteger);
 
-        ServiceReference[] refsString = this.bundleContext.getServiceReferences(String.class.getName(), null);
+        ServiceReference[] refsString = bundleContext.getServiceReferences(String.class.getName(), null);
         assertEquals(2, refsString.length);
         assertSame(reg1.getReference(), refsString[0]);
         assertSame(reg2.getReference(), refsString[1]);
 
-        ServiceReference[] refsInteger = this.bundleContext.getServiceReferences(Integer.class.getName(), null);
+        ServiceReference[] refsInteger = bundleContext.getServiceReferences(Integer.class.getName(), null);
         assertEquals(2, refsInteger.length);
         assertSame(reg3.getReference(), refsInteger[0]);
         assertSame(reg2.getReference(), refsInteger[1]);
 
-        ServiceReference[] allRefsString = this.bundleContext.getAllServiceReferences(String.class.getName(), null);
+        ServiceReference[] allRefsString = bundleContext.getAllServiceReferences(String.class.getName(), null);
         assertArrayEquals(refsString, allRefsString);
 
         // test get services
-        assertSame(service1, this.bundleContext.getService(refsString[0]));
-        assertSame(service2, this.bundleContext.getService(refsString[1]));
-        assertSame(service3, this.bundleContext.getService(refInteger));
+        assertSame(service1, bundleContext.getService(refsString[0]));
+        assertSame(service2, bundleContext.getService(refsString[1]));
+        assertSame(service3, bundleContext.getService(refInteger));
 
         // unget does nothing
-        this.bundleContext.ungetService(refsString[0]);
-        this.bundleContext.ungetService(refsString[1]);
-        this.bundleContext.ungetService(refInteger);
+        bundleContext.ungetService(refsString[0]);
+        bundleContext.ungetService(refsString[1]);
+        bundleContext.ungetService(refInteger);
     }
+    
+    @Test
+    public void testServiceUnregistration() {
+        // prepare test services
+        String clazz1 = String.class.getName();
+        Object service1 = new Object();
+        Dictionary properties1 = getServiceProperties(null);
+        ServiceRegistration reg1 = bundleContext.registerService(clazz1, service1, properties1);
+        
+        assertNotNull(bundleContext.getServiceReference(clazz1));
+
+        reg1.unregister();
+
+        assertNull(bundleContext.getServiceReference(clazz1));
+    }
+    
 
     private Dictionary getServiceProperties(final Long serviceRanking) {
         Dictionary<String, Object> props = new Hashtable<String, Object>();
@@ -117,7 +134,7 @@ public class MockBundleContextTest {
 
     @Test
     public void testGetBundles() throws Exception {
-        assertEquals(0, this.bundleContext.getBundles().length);
+        assertEquals(0, bundleContext.getBundles().length);
     }
 
     @Test
@@ -128,7 +145,7 @@ public class MockBundleContextTest {
         // prepare test services
         String clazz1 = String.class.getName();
         Object service1 = new Object();
-        this.bundleContext.registerService(clazz1, service1, null);
+        bundleContext.registerService(clazz1, service1, null);
 
         verify(serviceListener).serviceChanged(any(ServiceEvent.class));
 
@@ -152,8 +169,8 @@ public class MockBundleContextTest {
     public void testFrameworkListener() throws Exception {
         // ensure that listeners can be called (although they are not expected
         // to to anything)
-        this.bundleContext.addFrameworkListener(null);
-        this.bundleContext.removeFrameworkListener(null);
+        bundleContext.addFrameworkListener(null);
+        bundleContext.removeFrameworkListener(null);
     }
 
 }
