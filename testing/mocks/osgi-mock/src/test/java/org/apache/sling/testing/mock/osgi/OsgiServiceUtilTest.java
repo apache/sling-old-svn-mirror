@@ -49,7 +49,7 @@ import org.osgi.service.component.annotations.Modified;
 
 import com.google.common.collect.ImmutableMap;
 
-public class ReflectionServiceUtilTest {
+public class OsgiServiceUtilTest {
 
     private BundleContext bundleContext = MockOsgi.newBundleContext();
     private Service1 service1;

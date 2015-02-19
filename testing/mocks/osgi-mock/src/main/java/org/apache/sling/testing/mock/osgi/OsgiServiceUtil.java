@@ -37,11 +37,11 @@ import org.osgi.service.component.ComponentContext;
 import org.w3c.dom.Document;
 
 /**
- * Helper methods to inject dependencies and activate services via reflection.
+ * Helper methods to inject dependencies and activate services.
  */
-final class ReflectionServiceUtil {
+final class OsgiServiceUtil {
 
-    private ReflectionServiceUtil() {
+    private OsgiServiceUtil() {
         // static methods only
     }
 

@@ -63,13 +63,13 @@ public class OsgiMetadataUtilTest {
 
     @Test
     public void testReferences() {
-        Document doc = OsgiMetadataUtil.getMetadata(ReflectionServiceUtilTest.Service3.class);
-        List<Reference> references = OsgiMetadataUtil.getReferences(ReflectionServiceUtilTest.Service3.class, doc);
+        Document doc = OsgiMetadataUtil.getMetadata(OsgiServiceUtilTest.Service3.class);
+        List<Reference> references = OsgiMetadataUtil.getReferences(OsgiServiceUtilTest.Service3.class, doc);
         assertEquals(3, references.size());
 
         Reference ref1 = references.get(0);
         assertEquals("reference2", ref1.getName());
-        assertEquals("org.apache.sling.testing.mock.osgi.ReflectionServiceUtilTest$ServiceInterface2", ref1.getInterfaceType());
+        assertEquals("org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$ServiceInterface2", ref1.getInterfaceType());
         assertEquals(ReferenceCardinality.MANDATORY_MULTIPLE, ref1.getCardinality());
         assertEquals("bindReference2", ref1.getBind());
         assertEquals("unbindReference2", ref1.getUnbind());
@@ -77,8 +77,8 @@ public class OsgiMetadataUtilTest {
 
     @Test
     public void testActivateMethodName() {
-        Document doc = OsgiMetadataUtil.getMetadata(ReflectionServiceUtilTest.Service3.class);
-        String methodName = OsgiMetadataUtil.getActivateMethodName(ReflectionServiceUtilTest.Service3.class, doc);
+        Document doc = OsgiMetadataUtil.getMetadata(OsgiServiceUtilTest.Service3.class);
+        String methodName = OsgiMetadataUtil.getActivateMethodName(OsgiServiceUtilTest.Service3.class, doc);
         assertEquals("activate", methodName);
     }
 

@@ -37,7 +37,7 @@ import com.google.common.collect.ImmutableMap;
 /**
  * Test different variants of activate/deactivate methods with varying signatures.
  */
-public class ReflectionServiceUtilActivateDeactivateTest {
+public class OsgiServiceUtilActivateDeactivateTest {
 
     private Map<String,Object> map = ImmutableMap.<String, Object>of("prop1", "value1");
     private BundleContext bundleContext = MockOsgi.newBundleContext();
