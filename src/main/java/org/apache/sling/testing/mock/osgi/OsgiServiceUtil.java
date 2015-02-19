@@ -30,6 +30,7 @@ import java.util.SortedSet;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.OsgiMetadata;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.Reference;
 import org.osgi.framework.BundleContext;
@@ -67,8 +68,14 @@ final class OsgiServiceUtil {
         } else {
             methodName = metadata.getDeactivateMethodName();
         }
+        boolean fallbackDefaultName = false;
         if (StringUtils.isEmpty(methodName)) {
-            return false;
+            fallbackDefaultName = true;
+            if (activate) {
+                methodName = "activate";
+            } else {
+                methodName = "deactivate";
+            }
         }
 
         // try to find matching activate/deactivate method and execute it
@@ -143,6 +150,9 @@ final class OsgiServiceUtil {
             return true;
         }
         
+        if (fallbackDefaultName) {
+            return false;
+        }
         throw new RuntimeException("No matching " + (activate ? "activation" : "deactivation") + " method with name '" + methodName + "' "
                 + " found in class " + targetClass.getName());
     }
@@ -402,16 +412,18 @@ final class OsgiServiceUtil {
      * @param registration Service registration
      * @return List of references
      */
-    public static List<ReferenceInfo> getMatchingReferences(SortedSet<MockServiceRegistration> registeredServices,
+    public static List<ReferenceInfo> getMatchingDynamicReferences(SortedSet<MockServiceRegistration> registeredServices,
             MockServiceRegistration registration) {
         List<ReferenceInfo> references = new ArrayList<ReferenceInfo>();
         for (MockServiceRegistration existingRegistration : registeredServices) {
             OsgiMetadata metadata = OsgiMetadataUtil.getMetadata(existingRegistration.getService().getClass());
             if (metadata != null) {
                 for (Reference reference : metadata.getReferences()) {
-                    for (String serviceInterface : registration.getClasses()) {
-                        if (StringUtils.equals(serviceInterface, reference.getInterfaceType())) {
-                            references.add(new ReferenceInfo(existingRegistration, reference));
+                    if (reference.getPolicy() == ReferencePolicy.DYNAMIC) {
+                        for (String serviceInterface : registration.getClasses()) {
+                            if (StringUtils.equals(serviceInterface, reference.getInterfaceType())) {
+                                references.add(new ReferenceInfo(existingRegistration, reference));
+                            }
                         }
                     }
                 }
