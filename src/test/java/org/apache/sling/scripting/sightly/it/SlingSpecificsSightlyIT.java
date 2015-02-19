@@ -25,12 +25,14 @@ import io.sightly.tck.http.Client;
 import io.sightly.tck.html.HTMLExtractor;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class SlingSpecificsSightlyIT {
 
     private static Client client;
     private static String launchpadURL;
     private static final String SLING_USE = "/sightly/use.html";
+    private static final String SLING_JAVA_USE_NPE = "/sightly/use.javaerror.html";
     private static final String SLING_RESOURCE = "/sightly/resource.html";
 
     @BeforeClass
@@ -54,6 +56,13 @@ public class SlingSpecificsSightlyIT {
         String pageContent = client.getStringContent(url, 200);
         assertEquals("SUCCESS", HTMLExtractor.innerHTML(url, pageContent, "#resadapt"));
         assertEquals("SUCCESS", HTMLExtractor.innerHTML(url, pageContent, "#reqadapt"));
+    }
+
+    @Test
+    public void testErroneousUseObject() {
+        String url = launchpadURL + SLING_JAVA_USE_NPE;
+        String pageContent = client.getStringContent(url, 500);
+        assertTrue(pageContent.contains("at apps.sightly.scripts.use.ErrorPojo.init(ErrorPojo.java:13)"));
     }
 
     @Test
