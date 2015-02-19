@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
@@ -44,7 +45,7 @@ import org.osgi.framework.ServiceRegistration;
 class MockBundleContext implements BundleContext {
 
     private final MockBundle bundle;
-    private final List<MockServiceRegistration> registeredServices = new ArrayList<MockServiceRegistration>();
+    private final SortedSet<MockServiceRegistration> registeredServices = new TreeSet<MockServiceRegistration>();
     private final List<ServiceListener> serviceListeners = new ArrayList<ServiceListener>();
     private final List<BundleListener> bundleListeners = new ArrayList<BundleListener>();
 
@@ -77,12 +78,37 @@ class MockBundleContext implements BundleContext {
     @SuppressWarnings("unchecked")
     @Override
     public ServiceRegistration registerService(final String[] clazzes, final Object service, final Dictionary properties) {
-        MockServiceRegistration registration = new MockServiceRegistration(this.bundle, clazzes, service, properties);
+        MockServiceRegistration registration = new MockServiceRegistration(this.bundle, clazzes, service, properties, this);
+        handleRefsUpdateOnRegister(registration);
         this.registeredServices.add(registration);
         notifyServiceListeners(ServiceEvent.REGISTERED, registration.getReference());
         return registration;
     }
+    
+    /**
+     * Check for already registered services that may be affected by the service registration - either
+     * adding by additional optional references, or creating a conflict in the dependencies.
+     * @param registration
+     */
+    private void handleRefsUpdateOnRegister(MockServiceRegistration registration) {
+        // TODO: implement handling
+    }
+    
+    void unregisterService(MockServiceRegistration registration) {
+        this.registeredServices.remove(registration);
+        handleRefsUpdateOnUnregister(registration);
+        notifyServiceListeners(ServiceEvent.UNREGISTERING, registration.getReference());
+    }
 
+    /**
+     * Check for already registered services that may be affected by the service unregistration - either
+     * adding by removing optional references, or creating a conflict in the dependencies.
+     * @param registration
+     */
+    private void handleRefsUpdateOnUnregister(MockServiceRegistration registration) {
+        // TODO: implement handling
+    }
+    
     @Override
     public ServiceReference getServiceReference(final String clazz) {
         ServiceReference[] serviceRefs = getServiceReferences(clazz, null);

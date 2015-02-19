@@ -207,7 +207,7 @@ final class OsgiMetadataUtil {
         if (nodes != null) {
             for (int i = 0; i < nodes.getLength(); i++) {
                 Node node = nodes.item(i);
-                references.add(new Reference(node));
+                references.add(new Reference(clazz, node));
             }
         }
         return references;
@@ -253,6 +253,7 @@ final class OsgiMetadataUtil {
 
     static class OsgiMetadata {
         
+        private final Class<?> clazz;
         private final Set<String> serviceInterfaces;
         private final Map<String, Object> properties;
         private final List<Reference> references;
@@ -260,7 +261,8 @@ final class OsgiMetadataUtil {
         private final String deactivateMethodName;
         private final String modifiedMethodName;
         
-        private OsgiMetadata(Class clazz, Document metadataDocument) {
+        private OsgiMetadata(Class<?> clazz, Document metadataDocument) {
+            this.clazz = clazz;
             this.serviceInterfaces = OsgiMetadataUtil.getServiceInterfaces(clazz, metadataDocument);
             this.properties = OsgiMetadataUtil.getProperties(clazz, metadataDocument);
             this.references = OsgiMetadataUtil.getReferences(clazz, metadataDocument);
@@ -270,6 +272,7 @@ final class OsgiMetadataUtil {
         }
 
         private OsgiMetadata() {
+            this.clazz = null;
             this.serviceInterfaces = null;
             this.properties = null;
             this.references = null;
@@ -278,6 +281,10 @@ final class OsgiMetadataUtil {
             this.modifiedMethodName = null;
         }
         
+        public Class<?> getServiceClass() {
+            return clazz;
+        }
+
         public Set<String> getServiceInterfaces() {
             return serviceInterfaces;
         }
@@ -306,18 +313,24 @@ final class OsgiMetadataUtil {
 
     static class Reference {
 
+        private final Class<?> clazz;
         private final String name;
         private final String interfaceType;
         private final ReferenceCardinality cardinality;
         private final String bind;
         private final String unbind;
 
-        private Reference(Node node) {
+        private Reference(Class<?> clazz, Node node) {
+            this.clazz = clazz;
             this.name = getAttributeValue(node, "name");
             this.interfaceType = getAttributeValue(node, "interface");
             this.cardinality = toCardinality(getAttributeValue(node, "cardinality"));
             this.bind = getAttributeValue(node, "bind");
             this.unbind = getAttributeValue(node, "unbind");
+        }
+
+        public Class<?> getServiceClass() {
+            return clazz;
         }
 
         private ReferenceCardinality toCardinality(String value) {
