@@ -65,9 +65,9 @@ public class OsgiMetadataUtilTest {
     public void testReferences() {
         OsgiMetadata metadata = OsgiMetadataUtil.getMetadata(OsgiServiceUtilTest.Service3.class);
         List<Reference> references = metadata.getReferences();
-        assertEquals(3, references.size());
+        assertEquals(4, references.size());
 
-        Reference ref1 = references.get(0);
+        Reference ref1 = references.get(2);
         assertEquals("reference2", ref1.getName());
         assertEquals("org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$ServiceInterface2", ref1.getInterfaceType());
         assertEquals(ReferenceCardinality.MANDATORY_MULTIPLE, ref1.getCardinality());

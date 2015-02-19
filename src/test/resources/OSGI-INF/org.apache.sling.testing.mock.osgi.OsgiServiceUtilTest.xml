@@ -20,8 +20,9 @@
   <scr:component name="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$Service3" activate="activate" deactivate="deactivate" modified="modified">
     <implementation class="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$Service3"/>
     <property name="service.pid" value="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$Service3"/>
-    <reference name="reference2" interface="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$ServiceInterface2" cardinality="1..n" policy="static" bind="bindReference2" unbind="unbindReference2"/>
     <reference name="reference1" interface="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$ServiceInterface1" cardinality="1..1" policy="static" bind="bindReference1" unbind="unbindReference1"/>
+    <reference name="reference1Optional" interface="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$ServiceInterface1Optional" cardinality="0..1" policy="static" bind="bindReference1Optional" unbind="unbindReference1Optional"/>
+    <reference name="reference2" interface="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$ServiceInterface2" cardinality="1..n" policy="static" bind="bindReference2" unbind="unbindReference2"/>
     <reference name="reference3" interface="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$ServiceInterface3" cardinality="0..n" policy="static" bind="bindReference3" unbind="unbindReference3"/>
   </scr:component>
   <scr:component name="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$Service4">
