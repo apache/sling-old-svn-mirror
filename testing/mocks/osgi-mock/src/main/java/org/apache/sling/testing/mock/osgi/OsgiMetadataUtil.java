@@ -20,7 +20,9 @@ package org.apache.sling.testing.mock.osgi;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -40,6 +42,7 @@ import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -52,6 +55,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Helper methods to parse OSGi metadata.
@@ -82,13 +86,15 @@ final class OsgiMetadataUtil {
     private static final LoadingCache<Class, OsgiMetadata> METADATA_CACHE = CacheBuilder.newBuilder().build(new CacheLoader<Class, OsgiMetadata>() {
         @Override
         public OsgiMetadata load(Class clazz) throws Exception {
-            Document metadataDocument = OsgiMetadataUtil.getMetadataDocument(clazz);
-            if (metadataDocument == null) {
-                return NULL_METADATA;
+            List<Document> metadataDocuments = OsgiMetadataUtil.getMetadataDocument(clazz);
+            if (metadataDocuments != null) {
+                for (Document metadataDocument : metadataDocuments) {
+                    if (matchesService(clazz, metadataDocument)) {
+                        return new OsgiMetadata(clazz, metadataDocument);
+                    }
+                }
             }
-            else {
-                return new OsgiMetadata(clazz, metadataDocument);
-            }
+            return NULL_METADATA;
         }
     });
 
@@ -114,7 +120,11 @@ final class OsgiMetadataUtil {
     };
     
     public static String getMetadataPath(Class clazz) {
-        return "/OSGI-INF/" + StringUtils.substringBefore(clazz.getName(), "$") + ".xml";
+        return "OSGI-INF/" + StringUtils.substringBefore(clazz.getName(), "$") + ".xml";
+    }
+
+    public static String getOldMetadataMultiPath() {
+        return "OSGI-INF/serviceComponents.xml";
     }
 
     /**
@@ -138,32 +148,63 @@ final class OsgiMetadataUtil {
         }
     }
 
-    private static Document getMetadataDocument(Class clazz) {
+    private static List<Document> getMetadataDocument(Class clazz) {
         String metadataPath = getMetadataPath(clazz);
-        InputStream metadataStream = clazz.getResourceAsStream(metadataPath);
-        if (metadataStream == null) {
-            log.debug("No OSGi metadata found at {}", metadataPath);
-            return null;
+        InputStream metadataStream = OsgiMetadataUtil.class.getClassLoader().getResourceAsStream(metadataPath);
+        if (metadataStream == null) {            
+            String oldMetadataPath = getOldMetadataMultiPath();
+            log.debug("No OSGi metadata found at {}, try to fallback to {}", metadataPath, oldMetadataPath);
+
+            try {
+                Enumeration<URL> metadataUrls = OsgiMetadataUtil.class.getClassLoader().getResources(oldMetadataPath);
+                List<Document> docs = new ArrayList<Document>();
+                while (metadataUrls.hasMoreElements()) {
+                    URL metadataUrl = metadataUrls.nextElement();
+                    metadataStream = metadataUrl.openStream();
+                    docs.add(toXmlDocument(metadataStream, oldMetadataPath));
+                }
+                if (docs.size() == 0) {
+                    return null;
+                }
+                else {
+                    return docs;
+                }
+            }
+            catch (IOException ex) {
+                throw new RuntimeException("Unable to read classpath resource: " + oldMetadataPath, ex);
+            }
         }
+        else {
+            return ImmutableList.of(toXmlDocument(metadataStream, metadataPath));
+        }
+    }
+    
+    private static Document toXmlDocument(InputStream inputStream, String path) {
         try {
             DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-            return documentBuilder.parse(metadataStream);
+            return documentBuilder.parse(inputStream);
         } catch (ParserConfigurationException ex) {
-            throw new RuntimeException("Unable to read classpath resource: " + metadataPath, ex);
+            throw new RuntimeException("Unable to read classpath resource: " + path, ex);
         } catch (SAXException ex) {
-            throw new RuntimeException("Unable to read classpath resource: " + metadataPath, ex);
+            throw new RuntimeException("Unable to read classpath resource: " + path, ex);
         } catch (IOException ex) {
-            throw new RuntimeException("Unable to read classpath resource: " + metadataPath, ex);
+            throw new RuntimeException("Unable to read classpath resource: " + path, ex);
         } finally {
             try {
-                metadataStream.close();
+                inputStream.close();
             } catch (IOException ex) {
                 // ignore
             }
         }
     }
 
+    private static boolean matchesService(Class clazz, Document metadata) {
+        String query = "/components/component[@name='" + clazz.getName() + "']";
+        NodeList nodes = queryNodes(metadata, query);
+        return nodes != null && nodes.getLength() > 0;
+    }
+    
     private static Set<String> getServiceInterfaces(Class clazz, Document metadata) {
         Set<String> serviceInterfaces = new HashSet<String>();
         String query = "/components/component[@name='" + clazz.getName() + "']/service/provide[@interface!='']";
@@ -317,6 +358,7 @@ final class OsgiMetadataUtil {
         private final String name;
         private final String interfaceType;
         private final ReferenceCardinality cardinality;
+        private final ReferencePolicy policy;
         private final String bind;
         private final String unbind;
 
@@ -325,21 +367,13 @@ final class OsgiMetadataUtil {
             this.name = getAttributeValue(node, "name");
             this.interfaceType = getAttributeValue(node, "interface");
             this.cardinality = toCardinality(getAttributeValue(node, "cardinality"));
+            this.policy = toPolicy(getAttributeValue(node, "policy"));
             this.bind = getAttributeValue(node, "bind");
             this.unbind = getAttributeValue(node, "unbind");
         }
 
         public Class<?> getServiceClass() {
             return clazz;
-        }
-
-        private ReferenceCardinality toCardinality(String value) {
-            for (ReferenceCardinality item : ReferenceCardinality.values()) {
-                if (StringUtils.equals(item.getCardinalityString(), value)) {
-                    return item;
-                }
-            }
-            return ReferenceCardinality.MANDATORY_UNARY;
         }
 
         public String getName() {
@@ -353,6 +387,10 @@ final class OsgiMetadataUtil {
         public ReferenceCardinality getCardinality() {
             return this.cardinality;
         }
+        
+        public ReferencePolicy getPolicy() {
+            return policy;
+        }
 
         public String getBind() {
             return this.bind;
@@ -360,6 +398,24 @@ final class OsgiMetadataUtil {
 
         public String getUnbind() {
             return this.unbind;
+        }
+
+        private static ReferenceCardinality toCardinality(String value) {
+            for (ReferenceCardinality item : ReferenceCardinality.values()) {
+                if (StringUtils.equals(item.getCardinalityString(), value)) {
+                    return item;
+                }
+            }
+            return ReferenceCardinality.MANDATORY_UNARY;
+        }
+
+        private static ReferencePolicy toPolicy(String value) {
+            for (ReferencePolicy item : ReferencePolicy.values()) {
+                if (StringUtils.equalsIgnoreCase(item.name(), value)) {
+                    return item;
+                }
+            }
+            return ReferencePolicy.STATIC;
         }
 
     }

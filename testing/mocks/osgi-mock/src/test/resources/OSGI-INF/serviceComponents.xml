@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- This file follows the old SCR convention using a fixed name "serviceComponents.xml" -->
 <components xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0">
   <scr:component name="org.apache.sling.testing.mock.osgi.OsgiMetadataUtilTest$ServiceWithMetadata" activate="activate">
     <implementation class="org.apache.sling.testing.mock.osgi.OsgiMetadataUtilTest$ServiceWithMetadata"/>

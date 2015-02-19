@@ -19,6 +19,7 @@
 package org.apache.sling.testing.mock.osgi;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -53,12 +54,7 @@ public class OsgiMetadataUtilTest {
     @Test
     public void testNoMetadata() {
         OsgiMetadata metadata = OsgiMetadataUtil.getMetadata(ServiceWithoutMetadata.class);
-
-        Set<String> serviceInterfaces = metadata.getServiceInterfaces();
-        assertEquals(0, serviceInterfaces.size());
-
-        Map<String, Object> props = metadata.getProperties();
-        assertEquals(0, props.size());
+        assertNull(metadata);
     }
 
     @Test

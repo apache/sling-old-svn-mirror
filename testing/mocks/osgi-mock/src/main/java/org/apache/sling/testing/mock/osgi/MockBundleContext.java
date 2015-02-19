@@ -94,7 +94,7 @@ class MockBundleContext implements BundleContext {
      * @param registration
      */
     private void handleRefsUpdateOnRegister(MockServiceRegistration registration) {
-        List<ReferenceInfo> affectedReferences = OsgiServiceUtil.getMatchingReferences(registeredServices, registration);
+        List<ReferenceInfo> affectedReferences = OsgiServiceUtil.getMatchingDynamicReferences(registeredServices, registration);
         for (ReferenceInfo referenceInfo : affectedReferences) {
             Reference reference = referenceInfo.getReference();
             switch (reference.getCardinality()) {
@@ -125,7 +125,7 @@ class MockBundleContext implements BundleContext {
      * @param registration
      */
     private void handleRefsUpdateOnUnregister(MockServiceRegistration registration) {
-        List<ReferenceInfo> affectedReferences = OsgiServiceUtil.getMatchingReferences(registeredServices, registration);
+        List<ReferenceInfo> affectedReferences = OsgiServiceUtil.getMatchingDynamicReferences(registeredServices, registration);
         for (ReferenceInfo referenceInfo : affectedReferences) {
             Reference reference = referenceInfo.getReference();
             switch (reference.getCardinality()) {
