@@ -29,12 +29,12 @@ import java.util.Map;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.OsgiMetadata;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.Reference;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
-import org.w3c.dom.Document;
 
 /**
  * Helper methods to inject dependencies and activate services.
@@ -56,15 +56,15 @@ final class OsgiServiceUtil {
         Class<?> targetClass = target.getClass();
 
         // get method name for activation/deactivation from osgi metadata
-        Document metadata = OsgiMetadataUtil.getMetadata(targetClass);
-        if (metadata==null) {
+        OsgiMetadata metadata = OsgiMetadataUtil.getMetadata(targetClass);
+        if (metadata == null) {
             throw new NoScrMetadataException(targetClass);
         }
         String methodName;
         if (activate) {
-            methodName = OsgiMetadataUtil.getActivateMethodName(targetClass, metadata);
+            methodName = metadata.getActivateMethodName();
         } else {
-            methodName = OsgiMetadataUtil.getDeactivateMethodName(targetClass, metadata);
+            methodName = metadata.getDeactivateMethodName();
         }
         if (StringUtils.isEmpty(methodName)) {
             return false;
@@ -156,11 +156,11 @@ final class OsgiServiceUtil {
         Class<?> targetClass = target.getClass();
 
         // get method name for activation/deactivation from osgi metadata
-        Document metadata = OsgiMetadataUtil.getMetadata(targetClass);
-        if (metadata==null) {
+        OsgiMetadata metadata = OsgiMetadataUtil.getMetadata(targetClass);
+        if (metadata == null) {
             throw new NoScrMetadataException(targetClass);
         }
-        String methodName = OsgiMetadataUtil.getModifiedMethodName(targetClass, metadata);
+        String methodName = metadata.getModifiedMethodName();
         if (StringUtils.isEmpty(methodName)) {
             return false;
         }
@@ -264,11 +264,11 @@ final class OsgiServiceUtil {
         // collect all declared reference annotations on class and field level
         Class<?> targetClass = target.getClass();
 
-        Document metadata = OsgiMetadataUtil.getMetadata(targetClass);
-        if (metadata==null) {
+        OsgiMetadata metadata = OsgiMetadataUtil.getMetadata(targetClass);
+        if (metadata == null) {
             throw new NoScrMetadataException(targetClass);
         }
-        List<Reference> references = OsgiMetadataUtil.getReferences(targetClass, metadata);
+        List<Reference> references = metadata.getReferences();
         if (references.isEmpty()) {
             return false;
         }

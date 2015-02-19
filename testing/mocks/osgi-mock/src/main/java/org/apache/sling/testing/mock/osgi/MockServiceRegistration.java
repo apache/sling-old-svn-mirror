@@ -24,11 +24,11 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.OsgiMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.w3c.dom.Document;
 
 import com.google.common.collect.ImmutableList;
 
@@ -89,16 +89,16 @@ class MockServiceRegistration implements ServiceRegistration {
      */
     private void readOsgiMetadata() {
         Class<?> serviceClass = service.getClass();
-        Document doc = OsgiMetadataUtil.getMetadata(serviceClass);
-        if (doc == null) {
+        OsgiMetadata metadata = OsgiMetadataUtil.getMetadata(serviceClass);
+        if (metadata == null) {
             return;
         }
 
         // add service interfaces from OSGi metadata
-        clazzes.addAll(OsgiMetadataUtil.getServiceInterfaces(serviceClass, doc));
+        clazzes.addAll(metadata.getServiceInterfaces());
 
         // add properties from OSGi metadata
-        Map<String, Object> props = OsgiMetadataUtil.getProperties(serviceClass, doc);
+        Map<String, Object> props = metadata.getProperties();
         for (Map.Entry<String, Object> entry : props.entrySet()) {
             properties.put(entry.getKey(), entry.getValue());
         }
