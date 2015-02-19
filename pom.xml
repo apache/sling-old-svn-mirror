@@ -209,6 +209,12 @@
             <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.serviceusermapper</artifactId>
+            <version>1.0.5-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
 
         <!-- For the Console Plugin of the JcrResourceResolverFactoryImpl -->
         <dependency>
@@ -255,6 +261,5 @@
             <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
 </project>
