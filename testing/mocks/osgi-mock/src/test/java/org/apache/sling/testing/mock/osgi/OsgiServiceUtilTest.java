@@ -147,6 +147,10 @@ public class OsgiServiceUtilTest {
         // no methods
     }
 
+    public interface ServiceInterface1Optional {
+        // no methods
+    }
+
     public interface ServiceInterface2 {
         // no methods
     }
@@ -179,6 +183,8 @@ public class OsgiServiceUtilTest {
 
         @Reference
         private ServiceInterface1 reference1;
+        @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY)
+        private ServiceInterface1Optional reference1Optional;
 
         private List<ServiceReference> references2 = new ArrayList<ServiceReference>();
 
@@ -210,6 +216,10 @@ public class OsgiServiceUtilTest {
             return this.reference1;
         }
 
+        public ServiceInterface1Optional getReference1Optional() {
+            return this.reference1Optional;
+        }
+
         public List<ServiceInterface2> getReferences2() {
             List<ServiceInterface2> services = new ArrayList<ServiceInterface2>();
             for (ServiceReference serviceReference : references2) {
@@ -232,6 +242,14 @@ public class OsgiServiceUtilTest {
         
         public Map<String, Object> getConfig() {
             return config;
+        }
+
+        protected void bindReference1Optional(ServiceInterface1Optional service) {
+            reference1Optional = service;
+        }
+
+        protected void unbindReference1Optional(ServiceInterface1Optional service) {
+            reference1Optional = null;
         }
 
         protected void bindReference1(ServiceInterface1 service) {

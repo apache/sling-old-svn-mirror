@@ -242,13 +242,13 @@ final class OsgiServiceUtil {
             method.setAccessible(true);
             method.invoke(target, args);
         } catch (IllegalAccessException ex) {
-            throw new RuntimeException("Unable to invoke activate/deactivate method for class "
+            throw new RuntimeException("Unable to invoke method '" + method.getName() + "' for class "
                     + target.getClass().getName(), ex);
         } catch (IllegalArgumentException ex) {
-            throw new RuntimeException("Unable to invoke activate/deactivate method for class "
+            throw new RuntimeException("Unable to invoke method '" + method.getName() + "' for class "
                     + target.getClass().getName(), ex);
         } catch (InvocationTargetException ex) {
-            throw new RuntimeException("Unable to invoke activate/deactivate method for class "
+            throw new RuntimeException("Unable to invoke method '" + method.getName() + "' for class "
                     + target.getClass().getName(), ex.getCause());
         }
     }
@@ -351,8 +351,8 @@ final class OsgiServiceUtil {
             }
         }
 
-        throw new RuntimeException((bind ? "Bind" : "Unbind") + "method with name " + methodName + " not found "
-                + "for reference '" + reference.getName() + "' for class {}" +  targetClass.getName());
+        throw new RuntimeException((bind ? "Bind" : "Unbind") + " method with name " + methodName + " not found "
+                + "for reference '" + reference.getName() + "' for class " +  targetClass.getName());
     }
 
     /**
