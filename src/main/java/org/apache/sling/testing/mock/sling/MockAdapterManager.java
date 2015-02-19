@@ -46,11 +46,13 @@ class MockAdapterManager implements AdapterManager {
         if (this.bundleContext != null) {
             try {
                 ServiceReference[] references = bundleContext.getServiceReferences(AdapterFactory.class.getName(), null);
-                for (ServiceReference serviceReference : references) {
-                    AdapterFactory adapterFactory = (AdapterFactory) bundleContext.getService(serviceReference);
-                    AdapterType instance = adapterFactory.getAdapter(adaptable, type);
-                    if (instance != null) {
-                        return instance;
+                if (references != null) {
+                    for (ServiceReference serviceReference : references) {
+                        AdapterFactory adapterFactory = (AdapterFactory) bundleContext.getService(serviceReference);
+                        AdapterType instance = adapterFactory.getAdapter(adaptable, type);
+                        if (instance != null) {
+                            return instance;
+                        }
                     }
                 }
             } catch (InvalidSyntaxException ex) {

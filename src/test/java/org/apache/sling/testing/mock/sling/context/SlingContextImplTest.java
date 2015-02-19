@@ -55,6 +55,8 @@ public class SlingContextImplTest {
         this.context.setResourceResolverType(ResourceResolverType.RESOURCERESOLVER_MOCK);
         this.context.setUp();
 
+        context.addModelsForPackage("org.apache.sling.testing.mock.sling.context");
+        
         ContentLoader contentLoader = this.context.load();
         contentLoader.json("/json-import-samples/content.json", "/content/sample/en");
     }
@@ -129,8 +131,6 @@ public class SlingContextImplTest {
 
     @Test
     public void testAdaptToInterface() {
-        context.addModelsForPackage("org.apache.sling.testing.mock.sling.context");
-
         MockSlingHttpServletRequest request = new MockSlingHttpServletRequest();
         request.setAttribute("prop1", "myValue");
         ServiceInterface model = request.adaptTo(ServiceInterface.class);
