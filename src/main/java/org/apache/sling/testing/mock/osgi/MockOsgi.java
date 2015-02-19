@@ -111,7 +111,7 @@ public final class MockOsgi {
      * @return true if all dependencies could be injected, false if the service has no dependencies.
      */
     public static boolean injectServices(Object target, BundleContext bundleContext) {
-        return ReflectionServiceUtil.injectServices(target, bundleContext);
+        return OsgiServiceUtil.injectServices(target, bundleContext);
     }
 
     /**
@@ -121,7 +121,7 @@ public final class MockOsgi {
      */
     public static boolean activate(Object target) {
         ComponentContext componentContext = newComponentContext();
-        return ReflectionServiceUtil.activateDeactivate(target, componentContext, true);
+        return OsgiServiceUtil.activateDeactivate(target, componentContext, true);
     }
 
     /**
@@ -132,7 +132,7 @@ public final class MockOsgi {
      */
     public static boolean activate(Object target, Dictionary<String, Object> properties) {
         ComponentContext componentContext = newComponentContext(properties);
-        return ReflectionServiceUtil.activateDeactivate(target, componentContext, true);
+        return OsgiServiceUtil.activateDeactivate(target, componentContext, true);
     }
 
     /**
@@ -154,7 +154,7 @@ public final class MockOsgi {
      */
     public static boolean activate(Object target, BundleContext bundleContext, Dictionary<String, Object> properties) {
         ComponentContext componentContext = newComponentContext(bundleContext, properties);
-        return ReflectionServiceUtil.activateDeactivate(target, componentContext, true);
+        return OsgiServiceUtil.activateDeactivate(target, componentContext, true);
     }
 
     /**
@@ -175,7 +175,7 @@ public final class MockOsgi {
      */
     public static boolean deactivate(Object target) {
         ComponentContext componentContext = newComponentContext();
-        return ReflectionServiceUtil.activateDeactivate(target, componentContext, false);
+        return OsgiServiceUtil.activateDeactivate(target, componentContext, false);
     }
 
     /**
@@ -186,7 +186,7 @@ public final class MockOsgi {
      */
     public static boolean deactivate(Object target, Dictionary<String, Object> properties) {
         ComponentContext componentContext = newComponentContext(properties);
-        return ReflectionServiceUtil.activateDeactivate(target, componentContext, false);
+        return OsgiServiceUtil.activateDeactivate(target, componentContext, false);
     }
 
     /**
@@ -208,7 +208,7 @@ public final class MockOsgi {
      */
     public static boolean deactivate(Object target, BundleContext bundleContext, Dictionary<String, Object> properties) {
         ComponentContext componentContext = newComponentContext(bundleContext, properties);
-        return ReflectionServiceUtil.activateDeactivate(target, componentContext, false);
+        return OsgiServiceUtil.activateDeactivate(target, componentContext, false);
     }
 
     /**
@@ -241,7 +241,7 @@ public final class MockOsgi {
      * @return true if modified method was called. False if no modified method is defined.
      */
     public static boolean modified(Object target, BundleContext bundleContext, Map<String, Object> properties) {
-        return ReflectionServiceUtil.modified(target, bundleContext, properties);
+        return OsgiServiceUtil.modified(target, bundleContext, properties);
     }
     
 }
