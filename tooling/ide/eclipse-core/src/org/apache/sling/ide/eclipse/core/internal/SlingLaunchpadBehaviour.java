@@ -424,13 +424,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                             execute(command);
                             break;
                         case IModuleResourceDelta.REMOVED:
-                            Command<?> removeCmd = removeFileCommand(repository, resourceDelta.getModuleResource());
-                            if (removeCmd != null && isAddOrUpdateCommand(removeCmd)) {
-                                ensureParentIsPublished(resourceDelta.getModuleResource(), repository, allResources,
-                                        handledPaths);
-                                addedOrUpdatedResources.add(resourceDelta.getModuleResource());
-                            }
-                            execute(removeCmd);
+                            execute(removeFileCommand(repository, resourceDelta.getModuleResource()));
                             break;
                     }
                 }
@@ -464,11 +458,6 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
         setModulePublishState(module, IServer.PUBLISH_STATE_NONE);
 //        setServerPublishState(IServer.PUBLISH_STATE_NONE);
 	}
-
-    private boolean isAddOrUpdateCommand(Command<?> removeCmd) {
-        // TODO - this is fragile and lacks extensibility
-        return removeCmd.getClass().getName().endsWith("AddOrUpdateNodeCommand");
-    }
 
     /**
      * Ensures that the parent of this resource has been published to the repository
