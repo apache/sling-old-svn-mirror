@@ -100,7 +100,7 @@ public class SlingContextImpl extends OsgiContextImpl {
      * @return Resource resolver factory
      */
     protected ResourceResolverFactory newResourceResolverFactory() {
-        return ContextResourceResolverFactory.get(this.resourceResolverType);
+        return ContextResourceResolverFactory.get(this.resourceResolverType, bundleContext());
     }
 
     /**
