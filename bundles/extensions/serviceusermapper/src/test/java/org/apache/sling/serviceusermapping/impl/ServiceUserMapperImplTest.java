@@ -25,6 +25,7 @@ import java.util.Map;
 import junit.framework.TestCase;
 
 import org.apache.sling.commons.testing.osgi.MockBundle;
+import org.apache.sling.serviceusermapping.ServiceUserValidator;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -96,6 +97,43 @@ public class ServiceUserMapperImplTest {
         TestCase.assertEquals(SAMPLE, sum.getServiceUserID(BUNDLE1, null));
         TestCase.assertEquals(ANOTHER, sum.getServiceUserID(BUNDLE2, null));
         TestCase.assertEquals(SAMPLE, sum.getServiceUserID(BUNDLE1, ""));
+        TestCase.assertEquals(ANOTHER, sum.getServiceUserID(BUNDLE2, ""));
+        TestCase.assertEquals(SAMPLE_SUB, sum.getServiceUserID(BUNDLE1, SUB));
+        TestCase.assertEquals(ANOTHER_SUB, sum.getServiceUserID(BUNDLE2, SUB));
+    }
+    
+    @Test
+    public void test_getServiceUserID_WithServiceUserValidator() {
+        @SuppressWarnings("serial")
+        Map<String, Object> config = new HashMap<String, Object>() {
+            {
+                put("user.mapping", new String[] {
+                    BUNDLE_SYMBOLIC1 + "=" + SAMPLE, //
+                    BUNDLE_SYMBOLIC2 + "=" + ANOTHER, //
+                    BUNDLE_SYMBOLIC1 + ":" + SUB + "=" + SAMPLE_SUB, //
+                    BUNDLE_SYMBOLIC2 + ":" + SUB + "=" + ANOTHER_SUB //
+                });
+                put("user.default", NONE);
+            }
+        };
+
+        final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
+        sum.configure(config);
+        ServiceUserValidator serviceUserValidator = new ServiceUserValidator() {
+            
+            public boolean isValid(String serviceUserId, String serviceName,
+                    String subServiceName) {
+                if (SAMPLE.equals(serviceUserId)) {
+                    return false;
+                }
+                return true;
+            }
+        };
+        sum.bindServiceUserValidator(serviceUserValidator, null);
+
+        TestCase.assertEquals(null, sum.getServiceUserID(BUNDLE1, null));
+        TestCase.assertEquals(ANOTHER, sum.getServiceUserID(BUNDLE2, null));
+        TestCase.assertEquals(null, sum.getServiceUserID(BUNDLE1, ""));
         TestCase.assertEquals(ANOTHER, sum.getServiceUserID(BUNDLE2, ""));
         TestCase.assertEquals(SAMPLE_SUB, sum.getServiceUserID(BUNDLE1, SUB));
         TestCase.assertEquals(ANOTHER_SUB, sum.getServiceUserID(BUNDLE2, SUB));

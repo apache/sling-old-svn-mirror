@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -32,9 +33,11 @@ import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
+import org.apache.sling.serviceusermapping.ServiceUserValidator;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.slf4j.Logger;
@@ -45,11 +48,18 @@ import org.slf4j.LoggerFactory;
         label = "Apache Sling Service User Mapper Service",
         description = "Configuration for the service mapping service names to names of users.")
 @Service(value=ServiceUserMapper.class)
-@Reference(name="amendment",
-           referenceInterface=MappingConfigAmendment.class,
-           cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
-           policy=ReferencePolicy.DYNAMIC,
-           updated="updateAmendment")
+@References( {
+    @Reference(name="amendment",
+            referenceInterface=MappingConfigAmendment.class,
+            cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
+            policy=ReferencePolicy.DYNAMIC,
+            updated="updateAmendment"),
+    @Reference(name = "serviceUserValidator ", referenceInterface = ServiceUserValidator.class,
+    bind = "bindServiceUserValidator", unbind = "unbindServiceUserValidator",
+    cardinality= ReferenceCardinality.OPTIONAL_MULTIPLE, policy= ReferencePolicy.DYNAMIC)
+
+})
+
 public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     @Property(
@@ -83,6 +93,8 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     private Mapping[] activeMappings = new Mapping[0];
 
+    private Vector <ServiceUserValidator> validators = new Vector<ServiceUserValidator>();
+
     @Activate
     @Modified
     void configure(final Map<String, Object> config) {
@@ -96,7 +108,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
                     final Mapping mapping = new Mapping(prop.trim());
                     mappings.add(mapping);
                 } catch (final IllegalArgumentException iae) {
-                    log.info("configure: Ignoring '{}': {}", prop, iae.getMessage());
+                    log.error("configure: Ignoring '{}': {}", prop, iae.getMessage());
                 }
             }
         }
@@ -107,31 +119,32 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
             this.updateMappings();
         }
     }
+    
+    /**
+     * bind the serviceUserValidator
+     * @param serviceUserValidator
+     * @param properties
+     */
+    protected void bindServiceUserValidator(final ServiceUserValidator serviceUserValidator, final Map<String, Object> properties){
+        validators.add(serviceUserValidator);
+    }
+    
+    /**
+     * unbind the serviceUserValidator
+     * @param serviceUserValidator
+     * @param properties
+     */
+    protected void unbindServiceUserValidator(final ServiceUserValidator serviceUserValidator, final Map<String, Object> properties){
+        validators.remove(serviceUserValidator);
+    }
 
     /**
      * @see org.apache.sling.serviceusermapping.ServiceUserMapper#getServiceUserID(org.osgi.framework.Bundle, java.lang.String)
      */
     public String getServiceUserID(final Bundle bundle, final String subServiceName) {
         final String serviceName = bundle.getSymbolicName();
-
-        // try with serviceInfo first
-        for (Mapping mapping : this.activeMappings) {
-            final String user = mapping.map(serviceName, subServiceName);
-            if (user != null) {
-                return user;
-            }
-        }
-
-        // second round without serviceInfo
-        for (Mapping mapping : this.activeMappings) {
-            final String user = mapping.map(serviceName, null);
-            if (user != null) {
-                return user;
-            }
-        }
-
-        // finally, fall back to default user
-        return this.defaultUser;
+        final String userId = internalGetUserId(serviceName, subServiceName);
+        return isValidUser(userId, serviceName, subServiceName) ? userId : null;
     }
 
     protected void bindAmendment(final MappingConfigAmendment amendment, final Map<String, Object> props) {
@@ -147,7 +160,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
         synchronized ( this.amendments ) {
             if ( amendments.remove(key) != null ) {
                 this.updateMappings();
-            };
+            }
         }
 
     }
@@ -173,6 +186,42 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
             }
         }
         activeMappings = mappings.toArray(new Mapping[mappings.size()]);
+    }
+
+    private String internalGetUserId(String serviceName, String subServiceName) {
+        // try with serviceInfo first
+        for (Mapping mapping : this.activeMappings) {
+            final String userId = mapping.map(serviceName, subServiceName);
+            if (userId != null) {
+                return userId;
+            }
+        }
+
+        // second round without serviceInfo
+        for (Mapping mapping : this.activeMappings) {
+            final String userId = mapping.map(serviceName, null);
+            if (userId != null) {
+                return userId;
+            }
+        }
+
+        // finally, fall back to default user
+        return this.defaultUser;
+    }
+
+    private boolean isValidUser(String userId, String serviceName, String subServiceName) {
+        if (userId == null) {
+            return false;
+        }
+        if (validators != null && validators.size() > 0) {
+            for (ServiceUserValidator validator : validators) {
+                boolean valid = validator.isValid(userId, serviceName, subServiceName);
+                if (!valid) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }
 
