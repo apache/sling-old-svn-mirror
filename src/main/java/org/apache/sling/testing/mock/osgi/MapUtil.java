@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.OsgiMetadata;
+
 /**
  * Map util methods.
  */
@@ -49,4 +51,40 @@ final class MapUtil {
         return map;
     }
 
+    public static Dictionary<String, Object> propertiesMergeWithOsgiMetadata(Object target, Dictionary<String, Object> properties) {
+        Dictionary<String, Object> mergedProperties = new Hashtable<String, Object>();
+        
+        OsgiMetadata metadata = OsgiMetadataUtil.getMetadata(target.getClass());
+        if (metadata != null && metadata.getProperties() != null) {
+            for (Map.Entry<String, Object> entry : metadata.getProperties().entrySet()) {
+                mergedProperties.put(entry.getKey(), entry.getValue());
+            }
+        }
+        
+        if (properties != null) {
+            Enumeration<String> keys = properties.keys();
+            while (keys.hasMoreElements()) {
+                String key = keys.nextElement();
+                mergedProperties.put(key, properties.get(key));
+            }
+        }
+        
+        return mergedProperties;
+    }
+    
+    public static Map<String, Object> propertiesMergeWithOsgiMetadata(Object target, Map<String, Object> properties) {
+        Map<String, Object> mergedProperties = new HashMap<String, Object>();
+        
+        OsgiMetadata metadata = OsgiMetadataUtil.getMetadata(target.getClass());
+        if (metadata != null && metadata.getProperties() != null) {
+            mergedProperties.putAll(metadata.getProperties());
+        }
+        
+        if (properties != null) {
+            mergedProperties.putAll(properties);
+        }
+        
+        return mergedProperties;
+    }
+    
 }
