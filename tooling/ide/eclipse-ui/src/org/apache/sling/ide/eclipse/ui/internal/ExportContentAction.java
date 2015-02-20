@@ -18,9 +18,11 @@ package org.apache.sling.ide.eclipse.ui.internal;
 
 import java.util.Iterator;
 
+import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -60,6 +62,11 @@ public class ExportContentAction extends AbstractHandler implements IObjectActio
                 Shell activeShell = PlatformUI.getWorkbench().getDisplay().getActiveShell();
 
                 ExportWizard wiz = new ExportWizard();
+
+                if (resource instanceof IProject) {
+                    resource = ProjectUtil.getSyncDirectory((IProject) resource);
+                }
+
                 wiz.init(PlatformUI.getWorkbench(), resource);
 
                 WizardDialog dialog = new WizardDialog(activeShell, wiz);
