@@ -228,4 +228,15 @@
       	</include>
       </validator>
    </extension>
+   
+   <!-- disable XML validation for content projects -->
+    <extension id="org.apache.sling.ide.excludeXmlValidator" point="org.eclipse.wst.validation.exclude">
+    	<validator id="org.eclipse.wst.xml.core.xml">
+			<exclude>
+				<rules>
+					<facet id="sling.content"/>
+				</rules>
+			</exclude>
+		</validator>
+ 	</extension>
 </plugin>    
