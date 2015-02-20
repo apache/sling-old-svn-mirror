@@ -19,19 +19,11 @@
 package org.apache.sling.serviceusermapping.impl;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Dictionary;
 import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-import java.util.SortedMap;
-import java.util.SortedSet;
-import java.util.TreeMap;
-import java.util.TreeSet;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -46,12 +38,8 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.apache.sling.serviceusermapping.ServiceUserValidator;
-import org.apache.sling.serviceusermapping.ServiceUserMapping;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.framework.hooks.service.ListenerHook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -107,14 +95,9 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     private Vector <ServiceUserValidator> validators = new Vector<ServiceUserValidator>();
 
-    private SortedMap<Mapping, ServiceRegistration> activeMappingRegistrations = new TreeMap<Mapping, ServiceRegistration>();
-
-    private BundleContext bundleContext;
-
     @Activate
     @Modified
-    void configure(BundleContext bundleContext, final Map<String, Object> config) {
-        this.bundleContext = bundleContext;
+    void configure(final Map<String, Object> config) {
         final String[] props = PropertiesUtil.toStringArray(config.get(PROP_SERVICE2USER_MAPPING),
             PROP_SERVICE2USER_MAPPING_DEFAULT);
 
@@ -202,43 +185,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
                 mappings.add(m);
             }
         }
-
-
         activeMappings = mappings.toArray(new Mapping[mappings.size()]);
-
-        registerServiceMappings(mappings);
-
-    }
-
-
-    void registerServiceMappings(List<Mapping> newMappings) {
-
-        SortedSet<Mapping> orderedActiveMappings = new TreeSet<Mapping>(newMappings);
-
-
-        Iterator<Map.Entry<Mapping, ServiceRegistration>> it = activeMappingRegistrations.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry<Mapping, ServiceRegistration> registrationEntry = it.next();
-
-            if (!orderedActiveMappings.contains(registrationEntry.getKey())) {
-                registrationEntry.getValue().unregister();
-                it.remove();
-            }
-        }
-
-        if (bundleContext == null) {
-            return;
-        }
-
-        for (Mapping mapping: orderedActiveMappings) {
-            if (!activeMappingRegistrations.containsKey(mapping)) {
-                Dictionary<String, Object> properties = new Hashtable<String, Object>();
-                properties.put(ServiceUserMapping.SUBSERVICENAME, mapping.getSubServiceName() == null ? "" : mapping.getSubServiceName());
-                properties.put(ServiceUserMapping.SERVICENAME, mapping.getServiceName());
-                ServiceRegistration registration = bundleContext.registerService(ServiceUserMapping.class.getName(), mapping, properties);
-                activeMappingRegistrations.put(mapping, registration);
-            }
-        }
     }
 
     private String internalGetUserId(String serviceName, String subServiceName) {
