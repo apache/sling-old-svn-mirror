@@ -205,6 +205,11 @@ public class RenderContextImpl implements RenderContext {
             Iterable iterable = (Iterable) obj;
             return fromIterator(iterable.iterator());
         }
+        if (obj instanceof String || obj instanceof Number) {
+            Collection list = new ArrayList();
+            list.add(obj);
+            return list;
+        }
         return Collections.emptyList();
     }
 
