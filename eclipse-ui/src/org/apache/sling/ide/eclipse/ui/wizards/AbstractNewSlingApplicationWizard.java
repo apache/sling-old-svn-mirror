@@ -193,8 +193,16 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
         monitor.done();
     }
 
+    /**
+     * Extension method to allow subclasses to deploy and publish specific modules created by the wizard
+     * 
+     * <p>
+     * By default, all modules are deployed
+     * 
+     * @param module the module
+     * @return true is the module should be deployed, false otherwise
+     */
     protected boolean shouldDeploy(IModule module) {
-        // by default, deploy all applicable modules - subclasses may decide otherwise
         return true;
     }
 
@@ -209,7 +217,7 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
         List<IModule[]> modules = new ArrayList<IModule[]>();
         for (IProject project : createdProjects) {
             IModule module = ServerUtil.getModule(project);
-            if (module != null) {
+            if (module != null && shouldDeploy(module)) {
                 modules.add(new IModule[] { module });
             }
         }
