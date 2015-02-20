@@ -238,6 +238,19 @@ final class OsgiMetadataUtil {
                 }
             }
         }
+        query = "/components/component[@name='" + clazz.getName() + "']/property[@name!='' and text()!='']";
+        nodes = queryNodes(metadata, query);
+        if (nodes != null) {
+            for (int i = 0; i < nodes.getLength(); i++) {
+                Node node = nodes.item(i);
+                String name = getAttributeValue(node, "name");
+                String[] value = StringUtils.split(StringUtils.trim(node.getTextContent()), "\n\r");
+                for (int j = 0; j<value.length; j++) {
+                    value[j] = StringUtils.trim(value[j]);
+                }
+                props.put(name, value);
+            }
+        }
         return props;
     }
 

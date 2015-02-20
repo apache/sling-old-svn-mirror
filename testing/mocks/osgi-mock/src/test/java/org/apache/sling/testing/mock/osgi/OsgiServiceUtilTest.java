@@ -73,7 +73,7 @@ public class OsgiServiceUtilTest {
         assertTrue(MockOsgi.activate(service3, bundleContext, service3Config));
 
         assertNotNull(service3.getComponentContext());
-        assertEquals(service3Config, service3.getComponentContext().getProperties());
+        assertEquals(service3Config.get("prop1"), service3.getComponentContext().getProperties().get("prop1"));
 
         assertSame(service1, service3.getReference1());
 
@@ -101,16 +101,16 @@ public class OsgiServiceUtilTest {
 
         Service3 service3 = new Service3();
         MockOsgi.activate(service3, bundleContext, initialProperites);
-        assertEquals(initialProperites, service3.getConfig());
+        assertEquals(initialProperites.get("prop1"), service3.getConfig().get("prop1"));
         
         Map<String,Object> newProperties = ImmutableMap.<String, Object>of("prop2", "value2");
         MockOsgi.modified(service3, bundleContext, newProperties);
-        assertEquals(newProperties, service3.getConfig());
+        assertEquals(newProperties.get("prop2"), service3.getConfig().get("prop2"));
 
         newProperties = ImmutableMap.<String, Object>of("prop3", "value3");
         Dictionary<String,Object> newPropertiesDictonary = new Hashtable<String,Object>(newProperties);
         MockOsgi.modified(service3, bundleContext, newPropertiesDictonary);
-        assertEquals(newProperties, service3.getConfig());
+        assertEquals(newProperties.get("prop3"), service3.getConfig().get("prop3"));
     }
     
     @Test

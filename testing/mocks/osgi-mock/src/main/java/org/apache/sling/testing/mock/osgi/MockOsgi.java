@@ -18,6 +18,10 @@
  */
 package org.apache.sling.testing.mock.osgi;
 
+import static org.apache.sling.testing.mock.osgi.MapUtil.propertiesMergeWithOsgiMetadata;
+import static org.apache.sling.testing.mock.osgi.MapUtil.toDictionary;
+import static org.apache.sling.testing.mock.osgi.MapUtil.toMap;
+
 import java.util.Dictionary;
 import java.util.Map;
 
@@ -72,7 +76,7 @@ public final class MockOsgi {
      * @return Mocked {@link ComponentContext} instance
      */
     public static ComponentContext newComponentContext(Map<String, Object> properties) {
-        return newComponentContext(MapUtil.toDictionary(properties));
+        return newComponentContext(toDictionary(properties));
     }
 
     /**
@@ -91,7 +95,7 @@ public final class MockOsgi {
      * @return Mocked {@link ComponentContext} instance
      */
     public static ComponentContext newComponentContext(BundleContext bundleContext, Map<String, Object> properties) {
-        return newComponentContext(bundleContext, MapUtil.toDictionary(properties));
+        return newComponentContext(bundleContext, toDictionary(properties));
     }
 
     /**
@@ -120,8 +124,7 @@ public final class MockOsgi {
      * @return true if activation method was called. False if no activate method is defined.
      */
     public static boolean activate(Object target) {
-        ComponentContext componentContext = newComponentContext();
-        return OsgiServiceUtil.activateDeactivate(target, componentContext, true);
+        return MockOsgi.activate(target, (Dictionary<String, Object>)null);
     }
 
     /**
@@ -131,7 +134,8 @@ public final class MockOsgi {
      * @return true if activation method was called. False if no activate method is defined.
      */
     public static boolean activate(Object target, Dictionary<String, Object> properties) {
-        ComponentContext componentContext = newComponentContext(properties);
+        Dictionary<String, Object> mergedProperties = propertiesMergeWithOsgiMetadata(target, properties);
+        ComponentContext componentContext = newComponentContext(mergedProperties);
         return OsgiServiceUtil.activateDeactivate(target, componentContext, true);
     }
 
@@ -142,7 +146,7 @@ public final class MockOsgi {
      * @return true if activation method was called. False if no activate method is defined.
      */
     public static boolean activate(Object target, Map<String, Object> properties) {
-        return activate(target, MapUtil.toDictionary(properties));
+        return activate(target, toDictionary(properties));
     }
 
     /**
@@ -153,7 +157,8 @@ public final class MockOsgi {
      * @return true if activation method was called. False if no activate method is defined.
      */
     public static boolean activate(Object target, BundleContext bundleContext, Dictionary<String, Object> properties) {
-        ComponentContext componentContext = newComponentContext(bundleContext, properties);
+        Dictionary<String, Object> mergedProperties = propertiesMergeWithOsgiMetadata(target, properties);
+        ComponentContext componentContext = newComponentContext(bundleContext, mergedProperties);
         return OsgiServiceUtil.activateDeactivate(target, componentContext, true);
     }
 
@@ -165,7 +170,7 @@ public final class MockOsgi {
      * @return true if activation method was called. False if no activate method is defined.
      */
     public static boolean activate(Object target, BundleContext bundleContext, Map<String, Object> properties) {
-        return activate(target, bundleContext, MapUtil.toDictionary(properties));
+        return activate(target, bundleContext, toDictionary(properties));
     }
 
     /**
@@ -174,8 +179,7 @@ public final class MockOsgi {
      * @return true if deactivation method was called. False if no deactivate method is defined.
      */
     public static boolean deactivate(Object target) {
-        ComponentContext componentContext = newComponentContext();
-        return OsgiServiceUtil.activateDeactivate(target, componentContext, false);
+        return MockOsgi.deactivate(target, (Dictionary<String, Object>)null);
     }
 
     /**
@@ -185,7 +189,8 @@ public final class MockOsgi {
      * @return true if deactivation method was called. False if no deactivate method is defined.
      */
     public static boolean deactivate(Object target, Dictionary<String, Object> properties) {
-        ComponentContext componentContext = newComponentContext(properties);
+        Dictionary<String, Object> mergedProperties = propertiesMergeWithOsgiMetadata(target, properties);
+        ComponentContext componentContext = newComponentContext(mergedProperties);
         return OsgiServiceUtil.activateDeactivate(target, componentContext, false);
     }
 
@@ -196,7 +201,7 @@ public final class MockOsgi {
      * @return true if deactivation method was called. False if no deactivate method is defined.
      */
     public static boolean deactivate(Object target, Map<String, Object> properties) {
-        return deactivate(target, MapUtil.toDictionary(properties));
+        return deactivate(target, toDictionary(properties));
     }
 
     /**
@@ -207,7 +212,8 @@ public final class MockOsgi {
      * @return true if deactivation method was called. False if no deactivate method is defined.
      */
     public static boolean deactivate(Object target, BundleContext bundleContext, Dictionary<String, Object> properties) {
-        ComponentContext componentContext = newComponentContext(bundleContext, properties);
+        Dictionary<String, Object> mergedProperties = propertiesMergeWithOsgiMetadata(target, properties);
+        ComponentContext componentContext = newComponentContext(bundleContext, mergedProperties);
         return OsgiServiceUtil.activateDeactivate(target, componentContext, false);
     }
 
@@ -219,7 +225,7 @@ public final class MockOsgi {
      * @return true if deactivation method was called. False if no deactivate method is defined.
      */
     public static boolean deactivate(Object target, BundleContext bundleContext, Map<String, Object> properties) {
-        return deactivate(target, bundleContext, MapUtil.toDictionary(properties));
+        return deactivate(target, bundleContext, toDictionary(properties));
     }
 
     /**
@@ -230,7 +236,7 @@ public final class MockOsgi {
      * @return true if modified method was called. False if no modified method is defined.
      */
     public static boolean modified(Object target, BundleContext bundleContext, Dictionary<String, Object> properties) {
-        return modified(target, bundleContext, MapUtil.toMap(properties));
+        return modified(target, bundleContext, toMap(properties));
     }
 
     /**
@@ -241,7 +247,8 @@ public final class MockOsgi {
      * @return true if modified method was called. False if no modified method is defined.
      */
     public static boolean modified(Object target, BundleContext bundleContext, Map<String, Object> properties) {
-        return OsgiServiceUtil.modified(target, bundleContext, properties);
+        Map<String, Object> mergedProperties = propertiesMergeWithOsgiMetadata(target, properties);
+        return OsgiServiceUtil.modified(target, bundleContext, mergedProperties);
     }
     
 }

@@ -18,6 +18,7 @@
  */
 package org.apache.sling.testing.mock.osgi;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -45,10 +46,12 @@ public class OsgiMetadataUtilTest {
         assertTrue(serviceInterfaces.contains("java.lang.Comparable"));
 
         Map<String, Object> props = metadata.getProperties();
-        assertEquals(3, props.size());
+        assertEquals(4, props.size());
         assertEquals(5000, props.get("service.ranking"));
         assertEquals("The Apache Software Foundation", props.get("service.vendor"));
         assertEquals("org.apache.sling.models.impl.injectors.OSGiServiceInjector", props.get("service.pid"));
+        assertArrayEquals(new String[] { "org.apache.sling.api.resource.Resource", "org.apache.sling.api.resource.ResourceResolver" },
+                (String[])props.get("adaptables"));
     }
 
     @Test
