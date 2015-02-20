@@ -18,6 +18,7 @@
  */
 package org.apache.sling.serviceusermapping.impl;
 
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
@@ -25,10 +26,15 @@ import java.util.Map;
 import junit.framework.TestCase;
 
 import org.apache.sling.commons.testing.osgi.MockBundle;
+import org.apache.sling.serviceusermapping.ServiceUserMapping;
 import org.apache.sling.serviceusermapping.ServiceUserValidator;
+import org.apache.sling.commons.testing.osgi.MockBundleContext;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 
 public class ServiceUserMapperImplTest {
     private static final String BUNDLE_SYMBOLIC1 = "bundle1";
@@ -64,6 +70,7 @@ public class ServiceUserMapperImplTest {
         };
     };
 
+
     private static final Bundle BUNDLE2 = new MockBundle(10) {
         @Override
         public String getSymbolicName() {
@@ -75,6 +82,7 @@ public class ServiceUserMapperImplTest {
             return getHeaders();
         };
     };
+
 
     @Test
     public void test_getServiceUserID() {
@@ -92,7 +100,7 @@ public class ServiceUserMapperImplTest {
         };
 
         final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
-        sum.configure(config);
+        sum.configure(null, config);
 
         TestCase.assertEquals(SAMPLE, sum.getServiceUserID(BUNDLE1, null));
         TestCase.assertEquals(ANOTHER, sum.getServiceUserID(BUNDLE2, null));
@@ -118,7 +126,7 @@ public class ServiceUserMapperImplTest {
         };
 
         final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
-        sum.configure(config);
+        sum.configure(null, config);
         ServiceUserValidator serviceUserValidator = new ServiceUserValidator() {
             
             public boolean isValid(String serviceUserId, String serviceName,
@@ -153,7 +161,7 @@ public class ServiceUserMapperImplTest {
         };
 
         final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
-        sum.configure(config);
+        sum.configure(null, config);
         final MappingConfigAmendment mca1 = new MappingConfigAmendment();
         @SuppressWarnings("serial")
         final Map<String, Object> mca1Config = new HashMap<String, Object>() {
@@ -195,7 +203,7 @@ public class ServiceUserMapperImplTest {
         };
 
         final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
-        sum.configure(config);
+        sum.configure(null, config);
 
         final MappingConfigAmendment mca1 = new MappingConfigAmendment();
         @SuppressWarnings("serial")
@@ -221,4 +229,102 @@ public class ServiceUserMapperImplTest {
 
         TestCase.assertEquals(ANOTHER_SUB, sum.getServiceUserID(BUNDLE2, ""));
     }
+
+
+
+    @Test
+    public void test_amendmentServiceUserMapping() {
+        @SuppressWarnings("serial")
+        Map<String, Object> config = new HashMap<String, Object>() {
+            {
+                put("user.mapping", new String[] {
+                        BUNDLE_SYMBOLIC1 + "=" + SAMPLE, //
+                        BUNDLE_SYMBOLIC1 + ":" + SUB + "=" + SAMPLE_SUB, //
+                });
+                put("user.default", NONE);
+            }
+        };
+
+        final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
+        final ServiceRegistrationContext bundleContext = new ServiceRegistrationContext();
+        sum.configure(bundleContext, config);
+
+        TestCase.assertEquals(2, bundleContext.getRegistrations(ServiceUserMapping.class.getName()).size());
+
+        final MappingConfigAmendment mca1 = new MappingConfigAmendment();
+        @SuppressWarnings("serial")
+        final Map<String, Object> mca1Config = new HashMap<String, Object>() {
+            {
+                put("user.mapping", new String [] {BUNDLE_SYMBOLIC2 + "=" + ANOTHER});
+                put(Constants.SERVICE_ID, 1L);
+                put(Constants.SERVICE_RANKING, 100);
+            }
+        };
+        mca1.configure(mca1Config);
+        sum.bindAmendment(mca1, mca1Config);
+
+        TestCase.assertEquals(3, bundleContext.getRegistrations(ServiceUserMapping.class.getName()).size());
+
+        final MappingConfigAmendment mca2 = new MappingConfigAmendment();
+        @SuppressWarnings("serial")
+        final Map<String, Object> mca2Config = new HashMap<String, Object>() {
+            {
+                put("user.mapping", new String [] {BUNDLE_SYMBOLIC2 + ":" + SUB + "=" + ANOTHER_SUB});
+                put(Constants.SERVICE_ID, 2L);
+                put(Constants.SERVICE_RANKING, 200);
+            }
+        };
+        mca2.configure(mca2Config);
+        sum.bindAmendment(mca2, mca2Config);
+
+        TestCase.assertEquals(4, bundleContext.getRegistrations(ServiceUserMapping.class.getName()).size());
+
+        sum.unbindAmendment(mca1, mca1Config);
+
+        TestCase.assertEquals(3, bundleContext.getRegistrations(ServiceUserMapping.class.getName()).size());
+    }
+
+
+    private class ServiceRegistrationContext extends MockBundleContext {
+
+
+
+        final Map<String, Map<Object, Dictionary>> registrations = new HashMap<String, Map<Object, Dictionary>>();
+
+        public ServiceRegistrationContext() {
+            super(null);
+        }
+
+        @Override
+        public ServiceRegistration registerService(String string, Object o, Dictionary dictionary) {
+            if (!registrations.containsKey(string)) {
+                registrations.put(string, new HashMap<Object, Dictionary>());
+            }
+            final Map<Object, Dictionary> serviceRegistrations = registrations.get(string);
+            serviceRegistrations.put(o, dictionary);
+
+            final Object registeredObject = o;
+
+
+            return new ServiceRegistration() {
+                public ServiceReference getReference() {
+                    return null;
+                }
+
+                public void setProperties(Dictionary dictionary) {
+
+                }
+
+                public void unregister() {
+                    serviceRegistrations.remove(registeredObject);
+                }
+            };
+        }
+
+        public Map<Object, Dictionary> getRegistrations(String name) {
+            return registrations.get(name);
+        }
+
+    }
+
 }
