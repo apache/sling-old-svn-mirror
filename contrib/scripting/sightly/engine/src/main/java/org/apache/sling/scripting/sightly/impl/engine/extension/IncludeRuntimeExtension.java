@@ -18,12 +18,14 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.impl.engine.extension;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Map;
 
 import javax.script.Bindings;
 import javax.servlet.Servlet;
+import javax.servlet.ServletException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
@@ -109,8 +111,10 @@ public class IncludeRuntimeExtension implements RuntimeExtension {
                         SlingHttpServletResponse response = (SlingHttpServletResponse) bindings.get(SlingBindings.RESPONSE);
                         PrintWriterResponseWrapper resWrapper = new PrintWriterResponseWrapper(out, response);
                         servlet.service(request, resWrapper);
-                    } catch (Exception e) {
-                        LOG.error("Failed to include script {}", script, e);
+                    } catch (ServletException e) {
+                        throw new SightlyException("Failed to include script " + script, e);
+                    } catch (IOException e) {
+                        throw new SightlyException("Failed to include script " + script, e);
                     }
                 } else {
                     LOG.error("Failed to locate script {}", script);

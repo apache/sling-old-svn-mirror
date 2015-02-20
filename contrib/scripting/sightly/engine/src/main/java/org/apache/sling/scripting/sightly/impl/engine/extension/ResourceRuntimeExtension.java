@@ -18,6 +18,7 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.impl.engine.extension;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
@@ -28,6 +29,7 @@ import java.util.Set;
 
 import javax.script.Bindings;
 import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
@@ -42,6 +44,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.scripting.SlingBindings;
+import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.impl.plugin.ResourcePlugin;
 import org.apache.sling.scripting.sightly.render.RenderContext;
@@ -248,15 +251,17 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
             if (includeRes instanceof NonExistingResource || includeRes.isResourceType(Resource.RESOURCE_TYPE_NON_EXISTING)) {
                 includeRes = new SyntheticResource(request.getResourceResolver(), script, resourceType);
             }
+            RequestDispatcherOptions opts = new RequestDispatcherOptions(dispatcherOptions);
+            if (StringUtils.isNotEmpty(resourceType)) {
+                opts.setForceResourceType(resourceType);
+            }
+            RequestDispatcher dispatcher = request.getRequestDispatcher(includeRes, opts);
             try {
-                RequestDispatcherOptions opts = new RequestDispatcherOptions(dispatcherOptions);
-                if (StringUtils.isNotEmpty(resourceType)) {
-                    opts.setForceResourceType(resourceType);
-                }
-                RequestDispatcher dispatcher = request.getRequestDispatcher(includeRes, opts);
                 dispatcher.include(request, customResponse);
-            } catch (Exception e) {
-                LOG.error("Failed to include resource {}", script, e);
+            } catch (ServletException e) {
+                throw new SightlyException("Failed to include resource " + script, e);
+            } catch (IOException e) {
+                throw new SightlyException("Failed to include resource " + script, e);
             }
         }
     }
