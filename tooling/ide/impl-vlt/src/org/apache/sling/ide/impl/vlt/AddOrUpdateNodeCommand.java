@@ -179,6 +179,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         while (properties.hasNext()) {
             Property property = properties.nextProperty();
             if (property.getDefinition().isProtected()
+                    || property.getDefinition().isAutoCreated()
                     || property.getDefinition().getRequiredType() == PropertyType.BINARY) {
                 continue;
             }
