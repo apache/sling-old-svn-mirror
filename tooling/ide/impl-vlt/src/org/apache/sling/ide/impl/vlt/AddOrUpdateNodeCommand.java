@@ -303,7 +303,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         }
 
         PropertyDefinition definition = property.getDefinition();
-        if (definition.getRequiredType() != expectedType) {
+        if (definition.getRequiredType() != expectedType && definition.getRequiredType() != PropertyType.UNDEFINED) {
             getLogger().trace("Removing property {0} of type {1} since we need type {2}", property.getName(),
                     definition.getRequiredType(), expectedType);
             property.remove();

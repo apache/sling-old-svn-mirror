@@ -21,6 +21,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.concurrent.Callable;
@@ -29,13 +30,18 @@ import javax.jcr.Credentials;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
+import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeExistsException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.commons.cnd.CndImporter;
+import org.apache.jackrabbit.commons.cnd.ParseException;
 import org.apache.jackrabbit.core.TransientRepository;
 import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.transport.ResourceProxy;
@@ -352,8 +358,8 @@ public class AddOrUpdateNodeCommandTest {
         SimpleCredentials credentials = new SimpleCredentials("admin", "admin".toCharArray());
         Session session = repo.login(credentials);
 
-        InputStream cndInput = getClass().getResourceAsStream("mandatory.cnd"); // TODO - should be test-definitions.cnd
-        CndImporter.registerNodeTypes(new InputStreamReader(cndInput), session);
+        importNodeTypeDefinitions(session, "test-definitions.cnd");
+        importNodeTypeDefinitions(session, "folder.cnd");
 
         try {
             callable.setCredentials(credentials);
@@ -364,10 +370,23 @@ public class AddOrUpdateNodeCommandTest {
                 session.removeItem("/content");
             session.save();
             session.logout();
-
-            IOUtils.closeQuietly(cndInput);
         }
 
+    }
+
+    private void importNodeTypeDefinitions(Session session, String cndFile) throws InvalidNodeTypeDefinitionException,
+            NodeTypeExistsException, UnsupportedRepositoryOperationException, ParseException, RepositoryException,
+            IOException {
+        InputStream cndInput = null;
+        try {
+            cndInput = getClass().getResourceAsStream(cndFile);
+            if (cndInput == null) {
+                throw new IllegalArgumentException("Unable to read classpath resource " + cndFile);
+            }
+            CndImporter.registerNodeTypes(new InputStreamReader(cndInput), session);
+        } finally {
+            IOUtils.closeQuietly(cndInput);
+        }
     }
 
     private static abstract class CallableWithSession implements Callable<Void> {
