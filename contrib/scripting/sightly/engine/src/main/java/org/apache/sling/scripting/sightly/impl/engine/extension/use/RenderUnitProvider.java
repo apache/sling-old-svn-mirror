@@ -21,6 +21,7 @@ package org.apache.sling.scripting.sightly.impl.engine.extension.use;
 
 import javax.script.Bindings;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -28,9 +29,9 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.scripting.sightly.ResourceResolution;
+import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyScriptEngineFactory;
 import org.apache.sling.scripting.sightly.impl.engine.UnitLoader;
 import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
@@ -68,16 +69,22 @@ public class RenderUnitProvider implements UseProvider {
     public ProviderOutcome provide(String identifier, RenderContext renderContext, Bindings arguments) {
         if (identifier.endsWith("." + SightlyScriptEngineFactory.EXTENSION)) {
             Bindings globalBindings = renderContext.getBindings();
-            Resource renderUnitResource = locateResource(globalBindings, identifier, renderContext);
+            SlingHttpServletRequest request = (SlingHttpServletRequest) globalBindings.get(SlingBindings.REQUEST);
+            Resource resource = ResourceResolution.getResourceForRequest(renderContext.getScriptResourceResolver(), request);
+            Resource renderUnitResource = ResourceResolution.getResourceFromSearchPath(resource, identifier);
+            if (renderUnitResource == null) {
+                String resourceSuperType = resource.getResourceSuperType();
+                StringBuilder errorMessage = new StringBuilder("Cannot find resource ");
+                errorMessage.append(identifier).append(" for base path ").append(resource.getPath());
+                if (StringUtils.isNotEmpty(resourceSuperType)) {
+                    errorMessage.append(" with resource super type ").append(resourceSuperType);
+                }
+                errorMessage.append(".");
+                return ProviderOutcome.failure(new SightlyException(errorMessage.toString()));
+            }
             RenderUnit renderUnit = unitLoader.createUnit(renderUnitResource, globalBindings, (RenderContextImpl) renderContext);
             return ProviderOutcome.success(renderUnit);
         }
         return ProviderOutcome.failure();
-    }
-
-    private Resource locateResource(Bindings bindings, String script, RenderContext renderContext) {
-        SlingHttpServletRequest request = (SlingHttpServletRequest) bindings.get(SlingBindings.REQUEST);
-        Resource resource = ResourceResolution.getResourceForRequest(renderContext.getScriptResourceResolver(), request);
-        return ResourceResolution.getResourceFromSearchPath(resource, script);
     }
 }
