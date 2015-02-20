@@ -18,6 +18,7 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.impl.engine.runtime;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -60,5 +61,15 @@ public class RenderContextImplTest {
     public void testGetScriptResourceResolver() throws Exception {
         ResourceResolver scriptResolver = renderContext.getScriptResourceResolver();
         assertNotNull("Expected a non-null resource resolver.", scriptResolver);
+    }
+
+    @Test
+    public void testGetCollectionWithOneElement() {
+        String stringObject = "test";
+        Integer numberObject = 1;
+        Collection stringCollection = renderContext.toCollection(stringObject);
+        assertTrue(stringCollection.size() == 1 && stringCollection.contains(stringObject));
+        Collection numberCollection = renderContext.toCollection(numberObject);
+        assertTrue(numberCollection.size() == 1 && numberCollection.contains(numberObject));
     }
 }
