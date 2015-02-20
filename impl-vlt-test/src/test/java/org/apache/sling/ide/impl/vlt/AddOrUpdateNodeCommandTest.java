@@ -19,6 +19,7 @@ package org.apache.sling.ide.impl.vlt;
 import static org.apache.sling.ide.transport.Repository.CommandExecutionFlag.CREATE_ONLY_WHEN_MISSING;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.InputStream;
@@ -37,6 +38,7 @@ import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.jackrabbit.core.TransientRepository;
 import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.transport.ResourceProxy;
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -321,6 +323,77 @@ public class AddOrUpdateNodeCommandTest {
 
             Node content = session.getRootNode().getNode("content");
             assertThat(content.getPrimaryNodeType().getName(), equalTo("nt:unstructured"));
+
+        } finally {
+            if (session.itemExists("/content"))
+                session.removeItem("/content");
+            session.save();
+            session.logout();
+        }
+    }
+
+    @Test
+    public void autoCreatedPropertiesAreNotRemoved() throws Exception {
+
+        File out = new File(new File("target"), "jackrabbit");
+        TransientRepository repo = new TransientRepository(new File(out, "repository.xml"), new File(out, "repository"));
+        SimpleCredentials credentials = new SimpleCredentials("admin", "admin".toCharArray());
+        Session session = repo.login(credentials);
+
+        try {
+            Node content = session.getRootNode().addNode("content", "nt:folder");
+
+            session.save();
+
+            ResourceProxy resource = newResource("/content", "nt:folder");
+            resource.addProperty("jcr:mixinTypes", "mix:lastModified");
+
+            AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo, credentials, null, resource, logger);
+            cmd.execute().get();
+            cmd.execute().get(); // second time since mixins are processed after properties so we need two executions to
+                                 // expose the problem
+
+            session.refresh(false);
+
+            content = session.getRootNode().getNode("content");
+            assertThat("jcr:lastModified property not present", content.hasProperty("jcr:lastModified"), equalTo(true));
+            assertThat("jcr:lastModifiedBy property not present", content.hasProperty("jcr:lastModifiedBy"),
+                    equalTo(true));
+
+        } finally {
+            if (session.itemExists("/content"))
+                session.removeItem("/content");
+            session.save();
+            session.logout();
+        }
+    }
+
+    @Test
+    public void autoCreatedPropertiesAreUpdatedIfPresent() throws Exception {
+        File out = new File(new File("target"), "jackrabbit");
+        TransientRepository repo = new TransientRepository(new File(out, "repository.xml"), new File(out, "repository"));
+        SimpleCredentials credentials = new SimpleCredentials("admin", "admin".toCharArray());
+        Session session = repo.login(credentials);
+
+        try {
+            Node content = session.getRootNode().addNode("content", "nt:folder");
+
+            session.save();
+
+            ResourceProxy resource = newResource("/content", "nt:folder");
+            resource.addProperty("jcr:mixinTypes", "mix:lastModified");
+            resource.addProperty("jcr:lastModifiedBy", "admin2");
+
+            AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo, credentials, null, resource, logger);
+            cmd.execute().get();
+            cmd.execute().get(); // second time since mixins are processed after properties so we need two executions to
+                                 // expose the problem
+
+            session.refresh(false);
+
+            content = session.getRootNode().getNode("content");
+            assertThat("jcr:lastModifiedBy property not modified", content.getProperty("jcr:lastModifiedBy")
+                    .getString(), equalTo("admin2"));
 
         } finally {
             if (session.itemExists("/content"))
