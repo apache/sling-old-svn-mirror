@@ -19,15 +19,16 @@ package org.apache.sling.ide.impl.vlt;
 import static org.apache.sling.ide.transport.Repository.CommandExecutionFlag.CREATE_ONLY_WHEN_MISSING;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.concurrent.Callable;
 
+import javax.jcr.Credentials;
 import javax.jcr.Node;
 import javax.jcr.Property;
-import javax.jcr.RepositoryException;
+import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import javax.jcr.Value;
@@ -38,7 +39,6 @@ import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.jackrabbit.core.TransientRepository;
 import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.transport.ResourceProxy;
-import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -54,62 +54,59 @@ public class AddOrUpdateNodeCommandTest {
         doPropertyChangeTest(null, "Title");
     }
 
-    private void doPropertyChangeTest(Object initialPropertyValues, Object newPropertyValues)
-            throws RepositoryException, org.apache.sling.ide.transport.RepositoryException {
+    private void doPropertyChangeTest(final Object initialPropertyValues, final Object newPropertyValues)
+            throws Exception {
 
-        File out = new File(new File("target"), "jackrabbit");
-        TransientRepository repo = new TransientRepository(new File(out, "repository.xml"), new File(out, "repository"));
-        SimpleCredentials credentials = new SimpleCredentials("admin", "admin".toCharArray());
-        Session session = repo.login(credentials);
-        try {
-            Node contentNode = session.getRootNode().addNode("content");
-            if (initialPropertyValues instanceof String) {
-                contentNode.setProperty(PROP_NAME, (String) initialPropertyValues);
-            } else if (initialPropertyValues instanceof String[]) {
-                contentNode.setProperty(PROP_NAME, (String[]) initialPropertyValues);
-            }
-
-            session.save();
-
-            ResourceProxy resource = newResource("/content", NodeType.NT_UNSTRUCTURED);
-            if (newPropertyValues != null) {
-                resource.addProperty(PROP_NAME, newPropertyValues);
-            }
-
-            AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo, credentials, null, resource, logger);
-            cmd.execute().get();
-
-            session.refresh(false);
-
-            if (newPropertyValues == null) {
-                assertThat(session.getNode("/content").hasProperty(PROP_NAME), equalTo(false));
-                return;
-            }
-
-            Property newProp = session.getNode("/content").getProperty(PROP_NAME);
-            if (newPropertyValues instanceof String) {
-                assertThat("property.isMultiple", newProp.isMultiple(), equalTo(Boolean.FALSE));
-                assertThat(newProp.getString(), equalTo((String) newPropertyValues));
-
-            } else {
-
-                String[] expectedValues = (String[]) newPropertyValues;
-                assertThat("property.isMultiple", newProp.isMultiple(), equalTo(Boolean.TRUE));
-
-                Value[] values = session.getNode("/content").getProperty(PROP_NAME).getValues();
-
-                assertThat(values.length, equalTo(expectedValues.length));
-                for (int i = 0; i < values.length; i++) {
-                    assertThat(values[i].getString(), equalTo(expectedValues[i]));
+        doWithTransientRepository(new CallableWithSession() {
+            @Override
+            public Void call() throws Exception {
+                Node contentNode = session().getRootNode().addNode("content");
+                if (initialPropertyValues instanceof String) {
+                    contentNode.setProperty(PROP_NAME, (String) initialPropertyValues);
+                } else if (initialPropertyValues instanceof String[]) {
+                    contentNode.setProperty(PROP_NAME, (String[]) initialPropertyValues);
                 }
 
-            }
+                session().save();
 
-        } finally {
-            session.removeItem("/content");
-            session.save();
-            session.logout();
-        }
+                ResourceProxy resource = newResource("/content", NodeType.NT_UNSTRUCTURED);
+                if (newPropertyValues != null) {
+                    resource.addProperty(PROP_NAME, newPropertyValues);
+                }
+
+                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), null, resource, logger);
+                cmd.execute().get();
+
+                session().refresh(false);
+
+                if (newPropertyValues == null) {
+                    assertThat(session().getNode("/content").hasProperty(PROP_NAME), equalTo(false));
+                    return null;
+                }
+
+                Property newProp = session().getNode("/content").getProperty(PROP_NAME);
+                if (newPropertyValues instanceof String) {
+                    assertThat("property.isMultiple", newProp.isMultiple(), equalTo(Boolean.FALSE));
+                    assertThat(newProp.getString(), equalTo((String) newPropertyValues));
+
+                } else {
+
+                    String[] expectedValues = (String[]) newPropertyValues;
+                    assertThat("property.isMultiple", newProp.isMultiple(), equalTo(Boolean.TRUE));
+
+                    Value[] values = session().getNode("/content").getProperty(PROP_NAME).getValues();
+
+                    assertThat(values.length, equalTo(expectedValues.length));
+                    for (int i = 0; i < values.length; i++) {
+                        assertThat(values[i].getString(), equalTo(expectedValues[i]));
+                    }
+
+                }
+
+                return null;
+            }
+        });
+
     }
 
     @Test
@@ -133,110 +130,79 @@ public class AddOrUpdateNodeCommandTest {
     @Test
     public void changeNtFolderToSlingFolderWithAddedProperty() throws Exception {
 
-        File out = new File(new File("target"), "jackrabbit");
-        TransientRepository repo = new TransientRepository(new File(out, "repository.xml"), new File(out, "repository"));
-        SimpleCredentials credentials = new SimpleCredentials("admin", "admin".toCharArray());
-        Session session = repo.login(credentials);
+        doWithTransientRepository(new CallableWithSession() {
+            @Override
+            public Void call() throws Exception {
+                session().getRootNode().addNode("content", "nt:folder");
 
-        InputStream cndInput = getClass().getResourceAsStream("folder.cnd");
-        CndImporter.registerNodeTypes(new InputStreamReader(cndInput), session);
+                session().save();
 
-        try {
-            session.getRootNode().addNode("content", "nt:folder");
+                ResourceProxy resource = newResource("/content", "sling:Folder");
+                resource.getProperties().put("newProperty", "some/value");
 
-            session.save();
+                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), null, resource, logger);
+                cmd.execute().get();
 
-            ResourceProxy resource = newResource("/content", "sling:Folder");
-            resource.getProperties().put("newProperty", "some/value");
+                session().refresh(false);
 
-            AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo, credentials, null, resource, logger);
-            cmd.execute().get();
+                Node content = session().getRootNode().getNode("content");
+                assertThat(content.getPrimaryNodeType().getName(), equalTo("sling:Folder"));
 
-            session.refresh(false);
-
-            Node content = session.getRootNode().getNode("content");
-            assertThat(content.getPrimaryNodeType().getName(), equalTo("sling:Folder"));
-
-        } finally {
-            session.removeItem("/content");
-            session.save();
-            session.logout();
-
-            IOUtils.closeQuietly(cndInput);
-        }
+                return null;
+            }
+        });
     }
 
     @Test
     public void changeSlingFolderToNtFolderWithExistingProperty() throws Exception {
+        doWithTransientRepository(new CallableWithSession() {
+            @Override
+            public Void call() throws Exception {
+                Node content = session().getRootNode().addNode("content", "sling:Folder");
+                content.setProperty("newProperty", "some/value");
 
-        File out = new File(new File("target"), "jackrabbit");
-        TransientRepository repo = new TransientRepository(new File(out, "repository.xml"), new File(out, "repository"));
-        SimpleCredentials credentials = new SimpleCredentials("admin", "admin".toCharArray());
-        Session session = repo.login(credentials);
+                session().save();
 
-        InputStream cndInput = getClass().getResourceAsStream("folder.cnd");
-        CndImporter.registerNodeTypes(new InputStreamReader(cndInput), session);
+                ResourceProxy resource = newResource("/content", "nt:folder");
 
-        try {
-            Node content = session.getRootNode().addNode("content", "sling:Folder");
-            content.setProperty("newProperty", "some/value");
+                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), null, resource, logger);
+                cmd.execute().get();
 
-            session.save();
+                session().refresh(false);
 
-            ResourceProxy resource = newResource("/content", "nt:folder");
+                content = session().getRootNode().getNode("content");
+                assertThat(content.getPrimaryNodeType().getName(), equalTo("nt:folder"));
 
-            AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo, credentials, null, resource, logger);
-            cmd.execute().get();
-
-            session.refresh(false);
-
-            content = session.getRootNode().getNode("content");
-            assertThat(content.getPrimaryNodeType().getName(), equalTo("nt:folder"));
-
-        } finally {
-            session.removeItem("/content");
-            session.save();
-            session.logout();
-
-            IOUtils.closeQuietly(cndInput);
-        }
+                return null;
+            }
+        });
     }
 
     @Test
     @Ignore("SLING-4036")
     public void updateNtUnstructuredToNodeWithRequiredProperty() throws Exception {
 
-        File out = new File(new File("target"), "jackrabbit");
-        TransientRepository repo = new TransientRepository(new File(out, "repository.xml"), new File(out, "repository"));
-        SimpleCredentials credentials = new SimpleCredentials("admin", "admin".toCharArray());
-        Session session = repo.login(credentials);
+        doWithTransientRepository(new CallableWithSession() {
+            @Override
+            public Void call() throws Exception {
+                Node content = session().getRootNode().addNode("content", "nt:unstructured");
 
-        InputStream cndInput = getClass().getResourceAsStream("mandatory.cnd"); // TODO - should be test-definitions.cnd
-        CndImporter.registerNodeTypes(new InputStreamReader(cndInput), session);
+                session().save();
 
-        try {
-            Node content = session.getRootNode().addNode("content", "nt:unstructured");
+                ResourceProxy resource = newResource("/content", "custom");
+                resource.getProperties().put("attribute", "some value");
 
-            session.save();
+                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), null, resource, logger);
+                cmd.execute().get();
 
-            ResourceProxy resource = newResource("/content", "custom");
-            resource.getProperties().put("attribute", "some value");
+                session().refresh(false);
 
-            AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo, credentials, null, resource, logger);
-            cmd.execute().get();
+                content = session().getRootNode().getNode("content");
+                assertThat(content.getPrimaryNodeType().getName(), equalTo("custom"));
 
-            session.refresh(false);
-
-            content = session.getRootNode().getNode("content");
-            assertThat(content.getPrimaryNodeType().getName(), equalTo("custom"));
-
-        } finally {
-            session.removeItem("/content");
-            session.save();
-            session.logout();
-
-            IOUtils.closeQuietly(cndInput);
-        }
+                return null;
+            }
+        });
     }
 
     private ResourceProxy newResource(String path, String primaryType) {
@@ -249,157 +215,195 @@ public class AddOrUpdateNodeCommandTest {
     @Test
     public void createIfRequiredFlagSkipsExistingResources() throws Exception {
 
-        File out = new File(new File("target"), "jackrabbit");
-        TransientRepository repo = new TransientRepository(new File(out, "repository.xml"), new File(out, "repository"));
-        SimpleCredentials credentials = new SimpleCredentials("admin", "admin".toCharArray());
-        Session session = repo.login(credentials);
+        doWithTransientRepository(new CallableWithSession() {
+            @Override
+            public Void call() throws Exception {
+                Node content = session().getRootNode().addNode("content", "nt:folder");
 
-        try {
-            Node content = session.getRootNode().addNode("content", "nt:folder");
+                session().save();
 
-            session.save();
+                ResourceProxy resource = newResource("/content", "nt:unstructured");
 
-            ResourceProxy resource = newResource("/content", "nt:unstructured");
+                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), null, resource, logger,
+                        CREATE_ONLY_WHEN_MISSING);
+                cmd.execute().get();
 
-            AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo, credentials, null, resource, logger,
-                    CREATE_ONLY_WHEN_MISSING);
-            cmd.execute().get();
+                session().refresh(false);
 
-            session.refresh(false);
+                content = session().getRootNode().getNode("content");
+                assertThat(content.getPrimaryNodeType().getName(), equalTo("nt:folder"));
 
-            content = session.getRootNode().getNode("content");
-            assertThat(content.getPrimaryNodeType().getName(), equalTo("nt:folder"));
-
-        } finally {
-            session.removeItem("/content");
-            session.save();
-            session.logout();
-        }
+                return null;
+            }
+        });
     }
 
     @Test
     public void createIfRequiredFlagCreatesNeededResources() throws Exception {
 
-        File out = new File(new File("target"), "jackrabbit");
-        TransientRepository repo = new TransientRepository(new File(out, "repository.xml"), new File(out, "repository"));
-        SimpleCredentials credentials = new SimpleCredentials("admin", "admin".toCharArray());
-        Session session = repo.login(credentials);
+        doWithTransientRepository(new CallableWithSession() {
+            @Override
+            public Void call() throws Exception {
+                ResourceProxy resource = newResource("/content", "nt:unstructured");
 
-        try {
-            ResourceProxy resource = newResource("/content", "nt:unstructured");
+                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), null, resource, logger,
+                        CREATE_ONLY_WHEN_MISSING);
+                cmd.execute().get();
 
-            AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo, credentials, null, resource, logger,
-                    CREATE_ONLY_WHEN_MISSING);
-            cmd.execute().get();
+                session().refresh(false);
 
-            session.refresh(false);
+                Node content = session().getRootNode().getNode("content");
+                assertThat(content.getPrimaryNodeType().getName(), equalTo("nt:unstructured"));
 
-            Node content = session.getRootNode().getNode("content");
-            assertThat(content.getPrimaryNodeType().getName(), equalTo("nt:unstructured"));
-
-        } finally {
-            session.removeItem("/content");
-            session.save();
-            session.logout();
-        }
+                return null;
+            }
+        });
     }
 
     @Test
     public void createIfRequiredFlagCreatesNeededResourcesEvenWhenPrimaryTypeIsMissing() throws Exception {
 
-        File out = new File(new File("target"), "jackrabbit");
-        TransientRepository repo = new TransientRepository(new File(out, "repository.xml"), new File(out, "repository"));
-        SimpleCredentials credentials = new SimpleCredentials("admin", "admin".toCharArray());
-        Session session = repo.login(credentials);
+        doWithTransientRepository(new CallableWithSession() {
+            @Override
+            public Void call() throws Exception {
+                ResourceProxy resource = new ResourceProxy("/content");
 
-        try {
-            ResourceProxy resource = new ResourceProxy("/content");
+                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), null, resource, logger,
+                        CREATE_ONLY_WHEN_MISSING);
+                cmd.execute().get();
 
-            AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo, credentials, null, resource, logger,
-                    CREATE_ONLY_WHEN_MISSING);
-            cmd.execute().get();
+                session().refresh(false);
 
-            session.refresh(false);
+                Node content = session().getRootNode().getNode("content");
+                assertThat(content.getPrimaryNodeType().getName(), equalTo("nt:unstructured"));
 
-            Node content = session.getRootNode().getNode("content");
-            assertThat(content.getPrimaryNodeType().getName(), equalTo("nt:unstructured"));
-
-        } finally {
-            if (session.itemExists("/content"))
-                session.removeItem("/content");
-            session.save();
-            session.logout();
-        }
+                return null;
+            }
+        });
     }
 
     @Test
     public void autoCreatedPropertiesAreNotRemoved() throws Exception {
 
-        File out = new File(new File("target"), "jackrabbit");
-        TransientRepository repo = new TransientRepository(new File(out, "repository.xml"), new File(out, "repository"));
-        SimpleCredentials credentials = new SimpleCredentials("admin", "admin".toCharArray());
-        Session session = repo.login(credentials);
+        doWithTransientRepository(new CallableWithSession() {
+            @Override
+            public Void call() throws Exception {
+                Node content = session().getRootNode().addNode("content", "nt:folder");
 
-        try {
-            Node content = session.getRootNode().addNode("content", "nt:folder");
+                session().save();
 
-            session.save();
+                ResourceProxy resource = newResource("/content", "nt:folder");
+                resource.addProperty("jcr:mixinTypes", "mix:lastModified");
 
-            ResourceProxy resource = newResource("/content", "nt:folder");
-            resource.addProperty("jcr:mixinTypes", "mix:lastModified");
+                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), null, resource, logger);
+                cmd.execute().get();
+                cmd.execute().get(); // second time since mixins are processed after properties so we need two
+                                     // executions to
+                                     // expose the problem
 
-            AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo, credentials, null, resource, logger);
-            cmd.execute().get();
-            cmd.execute().get(); // second time since mixins are processed after properties so we need two executions to
-                                 // expose the problem
+                session().refresh(false);
 
-            session.refresh(false);
+                content = session().getRootNode().getNode("content");
+                assertThat("jcr:lastModified property not present", content.hasProperty("jcr:lastModified"),
+                        equalTo(true));
+                assertThat("jcr:lastModifiedBy property not present", content.hasProperty("jcr:lastModifiedBy"),
+                        equalTo(true));
 
-            content = session.getRootNode().getNode("content");
-            assertThat("jcr:lastModified property not present", content.hasProperty("jcr:lastModified"), equalTo(true));
-            assertThat("jcr:lastModifiedBy property not present", content.hasProperty("jcr:lastModifiedBy"),
-                    equalTo(true));
-
-        } finally {
-            if (session.itemExists("/content"))
-                session.removeItem("/content");
-            session.save();
-            session.logout();
-        }
+                return null;
+            }
+        });
     }
 
     @Test
     public void autoCreatedPropertiesAreUpdatedIfPresent() throws Exception {
+
+        doWithTransientRepository(new CallableWithSession() {
+            @Override
+            public Void call() throws Exception {
+                Node content = session().getRootNode().addNode("content", "nt:folder");
+
+                session().save();
+
+                ResourceProxy resource = newResource("/content", "nt:folder");
+                resource.addProperty("jcr:mixinTypes", "mix:lastModified");
+                resource.addProperty("jcr:lastModifiedBy", "admin2");
+
+                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), null, resource, logger);
+                cmd.execute().get();
+                cmd.execute().get(); // second time since mixins are processed after properties so we need two
+                                     // executions to
+                                     // expose the problem
+
+                session().refresh(false);
+
+                content = session().getRootNode().getNode("content");
+                assertThat("jcr:lastModifiedBy property not modified", content.getProperty("jcr:lastModifiedBy")
+                        .getString(), equalTo("admin2"));
+
+                return null;
+            }
+        });
+    }
+
+    private void doWithTransientRepository(CallableWithSession callable) throws Exception {
+
         File out = new File(new File("target"), "jackrabbit");
         TransientRepository repo = new TransientRepository(new File(out, "repository.xml"), new File(out, "repository"));
         SimpleCredentials credentials = new SimpleCredentials("admin", "admin".toCharArray());
         Session session = repo.login(credentials);
 
+        InputStream cndInput = getClass().getResourceAsStream("mandatory.cnd"); // TODO - should be test-definitions.cnd
+        CndImporter.registerNodeTypes(new InputStreamReader(cndInput), session);
+
         try {
-            Node content = session.getRootNode().addNode("content", "nt:folder");
-
-            session.save();
-
-            ResourceProxy resource = newResource("/content", "nt:folder");
-            resource.addProperty("jcr:mixinTypes", "mix:lastModified");
-            resource.addProperty("jcr:lastModifiedBy", "admin2");
-
-            AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo, credentials, null, resource, logger);
-            cmd.execute().get();
-            cmd.execute().get(); // second time since mixins are processed after properties so we need two executions to
-                                 // expose the problem
-
-            session.refresh(false);
-
-            content = session.getRootNode().getNode("content");
-            assertThat("jcr:lastModifiedBy property not modified", content.getProperty("jcr:lastModifiedBy")
-                    .getString(), equalTo("admin2"));
-
+            callable.setCredentials(credentials);
+            callable.setSession(session);
+            callable.call();
         } finally {
             if (session.itemExists("/content"))
                 session.removeItem("/content");
             session.save();
             session.logout();
+
+            IOUtils.closeQuietly(cndInput);
+        }
+
+    }
+
+    private static abstract class CallableWithSession implements Callable<Void> {
+
+        private Session session;
+        private Credentials credentials;
+
+        public void setSession(Session session) {
+
+            this.session = session;
+        }
+
+        public void setCredentials(Credentials credentials) {
+
+            this.credentials = credentials;
+        }
+
+        protected Session session() {
+
+            if (session == null)
+                throw new IllegalStateException("session is null");
+
+            return session;
+        }
+
+        protected Credentials credentials() {
+
+            if (credentials == null)
+                throw new IllegalStateException("credentials is null");
+
+            return credentials;
+        }
+
+        protected Repository repo() {
+
+            return session().getRepository();
         }
     }
 }
