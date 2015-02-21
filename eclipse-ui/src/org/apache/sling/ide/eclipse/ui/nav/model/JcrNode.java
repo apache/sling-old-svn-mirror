@@ -37,7 +37,6 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.util.ISO9075;
-import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
 import org.apache.sling.ide.eclipse.core.internal.Activator;
@@ -89,7 +88,6 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.part.ResourceTransfer;
 import org.eclipse.ui.views.properties.IPropertySource;
 import org.eclipse.ui.views.properties.tabbed.ITabbedPropertySheetPageContributor;
-import org.eclipse.wst.server.core.IServer;
 import org.xml.sax.SAXException;
 
 import de.pdark.decentxml.Attribute;
@@ -1084,13 +1082,6 @@ public class JcrNode implements IAdaptable {
 			return underlying.file.getProject();
 		}
 		return null;
-	}
-
-	public String getURLForBrowser(IServer server) {
-		final String host = server.getHost();
-		final int port = server.getAttribute(ISlingLaunchpadServer.PROP_PORT, 8080);
-        final String url = "http://"+host+":"+port+""+getJcrPath();
-		return url;
 	}
 
     public boolean isInContentXml() {
