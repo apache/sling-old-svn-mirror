@@ -456,7 +456,7 @@
             objectClass="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.OpenHtmlInBrowserAction"
-               icon="icons/obj16/sling_misc.gif"
+               icon="platform:/plugin/org.eclipse.ui.browser/icons/obj16/internal_browser.gif"
                id="org.apache.sling.ide.eclipse.ui.actionsOpenHtmlInBrowserAction"
                label="&amp;Open .html (on server) in browser"
                menubarPath="jcr">
@@ -535,7 +535,7 @@
          </action>
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.OpenHtmlInBrowserAction"
-               icon="icons/obj16/sling_misc.gif"
+               icon="platform:/plugin/org.eclipse.ui.browser/icons/obj16/internal_browser.gif"
                id="org.apache.sling.ide.eclipse.ui.actionsOpenHtmlInBrowserAction"
                label="&amp;Open .html (on server) in browser"
                toolbarPath="common.open.menu/jcr">
