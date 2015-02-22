@@ -33,8 +33,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
@@ -43,7 +41,6 @@ import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.adapter.AdapterManager;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
@@ -58,10 +55,6 @@ import org.slf4j.LoggerFactory;
  */
 @Component(immediate=true)
 @Service
-@Properties({
-    @Property(name=Constants.SERVICE_DESCRIPTION, value="Sling Adapter Manager"),
-    @Property(name=Constants.SERVICE_VENDOR, value="The Apache Software Foundation")
-})
 @Reference(name="AdapterFactory", referenceInterface=AdapterFactory.class,
 cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE, policy=ReferencePolicy.DYNAMIC)
 public class MockAdapterManagerImpl implements AdapterManager {
