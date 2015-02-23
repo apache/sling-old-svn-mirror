@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
 <!--
     Licensed to the Apache Software Foundation (ASF) under one
     or more contributor license agreements.  See the NOTICE file
@@ -17,9 +17,8 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xml:lang="en" th:with="page=${resource.adaptTo(@org.apache.sling.samples.fling.UserPage@class)}">
-<head th:replace="/apps/fling/page/fragments/head.html::default">
+<html data-th-with="page=${resource.adaptTo(@org.apache.sling.samples.fling.UserPage@class)}">
+<head data-th-replace="/apps/fling/page/fragments/head.html::default">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>USER PAGE</title>
@@ -32,7 +31,7 @@
 <div class="container">
   <nav class="nav-main">
     <div class="pull-left">
-      <ul class="breadcrumb" style="direction: rtl" th:replace="/apps/fling/page/fragments/navigation.html::breadcrumb">
+      <ul class="breadcrumb" style="direction: rtl" data-th-replace="/apps/fling/page/fragments/navigation.html::breadcrumb">
         <li class="active dropdown">
           <span>2rd BAR</span>
         </li>
@@ -48,40 +47,40 @@
         </li>
       </ul>
     </div>
-    <ul class="nav nav-pills" role="tablist" th:replace="/apps/fling/page/fragments/navigation.html::children">
+    <ul class="nav nav-pills" role="tablist" data-th-replace="/apps/fling/page/fragments/navigation.html::children">
       <li><a href="../user/html.html">3rd BAZ</a></li>
     </ul>
   </nav>
   <div class="panel panel-primary">
     <div class="panel-heading">
-      <span th:text="${page.title}">USER PAGE</span>
+      <span data-th-text="${page.title}">USER PAGE</span>
     </div>
-    <div class="panel-body" th:with="user=${page.user}">
+    <div class="panel-body" data-th-with="user=${page.user}">
       <form role="form">
         <div class="form-group">
           <label>User ID of current JCR session</label>
-          <input type="text" class="form-control" readonly="readonly" value="dummy" th:attr="value=${user.getID()}"/>
+          <input type="text" class="form-control" readonly="readonly" value="dummy" data-th-attr="value=${user.getID()}"/>
         </div>
         <div class="form-group">
           <label>principal name</label>
-          <input type="text" class="form-control" readonly="readonly" value="dummy" th:attr="value=${user.getPrincipal().getName()}"/>
+          <input type="text" class="form-control" readonly="readonly" value="dummy" data-th-attr="value=${user.getPrincipal().getName()}"/>
         </div>
-        <div class="form-group" th:each="property : ${page.userProperties}">
-          <label th:text="${property.key}">key</label>
-          <input type="text" class="form-control" readonly="readonly" value="value" th:attr="value=${property.value}"/>
+        <div class="form-group" data-th-each="property : ${page.userProperties}">
+          <label data-th-text="${property.key}">key</label>
+          <input type="text" class="form-control" readonly="readonly" value="value" data-th-attr="value=${property.value}"/>
         </div>
-        <div class="form-group" th:remove="all">
+        <div class="form-group" data-th-remove="all">
           <label>firstName</label>
           <input type="text" class="form-control" readonly="readonly" value="Foo"/>
         </div>
-        <div class="form-group" th:remove="all">
+        <div class="form-group" data-th-remove="all">
           <label>lastName</label>
           <input type="text" class="form-control" readonly="readonly" value="Bar"/>
         </div>
       </form>
-      <img src="../../../../assets/images/feather.png" width="355" height="111" th:attr="src='/fling/assets/images/feather.png'"/>
+      <img src="../../../../assets/images/feather.png" width="355" height="111" data-th-attr="src='/fling/assets/images/feather.png'"/>
     </div>
-    <div class="panel-footer" th:replace="/apps/fling/page/fragments/panel.html::footer">
+    <div class="panel-footer" data-th-replace="/apps/fling/page/fragments/panel.html::footer">
       <span>user | auth type</span>
     </div>
   </div>

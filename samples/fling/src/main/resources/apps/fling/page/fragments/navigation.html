@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
 <!--
     Licensed to the Apache Software Foundation (ASF) under one
     or more contributor license agreements.  See the NOTICE file
@@ -17,33 +17,32 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xml:lang="en">
+<html>
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 </head>
 <body>
 
-  <ul th:fragment="breadcrumb" class="breadcrumb" style="direction: rtl">
+  <ul data-th-fragment="breadcrumb" class="breadcrumb" style="direction: rtl">
     <li class="active dropdown">
-      <span th:text="${page.title}">current page</span>
+      <span data-th-text="${page.title}">current page</span>
     </li>
-    <li th:each="parent : ${page.parents}" class="dropdown">
-      <a th:if="${parent.children.iterator().hasNext()}" href="#" class="dropdown-toggle" role="button" data-toggle="dropdown"><span class="caret"></span></a>
-      <a th:href="${#strings.substringAfter(parent.path, '/content')} + '.html'" th:text="${parent.title}">parent page</a>
+    <li data-th-each="parent : ${page.parents}" class="dropdown">
+      <a data-th-if="${parent.children.iterator().hasNext()}" href="#" class="dropdown-toggle" role="button" data-toggle="dropdown"><span class="caret"></span></a>
+      <a data-th-href="${#strings.substringAfter(parent.path, '/content')} + '.html'" data-th-text="${parent.title}">parent page</a>
       <ul class="dropdown-menu" role="menu">
-        <li th:each="child : ${parent.children}" role="presentation"><a role="menuitem" tabindex="-1" th:href="${#strings.substringAfter(child.path, '/content')} + '.html'" th:text="${child.title}">child page</a></li>
+        <li data-th-each="child : ${parent.children}" role="presentation"><a role="menuitem" tabindex="-1" data-th-href="${#strings.substringAfter(child.path, '/content')} + '.html'" data-th-text="${child.title}">child page</a></li>
       </ul>
     </li>
   </ul>
 
-  <ul th:fragment="children" class="nav nav-pills" role="tablist">
-    <li th:each="child : ${page.children}"><a th:href="${page.name + '/' + child.name} + '.html'" th:text="${child.title}">child page</a></li>
+  <ul data-th-fragment="children" class="nav nav-pills" role="tablist">
+    <li data-th-each="child : ${page.children}"><a data-th-href="${page.name + '/' + child.name} + '.html'" data-th-text="${child.title}">child page</a></li>
   </ul>
 
-  <ul th:fragment="siblings" class="nav nav-pills" role="tablist">
-    <li th:each="sibling : ${page.siblings}"><a th:href="${sibling.name} + '.html'" th:text="${sibling.title}">sibling</a></li>
+  <ul data-th-fragment="siblings" class="nav nav-pills" role="tablist">
+    <li data-th-each="sibling : ${page.siblings}"><a data-th-href="${sibling.name} + '.html'" data-th-text="${sibling.title}">sibling</a></li>
   </ul>
 
 </body>

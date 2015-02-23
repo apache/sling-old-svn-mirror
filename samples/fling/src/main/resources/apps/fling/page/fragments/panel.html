@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
 <!--
     Licensed to the Apache Software Foundation (ASF) under one
     or more contributor license agreements.  See the NOTICE file
@@ -17,16 +17,15 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xml:lang="en">
+<html>
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 </head>
 <body>
 
-  <div th:fragment="footer" class="panel-footer">
-    <span th:text="${request.remoteUser}">remote user</span> (<a th:unless="${'anonymous'.equals(request.remoteUser)}" href="/system/sling/logout?resource=/fling.html" th:text="#{action.logout}">logout</a><a th:if="${'anonymous'.equals(request.remoteUser)}" th:href="${'/system/sling/login?resource=' + #strings.substringAfter(page.path, '/content')} + '.html'">login</a>) | <span th:text="${request.authType} ?: #{no_auth}">auth type</span>
+  <div data-th-fragment="footer" class="panel-footer">
+    <span data-th-text="${request.remoteUser}">remote user</span> (<a data-th-unless="${'anonymous'.equals(request.remoteUser)}" href="/system/sling/logout?resource=/fling.html" data-th-text="#{action.logout}">logout</a><a data-th-if="${'anonymous'.equals(request.remoteUser)}" data-th-href="${'/system/sling/login?resource=' + #strings.substringAfter(page.path, '/content')} + '.html'">login</a>) | <span data-th-text="${request.authType} ?: #{no_auth}">auth type</span>
   </div>
 
 </body>
