@@ -35,11 +35,15 @@ import org.apache.sling.scripting.thymeleaf.internal.dom.NodeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thymeleaf.Arguments;
+import org.thymeleaf.Configuration;
 import org.thymeleaf.context.IContext;
 import org.thymeleaf.dom.Element;
 import org.thymeleaf.dom.Macro;
 import org.thymeleaf.processor.ProcessorResult;
 import org.thymeleaf.processor.attr.AbstractAttrProcessor;
+import org.thymeleaf.standard.expression.IStandardExpression;
+import org.thymeleaf.standard.expression.IStandardExpressionParser;
+import org.thymeleaf.standard.expression.StandardExpressions;
 
 public class SlingIncludeAttrProcessor extends AbstractAttrProcessor {
 
@@ -65,16 +69,24 @@ public class SlingIncludeAttrProcessor extends AbstractAttrProcessor {
             final SlingWebContext slingWebContext = (SlingWebContext) context;
             final SlingHttpServletRequest slingHttpServletRequest = slingWebContext.getHttpServletRequest();
             final SlingHttpServletResponse slingHttpServletResponse = slingWebContext.getHttpServletResponse();
-            // resource and path
-            Resource resource = NodeUtil.getNodeProperty(element, SlingResourceAttrProcessor.NODE_PROPERTY_NAME, Resource.class);
-            String path = NodeUtil.getNodeProperty(element, SlingPathAttrProcessor.NODE_PROPERTY_NAME, String.class);
+            // resource or path to include
+            final Configuration configuration = arguments.getConfiguration();
+            final String attributeValue = element.getAttributeValue(attributeName);
+            final IStandardExpressionParser parser = StandardExpressions.getExpressionParser(configuration);
+            final IStandardExpression expression = parser.parseExpression(configuration, arguments, attributeValue);
+            final Object include = expression.execute(configuration, arguments);
+            String path = null;
+            if (include instanceof String) {
+                path = (String) include;
+            }
+            Resource resource = null;
+            if (include instanceof Resource) {
+                resource = (Resource) include;
+            }
             // request dispatcher options
-            final String resourceType = NodeUtil.getNodeProperty(element, SlingResourceTypeAttrProcessor.NODE_PROPERTY_NAME, String.class);
-            final String replaceSelectors = NodeUtil.getNodeProperty(element, SlingReplaceSelectorsAttrProcessor.NODE_PROPERTY_NAME, String.class);
-            final String addSelectors = NodeUtil.getNodeProperty(element, SlingAddSelectorsAttrProcessor.NODE_PROPERTY_NAME, String.class);
-            final String replaceSuffix = NodeUtil.getNodeProperty(element, SlingReplaceSuffixAttrProcessor.NODE_PROPERTY_NAME, String.class);
+            final RequestDispatcherOptions requestDispatcherOptions = prepareRequestDispatcherOptions(element);
             // dispatch
-            final String content = dispatch(resource, path, slingHttpServletRequest, slingHttpServletResponse, resourceType, replaceSelectors, addSelectors, replaceSuffix);
+            final String content = dispatch(resource, path, slingHttpServletRequest, slingHttpServletResponse, requestDispatcherOptions);
             // cleanup
             element.removeAttribute(attributeName);
             element.clearChildren();
@@ -91,15 +103,23 @@ public class SlingIncludeAttrProcessor extends AbstractAttrProcessor {
         return ProcessorResult.OK;
     }
 
-    /**
-     * @see org.apache.sling.scripting.jsp.taglib.IncludeTagHandler
-     */
-    protected String dispatch(Resource resource, String path, final SlingHttpServletRequest slingHttpServletRequest, final SlingHttpServletResponse slingHttpServletResponse, final String resourceType, final String replaceSelectors, final String addSelectors, final String replaceSuffix) {
+    protected RequestDispatcherOptions prepareRequestDispatcherOptions(final Element element) {
+        final String resourceType = NodeUtil.getNodeProperty(element, SlingResourceTypeAttrProcessor.NODE_PROPERTY_NAME, String.class);
+        final String replaceSelectors = NodeUtil.getNodeProperty(element, SlingReplaceSelectorsAttrProcessor.NODE_PROPERTY_NAME, String.class);
+        final String addSelectors = NodeUtil.getNodeProperty(element, SlingAddSelectorsAttrProcessor.NODE_PROPERTY_NAME, String.class);
+        final String replaceSuffix = NodeUtil.getNodeProperty(element, SlingReplaceSuffixAttrProcessor.NODE_PROPERTY_NAME, String.class);
         final RequestDispatcherOptions options = new RequestDispatcherOptions();
         options.setForceResourceType(resourceType);
         options.setReplaceSelectors(replaceSelectors);
         options.setAddSelectors(addSelectors);
         options.setReplaceSuffix(replaceSuffix);
+        return options;
+    }
+
+    /**
+     * @see org.apache.sling.scripting.jsp.taglib.IncludeTagHandler
+     */
+    protected String dispatch(Resource resource, String path, final SlingHttpServletRequest slingHttpServletRequest, final SlingHttpServletResponse slingHttpServletResponse, final RequestDispatcherOptions requestDispatcherOptions) {
 
         // ensure the path (if set) is absolute and normalized
         if (path != null) {
@@ -116,11 +136,12 @@ public class SlingIncludeAttrProcessor extends AbstractAttrProcessor {
                 resource = slingHttpServletRequest.getResource();
             } else {
                 // check whether the path (would) resolve, else SyntheticRes.
+                final String resourceType = requestDispatcherOptions.getForceResourceType();
                 final Resource tmp = slingHttpServletRequest.getResourceResolver().resolve(path);
                 if (tmp == null && resourceType != null) {
                     resource = new SyntheticResource(slingHttpServletRequest.getResourceResolver(), path, resourceType); // TODO DispatcherSyntheticResource?
                     // remove resource type overwrite as synthetic resource is correctly typed as requested
-                    options.remove(RequestDispatcherOptions.OPT_FORCE_RESOURCE_TYPE);
+                    requestDispatcherOptions.remove(RequestDispatcherOptions.OPT_FORCE_RESOURCE_TYPE);
                 }
             }
         }
@@ -129,9 +150,9 @@ public class SlingIncludeAttrProcessor extends AbstractAttrProcessor {
             // create a dispatcher for the resource or path
             final RequestDispatcher dispatcher;
             if (resource != null) {
-                dispatcher = slingHttpServletRequest.getRequestDispatcher(resource, options);
+                dispatcher = slingHttpServletRequest.getRequestDispatcher(resource, requestDispatcherOptions);
             } else {
-                dispatcher = slingHttpServletRequest.getRequestDispatcher(path, options);
+                dispatcher = slingHttpServletRequest.getRequestDispatcher(path, requestDispatcherOptions);
             }
 
             if (dispatcher != null) {
