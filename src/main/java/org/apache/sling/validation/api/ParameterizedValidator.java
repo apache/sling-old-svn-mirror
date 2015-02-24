@@ -26,10 +26,22 @@ import org.apache.sling.api.resource.ValueMap;
  */
 public interface ParameterizedValidator {
 
+    /**
+     * 
+     * @return the validator
+     */
     public abstract Validator<?> getValidator();
 
+    /**
+     * 
+     * @return the parameterization of the validator (never {@code null}, but might be empty map)
+     */
     public abstract ValueMap getParameters();
 
+    /**
+     * 
+     * @return the type of the validator (i.e. the type of the data it can handle)
+     */
     public abstract Class<?> getType();
 
 }
