@@ -44,6 +44,7 @@ import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.validation.api.ValidationModel;
 import org.apache.sling.validation.api.ValidationResult;
 import org.apache.sling.validation.api.Validator;
+import org.apache.sling.validation.api.exceptions.SlingValidationException;
 import org.apache.sling.validation.impl.setup.MockedResourceResolver;
 import org.apache.sling.validation.impl.util.examplevalidators.DateValidator;
 import org.apache.sling.validation.impl.validators.RegexValidator;
@@ -54,6 +55,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.powermock.reflect.Whitebox;
@@ -255,6 +257,46 @@ public class ValidationServiceImplTest {
                     .put("field1",
                             Arrays.asList("Property was expected to be of type 'class java.util.Date' but cannot be converted to that type."));
             Assert.assertThat(vr.getFailureMessages().entrySet(), Matchers.equalTo(expectedFailureMessages.entrySet()));
+        } finally {
+            if (model1 != null) {
+                rr.delete(model1);
+            }
+        }
+    }
+    
+    @Test
+    public void testValidateNeverCalledWithNullValues() throws Exception {
+        
+        Validator<String> myValidator = new Validator<String>() {
+            @Override
+            public String validate(String data, ValueMap valueMap, ValueMap arguments)
+                    throws SlingValidationException {
+                Assert.assertNotNull("ValueMap parameter for validate should never be null", valueMap);
+                Assert.assertNotNull("arguments parameter for validate should never be null", arguments);
+                return null;
+            }
+            
+        };
+        
+        validationService.validators.put("testvalidator",
+                myValidator);
+
+        TestProperty property = new TestProperty("field1");
+        property.addValidator("testvalidator");
+        Resource model1 = null;
+        try {
+            model1 = createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1",
+                    "sling/validation/test", new String[] { "/apps/validation" }, property);
+
+            ValidationModel vm = validationService.getValidationModel("sling/validation/test",
+                    "/apps/validation/1/resource");
+            HashMap<String, Object> hashMap = new HashMap<String, Object>() {
+                {
+                    put("field1", "1");
+                }
+            };
+            ValueMap map = new ValueMapDecorator(hashMap);
+            validationService.validate(map, vm);
         } finally {
             if (model1 != null) {
                 rr.delete(model1);
