@@ -65,10 +65,26 @@ import org.xml.sax.helpers.DefaultHandler;
 )
 @Service
 @Properties({
-    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
-    @Property(name = Constants.SERVICE_DESCRIPTION, value = "multi-purpose service for altering HTTP requests/responses based on Tuckey's UrlRewriteFilter"),
-    @Property(name = Constants.SERVICE_RANKING, intValue = 0, propertyPrivate = false),
-    @Property(name = EngineConstants.SLING_FILTER_SCOPE, value = {EngineConstants.FILTER_SCOPE_REQUEST, EngineConstants.FILTER_SCOPE_FORWARD})
+    @Property(
+        name = Constants.SERVICE_VENDOR,
+        value = "The Apache Software Foundation"
+    ),
+    @Property(
+        name = Constants.SERVICE_DESCRIPTION,
+        value = "multi-purpose service for altering HTTP requests/responses based on Tuckey's UrlRewriteFilter"
+    ),
+    @Property(
+        name = Constants.SERVICE_RANKING,
+        intValue = 0,
+        propertyPrivate = false
+    ),
+    @Property(
+        name = EngineConstants.SLING_FILTER_SCOPE,
+        value = {
+            EngineConstants.FILTER_SCOPE_REQUEST,
+            EngineConstants.FILTER_SCOPE_FORWARD
+        }
+    )
 })
 public final class SlingUrlRewriteFilter implements Filter {
 
