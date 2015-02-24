@@ -40,9 +40,6 @@ public class RegexValidator implements Validator<String> {
     @Override
     public String validate(String data, ValueMap valueMap, ValueMap arguments)
             throws SlingValidationException {
-        if (arguments == null) {
-            throw new SlingValidationException("Cannot perform data validation with null parameters");
-        }
         String regex = arguments.get(REGEX_PARAM, "");
         if (StringUtils.isEmpty(regex)) {
             throw new SlingValidationException("Mandatory " + REGEX_PARAM + " is missing from the arguments map.");
