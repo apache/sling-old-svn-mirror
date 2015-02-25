@@ -22,27 +22,28 @@ package org.apache.sling.scripting.sightly.use;
 import javax.script.Bindings;
 
 import org.apache.sling.scripting.sightly.render.RenderContext;
+import org.osgi.framework.Constants;
 
 import aQute.bnd.annotation.ConsumerType;
 
 /**
- * Provides instances for the use API. Providers are tried in the order of their
- * service ranking until one is found which can provide a non-null instance
  * <p>
- * {@code UseProvider} services are ranked according to the OSGi service
- * registration property {@code service.ranking} which is an integer value.
- * {@code UseProvider} services with lower ranking values are tried before
- * services with higher ranking values. The default value for the ranking if the
- * property is missing is zero.
+ * A {@code UseProvider} instantiates objects for the Use-API. Providers are queried in the descending order of their
+ * {@link Constants#SERVICE_RANKING service ranking} until one is found which can provide a non-null instance.
+ * </p>
+ * <p>
+ * The default value for the ranking if the property is missing is zero.
+ * </p>
  */
 @ConsumerType
 public interface UseProvider {
 
     /**
      * Provide an instance based on the given identifier
-     * @param identifier the identifier of the dependency
+     *
+     * @param identifier    the identifier of the dependency
      * @param renderContext the current rendering context
-     * @param arguments Specific arguments provided by the use plugin
+     * @param arguments     Specific arguments provided by the use plugin
      * @return a container with the instance that corresponds to the identifier. If the identifier cannot be
      * handled by this provider, a failed outcome is returned
      */
