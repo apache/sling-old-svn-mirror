@@ -30,8 +30,8 @@ import aQute.bnd.annotation.ConsumerType;
  * service ranking until one is found which can provide a non-null instance
  * <p>
  * {@code UseProvider} services are ranked according to the OSGi service
- * registration propertiy {@code service.ranking} which is an integer value.
- * {@code UseProvider} servies with lower ranking values are tried before
+ * registration property {@code service.ranking} which is an integer value.
+ * {@code UseProvider} services with lower ranking values are tried before
  * services with higher ranking values. The default value for the ranking if the
  * property is missing is zero.
  */
