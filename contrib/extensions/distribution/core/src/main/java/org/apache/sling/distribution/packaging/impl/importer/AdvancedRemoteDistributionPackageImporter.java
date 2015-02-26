@@ -32,6 +32,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
+import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
@@ -101,6 +102,8 @@ public class AdvancedRemoteDistributionPackageImporter implements DistributionPa
     protected void activate(Map<String, ?> config) throws Exception {
 
         String[] endpoints = PropertiesUtil.toStringArray(config.get(ENDPOINTS), new String[0]);
+        endpoints = SettingsUtils.removeEmptyEntries(endpoints);
+
         String endpointStrategyName = PropertiesUtil.toString(config.get(ENDPOINT_STRATEGY),
                 TransportEndpointStrategyType.One.name());
         TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(endpointStrategyName);
@@ -108,6 +111,8 @@ public class AdvancedRemoteDistributionPackageImporter implements DistributionPa
 
         boolean useCustomHeaders = PropertiesUtil.toBoolean(config.get(USE_CUSTOM_HEADERS), false);
         String[] customHeaders = PropertiesUtil.toStringArray(config.get(CUSTOM_HEADERS), new String[0]);
+        customHeaders = SettingsUtils.removeEmptyEntries(customHeaders);
+
         boolean useCustomBody = PropertiesUtil.toBoolean(config.get(USE_CUSTOM_BODY), false);
         String customBody = PropertiesUtil.toString(config.get(CUSTOM_BODY), "");
 

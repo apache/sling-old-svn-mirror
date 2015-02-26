@@ -175,8 +175,24 @@ public class SettingsUtils {
 
         if (uriMap.size() == 0) {
             String[] endpoints = PropertiesUtil.toStringArray(obj, new String[0]);
+            endpoints = removeEmptyEntries(endpoints);
             uriMap = toMap(Arrays.asList(endpoints), "endpoint");
         }
         return uriMap;
+    }
+
+    public static String[] removeEmptyEntries(String[] array) {
+        if (array == null || array.length == 0) {
+            return array;
+        }
+
+        List<String> result = new ArrayList<String>();
+        for (String string : array) {
+            if (string != null && string.trim().length() > 0) {
+                result.add(string);
+            }
+        }
+
+        return result.toArray(new String[0]);
     }
 }

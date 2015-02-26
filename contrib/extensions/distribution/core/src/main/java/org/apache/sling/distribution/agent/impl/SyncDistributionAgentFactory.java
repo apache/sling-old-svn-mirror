@@ -188,6 +188,8 @@ public class SyncDistributionAgentFactory extends AbstractDistributionAgentFacto
         Object importerEndpointsValue = config.get(IMPORTER_ENDPOINTS);
 
         String[] exporterEndpoints = PropertiesUtil.toStringArray(exporterEndpointsValue, new String[0]);
+        exporterEndpoints = SettingsUtils.removeEmptyEntries(exporterEndpoints);
+
         Map<String, String> importerEndpointsMap = SettingsUtils.toUriMap(importerEndpointsValue);
 
         boolean useMultipleQueues = PropertiesUtil.toBoolean(config.get(USE_MULTIPLE_QUEUES), false);

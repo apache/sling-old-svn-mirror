@@ -180,6 +180,7 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
     protected SimpleDistributionAgent createAgent(String agentName, BundleContext context, Map<String, Object> config, DefaultDistributionLog distributionLog) {
         String serviceName = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
         String[] allowedRoots = PropertiesUtil.toStringArray(config.get(ALLOWED_ROOTS), null);
+        allowedRoots = SettingsUtils.removeEmptyEntries(allowedRoots);
 
         boolean queueProcessingEnabled = PropertiesUtil.toBoolean(config.get(QUEUE_PROCESSING_ENABLED), true);
 
