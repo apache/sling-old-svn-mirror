@@ -158,11 +158,6 @@
                 </goals>
               </execution>
             </executions>
-            <configuration>
-              <excludes>
-                <exclude>**/SlingExtensionUrlrewriterIT.class</exclude>
-              </excludes>
-            </configuration>
           </plugin>
         </plugins>
       </build>
