@@ -17,7 +17,7 @@
  * under the License.
  */
 
-@Version("1.1")
+@Version("1.2")
 @Export(optional = "provide:=true")
 package org.apache.sling.serviceusermapping;
 
