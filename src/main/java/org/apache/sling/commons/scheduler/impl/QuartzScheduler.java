@@ -59,7 +59,8 @@ import org.slf4j.LoggerFactory;
  * The quartz based implementation of the scheduler.
  *
  */
-@Component(metatype=true, label="Apache Sling Scheduler",
+@Component(immediate=true,
+           metatype=true, label="Apache Sling Scheduler",
            description="The scheduler is able to run services and jobs at specific " +
                        "times or periodically based on cron expressions.")
 @Service(value=QuartzScheduler.class)
