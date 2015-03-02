@@ -185,7 +185,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.serviceusermapper</artifactId>
-            <version>1.0.2</version>
+            <version>1.1.0</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
