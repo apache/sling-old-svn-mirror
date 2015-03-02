@@ -58,8 +58,10 @@ public class OverridingResourceProviderTest {
      * /apps/a/1/d/1/b/1
      * /apps/a/1/c
      * /apps/a/2/c
+     * /apps/a/3
      * 
      * /apps/a/2 has the super type of /apps/a/1
+     * /apps/a/3 has the super type of /apps/a/2
      */
     @Before
     public void setup() throws Exception {
@@ -82,6 +84,7 @@ public class OverridingResourceProviderTest {
                     .resource("/apps/a/1/c").p("1", "a").p("2", "b")
                     .resource("/apps/a/2").p(SUPER_TYPE, "a/1").p("b", "2").p(MergedResourceConstants.PN_HIDE_CHILDREN, new String[] {"b"})
                     .resource("c").p("1", "c")
+                    .resource("/apps/a/3").p(SUPER_TYPE, "a/2")
                     .commit();
 
         this.provider = new MergingResourceProvider("/override", new OverridingResourcePicker(), true);
@@ -105,6 +108,14 @@ public class OverridingResourceProviderTest {
         assertEquals(2, vm.size());
         assertEquals("c", vm.get("1"));
         assertEquals("b", vm.get("2"));
+    }
+
+    @Test
+    public void testInheritingFromGrandParent() {
+        assertNotNull(this.provider.getResource(this.resolver, "/override/apps/a/3/a"));
+        assertNull(this.provider.getResource(this.resolver, "/override/apps/a/3/b"));
+        assertNotNull(this.provider.getResource(this.resolver, "/override/apps/a/3/c"));
+        assertNotNull(this.provider.getResource(this.resolver, "/override/apps/a/3/d"));
     }
 
     @Test
