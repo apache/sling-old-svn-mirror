@@ -707,7 +707,7 @@ public class Sling {
      * object after the system bundle of the framework has been started and
      * before it is being stopped.
      */
-    protected final BundleContext getBundleContext() {
+    public final BundleContext getBundleContext() {
         return this.framework.getBundleContext();
     }
 

@@ -28,18 +28,33 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 
 /**
- * The <code>SlingBridge</code> extends the base <code>Sling</code> class
- * calling the Eclipse Equinox Http Service activator for the proxy servlet to
- * be able to handle requests.
+ * The <code>SlingBridge</code> returns an extended <code>Sling</code> class
+ * to override any sling properties with context init parameters from
+ * the web application.
+ * In addition, the bundle context is set as a servlet context attribute
  */
-public class SlingBridge extends Sling {
+public class SlingBridge {
 
-    public SlingBridge(Notifiable notifiable, Logger logger,
-            LaunchpadContentProvider resourceProvider, Map<String, String> propOverwrite,
-            ServletContext servletContext)
-            throws BundleException {
-        super(notifiable, logger, resourceProvider, propOverwrite);
-        
-        servletContext.setAttribute(BundleContext.class.getName(), getBundleContext());
+    public static Sling getSlingBridge(final Notifiable notifiable,
+            final Logger logger,
+            final LaunchpadContentProvider resourceProvider,
+            final Map<String, String> propOverwrite,
+            final ServletContext servletContext)
+    throws BundleException {
+        final Sling sling = new Sling(notifiable, logger, resourceProvider, propOverwrite) {
+
+            @Override
+            protected void loadPropertiesOverride(final Map<String, String> properties) {
+                if ( propOverwrite != null ) {
+                    properties.putAll(propOverwrite);
+                }
+            }
+
+        };
+
+        servletContext.setAttribute(BundleContext.class.getName(), sling.getBundleContext());
+
+        return sling;
     }
+
 }
