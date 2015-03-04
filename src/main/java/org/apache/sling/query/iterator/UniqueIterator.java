@@ -21,8 +21,8 @@ package org.apache.sling.query.iterator;
 
 import java.util.Iterator;
 
-import org.apache.sling.query.api.TreeProvider;
 import org.apache.sling.query.api.internal.Option;
+import org.apache.sling.query.api.internal.TreeProvider;
 
 public class UniqueIterator<T> extends AbstractIterator<Option<T>> {
 

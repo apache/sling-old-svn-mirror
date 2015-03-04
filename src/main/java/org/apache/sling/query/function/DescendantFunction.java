@@ -21,9 +21,9 @@ package org.apache.sling.query.function;
 
 import java.util.Iterator;
 
-import org.apache.sling.query.api.TreeProvider;
 import org.apache.sling.query.api.internal.IteratorToIteratorFunction;
 import org.apache.sling.query.api.internal.Option;
+import org.apache.sling.query.api.internal.TreeProvider;
 import org.apache.sling.query.iterator.DescendantsIterator;
 
 public class DescendantFunction<T> implements IteratorToIteratorFunction<T> {

@@ -21,5 +21,7 @@ package org.apache.sling.query.api.internal;
 
 import java.util.Iterator;
 
+import org.apache.sling.query.api.Function;
+
 public interface IteratorToIteratorFunction<T> extends Function<Iterator<Option<T>>, Iterator<Option<T>>> {
 }
