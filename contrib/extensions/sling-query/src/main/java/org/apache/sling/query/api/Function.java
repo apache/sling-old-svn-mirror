@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.sling.query.api.internal;
+package org.apache.sling.query.api;
 
 import aQute.bnd.annotation.ConsumerType;
 
