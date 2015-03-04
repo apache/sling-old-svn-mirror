@@ -17,11 +17,12 @@
  * under the License.
  */
 
-package org.apache.sling.query.api;
+package org.apache.sling.query.api.internal;
 
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.sling.query.api.Predicate;
 import org.apache.sling.query.selector.parser.Attribute;
 import org.apache.sling.query.selector.parser.SelectorSegment;
 

@@ -24,12 +24,12 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.sling.query.api.Function;
 import org.apache.sling.query.api.Predicate;
 import org.apache.sling.query.api.SearchStrategy;
-import org.apache.sling.query.api.TreeProvider;
-import org.apache.sling.query.api.internal.Function;
 import org.apache.sling.query.api.internal.IteratorToIteratorFunction;
 import org.apache.sling.query.api.internal.Option;
+import org.apache.sling.query.api.internal.TreeProvider;
 import org.apache.sling.query.function.AddFunction;
 import org.apache.sling.query.function.ChildrenFunction;
 import org.apache.sling.query.function.ClosestFunction;
@@ -69,7 +69,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 
 	private final TreeProvider<T> provider;
 
-	protected AbstractQuery(TreeProvider<T> provider, T[] initialCollection, SearchStrategy strategy) {
+	AbstractQuery(TreeProvider<T> provider, T[] initialCollection, SearchStrategy strategy) {
 		this.provider = provider;
 		this.initialCollection = new ArrayList<T>(Arrays.asList(initialCollection));
 		this.searchStrategy = strategy;

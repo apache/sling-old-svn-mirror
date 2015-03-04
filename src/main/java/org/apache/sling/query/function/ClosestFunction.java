@@ -22,8 +22,8 @@ package org.apache.sling.query.function;
 import java.util.Iterator;
 
 import org.apache.sling.query.api.Predicate;
-import org.apache.sling.query.api.TreeProvider;
 import org.apache.sling.query.api.internal.ElementToIteratorFunction;
+import org.apache.sling.query.api.internal.TreeProvider;
 import org.apache.sling.query.util.IteratorUtils;
 
 public class ClosestFunction<T> implements ElementToIteratorFunction<T> {
