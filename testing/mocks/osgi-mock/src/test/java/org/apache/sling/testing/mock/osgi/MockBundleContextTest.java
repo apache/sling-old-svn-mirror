@@ -173,4 +173,9 @@ public class MockBundleContextTest {
         bundleContext.removeFrameworkListener(null);
     }
 
+    @Test
+    public void testGetProperty() {
+        assertNull(bundleContext.getProperty("anyProperty"));
+    }
+
 }
