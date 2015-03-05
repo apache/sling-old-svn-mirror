@@ -63,25 +63,25 @@ public class OverridingResourcePicker implements MergedResourcePicker {
         resources.add(currentTarget);
 
         while (currentTarget != null) {
-            final InheritanceRootInfo info = new InheritanceRootInfo();
-            findInheritanceRoot(currentTarget, info);
-            if (info.resource == null) {
+            final Resource inheritanceRootResource = findInheritanceRoot(currentTarget);
+            if (inheritanceRootResource == null) {
                 currentTarget = null;
             } else {
-                final Resource inheritanceRootResource = info.resource;
-                final String pathRelativeToInheritanceRoot = info.getPathRelativeToInheritanceRoot();
+                final String relPath = currentTarget.getPath()
+                        .substring(inheritanceRootResource.getPath().length());
                 final String superType = inheritanceRootResource.getResourceSuperType();
                 if (superType == null) {
                     currentTarget = null;
                 } else {
-                    final String superTypeChildPath = superType + pathRelativeToInheritanceRoot;
+                    final String superTypeChildPath = superType + relPath;
                     final Resource superTypeResource = resolver.getResource(superTypeChildPath);
                     if (superTypeResource != null) {
+                        resources.add(superTypeResource);
                         currentTarget = superTypeResource;
                     } else {
-                        currentTarget = new StubResource(resolver, superTypeChildPath);
+                        resources.add(new NonExistingResource(resolver, superTypeChildPath));
+                        currentTarget = null;
                     }
-                    resources.add(currentTarget);
                 }
             }
         }
@@ -91,32 +91,17 @@ public class OverridingResourcePicker implements MergedResourcePicker {
         return resources;
     }
 
-    private void findInheritanceRoot(final Resource target, final InheritanceRootInfo info) {
+    private Resource findInheritanceRoot(final Resource target) {
         String superType = target.getResourceSuperType();
         if (superType != null) {
-            info.resource = target;
+            return target;
         } else {
             Resource parent = target.getParent();
-            if (parent != null) {
-                info.addLevel(target.getName());
-                findInheritanceRoot(parent, info);
+            if (parent == null) {
+                return null;
+            } else {
+                return findInheritanceRoot(parent);
             }
-        }
-    }
-
-    // Using a value object here as a sort-of tuple because the original
-    // way of calculating the relative path of the current resource from the
-    // inheritance root did not deal with missing resources.
-    private class InheritanceRootInfo {
-        private Resource resource;
-        private final StringBuilder pathRelativeToInheritanceRoot = new StringBuilder();
-
-        private String getPathRelativeToInheritanceRoot() {
-            return pathRelativeToInheritanceRoot.toString();
-        }
-
-        private void addLevel(String name) {
-            pathRelativeToInheritanceRoot.insert(0, name).insert(0, '/');
         }
     }
 
