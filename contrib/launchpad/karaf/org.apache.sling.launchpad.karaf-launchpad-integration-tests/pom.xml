@@ -150,6 +150,7 @@
                 <include>**/*Test.class</include>
               </includes>
               <excludes>
+                <!--
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/post/PostServletPrivilegesUpdateTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/auth/AuthenticationResponseCodeTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/repository/OakRepositoryNameTest.*</exclude>
@@ -162,6 +163,7 @@
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/ResourceResolverProxyTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/ServletResolverConfigTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/resolution/WarSelectorServletTest.*</exclude>
+                -->
               </excludes>
               <forkMode>always</forkMode>
               <parallel>none</parallel>
