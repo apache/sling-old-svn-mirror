@@ -50,6 +50,16 @@ public class KeyValueMap<T>
     }
 
     /**
+     * Remove an item from the map
+     * @param key The key of the item.
+     * @return The previously stored value for the key or {@code null}.
+     * @since 1.1
+     */
+    public T remove(final String key) {
+        return this.properties.remove(key);
+    }
+
+    /**
      * Put all items from the other map in this map
      * @param map The other map
      */
@@ -73,5 +83,14 @@ public class KeyValueMap<T>
     @Override
     public String toString() {
         return properties.toString();
+    }
+
+    /**
+     * Get the size of the map.
+     * @return The size of the map.
+     * @since 1.1
+     */
+    public int size() {
+        return this.properties.size();
     }
 }

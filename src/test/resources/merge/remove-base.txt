@@ -1,0 +1,25 @@
+[feature name=f]
+
+[artifacts startLevel=5]
+ g/a/1.0.0
+ g/b/1.0.0
+
+[artifacts startLevel=7]
+ g/c/1.0.0
+ g/d/1.0.0
+ 
+[configurations]
+  org.sling.service.A
+    name="A"
+
+  org.sling.service.B
+    name="B"
+
+  org.sling.service.C
+    name="C"
+
+[settings]
+    key.a=a
+    key.b=b
+    key.c=c
+ 

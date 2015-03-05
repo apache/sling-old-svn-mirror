@@ -50,7 +50,62 @@ public abstract class ModelUtility {
 
             // run modes
             for(final RunMode runMode : feature.getRunModes()) {
-                final RunMode baseRunMode = baseFeature.getOrCreateRunMode(runMode.getNames());
+                // check for special remove run mode
+                String names[] = runMode.getNames();
+                if ( names != null ) {
+                    int removeIndex = -1;
+                    int index = 0;
+                    for(final String name : names) {
+                        if ( name.equals(ModelConstants.RUN_MODE_REMOVE) ) {
+                            removeIndex = index;
+                            break;
+                        }
+                        index++;
+                    }
+                    if ( removeIndex != -1 ) {
+                        String[] newNames = null;
+                        if ( names.length > 1 ) {
+                            newNames = new String[names.length - 1];
+                            index = 0;
+                            for(final String name : names) {
+                                if ( !name.equals(ModelConstants.RUN_MODE_REMOVE) ) {
+                                    newNames[index++] = name;
+                                }
+                            }
+                        }
+                        names = newNames;
+                        final RunMode baseRunMode = baseFeature.getRunMode(names);
+                        if ( baseRunMode != null ) {
+
+                            // artifact groups
+                            for(final ArtifactGroup group : runMode.getArtifactGroups()) {
+                                for(final Artifact artifact : group) {
+                                    for(final ArtifactGroup searchGroup : baseRunMode.getArtifactGroups()) {
+                                        final Artifact found = searchGroup.search(artifact);
+                                        if ( found != null ) {
+                                            searchGroup.remove(found);
+                                        }
+                                    }
+                                }
+                            }
+
+                            // configurations
+                            for(final Configuration config : runMode.getConfigurations()) {
+                                final Configuration found = baseRunMode.getConfiguration(config.getPid(), config.getFactoryPid());
+                                if ( found != null ) {
+                                    baseRunMode.getConfigurations().remove(found);
+                                }
+                            }
+
+                            // settings
+                            for(final Map.Entry<String, String> entry : runMode.getSettings() ) {
+                                baseRunMode.getSettings().remove(entry.getKey());
+                            }
+                        }
+                        continue;
+                    }
+                }
+                final RunMode baseRunMode = baseFeature.getOrCreateRunMode(names);
 
                 // artifact groups
                 for(final ArtifactGroup group : runMode.getArtifactGroups()) {
@@ -58,7 +113,7 @@ public abstract class ModelUtility {
 
                     for(final Artifact artifact : group) {
                         for(final ArtifactGroup searchGroup : baseRunMode.getArtifactGroups()) {
-                            final Artifact found = baseGroup.search(artifact);
+                            final Artifact found = searchGroup.search(artifact);
                             if ( found != null ) {
                                 searchGroup.remove(found);
                             }
