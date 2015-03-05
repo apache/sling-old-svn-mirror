@@ -1,0 +1,4 @@
+[feature name=f]
+
+[artifacts startLevel=3]
+ g/a/2.0.0

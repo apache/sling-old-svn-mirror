@@ -1,0 +1,12 @@
+[feature name=f]
+
+[artifacts runModes=:remove]
+ g/b/2.0.0
+ g/d/1.0.0
+ 
+[configurations runModes=:remove]
+  org.sling.service.B
+
+[settings runModes=:remove]
+  key.b=remove
+ 

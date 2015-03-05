@@ -256,7 +256,6 @@ public class ModelReader {
                                           if ( factoryPos == -1 ) {
                                               pid = configId;
                                               factoryPid = null;
-                                              config = new Configuration(configId, null);
                                           } else {
                                               pid = configId.substring(factoryPos + 1);
                                               factoryPid = configId.substring(0, factoryPos);
