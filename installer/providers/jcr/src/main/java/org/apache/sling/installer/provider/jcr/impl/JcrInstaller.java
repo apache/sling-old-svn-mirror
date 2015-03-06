@@ -217,7 +217,7 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
 
         /** Used for synchronizing. */
         final Object lock = new Object();
-        boolean active = true;
+        volatile boolean active = true;
 
         StoppableThread() {
             synchronized (JcrInstaller.class) {
