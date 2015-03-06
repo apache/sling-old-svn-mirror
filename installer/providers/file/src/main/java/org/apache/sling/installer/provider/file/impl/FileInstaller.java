@@ -34,6 +34,7 @@ import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.OsgiInstaller;
 import org.apache.sling.installer.api.UpdateHandler;
 import org.apache.sling.installer.api.UpdateResult;
+import org.apache.sling.settings.SlingSettingsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,11 +71,11 @@ public class FileInstaller
         return !this.scanConfigurations.isEmpty();
     }
 
-    public void start(final OsgiInstaller installer) {
+    public void start(final OsgiInstaller installer, final SlingSettingsService settings) {
         for(final ScanConfiguration config : this.scanConfigurations) {
             logger.debug("Starting monitor for {}", config.directory);
             this.monitors.add(new FileMonitor(new File(config.directory),
-                    config.scanInterval, new Installer(installer, hash(config.directory))));
+                    config.scanInterval, new Installer(installer, settings, config.directory, hash(config.directory))));
         }
     }
 
