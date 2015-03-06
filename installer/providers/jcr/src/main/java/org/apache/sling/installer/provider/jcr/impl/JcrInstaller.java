@@ -214,7 +214,11 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
     /** Thread that can be cleanly stopped with a flag */
     static int bgThreadCounter;
     class StoppableThread extends Thread {
+
+        /** Used for synchronizing. */
+        final Object lock = new Object();
         boolean active = true;
+
         StoppableThread() {
             synchronized (JcrInstaller.class) {
                 setName("JcrInstaller." + (++bgThreadCounter));
@@ -390,16 +394,14 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
     private void stop() {
     	logger.info("Deactivating Apache Sling JCR Installer");
 
-    	final long timeout = 30000L;
-        backgroundThread.active = false;
-        logger.debug("Waiting for " + backgroundThread.getName() + " Thread to end...");
-        backgroundThread.interrupt();
-    	try {
-            backgroundThread.join(timeout);
-    	} catch(InterruptedException iex) {
-    	    // ignore this as we want to shutdown
+    	if ( backgroundThread != null ) {
+    	    synchronized ( backgroundThread.lock ) {
+    	        backgroundThread.active = false;
+    	        backgroundThread.lock.notify();
+    	    }
+            logger.debug("Waiting for " + backgroundThread.getName() + " Thread to end...");
+            backgroundThread = null;
     	}
-        backgroundThread = null;
 
         folderNameFilter = null;
         watchedFolders = null;
@@ -670,10 +672,12 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
             logger.warn("Exception in runOneCycle()", e);
         }
 
-        try {
-            Thread.sleep(RUN_LOOP_DELAY_MSEC);
-        } catch (final InterruptedException ignore) {
-            // ignore
+        synchronized ( backgroundThread.lock ) {
+            try {
+                backgroundThread.lock.wait(RUN_LOOP_DELAY_MSEC);
+            } catch (final InterruptedException ignore) {
+                Thread.currentThread().interrupt();
+            }
         }
         counters[RUN_LOOP_COUNTER]++;
     }
