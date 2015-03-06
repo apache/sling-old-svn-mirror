@@ -22,4 +22,14 @@
     key.a=a
     key.b=b
     key.c=c
+
+[configurations runModes=myrunmode]
+  org.sling.service.runmode.A
+    name="A"
+
+  org.sling.service.runmode.B
+    name="B"
+
+  org.sling.service.runmode.C
+    name="C"
  
