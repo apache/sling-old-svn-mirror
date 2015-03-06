@@ -9,4 +9,6 @@
 
 [settings runModes=:remove]
   key.b=remove
- 
+
+[configurations runModes=:remove,myrunmode]
+  org.sling.service.runmode.B
