@@ -23,7 +23,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -39,9 +38,6 @@ import org.apache.sling.jcr.contentloader.ContentImporter;
 import org.apache.sling.jcr.contentloader.ImportOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static javax.jcr.ImportUUIDBehavior.IMPORT_UUID_COLLISION_REPLACE_EXISTING;
-import static javax.jcr.ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW;
 
 /**
  * The <code>DefaultContentImporter</code> is the default implementation of the ContentImporter service providing the following functionality:
@@ -73,7 +69,7 @@ public class DefaultContentImporter extends BaseImportLoader implements JcrConte
         // special treatment for system view imports
         if (name.endsWith(EXT_JCR_XML)) {
             boolean replace = (importOptions == null) ? false : importOptions.isOverwrite();
-            final Node node = importSystemView(parent, name, contentStream, replace);
+            final Node node = importJcrXml(parent, name, contentStream, replace);
             if (node != null) {
                 if (importListener != null) {
                     importListener.onCreate(node.getPath());

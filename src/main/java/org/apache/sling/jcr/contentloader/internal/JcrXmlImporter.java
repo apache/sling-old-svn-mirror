@@ -20,7 +20,6 @@ package org.apache.sling.jcr.contentloader.internal;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 
 import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.Node;
@@ -33,13 +32,13 @@ import org.slf4j.LoggerFactory;
 import static javax.jcr.ImportUUIDBehavior.IMPORT_UUID_COLLISION_REPLACE_EXISTING;
 import static javax.jcr.ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW;
 
-public class SystemViewImporter {
+public class JcrXmlImporter {
 
     public static final String EXT_JCR_XML = ".jcr.xml";
 
-    private final Logger logger = LoggerFactory.getLogger(SystemViewImporter.class);
+    private final Logger logger = LoggerFactory.getLogger(JcrXmlImporter.class);
 
-    public SystemViewImporter() {
+    public JcrXmlImporter() {
     }
 
     /**
@@ -55,7 +54,7 @@ public class SystemViewImporter {
      * @return <code>true</code> if the import succeeds, <code>false</code> if the import fails due to XML format errors.
      * @throws IOException If an IO error occurrs reading the XML file.
      */
-    protected Node importSystemView(Node parent, String name, InputStream contentStream, boolean replace) throws IOException {
+    protected Node importJcrXml(Node parent, String name, InputStream contentStream, boolean replace) throws IOException {
         InputStream ins = null;
         try {
             final String nodeName = (name.endsWith(EXT_JCR_XML)) ? name.substring(0, name.length() - EXT_JCR_XML.length()) : name;
@@ -69,10 +68,10 @@ public class SystemViewImporter {
             if (parent.hasNode(nodeName)) {
                 Node existingNode = parent.getNode(nodeName);
                 if (replace) {
-                    logger.debug("importSystemView: Removing existing node at {}", nodeName);
+                    logger.debug("importJcrXml: Removing existing node at {}", nodeName);
                     existingNode.remove();
                 } else {
-                    logger.debug("importSystemView: Node {} for XML already exists, nothing to to", nodeName);
+                    logger.debug("importJcrXml: Node {} for XML already exists, nothing to to", nodeName);
                     return existingNode;
                 }
             }
@@ -92,11 +91,11 @@ public class SystemViewImporter {
             return (parent.hasNode(nodeName)) ? parent.getNode(nodeName) : null;
         } catch (InvalidSerializedDataException isde) {
             // the xml might not be System or Document View export, fall back to old-style XML reading
-            logger.info("importSystemView: XML does not seem to be system view export; cause: {}", isde.toString());
+            logger.info("importJcrXml: XML does not seem to be system or document view; cause: {}", isde.toString());
             return null;
         } catch (RepositoryException re) {
             // any other repository related issue...
-            logger.info("importSystemView: Repository issue loading XML; cause: {}", re.toString());
+            logger.info("importJcrXml: Repository issue loading XML; cause: {}", re.toString());
             return null;
         } finally {
             if (ins != null) {
