@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.Item;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
@@ -45,8 +44,6 @@ import javax.jcr.Session;
 import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static javax.jcr.ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW;
 
 /**
  * The <code>Loader</code> loads initial content from the bundle.
@@ -466,7 +463,7 @@ public class Loader extends BaseImportLoader {
             // special treatment for system view imports
             if (resourcePath.endsWith(EXT_JCR_XML)) {
                 final InputStream contentStream = resourceUrl.openStream();
-                return importSystemView(parent, name, contentStream, false);
+                return importJcrXml(parent, name, contentStream, false);
             }
 
             // get the node reader for this resource
