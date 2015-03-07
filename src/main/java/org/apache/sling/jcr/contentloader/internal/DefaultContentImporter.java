@@ -81,8 +81,8 @@ public class DefaultContentImporter extends BaseImportLoader implements ContentH
         DefaultContentCreator contentCreator = new DefaultContentCreator(this);
         List<String> createdPaths = new ArrayList<String>();
         contentCreator.init(importOptions, this.defaultImportProviders, createdPaths, importListener);
-
-        contentCreator.prepareParsing(parent, toPlainName(contentCreator, name));
+        final String providerExtension = contentCreator.getImportProviderExtension(name);
+        contentCreator.prepareParsing(parent, toPlainName(name, providerExtension));
 
         final ImportProvider ip = contentCreator.getImportProvider(name);
         ContentReader reader = ip.getReader();
@@ -99,17 +99,6 @@ public class DefaultContentImporter extends BaseImportLoader implements ContentH
                 importListener.onCheckin(versionable.getPath());
             }
         }
-    }
-
-    private String toPlainName(DefaultContentCreator contentCreator, String name) {
-        final String providerExt = contentCreator.getImportProviderExtension(name);
-        if (providerExt != null) {
-            if (name.length() == providerExt.length()) {
-                return null; // no name is provided
-            }
-            return name.substring(0, name.length() - providerExt.length());
-        }
-        return name;
     }
 
     // ---------- ContentHelper implementation ---------------------------------------------

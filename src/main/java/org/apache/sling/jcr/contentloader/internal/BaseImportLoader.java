@@ -51,4 +51,15 @@ public abstract class BaseImportLoader extends JcrXmlImporter {
     public void dispose() {
         defaultImportProviders = null;
     }
+
+    protected String toPlainName(String name, String providerExtension) {
+        if (providerExtension != null) {
+            if (name.length() == providerExtension.length()) {
+                return null; // no name is provided
+            }
+            return name.substring(0, name.length() - providerExtension.length());
+        }
+        return name;
+    }
+
 }
