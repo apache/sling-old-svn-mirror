@@ -55,7 +55,6 @@ public class JcrXmlImporter {
      * @throws IOException If an IO error occurrs reading the XML file.
      */
     protected Node importJcrXml(Node parent, String name, InputStream contentStream, boolean replace) throws IOException {
-        InputStream ins = null;
         try {
             final String nodeName = (name.endsWith(EXT_JCR_XML)) ? name.substring(0, name.length() - EXT_JCR_XML.length()) : name;
 
@@ -83,9 +82,8 @@ public class JcrXmlImporter {
                 uuidBehavior = IMPORT_UUID_CREATE_NEW;
             }
 
-            ins = contentStream;
             Session session = parent.getSession();
-            session.importXML(parent.getPath(), ins, uuidBehavior);
+            session.importXML(parent.getPath(), contentStream, uuidBehavior);
 
             // additionally check whether the expected child node exists
             return (parent.hasNode(nodeName)) ? parent.getNode(nodeName) : null;
@@ -97,14 +95,6 @@ public class JcrXmlImporter {
             // any other repository related issue...
             logger.info("importJcrXml: Repository issue loading XML; cause: {}", re.toString());
             return null;
-        } finally {
-            if (ins != null) {
-                try {
-                    ins.close();
-                } catch (IOException ignore) {
-                    // ignore
-                }
-            }
         }
     }
 
