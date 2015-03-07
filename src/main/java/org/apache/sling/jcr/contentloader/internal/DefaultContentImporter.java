@@ -35,6 +35,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.contentloader.ContentImportListener;
 import org.apache.sling.jcr.contentloader.ContentImporter;
+import org.apache.sling.jcr.contentloader.ContentTypeUtil;
 import org.apache.sling.jcr.contentloader.ImportOptions;
 import org.osgi.framework.Constants;
 import org.slf4j.Logger;
@@ -60,40 +61,61 @@ import org.slf4j.LoggerFactory;
 })
 public class DefaultContentImporter extends BaseImportLoader implements ContentHelper, ContentImporter {
 
-    private final Logger log = LoggerFactory.getLogger(DefaultContentImporter.class);
-
     /**
      * The MimeTypeService used by the initial content initialContentLoader to resolve MIME types for files to be installed.
      */
     @Reference
     private MimeTypeService mimeTypeService;
 
+    private final Logger logger = LoggerFactory.getLogger(DefaultContentImporter.class);
+
+    public DefaultContentImporter() {
+    }
+
     /* (non-Javadoc)
      * @see org.apache.sling.jcr.contentloader.ContentImporter#importContent(javax.jcr.Node, java.lang.String, java.io.InputStream, org.apache.sling.jcr.contentloader.ImportOptions, org.apache.sling.jcr.contentloader.ContentImportListener)
-	 */
-    public void importContent(Node parent, String name, InputStream contentStream, ImportOptions importOptions, ContentImportListener importListener) throws RepositoryException, IOException {
+     */
+    public void importContent(Node parent, String filename, InputStream contentStream, ImportOptions importOptions, ContentImportListener importListener) throws RepositoryException, IOException {
 
         // special treatment for system view imports
-        if (name.endsWith(EXT_JCR_XML)) {
-            boolean replace = (importOptions == null) ? false : importOptions.isOverwrite();
-            final Node node = importJcrXml(parent, name, contentStream, replace);
-            if (node != null) {
-                if (importListener != null) {
-                    importListener.onCreate(node.getPath());
-                }
-            }
+        if (filename.endsWith(EXT_JCR_XML)) {
+            importJcrXml(parent, filename, contentStream, importOptions, importListener);
             return;
         }
 
-        DefaultContentCreator contentCreator = new DefaultContentCreator(this);
+        final DefaultContentCreator contentCreator = new DefaultContentCreator(this);
+
+        final String providerExtension = contentCreator.getImportProviderExtension(filename);
+        final String name = toPlainName(filename, providerExtension);
+
+        final ImportProvider importProvider = contentCreator.getImportProvider(filename);
+        final ContentReader contentReader = importProvider.getReader();
+
+        importContent(contentCreator, contentReader, parent, name, contentStream, importOptions, importListener);
+    }
+
+    public void importContent(final Node parent, final String name, final String contentType, final InputStream contentStream, final ImportOptions importOptions, final ContentImportListener importListener) throws RepositoryException, IOException {
+
+        // special treatment for system view imports
+        if (ContentTypeUtil.TYPE_JCR_XML.equalsIgnoreCase(contentType)) {
+            importJcrXml(parent, name, contentStream, importOptions, importListener);
+            return;
+        }
+
+        final DefaultContentCreator contentCreator = new DefaultContentCreator(this);
+
+        final String extension = ContentTypeUtil.getDefaultExtension(contentType);
+        final ImportProvider importProvider = contentCreator.getImportProvider(extension);
+        final ContentReader contentReader = importProvider.getReader();
+
+        importContent(contentCreator, contentReader, parent, name, contentStream, importOptions, importListener);
+    }
+
+    private void importContent(final DefaultContentCreator contentCreator, final ContentReader contentReader, final Node parent, final String name, final InputStream contentStream, final ImportOptions importOptions, final ContentImportListener importListener) throws RepositoryException, IOException {
         List<String> createdPaths = new ArrayList<String>();
         contentCreator.init(importOptions, this.defaultImportProviders, createdPaths, importListener);
-        final String providerExtension = contentCreator.getImportProviderExtension(name);
-        contentCreator.prepareParsing(parent, toPlainName(name, providerExtension));
-
-        final ImportProvider ip = contentCreator.getImportProvider(name);
-        ContentReader reader = ip.getReader();
-        reader.parse(contentStream, contentCreator);
+        contentCreator.prepareParsing(parent, name);
+        contentReader.parse(contentStream, contentCreator);
 
         // save changes
         Session session = parent.getSession();
@@ -104,6 +126,17 @@ public class DefaultContentImporter extends BaseImportLoader implements ContentH
             versionable.checkin();
             if (importListener != null) {
                 importListener.onCheckin(versionable.getPath());
+            }
+        }
+    }
+
+    private void importJcrXml(final Node parent, final String name, final InputStream contentStream, final ImportOptions importOptions, final ContentImportListener importListener) throws IOException, RepositoryException {
+        logger.debug("import JCR XML: '{}'", name);
+        boolean replace = (importOptions == null) ? false : importOptions.isOverwrite();
+        final Node node = importJcrXml(parent, name, contentStream, replace);
+        if (node != null) {
+            if (importListener != null) {
+                importListener.onCreate(node.getPath());
             }
         }
     }
