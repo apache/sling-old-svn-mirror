@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
     @Property(name = "service.description", value = "Apache Sling JCR Content Import Service")
 })
 @Service(ContentImporter.class)
-public class DefaultContentImporter extends BaseImportLoader implements JcrContentHelper, ContentImporter {
+public class DefaultContentImporter extends BaseImportLoader implements ContentHelper, ContentImporter {
 
     private final Logger log = LoggerFactory.getLogger(DefaultContentImporter.class);
 

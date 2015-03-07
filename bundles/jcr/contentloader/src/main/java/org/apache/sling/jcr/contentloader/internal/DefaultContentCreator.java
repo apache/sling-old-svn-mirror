@@ -101,7 +101,7 @@ public class DefaultContentCreator implements ContentCreator {
     /**
      * Helper class to get the mime type of a file.
      */
-    private final JcrContentHelper jcrContentHelper;
+    private final ContentHelper contentHelper;
 
     /**
      * List of active import providers mapped by extension.
@@ -131,10 +131,10 @@ public class DefaultContentCreator implements ContentCreator {
     /**
      * Constructor.
      *
-     * @param jcrContentHelper Helper class to get the mime type of a file
+     * @param contentHelper Helper class to get the mime type of a file
      */
-    public DefaultContentCreator(JcrContentHelper jcrContentHelper) {
-        this.jcrContentHelper = jcrContentHelper;
+    public DefaultContentCreator(ContentHelper contentHelper) {
+        this.contentHelper = contentHelper;
     }
 
     /**
@@ -711,7 +711,7 @@ public class DefaultContentCreator implements ContentCreator {
 
         // ensure content type
         if (mimeType == null) {
-            mimeType = jcrContentHelper.getMimeType(name);
+            mimeType = contentHelper.getMimeType(name);
             if (mimeType == null) {
                 log.info("createFile: Cannot find content type for {}, using {}", name, DEFAULT_CONTENT_TYPE);
                 mimeType = DEFAULT_CONTENT_TYPE;

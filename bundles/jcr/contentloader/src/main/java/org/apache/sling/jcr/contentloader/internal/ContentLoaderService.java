@@ -58,7 +58,7 @@ import org.slf4j.LoggerFactory;
     @Property(name="service.vendor", value="The Apache Software Foundation"),
     @Property(name="service.description", value="Apache Sling Content Loader Implementation")
 })
-public class ContentLoaderService implements SynchronousBundleListener, JcrContentHelper {
+public class ContentLoaderService implements SynchronousBundleListener, ContentHelper {
 
     public static final String PROPERTY_CONTENT_LOADED = "content-loaded";
     public static final String PROPERTY_CONTENT_LOADED_AT = "content-load-time";
