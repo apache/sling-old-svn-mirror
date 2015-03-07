@@ -31,10 +31,9 @@ import org.slf4j.LoggerFactory;
 
 import static javax.jcr.ImportUUIDBehavior.IMPORT_UUID_COLLISION_REPLACE_EXISTING;
 import static javax.jcr.ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW;
+import static org.apache.sling.jcr.contentloader.ContentTypeUtil.EXT_JCR_XML;
 
 public class JcrXmlImporter {
-
-    public static final String EXT_JCR_XML = ".jcr.xml";
 
     private final Logger logger = LoggerFactory.getLogger(JcrXmlImporter.class);
 

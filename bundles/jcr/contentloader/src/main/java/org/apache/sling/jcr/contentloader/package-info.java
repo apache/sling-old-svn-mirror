@@ -18,9 +18,8 @@
  */
 
 @Export(optional = "provide:=true")
-@Version("0.1")
+@Version("1.0.0")
 package org.apache.sling.jcr.contentloader;
 
 import aQute.bnd.annotation.Export;
 import aQute.bnd.annotation.Version;
-
