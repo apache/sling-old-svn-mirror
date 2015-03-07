@@ -465,7 +465,8 @@ public class Loader extends BaseImportLoader {
         try {
             // special treatment for system view imports
             if (resourcePath.endsWith(EXT_JCR_XML)) {
-                return importSystemView(parent, name, resourceUrl);
+                final InputStream contentStream = resourceUrl.openStream();
+                return importSystemView(parent, name, contentStream, false);
             }
 
             // get the node reader for this resource
