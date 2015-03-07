@@ -49,8 +49,7 @@ import org.slf4j.LoggerFactory;
  * The <code>ContentLoaderService</code> is the service
  * providing the following functionality:
  * <ul>
- * <li>Bundle listener to load initial content.
- * <li>Fires OSGi EventAdmin events on behalf of internal helper objects
+ * <li>Bundle listener to load and unload initial content.
  * </ul>
  *
  */
