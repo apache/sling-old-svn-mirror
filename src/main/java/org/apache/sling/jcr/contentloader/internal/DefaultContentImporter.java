@@ -36,6 +36,7 @@ import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.contentloader.ContentImportListener;
 import org.apache.sling.jcr.contentloader.ContentImporter;
 import org.apache.sling.jcr.contentloader.ImportOptions;
+import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,11 +47,17 @@ import org.slf4j.LoggerFactory;
  * </ul>
  */
 @Component
-@Properties({
-    @Property(name = "service.vendor", value = "The Apache Software Foundation"),
-    @Property(name = "service.description", value = "Apache Sling JCR Content Import Service")
-})
 @Service(ContentImporter.class)
+@Properties({
+    @Property(
+        name = Constants.SERVICE_VENDOR,
+        value = "The Apache Software Foundation"
+    ),
+    @Property(
+        name = Constants.SERVICE_DESCRIPTION,
+        value = "Apache Sling JCR Content Import Service"
+    )
+})
 public class DefaultContentImporter extends BaseImportLoader implements ContentHelper, ContentImporter {
 
     private final Logger log = LoggerFactory.getLogger(DefaultContentImporter.class);
