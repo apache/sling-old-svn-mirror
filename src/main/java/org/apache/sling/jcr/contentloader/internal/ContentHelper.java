@@ -23,7 +23,7 @@ package org.apache.sling.jcr.contentloader.internal;
  * Interface to provide helpers for the ContentCreator
  *
  */
-public interface JcrContentHelper {
+public interface ContentHelper {
 
 	/**
 	 * Returns the MIME type from the MimeTypeService for the given name
