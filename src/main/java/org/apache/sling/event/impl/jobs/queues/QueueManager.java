@@ -229,9 +229,12 @@ public class QueueManager
                 }
                 // this is just a sanity check, actually we always have a queue instance here
                 if ( queue != null ) {
-                    queues.put(queueInfo.queueName, queue);
-                    ((QueuesMBeanImpl)queuesMBean).sendEvent(new QueueStatusEvent(queue, null));
-                    queue.start();
+                    // on startup the queue might be empty and we can simply discard it
+                    if ( !queue.canBeClosed() ) {
+                        queues.put(queueInfo.queueName, queue);
+                        ((QueuesMBeanImpl)queuesMBean).sendEvent(new QueueStatusEvent(queue, null));
+                        queue.start();
+                    }
                 } else {
                     // we log anyway
                     logger.error("Unable to create new queue: unknown queue type {}", config);

@@ -107,6 +107,21 @@ public class QueueJobCache {
     }
 
     /**
+     * Fill the cache
+     */
+    public void fillCache() {
+        synchronized ( this.cache ) {
+            if ( this.cache.isEmpty() ) {
+                final Set<String> checkingTopics = new HashSet<String>();
+                checkingTopics.addAll(this.topics);
+                if ( !checkingTopics.isEmpty() ) {
+                    this.loadJobs(checkingTopics);
+                }
+            }
+        }
+    }
+
+    /**
      * Get the next job.
      * This method is not called concurrently, however
      * {@link #reschedule(JobHandler)} and {@link #handleNewTopics(Set)}
