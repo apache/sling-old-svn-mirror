@@ -41,6 +41,7 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.commons.io.IOUtils;
 import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -459,10 +460,11 @@ public class Loader extends BaseImportLoader {
     private Node createNode(Node parent, String name, URL resourceUrl, final DefaultContentCreator contentCreator) throws RepositoryException {
 
         final String resourcePath = resourceUrl.getPath().toLowerCase();
+        InputStream contentStream = null;
         try {
             // special treatment for system view imports
             if (resourcePath.endsWith(EXT_JCR_XML)) {
-                final InputStream contentStream = resourceUrl.openStream();
+                contentStream = resourceUrl.openStream();
                 return importJcrXml(parent, name, contentStream, false);
             }
 
@@ -486,6 +488,8 @@ public class Loader extends BaseImportLoader {
             throw re;
         } catch (Throwable t) {
             throw new RepositoryException(t.getMessage(), t);
+        } finally {
+            IOUtils.closeQuietly(contentStream);
         }
     }
 
