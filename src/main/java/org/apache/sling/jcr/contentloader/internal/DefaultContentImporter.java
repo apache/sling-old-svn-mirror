@@ -112,10 +112,10 @@ public class DefaultContentImporter extends BaseImportLoader implements ContentH
         return name;
     }
 
-    // ---------- JcrContentHelper implementation ---------------------------------------------
+    // ---------- ContentHelper implementation ---------------------------------------------
 
     /* (non-Javadoc)
-     * @see org.apache.sling.jcr.contentloader.internal.JcrContentHelper#getMimeType(java.lang.String)
+     * @see org.apache.sling.jcr.contentloader.internal.ContentHelper#getMimeType(java.lang.String)
      */
     public String getMimeType(String name) {
         // local copy to not get NPE despite check for null due to concurrent unbind
