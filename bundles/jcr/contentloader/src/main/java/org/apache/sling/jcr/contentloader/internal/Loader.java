@@ -480,7 +480,8 @@ public class Loader extends BaseImportLoader {
                 return null;
             }
 
-            contentCreator.prepareParsing(parent, toPlainName(name, contentCreator));
+            final String providerExtension = contentCreator.getImportProviderExtension(name);
+            contentCreator.prepareParsing(parent, toPlainName(name, providerExtension));
             nodeReader.parse(resourceUrl, contentCreator);
 
             return contentCreator.getCreatedRootNode();
@@ -734,15 +735,6 @@ public class Loader extends BaseImportLoader {
         } catch (Throwable t) {
             throw new RepositoryException(t.getMessage(), t);
         }
-    }
-
-    private String toPlainName(final String name, final DefaultContentCreator contentCreator) {
-
-        final String providerExt = contentCreator.getImportProviderExtension(name);
-        if (providerExt != null) {
-            return name.substring(0, name.length() - providerExt.length());
-        }
-        return name;
     }
 
     private Session createSession(String workspace) throws RepositoryException {
