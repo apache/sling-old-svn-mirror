@@ -35,6 +35,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.contentloader.ContentImportListener;
 import org.apache.sling.jcr.contentloader.ContentImporter;
+import org.apache.sling.jcr.contentloader.ContentReader;
 import org.apache.sling.jcr.contentloader.ContentTypeUtil;
 import org.apache.sling.jcr.contentloader.ImportOptions;
 import org.osgi.framework.Constants;

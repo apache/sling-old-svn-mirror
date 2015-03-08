@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.contentloader.internal;
+package org.apache.sling.jcr.contentloader;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,10 +24,13 @@ import java.net.URL;
 
 import javax.jcr.RepositoryException;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * The <code>ContentReader</code>
- * A content reader is provided by an {@link ImportProvider}.
+ * A content reader is provided by an {@link org.apache.sling.jcr.contentloader.internal.ImportProvider}.
  */
+@ConsumerType
 public interface ContentReader {
 
     /**
@@ -45,5 +48,5 @@ public interface ContentReader {
      * @throws IOException
      */
     void parse(InputStream ins, ContentCreator contentCreator) throws IOException, RepositoryException;
-    
+
 }

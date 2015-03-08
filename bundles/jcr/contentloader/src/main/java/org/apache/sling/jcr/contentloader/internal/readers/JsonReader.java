@@ -34,8 +34,8 @@ import javax.jcr.RepositoryException;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.jcr.contentloader.internal.ContentCreator;
-import org.apache.sling.jcr.contentloader.internal.ContentReader;
+import org.apache.sling.jcr.contentloader.ContentCreator;
+import org.apache.sling.jcr.contentloader.ContentReader;
 import org.apache.sling.jcr.contentloader.internal.ImportProvider;
 
 /**
@@ -130,7 +130,7 @@ public class JsonReader implements ContentReader {
     };
 
     /**
-     * @see org.apache.sling.jcr.contentloader.internal.ContentReader#parse(java.net.URL, org.apache.sling.jcr.contentloader.internal.ContentCreator)
+     * @see org.apache.sling.jcr.contentloader.ContentReader#parse(java.net.URL, org.apache.sling.jcr.contentloader.ContentCreator)
      */
     public void parse(java.net.URL url, ContentCreator contentCreator)
     throws IOException, RepositoryException {

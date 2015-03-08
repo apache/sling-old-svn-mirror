@@ -16,18 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.contentloader.internal;
+package org.apache.sling.jcr.contentloader;
 
 import java.io.InputStream;
 import java.util.Map;
 
 import javax.jcr.RepositoryException;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
- * The <code>ContentCreator</code> is used by the {@link ContentReader} to create the actual content.
+ * The <code>ContentCreator</code> is used by the {@link org.apache.sling.jcr.contentloader.ContentReader} to create the actual content.
  *
  * @since 2.0.4
  */
+@ProviderType
 public interface ContentCreator {
 
     /**
