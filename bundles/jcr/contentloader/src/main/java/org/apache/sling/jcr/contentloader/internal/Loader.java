@@ -56,14 +56,14 @@ public class Loader extends BaseImportLoader {
 
     private final Logger log = LoggerFactory.getLogger(Loader.class);
 
-    private ContentLoaderService contentLoaderService;
+    private BundleHelper bundleHelper;
 
     // bundles whose registration failed and should be retried
     private List<Bundle> delayedBundles;
 
-    public Loader(ContentLoaderService contentLoaderService) {
+    public Loader(BundleHelper bundleHelper) {
         super();
-        this.contentLoaderService = contentLoaderService;
+        this.bundleHelper = bundleHelper;
         this.delayedBundles = new LinkedList<Bundle>();
     }
 
@@ -72,7 +72,7 @@ public class Loader extends BaseImportLoader {
             delayedBundles.clear();
             delayedBundles = null;
         }
-        contentLoaderService = null;
+        bundleHelper = null;
         super.dispose();
     }
 
@@ -120,10 +120,10 @@ public class Loader extends BaseImportLoader {
         }
 
         try {
-            contentLoaderService.createRepositoryPath(metadataSession, ContentLoaderService.BUNDLE_CONTENT_NODE);
+            bundleHelper.createRepositoryPath(metadataSession, ContentLoaderService.BUNDLE_CONTENT_NODE);
 
             // check if the content has already been loaded
-            final Map<String, Object> bundleContentInfo = contentLoaderService.getBundleContentInfo(metadataSession, bundle, true);
+            final Map<String, Object> bundleContentInfo = bundleHelper.getBundleContentInfo(metadataSession, bundle, true);
 
             // if we don't get an info, someone else is currently loading
             if (bundleContentInfo == null) {
@@ -155,7 +155,7 @@ public class Loader extends BaseImportLoader {
                 success = true;
                 return true;
             } finally {
-                contentLoaderService.unlockBundleContentInfo(metadataSession, bundle, success, createdNodes);
+                bundleHelper.unlockBundleContentInfo(metadataSession, bundle, success, createdNodes);
             }
 
         } catch (RepositoryException re) {
@@ -179,9 +179,9 @@ public class Loader extends BaseImportLoader {
             delayedBundles.remove(bundle);
         } else {
             try {
-                contentLoaderService.createRepositoryPath(session, ContentLoaderService.BUNDLE_CONTENT_NODE);
+                bundleHelper.createRepositoryPath(session, ContentLoaderService.BUNDLE_CONTENT_NODE);
 
-                final Map<String, Object> bundleContentInfo = contentLoaderService.getBundleContentInfo(session, bundle, false);
+                final Map<String, Object> bundleContentInfo = bundleHelper.getBundleContentInfo(session, bundle, false);
 
                 // if we don't get an info, someone else is currently loading or unloading
                 // or the bundle is already uninstalled
@@ -191,9 +191,9 @@ public class Loader extends BaseImportLoader {
 
                 try {
                     uninstallContent(session, bundle, (String[]) bundleContentInfo.get(ContentLoaderService.PROPERTY_UNINSTALL_PATHS));
-                    contentLoaderService.contentIsUninstalled(session, bundle);
+                    bundleHelper.contentIsUninstalled(session, bundle);
                 } finally {
-                    contentLoaderService.unlockBundleContentInfo(session, bundle, false, null);
+                    bundleHelper.unlockBundleContentInfo(session, bundle, false, null);
                 }
             } catch (RepositoryException re) {
                 log.error("Cannot remove initial content for bundle " + bundle.getSymbolicName() + " : " + re.getMessage(), re);
@@ -214,7 +214,7 @@ public class Loader extends BaseImportLoader {
         final Map<String, Session> createdSessions = new HashMap<String, Session>();
 
         log.debug("Installing initial content from bundle {}", bundle.getSymbolicName());
-        final DefaultContentCreator contentCreator = new DefaultContentCreator(this.contentLoaderService);
+        final DefaultContentCreator contentCreator = new DefaultContentCreator(this.bundleHelper);
         try {
             while (pathIter.hasNext()) {
                 final PathEntry pathEntry = pathIter.next();
@@ -740,12 +740,12 @@ public class Loader extends BaseImportLoader {
 
     private Session createSession(String workspace) throws RepositoryException {
         try {
-            return contentLoaderService.getRepository().loginAdministrative(workspace);
+            return bundleHelper.getSession(workspace);
         } catch (NoSuchWorkspaceException e) {
-            Session temp = contentLoaderService.getRepository().loginAdministrative(null);
+            Session temp = bundleHelper.getSession();
             temp.getWorkspace().createWorkspace(workspace);
             temp.logout();
-            return contentLoaderService.getRepository().loginAdministrative(workspace);
+            return bundleHelper.getSession(workspace);
         }
     }
 

@@ -58,7 +58,7 @@ import org.slf4j.LoggerFactory;
     @Property(name="service.vendor", value="The Apache Software Foundation"),
     @Property(name="service.description", value="Apache Sling Content Loader Implementation")
 })
-public class ContentLoaderService implements SynchronousBundleListener, ContentHelper {
+public class ContentLoaderService implements SynchronousBundleListener, BundleHelper {
 
     public static final String PROPERTY_CONTENT_LOADED = "content-loaded";
     public static final String PROPERTY_CONTENT_LOADED_AT = "content-load-time";
@@ -178,7 +178,7 @@ public class ContentLoaderService implements SynchronousBundleListener, ContentH
         return (mts != null) ? mts.getMimeType(name) : null;
     }
 
-    protected void createRepositoryPath(final Session writerSession, final String repositoryPath)
+    public void createRepositoryPath(final Session writerSession, final String repositoryPath)
     throws RepositoryException {
         if ( !writerSession.itemExists(repositoryPath) ) {
             Node node = writerSession.getRootNode();
@@ -278,9 +278,16 @@ public class ContentLoaderService implements SynchronousBundleListener, ContentH
     /**
      * Returns an administrative session to the default workspace.
      */
-    private Session getSession()
+    public Session getSession()
     throws RepositoryException {
         return getRepository().loginAdministrative(null);
+    }
+
+    /**
+     * Returns an administrative session for the named workspace.
+     */
+    public Session getSession(final String workspace) throws RepositoryException {
+        return getRepository().loginAdministrative(workspace);
     }
 
     /**
