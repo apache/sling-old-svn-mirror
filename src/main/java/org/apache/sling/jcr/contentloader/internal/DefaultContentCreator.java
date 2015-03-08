@@ -53,6 +53,7 @@ import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
+import org.apache.sling.jcr.contentloader.ContentCreator;
 import org.apache.sling.jcr.contentloader.ContentImportListener;
 import org.apache.sling.jcr.contentloader.ImportOptions;
 import org.slf4j.Logger;
@@ -249,7 +250,7 @@ public class DefaultContentCreator implements ContentCreator {
     }
 
     /**
-     * @see org.apache.sling.jcr.contentloader.internal.ContentCreator#createNode(java.lang.String, java.lang.String, java.lang.String[])
+     * @see org.apache.sling.jcr.contentloader.ContentCreator#createNode(java.lang.String, java.lang.String, java.lang.String[])
      */
     public void createNode(String name, String primaryNodeType, String[] mixinNodeTypes) throws RepositoryException {
         final Node parentNode = this.parentNodeStack.peek();
@@ -315,7 +316,7 @@ public class DefaultContentCreator implements ContentCreator {
     }
 
     /**
-     * @see org.apache.sling.jcr.contentloader.internal.ContentCreator#createProperty(java.lang.String, int, java.lang.String)
+     * @see org.apache.sling.jcr.contentloader.ContentCreator#createProperty(java.lang.String, int, java.lang.String)
      */
     public void createProperty(String name, int propertyType, String value) throws RepositoryException {
         final Node node = this.parentNodeStack.peek();
@@ -369,7 +370,7 @@ public class DefaultContentCreator implements ContentCreator {
     }
 
     /**
-     * @see org.apache.sling.jcr.contentloader.internal.ContentCreator#createProperty(java.lang.String, int, java.lang.String[])
+     * @see org.apache.sling.jcr.contentloader.ContentCreator#createProperty(java.lang.String, int, java.lang.String[])
      */
     public void createProperty(String name, int propertyType, String[] values) throws RepositoryException {
         final Node node = this.parentNodeStack.peek();
@@ -452,21 +453,21 @@ public class DefaultContentCreator implements ContentCreator {
     }
 
     /**
-     * @see org.apache.sling.jcr.contentloader.internal.ContentCreator#createProperty(java.lang.String, java.lang.Object)
+     * @see org.apache.sling.jcr.contentloader.ContentCreator#createProperty(java.lang.String, java.lang.Object)
      */
     public void createProperty(String name, Object value) throws RepositoryException {
         createProperty(name, value, false);
     }
 
     /**
-     * @see org.apache.sling.jcr.contentloader.internal.ContentCreator#createProperty(java.lang.String, java.lang.Object[])
+     * @see org.apache.sling.jcr.contentloader.ContentCreator#createProperty(java.lang.String, java.lang.Object[])
      */
     public void createProperty(String name, Object[] values) throws RepositoryException {
         createProperty(name, values, false);
     }
 
     /**
-     * @see org.apache.sling.jcr.contentloader.internal.ContentCreator#finishNode()
+     * @see org.apache.sling.jcr.contentloader.ContentCreator#finishNode()
      */
     public void finishNode() throws RepositoryException {
         final Node node = this.parentNodeStack.pop();
@@ -684,7 +685,7 @@ public class DefaultContentCreator implements ContentCreator {
     }
 
     /**
-     * @see org.apache.sling.jcr.contentloader.internal.ContentCreator#createFileAndResourceNode(java.lang.String, java.io.InputStream, java.lang.String, long)
+     * @see org.apache.sling.jcr.contentloader.ContentCreator#createFileAndResourceNode(java.lang.String, java.io.InputStream, java.lang.String, long)
      */
     public void createFileAndResourceNode(String name, InputStream data, String mimeType, long lastModified) throws RepositoryException {
         int lastSlash = name.lastIndexOf('/');
@@ -728,7 +729,7 @@ public class DefaultContentCreator implements ContentCreator {
     }
 
     /**
-     * @see org.apache.sling.jcr.contentloader.internal.ContentCreator#switchCurrentNode(java.lang.String, java.lang.String)
+     * @see org.apache.sling.jcr.contentloader.ContentCreator#switchCurrentNode(java.lang.String, java.lang.String)
      */
     public boolean switchCurrentNode(String subPath, String newNodeType) throws RepositoryException {
         if (subPath.startsWith("/")) {
@@ -756,7 +757,7 @@ public class DefaultContentCreator implements ContentCreator {
     }
 
     /* (non-Javadoc)
-     * @see org.apache.sling.jcr.contentloader.internal.ContentCreator#createGroup(java.lang.String, java.lang.String[], java.util.Map)
+     * @see org.apache.sling.jcr.contentloader.ContentCreator#createGroup(java.lang.String, java.lang.String[], java.util.Map)
      */
     public void createGroup(final String name, String[] members, Map<String, Object> extraProperties) throws RepositoryException {
 
@@ -803,7 +804,7 @@ public class DefaultContentCreator implements ContentCreator {
     }
 
     /* (non-Javadoc)
-     * @see org.apache.sling.jcr.contentloader.internal.ContentCreator#createUser(java.lang.String, java.lang.String, java.util.Map)
+     * @see org.apache.sling.jcr.contentloader.ContentCreator#createUser(java.lang.String, java.lang.String, java.util.Map)
      */
     public void createUser(final String name, String password, Map<String, Object> extraProperties) throws RepositoryException {
         final Node parentNode = this.parentNodeStack.peek();
@@ -860,7 +861,7 @@ public class DefaultContentCreator implements ContentCreator {
     }
 
     /* (non-Javadoc)
-     * @see org.apache.sling.jcr.contentloader.internal.ContentCreator#createAce(java.lang.String, java.lang.String, java.lang.String[], java.lang.String[])
+     * @see org.apache.sling.jcr.contentloader.ContentCreator#createAce(java.lang.String, java.lang.String, java.lang.String[], java.lang.String[])
 	 */
     public void createAce(String principalId, String[] grantedPrivilegeNames, String[] deniedPrivilegeNames, String order) throws RepositoryException {
         final Node parentNode = this.parentNodeStack.peek();

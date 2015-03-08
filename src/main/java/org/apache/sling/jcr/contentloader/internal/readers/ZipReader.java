@@ -26,8 +26,8 @@ import java.util.zip.ZipInputStream;
 import javax.jcr.RepositoryException;
 
 import org.apache.commons.io.input.CloseShieldInputStream;
-import org.apache.sling.jcr.contentloader.internal.ContentCreator;
-import org.apache.sling.jcr.contentloader.internal.ContentReader;
+import org.apache.sling.jcr.contentloader.ContentCreator;
+import org.apache.sling.jcr.contentloader.ContentReader;
 import org.apache.sling.jcr.contentloader.internal.ImportProvider;
 
 
@@ -70,7 +70,7 @@ public class ZipReader implements ContentReader {
     }
 
     /**
-     * @see org.apache.sling.jcr.contentloader.internal.ContentReader#parse(java.net.URL, org.apache.sling.jcr.contentloader.internal.ContentCreator)
+     * @see org.apache.sling.jcr.contentloader.ContentReader#parse(java.net.URL, org.apache.sling.jcr.contentloader.ContentCreator)
      */
     public void parse(java.net.URL url, ContentCreator creator)
     		throws IOException, RepositoryException {
@@ -78,7 +78,7 @@ public class ZipReader implements ContentReader {
     }
 
 	/**
-	 * @see org.apache.sling.jcr.contentloader.internal.ContentReader#parse(java.io.InputStream, org.apache.sling.jcr.contentloader.internal.ContentCreator)
+	 * @see org.apache.sling.jcr.contentloader.ContentReader#parse(java.io.InputStream, org.apache.sling.jcr.contentloader.ContentCreator)
 	 */
 	public void parse(InputStream ins, ContentCreator creator)
 			throws IOException, RepositoryException {
