@@ -79,7 +79,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
     private SlingRepository repository;
 
     /**
-     * The MimeTypeService used by the initial content initialContentLoader to
+     * The MimeTypeService used by the bundle content loader to
      * resolve MIME types for files to be installed.
      */
     @Reference
@@ -89,7 +89,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
      * The initial content loader which is called to load initial content up
      * into the repository when the providing bundle is installed.
      */
-    private Loader initialContentLoader;
+    private BundleContentLoader bundleContentLoader;
 
     /**
      * The id of the current instance
@@ -135,7 +135,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
                     synchronized ( this.updatedBundles ) {
                         isUpdate = this.updatedBundles.remove(bundle.getSymbolicName());
                     }
-                    initialContentLoader.registerBundle(session, bundle, isUpdate);
+                    bundleContentLoader.registerBundle(session, bundle, isUpdate);
                 } catch (Throwable t) {
                     log.error(
                         "bundleChanged: Problem loading initial content of bundle "
@@ -155,7 +155,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
             case BundleEvent.UNINSTALLED:
                 try {
                     session = this.getSession();
-                    initialContentLoader.unregisterBundle(session, bundle);
+                    bundleContentLoader.unregisterBundle(session, bundle);
                 } catch (Throwable t) {
                     log.error(
                         "bundleChanged: Problem unloading initial content of bundle "
@@ -208,7 +208,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
     /** Activates this component, called by SCR before registering as a service */
     protected void activate(ComponentContext componentContext) {
         this.slingId = this.settingsService.getSlingId();
-        this.initialContentLoader = new Loader(this);
+        this.bundleContentLoader = new BundleContentLoader(this);
 
         componentContext.getBundleContext().addBundleListener(this);
 
@@ -228,7 +228,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
                     // load content for bundles which are neither INSTALLED nor
                     // UNINSTALLED
                     try {
-                        initialContentLoader.registerBundle(session, bundle, false);
+                        bundleContentLoader.registerBundle(session, bundle, false);
                     } catch (Throwable t) {
                         log.error(
                             "Problem loading initial content of bundle "
@@ -262,9 +262,9 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
     protected void deactivate(ComponentContext componentContext) {
         componentContext.getBundleContext().removeBundleListener(this);
 
-        if ( this.initialContentLoader != null ) {
-            this.initialContentLoader.dispose();
-            this.initialContentLoader = null;
+        if ( this.bundleContentLoader != null ) {
+            this.bundleContentLoader.dispose();
+            this.bundleContentLoader = null;
         }
     }
 

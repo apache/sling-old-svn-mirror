@@ -48,20 +48,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>Loader</code> loads initial content from the bundle.
+ * The <code>BundleContentLoader</code> loads initial content from the bundle.
  */
-public class Loader extends BaseImportLoader {
+public class BundleContentLoader extends BaseImportLoader {
 
     public static final String PARENT_DESCRIPTOR = "ROOT";
 
-    private final Logger log = LoggerFactory.getLogger(Loader.class);
+    private final Logger log = LoggerFactory.getLogger(BundleContentLoader.class);
 
     private BundleHelper bundleHelper;
 
     // bundles whose registration failed and should be retried
     private List<Bundle> delayedBundles;
 
-    public Loader(BundleHelper bundleHelper) {
+    public BundleContentLoader(BundleHelper bundleHelper) {
         super();
         this.bundleHelper = bundleHelper;
         this.delayedBundles = new LinkedList<Bundle>();
