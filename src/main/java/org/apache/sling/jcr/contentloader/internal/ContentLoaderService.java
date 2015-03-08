@@ -38,8 +38,10 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
+import org.osgi.framework.Constants;
 import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -53,10 +55,18 @@ import org.slf4j.LoggerFactory;
  * </ul>
  *
  */
-@Component(metatype=false)
+@Component(
+    metatype = false
+)
 @Properties({
-    @Property(name="service.vendor", value="The Apache Software Foundation"),
-    @Property(name="service.description", value="Apache Sling Content Loader Implementation")
+    @Property(
+        name = Constants.SERVICE_VENDOR,
+        value = "The Apache Software Foundation"
+    ),
+    @Property(
+        name = Constants.SERVICE_DESCRIPTION,
+        value = "Apache Sling Content Loader Implementation"
+    )
 })
 public class ContentLoaderService implements SynchronousBundleListener, BundleHelper {
 
@@ -103,7 +113,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
 
     /** Sling settings service. */
     @Reference
-    protected org.apache.sling.settings.SlingSettingsService settingsService;
+    protected SlingSettingsService settingsService;
 
     // ---------- BundleListener -----------------------------------------------
 
@@ -215,7 +225,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
         Session session = null;
         try {
             session = this.getSession();
-            this.createRepositoryPath(session, ContentLoaderService.BUNDLE_CONTENT_NODE);
+            this.createRepositoryPath(session, BUNDLE_CONTENT_NODE);
             log.debug(
                     "Activated - attempting to load content from all "
                     + "bundles which are neither INSTALLED nor UNINSTALLED");
@@ -338,22 +348,22 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
             return null;
         }
         final Map<String, Object> info = new HashMap<String, Object>();
-        if ( bcNode.hasProperty(ContentLoaderService.PROPERTY_CONTENT_LOADED_AT)) {
-            info.put(ContentLoaderService.PROPERTY_CONTENT_LOADED_AT, bcNode.getProperty(ContentLoaderService.PROPERTY_CONTENT_LOADED_AT).getDate());
+        if ( bcNode.hasProperty(PROPERTY_CONTENT_LOADED_AT)) {
+            info.put(PROPERTY_CONTENT_LOADED_AT, bcNode.getProperty(PROPERTY_CONTENT_LOADED_AT).getDate());
         }
-        if ( bcNode.hasProperty(ContentLoaderService.PROPERTY_CONTENT_LOADED) ) {
-            info.put(ContentLoaderService.PROPERTY_CONTENT_LOADED,
-                    bcNode.getProperty(ContentLoaderService.PROPERTY_CONTENT_LOADED).getBoolean());
+        if ( bcNode.hasProperty(PROPERTY_CONTENT_LOADED) ) {
+            info.put(PROPERTY_CONTENT_LOADED,
+                bcNode.getProperty(PROPERTY_CONTENT_LOADED).getBoolean());
         } else {
-            info.put(ContentLoaderService.PROPERTY_CONTENT_LOADED, false);
+            info.put(PROPERTY_CONTENT_LOADED, false);
         }
-        if ( bcNode.hasProperty(ContentLoaderService.PROPERTY_UNINSTALL_PATHS) ) {
+        if ( bcNode.hasProperty(PROPERTY_UNINSTALL_PATHS) ) {
             final Value[] values = bcNode.getProperty(PROPERTY_UNINSTALL_PATHS).getValues();
             final String[] s = new String[values.length];
             for(int i=0; i<values.length; i++) {
                 s[i] = values[i].getString();
             }
-            info.put(ContentLoaderService.PROPERTY_UNINSTALL_PATHS, s);
+            info.put(PROPERTY_UNINSTALL_PATHS, s);
         }
         return info;
     }
@@ -367,7 +377,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
         final Node parentNode = (Node)session.getItem(BUNDLE_CONTENT_NODE);
         final Node bcNode = parentNode.getNode(nodeName);
         if ( contentLoaded ) {
-            bcNode.setProperty(ContentLoaderService.PROPERTY_CONTENT_LOADED, contentLoaded);
+            bcNode.setProperty(PROPERTY_CONTENT_LOADED, contentLoaded);
             bcNode.setProperty(PROPERTY_CONTENT_LOADED_AT, Calendar.getInstance());
             bcNode.setProperty(PROPERTY_CONTENT_LOADED_BY, this.slingId);
             bcNode.setProperty(PROPERTY_CONTENT_UNLOADED_AT, (String)null);
@@ -387,7 +397,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
             final Node parentNode = (Node)session.getItem(BUNDLE_CONTENT_NODE);
             if ( parentNode.hasNode(nodeName) ) {
                 final Node bcNode = parentNode.getNode(nodeName);
-                bcNode.setProperty(ContentLoaderService.PROPERTY_CONTENT_LOADED, false);
+                bcNode.setProperty(PROPERTY_CONTENT_LOADED, false);
                 bcNode.setProperty(PROPERTY_CONTENT_UNLOADED_AT, Calendar.getInstance());
                 bcNode.setProperty(PROPERTY_CONTENT_UNLOADED_BY, this.slingId);
                 bcNode.setProperty(PROPERTY_UNINSTALL_PATHS, (String[])null);
