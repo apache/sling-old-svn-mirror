@@ -41,9 +41,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/xss</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/xss</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/xss</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/xss</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/xss</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/xss</url>
     </scm>
 
     <!-- ======================================================================= -->
