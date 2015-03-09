@@ -84,9 +84,9 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
         Map<String, Object> opts = new HashMap<String, Object>(options);
         PathInfo pathInfo = new PathInfo(coerceString(pathObj));
         String path = pathInfo.path;
-        String finalPath = buildPath(path, opts);
-        String resourceType = coerceString(getAndRemoveOption(opts, OPTION_RESOURCE_TYPE));
         final Bindings bindings = renderContext.getBindings();
+        String finalPath = buildPath(path, opts, (Resource) bindings.get(SlingBindings.RESOURCE));
+        String resourceType = coerceString(getAndRemoveOption(opts, OPTION_RESOURCE_TYPE));
         Map<String, String> dispatcherOptionsMap = handleSelectors(bindings, pathInfo.selectors, opts);
         String dispatcherOptions = createDispatcherOptions(dispatcherOptionsMap);
         StringWriter writer = new StringWriter();
@@ -167,7 +167,7 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
         return dispatcherOptionsMap;
     }
 
-    private String buildPath(Object pathObj, Map<String, Object> options) {
+    private String buildPath(Object pathObj, Map<String, Object> options, Resource currentResource) {
         String prependPath = getOption(OPTION_PREPEND_PATH, options, StringUtils.EMPTY);
         if (prependPath == null) {
             prependPath = StringUtils.EMPTY;
@@ -191,7 +191,11 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
                 appendPath = "/" + appendPath;
             }
         }
-        return ResourceUtil.normalize(prependPath + path + appendPath);
+        String finalPath = prependPath + path + appendPath;
+        if (!finalPath.startsWith("/")) {
+            finalPath = currentResource.getPath() + "/" + finalPath;
+        }
+        return ResourceUtil.normalize(finalPath);
     }
 
     private String createDispatcherOptions(Map<String, String> options) {
