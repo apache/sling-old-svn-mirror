@@ -55,20 +55,21 @@ public class JcrSystemUserValidator implements ServiceUserValidator {
     @Reference
     private volatile SlingRepository repository;
 
-    private  Method isSystemUserMethod;
+    private final Method isSystemUserMethod;
 
-    private Set<String> validIds = new CopyOnWriteArraySet<String>();
+    private final Set<String> validIds = new CopyOnWriteArraySet<String>();
 
     public JcrSystemUserValidator() {
+        Method m = null;
         try {
-            isSystemUserMethod = User.class.getMethod("isSystemUser");
+            m = User.class.getMethod("isSystemUser");
         } catch (Exception e) {
             log.debug("Exception while accessing isSystemUser method", e);
-            isSystemUserMethod = null;
         }
+        isSystemUserMethod = m;
     }
 
-    public boolean isValid(String serviceUserId, String serviceName, String subServiceName) {
+    public boolean isValid(final String serviceUserId, final String serviceName, final String subServiceName) {
         if (serviceUserId == null) {
             log.debug("the provided service user id is null");
             return false;
@@ -89,14 +90,14 @@ public class JcrSystemUserValidator implements ServiceUserValidator {
                      */
                     administrativeSession = repository.loginAdministrative(null);
                     if (administrativeSession instanceof JackrabbitSession) {
-                        UserManager userManager = ((JackrabbitSession) administrativeSession).getUserManager();
-                        Authorizable authorizable = userManager.getAuthorizable(serviceUserId);
+                        final UserManager userManager = ((JackrabbitSession) administrativeSession).getUserManager();
+                        final Authorizable authorizable = userManager.getAuthorizable(serviceUserId);
                         if (authorizable != null && !authorizable.isGroup() && (isSystemUser((User)authorizable))) {
                             validIds.add(serviceUserId);
                             return true;
                         }
                     }
-                } catch (RepositoryException e) {
+                } catch (final RepositoryException e) {
                     log.debug(e.getMessage());
                 }
             } finally {
@@ -109,7 +110,7 @@ public class JcrSystemUserValidator implements ServiceUserValidator {
     }
 
 
-    private boolean isSystemUser(User user){
+    private boolean isSystemUser(final User user){
         if (isSystemUserMethod != null) {
             try {
                 return (Boolean) isSystemUserMethod.invoke(user);
