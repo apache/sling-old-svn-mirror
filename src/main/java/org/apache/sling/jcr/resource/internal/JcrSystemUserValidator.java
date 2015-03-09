@@ -17,10 +17,12 @@
 package org.apache.sling.jcr.resource.internal;
 
 import java.lang.reflect.Method;
-import java.util.HashSet;
-import java.util.Set; 
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
+
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -41,10 +43,10 @@ import org.slf4j.LoggerFactory;
  *
  * @see org.apache.jackrabbit.api.security.user.User#isSystemUser()
  */
-@Component(label = "Service User Validation Service", description = "Service user validation for JCR system users.")
+@Component
 @Service(ServiceUserValidator.class)
 public class JcrSystemUserValidator implements ServiceUserValidator {
-    
+
     /**
      * logger instance
      */
@@ -52,12 +54,12 @@ public class JcrSystemUserValidator implements ServiceUserValidator {
 
     @Reference
     private volatile SlingRepository repository;
-    
-    private  Method isSystemUserMethod; 
 
-    private Set<String> validIds = new HashSet<String>();
-    
-    public JcrSystemUserValidator(){
+    private  Method isSystemUserMethod;
+
+    private Set<String> validIds = new CopyOnWriteArraySet<String>();
+
+    public JcrSystemUserValidator() {
         try {
             isSystemUserMethod = User.class.getMethod("isSystemUser");
         } catch (Exception e) {
@@ -105,8 +107,8 @@ public class JcrSystemUserValidator implements ServiceUserValidator {
             return false;
         }
     }
-    
-    
+
+
     private boolean isSystemUser(User user){
         if (isSystemUserMethod != null) {
             try {
