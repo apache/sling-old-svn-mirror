@@ -16,16 +16,4 @@
   ~ specific language governing permissions and limitations
   ~ under the License.
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Sightly data-sly-resource - Sling implementation</title>
-</head>
-<body>
-<div id="selectors" data-sly-resource="${'/sightly/includedresource' @ selectors=['a', 'b']}"></div>
-<div id="selectors-remove-c" data-sly-resource="${'/sightly/includedresource.a.b.c' @ selectors=['a', 'b']}"></div>
-<div id="removeselectors-remove-b" data-sly-resource="${'/sightly/includedresource.a.b.c' @ removeSelectors=['b']}"></div>
-<div id="addselectors" data-sly-resource="${'/sightly/includedresource' @ addSelectors=['a', 'b', 'c']}"></div>
-<div id="dot-include" data-sly-resource="${ '.' @ selectors='dot'}"></div>
-</body>
-</html>
+<div id="dot">It works</div>
