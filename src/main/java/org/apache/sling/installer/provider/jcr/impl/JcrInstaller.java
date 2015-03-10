@@ -190,7 +190,7 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
         /** Used for synchronizing. */
         final Object lock = new Object();
 
-        final AtomicBoolean active = new AtomicBoolean(true);
+        final AtomicBoolean active = new AtomicBoolean(false);
 
         private final AtomicBoolean running = new AtomicBoolean(false);
 
@@ -204,7 +204,7 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
         /** Session shared by all WatchedFolder */
         private volatile Session session;
 
-        StoppableThread(final InstallerConfig cfg) {
+        StoppableThread(final InstallerConfig cfg) throws RepositoryException {
             this.cfg = cfg;
             setName("JcrInstaller." + String.valueOf(bgThreadCounter.incrementAndGet()));
             setDaemon(true);
@@ -263,20 +263,20 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
                 }
 
                 // Scan watchedFolders and register resources with installer
-                for(final WatchedFolder f : watchedFolders) {
-                    f.start();
-                }
                 final List<InstallableResource> resources = new LinkedList<InstallableResource>();
                 for(final WatchedFolder f : watchedFolders) {
+                    f.start();
                     final WatchedFolder.ScanResult r = f.scan();
                     logger.debug("Startup: {} provides resources {}", f, r.toAdd);
                     resources.addAll(r.toAdd);
                 }
                 logger.debug("Registering {} resources with OSGi installer: {}", resources.size(), resources);
                 installer.registerResources(URL_SCHEME, resources.toArray(new InstallableResource[resources.size()]));
-            } catch (final RepositoryException re) {
-                logger.error("Repository exception during startup - deactivating installer!", re);
-                active.set(false);
+                this.active.set(true);
+            } finally {
+                if ( !this.active.get() ) {
+                    shutdown();
+                }
             }
         }
 
@@ -349,16 +349,17 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
         logger.info("Activating Apache Sling JCR Installer");
         final InstallerConfig cfg = new InstallerConfig(logger, componentContext, oldConfiguration, settings);
 
-        backgroundThread = new StoppableThread(cfg);
-        if ( !backgroundThread.active.get() ) {
+        try {
+            this.backgroundThread = new StoppableThread(cfg);
+            backgroundThread.start();
+        } catch (final RepositoryException re) {
+            logger.error("Repository exception during startup - deactivating installer!", re);
             final ComponentContext ctx = componentContext;
             if ( ctx  != null ) {
                 final String name = (String) componentContext.getProperties().get(
                         ComponentConstants.COMPONENT_NAME);
                 ctx.disableComponent(name);
             }
-        } else {
-            backgroundThread.start();
         }
     }
 
@@ -632,11 +633,13 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
             logger.warn("Exception in runOneCycle()", e);
         }
 
-        synchronized ( backgroundThread.lock ) {
-            try {
-                backgroundThread.lock.wait(RUN_LOOP_DELAY_MSEC);
-            } catch (final InterruptedException ignore) {
-                Thread.currentThread().interrupt();
+        if ( backgroundThread.active.get() ) {
+            synchronized ( backgroundThread.lock ) {
+                try {
+                    backgroundThread.lock.wait(RUN_LOOP_DELAY_MSEC);
+                } catch (final InterruptedException ignore) {
+                    Thread.currentThread().interrupt();
+                }
             }
         }
         counters[RUN_LOOP_COUNTER]++;
