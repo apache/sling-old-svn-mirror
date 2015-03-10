@@ -29,6 +29,7 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jcr.Node;
@@ -69,10 +70,10 @@ import org.slf4j.LoggerFactory;
  */
 @Component(label="%jcrinstall.name", description="%jcrinstall.description", immediate=true, metatype=true)
 @Properties({
-    @Property(name="service.description", value="Sling JCR Install Service"),
-    @Property(name="service.vendor", value="The Apache Software Foundation"),
+    @Property(name=Constants.SERVICE_DESCRIPTION, value="Sling JCR Install Service"),
+    @Property(name=Constants.SERVICE_VENDOR, value="The Apache Software Foundation"),
     @Property(name=UpdateHandler.PROPERTY_SCHEMES, value=JcrInstaller.URL_SCHEME, unbounded=PropertyUnbounded.ARRAY),
-    @Property(name="service.ranking", intValue=100)
+    @Property(name=Constants.SERVICE_RANKING, intValue=100)
 })
 @Service(value=UpdateHandler.class)
 public class JcrInstaller implements EventListener, UpdateHandler, ManagedService {
@@ -101,26 +102,6 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
     private static final String MIME_TXT = "text/plain";
     private static final String ENCODING = "UTF-8";
 
-    /**
-     * This class watches the repository for installable resources
-     */
-    @Reference
-    private SlingRepository repository;
-
-    /**
-     * Additional installation folders are activated based
-     * on the current RunMode. For example, /libs/foo/install.dev
-     * if the current run mode is "dev".
-     */
-    @Reference
-    private SlingSettingsService settings;
-
-    /**
-     * The OsgiInstaller installs resources in the OSGi framework.
-     */
-    @Reference
-    private OsgiInstaller installer;
-
     /** Default regexp for watched folders */
     public static final String DEFAULT_FOLDER_NAME_REGEXP = ".*/install$";
 
@@ -147,21 +128,6 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
     public static final String PROP_SEARCH_PATH = "sling.jcrinstall.search.path";
     public static final String [] DEFAULT_SEARCH_PATH = { "/libs:100", "/apps:200" };
 
-    /** List of watched folders */
-    private volatile List<WatchedFolder> watchedFolders;
-
-    /** Session shared by all WatchedFolder */
-    private volatile Session session;
-
-    /** The component context. */
-    private volatile ComponentContext componentContext;
-
-    /** Service reg for managed service. */
-    private volatile ServiceRegistration managedServiceRef;
-
-    /** Configuration from managed service (old pid) */
-    private volatile Dictionary<?, ?> oldConfiguration;
-
     public static final String DEFAULT_NEW_CONFIG_PATH = "sling/install";
     @Property(value=DEFAULT_NEW_CONFIG_PATH)
     public static final String PROP_NEW_CONFIG_PATH = "sling.jcrinstall.new.config.path";
@@ -176,16 +142,43 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
     @Property(boolValue=DEFAULT_ENABLE_WRITEBACK)
     public static final String PROP_ENABLE_WRITEBACK = "sling.jcrinstall.enable.writeback";
 
-    private volatile EventListener moveEventListener;
+    /**
+     * This class watches the repository for installable resources
+     */
+    @Reference
+    private SlingRepository repository;
+
+    /**
+     * Additional installation folders are activated based
+     * on the current RunMode. For example, /libs/foo/install.dev
+     * if the current run mode is "dev".
+     */
+    @Reference
+    private SlingSettingsService settings;
+
+    /**
+     * The OsgiInstaller installs resources in the OSGi framework.
+     */
+    @Reference
+    private OsgiInstaller installer;
+
+    /** List of watched folders */
+    private volatile List<WatchedFolder> watchedFolders;
+
+    /** The component context. */
+    private volatile ComponentContext componentContext;
+
+    /** Service reg for managed service. */
+    private volatile ServiceRegistration managedServiceRef;
+
+    /** Configuration from managed service (old pid) */
+    private volatile Dictionary<?, ?> oldConfiguration;
 
     /** Convert Nodes to InstallableResources */
     static interface NodeConverter {
     	InstallableResource convertNode(Node n, int priority)
     	throws RepositoryException;
     }
-
-    /** Detect newly created folders that we must watch */
-    private final List<RootFolderListener> listeners = new LinkedList<RootFolderListener>();
 
     /** Timer used to call updateFoldersList() */
     private final RescanTimer updateFoldersListTimer = new RescanTimer();
@@ -194,120 +187,140 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
     private final static AtomicInteger bgThreadCounter = new AtomicInteger();
     class StoppableThread extends Thread {
 
-
         /** Used for synchronizing. */
         final Object lock = new Object();
-        volatile boolean active = true;
+
+        final AtomicBoolean active = new AtomicBoolean(true);
+
+        private final AtomicBoolean running = new AtomicBoolean(false);
 
         private final InstallerConfig cfg;
 
+        /** Detect newly created folders that we must watch */
+        private final List<RootFolderListener> listeners = new LinkedList<RootFolderListener>();
+
+        private volatile EventListener moveEventListener;
+
+        /** Session shared by all WatchedFolder */
+        private volatile Session session;
+
         StoppableThread(final InstallerConfig cfg) {
             this.cfg = cfg;
-            synchronized (JcrInstaller.class) {
-                setName("JcrInstaller." + String.valueOf(bgThreadCounter.incrementAndGet()));
-            }
+            setName("JcrInstaller." + String.valueOf(bgThreadCounter.incrementAndGet()));
             setDaemon(true);
+
+            try {
+                // open session
+                session = repository.loginAdministrative(repository.getDefaultWorkspace());
+
+                for (String path : cfg.getRoots()) {
+                    listeners.add(new RootFolderListener(session, cfg.getFolderNameFilter(), path, updateFoldersListTimer));
+                    logger.debug("Configured root folder: {}", path);
+                }
+
+                // Watch for events on the root - that might be one of our root folders
+                session.getWorkspace().getObservationManager().addEventListener(JcrInstaller.this,
+                        Event.NODE_ADDED | Event.NODE_REMOVED,
+                        "/",
+                        false, // isDeep
+                        null,
+                        null,
+                        true); // noLocal
+                // add special observation listener for move events
+                this.moveEventListener = new EventListener() {
+
+                    /**
+                     * @see javax.jcr.observation.EventListener#onEvent(javax.jcr.observation.EventIterator)
+                     */
+                    public void onEvent(final EventIterator events) {
+                        try {
+                            while (events.hasNext()) {
+                                final Event e = events.nextEvent();
+                                JcrInstaller.this.checkChanges(cfg, e.getIdentifier());
+                                JcrInstaller.this.checkChanges(cfg, e.getPath());
+                            }
+                        } catch (final RepositoryException re) {
+                            logger.warn("RepositoryException in onEvent", re);
+                        }
+                    }
+                };
+                session.getWorkspace().getObservationManager().addEventListener(
+                        moveEventListener,
+                        Event.NODE_MOVED,
+                        "/",
+                        true, // isDeep
+                        null,
+                        null,
+                        true); // noLocal
+
+                logger.debug("Watching for node events on / to detect removal/add of our root folders");
+
+
+                // Find paths to watch and create WatchedFolders to manage them
+                watchedFolders = new LinkedList<WatchedFolder>();
+                for(String root : cfg.getRoots()) {
+                    findPathsToWatch(cfg, session, root, watchedFolders);
+                }
+
+                // Scan watchedFolders and register resources with installer
+                for(final WatchedFolder f : watchedFolders) {
+                    f.start();
+                }
+                final List<InstallableResource> resources = new LinkedList<InstallableResource>();
+                for(final WatchedFolder f : watchedFolders) {
+                    final WatchedFolder.ScanResult r = f.scan();
+                    logger.debug("Startup: {} provides resources {}", f, r.toAdd);
+                    resources.addAll(r.toAdd);
+                }
+                logger.debug("Registering {} resources with OSGi installer: {}", resources.size(), resources);
+                installer.registerResources(URL_SCHEME, resources.toArray(new InstallableResource[resources.size()]));
+            } catch (final RepositoryException re) {
+                logger.error("Repository exception during startup - deactivating installer!", re);
+                active.set(false);
+            }
+        }
+
+        public void shutdown() {
+            while ( running.get() ) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            try {
+                if (session != null) {
+                    for(RootFolderListener wfc : listeners) {
+                        wfc.cleanup(session);
+                    }
+                    session.getWorkspace().getObservationManager().removeEventListener(JcrInstaller.this);
+                    if ( moveEventListener != null ) {
+                        session.getWorkspace().getObservationManager().removeEventListener(moveEventListener);
+                        moveEventListener = null;
+                    }
+                }
+            } catch (final RepositoryException e) {
+                logger.warn("Exception in stop()", e);
+            }
+            if ( session != null ) {
+                session.logout();
+                session = null;
+            }
+            listeners.clear();
+
+            watchedFolders = null;
         }
 
         @Override
         public final void run() {
             logger.info("Background thread {} starting", Thread.currentThread().getName());
-            synchronized ( this.lock ) {
-                if ( this.active ) {
-                    try {
-                        // open session
-                        session = repository.loginAdministrative(repository.getDefaultWorkspace());
-
-                        for (String path : cfg.getRoots()) {
-                            listeners.add(new RootFolderListener(session, cfg.getFolderNameFilter(), path, updateFoldersListTimer));
-                            logger.debug("Configured root folder: {}", path);
-                        }
-
-                        // Watch for events on the root - that might be one of our root folders
-                        session.getWorkspace().getObservationManager().addEventListener(JcrInstaller.this,
-                                Event.NODE_ADDED | Event.NODE_REMOVED,
-                                "/",
-                                false, // isDeep
-                                null,
-                                null,
-                                true); // noLocal
-                        // add special observation listener for move events
-                        JcrInstaller.this.moveEventListener = new EventListener() {
-
-                            /**
-                             * @see javax.jcr.observation.EventListener#onEvent(javax.jcr.observation.EventIterator)
-                             */
-                            public void onEvent(final EventIterator events) {
-                                try {
-                                    while (events.hasNext()) {
-                                        final Event e = events.nextEvent();
-                                        JcrInstaller.this.checkChanges(cfg, e.getIdentifier());
-                                        JcrInstaller.this.checkChanges(cfg, e.getPath());
-                                    }
-                                } catch (final RepositoryException re) {
-                                    logger.warn("RepositoryException in onEvent", re);
-                                }
-                            }
-                        };
-                        session.getWorkspace().getObservationManager().addEventListener(
-                                moveEventListener,
-                                Event.NODE_MOVED,
-                                "/",
-                                true, // isDeep
-                                null,
-                                null,
-                                true); // noLocal
-
-                        logger.debug("Watching for node events on / to detect removal/add of our root folders");
-
-
-                        // Find paths to watch and create WatchedFolders to manage them
-                        watchedFolders = new LinkedList<WatchedFolder>();
-                        for(String root : cfg.getRoots()) {
-                            findPathsToWatch(cfg, root, watchedFolders);
-                        }
-
-                        // Scan watchedFolders and register resources with installer
-                        for(final WatchedFolder f : watchedFolders) {
-                            f.start();
-                        }
-                    } catch (final RepositoryException re) {
-                        logger.error("Repository exception during startup - deactivating installer!", re);
-                        active = false;
-                        final ComponentContext ctx = componentContext;
-                        if ( ctx  != null ) {
-                            final String name = (String) componentContext.getProperties().get(
-                                    ComponentConstants.COMPONENT_NAME);
-                            ctx.disableComponent(name);
-                        }
-                    }
+            while (this.active.get()) {
+                running.set(true);
+                try {
+                    runOneCycle(cfg, session);
+                } finally {
+                    running.set(false);
                 }
-            }
-
-            if ( this.active ) {
-                final List<InstallableResource> resources = new LinkedList<InstallableResource>();
-                for(final WatchedFolder f : watchedFolders) {
-                    if ( this.active ) {
-                        try {
-                            final WatchedFolder.ScanResult r = f.scan();
-                            logger.debug("Startup: {} provides resources {}", f, r.toAdd);
-                            resources.addAll(r.toAdd);
-                        } catch (final RepositoryException re) {
-                            if ( this.active ) {
-                                logger.error("Repository exception during scanning.", re);
-                            }
-                        }
-                    }
-                }
-
-                if ( this.active ) {
-                    logger.debug("Registering {} resources with OSGi installer: {}", resources.size(), resources);
-                    installer.registerResources(URL_SCHEME, resources.toArray(new InstallableResource[resources.size()]));
-                }
-            }
-
-            while (active) {
-                runOneCycle(cfg);
             }
             logger.info("Background thread {} done", Thread.currentThread().getName());
             counters[RUN_LOOP_COUNTER] = -1;
@@ -337,7 +350,16 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
         final InstallerConfig cfg = new InstallerConfig(logger, componentContext, oldConfiguration, settings);
 
         backgroundThread = new StoppableThread(cfg);
-        backgroundThread.start();
+        if ( !backgroundThread.active.get() ) {
+            final ComponentContext ctx = componentContext;
+            if ( ctx  != null ) {
+                final String name = (String) componentContext.getProperties().get(
+                        ComponentConstants.COMPONENT_NAME);
+                ctx.disableComponent(name);
+            }
+        } else {
+            backgroundThread.start();
+        }
     }
 
     /**
@@ -357,34 +379,14 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
 
     	if ( backgroundThread != null ) {
     	    synchronized ( backgroundThread.lock ) {
-    	        backgroundThread.active = false;
+    	        backgroundThread.active.set(false);
     	        backgroundThread.lock.notify();
     	    }
             logger.debug("Waiting for " + backgroundThread.getName() + " Thread to end...");
-            backgroundThread = null;
+
+            this.backgroundThread.shutdown();
+            this.backgroundThread = null;
     	}
-
-        try {
-            if (session != null) {
-                for(RootFolderListener wfc : listeners) {
-                    wfc.cleanup(session);
-                }
-                session.getWorkspace().getObservationManager().removeEventListener(this);
-                if ( moveEventListener != null ) {
-                    session.getWorkspace().getObservationManager().removeEventListener(moveEventListener);
-                    moveEventListener = null;
-                }
-            }
-        } catch (final RepositoryException e) {
-            logger.warn("Exception in stop()", e);
-        }
-        if ( session != null ) {
-            session.logout();
-            session = null;
-        }
-        listeners.clear();
-
-        watchedFolders = null;
     }
 
 
@@ -412,7 +414,8 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
 
     /** Find the paths to watch under rootPath, according to our folderNameFilter,
      * 	and add them to result */
-    private void findPathsToWatch(final InstallerConfig cfg, final String rootPath, final List<WatchedFolder> result) throws RepositoryException {
+    private void findPathsToWatch(final InstallerConfig cfg, final Session session,
+            final String rootPath, final List<WatchedFolder> result) throws RepositoryException {
         Session s = null;
 
         try {
@@ -422,7 +425,7 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
             } else {
                 logger.debug("Bundles root node {} found, looking for bundle folders inside it", rootPath);
                 final Node n = (Node)s.getItem(rootPath);
-                findPathsUnderNode(cfg, n, result);
+                findPathsUnderNode(cfg, session, n, result);
             }
         } finally {
             if (s != null) {
@@ -435,7 +438,8 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
      * Add n to result if it is a folder that we must watch, and recurse into its children
      * to do the same.
      */
-    void findPathsUnderNode(final InstallerConfig cfg, final Node n, final List<WatchedFolder> result) throws RepositoryException {
+    void findPathsUnderNode(final InstallerConfig cfg, final Session session,
+            final Node n, final List<WatchedFolder> result) throws RepositoryException {
         final String path = n.getPath();
         final int priority = cfg.getFolderNameFilter().getPriority(path);
         if (priority > 0) {
@@ -448,7 +452,7 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
         }
         final NodeIterator it = n.getNodes();
         while (it.hasNext()) {
-            findPathsUnderNode(cfg, it.nextNode(), result);
+            findPathsUnderNode(cfg, session, it.nextNode(), result);
         }
     }
 
@@ -474,14 +478,14 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
      *  @return a list of InstallableResource that must be unregistered,
      *  	for folders that have been removed
      */
-    private List<String> updateFoldersList(final InstallerConfig cfg) throws Exception {
+    private List<String> updateFoldersList(final InstallerConfig cfg, final Session session) throws Exception {
         logger.debug("Updating folder list.");
 
         final List<String> result = new LinkedList<String>();
 
         final List<WatchedFolder> newFolders = new ArrayList<WatchedFolder>();
 	    for(String root : cfg.getRoots()) {
-	        findPathsToWatch(cfg, root, newFolders);
+	        findPathsToWatch(cfg, session, root, newFolders);
 	    }
 	    for(WatchedFolder wf : newFolders) {
 	        addWatchedFolder(wf);
@@ -527,6 +531,10 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
         return cfg;
     }
 
+    Session getSession() {
+        return this.backgroundThread.session;
+    }
+
     /**
      * @see javax.jcr.observation.EventListener#onEvent(javax.jcr.observation.EventIterator)
      */
@@ -552,7 +560,7 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
     /**
      * Run periodic scans of our watched folders, and watch for folders creations/deletions.
      */
-    public void runOneCycle(final InstallerConfig cfg) {
+    public void runOneCycle(final InstallerConfig cfg, final Session session) {
         logger.debug("Running watch cycle.");
 
         try {
@@ -561,7 +569,7 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
             if (anyWatchFolderNeedsScan()) {
                 session.refresh(false);
                 didRefresh = true;
-                if (scanningIsPaused(cfg)) {
+                if (scanningIsPaused(cfg, session)) {
                     if (!pauseMessageLogged) {
                         //Avoid flooding the logs every 500 msec so log at info level once
                         logger.info("Detected signal for pausing the JCR Provider i.e. child nodes found under path {}. " +
@@ -611,7 +619,7 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
                 }
                 updateFoldersListTimer.reset();
                 counters[UPDATE_FOLDERS_LIST_COUNTER]++;
-                final List<String> toRemove = updateFoldersList(cfg);
+                final List<String> toRemove = updateFoldersList(cfg, session);
                 if ( toRemove.size() > 0 ) {
                     logger.info("Removing resource from OSGi installer (folder deleted): {}", toRemove);
                     installer.updateResources(URL_SCHEME, null,
@@ -634,7 +642,7 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
         counters[RUN_LOOP_COUNTER]++;
     }
 
-    boolean scanningIsPaused(final InstallerConfig cfg) throws RepositoryException {
+    boolean scanningIsPaused(final InstallerConfig cfg, final Session session) throws RepositoryException {
         if (session.nodeExists(cfg.getPauseScanNodePath())) {
             Node node = session.getNode(cfg.getPauseScanNodePath());
             boolean result = node.hasNodes();
