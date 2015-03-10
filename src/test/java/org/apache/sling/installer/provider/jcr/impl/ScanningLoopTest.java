@@ -88,11 +88,11 @@ public class ScanningLoopTest extends RepositoryTestBase {
     }
 
     public void testDefaultScanPauseFalse() throws Exception{
-        assertFalse(installer.scanningIsPaused());
+        assertFalse(installer.scanningIsPaused(installer.getConfiguration()));
     }
 
     public void testPauseScan() throws Exception{
-        assertFalse(installer.scanningIsPaused());
+        assertFalse(installer.scanningIsPaused(installer.getConfiguration()));
 
         Node n = contentHelper.createFolder(JcrInstaller.PAUSE_SCAN_NODE_PATH);
         Node testNode = n.addNode("foo.example.pause");
@@ -100,7 +100,7 @@ public class ScanningLoopTest extends RepositoryTestBase {
 
         eventHelper.waitForEvents(TIMEOUT);
 
-        assertTrue(installer.scanningIsPaused());
+        assertTrue(installer.scanningIsPaused(installer.getConfiguration()));
         final long sf = installer.getCounters()[JcrInstaller.SCAN_FOLDERS_COUNTER];
         final long uc = installer.getCounters()[JcrInstaller.UPDATE_FOLDERS_LIST_COUNTER];
 
