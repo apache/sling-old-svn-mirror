@@ -49,6 +49,22 @@
     <!-- B U I L D                                                               -->
     <!-- ======================================================================= -->
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <!-- Extend RAT configuration from parent pom -->
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <configuration>
+                        <excludes combine.children="append">
+                            <exclude>src/main/resources/ESAPI.properties</exclude>
+                            <exclude>src/main/resources/validation.properties</exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
