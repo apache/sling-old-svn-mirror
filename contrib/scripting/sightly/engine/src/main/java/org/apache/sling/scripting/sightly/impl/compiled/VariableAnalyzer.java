@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.sling.scripting.sightly.impl.compiler.SightlyParsingException;
 import org.apache.sling.scripting.sightly.impl.compiler.util.VariableTracker;
 
 /**
@@ -133,7 +134,7 @@ public class VariableAnalyzer {
     private VariableDescriptor dynamicDescriptor(String original) {
         VariableDescriptor descriptor = dynamicVariables.get(original);
         if (descriptor == null) {
-            String dynamicName = findDynamicName(original);
+            String dynamicName = findDynamicName(validName(original));
             descriptor = new VariableDescriptor(original, dynamicName, Type.UNKNOWN, VariableScope.DYNAMIC);
             dynamicVariables.put(original, descriptor);
             variables.add(descriptor);
@@ -142,7 +143,7 @@ public class VariableAnalyzer {
     }
 
     private String findDynamicName(String original) {
-        return DYNAMIC_PREFIX + original;
+        return DYNAMIC_PREFIX + syntaxSafeName(original);
     }
 
     private String findGlobalName(String original) {
@@ -164,6 +165,13 @@ public class VariableAnalyzer {
             return "_" + original;
         }
         return original.replaceAll("-", "_");
+    }
+
+    private String validName(String name) {
+        if (name == null || name.contains("-")) {
+            throw new SightlyParsingException("Unsupported identifier name: " + name);
+        }
+        return name.toLowerCase();
     }
 
     static {

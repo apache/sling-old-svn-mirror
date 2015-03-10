@@ -34,6 +34,8 @@ public class SlingSpecificsSightlyIT {
     private static final String SLING_USE = "/sightly/use.html";
     private static final String SLING_JAVA_USE_NPE = "/sightly/use.javaerror.html";
     private static final String SLING_RESOURCE = "/sightly/resource.html";
+    private static final String SLING_TEMPLATE = "/sightly/template.html";
+    private static final String SLING_TEMPLATE_BAD_IDENTIFIER = "/sightly/template.bad-id.html";
 
     @BeforeClass
     public static void init() {
@@ -74,6 +76,20 @@ public class SlingSpecificsSightlyIT {
         assertEquals("selectors: a.c", HTMLExtractor.innerHTML(url, pageContent, "#removeselectors-remove-b span.selectors"));
         assertEquals("selectors: a.b.c", HTMLExtractor.innerHTML(url, pageContent, "#addselectors span.selectors"));
         assertEquals("It works", HTMLExtractor.innerHTML(url, pageContent, "#dot"));
+    }
+
+    @Test
+    public void testDataSlyTemplate() {
+        String url = launchpadURL + SLING_TEMPLATE;
+        String pageContent = client.getStringContent(url, 200);
+        assertEquals("SUCCESS", HTMLExtractor.innerHTML(url, pageContent, "#template"));
+    }
+
+    @Test
+    public void testBadTemplateIdentifier() {
+        String url = launchpadURL + SLING_TEMPLATE_BAD_IDENTIFIER;
+        String pageContent = client.getStringContent(url, 500);
+        assertTrue(pageContent.contains("org.apache.sling.scripting.sightly.impl.compiler.SightlyParsingException"));
     }
 
 }
