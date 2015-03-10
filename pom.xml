@@ -15,7 +15,8 @@
   ~ See the License for the specific language governing permissions
   ~ and limitations under the License.
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <!-- ======================================================================= -->
     <!-- P A R E N T   P R O J E C T                                             -->
@@ -24,7 +25,7 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>20</version>
-        <relativePath />
+        <relativePath/>
     </parent>
 
     <!-- ======================================================================= -->
@@ -32,7 +33,7 @@
     <!-- ======================================================================= -->
     <artifactId>org.apache.sling.xss</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
 
     <name>Apache Sling XSS Protection Bundle</name>
     <description>
@@ -49,6 +50,22 @@
     <!-- B U I L D                                                               -->
     <!-- ======================================================================= -->
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <!-- Extend RAT configuration from parent pom -->
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <configuration>
+                        <excludes combine.children="append">
+                            <exclude>src/main/resources/ESAPI.properties</exclude>
+                            <exclude>src/main/resources/validation.properties</exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
