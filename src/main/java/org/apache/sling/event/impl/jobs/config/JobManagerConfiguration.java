@@ -443,9 +443,9 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
     public void configurationChanged(final boolean active) {
         final TopologyCapabilities caps = this.topologyCapabilities;
         if ( caps != null ) {
-            synchronized ( this.listeners ) {
-                this.stopProcessing(false);
+            this.stopProcessing(false);
 
+            if ( active ) {
                 this.startProcessing(Type.PROPERTIES_CHANGED, caps, true);
             }
         }
@@ -497,21 +497,24 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
 
         // and run checker again in some seconds (if leader)
         // notify listeners afterwards
-        scheduler.schedule(new Runnable() {
+        final Scheduler local = this.scheduler;
+        if ( local != null ) {
+            local.schedule(new Runnable() {
 
-                @Override
-                public void run() {
-                    if ( newCaps.isLeader() && newCaps.isActive() ) {
-                        mt.assignUnassignedJobs();
-                    }
-                    // start listeners
-                    synchronized ( listeners ) {
-                        if ( topologyCapabilities != null && newCaps.isActive() ) {
-                            notifiyListeners();
+                    @Override
+                    public void run() {
+                        if ( newCaps.isLeader() && newCaps.isActive() ) {
+                            mt.assignUnassignedJobs();
+                        }
+                        // start listeners
+                        synchronized ( listeners ) {
+                            if ( topologyCapabilities != null && newCaps.isActive() ) {
+                                notifiyListeners();
+                            }
                         }
                     }
-                }
-            }, scheduler.AT(new Date(System.currentTimeMillis() + this.backgroundLoadDelay * 1000)));
+                }, local.AT(new Date(System.currentTimeMillis() + this.backgroundLoadDelay * 1000)));
+        }
         logger.debug("Job processing started");
     }
 
