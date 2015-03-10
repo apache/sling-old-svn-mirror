@@ -207,7 +207,7 @@ public class TimedEventSender
                     try {
                         resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
                         final Resource eventResource = resolver.getResource(path);
-                        if ( TimedEventReceiver.TIMED_EVENT_RESOURCE_TYPE.equals(eventResource.getResourceType()) ) {
+                        if ( eventResource != null && TimedEventReceiver.TIMED_EVENT_RESOURCE_TYPE.equals(eventResource.getResourceType()) ) {
                             final ReadResult result = this.readEvent(eventResource);
                             if ( result != null ) {
                                 if ( result.hasReadErrors ) {
