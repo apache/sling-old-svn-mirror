@@ -23,10 +23,13 @@ import org.apache.sling.performance.annotation.PerformanceTestFactory;
 import org.apache.sling.performance.annotation.PerformanceTestSuite;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.runner.notification.Failure;
+import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
-import org.junit.runners.model.TestClass;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
@@ -34,7 +37,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -44,15 +46,18 @@ import java.util.List;
 
 /**
  * The custom JUnit runner that collects the performance tests
- * 
+ *
  */
 
 
 
 public class PerformanceRunner extends BlockJUnit4ClassRunner {
+    private static final Logger logger = LoggerFactory.getLogger(ReportLogger.class);
+
     protected LinkedList<FrameworkMethod> tests = new LinkedList<FrameworkMethod>();
     private List<PerformanceSuiteState> suitesState = new ArrayList<PerformanceSuiteState>();
     public ReportLevel reportLevel = ReportLevel.ClassLevel;
+    public String referenceMethod = null;
 
     public static enum ReportLevel{
         ClassLevel,
@@ -63,6 +68,8 @@ public class PerformanceRunner extends BlockJUnit4ClassRunner {
     @Target(ElementType.TYPE)
     public @interface Parameters {
         public ReportLevel reportLevel() default ReportLevel.ClassLevel;
+        /** This is the name of the reference method used to compute statistics */
+        public String referenceMethod() default "";
     }
 
     public PerformanceRunner(Class<?> clazz) throws InitializationError {
@@ -72,12 +79,44 @@ public class PerformanceRunner extends BlockJUnit4ClassRunner {
         // by default set to class level for legacy tests compatibility
         if (clazz.getAnnotation(Parameters.class) != null){
             reportLevel = clazz.getAnnotation(Parameters.class).reportLevel();
+            referenceMethod = clazz.getAnnotation(Parameters.class).referenceMethod();
+            if ("".equals(referenceMethod)) {
+                referenceMethod = null;
+            } else {
+                boolean found = false;
+                for (Method method : clazz.getMethods()) {
+                    if (method.getName().equals(referenceMethod) && method.getParameterTypes().length == 0) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    referenceMethod = null;
+                }
+            }
         }
 
         try {
             computeTests();
         } catch (Exception e) {
             throw new InitializationError(e);
+        }
+    }
+
+    @Override
+    public void run(RunNotifier notifier) {
+        super.run(notifier);
+        try {
+            ReportLogger.writeAllResults();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+        try {
+            for (Failure failure : ReportLogger.checkAllThresholds()) {
+                notifier.fireTestFailure(failure);
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -219,7 +258,7 @@ public class PerformanceRunner extends BlockJUnit4ClassRunner {
 
                 for (Method method : testMethods) {
                     FrameworkPerformanceMethod performaceTestMethod =
-                            new FrameworkPerformanceMethod(method, testObject, current, reportLevel);
+                            new FrameworkPerformanceMethod(method, testObject, current, reportLevel, referenceMethod);
                     tests.add(performaceTestMethod);
                 }
 
@@ -237,7 +276,7 @@ public class PerformanceRunner extends BlockJUnit4ClassRunner {
         for (FrameworkMethod method : getTestClass().getAnnotatedMethods(PerformanceTest.class)) {
             Object targetObject = getTestClass().getJavaClass().newInstance();
             FrameworkPerformanceMethod performanceTestMethod = new FrameworkPerformanceMethod(
-                    method.getMethod(), targetObject, current, reportLevel);
+                    method.getMethod(), targetObject, current, reportLevel, referenceMethod);
             tests.add(performanceTestMethod);
         }
 
@@ -245,7 +284,7 @@ public class PerformanceRunner extends BlockJUnit4ClassRunner {
     }
 
 
-        /**
+    /**
      * Retrieve specific method from test class
      *
      * @param testClass
