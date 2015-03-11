@@ -44,7 +44,7 @@ Add following Maven dependency to your `pom.xml`:
 	<dependency>
 		<groupId>org.apache.sling</groupId>
 		<artifactId>org.apache.sling.query</artifactId>
-		<version>2.0.0</version>
+		<version>3.0.0</version>
 	</dependency>
 
 ## Documentation
