@@ -45,6 +45,10 @@
         <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/xss</url>
     </scm>
 
+    <properties>
+        <sling.java.version>6</sling.java.version>
+    </properties>
+
     <!-- ======================================================================= -->
     <!-- B U I L D                                                               -->
     <!-- ======================================================================= -->
@@ -278,6 +282,12 @@
             <artifactId>mockito-all</artifactId>
             <version>1.8.4</version>
             <type>jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-api-mockito</artifactId>
+            <version>1.5.5</version>
             <scope>test</scope>
         </dependency>
         <dependency>
