@@ -19,63 +19,38 @@ package org.apache.sling.xss.impl;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.owasp.validator.html.AntiSamy;
 import org.owasp.validator.html.Policy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * Class that provides the capability of securing input provided as plain text for
- * HTML output.
+ * Class that provides the capability of securing input provided as plain text for HTML output.
  */
 public class PolicyHandler {
 
-    /**
-     * Logger
-     */
-    private static final Logger LOGGER = LoggerFactory.getLogger(PolicyHandler.class);
-
     private Policy policy;
-
     private AntiSamy antiSamy;
 
     /**
      * Try to load a policy from the given relative path.
      */
-    public PolicyHandler(final ResourceResolverFactory factory, final String policyPath) throws Exception {
-        final ResourceResolver resolver = factory.getAdministrativeResourceResolver(null);
+    public PolicyHandler(InputStream policyStream) throws Exception {
+        // fix for classloader issue with IBM JVM: see bug #31946
+        // (currently: http://bugs.day.com/bugzilla/show_bug.cgi?id=31946)
+        Thread currentThread = Thread.currentThread();
+        ClassLoader cl = currentThread.getContextClassLoader();
         try {
-            final Resource rsrc = resolver.getResource(policyPath);
-            if (rsrc == null) {
-                throw new IllegalArgumentException("Could not resolve '" + policyPath + " to a valid policy resource.");
-            }
-            LOGGER.debug("Loading policy from '{}'.", rsrc.getPath());
-
-            InputStream policyStream = null;
-            // fix for classloader issue with IBM JVM: see bug #31946
-            // (currently: http://bugs.day.com/bugzilla/show_bug.cgi?id=31946)
-            Thread currentThread = Thread.currentThread();
-            ClassLoader cl = currentThread.getContextClassLoader();
-            try {
-                currentThread.setContextClassLoader(this.getClass().getClassLoader());
-                policyStream = rsrc.adaptTo(InputStream.class);
-                this.policy = Policy.getInstance(policyStream);
-                this.antiSamy = new AntiSamy(this.policy);
-            } finally {
-                if (policyStream != null) {
-                    try {
-                        policyStream.close();
-                    } catch (final IOException ioe) {
-                        // ignored as we can't do anything about this (besides logging)
-                    }
-                }
-                currentThread.setContextClassLoader(cl);
-            }
+            currentThread.setContextClassLoader(this.getClass().getClassLoader());
+            this.policy = Policy.getInstance(policyStream);
+            this.antiSamy = new AntiSamy(this.policy);
         } finally {
-            resolver.close();
+            if (policyStream != null) {
+                try {
+                    policyStream.close();
+                } catch (final IOException ioe) {
+                    // ignored as we can't do anything about this (besides logging)
+                }
+            }
+            currentThread.setContextClassLoader(cl);
         }
     }
 

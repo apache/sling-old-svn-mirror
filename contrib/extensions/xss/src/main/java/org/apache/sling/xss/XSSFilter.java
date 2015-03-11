@@ -41,17 +41,6 @@ public interface XSSFilter {
     boolean check(ProtectionContext context, String src);
 
     /**
-     * Indicates whether or not a given source string contains XSS policy violations.
-     *
-     * @param context context to use for checking
-     * @param src     source string
-     * @param policy  the name/path of the policy to use
-     * @return true if the source is violation-free
-     * @throws NullPointerException if context is <code>null</code>
-     */
-    boolean check(ProtectionContext context, String src, String policy);
-
-    /**
      * Prevents the given source string from containing XSS stuff.
      * <p/>
      * The default protection context is used for checking.
@@ -70,17 +59,4 @@ public interface XSSFilter {
      * @throws NullPointerException if context is <code>null</code>
      */
     String filter(ProtectionContext context, String src);
-
-    /**
-     * Protects the given source string from containing XSS stuff.
-     * <p/>
-     * If the context is unknown or <code>null</code> the default context is used.
-     *
-     * @param context context to use for checking
-     * @param src     source string
-     * @param policy  the name/path of the policy to use
-     * @return string that does not contain XSS stuff
-     * @throws NullPointerException if context is <code>null</code>
-     */
-    String filter(ProtectionContext context, String src, String policy);
 }

@@ -88,7 +88,7 @@ class LongValidationRule extends BaseValidationRule {
 
         // validate min and max
         try {
-            long i = Long.valueOf(canonical);
+            long i = Long.parseLong(canonical);
             if (i < minValue) {
                 throw new ValidationException( "Invalid number input must be between " + minValue + " and " + maxValue + ": context=" + context, "Invalid number input must be between " + minValue + " and " + maxValue + ": context=" + context + ", input=" + input, context );
             }
