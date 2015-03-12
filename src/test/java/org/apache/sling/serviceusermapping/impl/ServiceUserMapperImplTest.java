@@ -24,7 +24,6 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
-import org.apache.sling.serviceusermapping.ServiceUserMapping;
 import org.apache.sling.serviceusermapping.ServiceUserValidator;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
@@ -237,7 +236,7 @@ public class ServiceUserMapperImplTest {
         final ServiceRegistrationContextHelper context = new ServiceRegistrationContextHelper();
         sum.configure(context.getBundleContext(), config);
 
-        TestCase.assertEquals(2, context.getRegistrations(ServiceUserMapping.class.getName()).size());
+        TestCase.assertEquals(2, context.getRegistrations(ServiceUserMappedImpl.SERVICEUSERMAPPED).size());
 
         final MappingConfigAmendment mca1 = new MappingConfigAmendment();
         @SuppressWarnings("serial")
@@ -251,7 +250,7 @@ public class ServiceUserMapperImplTest {
         mca1.configure(mca1Config);
         sum.bindAmendment(mca1, mca1Config);
 
-        TestCase.assertEquals(3, context.getRegistrations(ServiceUserMapping.class.getName()).size());
+        TestCase.assertEquals(3, context.getRegistrations(ServiceUserMappedImpl.SERVICEUSERMAPPED).size());
 
         final MappingConfigAmendment mca2 = new MappingConfigAmendment();
         @SuppressWarnings("serial")
@@ -265,11 +264,11 @@ public class ServiceUserMapperImplTest {
         mca2.configure(mca2Config);
         sum.bindAmendment(mca2, mca2Config);
 
-        TestCase.assertEquals(4, context.getRegistrations(ServiceUserMapping.class.getName()).size());
+        TestCase.assertEquals(4, context.getRegistrations(ServiceUserMappedImpl.SERVICEUSERMAPPED).size());
 
         sum.unbindAmendment(mca1, mca1Config);
 
-        TestCase.assertEquals(3, context.getRegistrations(ServiceUserMapping.class.getName()).size());
+        TestCase.assertEquals(3, context.getRegistrations(ServiceUserMappedImpl.SERVICEUSERMAPPED).size());
     }
 
 

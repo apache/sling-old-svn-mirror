@@ -21,8 +21,7 @@ package org.apache.sling.serviceusermapping.impl;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.serviceusermapping.ServiceUserMapping;
-import org.osgi.framework.Bundle;
+import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceEvent;
@@ -40,7 +39,7 @@ import java.util.Map;
 /**
  * The <code>ServiceUserMappingBundleFilter</code> only allows the bundle for which the service mapping is available to see it.
  */
-public class ServiceUserMappingBundleFilter implements EventListenerHook, FindHook {
+public class ServiceUserMappedBundleFilter implements EventListenerHook, FindHook {
 
     public void event(ServiceEvent serviceEvent, Map map) {
 
@@ -53,8 +52,8 @@ public class ServiceUserMappingBundleFilter implements EventListenerHook, FindHo
                 while (it.hasNext()) {
                     BundleContext ctx = it.next().getKey();
 
-                    String bundleName = ctx.getBundle().getSymbolicName();
-                    if (!serviceName.equals(bundleName)) {
+                    String bundleServiceName = ServiceUserMapperImpl.getServiceName(ctx.getBundle());
+                    if (!serviceName.equals(bundleServiceName)) {
                         it.remove();
                     }
                 }
@@ -64,7 +63,7 @@ public class ServiceUserMappingBundleFilter implements EventListenerHook, FindHo
 
     public void find(BundleContext bundleContext, String name, String filter, boolean allServices,
                      Collection references) {
-        String bundleName = bundleContext.getBundle().getSymbolicName();
+        String bundleServiceName = ServiceUserMapperImpl.getServiceName(bundleContext.getBundle());
 
         Iterator<ServiceReference> it = references.iterator();
         while (it.hasNext()) {
@@ -72,7 +71,7 @@ public class ServiceUserMappingBundleFilter implements EventListenerHook, FindHo
             if (isServiceMappingReference(serviceReference)) {
                 Object serviceName = serviceReference.getProperty(Mapping.SERVICENAME);
 
-                if (serviceName != null && !serviceName.equals(bundleName)) {
+                if (serviceName != null && !serviceName.equals(bundleServiceName)) {
                     it.remove();
                 }
             }
@@ -82,7 +81,7 @@ public class ServiceUserMappingBundleFilter implements EventListenerHook, FindHo
     private static boolean isServiceMappingReference(ServiceReference serviceReference) {
         Object objectClass = serviceReference.getProperty(Constants.OBJECTCLASS);
         for (Object o :  (Object[]) objectClass) {
-            if (ServiceUserMapping.class.getName().equals(o)) {
+            if (ServiceUserMappedImpl.SERVICEUSERMAPPED.equals(o)) {
                 return true;
             }
         }

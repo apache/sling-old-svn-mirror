@@ -45,9 +45,9 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.apache.sling.serviceusermapping.ServiceUserValidator;
-import org.apache.sling.serviceusermapping.ServiceUserMapping;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -167,7 +167,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
      * @see org.apache.sling.serviceusermapping.ServiceUserMapper#getServiceUserID(org.osgi.framework.Bundle, java.lang.String)
      */
     public String getServiceUserID(final Bundle bundle, final String subServiceName) {
-        final String serviceName = bundle.getSymbolicName();
+        final String serviceName = getServiceName(bundle);
         final String userId = internalGetUserId(serviceName, subServiceName);
         return isValidUser(userId, serviceName, subServiceName) ? userId : null;
     }
@@ -244,11 +244,12 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
             if (!activeMappingRegistrations.containsKey(mapping)) {
                 Dictionary<String, Object> properties = new Hashtable<String, Object>();
                 if (mapping.getSubServiceName() != null) {
-                    properties.put(ServiceUserMapping.SUBSERVICENAME, mapping.getSubServiceName());
+                    properties.put(ServiceUserMapped.SUBSERVICENAME, mapping.getSubServiceName());
                 }
 
                 properties.put(Mapping.SERVICENAME, mapping.getServiceName());
-                ServiceRegistration registration = bundleContext.registerService(ServiceUserMapping.class.getName(), mapping, properties);
+                ServiceRegistration registration = bundleContext.registerService(ServiceUserMappedImpl.SERVICEUSERMAPPED,
+                        new ServiceUserMappedImpl(), properties);
                 activeMappingRegistrations.put(mapping, registration);
             }
         }
@@ -288,6 +289,10 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
             }
         }
         return true;
+    }
+
+    static String getServiceName(Bundle bundle) {
+        return bundle.getSymbolicName();
     }
 }
 
