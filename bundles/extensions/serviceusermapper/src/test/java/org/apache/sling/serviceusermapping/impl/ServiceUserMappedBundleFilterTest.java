@@ -21,7 +21,6 @@ package org.apache.sling.serviceusermapping.impl;
 
 
 import junit.framework.TestCase;
-import org.apache.sling.serviceusermapping.ServiceUserMapping;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -44,7 +43,7 @@ import static org.mockito.Mockito.when;
 /**
  * Test reference and bundle filtering based on <code>Mapping.SERVICENAME</code>
  */
-public class ServiceUserMappingBundleFilterTest {
+public class ServiceUserMappedBundleFilterTest {
 
     final static String BUNDLE1 = "bundle1";
     final static String BUNDLE2 = "bundle2";
@@ -80,11 +79,11 @@ public class ServiceUserMappingBundleFilterTest {
         ServiceEvent serviceEvent = mock(ServiceEvent.class);
         ServiceReference serviceReference = mock(ServiceReference.class);
         when(serviceEvent.getServiceReference()).thenReturn(serviceReference);
-        when(serviceReference.getProperty(Constants.OBJECTCLASS)).thenReturn(new String[]{ServiceUserMapping.class.getName()});
+        when(serviceReference.getProperty(Constants.OBJECTCLASS)).thenReturn(new String[]{ServiceUserMappedImpl.SERVICEUSERMAPPED});
         when(serviceReference.getProperty(Mapping.SERVICENAME)).thenReturn(BUNDLE1);
 
 
-        EventListenerHook eventListenerHook = new ServiceUserMappingBundleFilter();
+        EventListenerHook eventListenerHook = new ServiceUserMappedBundleFilter();
         eventListenerHook.event(serviceEvent, map);
 
         TestCase.assertEquals(1, map.size());
@@ -102,12 +101,12 @@ public class ServiceUserMappingBundleFilterTest {
         collection.add(serviceReference2);
 
         when(serviceReference1.getProperty(Mapping.SERVICENAME)).thenReturn(BUNDLE1);
-        when(serviceReference1.getProperty(Constants.OBJECTCLASS)).thenReturn(new String[]{ServiceUserMapping.class.getName()});
+        when(serviceReference1.getProperty(Constants.OBJECTCLASS)).thenReturn(new String[]{ServiceUserMappedImpl.SERVICEUSERMAPPED});
 
         when(serviceReference2.getProperty(Mapping.SERVICENAME)).thenReturn(BUNDLE2);
-        when(serviceReference2.getProperty(Constants.OBJECTCLASS)).thenReturn(new String[]{ServiceUserMapping.class.getName()});
+        when(serviceReference2.getProperty(Constants.OBJECTCLASS)).thenReturn(new String[]{ServiceUserMappedImpl.SERVICEUSERMAPPED});
 
-        FindHook findHook = new ServiceUserMappingBundleFilter();
+        FindHook findHook = new ServiceUserMappedBundleFilter();
         findHook.find(bundleContext1, null, null, false, collection);
 
         TestCase.assertEquals(1, collection.size());

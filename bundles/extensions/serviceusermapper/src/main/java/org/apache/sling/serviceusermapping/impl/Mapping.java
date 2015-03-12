@@ -18,19 +18,17 @@
  */
 package org.apache.sling.serviceusermapping.impl;
 
-import org.apache.sling.serviceusermapping.ServiceUserMapping;
-
 /**
  * The <code>Mapping</code> class defines the mapping of a service's name and
  * optional service information to a user name.
  */
-class Mapping implements ServiceUserMapping, Comparable<Mapping> {
+class Mapping implements Comparable<Mapping> {
 
 
     /**
      * The name of the osgi property holding the service name.
      */
-    static String SERVICENAME = "serviceName";
+    static String SERVICENAME = ".serviceName";
 
     private final String serviceName;
 
