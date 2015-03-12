@@ -120,6 +120,7 @@
                         <include>%regex[.*LaunchpadReadyIT.*]</include>
                         <include>%regex[.*SlingSpecificsSightlyIT.*]</include>
                         <include>%regex[.*TestsRunner.*]</include>
+                        <include>%regex[.*PerformanceIT.*]</include>
                     </includes>
                     <dependenciesToScan>
                         <dependency>io.sightly:io.sightly.tck</dependency>
@@ -310,6 +311,12 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.testing</artifactId>
             <version>2.0.16</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>junit</groupId>
+                    <artifactId>junit-dep</artifactId>
+                </exclusion>
+            </exclusions>
             <scope>test</scope>
         </dependency>
 
@@ -352,6 +359,14 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Dependency for running Sling performance tests -->
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.performance.base</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
