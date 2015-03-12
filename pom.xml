@@ -40,8 +40,9 @@
     <name>Apache Sling Scripting Sightly Integration Tests Content</name>
 
     <description>
-        This bundle contains content adapted from the Adobe Sightly TCK meant to test the org.apache.sling.scripting.sightly
-        implementations.
+        This bundle contains:
+            - Content adapted from the Adobe Sightly TCK meant to test the org.apache.sling.scripting.sightly implementations.
+            - Content meant to test performance of the org.apache.sling.scripting.sightly implementation.
     </description>
 
     <scm>
