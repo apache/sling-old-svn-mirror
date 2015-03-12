@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.event</artifactId>
     <packaging>bundle</packaging>
-    <version>3.5.3-SNAPSHOT</version>
+    <version>3.5.5-SNAPSHOT</version>
 
     <name>Apache Sling Event Support</name>
     <description>

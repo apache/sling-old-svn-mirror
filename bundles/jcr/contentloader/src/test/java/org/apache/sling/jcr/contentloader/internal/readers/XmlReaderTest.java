@@ -34,7 +34,7 @@ import javax.jcr.RepositoryException;
 
 import junit.framework.TestCase;
 
-import org.apache.sling.jcr.contentloader.internal.ContentCreator;
+import org.apache.sling.jcr.contentloader.ContentCreator;
 
 public class XmlReaderTest extends TestCase {
 

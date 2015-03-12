@@ -19,23 +19,28 @@
 
 package org.apache.sling.query.api.internal;
 
+import java.util.Iterator;
+import java.util.List;
+
+import org.apache.sling.query.api.Predicate;
+import org.apache.sling.query.selector.parser.Attribute;
+import org.apache.sling.query.selector.parser.SelectorSegment;
+
 import aQute.bnd.annotation.ConsumerType;
 
-/**
- * Function can transform one value into another.
- * 
- * @author Tomasz Rękawek
- * 
- * @param <F> Input type
- * @param <T> Output type
- */
 @ConsumerType
-public interface Function<F, T> {
-	/**
-	 * Take input F and transform it into output T.
-	 * 
-	 * @param input Input value
-	 * @return Output value
-	 */
-	T apply(F input);
+public interface TreeProvider<T> {
+	Iterator<T> listChildren(T parent);
+
+	T getParent(T element);
+
+	String getName(T element);
+
+	Predicate<T> getPredicate(String type, String name, List<Attribute> attributes);
+
+	Iterator<T> query(List<SelectorSegment> segment, T resource);
+
+	boolean sameElement(T o1, T o2);
+
+	boolean isDescendant(T root, T testedElement);
 }

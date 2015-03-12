@@ -18,32 +18,26 @@
  */
 package org.apache.sling.jcr.contentloader.internal;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
+import java.util.List;
+import java.util.Map;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
-/**
- * The <code>ContentReader</code>
- * A content reader is provided by an {@link ImportProvider}.
- */
-public interface ContentReader {
+import org.osgi.framework.Bundle;
 
-    /**
-     * Read the content from the URL and create the
-     * content using the provided content creator.
-     * @param url The input stream.
-     * @throws IOException
-     */
-    void parse(URL url, ContentCreator creator) throws IOException, RepositoryException;
+public interface BundleHelper extends ContentHelper {
 
-    /**
-     * Read the content from the input stream and create the
-     * content using the provided content creator.
-     * @param ins the input stream.
-     * @throws IOException
-     */
-    void parse(InputStream ins, ContentCreator contentCreator) throws IOException, RepositoryException;
+    Map<String, Object> getBundleContentInfo(Session session, Bundle bundle, boolean create) throws RepositoryException;
+
+    void unlockBundleContentInfo(Session session, Bundle bundle, boolean contentLoaded, List<String> createdNodes)throws RepositoryException;
+
+    void contentIsUninstalled(Session session, Bundle bundle);
+
+    void createRepositoryPath(Session session, String path) throws RepositoryException;
+
+    Session getSession() throws RepositoryException;
     
+    Session getSession(String workspace) throws RepositoryException;
+
 }

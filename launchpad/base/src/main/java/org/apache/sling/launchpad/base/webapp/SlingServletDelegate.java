@@ -46,6 +46,7 @@ import org.apache.sling.launchpad.base.shared.Notifiable;
 import org.apache.sling.launchpad.base.shared.SharedConstants;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -134,10 +135,10 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
     private boolean servletDestroyed = false;
 
     /**
-     * The <code>Felix</code> instance loaded on {@link #init()} and stopped
+     * The OSGI framework instance loaded on {@link #init()} and stopped
      * on {@link #destroy()}.
      */
-    private SlingBridge sling;
+    private Sling sling;
 
     /**
      * The map of delegatee servlets to which requests are delegated. This map
@@ -156,23 +157,28 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
 
     private String slingHome;
 
+    @Override
     public void setNotifiable(Notifiable notifiable) {
         this.notifiable = notifiable;
     }
 
+    @Override
     public void setCommandLine(Map<String, String> args) {
         this.properties = args;
     }
 
+    @Override
     public void setSlingHome(String slingHome) {
         this.slingHome = slingHome;
     }
 
+    @Override
     public boolean start() {
         // might want to log, why we don't start !
         return false;
     }
 
+    @Override
     public void stop() {
         destroy();
     }
@@ -185,10 +191,11 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
      *
      * @throws ServletException if the framework cannot be initialized.
      */
+    @Override
     public final void init() throws ServletException {
         // temporary holders control final setup and ensure proper
         // disposal in case of setup errors
-        SlingBridge tmpSling = null;
+        Sling tmpSling = null;
         Servlet tmpDelegatee = null;
 
         try {
@@ -201,7 +208,7 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
             Logger logger = new ServletContextLogger(getServletContext());
             LaunchpadContentProvider rp = new ServletContextResourceProvider(
                 getServletContext());
-            tmpSling = new SlingBridge(notifiable, logger, rp, props, getServletContext());
+            tmpSling = SlingBridge.getSlingBridge(notifiable, logger, rp, props, getServletContext());
 
             // set up the OSGi HttpService proxy servlet
             tmpDelegatee = new ProxyServlet();
@@ -267,6 +274,7 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
      *             servlet's normal operation occurred
      * @throws IOException if an input or output exception occurs
      */
+    @Override
     public final void service(ServletRequest req, ServletResponse res)
             throws ServletException, IOException {
 
@@ -283,6 +291,7 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
      * Destroys this servlet by shutting down the OSGi framework and hence the
      * delegatee servlet if one is set at all.
      */
+    @Override
     public final void destroy() {
 
         // set the destroyed flag to signal to the startSling method
@@ -520,6 +529,7 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
             return resources.iterator(); // unchecked
         }
 
+        @Override
         public URL getResource(String path) {
             // nothing for empty or null path
             if (path == null || path.length() == 0) {

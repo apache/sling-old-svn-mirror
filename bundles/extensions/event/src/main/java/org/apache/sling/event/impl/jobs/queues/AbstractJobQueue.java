@@ -141,6 +141,7 @@ public abstract class AbstractJobQueue
         this.logger = LoggerFactory.getLogger(this.getClass().getName() + '.' + name);
         this.running = true;
         this.cache = new QueueJobCache(services.configuration, config.getType(), topics);
+        this.cache.fillCache();
     }
 
     /**

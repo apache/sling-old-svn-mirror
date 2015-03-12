@@ -38,8 +38,10 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
+import org.osgi.framework.Constants;
 import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -49,17 +51,24 @@ import org.slf4j.LoggerFactory;
  * The <code>ContentLoaderService</code> is the service
  * providing the following functionality:
  * <ul>
- * <li>Bundle listener to load initial content.
- * <li>Fires OSGi EventAdmin events on behalf of internal helper objects
+ * <li>Bundle listener to load and unload initial content.
  * </ul>
  *
  */
-@Component(metatype=false)
+@Component(
+    metatype = false
+)
 @Properties({
-    @Property(name="service.vendor", value="The Apache Software Foundation"),
-    @Property(name="service.description", value="Apache Sling Content Loader Implementation")
+    @Property(
+        name = Constants.SERVICE_VENDOR,
+        value = "The Apache Software Foundation"
+    ),
+    @Property(
+        name = Constants.SERVICE_DESCRIPTION,
+        value = "Apache Sling Content Loader Implementation"
+    )
 })
-public class ContentLoaderService implements SynchronousBundleListener, JcrContentHelper {
+public class ContentLoaderService implements SynchronousBundleListener, BundleHelper {
 
     public static final String PROPERTY_CONTENT_LOADED = "content-loaded";
     public static final String PROPERTY_CONTENT_LOADED_AT = "content-load-time";
@@ -80,7 +89,7 @@ public class ContentLoaderService implements SynchronousBundleListener, JcrConte
     private SlingRepository repository;
 
     /**
-     * The MimeTypeService used by the initial content initialContentLoader to
+     * The MimeTypeService used by the bundle content loader to
      * resolve MIME types for files to be installed.
      */
     @Reference
@@ -90,7 +99,7 @@ public class ContentLoaderService implements SynchronousBundleListener, JcrConte
      * The initial content loader which is called to load initial content up
      * into the repository when the providing bundle is installed.
      */
-    private Loader initialContentLoader;
+    private BundleContentLoader bundleContentLoader;
 
     /**
      * The id of the current instance
@@ -104,7 +113,7 @@ public class ContentLoaderService implements SynchronousBundleListener, JcrConte
 
     /** Sling settings service. */
     @Reference
-    protected org.apache.sling.settings.SlingSettingsService settingsService;
+    protected SlingSettingsService settingsService;
 
     // ---------- BundleListener -----------------------------------------------
 
@@ -136,7 +145,7 @@ public class ContentLoaderService implements SynchronousBundleListener, JcrConte
                     synchronized ( this.updatedBundles ) {
                         isUpdate = this.updatedBundles.remove(bundle.getSymbolicName());
                     }
-                    initialContentLoader.registerBundle(session, bundle, isUpdate);
+                    bundleContentLoader.registerBundle(session, bundle, isUpdate);
                 } catch (Throwable t) {
                     log.error(
                         "bundleChanged: Problem loading initial content of bundle "
@@ -156,7 +165,7 @@ public class ContentLoaderService implements SynchronousBundleListener, JcrConte
             case BundleEvent.UNINSTALLED:
                 try {
                     session = this.getSession();
-                    initialContentLoader.unregisterBundle(session, bundle);
+                    bundleContentLoader.unregisterBundle(session, bundle);
                 } catch (Throwable t) {
                     log.error(
                         "bundleChanged: Problem unloading initial content of bundle "
@@ -179,7 +188,7 @@ public class ContentLoaderService implements SynchronousBundleListener, JcrConte
         return (mts != null) ? mts.getMimeType(name) : null;
     }
 
-    protected void createRepositoryPath(final Session writerSession, final String repositoryPath)
+    public void createRepositoryPath(final Session writerSession, final String repositoryPath)
     throws RepositoryException {
         if ( !writerSession.itemExists(repositoryPath) ) {
             Node node = writerSession.getRootNode();
@@ -209,14 +218,14 @@ public class ContentLoaderService implements SynchronousBundleListener, JcrConte
     /** Activates this component, called by SCR before registering as a service */
     protected void activate(ComponentContext componentContext) {
         this.slingId = this.settingsService.getSlingId();
-        this.initialContentLoader = new Loader(this);
+        this.bundleContentLoader = new BundleContentLoader(this);
 
         componentContext.getBundleContext().addBundleListener(this);
 
         Session session = null;
         try {
             session = this.getSession();
-            this.createRepositoryPath(session, ContentLoaderService.BUNDLE_CONTENT_NODE);
+            this.createRepositoryPath(session, BUNDLE_CONTENT_NODE);
             log.debug(
                     "Activated - attempting to load content from all "
                     + "bundles which are neither INSTALLED nor UNINSTALLED");
@@ -229,7 +238,7 @@ public class ContentLoaderService implements SynchronousBundleListener, JcrConte
                     // load content for bundles which are neither INSTALLED nor
                     // UNINSTALLED
                     try {
-                        initialContentLoader.registerBundle(session, bundle, false);
+                        bundleContentLoader.registerBundle(session, bundle, false);
                     } catch (Throwable t) {
                         log.error(
                             "Problem loading initial content of bundle "
@@ -263,9 +272,9 @@ public class ContentLoaderService implements SynchronousBundleListener, JcrConte
     protected void deactivate(ComponentContext componentContext) {
         componentContext.getBundleContext().removeBundleListener(this);
 
-        if ( this.initialContentLoader != null ) {
-            this.initialContentLoader.dispose();
-            this.initialContentLoader = null;
+        if ( this.bundleContentLoader != null ) {
+            this.bundleContentLoader.dispose();
+            this.bundleContentLoader = null;
         }
     }
 
@@ -279,9 +288,16 @@ public class ContentLoaderService implements SynchronousBundleListener, JcrConte
     /**
      * Returns an administrative session to the default workspace.
      */
-    private Session getSession()
+    public Session getSession()
     throws RepositoryException {
         return getRepository().loginAdministrative(null);
+    }
+
+    /**
+     * Returns an administrative session for the named workspace.
+     */
+    public Session getSession(final String workspace) throws RepositoryException {
+        return getRepository().loginAdministrative(workspace);
     }
 
     /**
@@ -332,22 +348,22 @@ public class ContentLoaderService implements SynchronousBundleListener, JcrConte
             return null;
         }
         final Map<String, Object> info = new HashMap<String, Object>();
-        if ( bcNode.hasProperty(ContentLoaderService.PROPERTY_CONTENT_LOADED_AT)) {
-            info.put(ContentLoaderService.PROPERTY_CONTENT_LOADED_AT, bcNode.getProperty(ContentLoaderService.PROPERTY_CONTENT_LOADED_AT).getDate());
+        if ( bcNode.hasProperty(PROPERTY_CONTENT_LOADED_AT)) {
+            info.put(PROPERTY_CONTENT_LOADED_AT, bcNode.getProperty(PROPERTY_CONTENT_LOADED_AT).getDate());
         }
-        if ( bcNode.hasProperty(ContentLoaderService.PROPERTY_CONTENT_LOADED) ) {
-            info.put(ContentLoaderService.PROPERTY_CONTENT_LOADED,
-                    bcNode.getProperty(ContentLoaderService.PROPERTY_CONTENT_LOADED).getBoolean());
+        if ( bcNode.hasProperty(PROPERTY_CONTENT_LOADED) ) {
+            info.put(PROPERTY_CONTENT_LOADED,
+                bcNode.getProperty(PROPERTY_CONTENT_LOADED).getBoolean());
         } else {
-            info.put(ContentLoaderService.PROPERTY_CONTENT_LOADED, false);
+            info.put(PROPERTY_CONTENT_LOADED, false);
         }
-        if ( bcNode.hasProperty(ContentLoaderService.PROPERTY_UNINSTALL_PATHS) ) {
+        if ( bcNode.hasProperty(PROPERTY_UNINSTALL_PATHS) ) {
             final Value[] values = bcNode.getProperty(PROPERTY_UNINSTALL_PATHS).getValues();
             final String[] s = new String[values.length];
             for(int i=0; i<values.length; i++) {
                 s[i] = values[i].getString();
             }
-            info.put(ContentLoaderService.PROPERTY_UNINSTALL_PATHS, s);
+            info.put(PROPERTY_UNINSTALL_PATHS, s);
         }
         return info;
     }
@@ -361,7 +377,7 @@ public class ContentLoaderService implements SynchronousBundleListener, JcrConte
         final Node parentNode = (Node)session.getItem(BUNDLE_CONTENT_NODE);
         final Node bcNode = parentNode.getNode(nodeName);
         if ( contentLoaded ) {
-            bcNode.setProperty(ContentLoaderService.PROPERTY_CONTENT_LOADED, contentLoaded);
+            bcNode.setProperty(PROPERTY_CONTENT_LOADED, contentLoaded);
             bcNode.setProperty(PROPERTY_CONTENT_LOADED_AT, Calendar.getInstance());
             bcNode.setProperty(PROPERTY_CONTENT_LOADED_BY, this.slingId);
             bcNode.setProperty(PROPERTY_CONTENT_UNLOADED_AT, (String)null);
@@ -381,7 +397,7 @@ public class ContentLoaderService implements SynchronousBundleListener, JcrConte
             final Node parentNode = (Node)session.getItem(BUNDLE_CONTENT_NODE);
             if ( parentNode.hasNode(nodeName) ) {
                 final Node bcNode = parentNode.getNode(nodeName);
-                bcNode.setProperty(ContentLoaderService.PROPERTY_CONTENT_LOADED, false);
+                bcNode.setProperty(PROPERTY_CONTENT_LOADED, false);
                 bcNode.setProperty(PROPERTY_CONTENT_UNLOADED_AT, Calendar.getInstance());
                 bcNode.setProperty(PROPERTY_CONTENT_UNLOADED_BY, this.slingId);
                 bcNode.setProperty(PROPERTY_UNINSTALL_PATHS, (String[])null);

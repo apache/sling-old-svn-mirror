@@ -20,6 +20,8 @@ package org.apache.sling.jcr.contentloader.internal;
 
 import java.io.IOException;
 
+import org.apache.sling.jcr.contentloader.ContentReader;
+
 public interface ImportProvider {
 
     ContentReader getReader() throws IOException;

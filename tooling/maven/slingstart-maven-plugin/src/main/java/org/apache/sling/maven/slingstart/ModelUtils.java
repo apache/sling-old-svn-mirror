@@ -54,9 +54,13 @@ public abstract class ModelUtils {
      * Read all model files from the directory in alphabetical order
      * @param logger
      */
-    private static Model readLocalModel(final File systemsDirectory, final MavenProject project, final MavenSession session, final Logger logger)
+    private static Model readLocalModel(final Model startingModel,
+            final File systemsDirectory,
+            final MavenProject project,
+            final MavenSession session,
+            final Logger logger)
     throws MojoExecutionException {
-        final Model result = new Model();
+        final Model result = (startingModel != null ? startingModel : new Model());
         final List<String> candidates = new ArrayList<String>();
         if ( systemsDirectory != null && systemsDirectory.exists() ) {
             for(final File f : systemsDirectory.listFiles() ) {
@@ -107,8 +111,6 @@ public abstract class ModelUtils {
             final Logger logger)
     throws MojoExecutionException {
         try {
-            final Model localModel = readLocalModel(systemsDirectory, project, session, logger);
-
             // check dependent models
             Model depModel = null;
             for(final File file : dependentModels) {
@@ -128,22 +130,15 @@ public abstract class ModelUtils {
                     IOUtils.closeQuietly(r);
                 }
             }
-            final Model result;
             if ( depModel != null ) {
-                Map<Traceable, String> errors = ModelUtility.validate(depModel);
+                final Map<Traceable, String> errors = ModelUtility.validate(depModel);
                 if (errors != null ) {
                     throw new MojoExecutionException("Invalid model : " + errors);
                 }
-                ModelUtility.merge(depModel, localModel);
-                errors = ModelUtility.validate(depModel);
-                if (errors != null ) {
-                    throw new MojoExecutionException("Invalid model : " + errors);
-                }
-
-                result = depModel;
-            } else {
-                result = localModel;
             }
+
+            final Model result = readLocalModel(depModel, systemsDirectory, project, session, logger);
+
             return result;
         } catch ( final IOException ioe) {
             throw new MojoExecutionException("Unable to cache model", ioe);

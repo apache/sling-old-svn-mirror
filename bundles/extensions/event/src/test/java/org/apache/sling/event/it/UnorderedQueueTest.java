@@ -24,8 +24,10 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -120,7 +122,7 @@ public class UnorderedQueueTest extends AbstractJobHandlingTest {
                         synchronized ( maxParticipants ) {
                             maxParticipants.add(max);
                         }
-                        sleep(30);
+                        sleep(job.getProperty("sleep", 30));
                         parallelCount.decrementAndGet();
                         return JobResult.OK;
                     }
@@ -150,7 +152,13 @@ public class UnorderedQueueTest extends AbstractJobHandlingTest {
             // we start "some" jobs:
             for(int i = 0; i < NUM_JOBS; i++ ) {
                 final String subTopic = TOPIC + "/sub" + (i % 10);
-                jobManager.addJob(subTopic, null);
+                final Map<String, Object> props = new HashMap<String, Object>();
+                if ( i < 10 ) {
+                    props.put("sleep", 300);
+                } else {
+                    props.put("sleep", 30);
+                }
+                jobManager.addJob(subTopic, props);
             }
             // start the queue
             q.resume();

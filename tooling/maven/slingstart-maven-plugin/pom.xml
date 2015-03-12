@@ -22,7 +22,7 @@
     </parent>
 
     <artifactId>slingstart-maven-plugin</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.5-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <name>Apache Sling SlingStart Maven Plugin</name>
@@ -59,7 +59,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
-                <version>3.3</version>
+                <version>3.4</version>
                 <executions>
                     <execution>
                         <id>mojo-descriptor</id>
@@ -86,7 +86,7 @@
        <dependency>
            <groupId>org.apache.sling</groupId>
            <artifactId>org.apache.sling.provisioning.model</artifactId>
-           <version>1.0.0</version>
+           <version>1.1.1-SNAPSHOT</version>
        </dependency>
        <dependency>
            <groupId>org.apache.maven</groupId>
@@ -111,7 +111,7 @@
         <dependency>
             <groupId>org.apache.maven.plugin-tools</groupId>
             <artifactId>maven-plugin-annotations</artifactId>
-            <version>3.3</version>
+            <version>3.4</version>
             <scope>provided</scope>
         </dependency>
       <!-- We use a class from the config admin implementation to read config files -->

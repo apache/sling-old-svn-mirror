@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.sling.installer.api.OsgiInstaller;
 import org.apache.sling.installer.api.UpdateHandler;
+import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
@@ -47,11 +48,17 @@ public class ServicesListener {
     /** The name of the installer service. */
     private static final String INSTALLER_SERVICE_NAME = OsgiInstaller.class.getName();
 
+    /** The name of the settings service. */
+    private static final String SETTINGS_SERVICE_NAME = SlingSettingsService.class.getName();
+
     /** The bundle context. */
     private final BundleContext bundleContext;
 
     /** The listener for the installer. */
     private final Listener installerListener;
+
+    /** The listener for the settings service. */
+    private final Listener settingsListener;
 
     /** The file installer. */
     private final FileInstaller installer;
@@ -71,18 +78,20 @@ public class ServicesListener {
         }
         this.installer = new FileInstaller(configs, writeBack);
         this.installerListener = new Listener(INSTALLER_SERVICE_NAME);
+        this.settingsListener = new Listener(SETTINGS_SERVICE_NAME);
         this.installerListener.start();
+        this.settingsListener.start();
     }
 
     public synchronized void notifyChange() {
         final boolean shouldRun = this.installer.hasConfigurations();
         if ( (shouldRun && !running) || (!shouldRun && running) ) {
             final OsgiInstaller installer = (OsgiInstaller)this.installerListener.getService();
-
-            if ( installer != null&& !running ) {
+            final SlingSettingsService settings = (SlingSettingsService)this.settingsListener.getService();
+            if ( installer != null && settings != null && !running ) {
                 logger.debug("Starting scanner");
-                this.startScanner(installer);
-            } else if ( running && installer == null ) {
+                this.startScanner(installer, settings);
+            } else if ( running && (installer == null || settings == null) ) {
                 logger.debug("Stopping scanner");
                 this.stopScanner();
             }
@@ -100,9 +109,9 @@ public class ServicesListener {
     /** Vendor of all registered services. */
     public static final String VENDOR = "The Apache Software Foundation";
 
-    private void startScanner(final OsgiInstaller installer) {
+    private void startScanner(final OsgiInstaller installer, final SlingSettingsService settings) {
         if ( !running ) {
-            this.installer.start(installer);
+            this.installer.start(installer, settings);
             final Dictionary<String, Object> props = new Hashtable<String, Object>();
             props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling File Installer Controller Service");
             props.put(Constants.SERVICE_VENDOR, VENDOR);

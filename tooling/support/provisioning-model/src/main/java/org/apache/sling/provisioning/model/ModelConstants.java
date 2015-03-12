@@ -62,4 +62,10 @@ public abstract class ModelConstants {
 
     /** Default start level value */
     public static final int DEFAULT_START_LEVEL = 0;
+
+    /**
+     * Name of the run mode to remove things from the base model.
+     * @since 1.1
+     */
+    public static final String RUN_MODE_REMOVE = ":remove";
 }

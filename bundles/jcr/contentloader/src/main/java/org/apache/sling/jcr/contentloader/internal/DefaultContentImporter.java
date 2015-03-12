@@ -23,7 +23,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -36,12 +35,12 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.contentloader.ContentImportListener;
 import org.apache.sling.jcr.contentloader.ContentImporter;
+import org.apache.sling.jcr.contentloader.ContentReader;
+import org.apache.sling.jcr.contentloader.ContentTypeUtil;
 import org.apache.sling.jcr.contentloader.ImportOptions;
+import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static javax.jcr.ImportUUIDBehavior.IMPORT_UUID_COLLISION_REPLACE_EXISTING;
-import static javax.jcr.ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW;
 
 /**
  * The <code>DefaultContentImporter</code> is the default implementation of the ContentImporter service providing the following functionality:
@@ -50,14 +49,18 @@ import static javax.jcr.ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW;
  * </ul>
  */
 @Component
-@Properties({
-    @Property(name = "service.vendor", value = "The Apache Software Foundation"),
-    @Property(name = "service.description", value = "Apache Sling JCR Content Import Service")
-})
 @Service(ContentImporter.class)
-public class DefaultContentImporter extends BaseImportLoader implements JcrContentHelper, ContentImporter {
-
-    private final Logger log = LoggerFactory.getLogger(DefaultContentImporter.class);
+@Properties({
+    @Property(
+        name = Constants.SERVICE_VENDOR,
+        value = "The Apache Software Foundation"
+    ),
+    @Property(
+        name = Constants.SERVICE_DESCRIPTION,
+        value = "Apache Sling JCR Content Import Service"
+    )
+})
+public class DefaultContentImporter extends BaseImportLoader implements ContentHelper, ContentImporter {
 
     /**
      * The MimeTypeService used by the initial content initialContentLoader to resolve MIME types for files to be installed.
@@ -65,32 +68,55 @@ public class DefaultContentImporter extends BaseImportLoader implements JcrConte
     @Reference
     private MimeTypeService mimeTypeService;
 
+    private final Logger logger = LoggerFactory.getLogger(DefaultContentImporter.class);
+
+    public DefaultContentImporter() {
+    }
+
     /* (non-Javadoc)
      * @see org.apache.sling.jcr.contentloader.ContentImporter#importContent(javax.jcr.Node, java.lang.String, java.io.InputStream, org.apache.sling.jcr.contentloader.ImportOptions, org.apache.sling.jcr.contentloader.ContentImportListener)
-	 */
-    public void importContent(Node parent, String name, InputStream contentStream, ImportOptions importOptions, ContentImportListener importListener) throws RepositoryException, IOException {
+     */
+    public void importContent(Node parent, String filename, InputStream contentStream, ImportOptions importOptions, ContentImportListener importListener) throws RepositoryException, IOException {
 
         // special treatment for system view imports
-        if (name.endsWith(EXT_JCR_XML)) {
-            boolean replace = (importOptions == null) ? false : importOptions.isOverwrite();
-            final Node node = importSystemView(parent, name, contentStream, replace);
-            if (node != null) {
-                if (importListener != null) {
-                    importListener.onCreate(node.getPath());
-                }
-            }
+        if (filename.endsWith(EXT_JCR_XML)) {
+            importJcrXml(parent, filename, contentStream, importOptions, importListener);
             return;
         }
 
-        DefaultContentCreator contentCreator = new DefaultContentCreator(this);
+        final DefaultContentCreator contentCreator = new DefaultContentCreator(this);
+
+        final String providerExtension = contentCreator.getImportProviderExtension(filename);
+        final String name = toPlainName(filename, providerExtension);
+
+        final ImportProvider importProvider = contentCreator.getImportProvider(filename);
+        final ContentReader contentReader = importProvider.getReader();
+
+        importContent(contentCreator, contentReader, parent, name, contentStream, importOptions, importListener);
+    }
+
+    public void importContent(final Node parent, final String name, final String contentType, final InputStream contentStream, final ImportOptions importOptions, final ContentImportListener importListener) throws RepositoryException, IOException {
+
+        // special treatment for system view imports
+        if (ContentTypeUtil.TYPE_JCR_XML.equalsIgnoreCase(contentType)) {
+            importJcrXml(parent, name, contentStream, importOptions, importListener);
+            return;
+        }
+
+        final DefaultContentCreator contentCreator = new DefaultContentCreator(this);
+
+        final String extension = ContentTypeUtil.getDefaultExtension(contentType);
+        final ImportProvider importProvider = contentCreator.getImportProvider(extension);
+        final ContentReader contentReader = importProvider.getReader();
+
+        importContent(contentCreator, contentReader, parent, name, contentStream, importOptions, importListener);
+    }
+
+    private void importContent(final DefaultContentCreator contentCreator, final ContentReader contentReader, final Node parent, final String name, final InputStream contentStream, final ImportOptions importOptions, final ContentImportListener importListener) throws RepositoryException, IOException {
         List<String> createdPaths = new ArrayList<String>();
         contentCreator.init(importOptions, this.defaultImportProviders, createdPaths, importListener);
-
-        contentCreator.prepareParsing(parent, toPlainName(contentCreator, name));
-
-        final ImportProvider ip = contentCreator.getImportProvider(name);
-        ContentReader reader = ip.getReader();
-        reader.parse(contentStream, contentCreator);
+        contentCreator.prepareParsing(parent, name);
+        contentReader.parse(contentStream, contentCreator);
 
         // save changes
         Session session = parent.getSession();
@@ -105,89 +131,21 @@ public class DefaultContentImporter extends BaseImportLoader implements JcrConte
         }
     }
 
-    private String toPlainName(DefaultContentCreator contentCreator, String name) {
-        final String providerExt = contentCreator.getImportProviderExtension(name);
-        if (providerExt != null) {
-            if (name.length() == providerExt.length()) {
-                return null; // no name is provided
-            }
-            return name.substring(0, name.length() - providerExt.length());
-        }
-        return name;
-    }
-
-    /**
-     * Import the XML file as JCR system or document view import. If the XML
-     * file is not a valid system or document view export/import file,
-     * <code>false</code> is returned.
-     *
-     * @param parent        The parent node below which to import
-     * @param name          the name of the import resource
-     * @param contentStream The XML content to import
-     * @param replace       Whether or not to replace the subtree at name if the
-     *                      node exists.
-     * @return <code>true</code> if the import succeeds, <code>false</code> if the import fails due to XML format errors.
-     * @throws IOException If an IO error occurrs reading the XML file.
-     */
-    private Node importSystemView(Node parent, String name, InputStream contentStream, boolean replace) throws IOException {
-        InputStream ins = null;
-        try {
-            // check whether we have the content already, nothing to do then
-            final String nodeName = (name.endsWith(EXT_JCR_XML)) ? name.substring(0, name.length() - EXT_JCR_XML.length()) : name;
-
-            // ensure the name is not empty
-            if (nodeName.length() == 0) {
-                throw new IOException("Node name must not be empty (or extension only)");
-            }
-
-            // check for existence/replacement
-            if (parent.hasNode(nodeName)) {
-                Node existingNode = parent.getNode(nodeName);
-                if (replace) {
-                    log.debug("importSystemView: Removing existing node at {}", nodeName);
-                    existingNode.remove();
-                } else {
-                    log.debug("importSystemView: Node {} for XML already exists, nothing to to", nodeName);
-                    return existingNode;
-                }
-            }
-
-            final int uuidBehavior;
-            if (replace) {
-                uuidBehavior = IMPORT_UUID_COLLISION_REPLACE_EXISTING;
-            } else {
-                uuidBehavior = IMPORT_UUID_CREATE_NEW;
-            }
-
-            ins = contentStream;
-            Session session = parent.getSession();
-            session.importXML(parent.getPath(), ins, uuidBehavior);
-
-            // additionally check whether the expected child node exists
-            return (parent.hasNode(nodeName)) ? parent.getNode(nodeName) : null;
-        } catch (InvalidSerializedDataException isde) {
-            // the xml might not be System or Document View export, fall back to old-style XML reading
-            log.info("importSystemView: XML does not seem to be system view export; cause: {}", isde.toString());
-            return null;
-        } catch (RepositoryException re) {
-            // any other repository related issue...
-            log.info("importSystemView: Repository issue loading XML; cause: {}", re.toString());
-            return null;
-        } finally {
-            if (ins != null) {
-                try {
-                    ins.close();
-                } catch (IOException ignore) {
-                    // ignore
-                }
+    private void importJcrXml(final Node parent, final String name, final InputStream contentStream, final ImportOptions importOptions, final ContentImportListener importListener) throws IOException, RepositoryException {
+        logger.debug("import JCR XML: '{}'", name);
+        boolean replace = (importOptions == null) ? false : importOptions.isOverwrite();
+        final Node node = importJcrXml(parent, name, contentStream, replace);
+        if (node != null) {
+            if (importListener != null) {
+                importListener.onCreate(node.getPath());
             }
         }
     }
 
-    // ---------- JcrContentHelper implementation ---------------------------------------------
+    // ---------- ContentHelper implementation ---------------------------------------------
 
     /* (non-Javadoc)
-     * @see org.apache.sling.jcr.contentloader.internal.JcrContentHelper#getMimeType(java.lang.String)
+     * @see org.apache.sling.jcr.contentloader.internal.ContentHelper#getMimeType(java.lang.String)
      */
     public String getMimeType(String name) {
         // local copy to not get NPE despite check for null due to concurrent unbind

@@ -255,12 +255,13 @@ class MockBundleContext implements BundleContext {
         return new Bundle[0];
     }
 
-    // --- unsupported operations ---
     @Override
     public String getProperty(final String s) {
-        throw new UnsupportedOperationException();
+        // no mock implementation, simulate that no property is found and return null
+        return null;
     }
 
+    // --- unsupported operations ---
     @Override
     public Bundle installBundle(final String s) {
         throw new UnsupportedOperationException();

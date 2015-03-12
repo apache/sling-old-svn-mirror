@@ -1,4 +1,4 @@
-/*-
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,30 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.sling.jcr.contentloader;
 
-package org.apache.sling.query.api;
-
-import java.util.Iterator;
-import java.util.List;
-
-import org.apache.sling.query.selector.parser.Attribute;
-import org.apache.sling.query.selector.parser.SelectorSegment;
+import java.io.InputStream;
 
 import aQute.bnd.annotation.ConsumerType;
 
 @ConsumerType
-public interface TreeProvider<T> {
-	Iterator<T> listChildren(T parent);
+public interface ContentTypeDetector {
 
-	T getParent(T element);
+    String detectContentType(InputStream contentStream, String filename);
 
-	String getName(T element);
-
-	Predicate<T> getPredicate(String type, String name, List<Attribute> attributes);
-
-	Iterator<T> query(List<SelectorSegment> segment, T resource);
-
-	boolean sameElement(T o1, T o2);
-
-	boolean isDescendant(T root, T testedElement);
 }

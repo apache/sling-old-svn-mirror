@@ -35,36 +35,35 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.Item;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.sling.jcr.contentloader.ContentReader;
 import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static javax.jcr.ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW;
-
 /**
- * The <code>Loader</code> loads initial content from the bundle.
+ * The <code>BundleContentLoader</code> loads initial content from the bundle.
  */
-public class Loader extends BaseImportLoader {
+public class BundleContentLoader extends BaseImportLoader {
 
     public static final String PARENT_DESCRIPTOR = "ROOT";
 
-    private final Logger log = LoggerFactory.getLogger(Loader.class);
+    private final Logger log = LoggerFactory.getLogger(BundleContentLoader.class);
 
-    private ContentLoaderService contentLoaderService;
+    private BundleHelper bundleHelper;
 
     // bundles whose registration failed and should be retried
     private List<Bundle> delayedBundles;
 
-    public Loader(ContentLoaderService contentLoaderService) {
+    public BundleContentLoader(BundleHelper bundleHelper) {
         super();
-        this.contentLoaderService = contentLoaderService;
+        this.bundleHelper = bundleHelper;
         this.delayedBundles = new LinkedList<Bundle>();
     }
 
@@ -73,7 +72,7 @@ public class Loader extends BaseImportLoader {
             delayedBundles.clear();
             delayedBundles = null;
         }
-        contentLoaderService = null;
+        bundleHelper = null;
         super.dispose();
     }
 
@@ -121,10 +120,10 @@ public class Loader extends BaseImportLoader {
         }
 
         try {
-            contentLoaderService.createRepositoryPath(metadataSession, ContentLoaderService.BUNDLE_CONTENT_NODE);
+            bundleHelper.createRepositoryPath(metadataSession, ContentLoaderService.BUNDLE_CONTENT_NODE);
 
             // check if the content has already been loaded
-            final Map<String, Object> bundleContentInfo = contentLoaderService.getBundleContentInfo(metadataSession, bundle, true);
+            final Map<String, Object> bundleContentInfo = bundleHelper.getBundleContentInfo(metadataSession, bundle, true);
 
             // if we don't get an info, someone else is currently loading
             if (bundleContentInfo == null) {
@@ -156,7 +155,7 @@ public class Loader extends BaseImportLoader {
                 success = true;
                 return true;
             } finally {
-                contentLoaderService.unlockBundleContentInfo(metadataSession, bundle, success, createdNodes);
+                bundleHelper.unlockBundleContentInfo(metadataSession, bundle, success, createdNodes);
             }
 
         } catch (RepositoryException re) {
@@ -180,9 +179,9 @@ public class Loader extends BaseImportLoader {
             delayedBundles.remove(bundle);
         } else {
             try {
-                contentLoaderService.createRepositoryPath(session, ContentLoaderService.BUNDLE_CONTENT_NODE);
+                bundleHelper.createRepositoryPath(session, ContentLoaderService.BUNDLE_CONTENT_NODE);
 
-                final Map<String, Object> bundleContentInfo = contentLoaderService.getBundleContentInfo(session, bundle, false);
+                final Map<String, Object> bundleContentInfo = bundleHelper.getBundleContentInfo(session, bundle, false);
 
                 // if we don't get an info, someone else is currently loading or unloading
                 // or the bundle is already uninstalled
@@ -192,9 +191,9 @@ public class Loader extends BaseImportLoader {
 
                 try {
                     uninstallContent(session, bundle, (String[]) bundleContentInfo.get(ContentLoaderService.PROPERTY_UNINSTALL_PATHS));
-                    contentLoaderService.contentIsUninstalled(session, bundle);
+                    bundleHelper.contentIsUninstalled(session, bundle);
                 } finally {
-                    contentLoaderService.unlockBundleContentInfo(session, bundle, false, null);
+                    bundleHelper.unlockBundleContentInfo(session, bundle, false, null);
                 }
             } catch (RepositoryException re) {
                 log.error("Cannot remove initial content for bundle " + bundle.getSymbolicName() + " : " + re.getMessage(), re);
@@ -215,7 +214,7 @@ public class Loader extends BaseImportLoader {
         final Map<String, Session> createdSessions = new HashMap<String, Session>();
 
         log.debug("Installing initial content from bundle {}", bundle.getSymbolicName());
-        final DefaultContentCreator contentCreator = new DefaultContentCreator(this.contentLoaderService);
+        final DefaultContentCreator contentCreator = new DefaultContentCreator(this.bundleHelper);
         try {
             while (pathIter.hasNext()) {
                 final PathEntry pathEntry = pathIter.next();
@@ -462,10 +461,12 @@ public class Loader extends BaseImportLoader {
     private Node createNode(Node parent, String name, URL resourceUrl, final DefaultContentCreator contentCreator) throws RepositoryException {
 
         final String resourcePath = resourceUrl.getPath().toLowerCase();
+        InputStream contentStream = null;
         try {
             // special treatment for system view imports
             if (resourcePath.endsWith(EXT_JCR_XML)) {
-                return importSystemView(parent, name, resourceUrl);
+                contentStream = resourceUrl.openStream();
+                return importJcrXml(parent, name, contentStream, false);
             }
 
             // get the node reader for this resource
@@ -480,7 +481,8 @@ public class Loader extends BaseImportLoader {
                 return null;
             }
 
-            contentCreator.prepareParsing(parent, toPlainName(name, contentCreator));
+            final String providerExtension = contentCreator.getImportProviderExtension(name);
+            contentCreator.prepareParsing(parent, toPlainName(name, providerExtension));
             nodeReader.parse(resourceUrl, contentCreator);
 
             return contentCreator.getCreatedRootNode();
@@ -488,6 +490,8 @@ public class Loader extends BaseImportLoader {
             throw re;
         } catch (Throwable t) {
             throw new RepositoryException(t.getMessage(), t);
+        } finally {
+            IOUtils.closeQuietly(contentStream);
         }
     }
 
@@ -672,56 +676,6 @@ public class Loader extends BaseImportLoader {
         }
     }
 
-    /**
-     * Import the XML file as JCR system or document view import. If the XML
-     * file is not a valid system or document view export/import file,
-     * <code>false</code> is returned.
-     *
-     * @param parent  The parent node below which to import
-     * @param nodeXML The URL to the XML file to import
-     * @return <code>true</code> if the import succeeds, <code>false</code>
-     *         if the import fails due to XML format errors.
-     * @throws IOException If an IO error occurs reading the XML file.
-     */
-    private Node importSystemView(Node parent, String name, URL nodeXML) throws IOException {
-
-        InputStream ins = null;
-        try {
-            // check whether we have the content already, nothing to do then
-            if (name.endsWith(EXT_JCR_XML)) {
-                name = name.substring(0, name.length() - EXT_JCR_XML.length());
-            }
-            if (parent.hasNode(name)) {
-                log.debug("importSystemView: Node {} for XML {} already exists, nothing to do", name, nodeXML);
-                return parent.getNode(name);
-            }
-
-            ins = nodeXML.openStream();
-            Session session = parent.getSession();
-            session.importXML(parent.getPath(), ins, IMPORT_UUID_CREATE_NEW);
-
-            // additionally check whether the expected child node exists
-            return (parent.hasNode(name)) ? parent.getNode(name) : null;
-        } catch (InvalidSerializedDataException isde) {
-            // the XML might not be system or document view export, fall back
-            // to old-style XML reading
-            log.info("importSystemView: XML {} does not seem to be system view export, trying old style; cause: {}", nodeXML, isde.toString());
-            return null;
-        } catch (RepositoryException re) {
-            // any other repository related issue...
-            log.info("importSystemView: Repository issue loading XML {}, trying old style; cause: {}", nodeXML, re.toString());
-            return null;
-        } finally {
-            if (ins != null) {
-                try {
-                    ins.close();
-                } catch (IOException ignore) {
-                    // ignore
-                }
-            }
-        }
-    }
-
     protected static final class Descriptor {
 
         public URL url;
@@ -784,23 +738,14 @@ public class Loader extends BaseImportLoader {
         }
     }
 
-    private String toPlainName(final String name, final DefaultContentCreator contentCreator) {
-
-        final String providerExt = contentCreator.getImportProviderExtension(name);
-        if (providerExt != null) {
-            return name.substring(0, name.length() - providerExt.length());
-        }
-        return name;
-    }
-
     private Session createSession(String workspace) throws RepositoryException {
         try {
-            return contentLoaderService.getRepository().loginAdministrative(workspace);
+            return bundleHelper.getSession(workspace);
         } catch (NoSuchWorkspaceException e) {
-            Session temp = contentLoaderService.getRepository().loginAdministrative(null);
+            Session temp = bundleHelper.getSession();
             temp.getWorkspace().createWorkspace(workspace);
             temp.logout();
-            return contentLoaderService.getRepository().loginAdministrative(workspace);
+            return bundleHelper.getSession(workspace);
         }
     }
 

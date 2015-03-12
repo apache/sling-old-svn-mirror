@@ -49,8 +49,8 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import org.apache.sling.jcr.contentloader.internal.ContentCreator;
-import org.apache.sling.jcr.contentloader.internal.ContentReader;
+import org.apache.sling.jcr.contentloader.ContentCreator;
+import org.apache.sling.jcr.contentloader.ContentReader;
 import org.apache.sling.jcr.contentloader.internal.ImportProvider;
 import org.kxml2.io.KXmlParser;
 import org.slf4j.Logger;
@@ -160,7 +160,7 @@ public class XmlReader implements ContentReader {
 
 
     /**
-     * @see org.apache.sling.jcr.contentloader.internal.ContentReader#parse(URL, org.apache.sling.jcr.contentloader.internal.ContentCreator)
+     * @see org.apache.sling.jcr.contentloader.ContentReader#parse(URL, org.apache.sling.jcr.contentloader.ContentCreator)
      */
     public synchronized void parse(final URL url, final ContentCreator creator)
     throws IOException, RepositoryException {
@@ -177,7 +177,7 @@ public class XmlReader implements ContentReader {
     }
 
     /* (non-Javadoc)
-	 * @see org.apache.sling.jcr.contentloader.internal.ContentReader#parse(java.io.InputStream, org.apache.sling.jcr.contentloader.internal.ContentCreator)
+	 * @see org.apache.sling.jcr.contentloader.ContentReader#parse(java.io.InputStream, org.apache.sling.jcr.contentloader.ContentCreator)
 	 */
 	public void parse(InputStream ins, ContentCreator creator)
 			throws IOException, RepositoryException {
