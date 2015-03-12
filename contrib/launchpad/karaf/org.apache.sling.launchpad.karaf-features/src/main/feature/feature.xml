@@ -47,7 +47,7 @@
     <!-- org.apache.sling.resourceresolver requires jcr -->
     <bundle>mvn:org.apache.sling/org.apache.sling.resourceresolver/1.2.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.serviceusermapper/1.1.0</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.settings/1.3.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.settings/1.3.6</bundle>
     <!-- Apache Sling Commons -->
     <bundle>mvn:org.apache.sling/org.apache.sling.commons.classloader/1.3.2</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.commons.compiler/2.2.0</bundle>
@@ -98,7 +98,7 @@
   <feature name="sling-extension-event" version="${project.version}">
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-extension-discovery</feature>
-    <bundle>mvn:org.apache.sling/org.apache.sling.event/3.5.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.event/3.5.4</bundle>
   </feature>
   <feature name="sling-extension-explorer" version="${project.version}">
     <feature version="${project.version}">sling</feature>
@@ -322,13 +322,13 @@
     <feature version="${project.version}">sling</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.i18n/2.3.2</bundle>
   </feature>
-  <feature name="sling-extension-query" version="2.0.0">
+  <feature name="sling-extension-query" version="3.0.0">
     <feature version="${project.version}">sling</feature>
-    <bundle>mvn:org.apache.sling/org.apache.sling.query/2.0.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.query/3.0.0</bundle>
   </feature>
-  <feature name="sling-extension-resourcemerger" version="1.2.6">
+  <feature name="sling-extension-resourcemerger" version="1.2.8">
     <feature version="${project.version}">sling</feature>
-    <bundle>mvn:org.apache.sling/org.apache.sling.resourcemerger/1.2.6</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.resourcemerger/1.2.8</bundle>
   </feature>
   <feature name="sling-extension-urlrewriter" version="0.0.2">
     <feature version="${project.version}">sling</feature>
