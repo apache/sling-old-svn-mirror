@@ -30,7 +30,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.settings</artifactId>
-            <version>1.3.4</version>
+            <version>1.3.6</version>
             </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
@@ -169,7 +169,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.event</artifactId>
-            <version>3.5.2</version>
+            <version>3.5.4</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
