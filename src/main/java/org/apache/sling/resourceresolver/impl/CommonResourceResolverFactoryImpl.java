@@ -91,7 +91,11 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
                 while ( isActive.get() ) {
                     try {
                         final ResolverWeakReference ref = (ResolverWeakReference) resolverReferenceQueue.remove();
-                        ref.close();
+                        try {
+                            ref.close();
+                        } catch ( final Throwable t ) {
+                            // we ignore everything from there to not stop this thread
+                        }
                         refs.remove(ref.context.hashCode());
                     } catch ( final InterruptedException ie) {
                         Thread.currentThread().interrupt();
@@ -113,6 +117,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     /**
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getAdministrativeResourceResolver(java.util.Map)
      */
+    @Override
     public ResourceResolver getAdministrativeResourceResolver(final Map<String, Object> passedAuthenticationInfo)
     throws LoginException {
         if ( !isActive.get() ) {
@@ -134,6 +139,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     /**
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getResourceResolver(java.util.Map)
      */
+    @Override
     public ResourceResolver getResourceResolver(final Map<String, Object> passedAuthenticationInfo)
     throws LoginException {
         if ( !isActive.get() ) {
@@ -163,6 +169,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     /**
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getThreadResourceResolver()
      */
+    @Override
     public ResourceResolver getThreadResourceResolver() {
         if ( !isActive.get() ) {
             return null;
@@ -304,14 +311,17 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         return this.activator.isMangleNamespacePrefixes();
     }
 
+    @Override
     public String getMapRoot() {
         return this.activator.getMapRoot();
     }
 
+    @Override
     public Mapping[] getMappings() {
         return this.activator.getMappings();
     }
 
+    @Override
     public BidiMap getVirtualURLMap() {
         return this.activator.getVirtualURLMap();
     }
@@ -320,6 +330,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         return this.activator.getRootProviderEntry();
     }
 
+    @Override
     public int getDefaultVanityPathRedirectStatus() {
         return this.activator.getDefaultVanityPathRedirectStatus();
     }
@@ -331,31 +342,38 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         return this.activator.getResourceAccessSecurityTracker();
     }
 
+    @Override
     public ResourceResolver getServiceResourceResolver(
             final Map<String, Object> authenticationInfo) throws LoginException {
         throw new IllegalStateException("This method is not implemented.");
     }
 
+    @Override
     public boolean isVanityPathEnabled() {
         return this.activator.isVanityPathEnabled();
     }
 
+    @Override
     public long getMaxCachedVanityPathEntries() {
         return this.activator.getMaxCachedVanityPathEntries();
     }
 
+    @Override
     public int getVanityBloomFilterMaxBytes() {
         return this.activator.getVanityBloomFilterMaxBytes();
     }
 
+    @Override
     public boolean isOptimizeAliasResolutionEnabled() {
         return this.activator.isOptimizeAliasResolutionEnabled();
     }
 
+    @Override
     public boolean hasVanityPathPrecedence() {
         return this.activator.hasVanityPathPrecedence();
     }
 
+    @Override
     public List<VanityPathConfig> getVanityPathConfig() {
         final String[] includes = this.activator.getVanityPathWhiteList();
         final String[] excludes = this.activator.getVanityPathBlackList();
