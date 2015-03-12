@@ -47,8 +47,8 @@
         <sling.java.version>6</sling.java.version>
         <exam.version>4.4.0</exam.version>
         <url.version>2.3.0</url.version>
-        <bundle.build.name>${basedir}/target</bundle.build.name>
-        <bundle.file.name>${bundle.build.name}/${project.build.finalName}.jar</bundle.file.name>
+        <bundle.build.dir>${basedir}/target</bundle.build.dir>
+        <bundle.file.name>${bundle.build.dir}/${project.build.finalName}.jar</bundle.file.name>
         <min.port>35000</min.port>
         <max.port>35999</max.port>
     </properties>
@@ -128,6 +128,10 @@
                         <property>
                             <name>project.bundle.file</name>
                             <value>${bundle.file.name}</value>
+                        </property>
+                        <property>
+                            <name>bundle.build.dir</name>
+                            <value>${bundle.build.dir}</value>
                         </property>
                         <property>
                             <name>org.osgi.service.http.port</name>
