@@ -142,13 +142,23 @@ public class ResourceResolverContext {
     public void close() {
         if ( this.isClosed.compareAndSet(false, true)) {
             for (final DynamicResourceProvider provider : this.dynamicProviders) {
-                provider.close();
+                try {
+                    provider.close();
+                } catch ( final Throwable t) {
+                    // the provider might already be terminated (bundle stopped etc.)
+                    // so we ignore anything from here
+                }
             }
             this.dynamicProviders.clear();
             this.providers.clear();
             this.refreshableProviders.clear();
             if ( this.resourceTypeResourceResolver != null ) {
-                this.resourceTypeResourceResolver.close();
+                try {
+                    this.resourceTypeResourceResolver.close();
+                } catch ( final Throwable t) {
+                    // the resolver (or the underlying provider) might already be terminated (bundle stopped etc.)
+                    // so we ignore anything from here
+                }
                 this.resourceTypeResourceResolver = null;
             }
         }
