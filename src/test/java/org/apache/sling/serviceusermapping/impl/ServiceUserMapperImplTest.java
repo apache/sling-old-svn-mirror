@@ -18,6 +18,10 @@
  */
 package org.apache.sling.serviceusermapping.impl;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,10 +37,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class ServiceUserMapperImplTest {
     private static final String BUNDLE_SYMBOLIC1 = "bundle1";
@@ -96,7 +96,7 @@ public class ServiceUserMapperImplTest {
         TestCase.assertEquals(SAMPLE_SUB, sum.getServiceUserID(BUNDLE1, SUB));
         TestCase.assertEquals(ANOTHER_SUB, sum.getServiceUserID(BUNDLE2, SUB));
     }
-    
+
     @Test
     public void test_getServiceUserID_WithServiceUserValidator() {
         @SuppressWarnings("serial")
@@ -115,7 +115,7 @@ public class ServiceUserMapperImplTest {
         final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
         sum.configure(null, config);
         ServiceUserValidator serviceUserValidator = new ServiceUserValidator() {
-            
+
             public boolean isValid(String serviceUserId, String serviceName,
                     String subServiceName) {
                 if (SAMPLE.equals(serviceUserId)) {
@@ -124,7 +124,7 @@ public class ServiceUserMapperImplTest {
                 return true;
             }
         };
-        sum.bindServiceUserValidator(serviceUserValidator, null);
+        sum.bindServiceUserValidator(serviceUserValidator);
 
         TestCase.assertEquals(null, sum.getServiceUserID(BUNDLE1, null));
         TestCase.assertEquals(ANOTHER, sum.getServiceUserID(BUNDLE2, null));
