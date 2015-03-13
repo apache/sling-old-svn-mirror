@@ -19,7 +19,6 @@
 package org.apache.sling.serviceusermapping.impl;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -27,15 +26,15 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
@@ -105,7 +104,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     private Mapping[] activeMappings = new Mapping[0];
 
-    private Vector <ServiceUserValidator> validators = new Vector<ServiceUserValidator>();
+    private final List<ServiceUserValidator> validators = new CopyOnWriteArrayList<ServiceUserValidator>();
 
     private SortedMap<Mapping, ServiceRegistration> activeMappingRegistrations = new TreeMap<Mapping, ServiceRegistration>();
 
@@ -144,22 +143,20 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
             bundleContext = null;
         }
     }
-    
+
     /**
      * bind the serviceUserValidator
      * @param serviceUserValidator
-     * @param properties
      */
-    protected void bindServiceUserValidator(final ServiceUserValidator serviceUserValidator, final Map<String, Object> properties){
+    protected void bindServiceUserValidator(final ServiceUserValidator serviceUserValidator) {
         validators.add(serviceUserValidator);
     }
-    
+
     /**
      * unbind the serviceUserValidator
      * @param serviceUserValidator
-     * @param properties
      */
-    protected void unbindServiceUserValidator(final ServiceUserValidator serviceUserValidator, final Map<String, Object> properties){
+    protected void unbindServiceUserValidator(final ServiceUserValidator serviceUserValidator) {
         validators.remove(serviceUserValidator);
     }
 
@@ -211,27 +208,24 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
             }
         }
 
-
         activeMappings = mappings.toArray(new Mapping[mappings.size()]);
 
         updateServiceMappings(mappings);
-
     }
 
 
-    void updateServiceMappings(List<Mapping> newMappings) {
-        
+    void updateServiceMappings(final List<Mapping> newMappings) {
+
         // do not do anything if not activated
         if (bundleContext == null) {
             return;
         }
 
-        SortedSet<Mapping> orderedActiveMappings = new TreeSet<Mapping>(newMappings);
+        final SortedSet<Mapping> orderedActiveMappings = new TreeSet<Mapping>(newMappings);
 
-
-        Iterator<Map.Entry<Mapping, ServiceRegistration>> it = activeMappingRegistrations.entrySet().iterator();
+        final Iterator<Map.Entry<Mapping, ServiceRegistration>> it = activeMappingRegistrations.entrySet().iterator();
         while (it.hasNext()) {
-            Map.Entry<Mapping, ServiceRegistration> registrationEntry = it.next();
+            final Map.Entry<Mapping, ServiceRegistration> registrationEntry = it.next();
 
             if (!orderedActiveMappings.contains(registrationEntry.getKey())) {
                 registrationEntry.getValue().unregister();
@@ -240,24 +234,24 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
         }
 
 
-        for (Mapping mapping: orderedActiveMappings) {
+        for (final Mapping mapping: orderedActiveMappings) {
             if (!activeMappingRegistrations.containsKey(mapping)) {
-                Dictionary<String, Object> properties = new Hashtable<String, Object>();
+                final Dictionary<String, Object> properties = new Hashtable<String, Object>();
                 if (mapping.getSubServiceName() != null) {
                     properties.put(ServiceUserMapped.SUBSERVICENAME, mapping.getSubServiceName());
                 }
 
                 properties.put(Mapping.SERVICENAME, mapping.getServiceName());
-                ServiceRegistration registration = bundleContext.registerService(ServiceUserMappedImpl.SERVICEUSERMAPPED,
+                final ServiceRegistration registration = bundleContext.registerService(ServiceUserMappedImpl.SERVICEUSERMAPPED,
                         new ServiceUserMappedImpl(), properties);
                 activeMappingRegistrations.put(mapping, registration);
             }
         }
     }
 
-    private String internalGetUserId(String serviceName, String subServiceName) {
+    private String internalGetUserId(final String serviceName, final String subServiceName) {
         // try with serviceInfo first
-        for (Mapping mapping : this.activeMappings) {
+        for (final Mapping mapping : this.activeMappings) {
             final String userId = mapping.map(serviceName, subServiceName);
             if (userId != null) {
                 return userId;
@@ -276,22 +270,22 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
         return this.defaultUser;
     }
 
-    private boolean isValidUser(String userId, String serviceName, String subServiceName) {
+    private boolean isValidUser(final String userId, final String serviceName, final String subServiceName) {
         if (userId == null) {
             return false;
         }
-        if (validators != null && validators.size() > 0) {
-            for (ServiceUserValidator validator : validators) {
-                boolean valid = validator.isValid(userId, serviceName, subServiceName);
-                if (!valid) {
-                    return false;
+        if ( !validators.isEmpty() ) {
+            for (final ServiceUserValidator validator : validators) {
+                if ( validator.isValid(userId, serviceName, subServiceName) ) {
+                    return true;
                 }
             }
+            return false;
         }
         return true;
     }
 
-    static String getServiceName(Bundle bundle) {
+    static String getServiceName(final Bundle bundle) {
         return bundle.getSymbolicName();
     }
 }
