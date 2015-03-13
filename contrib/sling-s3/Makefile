@@ -32,8 +32,10 @@ start-s3-mongo: target/crank-s3-mongo.txt contrib/crankstart.jar
 	java -jar contrib/crankstart.jar target/crank-s3-mongo.txt
 
 install-deps: contrib/oak-s3 contrib/org.apache.sling.launchpad.karaf contrib/crankstart.jar
-	cd contrib/oak-s3; mvn clean install; cd ../..
-	cd contrib/org.apache.sling.launchpad.karaf; mvn clean install; cd ../..
+        mkdir -p contrib; cd contrib
+	cd contrib/oak-s3; mvn clean install; cd ..
+	cd contrib/org.apache.sling.launchpad.karaf; mvn clean install; cd ..
+        cd ..
 
 update-bundles:
 	rm crank.d/*-sling-startlevel-*.txt
