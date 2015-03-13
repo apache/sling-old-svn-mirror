@@ -1,0 +1,18 @@
+# Set OSGi framework properties
+osgi.property org.osgi.service.http.port ${port}
+osgi.property sling.home sling
+osgi.property repository.home sling/oak/repository
+osgi.property org.osgi.framework.storage sling/osgi.framework.storage
+osgi.property org.apache.sling.commons.log.level INFO
+osgi.property org.apache.sling.commons.log.file logs/error.log
+osgi.property org.apache.sling.commons.log.file.number 5
+osgi.property org.apache.sling.commons.log.file.size '.'yyyy-MM-dd
+osgi.property felix.startlevel.bundle 22
+osgi.property org.osgi.framework.startlevel.beginning 32
+
+# Once OSGi properties are set, start the framework
+start.framework
+
+# Load the Configuration Admin bundle and start it
+bundle mvn:org.apache.felix/org.apache.felix.configadmin/1.6.0
+start.all.bundles

@@ -1,0 +1,4 @@
+config org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService
+  mongouri=mongodb://localhost:27017
+  db=oak
+  customBlobStore=${customBlobStore}

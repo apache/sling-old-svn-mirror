@@ -1,0 +1,1 @@
+bundle mvn:org.mongodb/mongo-java-driver/2.12.2

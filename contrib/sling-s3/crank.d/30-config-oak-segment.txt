@@ -1,0 +1,4 @@
+config org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService
+  name=Default NodeStore
+  repository.home=sling/oak/repository
+  customBlobStore=${customBlobStore}

@@ -1,0 +1,22 @@
+defaults crankstart.bundle.start.level 5
+
+bundle mvn:org.apache.sling/org.apache.sling.extensions.webconsolebranding/1.0.0
+bundle mvn:org.apache.sling/org.apache.sling.extensions.webconsolesecurityprovider/1.0.0
+bundle mvn:org.apache.felix/org.apache.felix.inventory/1.0.4
+bundle mvn:org.apache.felix/org.apache.felix.prefs/1.0.6
+bundle mvn:org.apache.felix/org.apache.felix.webconsole/4.2.2
+bundle mvn:org.apache.geronimo.bundles/json/20090211_1
+bundle mvn:org.apache.felix/org.apache.felix.webconsole.plugins.ds/1.0.0
+bundle mvn:org.apache.felix/org.apache.felix.webconsole.plugins.obr/1.0.2
+bundle mvn:org.apache.felix/org.apache.felix.webconsole.plugins.packageadmin/1.0.0
+bundle mvn:org.apache.felix/org.apache.felix.webconsole.plugins.event/1.0.2
+bundle mvn:org.apache.felix/org.apache.felix.webconsole.plugins.memoryusage/1.0.4
+bundle mvn:org.apache.sling/org.apache.sling.commons.json/2.0.11-SNAPSHOT
+bundle mvn:org.apache.felix/org.apache.felix.bundlerepository/1.6.4
+bundle mvn:org.apache.sling/org.apache.sling.extensions.threaddump/0.2.2
+bundle mvn:org.apache.sling/org.apache.sling.jcr.webconsole/1.0.2
+bundle mvn:org.apache.sling/org.apache.sling.extensions.explorer/1.0.4
+bundle mvn:org.apache.aries.jmx/org.apache.aries.jmx.api/1.1.0
+bundle mvn:org.apache.aries/org.apache.aries.util/1.1.0
+bundle mvn:org.apache.aries.jmx/org.apache.aries.jmx.core/1.1.1
+bundle mvn:org.apache.aries.jmx/org.apache.aries.jmx.whiteboard/1.0.0

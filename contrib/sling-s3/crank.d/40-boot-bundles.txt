@@ -1,0 +1,5 @@
+# http felix addons
+defaults crankstart.bundle.start.level 0
+bundle mvn:org.apache.felix/org.apache.felix.http.servlet-api/1.0.1
+bundle mvn:org.apache.felix/org.apache.felix.http.api/2.3.2
+bundle mvn:org.apache.felix/org.apache.felix.http.jetty/2.2.2

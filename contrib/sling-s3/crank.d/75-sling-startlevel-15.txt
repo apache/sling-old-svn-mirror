@@ -1,0 +1,10 @@
+defaults crankstart.bundle.start.level 15
+
+bundle mvn:commons-io/commons-io/1.4
+bundle mvn:org.apache.sling/org.apache.sling.jcr.oak.server/0.0.2-SNAPSHOT
+bundle mvn:com.google.guava/guava/15.0
+bundle mvn:org.apache.jackrabbit/oak-core/${oak.version}
+bundle mvn:org.apache.jackrabbit/oak-commons/${oak.version}
+bundle mvn:org.apache.jackrabbit/oak-mk-api/${oak.version}
+bundle mvn:org.apache.jackrabbit/oak-lucene/${oak.version}
+bundle mvn:org.apache.jackrabbit/oak-blob/${oak.version}

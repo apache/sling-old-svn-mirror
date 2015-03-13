@@ -1,0 +1,3 @@
+defaults crankstart.bundle.start.level 15
+bundle mvn:org.apache.sling/org.apache.sling.launchpad.api/1.1.0
+bundle mvn:org.apache.sling/org.apache.sling.launchpad.karaf/0.1.1-SNAPSHOT
