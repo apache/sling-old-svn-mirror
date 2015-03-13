@@ -37,7 +37,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
-import org.apache.sling.resourceresolver.impl.tree.params.ParsedParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -124,7 +123,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
      *
      * @param path
      *            The path to the resource to return.
-     * @param parameters 
+     * @param parameters
      * @return The resource for the path or <code>null</code> if no resource can
      *         be found.
      * @throws org.apache.sling.api.SlingException
@@ -163,6 +162,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
     /**
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
+    @Override
     public int compareTo(final ResourceProviderEntry o) {
         return prefix.compareTo(o.prefix);
     }
@@ -302,7 +302,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
      * @param ctx The resource resolver context
      * @param resourceResolver the ResourceResolver.
      * @param fullPath the Full path
-     * @param parameters 
+     * @param parameters
      * @return null if no resource was found, a resource if one was found.
      */
     private Resource getInternalResource(final ResourceResolverContext ctx,
@@ -415,42 +415,43 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
         return fallbackResource;
     }
 
-    /**
-     * Internal method getting the provider handler containing a modifying resource provider
-     * for the given path
-     * @return The provider handler if such a provider exists or <code>null</code>
-     */
-    private ProviderHandler getModifyingProviderHandler(final ResourceResolverContext ctx,
-            final ResourceResolver resourceResolver,
-            final String fullPath) {
+    private List<ProviderHandler> getModifyingProviderHandlers(final ResourceResolverContext ctx,
+                                                        final ResourceResolver resourceResolver,
+                                                        final String fullPath) {
         final String[] elements = split(fullPath);
         final List<ResourceProviderEntry> entries = new ArrayList<ResourceProviderEntry>();
         this.populateProviderPath(entries, elements);
 
+        final List<ProviderHandler> viableProviderHandlers = new ArrayList<ProviderHandler>();
+
+        // build up a list of viable ModifyingResourceProviders in order of specificity
         for (int i = entries.size() - 1; i >= 0; i--) {
             final ProviderHandler[] rps = entries.get(i).getResourceProviders();
             for (final ProviderHandler rp : rps) {
                 final ResourceProvider provider = rp.getResourceProvider(ctx);
                 if ( provider instanceof ModifyingResourceProvider ) {
-                    return rp;
+                    viableProviderHandlers.add(rp);
                 }
                 if ( rp.ownsRoots() ) {
-                    return null;
+                    return viableProviderHandlers;
                 }
             }
         }
-        // try this one
+
+        // add our own ModifyingResourceProviders to the end of the list of viable providers
         for(final ProviderHandler rp : this.providers) {
             final ResourceProvider provider = rp.getResourceProvider(ctx);
             if ( provider instanceof ModifyingResourceProvider) {
-                return rp;
+                viableProviderHandlers.add(rp);
             }
         }
-        return null;
+        return viableProviderHandlers;
     }
 
     /**
-     * Delete the resource
+     * Delete the resource.  Iterate over all viable ModifyingProviderHandlers giving each an opportunity to delete
+     * the resource if they are able.
+     *
      * @throws NullPointerException if resource is null
      * @throws UnsupportedOperationException If deletion is not allowed/possible
      * @throws PersistenceException If deletion fails
@@ -459,16 +460,29 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
             final ResourceResolver resourceResolver,
             final Resource resource) throws PersistenceException {
         final String fullPath = resource.getPath();
-        final ProviderHandler handler = this.getModifyingProviderHandler(ctx, resourceResolver, fullPath);
-        if ( handler == null || !handler.canDelete(ctx, resource) ) {
+        final List<ProviderHandler> viableHandlers = this.getModifyingProviderHandlers(ctx, resourceResolver, fullPath);
+
+        boolean anyProviderAttempted = false;
+
+        // Give all viable handlers a chance to delete the resource
+        for (ProviderHandler currentProviderHandler : viableHandlers) {
+            if (currentProviderHandler.canDelete(ctx, resource)) {
+                final ModifyingResourceProvider mrp = (ModifyingResourceProvider) currentProviderHandler.getResourceProvider(ctx);
+                mrp.delete(resourceResolver, fullPath);
+                anyProviderAttempted = true;
+            }
+        }
+
+        // If none of the viable handlers could delete the resource or if the list of handlers was empty, throw an Exception
+        if (!anyProviderAttempted) {
             throw new UnsupportedOperationException("delete at '" + fullPath + "'");
         }
-        final ModifyingResourceProvider mrp = (ModifyingResourceProvider) handler.getResourceProvider(ctx);
-        mrp.delete(resourceResolver, fullPath);
     }
 
     /**
-     * Create a resource
+     * Create a resource.  Iterate over all viable ModifyingProviderHandlers stopping at the first one which creates
+     * the resource and return the created resource.
+     *
      * @throws UnsupportedOperationException If creation is not allowed/possible
      * @throws PersistenceException If creation fails
      * @return The new resource
@@ -477,12 +491,22 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
             final ResourceResolver resourceResolver,
             final String fullPath,
             final Map<String, Object> properties) throws PersistenceException {
-        final ProviderHandler handler = this.getModifyingProviderHandler(ctx, resourceResolver, fullPath);
-        if ( handler == null || !handler.canCreate(ctx, resourceResolver, fullPath) ) {
-            throw new UnsupportedOperationException("create '" + ResourceUtil.getName(fullPath) + "' at " + ResourceUtil.getParent(fullPath));
+        final List<ProviderHandler> viableHandlers = this.getModifyingProviderHandlers(ctx, resourceResolver, fullPath);
+
+        for (final ProviderHandler currentProviderHandler : viableHandlers) {
+            if (currentProviderHandler.canCreate(ctx, resourceResolver, fullPath)) {
+                final ModifyingResourceProvider mrp = (ModifyingResourceProvider) currentProviderHandler.getResourceProvider(ctx);
+
+                final Resource creationResultResource = mrp.create(resourceResolver, fullPath, properties);
+
+                if (creationResultResource != null) {
+                    return creationResultResource;
+                }
+            }
         }
-        final ModifyingResourceProvider mrp = (ModifyingResourceProvider) handler.getResourceProvider(ctx);
-        return mrp.create(resourceResolver, fullPath, properties);
+
+        // If none of the viable handlers could create the resource or if the list of handlers was empty, throw an Exception
+        throw new UnsupportedOperationException("create '" + ResourceUtil.getName(fullPath) + "' at " + ResourceUtil.getParent(fullPath));
     }
 
     private static final char SPLIT_SEP = '/';
