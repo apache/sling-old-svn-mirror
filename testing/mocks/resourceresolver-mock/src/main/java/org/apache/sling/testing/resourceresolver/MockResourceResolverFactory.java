@@ -23,15 +23,20 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Stack;
 
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.osgi.service.event.EventAdmin;
 
+import com.google.common.collect.ImmutableMap;
+
 /**
  * Simple resource resolver factory
  */
 public class MockResourceResolverFactory implements ResourceResolverFactory {
+    
+    private static final String JCR_ROOT="jcr:root";
 
     /** We use a linked hash map to preserve creation order. */
     private final Map<String, Map<String, Object>> resources = new LinkedHashMap<String, Map<String, Object>>();
@@ -59,7 +64,9 @@ public class MockResourceResolverFactory implements ResourceResolverFactory {
      */
     public MockResourceResolverFactory(final MockResourceResolverFactoryOptions options) {
         this.options = options;
-        resources.put("/", new HashMap<String, Object>());
+        Map<String, Object> props=ImmutableMap.<String, Object>builder()
+        .put(MockResource.JCR_PRIMARYTYPE, JCR_ROOT).build();
+        resources.put("/", props);
     }
 
     @Override

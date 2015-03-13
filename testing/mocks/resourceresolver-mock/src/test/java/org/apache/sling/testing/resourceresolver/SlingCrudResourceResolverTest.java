@@ -20,6 +20,7 @@ package org.apache.sling.testing.resourceresolver;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -227,6 +228,13 @@ public class SlingCrudResourceResolverTest {
         Resource rootResource = this.resourceResolver.resolve((String)null);
         assertNotNull(rootResource);
         assertEquals("/", rootResource.getPath());
+    }
+
+    
+    @Test
+    public void testIsResourceResolver() {
+        Resource root= resourceResolver.getResource("/");
+        assertFalse(root.isResourceType("app/resourceType"));
     }
 
 }
