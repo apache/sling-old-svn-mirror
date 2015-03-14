@@ -55,6 +55,7 @@ import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.jcr.contentloader.ContentCreator;
 import org.apache.sling.jcr.contentloader.ContentImportListener;
+import org.apache.sling.jcr.contentloader.ContentReader;
 import org.apache.sling.jcr.contentloader.ImportOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,9 +106,9 @@ public class DefaultContentCreator implements ContentCreator {
     private final ContentHelper contentHelper;
 
     /**
-     * List of active import providers mapped by extension.
+     * List of active content readers mapped by extension.
      */
-    private Map<String, ImportProvider> importProviders;
+    private Map<String, ContentReader> contentReaders;
 
     /**
      * Optional list of created nodes (for uninstall)
@@ -142,18 +143,18 @@ public class DefaultContentCreator implements ContentCreator {
      * Initialize this component.
      *
      * @param pathEntry              The configuration for this import.
-     * @param defaultImportProviders List of all import providers.
+     * @param defaultContentReaders  List of all content readers.
      * @param createdNodes           Optional list to store new nodes (for uninstall)
      */
-    public void init(final ImportOptions pathEntry, final Map<String, ImportProvider> defaultImportProviders, final List<String> createdNodes, final ContentImportListener importListener) {
+    public void init(final ImportOptions pathEntry, final Map<String, ContentReader> defaultContentReaders, final List<String> createdNodes, final ContentImportListener importListener) {
         this.configuration = pathEntry;
-        // create list of allowed import providers
-        this.importProviders = new HashMap<String, ImportProvider>();
-        final Iterator<Map.Entry<String, ImportProvider>> entryIter = defaultImportProviders.entrySet().iterator();
+        // create list of allowed content readers
+        this.contentReaders = new HashMap<String, ContentReader>();
+        final Iterator<Map.Entry<String, ContentReader>> entryIter = defaultContentReaders.entrySet().iterator();
         while (entryIter.hasNext()) {
-            final Map.Entry<String, ImportProvider> current = entryIter.next();
+            final Map.Entry<String, ContentReader> current = entryIter.next();
             if (!configuration.isIgnoredImportProvider(current.getKey())) {
-                importProviders.put(current.getKey(), current.getValue());
+                contentReaders.put(current.getKey(), current.getValue());
             }
         }
         this.createdNodes = createdNodes;
@@ -205,48 +206,12 @@ public class DefaultContentCreator implements ContentCreator {
     }
 
     /**
-     * Get all active import providers.
+     * Get all active content readers.
      *
-     * @return A map of providers
+     * @return A map of readers
      */
-    public Map<String, ImportProvider> getImportProviders() {
-        return this.importProviders;
-    }
-
-    /**
-     * Return the import provider for the name
-     *
-     * @param name The file name.
-     * @return The provider or <code>null</code>
-     */
-    public ImportProvider getImportProvider(String name) {
-        ImportProvider provider = null;
-        final Iterator<String> ipIter = importProviders.keySet().iterator();
-        while (provider == null && ipIter.hasNext()) {
-            final String ext = ipIter.next();
-            if (name.endsWith(ext)) {
-                provider = importProviders.get(ext);
-            }
-        }
-        return provider;
-    }
-
-    /**
-     * Get the extension of the file name.
-     *
-     * @param name The file name.
-     * @return The extension a provider is registered for - or <code>null</code>
-     */
-    public String getImportProviderExtension(String name) {
-        String providerExt = null;
-        final Iterator<String> ipIter = importProviders.keySet().iterator();
-        while (providerExt == null && ipIter.hasNext()) {
-            final String ext = ipIter.next();
-            if (name.endsWith(ext)) {
-                providerExt = ext;
-            }
-        }
-        return providerExt;
+    public Map<String, ContentReader> getContentReaders() {
+        return this.contentReaders;
     }
 
     /**

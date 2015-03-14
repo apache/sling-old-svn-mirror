@@ -24,6 +24,8 @@ import java.io.InputStream;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
+import aQute.bnd.annotation.ProviderType;
+
 
 /**
  * The <code>ContentImporter</code> service
@@ -32,6 +34,7 @@ import javax.jcr.RepositoryException;
  * implemented by this bundle and may be used by client bundles.
  * </p>
  */
+@ProviderType
 public interface ContentImporter {
 
     /**

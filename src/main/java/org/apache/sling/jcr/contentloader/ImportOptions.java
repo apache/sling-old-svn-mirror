@@ -18,10 +18,13 @@
  */
 package org.apache.sling.jcr.contentloader;
 
+import aQute.bnd.annotation.ConsumerType;
+
 
 /**
  * Encapsulates the options for the content import. 
  */
+@ConsumerType
 public abstract class ImportOptions {
 
 	/**
@@ -56,11 +59,11 @@ public abstract class ImportOptions {
 	}
 
 	/**
-	 * Check if the import provider for the given file extension should
+	 * Check if the content reader for the given file extension should
 	 * be ignored.
 	 * 
 	 * @param extension the extension to check
-	 * @return true to ignore the provider, false otherwise
+	 * @return true to ignore the reader, false otherwise
 	 */
 	public abstract boolean isIgnoredImportProvider(String extension);
 

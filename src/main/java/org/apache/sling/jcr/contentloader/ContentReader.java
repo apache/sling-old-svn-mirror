@@ -28,10 +28,13 @@ import aQute.bnd.annotation.ConsumerType;
 
 /**
  * The <code>ContentReader</code>
- * A content reader is provided by an {@link org.apache.sling.jcr.contentloader.internal.ImportProvider}.
  */
 @ConsumerType
 public interface ContentReader {
+
+    static final String PROPERTY_EXTENSIONS = "extensions";
+
+    static final String PROPERTY_TYPES = "contentTypes";
 
     /**
      * Read the content from the URL and create the

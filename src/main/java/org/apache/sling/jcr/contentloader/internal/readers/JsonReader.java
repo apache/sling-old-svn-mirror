@@ -31,12 +31,15 @@ import java.util.regex.Pattern;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.jcr.contentloader.ContentCreator;
 import org.apache.sling.jcr.contentloader.ContentReader;
-import org.apache.sling.jcr.contentloader.internal.ImportProvider;
 
 /**
  * The <code>JsonReader</code> Parses a Json document on content load and creates the
@@ -87,6 +90,12 @@ import org.apache.sling.jcr.contentloader.internal.ImportProvider;
  *
  * </pre>
  */
+@Component
+@Service
+@Properties({
+    @Property(name = ContentReader.PROPERTY_EXTENSIONS, value = "json"),
+    @Property(name = ContentReader.PROPERTY_TYPES, value = "application/json")
+})
 public class JsonReader implements ContentReader {
 
     private static final Pattern jsonDate = Pattern.compile("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}[-+]{1}[0-9]{2}[:]{0,1}[0-9]{2}$");
@@ -117,17 +126,6 @@ public class JsonReader implements ContentReader {
     }
     private static final String SECURITY_PRINCIPLES = "security:principals";
     private static final String SECURITY_ACL = "security:acl";
-
-    public static final ImportProvider PROVIDER = new ImportProvider() {
-        private JsonReader jsonReader;
-
-        public ContentReader getReader() {
-            if (jsonReader == null) {
-                jsonReader = new JsonReader();
-            }
-            return jsonReader;
-        }
-    };
 
     /**
      * @see org.apache.sling.jcr.contentloader.ContentReader#parse(java.net.URL, org.apache.sling.jcr.contentloader.ContentCreator)
@@ -428,7 +426,7 @@ public class JsonReader implements ContentReader {
 		}
 
 		String order = ace.optString("order", null);
-		
+
 		//do the work.
 		contentCreator.createAce(principalID, grantedPrivileges, deniedPrivileges, order);
     }

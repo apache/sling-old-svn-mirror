@@ -18,11 +18,14 @@
  */
 package org.apache.sling.jcr.contentloader;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * Listener interface to provide callbacks for all imported updates
  * for interested parties.  This is primarily used to record
  * the modifications during the "import" post operation.
  */
+@ConsumerType
 public interface ContentImportListener {
 
     /**
