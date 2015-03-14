@@ -92,6 +92,9 @@ public class DefaultStartupHandler
     /** Use incremental start level handling. */
     private final boolean useIncremental;
 
+    /** MBean startup listener. */
+    private final StartupListener mbeanStartupListener;
+
     /**
      * Constructor.
      * @param context Bundle context
@@ -104,6 +107,13 @@ public class DefaultStartupHandler
         this.startupMode = manager.getMode();
         this.targetStartLevel = manager.getTargetStartLevel();
 
+        StartupListener listener = null;
+        try {
+            listener = new MBeanStartupListener();
+        } catch ( final Exception ignore ) {
+            // ignore
+        }
+        this.mbeanStartupListener = listener;
         this.listenerTracker = new ServiceTracker<StartupListener, StartupListener>(context, StartupListener.class,
                 new ServiceTrackerCustomizer<StartupListener, StartupListener>() {
 
@@ -291,6 +301,9 @@ public class DefaultStartupHandler
                 logger.log(Logger.LOG_ERROR, "Error calling StartupListener " + listener, t);
             }
         }
+        if ( this.mbeanStartupListener != null ) {
+            this.mbeanStartupListener.startupFinished(this.startupMode);
+        }
 
         // stop the queue
         this.enqueue(false);
@@ -316,6 +329,9 @@ public class DefaultStartupHandler
             } catch (Throwable t) {
                 logger.log(Logger.LOG_ERROR, "Error calling StartupListener " + listener, t);
             }
+        }
+        if ( this.mbeanStartupListener != null ) {
+            this.mbeanStartupListener.startupProgress(ratio);
         }
     }
 
