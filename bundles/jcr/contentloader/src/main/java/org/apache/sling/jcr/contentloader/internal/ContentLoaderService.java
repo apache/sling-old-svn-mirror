@@ -96,6 +96,12 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
     private MimeTypeService mimeTypeService;
 
     /**
+     * Service storing all available content readers.
+     */
+    @Reference
+    private ContentReaderWhiteboard contentReaderWhiteboard;
+
+    /**
      * The initial content loader which is called to load initial content up
      * into the repository when the providing bundle is installed.
      */
@@ -218,7 +224,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
     /** Activates this component, called by SCR before registering as a service */
     protected void activate(ComponentContext componentContext) {
         this.slingId = this.settingsService.getSlingId();
-        this.bundleContentLoader = new BundleContentLoader(this);
+        this.bundleContentLoader = new BundleContentLoader(this, contentReaderWhiteboard);
 
         componentContext.getBundleContext().addBundleListener(this);
 

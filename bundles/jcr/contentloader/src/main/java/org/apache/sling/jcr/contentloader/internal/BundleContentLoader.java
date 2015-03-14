@@ -61,8 +61,8 @@ public class BundleContentLoader extends BaseImportLoader {
     // bundles whose registration failed and should be retried
     private List<Bundle> delayedBundles;
 
-    public BundleContentLoader(BundleHelper bundleHelper) {
-        super();
+    public BundleContentLoader(BundleHelper bundleHelper, ContentReaderWhiteboard contentReaderWhiteboard) {
+        super(contentReaderWhiteboard);
         this.bundleHelper = bundleHelper;
         this.delayedBundles = new LinkedList<Bundle>();
     }
@@ -73,7 +73,6 @@ public class BundleContentLoader extends BaseImportLoader {
             delayedBundles = null;
         }
         bundleHelper = null;
-        super.dispose();
     }
 
     /**
@@ -304,7 +303,7 @@ public class BundleContentLoader extends BaseImportLoader {
     private void installFromPath(final Bundle bundle, final String path, final PathEntry configuration, final Node parent, final List<String> createdNodes, final DefaultContentCreator contentCreator) throws RepositoryException {
 
         //  init content creator
-        contentCreator.init(configuration, this.defaultImportProviders, createdNodes, null);
+        contentCreator.init(configuration, getContentReaders(), createdNodes, null);
 
         final Map<String, Node> processedEntries = new HashMap<String, Node>();
 
@@ -317,8 +316,8 @@ public class BundleContentLoader extends BaseImportLoader {
                 log.info("install: No initial content entries at {} in bundle {}", path, bundle.getSymbolicName());
                 return;
             }
-            // we have a single file content, let's check if this has an import provider extension
-            for (String ext : contentCreator.getImportProviders().keySet()) {
+            // we have a single file content, let's check if this has an content reader extension
+            for (String ext : contentCreator.getContentReaders().keySet()) {
                 if (path.endsWith(ext)) {
 
                 }
@@ -342,7 +341,7 @@ public class BundleContentLoader extends BaseImportLoader {
                 final String base = entry.substring(0, entry.length() - 1);
 
                 URL nodeDescriptor = null;
-                for (String ext : contentCreator.getImportProviders().keySet()) {
+                for (String ext : contentCreator.getContentReaders().keySet()) {
                     nodeDescriptor = bundle.getEntry(base + ext);
                     if (nodeDescriptor != null) {
                         break;
@@ -399,7 +398,7 @@ public class BundleContentLoader extends BaseImportLoader {
 
             // check for node descriptor
             URL nodeDescriptor = null;
-            for (String ext : contentCreator.getImportProviders().keySet()) {
+            for (String ext : contentCreator.getContentReaders().keySet()) {
                 nodeDescriptor = bundle.getEntry(entry + ext);
                 if (nodeDescriptor != null) {
                     break;
@@ -407,10 +406,10 @@ public class BundleContentLoader extends BaseImportLoader {
             }
 
             // install if it is a descriptor
-            boolean foundProvider = contentCreator.getImportProvider(entry) != null;
+            boolean foundReader = getContentReader(entry) != null;
 
             Node node = null;
-            if (foundProvider) {
+            if (foundReader) {
                 node = createNode(parent, name, file, contentCreator);
                 if (node != null) {
                     log.debug("Created node as {} {}", node.getPath(), name);
@@ -419,7 +418,7 @@ public class BundleContentLoader extends BaseImportLoader {
                     log.warn("No node created for file {} {}", file, name);
                 }
             } else {
-                log.debug("Can't find provider for entry {} at {}", entry, name);
+                log.debug("Can't find content reader for entry {} at {}", entry, name);
             }
 
             // otherwise just place as file
@@ -470,19 +469,15 @@ public class BundleContentLoader extends BaseImportLoader {
             }
 
             // get the node reader for this resource
-            final ImportProvider ip = contentCreator.getImportProvider(resourcePath);
-            if (ip == null) {
-                return null;
-            }
-            final ContentReader nodeReader = ip.getReader();
+            final ContentReader nodeReader = getContentReader(resourcePath);
 
             // cannot find out the type
             if (nodeReader == null) {
                 return null;
             }
 
-            final String providerExtension = contentCreator.getImportProviderExtension(name);
-            contentCreator.prepareParsing(parent, toPlainName(name, providerExtension));
+            final String contentReaderExtension = getContentReaderExtension(name);
+            contentCreator.prepareParsing(parent, toPlainName(name, contentReaderExtension));
             nodeReader.parse(resourceUrl, contentCreator);
 
             return contentCreator.getCreatedRootNode();
@@ -540,7 +535,7 @@ public class BundleContentLoader extends BaseImportLoader {
             path = srcPath.substring(0, pos + 1) + name;
         }
 
-        contentCreator.init(configuration, defaultImportProviders, createdNodes, null);
+        contentCreator.init(configuration, getContentReaders(), createdNodes, null);
         contentCreator.prepareParsing(parent, name);
         final URLConnection conn = source.openConnection();
         final long lastModified = Math.min(conn.getLastModified(), configuration.getLastModified());
@@ -689,7 +684,7 @@ public class BundleContentLoader extends BaseImportLoader {
      */
     private Descriptor getParentNodeDescriptor(final Bundle bundle, final String path, final DefaultContentCreator contentCreator) {
 
-        for (Map.Entry<String, ImportProvider> entry : contentCreator.getImportProviders().entrySet()) {
+        for (Map.Entry<String, ContentReader> entry : contentCreator.getContentReaders().entrySet()) {
             if (entry.getValue() != null) {
                 final StringBuilder filePath = new StringBuilder(path);
                 if (!path.endsWith("/")) {
@@ -700,15 +695,10 @@ public class BundleContentLoader extends BaseImportLoader {
                 filePath.append(entry.getKey());
                 URL url = bundle.getEntry(filePath.toString());
                 if (url != null) {
-                    try {
-                        final Descriptor descriptor = new Descriptor();
-                        descriptor.url = url;
-                        descriptor.contentReader = entry.getValue().getReader();
-                        return descriptor;
-                    } catch (IOException ioe) {
-                        log.error("Unable to setup node reader for " + entry.getKey(), ioe);
-                        return null;
-                    }
+                    final Descriptor descriptor = new Descriptor();
+                    descriptor.url = url;
+                    descriptor.contentReader = entry.getValue();
+                    return descriptor;
                 }
             }
         }

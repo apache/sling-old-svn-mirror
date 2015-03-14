@@ -26,9 +26,12 @@ import java.util.zip.ZipInputStream;
 import javax.jcr.RepositoryException;
 
 import org.apache.commons.io.input.CloseShieldInputStream;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.jcr.contentloader.ContentCreator;
 import org.apache.sling.jcr.contentloader.ContentReader;
-import org.apache.sling.jcr.contentloader.internal.ImportProvider;
 
 
 /**
@@ -36,38 +39,15 @@ import org.apache.sling.jcr.contentloader.internal.ImportProvider;
  *
  * @since 2.0.4
  */
+@Component
+@Service
+@Properties({
+    @Property(name = ContentReader.PROPERTY_EXTENSIONS, value = {"zip", "jar"}),
+    @Property(name = ContentReader.PROPERTY_TYPES, value = {"application/zip", "application/java-archive"})
+})
 public class ZipReader implements ContentReader {
 
     private static final String NT_FOLDER = "nt:folder";
-
-    public static final ImportProvider ZIP_PROVIDER = new ImportProvider() {
-        private ZipReader zipReader;
-
-        public ContentReader getReader() {
-            if (zipReader == null) {
-                zipReader = new ZipReader(false);
-            }
-            return zipReader;
-        }
-    };
-
-    public static final ImportProvider JAR_PROVIDER = new ImportProvider() {
-        private ZipReader zipReader;
-
-        public ContentReader getReader() {
-            if (zipReader == null) {
-                zipReader = new ZipReader(true);
-            }
-            return zipReader;
-        }
-    };
-
-    /** Is this a jar reader? */
-    //private final boolean jarReader;
-
-    public ZipReader(boolean jarReader) {
-        //this.jarReader = jarReader;
-    }
 
     /**
      * @see org.apache.sling.jcr.contentloader.ContentReader#parse(java.net.URL, org.apache.sling.jcr.contentloader.ContentCreator)
@@ -116,5 +96,5 @@ public class ZipReader implements ContentReader {
             }
         }
 	}
-    
+
 }

@@ -86,11 +86,10 @@ public class DefaultContentImporter extends BaseImportLoader implements ContentH
 
         final DefaultContentCreator contentCreator = new DefaultContentCreator(this);
 
-        final String providerExtension = contentCreator.getImportProviderExtension(filename);
-        final String name = toPlainName(filename, providerExtension);
+        final String readerExtension = getContentReaderExtension(filename);
+        final String name = toPlainName(filename, readerExtension);
 
-        final ImportProvider importProvider = contentCreator.getImportProvider(filename);
-        final ContentReader contentReader = importProvider.getReader();
+        final ContentReader contentReader = getContentReader(filename);
 
         importContent(contentCreator, contentReader, parent, name, contentStream, importOptions, importListener);
     }
@@ -106,15 +105,14 @@ public class DefaultContentImporter extends BaseImportLoader implements ContentH
         final DefaultContentCreator contentCreator = new DefaultContentCreator(this);
 
         final String extension = ContentTypeUtil.getDefaultExtension(contentType);
-        final ImportProvider importProvider = contentCreator.getImportProvider(extension);
-        final ContentReader contentReader = importProvider.getReader();
+        final ContentReader contentReader =  getContentReader(extension);
 
         importContent(contentCreator, contentReader, parent, name, contentStream, importOptions, importListener);
     }
 
     private void importContent(final DefaultContentCreator contentCreator, final ContentReader contentReader, final Node parent, final String name, final InputStream contentStream, final ImportOptions importOptions, final ContentImportListener importListener) throws RepositoryException, IOException {
         List<String> createdPaths = new ArrayList<String>();
-        contentCreator.init(importOptions, this.defaultImportProviders, createdPaths, importListener);
+        contentCreator.init(importOptions, getContentReaders(), createdPaths, importListener);
         contentCreator.prepareParsing(parent, name);
         contentReader.parse(contentStream, contentCreator);
 

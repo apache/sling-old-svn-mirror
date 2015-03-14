@@ -7,6 +7,7 @@ import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 
+import org.apache.sling.jcr.contentloader.ContentReader;
 import org.apache.sling.jcr.contentloader.ImportOptions;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -54,7 +55,7 @@ public class DefaultContentCreatorTest {
             @Override
 			public boolean isPropertyOverwrite() {
 				return true;
-			} }, new HashMap<String, ImportProvider>(), null, null);
+			} }, new HashMap<String, ContentReader>(), null, null);
         
         contentCreator.prepareParsing(parentNode, null);
         this.mockery.checking(new Expectations() {{
@@ -95,7 +96,7 @@ public class DefaultContentCreatorTest {
 			@Override
 			public boolean isPropertyOverwrite() {
 				return false;
-			} }, new HashMap<String, ImportProvider>(), null, null);
+			} }, new HashMap<String, ContentReader>(), null, null);
         
         contentCreator.prepareParsing(parentNode, null);
         this.mockery.checking(new Expectations() {{

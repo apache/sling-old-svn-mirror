@@ -18,48 +18,90 @@
  */
 package org.apache.sling.jcr.contentloader.internal;
 
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
-import org.apache.sling.jcr.contentloader.internal.readers.JsonReader;
-import org.apache.sling.jcr.contentloader.internal.readers.XmlReader;
-import org.apache.sling.jcr.contentloader.internal.readers.ZipReader;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.sling.jcr.contentloader.ContentReader;
 
 /**
  * Base class that takes care of the details that are common to bundle content
  * loader and the POST operation "import" loader.
  */
+@Component
 public abstract class BaseImportLoader extends JcrXmlImporter {
-    public static final String EXT_XML = ".xml";
+
     public static final String EXT_JCR_XML = ".jcr.xml";
-    public static final String EXT_JSON = ".json";
-    public static final String EXT_JAR = ".jar";
-    public static final String EXT_ZIP = ".zip";
 
-    /** All available import providers. */
-    Map<String, ImportProvider> defaultImportProviders;
+    @Reference
+    private ContentReaderWhiteboard contentReaderWhiteboard;
 
-	public BaseImportLoader() {
-        defaultImportProviders = new LinkedHashMap<String, ImportProvider>();
-        defaultImportProviders.put(EXT_JCR_XML, null);
-        defaultImportProviders.put(EXT_JSON, JsonReader.PROVIDER);
-        defaultImportProviders.put(EXT_XML, XmlReader.PROVIDER);
-        defaultImportProviders.put(EXT_JAR, ZipReader.JAR_PROVIDER);
-        defaultImportProviders.put(EXT_ZIP, ZipReader.ZIP_PROVIDER);
-	}
-
-    public void dispose() {
-        defaultImportProviders = null;
+    // This constructor is meant to be used by the OSGi
+    public BaseImportLoader() {
     }
 
-    protected String toPlainName(String name, String providerExtension) {
-        if (providerExtension != null) {
-            if (name.length() == providerExtension.length()) {
+    // This constructor is meant to be used by non-OSGi
+    public BaseImportLoader(ContentReaderWhiteboard contentReaderWhiteboard) {
+        this.contentReaderWhiteboard = contentReaderWhiteboard;
+    }
+
+    public Map<String, ContentReader> getContentReaders() {
+        Map<String, ContentReader> readers = new LinkedHashMap<String, ContentReader>();
+        readers.put(EXT_JCR_XML, null);
+        for (Entry<String, ContentReader> e : contentReaderWhiteboard.getReadersByExtension().entrySet()) {
+            readers.put('.' + e.getKey(), e.getValue());
+        }
+        return readers;
+    }
+
+    protected String toPlainName(String name, String contentReaderExtension) {
+        if (contentReaderExtension != null) {
+            if (name.length() == contentReaderExtension.length()) {
                 return null; // no name is provided
             }
-            return name.substring(0, name.length() - providerExtension.length());
+            return name.substring(0, name.length() - contentReaderExtension.length());
         }
         return name;
     }
 
+    /**
+     * Get the extension of the file name.
+     *
+     * @param name The file name.
+     * @return The extension a reader is registered for - or <code>null</code>
+     */
+    protected String getContentReaderExtension(String name) {
+        String readerExt = null;
+        final Iterator<String> ipIter = getContentReaders().keySet().iterator();
+        while (readerExt == null && ipIter.hasNext()) {
+            final String ext = ipIter.next();
+            if (name.endsWith(ext)) {
+                readerExt = ext;
+            }
+        }
+        return readerExt;
+    }
+
+    /**
+     * Return the content reader for the name
+     *
+     * @param name The file name.
+     * @return The reader or <code>null</code>
+     */
+    public ContentReader getContentReader(String name) {
+        final Map<String, ContentReader> contentReaders = getContentReaders(); 
+
+        ContentReader reader = null;
+        final Iterator<String> ipIter = contentReaders.keySet().iterator();
+        while (reader == null && ipIter.hasNext()) {
+            final String ext = ipIter.next();
+            if (name.endsWith(ext)) {
+                reader = contentReaders.get(ext);
+            }
+        }
+        return reader;
+    }
 }
