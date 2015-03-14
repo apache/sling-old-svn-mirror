@@ -73,12 +73,11 @@
             <plugin>
                 <groupId>org.apache.sling</groupId>
                 <artifactId>slingstart-maven-plugin</artifactId>
-                <version>1.0.4</version>
+                <version>1.0.5-SNAPSHOT</version>
                 <extensions>true</extensions>
                 <configuration>
                     <createWebapp>true</createWebapp>
                 </configuration>
-<!--
                 <executions>
                     <execution>
                         <goals>
@@ -87,7 +86,6 @@
                         </goals>
                     </execution>
                 </executions>
-                -->
             </plugin>
         </plugins>
     </build>
