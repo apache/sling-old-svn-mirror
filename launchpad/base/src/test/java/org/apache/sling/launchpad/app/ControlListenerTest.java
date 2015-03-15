@@ -214,9 +214,11 @@ public class ControlListenerTest extends TestCase {
 
         TestCase.assertEquals(0, new ControlListener(main1, null).statusServer());
         TestCase.assertEquals(0, new ControlListener(main1, null).shutdownServer());
+        delay(); // wait for sever to start
 
         TestCase.assertEquals(0, new ControlListener(main2, null).statusServer());
         TestCase.assertEquals(0, new ControlListener(main2, null).shutdownServer());
+        delay(); // wait for sever to start
 
         TestCase.assertTrue(main1.stopCalled);
         TestCase.assertTrue(main2.stopCalled);
@@ -361,6 +363,7 @@ public class ControlListenerTest extends TestCase {
             });
         }
 
+        @Override
         protected void doStop() {
             this.stopCalled = true;
         }
