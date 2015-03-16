@@ -180,12 +180,26 @@ public class InternalQueueConfiguration
     @Activate
     protected void activate(final Map<String, Object> params) {
         this.name = PropertiesUtil.toString(params.get(ConfigurationConstants.PROP_NAME), null);
-        this.priority = ThreadPriority.valueOf(PropertiesUtil.toString(params.get(ConfigurationConstants.PROP_PRIORITY), ConfigurationConstants.DEFAULT_PRIORITY));
-        this.type = Type.valueOf(PropertiesUtil.toString(params.get(ConfigurationConstants.PROP_TYPE), ConfigurationConstants.DEFAULT_TYPE));
+        try {
+            this.priority = ThreadPriority.valueOf(PropertiesUtil.toString(params.get(ConfigurationConstants.PROP_PRIORITY), ConfigurationConstants.DEFAULT_PRIORITY));
+        } catch ( final IllegalArgumentException iae) {
+            logger.warn("Invalid value for queue priority. Using default instead of : {}", params.get(ConfigurationConstants.PROP_PRIORITY));
+            this.priority = ThreadPriority.valueOf(ConfigurationConstants.DEFAULT_PRIORITY);
+        }
+        try {
+            this.type = Type.valueOf(PropertiesUtil.toString(params.get(ConfigurationConstants.PROP_TYPE), ConfigurationConstants.DEFAULT_TYPE));
+        } catch ( final IllegalArgumentException iae) {
+            logger.error("Invalid value for queue type configuration: {}", params.get(ConfigurationConstants.PROP_TYPE));
+            this.type = null;
+        }
         this.retries = PropertiesUtil.toInteger(params.get(ConfigurationConstants.PROP_RETRIES), ConfigurationConstants.DEFAULT_RETRIES);
         this.retryDelay = PropertiesUtil.toLong(params.get(ConfigurationConstants.PROP_RETRY_DELAY), ConfigurationConstants.DEFAULT_RETRY_DELAY);
         final int maxParallel = PropertiesUtil.toInteger(params.get(ConfigurationConstants.PROP_MAX_PARALLEL), ConfigurationConstants.DEFAULT_MAX_PARALLEL);
         this.maxParallelProcesses = (maxParallel == -1 ? ConfigurationConstants.NUMBER_OF_PROCESSORS : maxParallel);
+        // ignore parallel setting for ordered queues
+        if ( this.type == Type.ORDERED ) {
+            this.maxParallelProcesses = 1;
+        }
         final String[] topicsParam = PropertiesUtil.toStringArray(params.get(ConfigurationConstants.PROP_TOPICS));
         this.matchers = TopicMatcherHelper.buildMatchers(topicsParam);
         if ( this.matchers == null ) {
@@ -206,6 +220,13 @@ public class InternalQueueConfiguration
      * If it is invalid, it is ignored.
      */
     private boolean checkIsValid() {
+        if ( type == Type.IGNORE || type == Type.DROP ) {
+            Utility.logDeprecated(logger, "Queue is using deprecated queue type. Ignoring queue " + name + " with type " + type);
+            return false;
+        }
+        if ( type == null ) {
+            return false;
+        }
         boolean hasMatchers = false;
         if ( this.matchers != null ) {
             for(final TopicMatcher m : this.matchers ) {
@@ -224,13 +245,7 @@ public class InternalQueueConfiguration
         if ( retries < -1 ) {
             return false;
         }
-        if ( type == Type.UNORDERED || type == Type.TOPIC_ROUND_ROBIN ) {
-            if ( maxParallelProcesses < 1 ) {
-                return false;
-            }
-        }
-        if ( type == Type.IGNORE || type == Type.DROP ) {
-            Utility.logDeprecated(logger, "Queue is using deprecated queue type. Ignoring queue " + name + " with type " + type);
+        if ( maxParallelProcesses < 1 ) {
             return false;
         }
         return true;

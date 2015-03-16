@@ -820,6 +820,7 @@ public class JobManagerImpl
         properties.put(Job.PROPERTY_JOB_RETRIES, info.queueConfiguration.getMaxRetries());
 
         properties.put(Job.PROPERTY_JOB_CREATED, Calendar.getInstance());
+        properties.put(JobImpl.PROPERTY_JOB_QUEUED, Calendar.getInstance());
         properties.put(Job.PROPERTY_JOB_CREATED_INSTANCE, Environment.APPLICATION_ID);
         if ( info.targetId != null ) {
             properties.put(Job.PROPERTY_JOB_TARGET_INSTANCE, info.targetId);

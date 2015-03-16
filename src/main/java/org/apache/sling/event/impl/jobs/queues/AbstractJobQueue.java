@@ -19,6 +19,7 @@
 package org.apache.sling.event.impl.jobs.queues;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -35,8 +36,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.impl.EventingThreadPool;
-import org.apache.sling.event.impl.jobs.InternalJobState;
-import org.apache.sling.event.impl.jobs.JobExecutionResultImpl;
 import org.apache.sling.event.impl.jobs.JobHandler;
 import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.JobTopicTraverser;
@@ -48,11 +47,10 @@ import org.apache.sling.event.impl.support.BatchResourceRemover;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
+import org.apache.sling.event.jobs.Job.JobState;
 import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.Statistics;
-import org.apache.sling.event.jobs.consumer.JobExecutionContext;
-import org.apache.sling.event.jobs.consumer.JobExecutionResult;
 import org.apache.sling.event.jobs.consumer.JobExecutor;
 import org.osgi.service.event.Event;
 import org.slf4j.Logger;
@@ -316,11 +314,8 @@ public abstract class AbstractJobQueue
      */
     private void runJobQueue() {
         while ( this.running && !this.isOutdated()) {
-            JobHandler info = null;
-            if ( info == null ) {
-                // so let's wait/get the next job from the queue
-                info = this.take();
-            }
+            // so let's wait/get the next job from the queue
+            final JobHandler info = this.take();
 
             // if we're suspended we drop the current item
             if ( this.running && info != null && !this.isOutdated() && !checkSuspended(info) ) {
@@ -407,9 +402,11 @@ public abstract class AbstractJobQueue
         boolean wasSuspended = false;
         synchronized ( this.suspendLock ) {
             while ( this.suspendedSince != -1 ) {
-                this.requeue(handler);
-                logger.debug("Sleeping as queue {} is suspended.", this.getName());
-                wasSuspended = true;
+                if (!wasSuspended ) {
+                    this.requeue(handler);
+                    logger.debug("Sleeping as queue {} is suspended.", this.getName());
+                    wasSuspended = true;
+                }
                 final long diff = System.currentTimeMillis() - this.suspendedSince;
                 try {
                     this.suspendLock.wait(MAX_SUSPEND_TIME - diff);
@@ -454,181 +451,21 @@ public abstract class AbstractJobQueue
                 handler.started = System.currentTimeMillis();
 
                 if ( consumer != null ) {
-                    final long queueTime = handler.started - handler.queued;
+                    final long queueTime = System.currentTimeMillis() - handler.getJob().getProperty(JobImpl.PROPERTY_JOB_QUEUED, Calendar.class).getTime().getTime();
                     NotificationUtility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_STARTED, job, queueTime);
                     synchronized ( this.processingJobsLists ) {
                         this.processingJobsLists.put(job.getId(), handler);
                     }
 
-                    final Runnable task = new Runnable() {
+                    final Runnable task = new JobRunner(logger, consumer, new JobRunner.StatusNotifier()  {
 
-                        /**
-                         * @see java.lang.Runnable#run()
-                         */
                         @Override
-                        public void run() {
-                            final Object lock = new Object();
-                            final Thread currentThread = Thread.currentThread();
-                            // update priority and name
-                            final String oldName = currentThread.getName();
-                            final int oldPriority = currentThread.getPriority();
-
-                            currentThread.setName(oldName + "-" + job.getQueueName() + "(" + job.getTopic() + ")");
-                            if ( configuration.getThreadPriority() != null ) {
-                                switch ( configuration.getThreadPriority() ) {
-                                    case NORM : currentThread.setPriority(Thread.NORM_PRIORITY);
-                                                break;
-                                    case MIN  : currentThread.setPriority(Thread.MIN_PRIORITY);
-                                                break;
-                                    case MAX  : currentThread.setPriority(Thread.MAX_PRIORITY);
-                                                break;
-                                }
-                            }
-                            JobExecutionResultImpl result = JobExecutionResultImpl.CANCELLED;
-                            Job.JobState resultState = Job.JobState.ERROR;
-                            final AtomicBoolean isAsync = new AtomicBoolean(false);
-
-                            try {
-                                synchronized ( lock ) {
-                                    final JobExecutionContext ctx = new JobExecutionContext() {
-
-                                        private boolean hasInit = false;
-
-                                        @Override
-                                        public void initProgress(final int steps,
-                                                final long eta) {
-                                            if ( !hasInit ) {
-                                                handler.persistJobProperties(job.startProgress(steps, eta));
-                                                hasInit = true;
-                                            }
-                                        }
-
-                                        @Override
-                                        public void incrementProgressCount(final int steps) {
-                                            if ( hasInit ) {
-                                                handler.persistJobProperties(job.setProgress(steps));
-                                            }
-                                        }
-
-                                        @Override
-                                        public void updateProgress(final long eta) {
-                                            if ( hasInit ) {
-                                                handler.persistJobProperties(job.update(eta));
-                                            }
-                                        }
-
-                                        @Override
-                                        public void log(final String message, Object... args) {
-                                            handler.persistJobProperties(job.log(message, args));
-                                        }
-
-                                        @Override
-                                        public boolean isStopped() {
-                                            return handler.isStopped();
-                                        }
-
-                                        @Override
-                                        public void asyncProcessingFinished(final JobExecutionResult result) {
-                                            synchronized ( lock ) {
-                                                if ( isAsync.compareAndSet(true, false) ) {
-                                                    services.jobConsumerManager.unregisterListener(job.getId());
-                                                    Job.JobState state = null;
-                                                    if ( result.succeeded() ) {
-                                                        state = Job.JobState.SUCCEEDED;
-                                                    } else if ( result.failed() ) {
-                                                        state = Job.JobState.QUEUED;
-                                                    } else if ( result.cancelled() ) {
-                                                        if ( handler.isStopped() ) {
-                                                            state = Job.JobState.STOPPED;
-                                                        } else {
-                                                            state = Job.JobState.ERROR;
-                                                        }
-                                                    }
-                                                    finishedJob(job.getId(), state, true);
-                                                    asyncCounter.decrementAndGet();
-                                                } else {
-                                                    throw new IllegalStateException("Job is not processed async " + job.getId());
-                                                }
-                                            }
-                                        }
-
-                                        @Override
-                                        public ResultBuilder result() {
-                                            return new ResultBuilder() {
-
-                                                private String message;
-
-                                                private Long retryDelayInMs;
-
-                                                @Override
-                                                public JobExecutionResult failed(final long retryDelayInMs) {
-                                                    this.retryDelayInMs = retryDelayInMs;
-                                                    return new JobExecutionResultImpl(InternalJobState.FAILED, message, retryDelayInMs);
-                                                }
-
-                                                @Override
-                                                public ResultBuilder message(final String message) {
-                                                    this.message = message;
-                                                    return this;
-                                                }
-
-                                                @Override
-                                                public JobExecutionResult succeeded() {
-                                                    return new JobExecutionResultImpl(InternalJobState.SUCCEEDED, message, retryDelayInMs);
-                                                }
-
-                                                @Override
-                                                public JobExecutionResult failed() {
-                                                    return new JobExecutionResultImpl(InternalJobState.FAILED, message, retryDelayInMs);
-                                                }
-
-                                                @Override
-                                                public JobExecutionResult cancelled() {
-                                                    return new JobExecutionResultImpl(InternalJobState.CANCELLED, message, retryDelayInMs);
-                                                }
-                                            };
-                                        }
-                                    };
-                                    result = (JobExecutionResultImpl)consumer.process(job, ctx);
-                                    if ( result == null ) { // ASYNC processing
-                                        services.jobConsumerManager.registerListener(job.getId(), consumer, ctx);
-                                        asyncCounter.incrementAndGet();
-                                        isAsync.set(true);
-                                    } else {
-                                        if ( result.succeeded() ) {
-                                            resultState = Job.JobState.SUCCEEDED;
-                                        } else if ( result.failed() ) {
-                                            resultState = Job.JobState.QUEUED;
-                                        } else if ( result.cancelled() ) {
-                                            if ( handler.isStopped() ) {
-                                                resultState = Job.JobState.STOPPED;
-                                            } else {
-                                                resultState = Job.JobState.ERROR;
-                                            }
-                                        }
-                                    }
-                                }
-                            } catch (final Throwable t) { //NOSONAR
-                                logger.error("Unhandled error occured in job processor " + t.getMessage() + " while processing job " + Utility.toString(job), t);
-                                // we don't reschedule if an exception occurs
-                                result = JobExecutionResultImpl.CANCELLED;
-                                resultState = Job.JobState.ERROR;
-                            } finally {
-                                currentThread.setPriority(oldPriority);
-                                currentThread.setName(oldName);
-                                if ( result != null ) {
-                                    if ( result.getRetryDelayInMs() != null ) {
-                                        job.setProperty(JobImpl.PROPERTY_DELAY_OVERRIDE, result.getRetryDelayInMs());
-                                    }
-                                    if ( result.getMessage() != null ) {
-                                       job.setProperty(Job.PROPERTY_RESULT_MESSAGE, result.getMessage());
-                                    }
-                                    finishedJob(job.getId(), resultState, false);
-                                }
-                            }
+                        public boolean finishedJob(String jobId, JobState resultState,
+                                boolean isAsync) {
+                            return AbstractJobQueue.this.finishedJob(jobId, resultState, isAsync);
                         }
+                    }, handler, configuration, services, asyncCounter);
 
-                    };
                     // check if the thread pool is available
                     final ThreadPool pool = this.threadPool;
                     if ( pool != null ) {
@@ -695,7 +532,6 @@ public abstract class AbstractJobQueue
                     if ( this.logger.isDebugEnabled() ) {
                         this.logger.debug("Failed job {}", Utility.toString(handler.getJob()));
                     }
-                    handler.queued = System.currentTimeMillis();
                     NotificationUtility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_FAILED, handler.getJob(), null);
                 }
                 break;
@@ -810,7 +646,7 @@ public abstract class AbstractJobQueue
             if ( logger.isDebugEnabled() ) {
                 logger.debug("Received ack for job {}", Utility.toString(ack.getJob()));
             }
-            final long queueTime = ack.started - ack.queued;
+            final long queueTime = ack.started - ack.getJob().getProperty(JobImpl.PROPERTY_JOB_QUEUED, Calendar.class).getTime().getTime();
             NotificationUtility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_STARTED, ack.getJob(), queueTime);
             synchronized ( this.processingJobsLists ) {
                 this.processingJobsLists.put(jobId, ack);
