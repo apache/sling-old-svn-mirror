@@ -104,6 +104,9 @@ public class JobQueueImpl
     /** A marker for closing the queue. */
     private final AtomicBoolean closeMarker = new AtomicBoolean(false);
 
+    /** A marker for doing a full cache search. */
+    private final AtomicBoolean doFullCacheSearch = new AtomicBoolean(false);
+
     /** The job cache. */
     private final QueueJobCache cache;
 
@@ -175,7 +178,7 @@ public class JobQueueImpl
         while ( this.running && !this.isOutdated.get() && !this.isSuspended() && this.available.tryAcquire() ) {
             boolean started = false;
             try {
-                final JobHandler handler = this.cache.getNextJob(this.services.jobConsumerManager, this, false);
+                final JobHandler handler = this.cache.getNextJob(this.services.jobConsumerManager, this, this.doFullCacheSearch.getAndSet(false));
                 if ( handler != null ) {
                     started = true;
                     this.threadPool.execute(new Runnable() {
@@ -437,7 +440,8 @@ public class JobQueueImpl
             this.resume();
         }
 
-        // TODO - set full cache search
+        // set full cache search
+        this.doFullCacheSearch.set(true);
 
         this.start();
     }
