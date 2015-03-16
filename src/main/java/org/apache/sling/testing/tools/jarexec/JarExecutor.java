@@ -57,6 +57,7 @@ public class JarExecutor {
     public static final String PROP_JAR_OPTIONS = PROP_PREFIX + "jar.options";
     public static final String PROP_EXIT_TIMEOUT_SECONDS = PROP_PREFIX + "exit.timeout.seconds";
     public static final String PROP_WAIT_ONSHUTDOWN = PROP_PREFIX + "wait.on.shutdown";
+    public static final String PROP_JAVA_PATH = PROP_PREFIX + "java.executable.path";
 
     @SuppressWarnings("serial")
     public static class ExecutorException extends Exception {
@@ -85,8 +86,13 @@ public class JarExecutor {
         String portStr = config.getProperty(PROP_SERVER_PORT);
         serverPort = portStr == null ? DEFAULT_PORT : Integer.valueOf(portStr);
 
-        final String javaExecutable = isWindows ? "java.exe" : "java";
-        jvmFullPath = System.getProperty( "java.home" ) + File.separator + "bin" + File.separator + javaExecutable;
+        final String configJvmPath = config.getProperty(PROP_JAVA_PATH);
+        if(configJvmPath == null) {
+            final String javaExecutable = isWindows ? "java.exe" : "java";
+            jvmFullPath = System.getProperty( "java.home" ) + File.separator + "bin" + File.separator + javaExecutable;
+        } else {
+            jvmFullPath = configJvmPath;
+        }
 
         String jarFolderPath = config.getProperty(PROP_JAR_FOLDER);
         jarFolderPath = jarFolderPath == null ? DEFAULT_JAR_FOLDER : jarFolderPath;
