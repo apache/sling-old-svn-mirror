@@ -60,7 +60,6 @@
     <!-- B U I L D                                                               -->
     <!-- ======================================================================= -->
     <build>
-        <!--  -->
         <resources>
             <resource>
                 <directory>${basedir}/src/main/resources</directory>
@@ -70,6 +69,21 @@
                 <targetPath>SLING-INF/sightlytck</targetPath>
             </resource>
         </resources>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <!-- Extend RAT configuration from parent pom -->
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <configuration>
+                        <excludes combine.children="append">
+                            <exclude>src/main/resources/SLING-INF/**/*.json</exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
