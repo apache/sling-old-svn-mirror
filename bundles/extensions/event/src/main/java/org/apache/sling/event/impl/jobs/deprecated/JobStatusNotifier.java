@@ -18,31 +18,22 @@
  */
 package org.apache.sling.event.impl.jobs.deprecated;
 
-import org.osgi.service.event.Event;
+import org.apache.sling.event.jobs.JobProcessor;
 
 public interface JobStatusNotifier {
 
     String CONTEXT_PROPERTY_NAME = JobStatusNotifier.class.getName();
 
-    class NotifierContext {
-        private final JobStatusNotifier notifier;
-
-        public NotifierContext(final JobStatusNotifier n) {
-            this.notifier = n;
-        }
-
-        public JobStatusNotifier getJobStatusNotifier() {
-            return this.notifier;
-        }
-    }
-
     /**
-     * Send an acknowledge message that someone is processing the job.
-     * @param job The job.
+     * Notify the job handling that the job has been ack'ed.
+     * If a processor is set, the job queue will use that processor to execute the job.
+     * If it is not set, async processing is enabled and {@link #finishedJob(boolean)}
+     * needs to be called by the caller of this method.
+     * @param processor The job processor.
      * @return <code>true</code> if the ack is ok, <code>false</code> otherwise (e.g. if
      *   someone else already send an ack for this job.
      */
-    boolean sendAcknowledge(Event job);
+    boolean getAcknowledge(final JobProcessor processor);
 
     /**
      * Notify that the job is finished.
@@ -50,9 +41,8 @@ public interface JobStatusNotifier {
      * during the processing. If the job should be rescheduled, <code>true</code> indicates
      * that the job could be rescheduled. If an error occurs or the number of retries is
      * exceeded, <code>false</code> will be returned.
-     * @param job The job.
      * @param reschedule Should the event be rescheduled?
      * @return <code>true</code> if everything went fine, <code>false</code> otherwise.
      */
-    boolean finishedJob(Event job, boolean reschedule);
+    boolean finishedJob(boolean reschedule);
 }
