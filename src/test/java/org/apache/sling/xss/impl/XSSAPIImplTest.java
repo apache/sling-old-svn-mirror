@@ -16,28 +16,27 @@
  ******************************************************************************/
 package org.apache.sling.xss.impl;
 
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.util.Map;
 
-import junit.framework.TestCase;
-
-import org.apache.sling.xss.XSSAPI;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.xss.XSSAPI;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.owasp.validator.html.AntiSamy;
 import org.owasp.validator.html.Policy;
+import org.powermock.reflect.Whitebox;
+
+import junit.framework.TestCase;
+
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class XSSAPIImplTest {
 
@@ -46,27 +45,25 @@ public class XSSAPIImplTest {
     private XSSAPI xssAPI;
 
     @Before
-    public void Setup() {
+    public void setup() {
         try {
             InputStream policyStream = new FileInputStream("./src/main/resources/SLING-INF/content/config.xml");
             Policy policy = Policy.getInstance(policyStream);
             AntiSamy antiSamy = new AntiSamy(policy);
 
-            PolicyHandler mockPolicyHandler = mock(PolicyHandler.class, Mockito.RETURNS_DEEP_STUBS);
+            PolicyHandler mockPolicyHandler = mock(PolicyHandler.class);
             when(mockPolicyHandler.getPolicy()).thenReturn(policy);
             when(mockPolicyHandler.getAntiSamy()).thenReturn(antiSamy);
 
             XSSFilterImpl xssFilter = new XSSFilterImpl();
-            Field policiesField = XSSFilterImpl.class.getDeclaredField("policies");
-            policiesField.setAccessible(true);
-            ((Map<String, PolicyHandler>) policiesField.get(xssFilter)).put(XSSFilterRule.DEFAULT_POLICY_PATH, mockPolicyHandler);
+            Whitebox.setInternalState(xssFilter, "defaultHandler", mockPolicyHandler);
 
             xssAPI = new XSSAPIImpl();
             Field filterField = XSSAPIImpl.class.getDeclaredField("xssFilter");
             filterField.setAccessible(true);
             filterField.set(xssAPI, xssFilter);
 
-            ResourceResolver mockResolver = mock(ResourceResolver.class, Mockito.RETURNS_DEEP_STUBS);
+            ResourceResolver mockResolver = mock(ResourceResolver.class);
             when(mockResolver.map(anyString())).thenAnswer(new Answer() {
                 public Object answer(InvocationOnMock invocation) {
                     Object[] args = invocation.getArguments();
@@ -75,7 +72,7 @@ public class XSSAPIImplTest {
                 }
             });
 
-            SlingHttpServletRequest mockRequest = mock(SlingHttpServletRequest.class, Mockito.RETURNS_DEEP_STUBS);
+            SlingHttpServletRequest mockRequest = mock(SlingHttpServletRequest.class);
             when(mockRequest.getResourceResolver()).thenReturn(mockResolver);
 
             xssAPI = xssAPI.getRequestSpecificAPI(mockRequest);
@@ -85,7 +82,7 @@ public class XSSAPIImplTest {
     }
 
     @Test
-    public void TestEncodeForHTML() {
+    public void testEncodeForHTML() {
         String[][] testData = {
                 //         Source                            Expected Result
                 //
@@ -108,7 +105,7 @@ public class XSSAPIImplTest {
     }
 
     @Test
-    public void TestEncodeForHTMLAttr() {
+    public void testEncodeForHTMLAttr() {
         String[][] testData = {
                 //         Source                            Expected Result
                 //
@@ -130,7 +127,7 @@ public class XSSAPIImplTest {
     }
 
     @Test
-    public void TestEncodeForXML() {
+    public void testEncodeForXML() {
         String[][] testData = {
                 //         Source                            Expected Result
                 //
@@ -152,7 +149,7 @@ public class XSSAPIImplTest {
     }
 
     @Test
-    public void TestEncodeForXMLAttr() {
+    public void testEncodeForXMLAttr() {
         String[][] testData = {
                 //         Source                            Expected Result
                 //
@@ -175,7 +172,7 @@ public class XSSAPIImplTest {
     }
 
     @Test
-    public void TestFilterHTML() {
+    public void testFilterHTML() {
         String[][] testData = {
                 //         Source                            Expected Result
                 {null, ""},
@@ -210,7 +207,7 @@ public class XSSAPIImplTest {
     }
 
     @Test
-    public void TestGetValidHref() {
+    public void testGetValidHref() {
         String[][] testData = {
                 //         Href                                        Expected Result
                 //
@@ -266,7 +263,7 @@ public class XSSAPIImplTest {
     }
 
     @Test
-    public void TestGetValidInteger() {
+    public void testGetValidInteger() {
         String[][] testData = {
                 //         Source                                        Expected Result
                 //
@@ -289,7 +286,7 @@ public class XSSAPIImplTest {
     }
 
     @Test
-    public void TestGetValidLong() {
+    public void testGetValidLong() {
         String[][] testData = {
                 //         Source                                        Expected Result
                 //
@@ -312,7 +309,7 @@ public class XSSAPIImplTest {
     }
 
     @Test
-    public void TestGetValidDimension() {
+    public void testGetValidDimension() {
         String[][] testData = {
                 //         Source                                        Expected Result
                 //
@@ -342,7 +339,7 @@ public class XSSAPIImplTest {
     }
 
     @Test
-    public void TestEncodeForJSString() {
+    public void testEncodeForJSString() {
         String[][] testData = {
                 //         Source                            Expected Result
                 //
@@ -364,7 +361,7 @@ public class XSSAPIImplTest {
     }
 
     @Test
-    public void TestGetValidJSToken() {
+    public void testGetValidJSToken() {
         String[][] testData = {
                 //         Source                            Expected Result
                 //
@@ -396,7 +393,7 @@ public class XSSAPIImplTest {
     }
 
     @Test
-    public void TestEncodeForCSSString() {
+    public void testEncodeForCSSString() {
         String[][] testData = {
                 // Source   Expected result
                 {null, null},
@@ -416,7 +413,7 @@ public class XSSAPIImplTest {
     }
 
     @Test
-    public void TestGetValidStyleToken() {
+    public void testGetValidStyleToken() {
         String[][] testData = {
                 // Source                           Expected result
                 {null                               , RUBBISH},
@@ -488,7 +485,7 @@ public class XSSAPIImplTest {
     }
 
     @Test
-    public void TestGetValidCSSColor() {
+    public void testGetValidCSSColor() {
         String[][] testData = {
                 //      Source                          Expected Result
                 //
@@ -524,7 +521,7 @@ public class XSSAPIImplTest {
     }
 
     @Test
-    public void TestGetValidMultiLineComment() {
+    public void testGetValidMultiLineComment() {
         String[][] testData = {
                 //Source            Expected Result
 

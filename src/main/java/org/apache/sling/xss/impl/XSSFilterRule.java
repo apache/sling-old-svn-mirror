@@ -22,11 +22,6 @@ package org.apache.sling.xss.impl;
 public interface XSSFilterRule {
 
     /**
-     * Path to default policy
-     */
-    String DEFAULT_POLICY_PATH = "sling/xss/config.xml";
-
-    /**
      * Check to see if a given string contains policy violations.
      *
      * @param policyHandler the policy handler to use for filtering
