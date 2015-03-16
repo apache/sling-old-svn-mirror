@@ -340,8 +340,6 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
      * Get the unique job id
      */
     public String getUniqueId(final String jobTopic) {
-        final String convTopic = jobTopic.replace('/', '.');
-
         final Calendar now = Calendar.getInstance();
         final StringBuilder sb = new StringBuilder();
         sb.append(now.get(Calendar.YEAR));
@@ -354,8 +352,6 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
         sb.append('/');
         sb.append(now.get(Calendar.MINUTE));
         sb.append('/');
-        sb.append(convTopic);
-        sb.append('_');
         sb.append(Environment.APPLICATION_ID);
         sb.append('_');
         sb.append(jobCounter.getAndIncrement());
