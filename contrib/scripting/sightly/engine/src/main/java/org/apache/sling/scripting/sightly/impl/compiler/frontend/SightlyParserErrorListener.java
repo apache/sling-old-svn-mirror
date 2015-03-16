@@ -37,13 +37,17 @@ public class SightlyParserErrorListener extends BaseErrorListener {
     @Override
     public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg,
                             RecognitionException e) {
-        List<String> stack = ((Parser) recognizer).getRuleInvocationStack();
-        Collections.reverse(stack);
-        if (e != null) {
-            throw new SightlyParsingException(msg,
-                    ((CommonTokenStream) recognizer.getInputStream()).getTokenSource().getInputStream().toString(), e);
+        String offendingInput;
+        if (Parser.class.isAssignableFrom(recognizer.getClass())) {
+            List<String> stack = ((Parser) recognizer).getRuleInvocationStack();
+            Collections.reverse(stack);
+            offendingInput = ((CommonTokenStream) recognizer.getInputStream()).getTokenSource().getInputStream().toString();
+        } else {
+            offendingInput = recognizer.getInputStream().toString();
         }
-        throw new SightlyParsingException(msg,
-                ((CommonTokenStream) recognizer.getInputStream()).getTokenSource().getInputStream().toString());
+        if (e != null) {
+            throw new SightlyParsingException(msg, offendingInput, e);
+        }
+        throw new SightlyParsingException(msg, offendingInput);
     }
 }

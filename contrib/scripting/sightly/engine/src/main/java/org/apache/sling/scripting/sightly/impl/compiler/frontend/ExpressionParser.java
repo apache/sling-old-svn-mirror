@@ -45,6 +45,8 @@ public class ExpressionParser {
 
     private SightlyParser createParser(String string) {
         SightlyLexer lexer = new SightlyLexer(new ANTLRInputStream(string));
+        lexer.removeErrorListeners();
+        lexer.addErrorListener(new SightlyParserErrorListener());
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);
         SightlyParser parser = new SightlyParser(tokenStream);
         parser.removeErrorListeners();
