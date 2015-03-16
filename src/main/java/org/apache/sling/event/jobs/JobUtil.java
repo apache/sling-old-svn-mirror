@@ -253,14 +253,14 @@ public abstract class JobUtil {
      * @deprecated - Use the new {@link JobConsumer} interface instead.
      */
     @Deprecated
-    private static JobStatusNotifier.NotifierContext getNotifierContext(final Event job) {
+    private static JobStatusNotifier getNotifier(final Event job) {
         // check if this is a job event
         if ( !isJobEvent(job) ) {
             return null;
         }
-        final JobStatusNotifier.NotifierContext ctx = (JobStatusNotifier.NotifierContext) job.getProperty(JobStatusNotifier.CONTEXT_PROPERTY_NAME);
+        final JobStatusNotifier ctx = (JobStatusNotifier) job.getProperty(JobStatusNotifier.CONTEXT_PROPERTY_NAME);
         if ( ctx == null ) {
-            throw new IllegalArgumentException("JobStatusNotifier context is not available in event properties.");
+            throw new IllegalArgumentException("JobStatusNotifier is not available in event properties.");
         }
         return ctx;
     }
@@ -277,9 +277,9 @@ public abstract class JobUtil {
      */
     @Deprecated
     public static boolean acknowledgeJob(final Event job) {
-        final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);
+        final JobStatusNotifier ctx = getNotifier(job);
         if ( ctx != null ) {
-            if ( !ctx.getJobStatusNotifier().sendAcknowledge(job) ) {
+            if ( !ctx.getAcknowledge(null) ) {
                 // if we don't get an ack, someone else is already processing this job.
                 // we process but do not notify the job event handler.
                 LoggerFactory.getLogger(JobUtil.class).info("Someone else is already processing job {}.", job);
@@ -297,9 +297,9 @@ public abstract class JobUtil {
      */
     @Deprecated
     public static void finishedJob(final Event job) {
-        final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);
+        final JobStatusNotifier ctx = getNotifier(job);
         if ( ctx != null ) {
-            ctx.getJobStatusNotifier().finishedJob(job, false);
+            ctx.finishedJob(false);
         }
     }
 
@@ -311,9 +311,9 @@ public abstract class JobUtil {
      */
     @Deprecated
     public static boolean rescheduleJob(final Event job) {
-        final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);
+        final JobStatusNotifier ctx = getNotifier(job);
         if ( ctx != null ) {
-            return ctx.getJobStatusNotifier().finishedJob(job, true);
+            return ctx.finishedJob(true);
         }
         return false;
     }
@@ -327,16 +327,17 @@ public abstract class JobUtil {
     @Deprecated
     public static void processJob(final Event job, final JobProcessor processor) {
         // first check for a notifier context to send an acknowledge
-        final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);
-        boolean notify = ctx != null;
-        if ( ctx != null && !ctx.getJobStatusNotifier().sendAcknowledge(job) ) {
+        final JobStatusNotifier ctx = getNotifier(job);
+        if ( ctx != null && !ctx.getAcknowledge(processor) ) {
             // if we don't get an ack, someone else is already processing this job.
-            // we process but do not notify the job event handler.
+            // we do not process.
             LoggerFactory.getLogger(JobUtil.class).info("Someone else is already processing job {}.", job);
-            notify = false;
+            return;
+        }
+        if ( ctx != null ) {
+            return;
         }
         final JobPriority priority = (JobPriority) job.getProperty(PROPERTY_JOB_PRIORITY);
-        final boolean notifyResult = notify;
 
         final Runnable task = new Runnable() {
 
@@ -361,23 +362,13 @@ public abstract class JobUtil {
                                     break;
                     }
                 }
-                boolean result = false;
                 try {
-                    result = processor.process(job);
+                    processor.process(job);
                 } catch (Throwable t) { //NOSONAR
                     LoggerFactory.getLogger(JobUtil.class).error("Unhandled error occured in job processor " + t.getMessage() + " while processing job " + job, t);
-                    // we don't reschedule if an exception occurs
-                    result = true;
                 } finally {
                     currentThread.setPriority(oldPriority);
                     currentThread.setName(oldName);
-                    if ( notifyResult ) {
-                        if ( result ) {
-                            JobUtil.finishedJob(job);
-                        } else {
-                            JobUtil.rescheduleJob(job);
-                        }
-                    }
                 }
             }
 

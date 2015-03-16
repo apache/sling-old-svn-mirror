@@ -47,7 +47,7 @@ import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
 import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
 import org.apache.sling.event.impl.jobs.notifications.NotificationUtility;
-import org.apache.sling.event.impl.jobs.queues.AbstractJobQueue;
+import org.apache.sling.event.impl.jobs.queues.JobQueueImpl;
 import org.apache.sling.event.impl.jobs.queues.QueueManager;
 import org.apache.sling.event.impl.jobs.stats.StatisticsManager;
 import org.apache.sling.event.impl.jobs.tasks.CleanUpTask;
@@ -347,7 +347,7 @@ public class JobManagerImpl
                         resolver.close();
                     }
                 } else {
-                    final JobHandler jh = new JobHandler(job, this.configuration);
+                    final JobHandler jh = new JobHandler(job, null, this.configuration);
                     jh.finished(Job.JobState.DROPPED, true, -1);
                 }
             }
@@ -855,7 +855,7 @@ public class JobManagerImpl
         if ( job != null && !this.configuration.isStoragePath(job.getResourcePath()) ) {
             // get the queue configuration
             final QueueInfo queueInfo = this.configuration.getQueueConfigurationManager().getQueueInfo(job.getTopic());
-            final AbstractJobQueue queue = (AbstractJobQueue)this.qManager.getQueue(queueInfo.queueName);
+            final JobQueueImpl queue = (JobQueueImpl)this.qManager.getQueue(queueInfo.queueName);
 
             boolean stopped = false;
             if ( queue != null ) {
@@ -863,7 +863,7 @@ public class JobManagerImpl
             }
             if ( forward && !stopped ) {
                 // mark the job as stopped
-                final JobHandler jh = new JobHandler(job,this.configuration);
+                final JobHandler jh = new JobHandler(job, null, this.configuration);
                 jh.finished(JobState.STOPPED, true, -1);
             }
         }

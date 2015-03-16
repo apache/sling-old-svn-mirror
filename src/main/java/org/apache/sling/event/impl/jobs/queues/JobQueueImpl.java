@@ -18,17 +18,17 @@
  */
 package org.apache.sling.event.impl.jobs.queues;
 
-import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -36,22 +36,25 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.impl.EventingThreadPool;
+import org.apache.sling.event.impl.jobs.JobExecutionResultImpl;
 import org.apache.sling.event.impl.jobs.JobHandler;
 import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.JobTopicTraverser;
 import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
 import org.apache.sling.event.impl.jobs.deprecated.JobStatusNotifier;
+import org.apache.sling.event.impl.jobs.deprecated.JobStatusNotifierImpl;
 import org.apache.sling.event.impl.jobs.notifications.NotificationUtility;
 import org.apache.sling.event.impl.support.BatchResourceRemover;
-import org.apache.sling.event.impl.support.Environment;
-import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.Job.JobState;
+import org.apache.sling.event.jobs.JobProcessor;
+import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.Queue;
+import org.apache.sling.event.jobs.QueueConfiguration.Type;
 import org.apache.sling.event.jobs.Statistics;
-import org.apache.sling.event.jobs.consumer.JobExecutor;
+import org.apache.sling.event.jobs.consumer.JobExecutionContext;
 import org.osgi.service.event.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,49 +63,40 @@ import org.slf4j.LoggerFactory;
  * The job blocking queue extends the blocking queue by some
  * functionality for the job event handling.
  */
-public abstract class AbstractJobQueue
-    implements Queue, JobStatusNotifier {
+public class JobQueueImpl
+    implements Queue {
 
     /** Default timeout for suspend. */
     private static final long MAX_SUSPEND_TIME = 1000 * 60 * 60; // 60 mins
 
-    /** Default number of seconds to wait for an ack. */
+    /** Default number of milliseconds to wait for an ack. */
     private static final long DEFAULT_WAIT_FOR_ACK_IN_MS = 60 * 1000; // by default we wait 60 secs
 
     /** The logger. */
-    protected final Logger logger;
+    private final Logger logger;
 
     /** Configuration. */
-    protected final InternalQueueConfiguration configuration;
+    private final InternalQueueConfiguration configuration;
 
     /** The queue name. */
-    protected volatile String queueName;
+    private volatile String queueName;
 
     /** Are we still running? */
-    protected volatile boolean running;
+    private volatile boolean running;
 
     /** Suspended since. */
-    private volatile long suspendedSince = -1L;
-
-    /** Suspend lock. */
-    private final Object suspendLock = new Object();
+    private final AtomicLong suspendedSince = new AtomicLong(-1);
 
     /** Services used by the queues. */
-    protected final QueueServices services;
+    private final QueueServices services;
 
     /** The map of events we're processing. */
     private final Map<String, JobHandler> processingJobsLists = new HashMap<String, JobHandler>();
 
     private final ThreadPool threadPool;
 
-    /** The map of events we're have started (send). */
-    private final Map<String, JobHandler> startedJobsLists = new HashMap<String, JobHandler>();
-
     /** Async counter. */
     private final AtomicInteger asyncCounter = new AtomicInteger();
-
-    /** Is the queue currently waiting(sleeping) */
-    protected volatile boolean isWaiting = false;
 
     /** Flag for outdated. */
     private final AtomicBoolean isOutdated = new AtomicBoolean(false);
@@ -113,25 +107,22 @@ public abstract class AbstractJobQueue
     /** The job cache. */
     private final QueueJobCache cache;
 
-    /** Flag to mark whether the queue os waiting for the next job. */
-    private volatile boolean isWaitingForNextJob = false;
-
-    /** Sync object for {@link #isWaitingForNextJob}. */
-    private final Object nextJobLock = new Object();
+    /** Semaphore for handling the max number of jobs. */
+    private final Semaphore available;
 
     /**
      * Create a new queue
      * @param name The queue name
      * @param config The queue configuration
      */
-    public AbstractJobQueue(final String name,
+    public JobQueueImpl(final String name,
                             final InternalQueueConfiguration config,
                             final QueueServices services,
                             final Set<String> topics) {
         if ( config.getOwnThreadPoolSize() > 0 ) {
             this.threadPool = new EventingThreadPool(services.threadPoolManager, config.getOwnThreadPoolSize());
         } else {
-            this.threadPool = Environment.THREAD_POOL;
+            this.threadPool = services.eventingThreadPool;
         }
         this.queueName = name;
         this.configuration = config;
@@ -140,6 +131,9 @@ public abstract class AbstractJobQueue
         this.running = true;
         this.cache = new QueueJobCache(services.configuration, config.getType(), topics);
         this.cache.fillCache();
+        this.available = new Semaphore(config.getMaxParallel(), true);
+        logger.info("Starting job queue {}", queueName);
+        logger.debug("Configuration for job queue={}", configuration);
     }
 
     /**
@@ -170,32 +164,210 @@ public abstract class AbstractJobQueue
      * Start the job queue.
      */
     public void start() {
-        final Thread queueThread = new Thread(new Runnable() {
+        start(false);
+    }
+    /**
+     * Start the job queue.
+     * This method might be called concurrently, therefore we synchronize
+     */
+    public synchronized void start(boolean justOne) {
+        // we start as many jobs in parallel as possible
+        while ( this.running && !this.isOutdated.get() && !this.isSuspended() && this.available.tryAcquire() ) {
+            boolean started = false;
+            try {
+                final JobHandler handler = this.cache.getNextJob(this.services.jobConsumerManager, this, false);
+                if ( handler != null ) {
+                    started = true;
+                    this.threadPool.execute(new Runnable() {
 
-            @Override
-            public void run() {
-                while ( running && !isOutdated()) {
-                    logger.info("Starting job queue {}", queueName);
-                    logger.debug("Configuration for job queue={}", configuration);
+                        @Override
+                        public void run() {
+                            // update thread priority and name
+                            final Thread currentThread = Thread.currentThread();
+                            final String oldName = currentThread.getName();
+                            final int oldPriority = currentThread.getPriority();
 
-                    try {
-                        runJobQueue();
-                    } catch (final Throwable t) { //NOSONAR
-                        logger.error("Job queue " + queueName + " stopped with exception: " + t.getMessage() + ". Restarting.", t);
+                            currentThread.setName(oldName + "-" + handler.getJob().getQueueName() + "(" + handler.getJob().getTopic() + ")");
+                            if ( configuration.getThreadPriority() != null ) {
+                                switch ( configuration.getThreadPriority() ) {
+                                    case NORM : currentThread.setPriority(Thread.NORM_PRIORITY);
+                                                break;
+                                    case MIN  : currentThread.setPriority(Thread.MIN_PRIORITY);
+                                                break;
+                                    case MAX  : currentThread.setPriority(Thread.MAX_PRIORITY);
+                                                break;
+                                }
+                            }
+
+                            try {
+                                startJob(handler);
+                            } finally {
+                                currentThread.setPriority(oldPriority);
+                                currentThread.setName(oldName);
+                            }
+                            // and try to launch another job
+                            start(true);
+                        }
+                    });
+                    if ( justOne ) {
+                        break;
                     }
+                } else {
+                    // no job available, stop look
+                    break;
+                }
+
+            } finally {
+                if ( !started ) {
+                    this.available.release();
                 }
             }
-
-        }, "Apache Sling Job Queue " + queueName);
-        queueThread.setDaemon(true);
-        queueThread.start();
+        }
     }
 
-    /**
-     * Is the queue outdated?
-     */
-    protected boolean isOutdated() {
-        return this.isOutdated.get();
+    private void startJob(final JobHandler handler) {
+        try {
+            this.closeMarker.set(false);
+            try {
+                final JobImpl job = handler.getJob();
+                handler.started = System.currentTimeMillis();
+
+                if ( handler.getConsumer() != null ) {
+                    final long queueTime = handler.started - job.getProperty(JobImpl.PROPERTY_JOB_QUEUED, Calendar.class).getTime().getTime();
+                    NotificationUtility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_STARTED, job, queueTime);
+                    synchronized ( this.processingJobsLists ) {
+                        this.processingJobsLists.put(job.getId(), handler);
+                    }
+
+                    final Object lock = new Object();
+
+                    JobExecutionResultImpl result = JobExecutionResultImpl.CANCELLED;
+                    Job.JobState resultState = Job.JobState.ERROR;
+                    final AtomicBoolean isAsync = new AtomicBoolean(false);
+
+                    try {
+                        synchronized ( lock ) {
+                            final JobExecutionContext ctx = new JobExecutionContextImpl(handler, lock, isAsync, new JobExecutionContextImpl.ASyncHandler() {
+
+                                @Override
+                                public void finished(final JobState state) {
+                                    services.jobConsumerManager.unregisterListener(job.getId());
+                                    finishedJob(job.getId(), state, true);
+                                    asyncCounter.decrementAndGet();
+                                }
+                            });
+
+                            result = (JobExecutionResultImpl)handler.getConsumer().process(job, ctx);
+                            if ( result == null ) { // ASYNC processing
+                                services.jobConsumerManager.registerListener(job.getId(), handler.getConsumer(), ctx);
+                                asyncCounter.incrementAndGet();
+                                isAsync.set(true);
+                            } else {
+                                if ( result.succeeded() ) {
+                                    resultState = Job.JobState.SUCCEEDED;
+                                } else if ( result.failed() ) {
+                                    resultState = Job.JobState.QUEUED;
+                                } else if ( result.cancelled() ) {
+                                    if ( handler.isStopped() ) {
+                                        resultState = Job.JobState.STOPPED;
+                                    } else {
+                                        resultState = Job.JobState.ERROR;
+                                    }
+                                }
+                            }
+                        }
+                    } catch (final Throwable t) { //NOSONAR
+                        logger.error("Unhandled error occured in job processor " + t.getMessage() + " while processing job " + Utility.toString(job), t);
+                        // we don't reschedule if an exception occurs
+                        result = JobExecutionResultImpl.CANCELLED;
+                        resultState = Job.JobState.ERROR;
+                    } finally {
+                        if ( result != null ) {
+                            if ( result.getRetryDelayInMs() != null ) {
+                                job.setProperty(JobImpl.PROPERTY_DELAY_OVERRIDE, result.getRetryDelayInMs());
+                            }
+                            if ( result.getMessage() != null ) {
+                               job.setProperty(Job.PROPERTY_RESULT_MESSAGE, result.getMessage());
+                            }
+                            this.finishedJob(job.getId(), resultState, false);
+                        }
+                    }
+
+                } else {
+                    final Event jobEvent = this.getJobEvent(handler);
+                    final JobStatusNotifierImpl notifier = (JobStatusNotifierImpl) jobEvent.getProperty(JobStatusNotifier.CONTEXT_PROPERTY_NAME);
+                    // we need async delivery, otherwise we might create a deadlock
+                    // as this method runs inside a synchronized block and the finishedJob
+                    // method as well!
+                    final long endOfAck = System.currentTimeMillis() + DEFAULT_WAIT_FOR_ACK_IN_MS;
+                    this.services.eventAdmin.postEvent(jobEvent);
+
+                    // wait for the ack
+                    synchronized ( notifier ) {
+                        while ( System.currentTimeMillis() < endOfAck && !notifier.isCalled() ) {
+                            try {
+                                notifier.wait(endOfAck - System.currentTimeMillis());
+                            } catch ( final InterruptedException ie) {
+                                Thread.currentThread().interrupt();
+                                ignoreException(ie);
+                            }
+                        }
+                        if ( !notifier.isCalled() ) {
+                            notifier.markDone();
+                        }
+                    }
+                    if ( !notifier.isCalled() ) {
+                        if ( handler.reschedule() ) {
+                            this.logger.info("No acknowledge received for job {} stored at {}. Requeueing job.", Utility.toString(handler.getJob()), handler.getJob().getId());
+                            handler.getJob().retry();
+                            this.requeue(handler);
+                        }
+                    } else {
+                        if ( logger.isDebugEnabled() ) {
+                            logger.debug("Received ack for job {}", Utility.toString(job));
+                        }
+                        // check for processor
+                        final JobProcessor processor = notifier.getProcessor();
+                        if ( processor != null ) {
+                            boolean result = false;
+                            try {
+                                result = processor.process(jobEvent);
+                            } catch (Throwable t) { //NOSONAR
+                                LoggerFactory.getLogger(JobUtil.class).error("Unhandled error occured in job processor " + t.getMessage() + " while processing job " + job, t);
+                                // we don't reschedule if an exception occurs
+                                result = true;
+                            }
+                            if ( result ) {
+                                this.finishedJob(job.getId(), Job.JobState.SUCCEEDED, false);
+                            } else {
+                                this.finishedJob(job.getId(), Job.JobState.QUEUED, false);
+                            }
+                        } else {
+                            // async processing
+                            final AtomicBoolean isAsync = new AtomicBoolean(true);
+                            final JobExecutionContext ctx = new JobExecutionContextImpl(handler, new Object(), isAsync, new JobExecutionContextImpl.ASyncHandler() {
+
+                                @Override
+                                public void finished(final JobState state) {
+                                    services.jobConsumerManager.unregisterListener(job.getId());
+                                    finishedJob(job.getId(), state, true);
+                                    asyncCounter.decrementAndGet();
+                                }
+                            });
+                            services.jobConsumerManager.registerListener(job.getId(), handler.getConsumer(), ctx);
+                            asyncCounter.incrementAndGet();
+
+                            notifier.setJobExecutionContext(ctx);
+                        }
+                    }
+                }
+            } catch (final Exception re) {
+                // if an exception occurs, we just log
+                this.logger.error("Exception during job processing.", re);
+            }
+        } finally {
+            this.available.release();
+        }
     }
 
     /**
@@ -229,8 +401,11 @@ public abstract class AbstractJobQueue
     /**
      * Check whether this queue can be closed
      */
-    protected boolean canBeClosed() {
-        return !this.isWaiting && !this.isSuspended() && this.cache.isEmpty() && this.asyncCounter.get() == 0;
+    public boolean canBeClosed() {
+        return !this.isSuspended()
+            && this.cache.isEmpty()
+            && this.asyncCounter.get() == 0
+            && this.available.availablePermits() == this.configuration.getMaxParallel();
     }
 
     /**
@@ -240,18 +415,9 @@ public abstract class AbstractJobQueue
         this.running = false;
         this.logger.debug("Shutting down job queue {}", queueName);
         this.resume();
-        if ( this.isWaiting ) {
-            this.logger.debug("Waking up waiting queue {}", this.queueName);
-            this.notifyFinished(false);
-        }
-        // stop the queue
-        this.stopWaitingForNextJob();
 
         synchronized ( this.processingJobsLists ) {
             this.processingJobsLists.clear();
-        }
-        synchronized ( this.startedJobsLists ) {
-            this.startedJobsLists.clear();
         }
         if ( this.configuration.getOwnThreadPoolSize() > 0 ) {
             ((EventingThreadPool)this.threadPool).release();
@@ -261,118 +427,19 @@ public abstract class AbstractJobQueue
     }
 
     /**
-     * Periodically check for started jobs without an acknowledge.
+     * Periodic maintenance
      */
-    public void checkForUnprocessedJobs() {
-        if ( this.running ) {
-            // check for jobs that were started but never got an acknowledge
-            final long tooOld = System.currentTimeMillis() - DEFAULT_WAIT_FOR_ACK_IN_MS;
-            // to keep the synchronized block as fast as possible we just store the
-            // jobs to be removed in a new list and process this list afterwards
-            final List<JobHandler> restartJobs = new ArrayList<JobHandler>();
-            synchronized ( this.startedJobsLists ) {
-                final Iterator<Map.Entry<String, JobHandler>> i = this.startedJobsLists.entrySet().iterator();
-                while ( i.hasNext() ) {
-                    final Map.Entry<String, JobHandler> entry = i.next();
-                    if ( entry.getValue().started <= tooOld ) {
-                        restartJobs.add(entry.getValue());
-                    }
-                }
-            }
-
-            // restart jobs is now a list of potential candidates, we now have to check
-            // each candidate separately again!
-            if ( restartJobs.size() > 0 ) {
-                try {
-                    Thread.sleep(500);
-                } catch (final InterruptedException e) {
-                    this.ignoreException(e);
-                    Thread.currentThread().interrupt();
-                }
-            }
-            final Iterator<JobHandler> jobIter = restartJobs.iterator();
-            while ( jobIter.hasNext() ) {
-                final JobHandler handler = jobIter.next();
-                boolean process = false;
-                synchronized ( this.startedJobsLists ) {
-                    process = this.startedJobsLists.remove(handler.getJob().getId()) != null;
-                }
-                if ( process ) {
-                    if ( handler.reschedule() ) {
-                        this.logger.info("No acknowledge received for job {} stored at {}. Requeueing job.", Utility.toString(handler.getJob()), handler.getJob().getId());
-                        handler.getJob().retry();
-                        this.requeue(handler);
-                        this.notifyFinished(true);
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Execute the queue
-     */
-    private void runJobQueue() {
-        while ( this.running && !this.isOutdated()) {
-            // so let's wait/get the next job from the queue
-            final JobHandler info = this.take();
-
-            // if we're suspended we drop the current item
-            if ( this.running && info != null && !this.isOutdated() && !checkSuspended(info) ) {
-                // if we still have a job and are running, let's go
-                this.start(info);
-            }
-        }
-    }
-
-    /**
-     * Take a new job for this queue.
-     * This method blocks until a job is available or the queue is stopped.
-     * @param queueName The queue name
-     * @return A new job or {@code null} if {@link #stop(String)} is called.
-     */
-    private JobHandler take() {
-        logger.debug("Taking new job for {}", queueName);
-        JobImpl result = null;
-
-        boolean doFull = false;
-
-        while ( result == null && !this.isOutdated() && this.running ) {
-            this.isWaitingForNextJob = true;
-
-            result = this.cache.getNextJob(doFull);
-            if ( result == null && !this.isOutdated() && this.running ) {
-                // block
-                synchronized ( nextJobLock ) {
-                    while ( isWaitingForNextJob ) {
-                        try {
-                            nextJobLock.wait(20000);
-                            isWaitingForNextJob = false;
-                            doFull = true;
-                        } catch ( final InterruptedException ignore ) {
-                            Thread.currentThread().interrupt();
-                        }
-                    }
-                }
-            }
-            this.isWaitingForNextJob = false;
+    public void maintain() {
+        // check suspended
+        final long since = this.suspendedSince.get();
+        if ( since != -1 && since + MAX_SUSPEND_TIME < System.currentTimeMillis() ) {
+            logger.info("Waking up suspended queue. It has been suspended for more than {}ms", MAX_SUSPEND_TIME);
+            this.resume();
         }
 
-        if ( logger.isDebugEnabled() ) {
-            logger.debug("Returning job for {} : {}", queueName, Utility.toString(result));
-        }
-        return (result != null ? new JobHandler( result, this.services.configuration) : null);
-    }
+        // TODO - set full cache search
 
-    /**
-     * Stop waiting for a job
-     * @param queueName The queue name.
-     */
-    private void stopWaitingForNextJob() {
-        synchronized ( nextJobLock ) {
-            this.isWaitingForNextJob = false;
-            nextJobLock.notify();
-        }
+        this.start();
     }
 
     /**
@@ -381,7 +448,7 @@ public abstract class AbstractJobQueue
      */
     public void wakeUpQueue(final Set<String> topics) {
         this.cache.handleNewTopics(topics);
-        this.stopWaitingForNextJob();
+        this.start();
     }
 
     /**
@@ -390,115 +457,7 @@ public abstract class AbstractJobQueue
      */
     private void requeue(final JobHandler handler) {
         this.cache.reschedule(handler);
-        synchronized ( this.nextJobLock ) {
-            this.nextJobLock.notify();
-        }
-    }
-
-    /**
-     * Check if the queue is suspended and go into suspend mode
-     */
-    private boolean checkSuspended(final JobHandler handler) {
-        boolean wasSuspended = false;
-        synchronized ( this.suspendLock ) {
-            while ( this.suspendedSince != -1 ) {
-                if (!wasSuspended ) {
-                    this.requeue(handler);
-                    logger.debug("Sleeping as queue {} is suspended.", this.getName());
-                    wasSuspended = true;
-                }
-                final long diff = System.currentTimeMillis() - this.suspendedSince;
-                try {
-                    this.suspendLock.wait(MAX_SUSPEND_TIME - diff);
-                } catch (final InterruptedException ignore) {
-                    this.ignoreException(ignore);
-                    Thread.currentThread().interrupt();
-                }
-                logger.debug("Waking up queue {}.", this.getName());
-                if ( System.currentTimeMillis() > this.suspendedSince + MAX_SUSPEND_TIME ) {
-                    this.resume();
-                }
-            }
-        }
-        return wasSuspended;
-    }
-
-    /**
-     * Execute a job
-     */
-    protected boolean executeJob(final JobHandler handler) {
-        final JobImpl job = handler.getJob();
-        final JobExecutor consumer = this.services.jobConsumerManager.getExecutor(job.getTopic());
-
-        if ( (consumer != null || (job.isBridgedEvent() && this.services.jobConsumerManager.supportsBridgedEvents())) ) {
-            final boolean success = this.startJobExecution(handler, consumer);
-            return success;
-        } else {
-            // no consumer on this instance, assign to another instance
-            handler.reassign();
-            return false;
-        }
-    }
-
-    private boolean startJobExecution(final JobHandler handler, final JobExecutor consumer) {
-        this.closeMarker.set(false);
-        final JobImpl job = handler.getJob();
-        if ( handler.startProcessing(this) ) {
-            if ( logger.isDebugEnabled() ) {
-                logger.debug("Starting job {}", Utility.toString(job));
-            }
-            try {
-                handler.started = System.currentTimeMillis();
-
-                if ( consumer != null ) {
-                    final long queueTime = System.currentTimeMillis() - handler.getJob().getProperty(JobImpl.PROPERTY_JOB_QUEUED, Calendar.class).getTime().getTime();
-                    NotificationUtility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_STARTED, job, queueTime);
-                    synchronized ( this.processingJobsLists ) {
-                        this.processingJobsLists.put(job.getId(), handler);
-                    }
-
-                    final Runnable task = new JobRunner(logger, consumer, new JobRunner.StatusNotifier()  {
-
-                        @Override
-                        public boolean finishedJob(String jobId, JobState resultState,
-                                boolean isAsync) {
-                            return AbstractJobQueue.this.finishedJob(jobId, resultState, isAsync);
-                        }
-                    }, handler, configuration, services, asyncCounter);
-
-                    // check if the thread pool is available
-                    final ThreadPool pool = this.threadPool;
-                    if ( pool != null ) {
-                        pool.execute(task);
-                    } else {
-                        // if we don't have a thread pool, we create the thread directly
-                        // (this should never happen for jobs, but is a safe fall back)
-                        new Thread(task).start();
-                    }
-
-                } else {
-                    // let's add the event to our started jobs list
-                    synchronized ( this.startedJobsLists ) {
-                        this.startedJobsLists.put(job.getId(), handler);
-                    }
-                    final Event jobEvent = this.getJobEvent(handler);
-                    // we need async delivery, otherwise we might create a deadlock
-                    // as this method runs inside a synchronized block and the finishedJob
-                    // method as well!
-                    this.services.eventAdmin.postEvent(jobEvent);
-                }
-                return true;
-
-            } catch (final Exception re) {
-                // if an exception occurs, we just log
-                this.logger.error("Exception during job processing.", re);
-            }
-        } else {
-            if ( logger.isDebugEnabled() ) {
-                logger.debug("Discarding removed job {}", Utility.toString(job));
-            }
-        }
-        return false;
+        this.start();
     }
 
     private static final class RescheduleInfo {
@@ -547,15 +506,6 @@ public abstract class AbstractJobQueue
     }
 
     /**
-     * @see org.apache.sling.event.impl.jobs.deprecated.JobStatusNotifier#finishedJob(org.osgi.service.event.Event, boolean)
-     */
-    @Override
-    public boolean finishedJob(final Event job, final boolean shouldReschedule) {
-        final String location = (String)job.getProperty(ResourceHelper.PROPERTY_JOB_ID);
-        return this.finishedJob(location, shouldReschedule ? Job.JobState.QUEUED : Job.JobState.SUCCEEDED, false);
-    }
-
-    /**
      * Handle job finish and determine whether to reschedule or cancel the job
      */
     private boolean finishedJob(final String jobId,
@@ -563,11 +513,6 @@ public abstract class AbstractJobQueue
                                 final boolean isAsync) {
         if ( this.logger.isDebugEnabled() ) {
             this.logger.debug("Received finish for job {}, resultState={}", jobId, resultState);
-        }
-        // this is just a sanity check, as usually the job should have been
-        // removed during sendAcknowledge.
-        synchronized ( this.startedJobsLists ) {
-            this.startedJobsLists.remove(jobId);
         }
 
         // get job handler
@@ -602,7 +547,6 @@ public abstract class AbstractJobQueue
         } else {
             this.reschedule(handler);
         }
-        this.notifyFinished(rescheduleInfo.reschedule);
 
         return rescheduleInfo.reschedule;
     }
@@ -622,7 +566,7 @@ public abstract class AbstractJobQueue
         }
 
         // put properties for finished job callback
-        properties.put(JobStatusNotifier.CONTEXT_PROPERTY_NAME, new JobStatusNotifier.NotifierContext(this));
+        properties.put(JobStatusNotifier.CONTEXT_PROPERTY_NAME, new JobStatusNotifierImpl());
 
         // remove app id and distributable flag
         properties.remove(EventUtil.PROPERTY_DISTRIBUTE);
@@ -632,40 +576,13 @@ public abstract class AbstractJobQueue
     }
 
     /**
-     * @see org.apache.sling.event.impl.jobs.deprecated.JobStatusNotifier#sendAcknowledge(org.osgi.service.event.Event)
-     */
-    @Override
-    public boolean sendAcknowledge(final Event job) {
-        final String jobId = (String)job.getProperty(ResourceHelper.PROPERTY_JOB_ID);
-        final JobHandler ack;
-        synchronized ( this.startedJobsLists ) {
-            ack = this.startedJobsLists.remove(jobId);
-        }
-        // if the event is still in the started jobs list, we confirm the ack
-        if ( ack != null ) {
-            if ( logger.isDebugEnabled() ) {
-                logger.debug("Received ack for job {}", Utility.toString(ack.getJob()));
-            }
-            final long queueTime = ack.started - ack.getJob().getProperty(JobImpl.PROPERTY_JOB_QUEUED, Calendar.class).getTime().getTime();
-            NotificationUtility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_STARTED, ack.getJob(), queueTime);
-            synchronized ( this.processingJobsLists ) {
-                this.processingJobsLists.put(jobId, ack);
-            }
-        }
-        return ack != null;
-    }
-
-    /**
      * @see org.apache.sling.event.jobs.Queue#resume()
      */
     @Override
     public void resume() {
-        synchronized ( this.suspendLock ) {
-            if ( this.suspendedSince != -1 ) {
-                this.logger.debug("Waking up suspended queue {}", queueName);
-                this.suspendedSince = -1;
-                this.suspendLock.notify();
-            }
+        if ( this.suspendedSince.getAndSet(-1) != -1 ) {
+            this.logger.debug("Waking up suspended queue {}", queueName);
+            this.start();
         }
     }
 
@@ -674,11 +591,8 @@ public abstract class AbstractJobQueue
      */
     @Override
     public void suspend() {
-        synchronized ( this.suspendLock ) {
-            if ( this.suspendedSince == -1 ) {
-                this.logger.debug("Suspending queue {}", queueName);
-                this.suspendedSince = System.currentTimeMillis();
-            }
+        if ( this.suspendedSince.compareAndSet(-1, System.currentTimeMillis()) ) {
+            this.logger.debug("Suspending queue {}", queueName);
         }
     }
 
@@ -687,9 +601,7 @@ public abstract class AbstractJobQueue
      */
     @Override
     public boolean isSuspended() {
-        synchronized ( this.suspendLock ) {
-            return this.suspendedSince != -1;
-        }
+        return this.suspendedSince.get() != -1;
     }
 
     /**
@@ -767,13 +679,10 @@ public abstract class AbstractJobQueue
      */
     @Override
     public String getStateInfo() {
-        synchronized ( this.suspendLock ) {
-            return "outdated=" + this.isOutdated.get() +
-                    ", isWaiting=" + this.isWaiting +
-                    ", isWaitingForNextJob=" + this.isWaitingForNextJob +
-                    ", suspendedSince=" + this.suspendedSince +
-                    ", asyncJobs=" + this.asyncCounter.get();
-        }
+        return "outdated=" + this.isOutdated.get() +
+                ", suspendedSince=" + this.suspendedSince.get() +
+                ", asyncJobs=" + this.asyncCounter.get() +
+                ", jobCount=" + String.valueOf(this.configuration.getMaxParallel() - this.available.availablePermits());
     }
 
     /**
@@ -781,7 +690,7 @@ public abstract class AbstractJobQueue
      * @param handler The job handler.
      * @return The retry delay
      */
-    protected long getRetryDelay(final JobHandler handler) {
+    private long getRetryDelay(final JobHandler handler) {
         long delay = this.configuration.getRetryDelayInMs();
         if ( handler.getJob().getProperty(JobImpl.PROPERTY_DELAY_OVERRIDE) != null ) {
             delay = handler.getJob().getProperty(JobImpl.PROPERTY_DELAY_OVERRIDE, Long.class);
@@ -791,15 +700,11 @@ public abstract class AbstractJobQueue
         return delay;
     }
 
-    protected void reschedule(final JobHandler handler) {
-        this.requeue(handler);
-    }
-
     /**
      * Helper method which just logs the exception in debug mode.
      * @param e
      */
-    protected void ignoreException(Exception e) {
+    private void ignoreException(Exception e) {
         if ( this.logger.isDebugEnabled() ) {
             this.logger.debug("Ignored exception " + e.getMessage(), e);
         }
@@ -816,13 +721,34 @@ public abstract class AbstractJobQueue
         return handler != null;
     }
 
-    /**
-     * Start processing of a new job.
-     * @param handler The new job handler
-     */
-    protected abstract void start(final JobHandler handler);
+    private void reschedule(final JobHandler handler) {
+        // we delay putting back the job until the retry delay is over
+        final long delay = this.getRetryDelay(handler);
+        if ( delay > 0 ) {
+            if ( this.configuration.getType() == Type.ORDERED ) {
+                this.suspend();
+            }
+            handler.addToRetryList();
+            final Date fireDate = new Date();
+            fireDate.setTime(System.currentTimeMillis() + delay);
 
-    protected abstract void notifyFinished(boolean reschedule);
-
+            final String jobName = "Waiting:" + queueName + ":" + handler.hashCode();
+            final Runnable t = new Runnable() {
+                @Override
+                public void run() {
+                    if ( handler.removeFromRetryList() ) {
+                        requeue(handler);
+                    }
+                    if ( configuration.getType() == Type.ORDERED ) {
+                        resume();
+                    }
+                }
+            };
+            services.scheduler.schedule(t, services.scheduler.AT(fireDate).name(jobName));
+        } else {
+            // put directly into queue
+            this.requeue(handler);
+        }
+    }
 }
 

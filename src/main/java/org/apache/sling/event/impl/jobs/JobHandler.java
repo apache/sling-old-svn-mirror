@@ -35,6 +35,7 @@ import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.Queue;
+import org.apache.sling.event.jobs.consumer.JobExecutor;
 
 
 /**
@@ -44,20 +45,28 @@ public class JobHandler {
 
     private final JobImpl job;
 
-    public long started = -1;
+    public volatile long started = -1;
 
     private volatile boolean isStopped = false;
 
     private final JobManagerConfiguration configuration;
 
+    private final JobExecutor consumer;
+
     public JobHandler(final JobImpl job,
+            final JobExecutor consumer,
             final JobManagerConfiguration configuration) {
         this.job = job;
+        this.consumer = consumer;
         this.configuration = configuration;
     }
 
     public JobImpl getJob() {
         return this.job;
+    }
+
+    public JobExecutor getConsumer() {
+        return this.consumer;
     }
 
     public boolean startProcessing(final Queue queue) {
