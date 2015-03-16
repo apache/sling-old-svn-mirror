@@ -36,6 +36,7 @@ public class SlingSpecificsSightlyIT {
     private static final String SLING_RESOURCE = "/sightly/resource.html";
     private static final String SLING_TEMPLATE = "/sightly/template.html";
     private static final String SLING_TEMPLATE_BAD_IDENTIFIER = "/sightly/template.bad-id.html";
+    private static final String SLING_JS_USE = "/sightly/use.jsuse.html";
 
     @BeforeClass
     public static void init() {
@@ -90,6 +91,16 @@ public class SlingSpecificsSightlyIT {
         String url = launchpadURL + SLING_TEMPLATE_BAD_IDENTIFIER;
         String pageContent = client.getStringContent(url, 500);
         assertTrue(pageContent.contains("org.apache.sling.scripting.sightly.impl.compiler.SightlyParsingException"));
+    }
+
+    @Test
+    public void testJSUseAPI() {
+        String url = launchpadURL + SLING_JS_USE;
+        String pageContent = client.getStringContent(url, 200);
+        assertEquals("use", HTMLExtractor.innerHTML(url, pageContent, "#resource-name"));
+        assertEquals("use", HTMLExtractor.innerHTML(url, pageContent, "#resource-getName"));
+        assertEquals("/apps/sightly/scripts/use", HTMLExtractor.innerHTML(url, pageContent, "#resource-resourceType"));
+        assertEquals("/apps/sightly/scripts/use", HTMLExtractor.innerHTML(url, pageContent, "#resource-getResourceType"));
     }
 
 }
