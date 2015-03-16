@@ -99,6 +99,26 @@ use(['helper.js'], function(helper) {
         },
 
         /**
+         * Returns the name of this resource. The name of a resource is the last segment of the path.
+         * @returns {string} the name of this resource
+         */
+        getName: function () {
+            var index = this.path.lastIndexOf('/');
+            if (index == -1) {
+                return this.path;
+            }
+            return this.path.substring(index + 1);
+        },
+
+        /**
+         * The resource type is meant to point to rendering/processing scripts, editing dialogs, etc.
+         * @return {string} the resource type of this resource
+         */
+        getResourceType: function () {
+            return this.nativeResource.resourceType;
+        },
+
+        /**
          * Resolve a path to a resource. The path may be relative
          * to this path
          * @param  {string} path the requested path
@@ -124,11 +144,7 @@ use(['helper.js'], function(helper) {
          */
         name: {
             get: function() {
-                var index = this.path.lastIndexOf('/');
-                if (index == -1) {
-                    return this.path;
-                }
-                return this.path.substring(index + 1);
+                return this.getName();
             }
         },
 
@@ -140,7 +156,7 @@ use(['helper.js'], function(helper) {
          */
         resourceType: {
             get: function() {
-                return this.nativeResource.resourceType;
+                return this.getResourceType();
             }
         }
     });
