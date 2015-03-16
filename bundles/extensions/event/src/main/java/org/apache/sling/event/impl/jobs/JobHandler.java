@@ -44,7 +44,6 @@ public class JobHandler {
 
     private final JobImpl job;
 
-    public long queued = -1;
     public long started = -1;
 
     private volatile boolean isStopped = false;
@@ -82,6 +81,7 @@ public class JobHandler {
                     mvm.put(Job.PROPERTY_RESULT_MESSAGE, job.getProperty(Job.PROPERTY_RESULT_MESSAGE));
                 }
                 mvm.remove(Job.PROPERTY_JOB_STARTED_TIME);
+                mvm.put(JobImpl.PROPERTY_JOB_QUEUED, Calendar.getInstance());
                 try {
                     resolver.commit();
                     return true;

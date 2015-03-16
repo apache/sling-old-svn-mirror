@@ -48,6 +48,11 @@ public class JobImpl implements Job, Comparable<JobImpl> {
     public static final String PROPERTY_DELAY_OVERRIDE = ":slingevent:delayOverride";
 
     /**
+     * Internal job property specifying when the job was put into the queue.
+     */
+    public static final String PROPERTY_JOB_QUEUED = "event.job.queued.time";
+
+    /**
      * This property contains the finished state of a job once it's marked as finished.
      * The value is either "CANCELLED" or "SUCCEEDED".
      * This property is read-only and can't be specified when the job is created.
