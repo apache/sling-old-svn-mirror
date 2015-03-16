@@ -174,7 +174,8 @@
         <configuration>
           <instructions>
             <Export-Package>
-              org.apache.sling.scripting.thymeleaf
+              org.apache.sling.scripting.thymeleaf,
+              org.thymeleaf.*;version="2.1.4.RELEASE"
             </Export-Package>
             <Import-Package>
               org.apache.commons.io.input;version="1.4.9999",
