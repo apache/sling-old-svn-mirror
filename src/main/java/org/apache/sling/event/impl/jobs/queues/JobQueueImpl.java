@@ -29,6 +29,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -115,6 +116,11 @@ public class JobQueueImpl
 
     /** Guard for having only one thread executing start jobs. */
     private final AtomicBoolean startJobsGuard = new AtomicBoolean(false);
+
+    /** Lock for close/start. */
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+
+    private volatile long isSleepingUntil = -1;
 
     /**
      * Create a new queue.
@@ -206,6 +212,7 @@ public class JobQueueImpl
             // we start as many jobs in parallel as possible
             while ( this.running && !this.isOutdated.get() && !this.isSuspended() && this.available.tryAcquire() ) {
                 boolean started = false;
+                this.lock.writeLock().lock();
                 try {
                     final JobHandler handler = this.cache.getNextJob(this.services.jobConsumerManager, this, this.doFullCacheSearch.getAndSet(false));
                     if ( handler != null ) {
@@ -253,6 +260,7 @@ public class JobQueueImpl
                     if ( !started ) {
                         this.available.release();
                     }
+                    this.lock.writeLock().unlock();
                 }
             }
             this.startJobsGuard.set(false);
@@ -421,13 +429,18 @@ public class JobQueueImpl
     public boolean tryToClose() {
         // resume the queue as we want to close it!
         this.resume();
-        // check if possible
-        if ( this.canBeClosed() ) {
-            if ( this.closeMarker.get() ) {
-                this.close();
-                return true;
+        this.lock.writeLock().lock();
+        try {
+            // check if possible
+            if ( this.canBeClosed() ) {
+                if ( this.closeMarker.get() ) {
+                    this.close();
+                    return true;
+                }
+                this.closeMarker.set(true);
             }
-            this.closeMarker.set(true);
+        } finally {
+            this.lock.writeLock().unlock();
         }
         return false;
     }
@@ -704,7 +717,11 @@ public class JobQueueImpl
      */
     @Override
     public Object getState(final String key) {
-        // not supported for now
+        if ( this.configuration.getType() == Type.ORDERED ) {
+            if ( "isSleepingUntil".equals(key) ) {
+                return this.isSleepingUntil;
+            }
+        }
         return null;
     }
 
@@ -716,7 +733,8 @@ public class JobQueueImpl
         return "outdated=" + this.isOutdated.get() +
                 ", suspendedSince=" + this.suspendedSince.get() +
                 ", asyncJobs=" + this.asyncCounter.get() +
-                ", jobCount=" + String.valueOf(this.configuration.getMaxParallel() - this.available.availablePermits());
+                ", jobCount=" + String.valueOf(this.configuration.getMaxParallel() - this.available.availablePermits() +
+                (this.configuration.getType() == Type.ORDERED ? ", isSleepingUntil=" + this.isSleepingUntil : ""));
     }
 
     /**
@@ -760,22 +778,25 @@ public class JobQueueImpl
         final long delay = this.getRetryDelay(handler);
         if ( delay > 0 ) {
             if ( this.configuration.getType() == Type.ORDERED ) {
-                this.suspend();
+                this.cache.setIsBlocked(true);
             }
             handler.addToRetryList();
             final Date fireDate = new Date();
             fireDate.setTime(System.currentTimeMillis() + delay);
+            this.isSleepingUntil = fireDate.getTime();
 
             final String jobName = "Waiting:" + queueName + ":" + handler.hashCode();
             final Runnable t = new Runnable() {
                 @Override
                 public void run() {
+                    isSleepingUntil = -1;
                     if ( handler.removeFromRetryList() ) {
                         requeue(handler);
                     }
                     if ( configuration.getType() == Type.ORDERED ) {
-                        resume();
+                        cache.setIsBlocked(false);
                     }
+                    startJobs();
                 }
             };
             services.scheduler.schedule(t, services.scheduler.AT(fireDate).name(jobName));
