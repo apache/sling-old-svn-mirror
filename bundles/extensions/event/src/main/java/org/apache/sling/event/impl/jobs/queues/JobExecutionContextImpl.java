@@ -25,21 +25,37 @@ import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.consumer.JobExecutionContext;
 import org.apache.sling.event.jobs.consumer.JobExecutionResult;
 
+/**
+ * Implementation of the job execution context passed to
+ * job executors.
+ */
 public class JobExecutionContextImpl implements JobExecutionContext {
 
+    /**
+     * Call back interface to the queue.
+     */
     public interface ASyncHandler {
         void finished(Job.JobState state);
     }
 
+    /**
+     * Boolean to check whether init is finished.
+     */
     private volatile boolean hasInit = false;
 
-    private final JobHandler handler;
-
+    /**
+     * Lock for handling the async notification.
+     */
     private final Object lock;
 
+    /**
+     * Flag to indicate whether this is async processing
+     */
     private final AtomicBoolean isAsync;
 
     private final ASyncHandler asyncHandler;
+
+    private final JobHandler handler;
 
     public JobExecutionContextImpl(final JobHandler handler,
             final Object syncLock,
@@ -102,7 +118,7 @@ public class JobExecutionContextImpl implements JobExecutionContext {
                 }
                 asyncHandler.finished(state);
             } else {
-                throw new IllegalStateException("Job is not processed async " + handler.getJob().getId());
+                throw new IllegalStateException("Job is not processed async or is already finished: " + handler.getJob().getId());
             }
         }
     }
