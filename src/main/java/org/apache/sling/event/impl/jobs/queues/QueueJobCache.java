@@ -83,6 +83,7 @@ public class QueueJobCache {
         this.queueType = queueType;
         this.topics = new ConcurrentSkipListSet<String>(topics);
         this.topicsWithNewJobs.addAll(topics);
+        this.fillCache();
     }
 
     /**
@@ -111,17 +112,14 @@ public class QueueJobCache {
     }
 
     /**
-     * Fill the cache
+     * Fill the cache.
+     * No need to sync as this is called from the constructor.
      */
-    public void fillCache() {
-        synchronized ( this.cache ) {
-            if ( this.cache.isEmpty() ) {
-                final Set<String> checkingTopics = new HashSet<String>();
-                checkingTopics.addAll(this.topics);
-                if ( !checkingTopics.isEmpty() ) {
-                    this.loadJobs(checkingTopics);
-                }
-            }
+    private void fillCache() {
+        final Set<String> checkingTopics = new HashSet<String>();
+        checkingTopics.addAll(this.topics);
+        if ( !checkingTopics.isEmpty() ) {
+            this.loadJobs(checkingTopics);
         }
     }
 

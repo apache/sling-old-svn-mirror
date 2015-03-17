@@ -113,15 +113,44 @@ public class JobQueueImpl
     /** Semaphore for handling the max number of jobs. */
     private final Semaphore available;
 
+    /** Guard for having only one thread executing start jobs. */
+    private final AtomicBoolean startJobsGuard = new AtomicBoolean(false);
+
     /**
-     * Create a new queue
+     * Create a new queue.
+     *
      * @param name The queue name
      * @param config The queue configuration
+     * @param services The queue services
+     * @param topics The topics handled by this queue
+     *
+     * @return {@code JobQueueImpl} if there are jobs to process, {@code null} otherwise.
      */
-    public JobQueueImpl(final String name,
-                            final InternalQueueConfiguration config,
-                            final QueueServices services,
-                            final Set<String> topics) {
+    public static JobQueueImpl createQueue(final String name,
+                        final InternalQueueConfiguration config,
+                        final QueueServices services,
+                        final Set<String> topics) {
+        final QueueJobCache cache = new QueueJobCache(services.configuration, config.getType(), topics);
+        if ( cache.isEmpty() ) {
+            return null;
+        }
+        return new JobQueueImpl(name, config, services, topics, cache);
+    }
+
+    /**
+     * Create a new queue.
+     *
+     * @param name The queue name
+     * @param config The queue configuration
+     * @param services The queue services
+     * @param topics The topics handled by this queue
+     * @param cache The job cache
+     */
+    private JobQueueImpl(final String name,
+                        final InternalQueueConfiguration config,
+                        final QueueServices services,
+                        final Set<String> topics,
+                        final QueueJobCache cache) {
         if ( config.getOwnThreadPoolSize() > 0 ) {
             this.threadPool = new EventingThreadPool(services.threadPoolManager, config.getOwnThreadPoolSize());
         } else {
@@ -132,8 +161,7 @@ public class JobQueueImpl
         this.services = services;
         this.logger = LoggerFactory.getLogger(this.getClass().getName() + '.' + name);
         this.running = true;
-        this.cache = new QueueJobCache(services.configuration, config.getType(), topics);
-        this.cache.fillCache();
+        this.cache = cache;
         this.available = new Semaphore(config.getMaxParallel(), true);
         logger.info("Starting job queue {}", queueName);
         logger.debug("Configuration for job queue={}", configuration);
@@ -166,65 +194,68 @@ public class JobQueueImpl
     /**
      * Start the job queue.
      */
-    public void start() {
-        start(false);
+    public void startJobs() {
+        startJobs(false);
     }
     /**
      * Start the job queue.
-     * This method might be called concurrently, therefore we synchronize
+     * This method might be called concurrently, therefore we use a guard
      */
-    public synchronized void start(boolean justOne) {
-        // we start as many jobs in parallel as possible
-        while ( this.running && !this.isOutdated.get() && !this.isSuspended() && this.available.tryAcquire() ) {
-            boolean started = false;
-            try {
-                final JobHandler handler = this.cache.getNextJob(this.services.jobConsumerManager, this, this.doFullCacheSearch.getAndSet(false));
-                if ( handler != null ) {
-                    started = true;
-                    this.threadPool.execute(new Runnable() {
+    private void startJobs(boolean justOne) {
+        if ( this.startJobsGuard.compareAndSet(false, true) ) {
+            // we start as many jobs in parallel as possible
+            while ( this.running && !this.isOutdated.get() && !this.isSuspended() && this.available.tryAcquire() ) {
+                boolean started = false;
+                try {
+                    final JobHandler handler = this.cache.getNextJob(this.services.jobConsumerManager, this, this.doFullCacheSearch.getAndSet(false));
+                    if ( handler != null ) {
+                        started = true;
+                        this.threadPool.execute(new Runnable() {
 
-                        @Override
-                        public void run() {
-                            // update thread priority and name
-                            final Thread currentThread = Thread.currentThread();
-                            final String oldName = currentThread.getName();
-                            final int oldPriority = currentThread.getPriority();
+                            @Override
+                            public void run() {
+                                // update thread priority and name
+                                final Thread currentThread = Thread.currentThread();
+                                final String oldName = currentThread.getName();
+                                final int oldPriority = currentThread.getPriority();
 
-                            currentThread.setName(oldName + "-" + handler.getJob().getQueueName() + "(" + handler.getJob().getTopic() + ")");
-                            if ( configuration.getThreadPriority() != null ) {
-                                switch ( configuration.getThreadPriority() ) {
-                                    case NORM : currentThread.setPriority(Thread.NORM_PRIORITY);
-                                                break;
-                                    case MIN  : currentThread.setPriority(Thread.MIN_PRIORITY);
-                                                break;
-                                    case MAX  : currentThread.setPriority(Thread.MAX_PRIORITY);
-                                                break;
+                                currentThread.setName(oldName + "-" + handler.getJob().getQueueName() + "(" + handler.getJob().getTopic() + ")");
+                                if ( configuration.getThreadPriority() != null ) {
+                                    switch ( configuration.getThreadPriority() ) {
+                                        case NORM : currentThread.setPriority(Thread.NORM_PRIORITY);
+                                                    break;
+                                        case MIN  : currentThread.setPriority(Thread.MIN_PRIORITY);
+                                                    break;
+                                        case MAX  : currentThread.setPriority(Thread.MAX_PRIORITY);
+                                                    break;
+                                    }
                                 }
-                            }
 
-                            try {
-                                startJob(handler);
-                            } finally {
-                                currentThread.setPriority(oldPriority);
-                                currentThread.setName(oldName);
+                                try {
+                                    startJob(handler);
+                                } finally {
+                                    currentThread.setPriority(oldPriority);
+                                    currentThread.setName(oldName);
+                                }
+                                // and try to launch another job
+                                startJobs(true);
                             }
-                            // and try to launch another job
-                            start(true);
+                        });
+                        if ( justOne ) {
+                            break;
                         }
-                    });
-                    if ( justOne ) {
+                    } else {
+                        // no job available, stop look
                         break;
                     }
-                } else {
-                    // no job available, stop look
-                    break;
-                }
 
-            } finally {
-                if ( !started ) {
-                    this.available.release();
+                } finally {
+                    if ( !started ) {
+                        this.available.release();
+                    }
                 }
             }
+            this.startJobsGuard.set(false);
         }
     }
 
@@ -404,9 +435,8 @@ public class JobQueueImpl
     /**
      * Check whether this queue can be closed
      */
-    public boolean canBeClosed() {
+    private boolean canBeClosed() {
         return !this.isSuspended()
-            && this.cache.isEmpty()
             && this.asyncCounter.get() == 0
             && this.available.availablePermits() == this.configuration.getMaxParallel();
     }
@@ -443,7 +473,7 @@ public class JobQueueImpl
         // set full cache search
         this.doFullCacheSearch.set(true);
 
-        this.start();
+        this.startJobs();
     }
 
     /**
@@ -452,7 +482,7 @@ public class JobQueueImpl
      */
     public void wakeUpQueue(final Set<String> topics) {
         this.cache.handleNewTopics(topics);
-        this.start();
+        this.startJobs();
     }
 
     /**
@@ -461,7 +491,7 @@ public class JobQueueImpl
      */
     private void requeue(final JobHandler handler) {
         this.cache.reschedule(handler);
-        this.start();
+        this.startJobs();
     }
 
     private static final class RescheduleInfo {
@@ -586,7 +616,7 @@ public class JobQueueImpl
     public void resume() {
         if ( this.suspendedSince.getAndSet(-1) != -1 ) {
             this.logger.debug("Waking up suspended queue {}", queueName);
-            this.start();
+            this.startJobs();
         }
     }
 
