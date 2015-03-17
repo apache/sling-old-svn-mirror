@@ -19,15 +19,14 @@
 package org.apache.sling.event.impl.jobs.queues;
 
 import org.apache.sling.event.impl.jobs.InternalJobState;
-import org.apache.sling.event.impl.jobs.JobExecutionResultImpl;
 import org.apache.sling.event.jobs.consumer.JobExecutionContext.ResultBuilder;
 import org.apache.sling.event.jobs.consumer.JobExecutionResult;
 
 public class ResultBuilderImpl implements ResultBuilder {
 
-    private String message;
+    private volatile String message;
 
-    private Long retryDelayInMs;
+    private volatile Long retryDelayInMs;
 
     @Override
     public JobExecutionResult failed(final long retryDelayInMs) {

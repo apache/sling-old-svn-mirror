@@ -16,8 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.event.impl.jobs;
+package org.apache.sling.event.impl.jobs.queues;
 
+import org.apache.sling.event.impl.jobs.InternalJobState;
 import org.apache.sling.event.jobs.consumer.JobExecutionResult;
 
 /**
