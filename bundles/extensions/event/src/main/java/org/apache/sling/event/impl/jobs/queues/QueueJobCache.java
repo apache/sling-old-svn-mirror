@@ -70,6 +70,9 @@ public class QueueJobCache {
     /** The queue type. */
     private final QueueConfiguration.Type queueType;
 
+    /** Block the cache - for ordered queues only. */
+    private final AtomicBoolean queueIsBlocked = new AtomicBoolean(false);
+
     /**
      * Create a new queue job cache
      * @param configuration Current job manager configuration
@@ -111,6 +114,10 @@ public class QueueJobCache {
         return result;
     }
 
+    public void setIsBlocked(final boolean value) {
+        this.queueIsBlocked.set(value);
+    }
+
     /**
      * Fill the cache.
      * No need to sync as this is called from the constructor.
@@ -134,49 +141,50 @@ public class QueueJobCache {
             final boolean doFull) {
         JobHandler handler = null;
 
-        synchronized ( this.cache ) {
-            boolean retry;
-            do {
-                retry = false;
-                if ( this.cache.isEmpty() ) {
-                    final Set<String> checkingTopics = new HashSet<String>();
-                    synchronized ( this.topicsWithNewJobs ) {
-                        checkingTopics.addAll(this.topicsWithNewJobs);
-                        this.topicsWithNewJobs.clear();
+        if ( !this.queueIsBlocked.get() ) {
+            synchronized ( this.cache ) {
+                boolean retry;
+                do {
+                    retry = false;
+                    if ( this.cache.isEmpty() ) {
+                        final Set<String> checkingTopics = new HashSet<String>();
+                        synchronized ( this.topicsWithNewJobs ) {
+                            checkingTopics.addAll(this.topicsWithNewJobs);
+                            this.topicsWithNewJobs.clear();
+                        }
+                        if ( doFull ) {
+                            checkingTopics.addAll(this.topics);
+                        }
+                        if ( !checkingTopics.isEmpty() ) {
+                            this.loadJobs(checkingTopics);
+                        }
                     }
-                    if ( doFull ) {
-                        checkingTopics.addAll(this.topics);
-                    }
-                    if ( !checkingTopics.isEmpty() ) {
-                        this.loadJobs(checkingTopics);
-                    }
-                }
 
-                if ( !this.cache.isEmpty() ) {
-                    final JobImpl job = this.cache.remove(0);
-                    final JobExecutor consumer = jobConsumerManager.getExecutor(job.getTopic());
+                    if ( !this.cache.isEmpty() ) {
+                        final JobImpl job = this.cache.remove(0);
+                        final JobExecutor consumer = jobConsumerManager.getExecutor(job.getTopic());
 
-                    handler = new JobHandler(job, consumer, this.configuration);
-                    if ( (consumer != null || (job.isBridgedEvent() && jobConsumerManager.supportsBridgedEvents())) ) {
-                        if ( !handler.startProcessing(queue) ) {
-                            if ( logger.isDebugEnabled() ) {
-                                logger.debug("Discarding removed job {}", Utility.toString(job));
+                        handler = new JobHandler(job, consumer, this.configuration);
+                        if ( (consumer != null || (job.isBridgedEvent() && jobConsumerManager.supportsBridgedEvents())) ) {
+                            if ( !handler.startProcessing(queue) ) {
+                                if ( logger.isDebugEnabled() ) {
+                                    logger.debug("Discarding removed job {}", Utility.toString(job));
+                                }
+                                handler = null;
+                                retry = true;
                             }
+                        } else {
+                            // no consumer on this instance, assign to another instance
+                            handler.reassign();
+
                             handler = null;
                             retry = true;
                         }
-                    } else {
-                        // no consumer on this instance, assign to another instance
-                        handler.reassign();
 
-                        handler = null;
-                        retry = true;
                     }
-
-                }
-            } while ( handler == null && retry);
+                } while ( handler == null && retry);
+            }
         }
-
         return handler;
     }
 
