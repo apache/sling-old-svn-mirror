@@ -55,7 +55,9 @@ import org.slf4j.LoggerFactory;
  * This handler is enabled by default, to disable it provide a configuration
  * which removes both topic properties (or sets them to null)
  *
+ * @deprecated
  */
+@Deprecated
 @Component(immediate=true)
 @Service(value={EventHandler.class, JobConsumer.class})
 @Properties({

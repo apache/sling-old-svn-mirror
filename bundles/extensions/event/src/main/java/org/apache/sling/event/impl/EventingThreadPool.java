@@ -67,6 +67,7 @@ public class EventingThreadPool implements ThreadPool {
 
     public EventingThreadPool(final ThreadPoolManager tpm, final int poolSize) {
         this.threadPoolManager = tpm;
+        this.configure(poolSize);
     }
 
     public void release() {
@@ -91,7 +92,7 @@ public class EventingThreadPool implements ThreadPool {
         config.setShutdownGraceful(true);
         config.setPriority(ThreadPriority.NORM);
         config.setDaemon(true);
-        this.threadPool = threadPoolManager.create(config, "Apache Sling Eventing Thread Pool");
+        this.threadPool = threadPoolManager.create(config, "Apache Sling Job Thread Pool");
     }
 
     /**

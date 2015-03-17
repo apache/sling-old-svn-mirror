@@ -214,9 +214,10 @@ public class QueueManager
      * @param topics The topics
      */
     private void start(final QueueInfo queueInfo,
-            final Set<String> topics) {
+                       final Set<String> topics) {
         final InternalQueueConfiguration config = queueInfo.queueConfiguration;
         // get or create queue
+        boolean isNewQueue = false;
         JobQueueImpl queue = null;
         // we synchronize to avoid creating a queue which is about to be removed during cleanup
         synchronized ( queuesLock ) {
@@ -228,13 +229,18 @@ public class QueueManager
                 queue = null;
             }
             if ( queue == null ) {
-                queue = new JobQueueImpl(queueInfo.queueName, config, queueServices, topics);
-                // on startup the queue might be empty and we can simply discard it
-                if ( !queue.canBeClosed() ) {
+                queue = JobQueueImpl.createQueue(queueInfo.queueName, config, queueServices, topics);
+                // on startup the queue might be empty and we get null back from createQueue
+                if ( queue != null ) {
+                    isNewQueue = true;
                     queues.put(queueInfo.queueName, queue);
                     ((QueuesMBeanImpl)queuesMBean).sendEvent(new QueueStatusEvent(queue, null));
-                    queue.start();
                 }
+            }
+        }
+        if ( queue != null ) {
+            if ( isNewQueue ) {
+                queue.startJobs();
             } else {
                 queue.wakeUpQueue(topics);
             }

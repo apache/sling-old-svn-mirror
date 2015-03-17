@@ -21,6 +21,10 @@ package org.apache.sling.event.impl.jobs.deprecated;
 import org.apache.sling.event.jobs.JobProcessor;
 import org.apache.sling.event.jobs.consumer.JobExecutionContext;
 
+/**
+ * @deprecated
+ */
+@Deprecated
 public class JobStatusNotifierImpl implements JobStatusNotifier {
 
     private volatile boolean isCalled = false;

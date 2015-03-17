@@ -20,6 +20,10 @@ package org.apache.sling.event.impl.jobs.deprecated;
 
 import org.apache.sling.event.jobs.JobProcessor;
 
+/**
+ * @deprecated
+ */
+@Deprecated
 public interface JobStatusNotifier {
 
     String CONTEXT_PROPERTY_NAME = JobStatusNotifier.class.getName();
