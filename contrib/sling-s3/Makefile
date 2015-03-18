@@ -41,7 +41,7 @@ update-bundles:
 	rm crank.d/*-sling-startlevel-*.txt
 	$(BUNDLES)
 
-install-deps:
+install-deps: contrib/crankstart.jar
 	./scripts/download_dependencies.rb *.d/*
 
 clean:
