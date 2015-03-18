@@ -39,53 +39,47 @@ public class JobExecutionContextImpl implements JobExecutionContext {
     }
 
     /**
-     * Boolean to check whether init is finished.
+     * Boolean to check whether init progress has been called.
      */
-    private volatile boolean hasInit = false;
-
-    /**
-     * Lock for handling the async notification.
-     */
-    private final Object lock;
+    private final AtomicBoolean initProgressIsCalled = new AtomicBoolean(false);
 
     /**
      * Flag to indicate whether this is async processing
      */
-    private final AtomicBoolean isAsync;
+    private final AtomicBoolean isAsync = new AtomicBoolean(false);
 
     private final ASyncHandler asyncHandler;
 
     private final JobHandler handler;
 
     public JobExecutionContextImpl(final JobHandler handler,
-            final Object syncLock,
-            final AtomicBoolean isAsync,
             final ASyncHandler asyncHandler) {
         this.handler = handler;
-        this.lock = syncLock;
-        this.isAsync = isAsync;
         this.asyncHandler = asyncHandler;
+    }
+
+    public void markAsync() {
+        this.isAsync.set(true);
     }
 
     @Override
     public void initProgress(final int steps,
             final long eta) {
-        if ( !hasInit ) {
+        if ( initProgressIsCalled.compareAndSet(false, true) ) {
             handler.persistJobProperties(handler.getJob().startProgress(steps, eta));
-            hasInit = true;
         }
     }
 
     @Override
     public void incrementProgressCount(final int steps) {
-        if ( hasInit ) {
+        if ( initProgressIsCalled.get() ) {
             handler.persistJobProperties(handler.getJob().setProgress(steps));
         }
     }
 
     @Override
     public void updateProgress(final long eta) {
-        if ( hasInit ) {
+        if ( initProgressIsCalled.get() ) {
             handler.persistJobProperties(handler.getJob().update(eta));
         }
     }
@@ -102,7 +96,7 @@ public class JobExecutionContextImpl implements JobExecutionContext {
 
     @Override
     public void asyncProcessingFinished(final JobExecutionResult result) {
-        synchronized ( lock ) {
+        synchronized ( this ) {
             if ( isAsync.compareAndSet(true, false) ) {
                 Job.JobState state = null;
                 if ( result.succeeded() ) {

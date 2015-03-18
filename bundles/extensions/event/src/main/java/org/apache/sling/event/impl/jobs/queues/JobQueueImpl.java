@@ -54,7 +54,6 @@ import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.QueueConfiguration.Type;
 import org.apache.sling.event.jobs.Statistics;
-import org.apache.sling.event.jobs.consumer.JobExecutionContext;
 import org.osgi.service.event.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -280,29 +279,25 @@ public class JobQueueImpl
                         this.processingJobsLists.put(job.getId(), handler);
                     }
 
-                    final Object lock = new Object();
-
                     JobExecutionResultImpl result = JobExecutionResultImpl.CANCELLED;
                     Job.JobState resultState = Job.JobState.ERROR;
-                    final AtomicBoolean isAsync = new AtomicBoolean(false);
+                    final JobExecutionContextImpl ctx = new JobExecutionContextImpl(handler, new JobExecutionContextImpl.ASyncHandler() {
+
+                        @Override
+                        public void finished(final JobState state) {
+                            services.jobConsumerManager.unregisterListener(job.getId());
+                            finishedJob(job.getId(), state, true);
+                            asyncCounter.decrementAndGet();
+                        }
+                    });
 
                     try {
-                        synchronized ( lock ) {
-                            final JobExecutionContext ctx = new JobExecutionContextImpl(handler, lock, isAsync, new JobExecutionContextImpl.ASyncHandler() {
-
-                                @Override
-                                public void finished(final JobState state) {
-                                    services.jobConsumerManager.unregisterListener(job.getId());
-                                    finishedJob(job.getId(), state, true);
-                                    asyncCounter.decrementAndGet();
-                                }
-                            });
-
+                        synchronized ( ctx ) {
                             result = (JobExecutionResultImpl)handler.getConsumer().process(job, ctx);
                             if ( result == null ) { // ASYNC processing
                                 services.jobConsumerManager.registerListener(job.getId(), handler.getConsumer(), ctx);
                                 asyncCounter.incrementAndGet();
-                                isAsync.set(true);
+                                ctx.markAsync();
                             } else {
                                 if ( result.succeeded() ) {
                                     resultState = Job.JobState.SUCCEEDED;
@@ -385,8 +380,7 @@ public class JobQueueImpl
                             }
                         } else {
                             // async processing
-                            final AtomicBoolean isAsync = new AtomicBoolean(true);
-                            final JobExecutionContext ctx = new JobExecutionContextImpl(handler, new Object(), isAsync, new JobExecutionContextImpl.ASyncHandler() {
+                            final JobExecutionContextImpl ctx = new JobExecutionContextImpl(handler, new JobExecutionContextImpl.ASyncHandler() {
 
                                 @Override
                                 public void finished(final JobState state) {
@@ -397,6 +391,7 @@ public class JobQueueImpl
                             });
                             services.jobConsumerManager.registerListener(job.getId(), handler.getConsumer(), ctx);
                             asyncCounter.incrementAndGet();
+                            ctx.markAsync();
 
                             notifier.setJobExecutionContext(ctx);
                         }
