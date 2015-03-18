@@ -90,12 +90,19 @@ public class JsUseProvider implements UseProvider {
             return ProviderOutcome.failure(new SightlyException("No JavaScript engine was defined."));
         }
         SlingScriptHelper scriptHelper = Utils.getHelper(globalBindings);
-        JsEnvironment environment = new JsEnvironment(jsEngine);
-        environment.initialize();
-        String callerPath = scriptHelper.getScript().getScriptResource().getPath();
-        ResourceResolver adminResolver = renderContext.getScriptResourceResolver();
-        Resource caller = adminResolver.getResource(callerPath);
-        AsyncContainer asyncContainer = environment.run(caller, identifier, globalBindings, arguments);
-        return ProviderOutcome.success(jsValueAdapter.adapt(asyncContainer));
+        JsEnvironment environment = null;
+        try {
+            environment = new JsEnvironment(jsEngine);
+            environment.initialize();
+            String callerPath = scriptHelper.getScript().getScriptResource().getPath();
+            ResourceResolver adminResolver = renderContext.getScriptResourceResolver();
+            Resource caller = adminResolver.getResource(callerPath);
+            AsyncContainer asyncContainer = environment.run(caller, identifier, globalBindings, arguments);
+            return ProviderOutcome.success(jsValueAdapter.adapt(asyncContainer));
+        } finally {
+            if (environment != null) {
+                environment.cleanup();
+            }
+        }
     }
 }
