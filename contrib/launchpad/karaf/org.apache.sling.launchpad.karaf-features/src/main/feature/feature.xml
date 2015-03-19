@@ -45,8 +45,8 @@
     <bundle>mvn:org.apache.sling/org.apache.sling.auth.core/1.3.6</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.engine/2.4.0</bundle>
     <!-- org.apache.sling.resourceresolver requires jcr -->
-    <bundle>mvn:org.apache.sling/org.apache.sling.resourceresolver/1.2.0</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.serviceusermapper/1.1.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.resourceresolver/1.2.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.serviceusermapper/1.2.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.settings/1.3.6</bundle>
     <!-- Apache Sling Commons -->
     <bundle>mvn:org.apache.sling/org.apache.sling.commons.classloader/1.3.2</bundle>
@@ -147,7 +147,7 @@
   <feature name="sling-installer-provider-jcr" version="${project.version}">
     <feature version="${project.version}">sling-installer</feature>
     <feature version="${project.version}">sling-jcr</feature>
-    <bundle>mvn:org.apache.sling/org.apache.sling.installer.provider.jcr/3.1.8</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.installer.provider.jcr/3.1.14</bundle>
   </feature>
   <!-- Apache Sling Launchpad -->
   <feature name="sling-launchpad-content" version="${project.version}">
