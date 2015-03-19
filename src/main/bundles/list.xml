@@ -122,6 +122,16 @@
             <version>3.1_1</version>
         </bundle>
         <bundle>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore-osgi</artifactId>
+            <version>4.4</version>
+        </bundle>
+        <bundle>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient-osgi</artifactId>
+            <version>4.4</version>
+        </bundle>
+        <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.osgi</artifactId>
             <version>2.2.2</version>
@@ -164,7 +174,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.discovery.impl</artifactId>
-            <version>1.0.12</version>
+            <version>1.1.0</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
