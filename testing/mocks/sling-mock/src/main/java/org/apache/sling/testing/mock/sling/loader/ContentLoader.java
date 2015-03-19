@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.CharEncoding;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.ModifiableValueMap;
@@ -326,7 +327,7 @@ public final class ContentLoader {
 
     private String convertToJsonString(InputStream inputStream) {
         try {
-            return IOUtils.toString(inputStream);
+            return IOUtils.toString(inputStream, CharEncoding.UTF_8);
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         } finally {
