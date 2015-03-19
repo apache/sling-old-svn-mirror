@@ -1,8 +1,10 @@
 #!/usr/bin/env ruby
 
-DEP_PLUGIN = 'org.apache.maven.plugins:maven-dependency-plugin:2.10:get'
+DEP_PLUGIN = 'org.apache.maven.plugins:maven-dependency-plugin:2.10'
 SNAPSHOT_REPO = 'https://repository.apache.org/content/repositories/snapshots'
 LOCAL_REPO = '~/.m2/repository'
+# If set, copy artifacts to OUTPUT location, default is ~/.m2 only
+OUTPUT = ENV["OUTPUT"]
 
 def run cmd
   output = ""
@@ -13,18 +15,39 @@ def run cmd
   output
 end
 
+def dep_get groupId, artifactId, version
+  result = run "mvn #{DEP_PLUGIN}:get -DremoteRepositories=#{SNAPSHOT_REPO} -Dartifact=#{groupId}:#{artifactId}:#{version} -Dtransitive=false"
+  result.include? 'BUILD SUCCESS'
+end
+
+def dep_copy groupId, artifactId, version, dest
+  `mkdir -p #{dest}`
+  result = run "mvn #{DEP_PLUGIN}:copy -Dartifact=#{groupId}:#{artifactId}:#{version} -DoutputDirectory=#{dest}"
+  result.include? 'BUILD SUCCESS'
+end
+
 def download groupId, artifactId, version
   puts "#{groupId}:#{artifactId}:#{version}"
-  local = "#{LOCAL_REPO}/#{groupId.gsub('.', '/')}/#{artifactId}/#{version}/#{artifactId}-#{version}.jar"
-  if File.exists?(File.expand_path(local))
-    puts "(/) Already installed"
-    return
-  end
-  result = run "mvn #{DEP_PLUGIN} -DremoteRepositories=#{SNAPSHOT_REPO} -Dartifact=#{groupId}:#{artifactId}:#{version} -Dtransitive=false"
-  if result.include? 'BUILD SUCCESS'
-    puts "(/) Downloaded"
+
+  repo_dir = "#{groupId.gsub('.', '/')}/#{artifactId}/#{version}"
+  jar_name = "#{artifactId}-#{version}.jar"
+
+  if !OUTPUT.nil?
+    if File.exists?(File.expand_path("#{OUTPUT}/#{repo_dir}/#{jar_name}"))
+      puts "(/) Already downloaded"
+    elsif dep_copy groupId, artifactId, version, "#{OUTPUT}/#{repo_dir}"
+      puts "(/) Downloaded"
+    else
+      puts "(X) Error"
+    end
   else
-    puts "(X) Error\n#{result}"
+    if File.exists?(File.expand_path("#{LOCAL_REPO}/#{repo_dir}/#{jar_name}"))
+      puts "(/) Already installed"
+    elsif dep_get groupId, artifactId, version
+      puts "(/) Installed to local repo"
+    else
+      puts "(X) Error"
+    end
   end
 end
 
