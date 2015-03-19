@@ -19,6 +19,7 @@ package org.apache.sling.scripting.jsp.taglib;
 import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_BINDINGS_NAME;
 import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_LOG_NAME;
 import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_NODE_NAME;
+import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_PROPERTIES_NAME;
 import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_REQUEST_NAME;
 import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_RESOURCE_NAME;
 import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_RESOURCE_RESOLVER_NAME;
@@ -36,6 +37,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.slf4j.Logger;
@@ -63,6 +65,13 @@ public class DefineObjectsTEI extends TagExtraInfo {
      * scripting variable (value is "resourceName").
      */
     public static final String ATTR_RESOURCE_NAME = "resourceName";
+
+
+    /**
+     * The name of the tag attribute used to define the name of the <code>ValueMap</code>
+     * representation of the resource (value is "propertiesName").
+     */
+    public static final String ATTR_PROPERTIES_NAME = "propertiesName";
 
     /**
      * The name of the tag attribute used to define the name of the Node
@@ -100,6 +109,8 @@ public class DefineObjectsTEI extends TagExtraInfo {
 
     private static final String RESOURCE_CLASS = Resource.class.getName();
 
+    private static final String VALUE_MAP_CLASS = ValueMap.class.getName();
+
     private static final String RESOURCE_RESOLVER_CLASS = ResourceResolver.class.getName();
 
     private static final String NODE_CLASS = "javax.jcr.Node";
@@ -127,6 +138,10 @@ public class DefineObjectsTEI extends TagExtraInfo {
 
         addVar(varInfos, data, ATTR_RESOURCE_NAME, DEFAULT_RESOURCE_NAME,
             RESOURCE_CLASS);
+
+        addVar(varInfos, data, ATTR_PROPERTIES_NAME,
+                DEFAULT_PROPERTIES_NAME, VALUE_MAP_CLASS);
+
         if ( DefineObjectsTag.JCR_NODE_CLASS != null ) {
             addVar(varInfos, data, ATTR_NODE_NAME, DEFAULT_NODE_NAME, NODE_CLASS);
         }

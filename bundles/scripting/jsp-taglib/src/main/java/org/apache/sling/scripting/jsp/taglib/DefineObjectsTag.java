@@ -20,6 +20,8 @@ import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.TagSupport;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 
@@ -47,6 +49,12 @@ public class DefineObjectsTag extends TagSupport {
      * <code>Resource</code> object (value is "resource").
      */
     public static final String DEFAULT_RESOURCE_NAME = "resource";
+
+    /**
+     * Default name for the scripting variable referencing the <code>ValueMap</code>
+     * representation of the <code>Resource</code> object (value is "properties").
+     */
+    public static final String DEFAULT_PROPERTIES_NAME = "properties";
 
     /**
      * Default name for the scripting variable referencing the JCR node
@@ -84,6 +92,8 @@ public class DefineObjectsTag extends TagSupport {
     private String responseName = DEFAULT_RESPONSE_NAME;
 
     private String resourceName = DEFAULT_RESOURCE_NAME;
+
+    private String propertiesName = DEFAULT_PROPERTIES_NAME;
 
     private String nodeName = DEFAULT_NODE_NAME;
 
@@ -126,15 +136,18 @@ public class DefineObjectsTag extends TagSupport {
     public int doEndTag() {
         final SlingBindings bindings = (SlingBindings)pageContext.getRequest().getAttribute(SlingBindings.class.getName());
         final SlingScriptHelper scriptHelper = bindings.getSling();
+        final Resource resource = scriptHelper.getRequest().getResource();
+        final ValueMap properties = ResourceUtil.getValueMap(resource);
 
         pageContext.setAttribute(requestName, scriptHelper.getRequest());
         pageContext.setAttribute(responseName, scriptHelper.getResponse());
-        final Resource resource = scriptHelper.getRequest().getResource();
         pageContext.setAttribute(resourceName, resource);
+        pageContext.setAttribute(propertiesName, properties);
         pageContext.setAttribute(resourceResolverName, scriptHelper.getRequest().getResourceResolver());
         pageContext.setAttribute(slingName, scriptHelper);
         pageContext.setAttribute(logName, bindings.getLog());
         pageContext.setAttribute(bindingsName, bindings);
+
         if ( JCR_NODE_CLASS != null ) {
             final Object node = resource.adaptTo(JCR_NODE_CLASS);
             if (node != null) {
@@ -163,6 +176,10 @@ public class DefineObjectsTag extends TagSupport {
 
     public void setResourceName(String name) {
         this.resourceName = name;
+    }
+
+    public void setPropertiesName(String propertiesName) {
+        this.propertiesName = propertiesName;
     }
 
     public void setNodeName(String name) {

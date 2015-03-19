@@ -43,7 +43,7 @@
 				<configuration>
 					<instructions>
 						<Export-Package>
-							org.apache.sling.scripting.jsp.taglib.*;version=2.2.0
+							org.apache.sling.scripting.jsp.taglib.*;version=2.3.0
 						</Export-Package>
 						<Import-Package>
 							javax.jcr;resolution:=optional,
