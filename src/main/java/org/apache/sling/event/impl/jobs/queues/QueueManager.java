@@ -124,7 +124,7 @@ public class QueueManager
     private final AtomicBoolean isActive = new AtomicBoolean(false);
 
     /** The queue services. */
-    private QueueServices queueServices;
+    private volatile QueueServices queueServices;
 
     /**
      * Activate this component.
