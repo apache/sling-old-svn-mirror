@@ -470,8 +470,8 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
                 final ModifyingResourceProvider mrp = (ModifyingResourceProvider) currentProviderHandler.getResourceProvider(ctx);
                 if ( viableHandlers.size() == 1 || mrp.getResource(resourceResolver, fullPath) != null ) {
                     mrp.delete(resourceResolver, fullPath);
+                    anyProviderAttempted = true;
                 }
-                anyProviderAttempted = true;
             }
         }
 
