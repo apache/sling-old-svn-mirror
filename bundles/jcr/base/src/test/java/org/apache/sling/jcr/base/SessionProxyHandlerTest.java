@@ -1,5 +1,3 @@
-package org.apache.sling.jcr.base;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,13 +16,12 @@ package org.apache.sling.jcr.base;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.sling.jcr.base;
 
 import org.apache.sling.jcr.api.NamespaceMapper;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.apache.sling.testing.mock.jcr.MockJcr;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 
