@@ -57,7 +57,7 @@ import aQute.bnd.annotation.ProviderType;
  * }
  * </pre>
  * <p>Optionally you can pass in a {@link ChangeListener} instance to get notified when the list
- * of referenced services has chagned.</p>
+ * of referenced services has changed.</p>
  * @param <T> Service type
  * @since 2.3
  */
@@ -76,7 +76,7 @@ public final class RankedServices<T> implements Iterable<T> {
   }
 
   /**
-   * Instantiate without change listener.
+   * Instantiate with change listener.
    * @param changeListener Change listener
    */
   public RankedServices(ChangeListener changeListener) {
