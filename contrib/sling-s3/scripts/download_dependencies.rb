@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+require 'fileutils'
 
 DEP_PLUGIN = 'org.apache.maven.plugins:maven-dependency-plugin:2.10'
 SNAPSHOT_REPO = 'https://repository.apache.org/content/repositories/snapshots'
@@ -20,33 +21,30 @@ def dep_get groupId, artifactId, version
   result.include? 'BUILD SUCCESS'
 end
 
-def dep_copy groupId, artifactId, version, dest
-  `mkdir -p #{dest}`
-  result = run "mvn #{DEP_PLUGIN}:copy -Dartifact=#{groupId}:#{artifactId}:#{version} -DoutputDirectory=#{dest}"
-  result.include? 'BUILD SUCCESS'
-end
-
 def download groupId, artifactId, version
   puts "#{groupId}:#{artifactId}:#{version}"
 
   repo_dir = "#{groupId.gsub('.', '/')}/#{artifactId}/#{version}"
   jar_name = "#{artifactId}-#{version}.jar"
 
-  if !OUTPUT.nil?
-    if File.exists?(File.expand_path("#{OUTPUT}/#{repo_dir}/#{jar_name}"))
-      puts "(/) Already downloaded"
-    elsif dep_copy groupId, artifactId, version, "#{OUTPUT}/#{repo_dir}"
-      puts "(/) Downloaded"
-    else
-      puts "(X) Error"
-    end
+  repo_file = File.expand_path("#{LOCAL_REPO}/#{repo_dir}/#{jar_name}")
+  puts "Retreiving #{repo_file}"
+  if File.exists?(repo_file)
+    puts "(/) Already downloaded"
+  elsif dep_get groupId, artifactId, version
+    puts "(/) Downloaded"
   else
-    if File.exists?(File.expand_path("#{LOCAL_REPO}/#{repo_dir}/#{jar_name}"))
-      puts "(/) Already installed"
-    elsif dep_get groupId, artifactId, version
-      puts "(/) Installed to local repo"
+    abort "(X) Error"
+  end
+  if !OUTPUT.nil?
+    output_dir = File.expand_path("#{OUTPUT}/#{repo_dir}")
+    FileUtils.rm_rf output_dir
+    FileUtils.mkdir_p output_dir
+    if !File.exists?(repo_file)
+      abort "(X) Missing "
     else
-      puts "(X) Error"
+      puts "(/) #{repo_file} -> #{output_dir}"
+      FileUtils.cp repo_file, output_dir
     end
   end
 end
@@ -56,7 +54,7 @@ defaults = Hash.new
 ARGV.each do |f|
   File.open(f).each_line do |l|
     defaults.each { |k, v| l[k] &&= v }
-    if l =~ /^bundle mvn:([^\/]+)\/([^\/]+)\/(.+)$/
+    if l =~ /^(?:bundle|classpath) mvn:([^\/]+)\/([^\/]+)\/(.+)$/
       download($1, $2, $3)
     elsif l =~ /^defaults ([^ ]+) ([^ ]+)$/
       defaults["${#{$1}}"] = $2
