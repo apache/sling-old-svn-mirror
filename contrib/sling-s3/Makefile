@@ -1,6 +1,7 @@
-GENERATE=./scripts/generate_crankfile.sh
-BUNDLES=./scripts/bundles.rb
-CRANKSTART=./scripts/crankstart.sh
+SLING_SCRIPTS=./scripts
+GENERATE=${SLING_SCRIPTS}/generate_crankfile.sh
+BUNDLES=${SLING_SCRIPTS}/bundles.rb
+CRANKSTART=${SLING_SCRIPTS}/crankstart.sh
 
 .PHONY: clean start start-s3 start-mongo start-s3-mongo
 
@@ -42,7 +43,7 @@ update-bundles:
 	$(BUNDLES)
 
 install-deps: contrib/crankstart.jar
-	./scripts/download_dependencies.rb *.d/*
+	${SLING_SCRIPTS}/download_dependencies.rb *.d/*
 
 clean:
 	rm -rf target sling
