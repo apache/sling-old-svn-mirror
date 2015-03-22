@@ -33,7 +33,8 @@ def find_projects(root):
             artifactIds.append(artifactId)
     artifactIds.sort()
     for artifactId in artifactIds:
-       print artifactId
+       print '* {{' + artifactId + '}}'
+       # wiki markup: print '* {{' + artifactId + '}}'
     print len(artifactIds), 'artifacts found'
 
 def find_project(dirpath, filenames):
