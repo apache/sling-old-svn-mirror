@@ -4,7 +4,7 @@ config org.apache.jackrabbit.oak.plugins.blob.datastore.S3DataStore
   s3Bucket=${s3Bucket}
   s3Region=${s3Region}
   s3EndPoint=${s3EndPoint}
-  path=sling/oak
+  path=${sling.home}/oak
 
   connectionTimeout=120000
   socketTimeout=120000

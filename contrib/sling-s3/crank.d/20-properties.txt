@@ -1,8 +1,8 @@
 # Set OSGi framework properties
 osgi.property org.osgi.service.http.port ${port}
 osgi.property sling.home ${sling.home}
-osgi.property repository.home sling/oak/repository
-osgi.property org.osgi.framework.storage sling/osgi.framework.storage
+osgi.property repository.home ${sling.home}/oak/repository
+osgi.property org.osgi.framework.storage ${sling.home}/osgi.framework.storage
 osgi.property org.apache.sling.commons.log.level INFO
 osgi.property org.apache.sling.commons.log.file logs/error.log
 osgi.property org.apache.sling.commons.log.file.number 5
