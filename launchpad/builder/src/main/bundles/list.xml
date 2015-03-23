@@ -611,5 +611,11 @@
             <version>${oak.version}</version>
             <runModes>oak</runModes>
         </bundle>
+        <bundle>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongo-java-driver</artifactId>
+            <version>2.11.4</version>
+            <runModes>oak_mongo</runModes>
+       </bundle>
     </startLevel>
 </bundles>
