@@ -38,9 +38,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/performance/base</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/performance/base</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/testing/performance/base</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/performance/base</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/performance/base</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/performance/base</url>
     </scm>
 
     <dependencies>
