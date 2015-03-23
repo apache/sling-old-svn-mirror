@@ -489,7 +489,10 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         if (initEventDelayed) {
             if (isIsolated(newView)) {
                 // we cannot proceed until we're out of the isolated mode..
-                logger.warn("handlePotentialTopologyChange: still in isolated mode - cannot send TOPOLOGY_INIT yet.");
+                // SLING-4535 : while this has warning character, it happens very frequently,
+                //              eg also when binding a PropertyProvider (so normal processing)
+                //              hence lowering to info for now
+                logger.info("handlePotentialTopologyChange: still in isolated mode - cannot send TOPOLOGY_INIT yet.");
                 return;
             }
             logger.info("handlePotentialTopologyChange: new view is no longer isolated sending delayed TOPOLOGY_INIT now.");
