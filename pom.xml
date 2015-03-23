@@ -17,28 +17,26 @@
   ~ specific language governing permissions and limitations
   ~ under the License.
   -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>22</version>
-        <relativePath/>
+        <relativePath />
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>org.apache.sling.scripting.sightly.repl</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Scripting Sightly Read-Eval-Print Loop Environment</name>
     <description>REPL for Apache Sling Scripting Sightly engine</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/scripting/sightly/repl</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/scripting/sightly/repl</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/scripting/sightly/repl</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.sightly.repl-1.0.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.sightly.repl-1.0.0</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.scripting.sightly.repl-1.0.0</url>
     </scm>
 
     <properties>
@@ -70,7 +68,7 @@
                 <configuration>
                     <instructions>
                         <Sling-Initial-Content>SLING-INF;overwrite=true</Sling-Initial-Content>
-                        <Require-Capability>io.sightly; filter:="(&amp;(version>=1.0)(!(version>=2.0)))"</Require-Capability>
+                        <Require-Capability>io.sightly; filter:="(&amp;(version&gt;=1.0)(!(version&gt;=2.0)))"</Require-Capability>
                     </instructions>
                 </configuration>
             </plugin>
