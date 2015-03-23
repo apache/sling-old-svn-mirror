@@ -312,7 +312,7 @@
                 <activeByDefault>true</activeByDefault>
                 <property>
                     <name>sling.run.modes</name>
-                    <value>!oak</value>
+                    <value>!oak,oak_tar</value>
                 </property>
             </activation>
             <properties>
@@ -324,7 +324,7 @@
             <activation>
                 <property>
                     <name>sling.run.modes</name>
-                    <value>oak</value>
+                    <value>oak,oak_tar</value>
                 </property>
             </activation>
             <properties>
