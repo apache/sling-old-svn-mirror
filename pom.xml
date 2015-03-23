@@ -296,6 +296,7 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                         <exclude>target/*</exclude>
                         <!-- README files in markdown format -->
                         <exclude>README.md</exclude>
+                        <exclude>**/*.json</exclude>
                     </excludes>
                 </configuration>
                 <executions>
