@@ -24,21 +24,21 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>22</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.scripting.sightly.testing</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
 
     <name>Apache Sling Scripting Sightly Integration Tests</name>
     <description>This project runs the integration tests for validating the Apache Sling Scripting Sightly implementation
         against the Adobe Sightly TCK.</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/scripting/sightly/testing</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/scripting/sightly/testing</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/scripting/sightly/testing</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.sightly.testing-1.0.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.sightly.testing-1.0.0</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.scripting.sightly.testing-1.0.0</url>
     </scm>
 
     <properties>
@@ -58,7 +58,7 @@
         <test.host>localhost</test.host>
 
         <!-- optionally exclude some integration tests  -->
-        <failsafe.exclude></failsafe.exclude>
+        <failsafe.exclude />
 
         <!--
             Set this to true to stop mvn once the integration test Jetty instance is
