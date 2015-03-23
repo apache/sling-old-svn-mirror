@@ -65,7 +65,7 @@ public class SlingSpecificsSightlyIT {
     public void testErroneousUseObject() {
         String url = launchpadURL + SLING_JAVA_USE_NPE;
         String pageContent = client.getStringContent(url, 500);
-        assertTrue(pageContent.contains("at apps.sightly.scripts.use.ErrorPojo.init(ErrorPojo.java:13)"));
+        assertTrue(pageContent.contains("java.lang.NullPointerException"));
     }
 
     @Test
