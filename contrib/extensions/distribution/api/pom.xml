@@ -17,8 +17,7 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <!-- ======================================================================= -->
     <!-- P A R E N T   P R O J E C T                                             -->
@@ -33,7 +32,7 @@
     <!-- P R O J E C T                                                           -->
     <!-- ======================================================================= -->
     <artifactId>org.apache.sling.distribution.api</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.1.0</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Distribution API</name>
@@ -42,10 +41,10 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/distribution/api</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/distribution/api
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.distribution.api-0.1.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.distribution.api-0.1.0
         </developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/distribution/api</url>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.distribution.api-0.1.0</url>
     </scm>
 
     <!-- ======================================================================= -->
