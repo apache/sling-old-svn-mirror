@@ -89,7 +89,7 @@ public class DefaultContentImporter extends BaseImportLoader implements ContentH
         final String readerExtension = getContentReaderExtension(filename);
         final String name = toPlainName(filename, readerExtension);
 
-        final ContentReader contentReader = getContentReader(filename);
+        final ContentReader contentReader = getContentReader(filename, importOptions);
 
         importContent(contentCreator, contentReader, parent, name, contentStream, importOptions, importListener);
     }
@@ -105,7 +105,7 @@ public class DefaultContentImporter extends BaseImportLoader implements ContentH
         final DefaultContentCreator contentCreator = new DefaultContentCreator(this);
 
         final String extension = ContentTypeUtil.getDefaultExtension(contentType);
-        final ContentReader contentReader =  getContentReader(extension);
+        final ContentReader contentReader =  getContentReader(extension, importOptions);
 
         importContent(contentCreator, contentReader, parent, name, contentStream, importOptions, importListener);
     }

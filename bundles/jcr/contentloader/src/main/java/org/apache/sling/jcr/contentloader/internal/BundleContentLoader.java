@@ -356,7 +356,7 @@ public class BundleContentLoader extends BaseImportLoader {
                 if (nodeDescriptor != null) {
                     node = processedEntries.get(nodeDescriptor.toString());
                     if (node == null) {
-                        node = createNode(parent, name, nodeDescriptor, contentCreator);
+                        node = createNode(parent, name, nodeDescriptor, contentCreator, configuration);
                         processedEntries.put(nodeDescriptor.toString(), node);
                     }
                 } else {
@@ -390,10 +390,6 @@ public class BundleContentLoader extends BaseImportLoader {
 
         final URL file = bundle.getEntry(entry);
         final String name = getName(entry);
-        final String entryExt = getContentReaderExtension(entry);
-        if (entryExt != null && configuration.isIgnoredImportProvider(entryExt)) {
-            return;
-        }
         try {
             if (processedEntries.containsKey(file.toString())) {
                 // this is a consumed node descriptor
@@ -410,11 +406,11 @@ public class BundleContentLoader extends BaseImportLoader {
             }
 
             // install if it is a descriptor
-            boolean foundReader = getContentReader(entry) != null;
+            boolean foundReader = getContentReader(entry, configuration) != null;
 
             Node node = null;
             if (foundReader) {
-                node = createNode(parent, name, file, contentCreator);
+                node = createNode(parent, name, file, contentCreator, configuration);
                 if (node != null) {
                     log.debug("Created node as {} {}", node.getPath(), name);
                     processedEntries.put(file.toString(), node);
@@ -439,7 +435,7 @@ public class BundleContentLoader extends BaseImportLoader {
             if (nodeDescriptor != null && processedEntries.containsKey(nodeDescriptor.toString())) {
                 try {
                     contentCreator.setIgnoreOverwriteFlag(true);
-                    node = createNode(parent, name, nodeDescriptor, contentCreator);
+                    node = createNode(parent, name, nodeDescriptor, contentCreator, configuration);
                     processedEntries.put(nodeDescriptor.toString(), node);
                 } finally {
                     contentCreator.setIgnoreOverwriteFlag(false);
@@ -457,11 +453,13 @@ public class BundleContentLoader extends BaseImportLoader {
      * @param parent         The parent node
      * @param name           The name of the new content node
      * @param resourceUrl    The resource url.
-     * @param contentCreator
+     * @param contentCreator the content creator
+     * @param configuration  the configuration for the node that needs to be created
      * @return
      * @throws RepositoryException
      */
-    private Node createNode(Node parent, String name, URL resourceUrl, final DefaultContentCreator contentCreator) throws RepositoryException {
+    private Node createNode(Node parent, String name, URL resourceUrl, final DefaultContentCreator contentCreator, PathEntry configuration)
+            throws RepositoryException {
 
         final String resourcePath = resourceUrl.getPath().toLowerCase();
         InputStream contentStream = null;
@@ -473,7 +471,7 @@ public class BundleContentLoader extends BaseImportLoader {
             }
 
             // get the node reader for this resource
-            final ContentReader nodeReader = getContentReader(resourcePath);
+            final ContentReader nodeReader = getContentReader(resourcePath, configuration);
 
             // cannot find out the type
             if (nodeReader == null) {
