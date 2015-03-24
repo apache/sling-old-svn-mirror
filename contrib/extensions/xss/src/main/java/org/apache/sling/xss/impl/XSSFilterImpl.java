@@ -67,6 +67,7 @@ public class XSSFilterImpl implements XSSFilter, EventHandler {
     public void handleEvent(final Event event) {
         final String path = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
         if (path.endsWith("/" + DEFAULT_POLICY_PATH)) {
+            LOGGER.debug("Detected policy file change at {}. Updating default handler.", path);
             updateDefaultHandler();
         }
     }
@@ -108,6 +109,21 @@ public class XSSFilterImpl implements XSSFilter, EventHandler {
                         }
                     } catch (Exception e) {
                         LOGGER.error("Unable to load policy from " + policyResource.getPath(), e);
+                    }
+                }
+            } else {
+                // the content was not installed but the service is active; let's use the embedded file for the default handler
+                LOGGER.debug("Could not find a policy file at the default location {}. Attempting to use the default resource embedded in" +
+                        " the bundle.", DEFAULT_POLICY_PATH);
+                InputStream policyStream = this.getClass().getClassLoader().getResourceAsStream("SLING-INF/content/config.xml");
+                if (policyStream != null) {
+                    try {
+                        if (defaultHandler == null) {
+                            defaultHandler = new PolicyHandler(policyStream);
+                            policyStream.close();
+                        }
+                    } catch (Exception e) {
+                        LOGGER.error("Unable to load policy from embedded policy file.", e);
                     }
                 }
             }
@@ -167,14 +183,17 @@ public class XSSFilterImpl implements XSSFilter, EventHandler {
         return ctx.filter(handler, src);
     }
 
+    @SuppressWarnings("unused")
     public void setDefaultPolicy(InputStream policyStream) throws Exception {
         defaultHandler = new PolicyHandler(policyStream);
     }
 
+    @SuppressWarnings("unused")
     public void resetDefaultPolicy() {
         updateDefaultHandler();
     }
 
+    @SuppressWarnings("unused")
     public void loadPolicy(String policyName, InputStream policyStream) throws Exception {
         if (policies.size() < DEFAULT_POLICY_CACHE_SIZE) {
             PolicyHandler policyHandler = new PolicyHandler(policyStream);
@@ -182,10 +201,12 @@ public class XSSFilterImpl implements XSSFilter, EventHandler {
         }
     }
 
+    @SuppressWarnings("unused")
     public void unloadPolicy(String policyName) {
         policies.remove(policyName);
     }
 
+    @SuppressWarnings("unused")
     public boolean hasPolicy(String policyName) {
         return policies.containsKey(policyName);
     }
