@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.scripting.sightly.testing</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
 
     <name>Apache Sling Scripting Sightly Integration Tests</name>
     <description>This project runs the integration tests for validating the Apache Sling Scripting Sightly implementation
@@ -366,7 +366,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.performance.base</artifactId>
-            <version>1.0.2</version>
+            <version>0.0.1-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
