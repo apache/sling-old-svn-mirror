@@ -390,6 +390,10 @@ public class BundleContentLoader extends BaseImportLoader {
 
         final URL file = bundle.getEntry(entry);
         final String name = getName(entry);
+        final String entryExt = getContentReaderExtension(entry);
+        if (entryExt != null && configuration.isIgnoredImportProvider(entryExt)) {
+            return;
+        }
         try {
             if (processedEntries.containsKey(file.toString())) {
                 // this is a consumed node descriptor
