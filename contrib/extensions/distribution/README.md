@@ -66,8 +66,8 @@ Distribution agents configurations are proper OSGi configurations (backed by nod
 
 
 There are specialized factories for each supported scenario:
-- "forward" agents, see [ForwardDistributionAgentFactory-publish.json](sample/src/main/resources/SLING-CONTENT/libs/sling/distribution/install.author/publish/org.apache.sling.distribution.agent.impl.org.apache.sling.distribution.agent.impl.ForwardDistributionAgentFactory-publish.json).
-- "reverse" agents, see [ReverseDistributionAgentFactory-publish-reverse.json](sample/src/main/resources/SLING-CONTENT/libs/sling/distribution/install.author/publish-reverse/org.apache.sling.distribution.agent.impl.org.apache.sling.distribution.agent.impl.ReverseDistributionAgentFactory-publish-reverse.json).
+- "forward" agents, see [ForwardDistributionAgentFactory-publish.json](sample/src/main/resources/SLING-CONTENT/libs/sling/distribution/install.author/publish/org.apache.sling.distribution.agent.impl.ForwardDistributionAgentFactory-publish.json).
+- "reverse" agents, see [ReverseDistributionAgentFactory-publish-reverse.json](sample/src/main/resources/SLING-CONTENT/libs/sling/distribution/install.author/publish-reverse/org.apache.sling.distribution.agent.impl.ReverseDistributionAgentFactory-publish-reverse.json).
 - "sync" agents, see [SyncDistributionAgentFactory-pubsync.json](sample/src/main/resources/SLING-CONTENT/libs/sling/distribution/install.author/pubsync/org.apache.sling.distribution.agent.impl.SyncDistributionAgentFactory-pubsync.json).
 - "queue" agents, see [QueueDistributionAgentFactory-reverse.json](sample/src/main/resources/SLING-CONTENT/libs/sling/distribution/install.publish/reverse/org.apache.sling.distribution.agent.impl.QueueDistributionAgentFactory-reverse.json).
 
