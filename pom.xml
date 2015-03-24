@@ -32,7 +32,7 @@
     <!-- P R O J E C T                                                           -->
     <!-- ======================================================================= -->
     <artifactId>org.apache.sling.distribution.api</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Distribution API</name>
@@ -41,10 +41,10 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.distribution.api-0.1.0</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.distribution.api-0.1.0
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/distribution/api</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/distribution/api
         </developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.distribution.api-0.1.0</url>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/distribution/api</url>
     </scm>
 
     <!-- ======================================================================= -->
