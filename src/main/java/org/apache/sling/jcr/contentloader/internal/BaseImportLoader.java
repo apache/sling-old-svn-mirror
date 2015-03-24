@@ -26,6 +26,7 @@ import java.util.Map.Entry;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.jcr.contentloader.ContentReader;
+import org.apache.sling.jcr.contentloader.ImportOptions;
 
 /**
  * Base class that takes care of the details that are common to bundle content
@@ -91,17 +92,25 @@ public abstract class BaseImportLoader extends JcrXmlImporter {
      * @param name The file name.
      * @return The reader or <code>null</code>
      */
-    public ContentReader getContentReader(String name) {
-        final Map<String, ContentReader> contentReaders = getContentReaders(); 
-
-        ContentReader reader = null;
-        final Iterator<String> ipIter = contentReaders.keySet().iterator();
-        while (reader == null && ipIter.hasNext()) {
-            final String ext = ipIter.next();
-            if (name.endsWith(ext)) {
-                reader = contentReaders.get(ext);
+    public ContentReader getContentReader(String name, PathEntry configuration) {
+        final Map<String, ContentReader> contentReaders = getContentReaders();
+        for (Map.Entry<String, ContentReader> readerEntry : contentReaders.entrySet()) {
+            String extension = readerEntry.getKey();
+            if (name.endsWith(extension) && !configuration.isIgnoredImportProvider(extension)) {
+                return readerEntry.getValue();
             }
         }
-        return reader;
+        return null;
+    }
+
+    public ContentReader getContentReader(String name, ImportOptions importOptions) {
+        final Map<String, ContentReader> contentReaders = getContentReaders();
+        for (Map.Entry<String, ContentReader> readerEntry : contentReaders.entrySet()) {
+            String extension = readerEntry.getKey();
+            if (name.endsWith(extension) && !importOptions.isIgnoredImportProvider(extension)) {
+                return readerEntry.getValue();
+            }
+        }
+        return null;
     }
 }
