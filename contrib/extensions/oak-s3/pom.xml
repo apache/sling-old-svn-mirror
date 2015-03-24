@@ -55,8 +55,10 @@
                             !javax.mail.*,
                             !org.aspectj.lang.*,
                             !org.junit.*,
+                            !junit.framework.*,
                             !org.springframework.*,
                             !org.joda.convert.*,
+                            !org.apache.felix.scrplugin.*,
                             *
                         </Import-Package>
                         <Export-Package>org.apache.jackrabbit.aws.ext.*</Export-Package>
