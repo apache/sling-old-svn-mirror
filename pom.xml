@@ -27,7 +27,7 @@
     </parent>
 
     <artifactId>org.apache.sling.distribution.it</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Distribution Integration Tests</name>
@@ -88,9 +88,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.distribution.it-0.1.0</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.distribution.it-0.1.0</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.distribution.it-0.1.0</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/distribution/it</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/distribution/it</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/distribution/it</url>
     </scm>
 
     <build>
