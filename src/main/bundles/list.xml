@@ -614,7 +614,7 @@
         <bundle>
             <groupId>org.mongodb</groupId>
             <artifactId>mongo-java-driver</artifactId>
-            <version>2.11.4</version>
+            <version>2.12.2</version>
             <runModes>oak_mongo</runModes>
        </bundle>
     </startLevel>
