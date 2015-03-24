@@ -17,8 +17,7 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
@@ -28,7 +27,7 @@
     </parent>
 
     <artifactId>org.apache.sling.distribution.it</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.1.0</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Distribution Integration Tests</name>
@@ -55,16 +54,16 @@
         <keepJarRunning>false</keepJarRunning>
 
         <!-- URL of a server against which to run tests -->
-        <test.server.url/>
+        <test.server.url />
 
         <!-- Set this to run tests against a specific hostname, if test.server.url is not set-->
-        <test.server.hostname/>
+        <test.server.hostname />
 
         <!-- Set this to use a different username for remote execution of sling junit tests -->
-        <test.server.username/>
+        <test.server.username />
 
         <!-- Set this to use a different password for remote execution of sling junit tests -->
-        <test.server.password/>
+        <test.server.password />
 
         <!-- Options for the VM that executes our runnable jar -->
         <jar.executor.vm.options>-Xmx512m</jar.executor.vm.options>
@@ -73,7 +72,7 @@
         <sling.testing.timeout.multiplier>1.0</sling.testing.timeout.multiplier>
 
         <!-- Set this to run the executable jar in a specified filesystem folder -->
-        <jar.executor.work.folder/>
+        <jar.executor.work.folder />
 
         <!-- Options for the jar to execute. $JAREXEC_SERVER_PORT$ is replaced by the
         selected port number -->
@@ -89,9 +88,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/distribution/it</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/distribution/it</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/distribution/it</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.distribution.it-0.1.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.distribution.it-0.1.0</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.distribution.it-0.1.0</url>
     </scm>
 
     <build>
@@ -392,17 +391,17 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.distribution.api</artifactId>
-            <version>${project.version}</version>
+            <version>0.1.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.distribution.core</artifactId>
-            <version>${project.version}</version>
+            <version>0.1.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.distribution.sample</artifactId>
-            <version>${project.version}</version>
+            <version>0.1.0</version>
         </dependency>
     </dependencies>
 </project>
