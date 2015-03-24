@@ -141,7 +141,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
         Session session = null;
         final Bundle bundle = event.getBundle();
         switch (event.getType()) {
-            case BundleEvent.STARTING:
+            case BundleEvent.RESOLVED:
                 // register content when the bundle content is available
                 // as node types are registered when the bundle is installed
                 // we can safely add the content at this point.
