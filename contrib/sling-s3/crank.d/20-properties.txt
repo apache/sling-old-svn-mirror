@@ -4,7 +4,7 @@ osgi.property sling.home ${sling.home}
 osgi.property repository.home ${sling.home}/oak/repository
 osgi.property org.osgi.framework.storage ${sling.home}/osgi.framework.storage
 osgi.property org.apache.sling.commons.log.level INFO
-osgi.property org.apache.sling.commons.log.file logs/error.log
+osgi.property org.apache.sling.commons.log.file ${log.file}
 osgi.property org.apache.sling.commons.log.file.number 5
 osgi.property org.apache.sling.commons.log.file.size '.'yyyy-MM-dd
 osgi.property felix.startlevel.bundle 22
