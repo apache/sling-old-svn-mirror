@@ -19,7 +19,7 @@ result.child.element_children.each do |startLevel|
     groupId = bundle.xpath('./groupId').text
     version = bundle.xpath('./version').text
     runModes = bundle.xpath('./runModes').text
-    next if runModes == 'jackrabbit'
+    next if runModes == 'jackrabbit' or runModes == 'oak_mongo'
     f.puts "bundle mvn:#{groupId}/#{artifactId}/#{version}"
   end
   f.close
