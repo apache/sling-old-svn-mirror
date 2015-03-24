@@ -37,7 +37,7 @@
 
 
     <properties>
-        <oak.version>1.0.9</oak.version>
+        <oak.version>1.0.12</oak.version>
         <!--
             Jetty default port (override with -D)
         -->
