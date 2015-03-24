@@ -230,11 +230,5 @@ public class SlingCrudResourceResolverTest {
         assertEquals("/", rootResource.getPath());
     }
 
-    
-    @Test
-    public void testIsResourceResolver() {
-        Resource root= resourceResolver.getResource("/");
-        assertFalse(root.isResourceType("app/resourceType"));
-    }
 
 }
