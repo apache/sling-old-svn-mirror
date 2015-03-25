@@ -17,9 +17,9 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
     -->
-<project 
-    xmlns="http://maven.apache.org/POM/4.0.0" 
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+<project
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
@@ -28,7 +28,7 @@ under the License.
         <version>22</version>
         <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
-    <artifactId>sling-lauchpad</artifactId>
+    <artifactId>sling-server</artifactId>
     <packaging>jar</packaging>
     <version>8-SNAPSHOT</version>
     <name>Apache Sling Launchpad Debian Package Builder</name>
@@ -45,13 +45,86 @@ under the License.
         <!--
             jdeb plugin version for debian package
         -->
-        <jdeb.version>1.0.1</jdeb.version>
+        <jdeb.version>1.4</jdeb.version>
         <launchpad.artifact>org.apache.sling.launchpad</launchpad.artifact>
         <launchpad.version>8-SNAPSHOT</launchpad.version>
         <launchpad.classifier>standalone</launchpad.classifier>
+        <slingInstallDir>/opt/sling</slingInstallDir>
+        <slingConfigDir>/etc/sling</slingConfigDir>
+        <slingS3Dir>${basedir/../../sling-s3}</slingS3Dir>
     </properties>
     <build>
         <plugins>
+            <plugin>
+                <!-- Copy sling-s3 info local workdir -->
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-sling-s3</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/${slingConfigDir}</outputDirectory>
+                            <overwrite>true</overwrite>
+                            <resources>
+                                <resource>
+                                    <directory>${slingS3Dir}</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <!-- Use exec plugin to call make sling-s3 targets -->
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.2.1</version>
+                <executions>
+                    <execution>
+                        <!-- make all in the Maven compile phase -->
+                        <id>fix-exec-permissions</id>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <workingDirectory>${project.build.directory}/${slingConfigDir}</workingDirectory>
+                            <executable>chmod</executable>
+                            <arguments>
+                                <argument>-R</argument>
+                                <argument>775</argument>
+                                <argument>scripts</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- make all in the Maven compile phase -->
+                        <id>build-config</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                        	> <environmentVariables>
+                        	<OUTPUT>
+                        		${project.build.directory}/contrib
+                        	</OUTPUT>
+                        </environmentVariables>
+                        <workingDirectory>${project.build.directory}/${slingConfigDir}</workingDirectory>
+                            <executable>make</executable>
+                            <arguments>
+                                <argument>update-bundles</argument>
+                                <argument>install-deps</argument>
+                                <argument>all</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <artifactId>jdeb</artifactId>
                 <groupId>org.vafer</groupId>
@@ -63,22 +136,70 @@ under the License.
                             <goal>jdeb</goal>
                         </goals>
                         <configuration>
+                            <classifier>all</classifier>
                             <dataSet>
+                                <!-- etc/{default,logrotate.d}/sling - conf files -->
                                 <data>
-                                    <src>${project.build.directory}/${launchpad.artifact}-${project.version}-${launchpad.classifier}.jar</src>
-                                    <type>file</type>
+                                    <src>${project.basedir}/src/root_fs/etc</src>
+                                    <type>directory</type>
+                                    <excludes>**/.svn/,**/init.d/</excludes>
+                                    <conffile>true</conffile>
                                     <mapper>
                                         <type>perm</type>
-                                        <prefix>/opt/sling/${project.parent.artifactId}</prefix>
+                                        <prefix>/etc</prefix>
                                     </mapper>
                                 </data>
+                                <!-- all other root_fs -->
                                 <data>
                                     <src>${project.basedir}/src/root_fs/</src>
                                     <type>directory</type>
-                                    <excludes>**/.svn/</excludes>
+                                    <excludes>**/.svn/,**/etc/default/,**/etc/logrotate.d/</excludes>
                                     <mapper>
+                                        <filemode>775</filemode>
                                         <type>perm</type>
                                         <prefix>/</prefix>
+                                    </mapper>
+                                </data>
+                                <!-- etc/sling/crank-*.d/ conf files -->
+                                <data>
+                                    <src>${project.build.directory}/${slingConfigDir}</src>
+                                    <type>directory</type>
+                                    <conffile>true</conffile>
+                                    <excludes>**/.svn/,**/contrib/,**/scripts/,**/target/</excludes>
+                                    <mapper>
+                                        <type>perm</type>
+                                        <prefix>${slingConfigDir}</prefix>
+                                    </mapper>
+                                </data>
+                                <!-- crank target files, etc - non-conf files, as they are generated -->
+                                <data>
+                                    <src>${project.build.directory}/${slingConfigDir}</src>
+                                    <type>directory</type>
+                                    <includes>**/target/*</includes>
+                                    <mapper>
+                                        <filemode>775</filemode>
+                                        <type>perm</type>
+                                        <prefix>${slingConfigDir}</prefix>
+                                    </mapper>
+                                </data>
+                                <!-- sling-s3 scripts & other binaries -->
+                                <data>
+                                    <src>${project.build.directory}/${slingConfigDir}</src>
+                                    <type>directory</type>
+                                    <includes>**/contrib/*,**/scripts/*</includes>
+                                    <mapper>
+                                        <filemode>775</filemode>
+                                        <type>perm</type>
+                                        <prefix>${slingInstallDir}</prefix>
+                                    </mapper>
+                                </data>
+                                <!-- dependencies -->
+                                <data>
+                                    <src>${project.build.directory}/contrib</src>
+                                    <type>directory</type>
+                                    <mapper>
+                                        <type>perm</type>
+                                        <prefix>${slingInstallDir}/contrib</prefix>
                                     </mapper>
                                 </data>
                             </dataSet>
@@ -130,6 +251,22 @@ under the License.
             </plugin>
         </plugins>
     </reporting>
+    <distributionManagement>
+        <repository>
+            <id>nexus-releases</id>
+            <name>Internal Releases</name>
+            <url>http://nexus.nim.com:8081/nexus/content/repositories/releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>nexus-snapshots</id>
+            <name>Internal Releases</name>
+            <url>http://nexus.nim.com:8081/nexus/content/repositories/snapshots/</url>
+        </snapshotRepository>
+        <site>
+            <id>nim-maven-project-site</id>
+            <url>scpexe://wiki.nim.com/var/www/server-site/</url>
+        </site>
+    </distributionManagement>
     <repositories>
         <repository>
             <id>OPS4J</id>

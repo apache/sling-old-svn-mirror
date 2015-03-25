@@ -16,79 +16,93 @@
 # specific language governing permissions and limitations
 # under the License.
 
-#
-# Usage
-#
-function usage () {
-   echo "Purpose: Stop/Start sling"
-   echo "Usage  : $0 { stop | start }"
-}
-
-NAME=sling
-
-PID=/var/run/${NAME}.pid
-
-[ "$DEBUG" ] && set -x
+### BEGIN INIT INFO
+# Provides:          sling
+# Required-Start:    $remote_fs $syslog $named
+# Required-Stop:     $remote_fs $syslog $named
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start sling at boot time
+# Description:       Enable service provided by sling.
+### END INIT INFO
 
 . /etc/profile
-
+export FANCYTTY=true
+. /lib/lsb/init-functions
 export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
+SLING_COMMON=/opt/sling/scripts/sling-common.sh
+if [ -r $SLING_COMMON ] ; then
+	. $SLING_COMMON
+else
+	log_failure_msg "Missing $SLING_COMMON file, cannot read env settings."
+	exit -1
+fi
 
-SLING_DEFAULTS=/etc/default/sling
-[ -r $SLING_DEFAULTS ] && . $SLING_DEFAULTS
+PID=/var/run/sling.pid
+DAEMON=$(which java)
 
-SLING_JAR=$(find $SLING_HOME -name \*-standalone.jar)
-
-running()
-{
-  local PID=$(cat "$1" 2>/dev/null) || return 1
-  kill -0 "$PID" 2>/dev/null
+function usage () {
+	log_warning_msg "Purpose: Stop/Start sling"
+	log_warning_msg "Usage  : $0 { stop | start | restart }"
 }
 
-status() 
-{
-	if running "$PID"
-	then
-	  echo "OK"
-	else
-	  echo "FAILED"
-	fi
+function rebuild_config () {
+	log_progress_msg "Rebuild configuration"
+	cd ${SLING_CFG}
+	make -e target/${RUNMODE}.txt
 }
 
-#
-# Stop current sling instance
-#
 function stop () {
-	start-stop-daemon --stop --pidfile $PID --chdir $SLING_HOME --startas "./$NAME" --signal TERM
+	killproc -p $PID $DAEMON TERM
 }
 
-#
-# Start batch job scheduler
-#
 function start () {
 
-  if start-stop-daemon --start \
-	  --chdir "$SLING_HOME" \
-	  --chuid $SLING_USER \
-	  --pidfile "$PID" \
-	  --make-pidfile \
-	  --startas $(which java) \
-	  -- \
-	  $JAVA_ARGS $JAVA_DEBUG_ARGS \
-	  -jar $SLING_JAR $SLING_DEFAULT_ARGS \
-	  >>$LOG_FILE 2>&1 &
-  then
-	sleep 3s
-	status
-  fi
+	if [ ! "${RUNMODE}" ] ; then
+		log_warning_msg "RUNMODE is not set in ${SLING_DEFAULTS}"
+	fi
+
+	check_sling_permissions
+
+	# Get MVN_OPTS from crankstart env file.
+	[ -r $CRANKSTART_ENV ] && . $CRANKSTART_ENV
+	CRANKSTART_JAR=${M2REPO}/crankstart.jar
+
+	# Update crankstart file if needed
+	log_daemon_msg "Starting sling serices"
+	rebuild_config
+
+	log_progress_msg "Start sling daemon"
+	if start-stop-daemon --start \
+		--chdir "$SLING_EXEC" \
+		--chuid $SLING_USER \
+		--pidfile "$PID" \
+		--make-pidfile \
+		--background \
+		--verbose \
+		--no-close \
+		--exec $(which java) \
+		--start \
+		-- \
+		${JAVA_ARGS} \
+		${MVN_OPTS} \
+		-jar ${CRANKSTART_JAR} \
+		${SLING_CFG}/target/${RUNMODE}.txt \
+		>$START_LOG_FILE 2>&1
+	then
+		sleep 3
+		status_of_proc -p $PID $DAEMON
+	fi
+	log_end_msg $?
 
 }
 
 if test -z "$1"; then
-   usage
-   exit
+	usage
+	exit
 fi
-case $1 in 
+
+case $1 in
 	start)
 		start
 		;;
@@ -96,24 +110,19 @@ case $1 in
 		stop
 		;;
 	restart)
-		stop
-		while ps --pid $(cat $PID) >/dev/null ; do
-			sleep 1
-		done
-		start
-		;;
-	status)
-		if [ $(status) == "OK" ] ; then
-			exit 0
-		else
-			exit 1
+		if [ -f $PID ] ; then
+			stop
+			while pidofproc -p $PID $DAEMON > /dev/null ; do
+				sleep 1
+			done
 		fi
+		start
+	;;
+	status)
+		status_of_proc -p $PID $DAEMON
 		;;
 	*)
 		echo "Unknown parameter: $1"
 		usage
 		;;
-	esac
-
-
-# end_of_file
+esac
