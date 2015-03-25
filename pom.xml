@@ -229,25 +229,25 @@
                         <bundle>
                             <groupId>org.apache.sling</groupId>
                             <artifactId>org.apache.sling.scripting.sightly</artifactId>
-                            <version>1.0.0</version>
+                            <version>1.0.1-SNAPSHOT</version>
                             <startLevel>20</startLevel>
                         </bundle>
                         <bundle>
                             <groupId>org.apache.sling</groupId>
                             <artifactId>org.apache.sling.scripting.sightly.js.provider</artifactId>
-                            <version>1.0.0</version>
+                            <version>1.0.1-SNAPSHOT</version>
                             <startLevel>20</startLevel>
                         </bundle>
                         <bundle>
                             <groupId>org.apache.sling</groupId>
                             <artifactId>org.apache.sling.scripting.sightly.testing-content</artifactId>
-                            <version>1.0.0</version>
+                            <version>1.0.1-SNAPSHOT</version>
                             <startLevel>20</startLevel>
                         </bundle>
                         <bundle>
                             <groupId>org.apache.sling</groupId>
                             <artifactId>org.apache.sling.scripting.sightly.repl</artifactId>
-                            <version>1.0.0</version>
+                            <version>1.0.1-SNAPSHOT</version>
                             <startLevel>20</startLevel>
                         </bundle>
                     </additionalBundles>
@@ -366,7 +366,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.performance.base</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.3-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
