@@ -251,22 +251,6 @@ under the License.
             </plugin>
         </plugins>
     </reporting>
-    <distributionManagement>
-        <repository>
-            <id>nexus-releases</id>
-            <name>Internal Releases</name>
-            <url>http://nexus.nim.com:8081/nexus/content/repositories/releases/</url>
-        </repository>
-        <snapshotRepository>
-            <id>nexus-snapshots</id>
-            <name>Internal Releases</name>
-            <url>http://nexus.nim.com:8081/nexus/content/repositories/snapshots/</url>
-        </snapshotRepository>
-        <site>
-            <id>nim-maven-project-site</id>
-            <url>scpexe://wiki.nim.com/var/www/server-site/</url>
-        </site>
-    </distributionManagement>
     <repositories>
         <repository>
             <id>OPS4J</id>
