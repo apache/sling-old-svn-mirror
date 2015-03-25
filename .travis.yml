@@ -1,8 +1,14 @@
 language: java
+
 jdk:
   - openjdk7
   - openjdk6
+
+sudo: false
+
 install: true
+
 script: mvn -q clean install -DobrRepository=false -DHttpTestBase.readyTimeoutSeconds=300 -PwarIntegrationTests -PintegrationTests
+
 notifications:
   email: false
