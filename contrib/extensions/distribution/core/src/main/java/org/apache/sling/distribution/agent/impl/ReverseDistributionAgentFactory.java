@@ -110,7 +110,7 @@ public class ReverseDistributionAgentFactory extends AbstractDistributionAgentFa
     /**
      * no. of items to poll property
      */
-    @Property(intValue = 10, label = "Pull Items", description = "Number of subsequent pull requests to make.")
+    @Property(intValue = 100, label = "Pull Items", description = "Number of subsequent pull requests to make.")
     public static final String PULL_ITEMS = "pull.items";
 
 
@@ -180,11 +180,11 @@ public class ReverseDistributionAgentFactory extends AbstractDistributionAgentFa
         exporterEndpoints = SettingsUtils.removeEmptyEntries(exporterEndpoints);
 
 
-        int pollItems = PropertiesUtil.toInteger(config.get(PULL_ITEMS), Integer.MAX_VALUE);
+        int pullItems = PropertiesUtil.toInteger(config.get(PULL_ITEMS), Integer.MAX_VALUE);
 
 
         DistributionPackageExporter packageExporter = new RemoteDistributionPackageExporter(distributionLog, packageBuilder, transportSecretProvider, exporterEndpoints,
-                TransportEndpointStrategyType.All, pollItems);
+                TransportEndpointStrategyType.All, pullItems);
         DistributionPackageImporter packageImporter = new LocalDistributionPackageImporter(packageBuilder);
         DistributionQueueProvider queueProvider =  new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
 
