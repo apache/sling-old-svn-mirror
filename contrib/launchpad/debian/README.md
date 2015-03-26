@@ -9,8 +9,8 @@ config and run
 	"service sling start"
 
 Components used are:
-* [Sling crankstart][(https://github.com/apache/sling/tree/trunk/contrib/crankstart)]
-* [Sling-s3][(https://github.com/apache/sling/tree/trunk/contrib/sling-s3)]
+* [Sling crankstart](https://github.com/apache/sling/tree/trunk/contrib/crankstart)
+* [Sling-s3](https://github.com/apache/sling/tree/trunk/contrib/sling-s3)
 
 Supported run modes are:
 

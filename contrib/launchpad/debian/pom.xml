@@ -219,7 +219,6 @@ under the License.
                         <phase>process-resources</phase>
                         <configuration>
                             <outputDirectory>${project.build.directory}</outputDirectory>
-                            <includeArtifactIds>${launchpad.artifact}</includeArtifactIds>
                             <excludeTransitive>true</excludeTransitive>
                             <overWriteReleases>false</overWriteReleases>
                             <overWriteSnapshots>false</overWriteSnapshots>
@@ -229,14 +228,6 @@ under the License.
             </plugin>
         </plugins>
     </build>
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>${launchpad.artifact}</artifactId>
-            <version>${launchpad.version}</version>
-            <classifier>${launchpad.classifier}</classifier>
-        </dependency>
-    </dependencies>
     <reporting>
         <plugins>
             <plugin>
