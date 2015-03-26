@@ -4,6 +4,6 @@ Section: misc
 Priority: optional
 Architecture: all
 Maintainer: Bruce Edge <bruce.edge@nextissuemedia.com>
-Depends: oracle-java7-installer
+Depends: oracle-java7-installer, make
 Description: [[description]]
 Distribution: development

@@ -1,6 +1,6 @@
-/var/log/sling/sling-start.log {
-  rotate 5
-  size 4M
+/var/log/sling/startup.log {
+  rotate
+  size 10M
   copytruncate
   daily
   compress

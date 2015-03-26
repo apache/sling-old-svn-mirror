@@ -25,8 +25,18 @@ if [ remove = "$1" ]; then
     	service sling stop
     fi
     rm -f $SLING_DEFAULTS
-    if [ "$SLING_DATA" ] && [ -d $SLING_DATA ] ; then
-    	echo Not Purging $SLING_DATA
-    	# rm -rf $SLING_DATA
-    fi
+
+    # Generate a cleanup script to purge all generated files
+    # Note: validate all deletions!
+    cat >/tmp/sling-cleanup.sh <<-EOT
+    #!/bin/bash
+    echo Purging sling generated files
+    [ "$DEBUG" ] && set -x
+    [ "${SLING_EXEC}" ] 		&& [ -d ${SLING_EXEC} ] 	&& rm -rf ${SLING_EXEC}
+    [ -d ${SLING_CFG}/target ] 								&& rm -rf ${SLING_CFG}/target
+    [ "${SLING_LOG_DIR}" ] 		&& [ -d ${SLING_LOG_DIR} ]	&& rm -rf ${SLING_LOG_DIR}
+    # Purge deletes data as well
+    rm -f $0
+EOT
+
 fi

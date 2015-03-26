@@ -19,31 +19,10 @@
 echo $0 $*
 [ "$DEBUG" ] && set -x
 
-SLING_COMMON=/opt/sling/scripts/sling-common.sh
-if [ -r $SLING_COMMON ] ; then
-	. $SLING_COMMON
-else
-	log_failure_msg "Missing $SLING_COMMON file, cannot read env settings."
-	exit -1
-fi
+if [ remove = "$1" ]; then
+	update-rc.d -f sling remove
 
-SLING_USER=${SLING_USER:-sling}
-SLING_GROUP=${SLING_GROUP:-sling}
-
-
-# Check for sling user and group
-if ! getent group | grep -q $SLING_USER ; then
-	groupadd --system $SLING_GROUP
-fi
-if ! getent passwd | grep -q $SLING_GROUP ; then
-	useradd --home-dir $SLING_EXEC --gid $SLING_GROUP $SLING_USER
-fi
-
-check_sling_permissions force
-
-update-rc.d sling defaults
-
-# Only restart if already running
-if service sling status; then
-	service sling restart
+	# Run cleanup script created by prerm
+	CLEANUP=/tmp/sling-cleanup.sh
+	[ -e ${CLEANUP} ] && sh ${CLEANUP} $@
 fi
