@@ -88,8 +88,6 @@ public class Result<ModelType> {
                     log.error(String.format(failureType.message, clazz));
                     break;
                 case OTHER:
-                    log.error(String.format(failureType.message, failureMessage));
-                    break;
                 default:
                     log.error(getMessage(), failureException);
                     break;
