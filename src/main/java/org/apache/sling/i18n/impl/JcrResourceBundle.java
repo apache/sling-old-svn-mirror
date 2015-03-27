@@ -18,12 +18,14 @@
  */
 package org.apache.sling.i18n.impl;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -31,9 +33,12 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 
+import org.apache.jackrabbit.commons.json.JsonHandler;
+import org.apache.jackrabbit.commons.json.JsonParser;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
@@ -74,17 +79,19 @@ public class JcrResourceBundle extends ResourceBundle {
             ResourceResolver resourceResolver) {
         this.locale = locale;
 
+        log.info("Finding all dictionaries for '{}' (basename: {}) ...", locale, baseName == null ? "<none>" : baseName);
+
         long start = System.currentTimeMillis();
         refreshSession(resourceResolver);
         Set<String> roots = loadPotentialLanguageRoots(resourceResolver, locale, baseName);
         this.resources = loadFully(resourceResolver, roots, this.languageRoots);
+
         long end = System.currentTimeMillis();
-        if (log.isDebugEnabled()) {
-            log.debug(
-                "JcrResourceBundle: Fully loaded {} entries for {} (base: {}) in {}ms",
-                new Object[] { resources.size(), locale, baseName,
-                    (end - start) });
-            log.debug("JcrResourceBundle: Language roots: {}", languageRoots);
+        if (log.isInfoEnabled()) {
+            log.info(
+                "Finished loading {} entries for '{}' (basename: {}) in {}ms",
+                new Object[] { resources.size(), locale, baseName == null ? "<none>" : baseName, (end - start)}
+            );
         }
     }
 
@@ -139,11 +146,11 @@ public class JcrResourceBundle extends ResourceBundle {
      * Therefore this method must not be called concurrently or the set
      * must either be thread safe.
      *
-     * @param resourceResolver The storage access (must not be {@code null})
-     * @param roots The set of (potential) disctionary subtrees. This must
+     * @param resolver The storage access (must not be {@code null})
+     * @param roots The set of (potential) dictionary subtrees. This must
      *      not be {@code null}. If empty, no resources will actually be
      *      loaded.
-     * @param languageRoots The set of actualy dictionary subtrees. While
+     * @param languageRoots The set of actually dictionary subtrees. While
      *      processing the resources, all subtrees listed in the {@code roots}
      *      set is added to this set if it actually contains resources. This
      *      must not be {@code null}.
@@ -152,83 +159,169 @@ public class JcrResourceBundle extends ResourceBundle {
      * @throws NullPointerException if either of the parameters is {@code null}.
      */
     @SuppressWarnings("deprecation")
-    private Map<String, Object> loadFully(final ResourceResolver resourceResolver, Set<String> roots, Set<String> languageRoots) {
-        final List<List<Map<String, Object>>> allResources = new ArrayList<List<Map<String,Object>>>();
+    private Map<String, Object> loadFully(final ResourceResolver resolver, Set<String> roots, Set<String> languageRoots) {
 
-        final String[] path = resourceResolver.getSearchPath();
+        final String[] searchPath = resolver.getSearchPath();
+
+        // for each search path entry, have a list of maps (dictionaries)
+        // plus other = "outside the search path" at the end
+
+        //   [0] /apps2  -> [dict1, dict2, dict3 ...]
+        //   [1] /apps   -> [dict4, dict5, ...]
+        //   [2] /libs   -> [dict6, ...]
+        //   [3] (other) -> [dict7, dict8 ...]
+
+        List<List<Map<String, Object>>> dictionariesBySearchPath = new ArrayList<List<Map<String, Object>>>(searchPath.length + 1);
+        for (int i = 0; i < searchPath.length + 1; i++) {
+            dictionariesBySearchPath.add(new ArrayList<Map<String, Object>>());
+        }
 
         for (final String root: roots) {
-            String fullLoadQuery = String.format(QUERY_MESSAGES_FORMAT, ISO9075.encodePath(root));
 
-            log.debug("Executing full load query {}", fullLoadQuery);
-
-            // do an XPath query because this won't go away soon and still
-            // (2011/04/04) is the fastest query language ...
-            Iterator<Map<String, Object>> bundles = null;
-            try {
-                bundles = resourceResolver.queryResources(fullLoadQuery, "xpath");
-            } catch (final SlingException se) {
-                log.error("Exception during resource query " + fullLoadQuery, se);
+            Resource dictionaryResource = resolver.getResource(root);
+            if (dictionaryResource == null) {
+                log.warn("Dictionary root found by search not accessible: {}", root);
+                continue;
             }
 
-            if ( bundles != null ) {
+            // linked hash map to keep order (not functionally important, but helpful for dictionary debugging)
+            Map<String, Object> dictionary = new LinkedHashMap<String, Object>();
 
-                final Map<String, Object> rest = new HashMap<String, Object>();
-                final List<Map<String, Object>> res0 = new ArrayList<Map<String, Object>>();
-                for (int i = 0; i < path.length; i++) {
-                    res0.add(new HashMap<String, Object>());
-                }
-                res0.add(rest); // add global list at the end
-
-                allResources.add(res0);
-
-                while (bundles.hasNext()) {
-                    final Map<String, Object> row = bundles.next();
-                    if (row.containsKey(PROP_VALUE)) {
-                        final String jcrPath = (String) row.get(JCR_PATH);
-                        String key = (String) row.get(PROP_KEY);
-
-                        if (key == null) {
-                            key = ResourceUtil.getName(jcrPath);
-                        }
-
-                        Map<String, Object> dst = rest;
-                        for (int i = 0; i < path.length; i++) {
-                            if (jcrPath.startsWith(path[i])) {
-                                dst = res0.get(i);
-                                break;
-                            }
-                        }
-
-                        dst.put(key, row.get(PROP_VALUE));
-                    }
-                }
-
-                for (int i = res0.size() - 1; i >= 0; i--) {
-                    final Map<String, Object> resources = res0.get(i);
-                    if (!resources.isEmpty()) {
-                        // also remember root (in case we face a non-empty map)
-                        languageRoots.add(root);
-                        break;
-                    }
+            // find where in the search path this dict belongs
+            // otherwise put it in the outside-the-search-path bucket (last list)
+            List<Map<String, Object>> targetList = dictionariesBySearchPath.get(searchPath.length);
+            for (int i = 0; i < searchPath.length; i++) {
+                if (root.startsWith(searchPath[i])) {
+                    targetList = dictionariesBySearchPath.get(i);
+                    break;
                 }
             }
-        }
-        final Map<String, Object> result = new HashMap<String, Object>();
-        for(final List<Map<String, Object>> current : allResources) {
-            final Map<String, Object> rest = current.get(current.size() - 1);
-            result.putAll(rest);
+            targetList.add(dictionary);
+
+            // check type of dictionary
+            if (dictionaryResource.getName().endsWith(".json")) {
+                loadJsonDictionary(dictionaryResource, dictionary);
+            } else {
+                loadSlingMessageDictionary(resolver, root, dictionary);
+            }
+
+            if (!dictionary.isEmpty()) {
+                languageRoots.add(root);
+            }
         }
 
-        for (int i = path.length - 1; i >= 0; i--) {
+        // linked hash map to keep order (not functionally important, but helpful for dictionary debugging)
+        final Map<String, Object> result = new LinkedHashMap<String, Object>();
 
-            for(final List<Map<String, Object>> current : allResources) {
-                final Map<String, Object> resources = current.get(i);
-                result.putAll(resources);
+        // first, add everything that's not under a search path (e.g. /content)
+        // below, same strings inside a search path dictionary would overlay them since
+        // they are added later to result = overwrite
+        for (Map<String, Object> dict : dictionariesBySearchPath.get(searchPath.length)) {
+            result.putAll(dict);
+        }
+
+        // then, in order of the search path, add all the individual dictionaries into
+        // a single result, so that e.g. strings in /apps overlay the ones in /libs
+        for (int i = searchPath.length - 1; i >= 0; i--) {
+
+            for (Map<String, Object> dict : dictionariesBySearchPath.get(i)) {
+                result.putAll(dict);
             }
         }
 
         return result;
+    }
+
+    private void loadJsonDictionary(Resource resource, final Map<String, Object> targetDictionary) {
+        log.info("Loading json dictionary: {}", resource.getPath());
+
+        // use streaming parser (we don't need the dict in memory twice)
+        JsonParser parser = new JsonParser(new JsonHandler() {
+
+            private String key;
+
+            @Override
+            public void key(String key) throws IOException {
+                this.key = key;
+            }
+
+            @Override
+            public void value(String value) throws IOException {
+                targetDictionary.put(key, value);
+            }
+
+            @Override
+            public void object() throws IOException {}
+            @Override
+            public void endObject() throws IOException {}
+            @Override
+            public void array() throws IOException {}
+            @Override
+            public void endArray() throws IOException {}
+            @Override
+            public void value(boolean value) throws IOException {}
+            @Override
+            public void value(long value) throws IOException {}
+            @Override
+            public void value(double value) throws IOException {}
+        });
+
+        InputStream stream = resource.adaptTo(InputStream.class);
+        if (stream != null) {
+            String encoding = "utf-8";
+            ResourceMetadata metadata = resource.getResourceMetadata();
+            if (metadata != null) { // test does not implement metadata
+                if (metadata.getCharacterEncoding() != null) {
+                    encoding = metadata.getCharacterEncoding();
+                }
+            }
+
+            try {
+
+                parser.parse(stream, encoding);
+
+            } catch (IOException e) {
+                log.warn("Could not parse i18n json dictionary {}: {}", resource.getPath(), e.getMessage());
+            } finally {
+                try {
+                    stream.close();
+                } catch (IOException ignore) {
+                }
+            }
+        } else {
+            log.warn("Not a json file: {}", resource.getPath());
+        }
+    }
+
+    private void loadSlingMessageDictionary(ResourceResolver resourceResolver, String path, Map<String, Object> targetDictionary) {
+        // run query for sling:Message nodes
+        String dictQuery = String.format(QUERY_MESSAGES_FORMAT, ISO9075.encodePath(path));
+
+        log.info("Loading sling:Message dictionary: {}", path);
+        log.info("Executing query {}", dictQuery);
+
+        try {
+            // do an XPath query because this won't go away soon and still
+            // (2011/04/04) is the fastest query language ...
+            Iterator<Map<String, Object>> queryResult = resourceResolver.queryResources(dictQuery, "xpath");
+
+            while (queryResult.hasNext()) {
+                final Map<String, Object> row = queryResult.next();
+                if (row.containsKey(PROP_VALUE)) {
+                    final String jcrPath = (String) row.get(JCR_PATH);
+                    String key = (String) row.get(PROP_KEY);
+
+                    if (key == null) {
+                        key = ResourceUtil.getName(jcrPath);
+                    }
+
+                    targetDictionary.put(key, row.get(PROP_VALUE));
+                }
+            }
+
+        } catch (final SlingException se) {
+            log.error("Exception during resource query " + dictQuery, se);
+        }
     }
 
     private Set<String> loadPotentialLanguageRoots(ResourceResolver resourceResolver, Locale locale, String baseName) {

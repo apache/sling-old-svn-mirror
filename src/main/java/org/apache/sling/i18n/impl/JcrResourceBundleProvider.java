@@ -324,6 +324,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         final Set<String> languageRoots = resourceBundle.getLanguageRootPaths();
         languageRootPaths.addAll(languageRoots);
         log.debug("registerResourceBundle({}, ...): added service registration and language roots {}", key, languageRoots);
+        log.info("Currently loaded dictionaries across all locales: {}", languageRootPaths);
     }
 
     /**
