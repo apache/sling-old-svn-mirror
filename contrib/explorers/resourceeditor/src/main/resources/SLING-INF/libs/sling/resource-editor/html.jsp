@@ -26,11 +26,11 @@ original
 
 <script type="text/javascript" src="<%= request.getContextPath() %>/libs/jsnodetypes/js/jsnodetypes.js"></script>
 
-<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/jquery.min.js"></script>
-<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/bootbox.min.js"></script>
-<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/jstree.js"></script>
-<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/select2.min.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/3rd_party/jquery.min.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/3rd_party/bootstrap.min.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/3rd_party/bootbox.min.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/3rd_party/jstree.min.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/3rd_party/select2.min.js"></script>
 
 <script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/reseditor/tree/JSTreeAdapter.js"></script>
 <script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/reseditor/tree/TreeController.js"></script>
@@ -40,14 +40,14 @@ original
 
 <!-- 
 <script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/jquery.scrollTo-min.js"></script>
- -->
 <script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/urlEncode.js"></script>
+ -->
 
 <link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/css/style.css">
 <link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/css/bootstrap.css">
 <link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/css/bootbox.reseditor.css">
-<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/css/shake.css">
-<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/css/select2.css">
+<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/css/3rd_party/animate.min.css">
+<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/css/3rd_party/select2.css">
 <link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/css/select2.reseditor.css">
 
 <!--[if IE]>
@@ -97,7 +97,7 @@ new org.apache.sling.reseditor.JSTreeAdapter(jsTreeAdapterSettings, treeControll
 		<div id="login" class="row">
 			<div class="col-sm-12">
 			 	<div class="logo">
-				Sling Resource Editor <span class="edition">node-edit version</span>
+				The Sling Resource Editor <span class="edition">node-edit version</span>
 				</div>			 	
 				<div class="tabbable tabs-below"> 
 				  <div id="login_tab_content" class="tab-content plate-background plate-box-shadow" style="display:none;">

@@ -38,24 +38,6 @@
 		</resources>
 		<plugins>
 			<plugin>
-				<groupId>org.lesscss</groupId>
-				<artifactId>lesscss-maven-plugin</artifactId>
-				<version>1.7.0.1.1</version>
-				<configuration>
-					<outputDirectory>${project.basedir}/src/main/resources/SLING-INF/libs/sling/resource-editor-static-content/css</outputDirectory>
-					<includes>
-						<include>bootstrap.less</include>
-					</includes>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>compile</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>maven-scr-plugin</artifactId>
 				<executions>
@@ -99,6 +81,31 @@
 					<remoteOBR>www.jcrbrowser.org</remoteOBR>
 				</configuration>
 			</plugin>
+			<plugin>
+		        <groupId>com.github.eirslett</groupId>
+		        <artifactId>frontend-maven-plugin</artifactId>
+		        <version>0.0.22</version>
+		        <configuration>
+			        <workingDirectory>frontend</workingDirectory>
+			    </configuration>
+			    <executions>
+				    <execution>
+					    <goals> <goal>install-node-and-npm</goal> </goals>
+					    <configuration>
+					        <nodeVersion>v0.12.1</nodeVersion>
+					        <npmVersion>1.4.9</npmVersion>
+					    </configuration>
+					</execution>
+					<execution> 
+						<id>npm install</id> 	
+						<goals> <goal>npm</goal> 	</goals>
+					</execution>
+					<execution>
+						<id>grunt build</id>
+						<goals> <goal>grunt</goal> </goals>
+					</execution>
+				</executions>
+		    </plugin>
 		</plugins>
 		<extensions>
 			<extension>

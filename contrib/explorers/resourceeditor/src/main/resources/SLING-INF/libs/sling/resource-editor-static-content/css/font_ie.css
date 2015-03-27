@@ -2,6 +2,6 @@
   font-family: 'Michroma';
   font-style: normal;
   font-weight: 400;
-  src: url(../font/Michroma.eot);
-  src: local('Michroma'), url(../font/Michroma.eot) format('embedded-opentype'), url(../font/Michroma.woff) format('woff');
+  src: url(../font/3rd_party/Michroma.eot);
+  src: local('Michroma'), url(../font/3rd_party/Michroma.eot) format('embedded-opentype'), url(../font/3rd_party/Michroma.woff) format('woff');
 }
