@@ -67,13 +67,17 @@ function start () {
 
 	# Get MVN_OPTS from crankstart env file.
 	if [ -r $CRANKSTART_ENV ] ; then
-		M2REPO=$SLING_DEPENDENCIES
+		# Define where to load dependencies from.
+		# Other packages can use ${SLING_EXEC}.${aartigactId}
+		# for dependencies to avoid name collisions.
+		# All will be aggregated here to provide a full classpath
+		M2REPO=$(find ${SLING_EXEC} -name contrib\* -type d | tr '\n' ',' | sed -e "s/,$//")
 		. $CRANKSTART_ENV
 	else
 		log_failure_msg "Missing $CRANKSTART_ENV file, cannot read crankstart env settings."
 		exit -1
 	fi
-	CRANKSTART_JAR=${SLING_DEPENDENCIES}/crankstart.jar
+	CRANKSTART_JAR=${SLING_EXEC}/contrib/crankstart.jar
 
 	# Update crankstart file if needed
 	log_daemon_msg "Starting sling serices"
