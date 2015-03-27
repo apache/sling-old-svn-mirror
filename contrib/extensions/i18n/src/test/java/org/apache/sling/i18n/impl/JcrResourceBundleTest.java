@@ -18,6 +18,8 @@
  */
 package org.apache.sling.i18n.impl;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -25,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import javax.jcr.Binary;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
@@ -35,6 +38,7 @@ import javax.jcr.query.RowIterator;
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -85,62 +89,7 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
                         @Override
                         public Resource next() {
                             final Node node = nodes.nextNode();
-                            final Resource rsrc = new AbstractResource() {
-
-                                @Override
-                                public String getResourceType() {
-                                    // TODO Auto-generated method stub
-                                    return null;
-                                }
-
-                                @Override
-                                public String getResourceSuperType() {
-                                    // TODO Auto-generated method stub
-                                    return null;
-                                }
-
-                                @Override
-                                public ResourceResolver getResourceResolver() {
-                                    // TODO Auto-generated method stub
-                                    return null;
-                                }
-
-                                @Override
-                                public ResourceMetadata getResourceMetadata() {
-                                    // TODO Auto-generated method stub
-                                    return null;
-                                }
-
-                                @Override
-                                public String getPath() {
-                                    try {
-                                        return node.getPath();
-                                    } catch ( final RepositoryException re ) {
-                                        throw new RuntimeException(re);
-                                    }
-                                }
-
-                                @Override
-                                public <AdapterType> AdapterType adaptTo(
-                                        Class<AdapterType> type) {
-                                    if ( type == ValueMap.class) {
-                                        try {
-                                            final Map<String, Object> props = new HashMap<String, Object>();
-                                            if ( node.hasProperty(JcrResourceBundle.PROP_LANGUAGE) ) {
-                                                props.put(JcrResourceBundle.PROP_LANGUAGE, node.getProperty(JcrResourceBundle.PROP_LANGUAGE).getString());
-                                            }
-                                            if ( node.hasProperty(JcrResourceBundle.PROP_BASENAME) ) {
-                                                props.put(JcrResourceBundle.PROP_BASENAME, node.getProperty(JcrResourceBundle.PROP_BASENAME).getString());
-                                            }
-                                            return (AdapterType)new ValueMapDecorator(props);
-                                        } catch ( final RepositoryException re ) {
-                                            throw new RuntimeException(re);
-                                        }
-                                    }
-                                    return super.adaptTo(type);
-                                }
-                            };
-                            return rsrc;
+                            return new TestResource(node);
                         }
 
                         @Override
@@ -163,7 +112,17 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
 
             @Override
             public Resource getResource(String path) {
-                // TODO Auto-generated method stub
+                try {
+                    Node n = getSession().getNode(path);
+                    if (n != null) {
+                        return new TestResource(n);
+                    }
+
+                } catch (NamingException ne) {
+                     //ignore
+                } catch (RepositoryException re) {
+                    //ignore
+                }
                 return null;
             }
 
@@ -550,6 +509,52 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
         assertEquals(MESSAGES_DE.size(), counter);
     }
 
+    public void test_outside_search_path() throws Exception {
+        Node libsI18n = getSession().getRootNode().getNode("libs/i18n");
+        libsI18n.remove();
+
+        // dict outside search path: /content
+        Node contentI18n = getSession().getRootNode().addNode("content").addNode("i18n", "nt:unstructured");
+        Node de = contentI18n.addNode("de", "nt:folder");
+        de.addMixin("mix:language");
+        de.setProperty("jcr:language", "de");
+        for (Message msg : MESSAGES_DE.values()) {
+            msg.add(de);
+        }
+        getSession().save();
+
+        // test if /content dictionary is read at all
+        JcrResourceBundle bundle = new JcrResourceBundle(new Locale("de"), null, resolver);
+        for (Message msg : MESSAGES_DE.values()) {
+            assertEquals(msg.message, bundle.getString(msg.key));
+        }
+
+        // now overwrite /content dict in /libs
+        libsI18n = getSession().getRootNode().getNode("libs").addNode("i18n", "nt:unstructured");
+        de = libsI18n.addNode("de", "nt:folder");
+        de.addMixin("mix:language");
+        de.setProperty("jcr:language", "de");
+        for (Message msg : MESSAGES_DE_APPS.values()) {
+            msg.add(de);
+        }
+        getSession().save();
+
+        // test if /libs (something in the search path) overlays /content (outside the search path)
+        bundle = new JcrResourceBundle(new Locale("de"), null, resolver);
+        for (Message msg : MESSAGES_DE_APPS.values()) {
+            assertEquals(msg.message, bundle.getString(msg.key));
+        }
+
+        // test getKeys
+        Enumeration<String> keys = bundle.getKeys();
+        int counter = 0;
+        while (keys.hasMoreElements()) {
+            counter++;
+            String key = keys.nextElement();
+            assertTrue("bundle returned key that is not supposed to be there: " + key, MESSAGES_DE_APPS.containsKey(key));
+        }
+        assertEquals(MESSAGES_DE.size(), counter);
+    }
 
     public void test_basename() throws Exception {
         // create another de lib with a basename set
@@ -579,4 +584,119 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
         }
         assertEquals(MESSAGES_DE.size(), counter);
     }
+
+    public void test_json_dictionary() throws Exception {
+        Node appsI18n = getSession().getRootNode().addNode("apps").addNode("i18n", "nt:unstructured");
+        Node deJson = appsI18n.addNode("de.json", "nt:file");
+        deJson.addMixin("mix:language");
+        deJson.setProperty("jcr:language", "de");
+        Node content = deJson.addNode("jcr:content", "nt:resource");
+        content.setProperty("jcr:mimeType", "application/json");
+
+        // manually creating json file, good enough for the test
+        StringBuilder json = new StringBuilder();
+        json.append("{");
+        for (Message msg : MESSAGES_DE_APPS.values()) {
+            json.append("\"").append(msg.key).append("\": \"");
+            json.append(msg.message).append("\",\n");
+        }
+        json.append("}");
+
+        InputStream stream = new ByteArrayInputStream(json.toString().getBytes());
+        Binary binary = getSession().getValueFactory().createBinary(stream);
+        content.setProperty("jcr:data", binary);
+        getSession().save();
+
+        // test getString
+        JcrResourceBundle bundle = new JcrResourceBundle(new Locale("de"), null, resolver);
+        for (Message msg : MESSAGES_DE_APPS.values()) {
+            assertEquals(msg.message, bundle.getString(msg.key));
+        }
+
+        // test getKeys
+        Enumeration<String> keys = bundle.getKeys();
+        int counter = 0;
+        while (keys.hasMoreElements()) {
+            counter++;
+            String key = keys.nextElement();
+            assertTrue("bundle returned key that is not supposed to be there: " + key, MESSAGES_DE_APPS.containsKey(key));
+        }
+        assertEquals(MESSAGES_DE.size(), counter);
+    }
+
+    private class TestResource extends AbstractResource {
+
+        private Node node = null;
+        public TestResource(Node xnode) {
+            super();
+            node = xnode;
+        }
+
+        @Override
+        public String getResourceType() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public String getResourceSuperType() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public ResourceResolver getResourceResolver() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public ResourceMetadata getResourceMetadata() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public String getPath() {
+            try {
+                return node.getPath();
+            } catch ( final RepositoryException re ) {
+                throw new RuntimeException(re);
+            }
+        }
+
+        @Override
+        public <AdapterType> AdapterType adaptTo(
+                Class<AdapterType> type) {
+            if ( type == ValueMap.class) {
+                try {
+                    final Map<String, Object> props = new HashMap<String, Object>();
+                    if ( node.hasProperty(JcrResourceBundle.PROP_LANGUAGE) ) {
+                        props.put(JcrResourceBundle.PROP_LANGUAGE, node.getProperty(JcrResourceBundle.PROP_LANGUAGE).getString());
+                    }
+                    if ( node.hasProperty(JcrResourceBundle.PROP_BASENAME) ) {
+                        props.put(JcrResourceBundle.PROP_BASENAME, node.getProperty(JcrResourceBundle.PROP_BASENAME).getString());
+                    }
+                    return (AdapterType)new ValueMapDecorator(props);
+                } catch ( final RepositoryException re ) {
+                    throw new RuntimeException(re);
+                }
+            }
+            if (type == InputStream.class) {
+                try {
+                    if (node.hasNode(JcrConstants.JCR_CONTENT)) {
+                        return (AdapterType) node.getNode(JcrConstants.JCR_CONTENT).getProperty(JcrConstants.JCR_DATA).getBinary().getStream();
+                    } else {
+                        return null;
+                    }
+                } catch (RepositoryException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            if (type == Node.class) {
+                return (AdapterType)node;
+            }
+            return super.adaptTo(type);
+        }
+    };
 }
