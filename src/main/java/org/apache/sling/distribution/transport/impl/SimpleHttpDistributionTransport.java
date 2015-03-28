@@ -147,14 +147,15 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
             try {
 
                 int pulls = 0;
-                while ((httpResponse = executor.execute(req).returnResponse())
-                        .getStatusLine().getStatusCode() == 200
-                        && pulls < maxNumberOfPackages) {
+                while (pulls < maxNumberOfPackages
+                        && (httpResponse = executor.execute(req).returnResponse()).getStatusLine().getStatusCode() == 200) {
                     HttpEntity entity = httpResponse.getEntity();
                     if (entity != null) {
                         final DistributionPackage responsePackage = packageBuilder.readPackage(resourceResolver, entity.getContent());
                         if (responsePackage != null) {
                             responsePackage.getInfo().setOrigin(distributionURI);
+                            log.debug("pulled package no {} with info {}", pulls, responsePackage.getInfo());
+
                             result.add(responsePackage);
                         } else {
                             log.warn("responsePackage is null");
