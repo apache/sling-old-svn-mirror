@@ -1,5 +1,13 @@
 module.exports = function(grunt) {
+	
+	var staticContentFolder = '../src/main/resources/SLING-INF/libs/sling/resource-editor-static-content';
+	
 	grunt.initConfig({
+		env : {
+		    build : {
+		    	PHANTOMJS_BIN : 'node_modules/karma-phantomjs-launcher/node_modules/phantomjs/lib/phantom/bin/phantomjs',
+		    }
+		},
 	    less: {
 	      compileCore: {
 	        options: {
@@ -7,10 +15,10 @@ module.exports = function(grunt) {
 	          sourceMap: true,
 	          outputSourceFiles: true,
 	          sourceMapURL: 'bootstrap.css.map',
-	          sourceMapFilename: '../src/main/resources/SLING-INF/libs/sling/resource-editor-static-content/css/bootstrap.css.map'
+	          sourceMapFilename: staticContentFolder+'/css/bootstrap.css.map'
 	        },
 	        src: '../src/main/less/reseditor.less',
-	        dest: '../src/main/resources/SLING-INF/libs/sling/resource-editor-static-content/css/bootstrap.css'
+	        dest: staticContentFolder+'/css/bootstrap.css'
 	      }
 	    }, 
 	    watch: {
@@ -33,7 +41,7 @@ module.exports = function(grunt) {
 		                  'bootbox/bootbox.min.js',
 		                  'jstree/dist/jstree.min.js'
 		                 ], // Actual pattern(s) to match.
-		            dest: '../src/main/resources/SLING-INF/libs/sling/resource-editor-static-content/js/3rd_party',   // Destination path prefix.
+		            dest: staticContentFolder+'/js/3rd_party',   // Destination path prefix.
 		            flatten: true
 		          },
 		        ],
@@ -48,49 +56,31 @@ module.exports = function(grunt) {
 	                  'select2/select2.png',
 	                  'animate.css/animate.min.css',
 	                 ], // Actual pattern(s) to match.
-	            dest: '../src/main/resources/SLING-INF/libs/sling/resource-editor-static-content/css/3rd_party',   // Destination path prefix.
+	            dest: staticContentFolder+'/css/3rd_party',   // Destination path prefix.
 	            flatten: true
 	          },
 	        ],
 	      }
 	    },
-	    jasmine: {
-	        main: {
-	          src: ['../src/main/resources/SLING-INF/libs/sling/resource-editor-static-content/js/jquery.min.js',
-	                '../src/main/resources/SLING-INF/libs/sling/resource-editor-static-content/js/**/*.js'],
-	          options: {
-	            specs: '../src/test/javascript/spec/*spec.js',
-	            helpers: '../src/test/javascript/spec/*Helper.js',
-	            version: '2.2.1',
-	            summary: true
-	          }
-	        }
-	    },
 	    karma: {
 	    	options: {
 	    	    runnerPort: 9999,
 	    	    singleRun: true,
-	    	    browsers: ['PhantomJS'],
-	    	    plugins : ['karma-jasmine', 'karma-phantomjs-launcher'],
-	    	    frameworks: ['jasmine']
+	    	    browsers: ['Chrome', 'Firefox', 'PhantomJS'],
+	    	    plugins : ['karma-jasmine', 'karma-phantomjs-launcher', 'karma-chrome-launcher', 'karma-firefox-launcher', 'karma-ie-launcher'],
+	    	    frameworks: ['jasmine'],
+			    files: ['../src/test/javascript/spec/*spec.js',
+			            staticContentFolder+'/js/3rd_party/jquery.min.js',
+			            staticContentFolder+'/js/**/*.js'
+			           ]
+	    	},  
+	    	desktop_build: {
+	    	    singleRun: true,
+	    	    browsers: ['Chrome', 'Firefox']
 	    	},
 	    	build: {
 	    	    singleRun: true,
-	    	    files: [
-	    	            { src: ['../src/main/resources/SLING-INF/libs/sling/resource-editor-static-content/js/3rd_party/jquery.min.js']},
-	    	            { src: ['../src/test/javascript/spec/*spec.js']},
-	    	            { src: ['../src/main/resources/SLING-INF/libs/sling/resource-editor-static-content/js/**/*.js']}
-	    	          ]
-	    	},
-	    	local_build: {
-	    	    singleRun: true,
-	    	    browsers: ['Chrome', 'Firefox', 'PhantomJS'],
-	    	    plugins : ['karma-jasmine', 'karma-phantomjs-launcher', 'karma-chrome-launcher', 'karma-firefox-launcher', 'karma-ie-launcher'],
-	    	    files: [
-	    	            { src: ['../src/test/javascript/spec/*spec.js']},
-	    	            { src: ['../src/main/resources/SLING-INF/libs/sling/resource-editor-static-content/js/3rd_party/jquery.min.js']},
-	    	            { src: ['../src/main/resources/SLING-INF/libs/sling/resource-editor-static-content/js/**/*.js']}
-	    	          ]
+	    	    browsers: ['PhantomJS']
 	    	},
 	    	watch: {
 	    	    reporters: 'dots',
@@ -101,9 +91,6 @@ module.exports = function(grunt) {
 	    },
         webdriver: {
             options: {
-//                desiredCapabilities: {
-//                    browserName: 'chrome'
-//                }
             },
             chrome: {
                 tests: ['../src/test/javascript/e2e/spec/**/*spec.js'],
@@ -129,11 +116,11 @@ module.exports = function(grunt) {
     // These plugins provide necessary tasks.
     require('load-grunt-tasks')(grunt, { scope: 'devDependencies' });
 
-//	grunt.registerTask('build', ['less', 'copy', 'jasmine', 'karma:build']);
-	grunt.registerTask('build', ['less', 'copy', 'karma:build']);
+	grunt.registerTask('setup', ['env:build']);
+	grunt.registerTask('build', ['setup', 'less', 'copy', 'karma:build']);
 
 	grunt.registerTask('default', ['build']);
 	
 
-    grunt.registerTask('local_build', ['less', 'copy', 'karma:local_build', 'webdriver:chrome', 'webdriver:firefox', 'build']);
+    grunt.registerTask('desktop_build', ['setup', 'less', 'copy', 'karma:desktop_build', 'webdriver:chrome', 'webdriver:firefox']);
 };
