@@ -2,5 +2,5 @@
   font-family: 'Michroma';
   font-style: normal;
   font-weight: 400;
-  src: local('Michroma'), url(../font/3rd_party/Michroma.woff) format('woff');
+  src: local('Michroma'), url(../3rd_party/font/Michroma.woff) format('woff');
 }

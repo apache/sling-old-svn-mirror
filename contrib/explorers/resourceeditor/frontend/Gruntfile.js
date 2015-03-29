@@ -15,10 +15,10 @@ module.exports = function(grunt) {
 	          sourceMap: true,
 	          outputSourceFiles: true,
 	          sourceMapURL: 'bootstrap.css.map',
-	          sourceMapFilename: staticContentFolder+'/css/bootstrap.css.map'
+	          sourceMapFilename: staticContentFolder+'/generated/css/bootstrap.css.map'
 	        },
 	        src: '../src/main/less/reseditor.less',
-	        dest: staticContentFolder+'/css/bootstrap.css'
+	        dest: staticContentFolder+'/generated/css/bootstrap.css'
 	      }
 	    }, 
 	    watch: {
@@ -41,7 +41,7 @@ module.exports = function(grunt) {
 		                  'bootbox/bootbox.min.js',
 		                  'jstree/dist/jstree.min.js'
 		                 ], // Actual pattern(s) to match.
-		            dest: staticContentFolder+'/js/3rd_party',   // Destination path prefix.
+		            dest: staticContentFolder+'/generated/3rd_party/js',   // Destination path prefix.
 		            flatten: true
 		          },
 		        ],
@@ -56,7 +56,7 @@ module.exports = function(grunt) {
 	                  'select2/select2.png',
 	                  'animate.css/animate.min.css',
 	                 ], // Actual pattern(s) to match.
-	            dest: staticContentFolder+'/css/3rd_party',   // Destination path prefix.
+	            dest: staticContentFolder+'/generated/3rd_party/css',   // Destination path prefix.
 	            flatten: true
 	          },
 	        ],
