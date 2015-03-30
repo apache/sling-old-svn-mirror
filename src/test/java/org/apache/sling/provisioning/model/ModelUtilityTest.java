@@ -62,5 +62,10 @@ public class ModelUtilityTest {
         assertEquals(2, model.getFeature("f").getRunMode().getSettings().size());
         assertEquals("a", model.getFeature("f").getRunMode().getSettings().get("key.a"));
         assertEquals("c", model.getFeature("f").getRunMode().getSettings().get("key.c"));
+
+        assertNotNull(model.getFeature("f").getRunMode("myrunmode"));
+        final List<Configuration> cfgs2 = U.assertConfigurationsInRunMode(model.getFeature("f").getRunMode("myrunmode"), 2);
+        assertEquals("org.sling.service.runmode.A", cfgs2.get(0).getPid());
+        assertEquals("org.sling.service.runmode.C", cfgs2.get(1).getPid());
     }
 }
