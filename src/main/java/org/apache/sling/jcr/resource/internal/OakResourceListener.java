@@ -80,7 +80,8 @@ public class OakResourceListener extends NodeObserver implements Closeable {
             final ObservationListenerSupport support,
             final BundleContext bundleContext,
             final Executor executor,
-            final PathMapper pathMapper)
+            final PathMapper pathMapper,
+            final int  observationQueueLength)
     throws RepositoryException {
         super("/", "jcr:primaryType", "sling:resourceType", "sling:resourceSuperType");
         this.support = support;
@@ -91,7 +92,15 @@ public class OakResourceListener extends NodeObserver implements Closeable {
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling JCR Observation Listener for Oak");
 
-        final Observer observer = new BackgroundObserver(this, executor);
+        final Observer observer = new BackgroundObserver(this, executor, observationQueueLength) {
+            @Override
+            protected void added(int queueSize) {
+                if (queueSize == observationQueueLength) {
+                    logger.warn("Revision queue for observer {} is full (max = {}). Further revisions will be compacted.",
+                            getClass().getName(), observationQueueLength);
+                }
+            }
+        };
         serviceRegistration = bundleContext.registerService(Observer.class.getName(), observer, props);
     }
 
