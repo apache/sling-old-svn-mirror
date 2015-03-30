@@ -55,6 +55,10 @@ module.exports = function(grunt) {
 	                  'select2/select2.css',
 	                  'select2/select2.png',
 	                  'animate.css/animate.min.css',
+	                  'jstree/dist/themes/default/style.min.css',
+	                  'jstree/dist/themes/default/32px.png',
+	                  'jstree/dist/themes/default/40px.png',
+	                  'jstree/dist/themes/default/throbber.gif',
 	                 ], // Actual pattern(s) to match.
 	            dest: staticContentFolder+'/generated/3rd_party/css',   // Destination path prefix.
 	            flatten: true
@@ -70,7 +74,8 @@ module.exports = function(grunt) {
 	    	    plugins : ['karma-jasmine', 'karma-phantomjs-launcher', 'karma-chrome-launcher', 'karma-firefox-launcher', 'karma-ie-launcher'],
 	    	    frameworks: ['jasmine'],
 			    files: ['../src/test/javascript/spec/*spec.js',
-			            staticContentFolder+'/js/3rd_party/jquery.min.js',
+			            staticContentFolder+'/generated/3rd_party/js/jquery.min.js',
+			            staticContentFolder+'/generated/3rd_party/js/**/*.js',
 			            staticContentFolder+'/js/**/*.js'
 			           ]
 	    	},  

@@ -14,9 +14,9 @@
 <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link href='<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/3rd_party/css/font.css' rel='stylesheet' type='text/css'>
+<link href='<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/css/font.css' rel='stylesheet' type='text/css'>
  <!--[if lt IE 9]>
-<link href='<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/3rd_party/css/font_ie.css' rel='stylesheet' type='text/css'>
+<link href='<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/css/font_ie.css' rel='stylesheet' type='text/css'>
   <![endif]-->
   
 <!-- 
@@ -43,7 +43,8 @@ original
 <script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/generated/3rd_party/js/urlEncode.js"></script>
  -->
 
-<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/css/style.css">
+<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/generated/3rd_party/css/style.min.css">
+<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/css/jstree.reseditor.css">
 <link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/generated/css/bootstrap.css">
 <link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/css/bootbox.reseditor.css">
 <link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/generated/3rd_party/css/animate.min.css">
