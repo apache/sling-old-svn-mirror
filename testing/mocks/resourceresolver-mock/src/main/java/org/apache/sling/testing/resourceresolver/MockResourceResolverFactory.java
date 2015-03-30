@@ -28,10 +28,13 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.osgi.service.event.EventAdmin;
 
+
 /**
  * Simple resource resolver factory
  */
 public class MockResourceResolverFactory implements ResourceResolverFactory {
+    
+    private static final String ROOT_PRIMARY_TYPE="rep:root";
 
     /** We use a linked hash map to preserve creation order. */
     private final Map<String, Map<String, Object>> resources = new LinkedHashMap<String, Map<String, Object>>();
@@ -59,7 +62,9 @@ public class MockResourceResolverFactory implements ResourceResolverFactory {
      */
     public MockResourceResolverFactory(final MockResourceResolverFactoryOptions options) {
         this.options = options;
-        resources.put("/", new HashMap<String, Object>());
+        Map<String, Object> props= new HashMap<String,Object>();
+        props.put(MockResource.JCR_PRIMARYTYPE, ROOT_PRIMARY_TYPE);
+        resources.put("/", props);
     }
 
     @Override
