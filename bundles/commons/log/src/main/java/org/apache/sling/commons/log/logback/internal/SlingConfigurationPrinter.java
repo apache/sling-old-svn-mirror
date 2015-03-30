@@ -90,7 +90,7 @@ public class SlingConfigurationPrinter {
      * if some complex rotation logic is used where rotated file get different names
      * or get created in different directory then those files would not be
      * included
-     * 
+     *
      * @see org.apache.felix.webconsole.AttachmentProvider#getAttachments(String)
      */
     @SuppressWarnings("UnusedDeclaration")
@@ -128,6 +128,7 @@ public class SlingConfigurationPrinter {
             final File dir = file.getParentFile();
             final String baseName = file.getName();
             return dir.listFiles(new FilenameFilter() {
+                @Override
                 public boolean accept(File dir, String name) {
                     return name.startsWith(baseName);
                 }

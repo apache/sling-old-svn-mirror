@@ -57,7 +57,28 @@ public class XmlUtil {
         return "Source not found";
     }
 
-    public static String escapeXml(String xml) {
-        return xml.replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\\$", "&#37;");
+    public static String escapeXml(final String input) {
+        if (input == null) {
+            return null;
+        }
+
+        final StringBuilder b = new StringBuilder(input.length());
+        for(int i = 0;i  < input.length(); i++) {
+            final char c = input.charAt(i);
+            if (c == '&') {
+                b.append("&amp;");
+            } else if(c == '<') {
+                b.append("&lt;");
+            } else if(c == '>') {
+                b.append("&gt;");
+            } else if(c == '"') {
+                b.append("&quot;");
+            } else if(c == '\'') {
+                b.append("&apos;");
+            } else {
+                b.append(c);
+            }
+        }
+        return b.toString().replaceAll("\\$", "&#37;");
     }
 }
