@@ -42,7 +42,7 @@ public class RootResourceTypeTest {
     @Test
     public void testIsResourceResolver() {
         Resource root= resourceResolver.getResource("/");
-        Assert.assertTrue(root.isResourceType("jcr:root"));
+        Assert.assertTrue(root.isResourceType("rep:root"));
     }
 
 }
