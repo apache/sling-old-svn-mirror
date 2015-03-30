@@ -12,3 +12,5 @@ jcrbrowser/src/main/resources/SLING-INF/libs/jcrbrowser/content/css/bootstrap.cs
 jcrbrowser/.externalToolBuilders/Maven_Ant_Builder.launch
 jcrbrowser/maven-eclipse.xml
 org.sboehme.treeview/.externalToolBuilders/Maven_Ant_Builder.launch
+/frontend/node
+/frontend/node_modules
