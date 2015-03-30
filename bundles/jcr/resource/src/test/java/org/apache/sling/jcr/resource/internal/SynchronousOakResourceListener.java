@@ -45,7 +45,7 @@ public class SynchronousOakResourceListener extends OakResourceListener {
             final ServiceTracker tracker,
             final Executor executor)
             throws LoginException, RepositoryException, NoSuchFieldException {
-        super("/", new ObservationListenerSupport(bundleContext, repo), bundleContext, executor, new PathMapperImpl());
+        super("/", new ObservationListenerSupport(bundleContext, repo), bundleContext, executor, new PathMapperImpl(), 1000);
         PrivateAccessor.setField(this.support, "resourceResolver", resolver);
         PrivateAccessor.setField(this.support, "eventAdminTracker", tracker);
     }
