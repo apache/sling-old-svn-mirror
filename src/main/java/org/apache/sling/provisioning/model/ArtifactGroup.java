@@ -45,7 +45,7 @@ public class ArtifactGroup extends ItemList<Artifact>
     }
 
     /**
-     * Search an artifact with the same groupId, artifactId, version, type and classifier.
+     * Search an artifact with the same groupId, artifactId, type and classifier.
      * Version is not considered.
      * @param template A template artifact
      * @return The artifact or {@code null}.
