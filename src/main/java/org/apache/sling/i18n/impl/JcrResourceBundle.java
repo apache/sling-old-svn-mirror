@@ -32,15 +32,15 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.util.TraversingItemVisitor;
 
 import org.apache.jackrabbit.commons.json.JsonHandler;
 import org.apache.jackrabbit.commons.json.JsonParser;
-import org.apache.jackrabbit.util.ISO9075;
-import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +49,7 @@ public class JcrResourceBundle extends ResourceBundle {
 
     private static final Logger log = LoggerFactory.getLogger(JcrResourceBundle.class);
 
-    static final String JCR_PATH = "jcr:path";
+    static final String NT_MESSAGE = "sling:Message";
 
     static final String PROP_KEY = "sling:key";
 
@@ -58,14 +58,6 @@ public class JcrResourceBundle extends ResourceBundle {
     static final String PROP_BASENAME = "sling:basename";
 
     static final String PROP_LANGUAGE = "jcr:language";
-
-    /**
-     * java.util.Formatter pattern to build the XPath query to search for
-     * messages in a given root path (%s argument).
-     *
-     * @see #loadFully(ResourceResolver, Set, Set)
-     */
-    private static final String QUERY_MESSAGES_FORMAT = "/jcr:root%s//element(*,sling:Message)";
 
     static final String QUERY_LANGUAGE_ROOTS = "//element(*,mix:language)[@jcr:language]";
 
@@ -202,7 +194,7 @@ public class JcrResourceBundle extends ResourceBundle {
             if (dictionaryResource.getName().endsWith(".json")) {
                 loadJsonDictionary(dictionaryResource, dictionary);
             } else {
-                loadSlingMessageDictionary(resolver, root, dictionary);
+                loadSlingMessageDictionary(dictionaryResource, dictionary);
             }
 
             if (!dictionary.isEmpty()) {
@@ -293,34 +285,29 @@ public class JcrResourceBundle extends ResourceBundle {
         }
     }
 
-    private void loadSlingMessageDictionary(ResourceResolver resourceResolver, String path, Map<String, Object> targetDictionary) {
-        // run query for sling:Message nodes
-        String dictQuery = String.format(QUERY_MESSAGES_FORMAT, ISO9075.encodePath(path));
+    private void loadSlingMessageDictionary(Resource dictionaryResource, final Map<String, Object> targetDictionary) {
+        log.info("Loading sling:Message dictionary: {}", dictionaryResource.getPath());
 
-        log.info("Loading sling:Message dictionary: {}", path);
-        log.info("Executing query {}", dictQuery);
-
-        try {
-            // do an XPath query because this won't go away soon and still
-            // (2011/04/04) is the fastest query language ...
-            Iterator<Map<String, Object>> queryResult = resourceResolver.queryResources(dictQuery, "xpath");
-
-            while (queryResult.hasNext()) {
-                final Map<String, Object> row = queryResult.next();
-                if (row.containsKey(PROP_VALUE)) {
-                    final String jcrPath = (String) row.get(JCR_PATH);
-                    String key = (String) row.get(PROP_KEY);
-
-                    if (key == null) {
-                        key = ResourceUtil.getName(jcrPath);
+        TraversingItemVisitor.Default visitor = new TraversingItemVisitor.Default() {
+            @Override
+            protected void entering(Node node, int level) throws RepositoryException {
+                if (node.isNodeType(NT_MESSAGE) && node.hasProperty(PROP_VALUE)) {
+                    String key;
+                    if (node.hasProperty(PROP_KEY)) {
+                        key = node.getProperty(PROP_KEY).getString();
+                    } else {
+                        key = node.getName();
                     }
-
-                    targetDictionary.put(key, row.get(PROP_VALUE));
+                    String value = node.getProperty(PROP_VALUE).getString();
+                    targetDictionary.put(key, value);
                 }
             }
-
-        } catch (final SlingException se) {
-            log.error("Exception during resource query " + dictQuery, se);
+        };
+        try {
+            Node node = dictionaryResource.adaptTo(Node.class);
+            visitor.visit(node);
+        } catch (RepositoryException e) {
+            log.error("Could not read sling:Message dictionary: " + dictionaryResource.getPath(), e);
         }
     }
 
