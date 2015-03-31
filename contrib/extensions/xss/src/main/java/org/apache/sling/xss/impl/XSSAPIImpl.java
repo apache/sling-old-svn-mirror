@@ -16,24 +16,36 @@
  ******************************************************************************/
 package org.apache.sling.xss.impl;
 
+import java.io.StringReader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.commons.json.JSONArray;
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.xss.ProtectionContext;
 import org.apache.sling.xss.XSSAPI;
 import org.apache.sling.xss.XSSFilter;
 import org.owasp.encoder.Encode;
 import org.owasp.esapi.ESAPI;
 import org.owasp.esapi.Validator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xml.sax.InputSource;
+import org.xml.sax.XMLReader;
 
 @Component
 @Service(value = XSSAPI.class)
 public class XSSAPIImpl implements XSSAPI {
+    private static final Logger LOGGER = LoggerFactory.getLogger(XSSAPIImpl.class);
 
     // =============================================================================================
     // VALIDATORS
@@ -45,6 +57,12 @@ public class XSSAPIImpl implements XSSAPI {
     private Validator validator = ESAPI.validator();
 
     private static final Pattern PATTERN_AUTO_DIMENSION = Pattern.compile("['\"]?auto['\"]?");
+
+    private static SAXParserFactory factory = SAXParserFactory.newInstance();
+    static {
+        factory.setValidating(false);
+        factory.setNamespaceAware(true);
+    }
 
     /**
      * @see org.apache.sling.xss.XSSAPI#getValidInteger(String, int)
@@ -273,6 +291,60 @@ public class XSSAPIImpl implements XSSAPI {
             return comment;
         }
         return defaultComment;
+    }
+
+    /**
+     * @see org.apache.sling.xss.XSSAPI#getValidJSON(String, String)
+     */
+    public String getValidJSON(String json, String defaultJson) {
+        if (json == null) {
+            return getValidJSON(defaultJson, "");
+        }
+        json = json.trim();
+        if ("".equals(json)) {
+            return "";
+        }
+        int curlyIx = json.indexOf("{");
+        int straightIx = json.indexOf("[");
+        if (curlyIx >= 0 && (curlyIx < straightIx || straightIx < 0)) {
+            try {
+                JSONObject obj = new JSONObject(json);
+                return obj.toString();
+            } catch (JSONException e) {
+                LOGGER.debug("JSON validation failed: " + e.getMessage(), e);
+            }
+        } else {
+            try {
+                JSONArray arr = new JSONArray(json);
+                return arr.toString();
+            } catch (JSONException e) {
+                LOGGER.debug("JSON validation failed: " + e.getMessage(), e);
+            }
+        }
+        return getValidJSON(defaultJson, "");
+    }
+
+    /**
+     * @see org.apache.sling.xss.XSSAPI#getValidXML(String, String)
+     */
+    public String getValidXML(String xml, String defaultXml) {
+        if (xml == null) {
+            return getValidXML(defaultXml, "");
+        }
+        xml = xml.trim();
+        if ("".equals(xml)) {
+            return "";
+        }
+
+        try {
+            SAXParser parser = factory.newSAXParser();
+            XMLReader reader = parser.getXMLReader();
+            reader.parse(new InputSource(new StringReader(xml)));
+            return xml;
+        } catch (Exception e) {
+            LOGGER.debug("XML validation failed: " + e.getMessage(), e);
+        }
+        return getValidXML(defaultXml, "");
     }
 
     // =============================================================================================
