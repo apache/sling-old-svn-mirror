@@ -136,6 +136,8 @@ under the License.
                             <goal>jdeb</goal>
                         </goals>
                         <configuration>
+                            <snapshotExpand>true</snapshotExpand>
+                            <snapshotEnv>BUILD_NUMBER</snapshotEnv>
                             <classifier>all</classifier>
                             <dataSet>
                                 <!-- etc/{default,logrotate.d}/sling - conf files -->
