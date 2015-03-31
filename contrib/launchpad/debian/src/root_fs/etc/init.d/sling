@@ -67,11 +67,16 @@ function start () {
 
 	# Get MVN_OPTS from crankstart env file.
 	if [ -r $CRANKSTART_ENV ] ; then
-		# Define where to load dependencies from.
-		# Other packages can use ${SLING_EXEC}.${aartigactId}
+		# Other packages can use ${SLING_EXEC}.${artifactId}
 		# for dependencies to avoid name collisions.
-		# All will be aggregated here to provide a full classpath
-		M2REPO=$(find ${SLING_EXEC} -name contrib\* -type d | tr '\n' ',' | sed -e "s/,$//")
+		# All will be aggregated here to provide a fully
+		# populated local repo.
+		M2REPO=${SLING_EXEC}/repo
+		rm -rf ${M2REPO}
+		mkdir ${M2REPO}
+		for f in ${SLING_EXEC}/contrib* ; do
+			cp -sR $f/* ${M2REPO}
+		done
 		. $CRANKSTART_ENV
 	else
 		log_failure_msg "Missing $CRANKSTART_ENV file, cannot read crankstart env settings."
