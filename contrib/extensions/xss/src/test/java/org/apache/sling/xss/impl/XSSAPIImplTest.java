@@ -61,6 +61,7 @@ public class XSSAPIImplTest {
             Whitebox.setInternalState(xssFilter, "defaultHandler", mockPolicyHandler);
 
             xssAPI = new XSSAPIImpl();
+            Whitebox.invokeMethod(xssAPI, "activate");
             Field filterField = XSSAPIImpl.class.getDeclaredField("xssFilter");
             filterField.setAccessible(true);
             filterField.set(xssAPI, xssFilter);

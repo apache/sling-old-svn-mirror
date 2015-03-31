@@ -23,7 +23,9 @@ import java.util.regex.Pattern;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -47,10 +49,6 @@ import org.xml.sax.XMLReader;
 public class XSSAPIImpl implements XSSAPI {
     private static final Logger LOGGER = LoggerFactory.getLogger(XSSAPIImpl.class);
 
-    // =============================================================================================
-    // VALIDATORS
-    //
-
     @Reference
     private XSSFilter xssFilter = null;
 
@@ -58,11 +56,25 @@ public class XSSAPIImpl implements XSSAPI {
 
     private static final Pattern PATTERN_AUTO_DIMENSION = Pattern.compile("['\"]?auto['\"]?");
 
-    private static SAXParserFactory factory = SAXParserFactory.newInstance();
-    static {
+    private SAXParserFactory factory;
+
+    @Activate
+    @SuppressWarnings("unused")
+    protected void activate() {
+        factory = SAXParserFactory.newInstance();
         factory.setValidating(false);
         factory.setNamespaceAware(true);
     }
+
+    @Deactivate
+    @SuppressWarnings("unused")
+    protected void deactivate() {
+        factory = null;
+    }
+
+    // =============================================================================================
+    // VALIDATORS
+    //
 
     /**
      * @see org.apache.sling.xss.XSSAPI#getValidInteger(String, int)
