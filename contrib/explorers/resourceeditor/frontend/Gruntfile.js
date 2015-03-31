@@ -1,6 +1,9 @@
 module.exports = function(grunt) {
-	
+
 	var staticContentFolder = '../src/main/resources/SLING-INF/libs/sling/resource-editor-static-content';
+	var jspFolder = '../src/main/resources/SLING-INF/libs/sling/resource-editor';
+	var e2eTestSpecFolder = '../src/test/javascript/e2e/spec/**/*spec.js';
+	//console.log(grunt.option('host'));
 	
 	grunt.initConfig({
 		env : {
@@ -25,6 +28,22 @@ module.exports = function(grunt) {
 			less : {
 				files : '../src/main/less/**/*.less',
 				tasks : [ 'less' ],
+			},
+			all : {
+				files : ['../src/main/less/**/*.less', 
+				         '../src/test/javascript/**/*spec.js',
+				         staticContentFolder+'/js/**/*.js',
+				         jspFolder+'/*.*'
+				         ],
+				tasks : [ 'desktop_build' ],
+			},
+			e2e : {
+				files : ['../src/main/less/**/*.less', 
+				         '../src/test/javascript/**/*spec.js',
+				         staticContentFolder+'/js/**/*.js',
+				         jspFolder+'/*.*'
+				         ],
+				tasks : [ 'webdriver:chrome', 'webdriver:firefox' ],
 			}
 	    },
 	    _comment:'The google web fonts could be downloaded and copied via grunt-goog-webfont-dl. But goog-webfont-dl directly points to the global #!/usr/bin/env node and not to the local one.',
@@ -96,9 +115,11 @@ module.exports = function(grunt) {
 	    },
         webdriver: {
             options: {
+            	host: 'localhost',
+            	port: 8080
             },
             chrome: {
-                tests: ['../src/test/javascript/e2e/spec/**/*spec.js'],
+                tests: [e2eTestSpecFolder],
                 options: {
                     // overwrite default settings 
                     desiredCapabilities: {
@@ -107,7 +128,7 @@ module.exports = function(grunt) {
                 }
             },
             firefox: {
-                tests: ['../src/test/javascript/e2e/spec/**/*spec.js'],
+                tests: [e2eTestSpecFolder],
                 options: {
                     // overwrite default settings 
                     desiredCapabilities: {
@@ -115,7 +136,7 @@ module.exports = function(grunt) {
                     }
                 }
             }
-          }
+        }
 	})
 	
     // These plugins provide necessary tasks.
