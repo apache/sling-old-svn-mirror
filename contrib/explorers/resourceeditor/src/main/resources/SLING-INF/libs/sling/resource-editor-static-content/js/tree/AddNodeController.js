@@ -38,6 +38,8 @@ org.apache.sling.reseditor.AddNodeController = (function() {
 		this.showAllNodeTypes = false;
 		this.nodeTypeObjects = [];
 		this.nodeType="";
+		this.latestEnteredNodeName="";
+		this.latestEnteredResType="";
 		
 		var thatAddNodeController = this;
 		$(document).ready(function() {
@@ -63,7 +65,7 @@ org.apache.sling.reseditor.AddNodeController = (function() {
 			$("body").on('keydown', function (e) {
 		    	// see http://www.javascripter.net/faq/keycodes.htm
 				var aKey = 65;
-		    	if (e.ctrlKey && aKey==e.which) {
+		    	if (e.ctrlKey && aKey==e.which) { /*ctrl-a*/
 		    		if (thatAddNodeController.dialogShown){
 		    			thatAddNodeController.addNode();
 		    		}
@@ -74,10 +76,9 @@ org.apache.sling.reseditor.AddNodeController = (function() {
 
 	AddNodeController.prototype.addNode = function() {
 		var thatAddNodeController = this;
-		var nodeName = $("#nodeName").val().trim();
+		var nodeName = this.latestEnteredNodeName.trim();
 		var nodeType = $("#nodeType").val();
-		var resourceTypeData = $("#resourceType").select2('data');
-		var resourceType = resourceTypeData != null ? resourceTypeData.text.trim() : "";
+		var resourceType = (this.latestEnteredResType != null && this.latestEnteredResType != "") ? this.latestEnteredResType.trim() : "";
 		
 		var data = {"_charset_": "utf-8"};
 		if ("" != nodeType){
@@ -204,12 +205,20 @@ org.apache.sling.reseditor.AddNodeController = (function() {
 		$("#nodeName").select2({
 			placeholder: "Enter or select a node name",
 			allowClear: true, 
+			selectOnBlur: true,
 			data: nodeNameObjects,
 			createSearchChoice: function(searchTerm){
 				return {id:searchTerm, text:searchTerm};
 			}
 		});
-
+		$("#nodeName").on("select2-highlight", function(e) { 
+			/* In Select2 there is currently no way of getting
+			 * the highlighted (newly entered but not yet selected) text.
+			 * But there is this event. Thats why I use this one. 
+			 */ 
+			thatAddNodeController.latestEnteredNodeName=e.val;
+		})
+		
 		var nodeNameList = Object.keys(appliCnTypesByNodeName);
 		nodeNameList.sort();
 		thatAddNodeController.nodeTypeObjects = getNodeTypesByDependenyState.call(thatAddNodeController, nodeNameList, appliCnTypesByNodeName, thatAddNodeController.nodeTypeObjects);
@@ -234,6 +243,7 @@ org.apache.sling.reseditor.AddNodeController = (function() {
 		$("#nodeType").select2({
 			placeholder: "Select a node type",
 			allowClear: true,  
+			selectOnBlur: true,
 			data: function() { 
 			      return { results: thatAddNodeController.nodeTypeObjects } ; // Use the global variable to populate the list
 		    }
@@ -257,11 +267,19 @@ org.apache.sling.reseditor.AddNodeController = (function() {
 			var select2 = $("#resourceType").select2({
 				placeholder: "Enter or select a resource type",
 				allowClear: true, 
+				selectOnBlur: true,
 				data: data,
 				createSearchChoice: function(searchTerm){
 					return {id:searchTerm, text:searchTerm};
 				}
 			}).data("select2");
+			$("#resourceType").on("select2-highlight", function(e) {
+				/* In Select2 there is currently no way of getting
+				 * the highlighted (newly entered but not yet selected) text.
+				 * But there is this event. Thats why I use this one. 
+				 */ 
+				thatAddNodeController.latestEnteredResType=e.val;
+			})
 		});
 	}
 	
