@@ -75,7 +75,7 @@ function start () {
 		rm -rf ${M2REPO}
 		install -d --owner=sling --group=sling  ${M2REPO}
 		for f in ${SLING_EXEC}/contrib* ; do
-			sudo -u sling "cp -sR $f/* ${M2REPO}"
+			sudo -u sling -s cp -sR $f/* ${M2REPO}
 		done
 		. $CRANKSTART_ENV
 	else
