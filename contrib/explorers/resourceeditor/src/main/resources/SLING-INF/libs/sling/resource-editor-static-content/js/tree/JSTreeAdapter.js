@@ -162,7 +162,7 @@ $(document).ready(function() {
       		  }
       	});
     }).on('hover_node.jstree', function (event, nodeObj) {
-        $('#'+nodeObj.node.id+' a:first').focus();
+        //noop
     }).on('keydown.jstree', 'a.jstree-anchor', function (e) {
     	treeController.configureKeyListeners(e);
     }).on('select_node.jstree', function (e, data) {
