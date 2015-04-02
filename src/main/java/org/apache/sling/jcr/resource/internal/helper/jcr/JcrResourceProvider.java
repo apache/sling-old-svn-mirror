@@ -27,7 +27,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Queue;
 import java.util.Set;
 
 import javax.jcr.Item;
@@ -67,6 +66,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
+import org.apache.sling.jcr.resource.internal.HelperData;
 import org.apache.sling.jcr.resource.internal.JcrModifiableValueMap;
 import org.apache.sling.jcr.resource.internal.NodeUtil;
 import org.slf4j.Logger;
@@ -112,18 +112,16 @@ public class JcrResourceProvider
     private boolean closed = false;
 
     private final Session session;
-    private final ClassLoader dynamicClassLoader;
+    private final HelperData helper;
     private final RepositoryHolder repositoryHolder;
-    private final PathMapper pathMapper;
 
     public JcrResourceProvider(final Session session,
                                final ClassLoader dynamicClassLoader,
                                final RepositoryHolder repositoryHolder,
                                final PathMapper pathMapper) {
         this.session = session;
-        this.dynamicClassLoader = dynamicClassLoader;
+        this.helper = new HelperData(dynamicClassLoader, pathMapper);
         this.repositoryHolder = repositoryHolder;
-        this.pathMapper = pathMapper;
     }
 
     // ---------- ResourceProvider interface ----------------------------------
@@ -145,7 +143,7 @@ public class JcrResourceProvider
         return getResource(resourceResolver, path, Collections.<String, String> emptyMap());
     }
 
-    
+
     /**
      * @see org.apache.sling.api.resource.ResourceProvider#getResource(org.apache.sling.api.resource.ResourceResolver, java.lang.String)
      */
@@ -208,7 +206,7 @@ public class JcrResourceProvider
      */
     private JcrItemResource createResource(final ResourceResolver resourceResolver,
             final String resourcePath, final Map<String, String> parameters) throws RepositoryException {
-        final String jcrPath = pathMapper.mapResourcePathToJCRPath(resourcePath);
+        final String jcrPath = helper.pathMapper.mapResourcePathToJCRPath(resourcePath);
         if (jcrPath != null && itemExists(jcrPath)) {
             Item item = session.getItem(jcrPath);
             final String version;
@@ -222,7 +220,7 @@ public class JcrResourceProvider
                 log.debug(
                     "createResource: Found JCR Node Resource at path '{}'",
                     resourcePath);
-                final JcrNodeResource resource = new JcrNodeResource(resourceResolver, resourcePath, version, (Node) item, dynamicClassLoader, pathMapper);
+                final JcrNodeResource resource = new JcrNodeResource(resourceResolver, resourcePath, version, (Node) item, helper);
                 resource.getResourceMetadata().setParameterMap(parameters);
                 return resource;
             }
@@ -231,7 +229,7 @@ public class JcrResourceProvider
                 "createResource: Found JCR Property Resource at path '{}'",
                 resourcePath);
             final JcrPropertyResource resource = new JcrPropertyResource(resourceResolver, resourcePath, version,
-                (Property) item, pathMapper);
+                (Property) item);
             resource.getResourceMetadata().setParameterMap(parameters);
             return resource;
         }
@@ -343,7 +341,7 @@ public class JcrResourceProvider
 
         try {
             final QueryResult res = JcrResourceUtil.query(session, query, language);
-            return new JcrNodeResourceIterator(resolver, res.getNodes(), this.dynamicClassLoader, pathMapper);
+            return new JcrNodeResourceIterator(resolver, res.getNodes(), helper);
         } catch (final javax.jcr.query.InvalidQueryException iqe) {
             throw new QuerySyntaxException(iqe.getMessage(), query, language, iqe);
         } catch (final RepositoryException re) {
@@ -390,7 +388,7 @@ public class JcrResourceProvider
                     while ( result == null && rows.hasNext() ) {
                         try {
                             final Row jcrRow = rows.nextRow();
-                            final String resourcePath = pathMapper.mapJCRPathToResourcePath(jcrRow.getPath());
+                            final String resourcePath = helper.pathMapper.mapJCRPathToResourcePath(jcrRow.getPath());
                             if ( resourcePath != null ) {
                                 final Map<String, Object> row = new HashMap<String, Object>();
 
@@ -406,7 +404,7 @@ public class JcrResourceProvider
                                         if (colName.equals(QUERY_COLUMN_PATH)) {
                                             didPath = true;
                                             row.put(colName,
-                                                    pathMapper.mapJCRPathToResourcePath(JcrResourceUtil.toJavaObject(values[i]).toString()));
+                                                    helper.pathMapper.mapJCRPathToResourcePath(JcrResourceUtil.toJavaObject(values[i]).toString()));
                                         }
                                         if (colName.equals(QUERY_COLUMN_SCORE)) {
                                             didScore = true;
@@ -414,7 +412,7 @@ public class JcrResourceProvider
                                     }
                                 }
                                 if (!didPath) {
-                                    row.put(QUERY_COLUMN_PATH, pathMapper.mapJCRPathToResourcePath(jcrRow.getPath()));
+                                    row.put(QUERY_COLUMN_PATH, helper.pathMapper.mapJCRPathToResourcePath(jcrRow.getPath()));
                                 }
                                 if (!didScore) {
                                     row.put(QUERY_COLUMN_SCORE, jcrRow.getScore());
@@ -547,7 +545,7 @@ public class JcrResourceProvider
                 nodeType = null;
             }
         }
-        final String jcrPath = pathMapper.mapResourcePathToJCRPath(resourcePath);
+        final String jcrPath = helper.pathMapper.mapResourcePathToJCRPath(resourcePath);
         if ( jcrPath == null ) {
             throw new PersistenceException("Unable to create node at " + resourcePath, null, resourcePath, null);
         }
@@ -569,7 +567,7 @@ public class JcrResourceProvider
 
             if ( properties != null ) {
                 // create modifiable map
-                final JcrModifiableValueMap jcrMap = new JcrModifiableValueMap(node, this.dynamicClassLoader);
+                final JcrModifiableValueMap jcrMap = new JcrModifiableValueMap(node, this.helper);
                 // check mixin types first
                 final Object value = properties.get(NodeUtil.MIXIN_TYPES);
                 if ( value != null ) {
@@ -591,7 +589,7 @@ public class JcrResourceProvider
                 }
             }
 
-            return new JcrNodeResource(resolver, resourcePath, null, node, this.dynamicClassLoader, pathMapper);
+            return new JcrNodeResource(resolver, resourcePath, null, node, this.helper);
         } catch (final RepositoryException e) {
             throw new PersistenceException("Unable to create node at " + jcrPath, e, resourcePath, null);
         }
@@ -602,7 +600,7 @@ public class JcrResourceProvider
      */
     public void delete(final ResourceResolver resolver, final String resourcePath)
     throws PersistenceException {
-        final String jcrPath = pathMapper.mapResourcePathToJCRPath(resourcePath);
+        final String jcrPath = helper.pathMapper.mapResourcePathToJCRPath(resourcePath);
         if ( jcrPath == null ) {
             throw new PersistenceException("Unable to delete resource at " + resourcePath, null, resourcePath, null);
         }
