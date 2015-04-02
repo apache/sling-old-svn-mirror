@@ -16,9 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.sling.jcr.resource.internal;
 
-@Version("2.3")
-package org.apache.sling.jcr.resource;
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 
-import aQute.bnd.annotation.Version;
+import org.apache.sling.jcr.resource.JcrPropertyMap;
 
+public class JcrValueMap extends JcrPropertyMap {
+
+    private final HelperData helper;
+
+    public JcrValueMap(final Node node, final HelperData helper) {
+        super(node, helper.dynamicClassLoader);
+        this.helper = helper;
+    }
+
+    @Override
+    protected String[] getNamespacePrefixes() throws RepositoryException {
+        return this.helper.getNamespacePrefixes(this.getNode().getSession());
+    }
+
+}
