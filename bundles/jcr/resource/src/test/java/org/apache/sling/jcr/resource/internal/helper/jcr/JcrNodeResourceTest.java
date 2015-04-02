@@ -31,9 +31,14 @@ import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
+import org.apache.sling.jcr.resource.internal.HelperData;
 import org.apache.sling.jcr.resource.internal.PathMapperImpl;
 
 public class JcrNodeResourceTest extends JcrItemResourceTestBase {
+
+    private HelperData getHelperData() throws Exception {
+        return new HelperData(null, new PathMapperImpl());
+    }
 
     public void testNtFileNtResource() throws Exception {
 
@@ -45,7 +50,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         getSession().save();
 
         file = rootNode.getNode(name);
-        JcrNodeResource jnr = new JcrNodeResource(null, file.getPath(), null, file, null, new PathMapperImpl());
+        JcrNodeResource jnr = new JcrNodeResource(null, file.getPath(), null, file, getHelperData());
 
         assertEquals(file.getPath(), jnr.getPath());
 
@@ -63,7 +68,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         getSession().save();
 
         file = rootNode.getNode(name);
-        JcrNodeResource jnr = new JcrNodeResource(null, file.getPath(), null, file, null, new PathMapperImpl());
+        JcrNodeResource jnr = new JcrNodeResource(null, file.getPath(), null, file, getHelperData());
 
         assertEquals(file.getPath(), jnr.getPath());
 
@@ -79,7 +84,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         getSession().save();
 
         res = rootNode.getNode(name);
-        JcrNodeResource jnr = new JcrNodeResource(null, res.getPath(), null, res, null, new PathMapperImpl());
+        JcrNodeResource jnr = new JcrNodeResource(null, res.getPath(), null, res, getHelperData());
 
         assertEquals(res.getPath(), jnr.getPath());
 
@@ -95,7 +100,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         getSession().save();
 
         res = rootNode.getNode(name);
-        JcrNodeResource jnr = new JcrNodeResource(null, res.getPath(), null, res, null, new PathMapperImpl());
+        JcrNodeResource jnr = new JcrNodeResource(null, res.getPath(), null, res, getHelperData());
 
         assertEquals(res.getPath(), jnr.getPath());
 
@@ -108,14 +113,14 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         Node node = rootNode.addNode(name, JcrConstants.NT_UNSTRUCTURED);
         getSession().save();
 
-        JcrNodeResource jnr = new JcrNodeResource(null, node.getPath(), null, node, null, new PathMapperImpl());
+        JcrNodeResource jnr = new JcrNodeResource(null, node.getPath(), null, node, getHelperData());
         assertEquals(JcrConstants.NT_UNSTRUCTURED, jnr.getResourceType());
 
         String typeName = "some/resource/type";
         node.setProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY, typeName);
         getSession().save();
 
-        jnr = new JcrNodeResource(null, node.getPath(), null, node, null, new PathMapperImpl());
+        jnr = new JcrNodeResource(null, node.getPath(), null, node, getHelperData());
         assertEquals(typeName, jnr.getResourceType());
     }
 
@@ -127,7 +132,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         node.setProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY, typeName);
         getSession().save();
 
-        Resource jnr = new JcrNodeResource(null, node.getPath(), null, node, null, new PathMapperImpl());
+        Resource jnr = new JcrNodeResource(null, node.getPath(), null, node, getHelperData());
         assertEquals(typeName, jnr.getResourceType());
 
         // default super type is null
@@ -138,7 +143,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         typeNode.setProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY, superTypeName);
         getSession().save();
 
-        jnr = new JcrNodeResource(null, typeNode.getPath(), null, typeNode, null, new PathMapperImpl());
+        jnr = new JcrNodeResource(null, typeNode.getPath(), null, typeNode, getHelperData());
         assertEquals(JcrConstants.NT_UNSTRUCTURED, jnr.getResourceType());
         assertEquals(superTypeName, jnr.getResourceSuperType());
 
@@ -147,7 +152,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         node.setProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY, otherSuperTypeName);
         getSession().save();
 
-        jnr = new JcrNodeResource(null, node.getPath(), null, node, null, new PathMapperImpl());
+        jnr = new JcrNodeResource(null, node.getPath(), null, node, getHelperData());
         assertEquals(typeName, jnr.getResourceType());
         assertEquals(otherSuperTypeName, jnr.getResourceSuperType());
 
@@ -155,7 +160,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         node.getProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY).remove();
         getSession().save();
 
-        jnr = new JcrNodeResource(null, node.getPath(), null, node, null, new PathMapperImpl());
+        jnr = new JcrNodeResource(null, node.getPath(), null, node, getHelperData());
         assertEquals(typeName, jnr.getResourceType());
         assertNull(jnr.getResourceSuperType());
     }
@@ -168,7 +173,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         getSession().save();
 
         res = rootNode.getNode(name);
-        JcrNodeResource jnr = new JcrNodeResource(null, res.getPath(), null, res, null, new PathMapperImpl());
+        JcrNodeResource jnr = new JcrNodeResource(null, res.getPath(), null, res, getHelperData());
 
         final Map<?, ?> props = jnr.adaptTo(Map.class);
 
@@ -235,7 +240,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         getSession().save();
 
         file = rootNode.getNode(name);
-        JcrNodeResource jnr = new JcrNodeResource(null, file.getPath(), null, file, null, new PathMapperImpl());
+        JcrNodeResource jnr = new JcrNodeResource(null, file.getPath(), null, file, getHelperData());
 
         assertEquals(utf8bytes, jnr.adaptTo(InputStream.class));
         assertEquals(utf8bytes.length, jnr.getResourceMetadata().getContentLength());

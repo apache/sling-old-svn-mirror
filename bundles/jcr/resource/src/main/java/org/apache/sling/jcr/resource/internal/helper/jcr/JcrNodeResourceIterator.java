@@ -27,6 +27,7 @@ import javax.jcr.RepositoryException;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.jcr.resource.internal.HelperData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,9 +51,7 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
     /** The prefetched next iterator entry, null at the end of iterating */
     private Resource nextResult;
 
-    private final ClassLoader dynamicClassLoader;
-
-    private final PathMapper pathMapper;
+    private final HelperData helper;
 
     private final String parentPath;
 
@@ -64,9 +63,8 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
      */
     public JcrNodeResourceIterator(final ResourceResolver resourceResolver,
                                    final NodeIterator nodes,
-                                   final ClassLoader dynamicClassLoader,
-                                   final PathMapper pathMapper) {
-        this(resourceResolver, null, null, nodes, dynamicClassLoader, pathMapper);
+                                   final HelperData helper) {
+        this(resourceResolver, null, null, nodes, helper);
     }
 
     /**
@@ -78,14 +76,12 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
                                    final String parentPath,
                                    final String parentVersion,
                                    final NodeIterator nodes,
-                                   final ClassLoader dynamicClassLoader,
-                                   final PathMapper pathMapper) {
+                                   final HelperData helper) {
         this.resourceResolver = resourceResolver;
         this.parentPath = parentPath;
         this.parentVersion = parentVersion;
         this.nodes = nodes;
-        this.dynamicClassLoader = dynamicClassLoader;
-        this.pathMapper = pathMapper;
+        this.helper = helper;
         this.nextResult = seek();
     }
 
@@ -118,7 +114,7 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
                 final String path = getPath(n);
                 if ( path != null ) {
                     final Resource resource = new JcrNodeResource(resourceResolver,
-                        path, parentVersion, n, dynamicClassLoader, pathMapper);
+                        path, parentVersion, n, helper);
                     LOGGER.debug("seek: Returning Resource {}", resource);
                     return resource;
                 }
@@ -141,6 +137,6 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
         } else {
             path = String.format("%s/%s", parentPath, node.getName());
         }
-        return pathMapper.mapJCRPathToResourcePath(path);
+        return helper.pathMapper.mapJCRPathToResourcePath(path);
     }
 }

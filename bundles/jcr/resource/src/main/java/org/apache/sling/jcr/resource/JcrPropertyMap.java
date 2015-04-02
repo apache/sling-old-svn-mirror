@@ -41,7 +41,10 @@ import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
 /**
  * An implementation of the value map based on a JCR node.
  * @see JcrModifiablePropertyMap
+ *
+ * @deprecated A (JCR) resource should be adapted to a {@link ValueMap}.
  */
+@Deprecated
 public class JcrPropertyMap
     implements ValueMap {
 
@@ -87,7 +90,7 @@ public class JcrPropertyMap
     /**
      * Get the node.
      */
-    Node getNode() {
+    protected Node getNode() {
         return node;
     }
 
@@ -384,7 +387,7 @@ public class JcrPropertyMap
     /**
     * Read namespace prefixes and store as member variable to minimize number of JCR API calls
     */
-    private String[] getNamespacePrefixes() throws RepositoryException {
+    protected String[] getNamespacePrefixes() throws RepositoryException {
         if (this.namespacePrefixes == null) {
             this.namespacePrefixes = getNode().getSession().getNamespacePrefixes();
         }
