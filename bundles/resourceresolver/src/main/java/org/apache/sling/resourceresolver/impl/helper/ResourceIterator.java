@@ -50,8 +50,8 @@ import org.slf4j.LoggerFactory;
  */
 public class ResourceIterator implements Iterator<Resource> {
 
-    /** default log */
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    /** Logger */
+    private static final Logger LOGGER = LoggerFactory.getLogger(ResourceIterator.class);
 
     /**
      * The resource whose children are listed
@@ -127,7 +127,7 @@ public class ResourceIterator implements Iterator<Resource> {
         this.parentResource = parentResource;
         this.rootProviderEntry = rootProviderEntry;
 
-        log.debug("Child Iterator for {}", parentResource.getPath());
+        LOGGER.debug("Child Iterator for {}", parentResource.getPath());
 
         String path = parentResource.getPath();
         if (!path.endsWith("/")) {
@@ -140,8 +140,8 @@ public class ResourceIterator implements Iterator<Resource> {
         final Set<ProviderHandler> providersSet = new LinkedHashSet<ProviderHandler>();
         final ResourceProviderEntry atPath = getResourceProviders(path, providersSet);
 
-        if (log.isDebugEnabled()) {
-            log.debug(" Provider Set for path {} {} ", path, Arrays
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(" Provider Set for path {} {} ", path, Arrays
                     .toString(providersSet.toArray(new ProviderHandler[providersSet.size()])));
         }
         this.iteratorPath = path;
@@ -152,10 +152,12 @@ public class ResourceIterator implements Iterator<Resource> {
         nextResource = seek();
     }
 
+    @Override
     public boolean hasNext() {
         return nextResource != null;
     }
 
+    @Override
     public Resource next() {
         if (!hasNext()) {
             throw new NoSuchElementException();
@@ -163,10 +165,11 @@ public class ResourceIterator implements Iterator<Resource> {
 
         final Resource result = nextResource;
         nextResource = seek();
-        log.debug("  Child resource [{}] [{}] ", iteratorPath, result.getPath());
+        LOGGER.debug("  Child resource [{}] [{}] ", iteratorPath, result.getPath());
         return result;
     }
 
+    @Override
     public void remove() {
         throw new UnsupportedOperationException("remove");
     }
@@ -177,7 +180,7 @@ public class ResourceIterator implements Iterator<Resource> {
                     && providers.hasNext()) {
                 final ProviderHandler provider = providers.next();
                 resources = provider.listChildren(this.resourceResolverContext, parentResource);
-                log.debug("     Checking Provider {} ", provider);
+                LOGGER.debug("     Checking Provider {} ", provider);
             }
 
             if (resources != null && resources.hasNext()) {
@@ -204,7 +207,7 @@ public class ResourceIterator implements Iterator<Resource> {
                     // mark it as visited and remove from delayed
                     visited.add(resPath);
                     delayed.remove(resPath);
-                    log.debug("      resource {} {}", resPath, res.getClass());
+                    LOGGER.debug("      resource {} {}", resPath, res.getClass());
 
                     res.getResourceMetadata().setResolutionPath(res.getPath());
                     return res;
@@ -235,7 +238,7 @@ public class ResourceIterator implements Iterator<Resource> {
                             // does not contain it
                             delayed.remove(resPath);
                             visited.add(resPath);
-                            log.debug("   B  resource {} {}", resPath,
+                            LOGGER.debug("   B  resource {} {}", resPath,
                                     res.getClass());
                             res.getResourceMetadata().setResolutionPath(res.getPath());
                             return res;
@@ -258,7 +261,7 @@ public class ResourceIterator implements Iterator<Resource> {
         // resources. now lets do the delayed (synthetic) resources
         final Resource res = delayedIter.hasNext() ? delayedIter.next() : null;
         if (res != null) {
-            log.debug("   D  resource {} {}", res.getPath(), res.getClass());
+            LOGGER.debug("   D  resource {} {}", res.getPath(), res.getClass());
             res.getResourceMetadata().setResolutionPath(res.getPath());
         }
         return res;
@@ -285,16 +288,16 @@ public class ResourceIterator implements Iterator<Resource> {
         for (final String element : elements) {
             if (base.containsKey(element)) {
                 base = base.get(element);
-                if (log.isDebugEnabled()) {
-                    log.debug("Loading from {}  {} ", element,
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Loading from {}  {} ", element,
                             base.getResourceProviders().length);
                 }
                 for (final ProviderHandler rp : base.getResourceProviders()) {
-                    log.debug("Adding {} for {} ", rp, path);
+                    LOGGER.debug("Adding {} for {} ", rp, path);
                     providers.add(rp);
                 }
             } else {
-                log.debug("No container for {} ", element);
+                LOGGER.debug("No container for {} ", element);
                 base = null;
                 break;
             }
@@ -302,7 +305,7 @@ public class ResourceIterator implements Iterator<Resource> {
 
         // add in providers at this node in the tree, ie the root provider
         for (final ProviderHandler rp : rootProviderEntry.getResourceProviders()) {
-            log.debug("Loading All at {} ", path);
+            LOGGER.debug("Loading All at {} ", path);
             providers.add(rp);
         }
         return base;
