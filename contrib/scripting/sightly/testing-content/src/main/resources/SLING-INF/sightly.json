@@ -16,5 +16,9 @@
     "template": {
       "jcr:primaryType": "nt:unstructured",
       "sling:resourceType": "/apps/sightly/scripts/template"
+    },
+    "text.txt": {
+      "jcr:primaryType": "nt:unstructured",
+      "sling:resourceType": "/apps/sightly/scripts/text"
     }
 }

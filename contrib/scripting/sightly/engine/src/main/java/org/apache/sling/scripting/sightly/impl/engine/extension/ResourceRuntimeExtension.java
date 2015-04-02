@@ -101,6 +101,8 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
             selectors.addAll(Arrays.asList(request.getRequestPathInfo().getSelectors()));
         }
         Map<String, String> dispatcherOptionsMap = new HashMap<String, String>();
+        dispatcherOptionsMap.put(OPTION_ADD_SELECTORS, getSelectorString(selectors));
+        dispatcherOptionsMap.put(OPTION_REPLACE_SELECTORS, " ");
         if (options.containsKey(OPTION_SELECTORS)) {
             Object selectorsObject = getAndRemoveOption(options, OPTION_SELECTORS);
             selectors.clear();
@@ -283,11 +285,11 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
 
         PathInfo(String path) {
             selectors = getSelectorsFromPath(path);
-            String selectorString = getSelectorString(selectors);
-            if (StringUtils.isNotEmpty(selectorString)) {
-                this.path = path.substring(0, path.length() - selectorString.length() - 1);
-            } else {
+            if (selectors.isEmpty()) {
                 this.path = path;
+            } else {
+                String selectorString = getSelectorString(selectors);
+                this.path = path.replace("." + selectorString, "");
             }
         }
     }
@@ -302,9 +304,14 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
             }
             int dotPos = processingPath.indexOf('.');
             if (dotPos > -1) {
-                String selectorString = processingPath.substring(dotPos + 1, processingPath.length());
-                String[] selectorParts = selectorString.split("\\.");
-                selectors.addAll(Arrays.asList(selectorParts));
+                int lastDotPos = processingPath.lastIndexOf('.');
+                // We're expecting selectors only when an extension is also present. If there's
+                // one dot it means we only have the extension
+                if (lastDotPos > dotPos) {
+                    String selectorString = processingPath.substring(dotPos + 1, lastDotPos);
+                    String[] selectorParts = selectorString.split("\\.");
+                    selectors.addAll(Arrays.asList(selectorParts));
+                }
             }
         }
         return selectors;
