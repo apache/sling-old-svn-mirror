@@ -20,6 +20,7 @@ package org.apache.sling.scripting.sightly.impl.engine.extension;
 
 import java.util.Enumeration;
 import java.util.Locale;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 import javax.script.Bindings;
@@ -52,10 +53,11 @@ public class I18nRuntimeExtension implements RuntimeExtension {
     @Override
     public Object call(final RenderContext renderContext, Object... arguments) {
         RenderContextImpl renderContextImpl = (RenderContextImpl) renderContext;
-        ExtensionUtils.checkArgumentCount(I18nFilter.FUNCTION, arguments, 3);
+        ExtensionUtils.checkArgumentCount(I18nFilter.FUNCTION, arguments, 2);
         String text = renderContextImpl.toString(arguments[0]);
-        String locale = renderContextImpl.toString(arguments[1]);
-        String hint = renderContextImpl.toString(arguments[2]);
+        Map<String, Object> options = (Map<String, Object>) arguments[1];
+        String locale = renderContextImpl.toString(options.get(I18nFilter.LOCALE_OPTION));
+        String hint = renderContextImpl.toString(options.get(I18nFilter.HINT_OPTION));
         final Bindings bindings = renderContextImpl.getBindings();
         return get(bindings, text, locale, hint);
     }
