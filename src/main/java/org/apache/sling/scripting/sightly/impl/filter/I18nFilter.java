@@ -24,7 +24,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.Expression;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.ExpressionNode;
-import org.apache.sling.scripting.sightly.impl.compiler.expression.node.NullLiteral;
+import org.apache.sling.scripting.sightly.impl.compiler.expression.node.MapLiteral;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.node.RuntimeCall;
 
 /**
@@ -47,17 +47,7 @@ public class I18nFilter extends FilterComponent {
                 == ExpressionContext.PLUGIN_DATA_SLY_TEMPLATE || expressionContext == ExpressionContext.PLUGIN_DATA_SLY_CALL) {
             return expression;
         }
-        ExpressionNode hint = option(expression, HINT_OPTION);
-        ExpressionNode locale = option(expression, LOCALE_OPTION);
-        ExpressionNode translation = new RuntimeCall(FUNCTION, expression.getRoot(), locale, hint);
+        ExpressionNode translation = new RuntimeCall(FUNCTION, expression.getRoot(), new MapLiteral(expression.getOptions()));
         return expression.withNode(translation).withRemovedOptions(HINT_OPTION, LOCALE_OPTION);
-    }
-
-    private ExpressionNode option(Expression expression, String optionName) {
-        ExpressionNode node = expression.getOption(optionName);
-        if (node == null) {
-            return NullLiteral.INSTANCE;
-        }
-        return node;
     }
 }
