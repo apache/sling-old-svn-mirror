@@ -81,7 +81,7 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
                            final Node node,
                            final ClassLoader dynamicClassLoader,
                            final PathMapper pathMapper) {
-        super(resourceResolver, path, version, node, new JcrNodeResourceMetadata(node), pathMapper);
+        super(resourceResolver, path, version, node, new JcrNodeResourceMetadata(node));
         this.pathMapper = pathMapper;
         this.dynamicClassLoader = dynamicClassLoader;
         this.resourceSuperType = UNSET_RESOURCE_SUPER_TYPE;
