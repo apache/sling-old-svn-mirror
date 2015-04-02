@@ -77,6 +77,10 @@ public class SlingSpecificsSightlyIT {
         assertEquals("selectors: a.c", HTMLExtractor.innerHTML(url, pageContent, "#removeselectors-remove-b span.selectors"));
         assertEquals("selectors: a.b.c", HTMLExtractor.innerHTML(url, pageContent, "#addselectors span.selectors"));
         assertEquals("It works", HTMLExtractor.innerHTML(url, pageContent, "#dot"));
+        assertEquals("path: /sightly/text.txt", HTMLExtractor.innerHTML(url, pageContent, "#extension-selectors span.path"));
+        assertEquals("selectors: a.b", HTMLExtractor.innerHTML(url, pageContent, "#extension-selectors span.selectors"));
+        assertEquals("path: /sightly/text.txt", HTMLExtractor.innerHTML(url, pageContent, "#extension-replaceselectors span.path"));
+        assertEquals("selectors: c", HTMLExtractor.innerHTML(url, pageContent, "#extension-replaceselectors span.selectors"));
     }
 
     @Test
