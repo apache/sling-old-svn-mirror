@@ -1,24 +1,27 @@
 #!/usr/bin/env ruby
 
 require 'open-uri'
-require 'nokogiri'
+require 'rexml/document'
+include REXML
 
 url = 'https://svn.apache.org/repos/asf/sling/trunk/launchpad/builder/src/main/bundles/list.xml'
-result = Nokogiri.XML(open(url).read)
+doc = Document.new(open(url).read)
 
 index = 50
 
-result.child.element_children.each do |startLevel|
-  level = startLevel['level']
+doc.root.each_element('startLevel') do |startLevel|
+  level = startLevel.attributes['level']
   f = File.open("crank.d/#{index}-sling-startlevel-#{level}.txt", 'w')
   level = 1 if level == 'boot'
   f.puts "defaults crankstart.bundle.start.level #{level}"
   f.puts
-  startLevel.element_children.each do |bundle|
-    artifactId = bundle.xpath('./artifactId').text
-    groupId = bundle.xpath('./groupId').text
-    version = bundle.xpath('./version').text
-    runModes = bundle.xpath('./runModes').text
+  startLevel.each_element('bundle') do |bundle|
+    elements = bundle.elements
+    artifactId = elements['artifactId'].text
+    groupId = elements['groupId'].text
+    version = elements['version'].text
+    runModes = elements['runModes']
+    runModes = runModes.text if runModes
     next if runModes == 'jackrabbit' or runModes == 'oak_mongo'
     f.puts "bundle mvn:#{groupId}/#{artifactId}/#{version}"
   end

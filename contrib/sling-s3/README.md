@@ -6,7 +6,7 @@ A set of [crankstart](https://github.com/apache/sling/tree/trunk/contrib/crankst
 
 * make
 * JRE 1.7
-* ruby & nokogiri gem (if you want to auto-update the bundles list)
+* ruby
 
 ## Usage
 
