@@ -52,8 +52,8 @@ public class TikaSlingIT extends KarafTestSupport {
     }
 
     @Test
-    public void testOrgApacheTikaParsers() {
-        final Bundle bundle = findBundle("org.apache.tika.parsers");
+    public void testOrgApacheTikaBundle() {
+        final Bundle bundle = findBundle("org.apache.tika.bundle");
         assertNotNull(bundle);
         assertEquals(Bundle.ACTIVE, bundle.getState());
     }
