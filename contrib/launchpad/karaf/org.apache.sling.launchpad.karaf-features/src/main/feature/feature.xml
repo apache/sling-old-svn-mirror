@@ -358,6 +358,12 @@
     <!-- bundle dependencies -->
     <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.urlrewritefilter/4.0.4_1</bundle>
   </feature>
+  <!-- Apache Sling JCR (contrib) -->
+  <feature name="sling-jcr-compiler" version="${project.version}">
+    <feature version="${project.version}">sling</feature>
+    <feature version="${project.version}">sling-jcr</feature>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.compiler/2.1.0</bundle>
+  </feature>
   <!-- Apache Sling Scripting (contrib) -->
   <feature name="sling-scripting-groovy" version="1.0.0">
     <feature version="${project.version}">sling</feature>
