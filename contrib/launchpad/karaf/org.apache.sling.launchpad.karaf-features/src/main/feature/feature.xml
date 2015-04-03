@@ -379,6 +379,10 @@
     <!-- bundle dependencies -->
     <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.urlrewritefilter/4.0.4_1</bundle>
   </feature>
+  <feature name="sling-extension-xss" version="${project.version}">
+    <feature version="${project.version}">sling</feature>
+    <bundle>mvn:org.apache.sling/org.apache.sling.xss/1.0.2</bundle>
+  </feature>
   <!-- Apache Sling JCR (contrib) -->
   <feature name="sling-jcr-compiler" version="${project.version}">
     <feature version="${project.version}">sling</feature>
