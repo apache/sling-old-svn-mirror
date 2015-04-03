@@ -120,6 +120,7 @@
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-extension-discovery</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.event/3.5.4</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.event.dea/1.0.0</bundle>
   </feature>
   <feature name="sling-extension-explorer" version="${project.version}">
     <feature version="${project.version}">sling</feature>
