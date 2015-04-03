@@ -325,14 +325,14 @@
     <feature version="${project.version}">sling-auth-openid</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.auth.selector/1.0.6</bundle>
   </feature>
-  <feature name="sling-auth-xing-login" version="0.0.2">
+  <feature name="sling-auth-xing-login" version="${project.version}">
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-jcr</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.auth.xing.login/0.0.2</bundle>
     <!-- bundle dependencies -->
     <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.auth.xing.api/0.0.2</bundle>
   </feature>
-  <feature name="sling-auth-xing-oauth" version="0.0.2">
+  <feature name="sling-auth-xing-oauth" version="${project.version}">
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-jcr</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.auth.xing.oauth/0.0.2</bundle>
@@ -361,19 +361,19 @@
     <bundle>mvn:org.apache.sling/org.apache.sling.hc.support/1.0.4</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.hc.webconsole/1.1.2</bundle>
   </feature>
-  <feature name="sling-extension-i18n" version="2.3.2">
+  <feature name="sling-extension-i18n" version="${project.version}">
     <feature version="${project.version}">sling</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.i18n/2.3.2</bundle>
   </feature>
-  <feature name="sling-extension-query" version="3.0.0">
+  <feature name="sling-extension-query" version="${project.version}">
     <feature version="${project.version}">sling</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.query/3.0.0</bundle>
   </feature>
-  <feature name="sling-extension-resourcemerger" version="1.2.8">
+  <feature name="sling-extension-resourcemerger" version="${project.version}">
     <feature version="${project.version}">sling</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.resourcemerger/1.2.8</bundle>
   </feature>
-  <feature name="sling-extension-urlrewriter" version="0.0.2">
+  <feature name="sling-extension-urlrewriter" version="${project.version}">
     <feature version="${project.version}">sling</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.urlrewriter/0.0.2</bundle>
     <!-- bundle dependencies -->
@@ -390,14 +390,14 @@
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.compiler/2.1.0</bundle>
   </feature>
   <!-- Apache Sling Scripting (contrib) -->
-  <feature name="sling-scripting-groovy" version="1.0.0">
+  <feature name="sling-scripting-groovy" version="${project.version}">
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-scripting</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.groovy/1.0.0</bundle>
     <!-- bundle dependencies -->
     <bundle dependency="true">mvn:org.codehaus.groovy/groovy-all/1.8.0</bundle>
   </feature>
-  <feature name="sling-scripting-java" version="2.0.12">
+  <feature name="sling-scripting-java" version="${project.version}">
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-scripting</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.java/2.0.12</bundle>
@@ -408,7 +408,7 @@
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-jcr</feature>
     <feature version="${project.version}">sling-scripting</feature>
-    <feature version="2.3.2">sling-extension-i18n</feature>
+    <feature version="${project.version}">sling-extension-i18n</feature>
     <feature version="${project.version}">sling-extension-xss</feature>
     <feature version="${project.version}">sling-jcr-compiler</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly/1.0.0</bundle>
@@ -416,10 +416,10 @@
     <!-- bundle dependencies -->
     <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.rhino/1.7R2_4</bundle>
   </feature>
-  <feature name="sling-scripting-thymeleaf" version="0.0.4">
+  <feature name="sling-scripting-thymeleaf" version="${project.version}">
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-scripting</feature>
-    <feature version="2.3.2">sling-extension-i18n</feature>
+    <feature version="${project.version}">sling-extension-i18n</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.thymeleaf/0.0.4</bundle>
     <!-- bundle dependencies -->
     <bundle dependency="true">mvn:org.javassist/javassist/3.18.2-GA</bundle>
