@@ -340,6 +340,15 @@
     <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.auth.xing.api/0.0.2</bundle>
   </feature>
   <!-- Apache Sling Extensions (contrib) -->
+  <feature name="sling-extension-healthcheck" version="${project.version}">
+    <feature version="${project.version}">sling</feature>
+    <feature version="${project.version}">sling-jcr</feature>
+    <feature version="${project.version}">sling-scripting</feature>
+    <bundle>mvn:org.apache.sling/org.apache.sling.hc.core/1.2.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.hc.jmx/1.0.6</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.hc.support/1.0.4</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.hc.webconsole/1.1.2</bundle>
+  </feature>
   <feature name="sling-extension-i18n" version="2.3.2">
     <feature version="${project.version}">sling</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.i18n/2.3.2</bundle>
