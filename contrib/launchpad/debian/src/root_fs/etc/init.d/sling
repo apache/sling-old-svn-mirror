@@ -60,13 +60,29 @@ function start () {
 
 	if [ ! "${RUNMODE}" ] ; then
 		log_warning_msg "RUNMODE is not set in ${SLING_DEFAULTS}"
+		exit -1
 	fi
 
 	check_sling_permissions
 
 	# Get MVN_OPTS from crankstart env file.
-	[ -r $CRANKSTART_ENV ] && . $CRANKSTART_ENV
-	CRANKSTART_JAR=${M2REPO}/crankstart.jar
+	if [ -r $CRANKSTART_ENV ] ; then
+		# Other packages can use ${SLING_EXEC}.${artifactId}
+		# for dependencies to avoid name collisions.
+		# All will be aggregated here to provide a fully
+		# populated local repo.
+		M2REPO=${SLING_EXEC}/repo
+		rm -rf ${M2REPO}
+		install -d --owner=sling --group=sling  ${M2REPO}
+		for f in ${SLING_EXEC}/contrib* ; do
+			sudo -u sling -s cp -sRf $f/* ${M2REPO}
+		done
+		. $CRANKSTART_ENV
+	else
+		log_failure_msg "Missing $CRANKSTART_ENV file, cannot read crankstart env settings."
+		exit -1
+	fi
+	CRANKSTART_JAR=${SLING_EXEC}/contrib/crankstart.jar
 
 	# Update crankstart file if needed
 	log_daemon_msg "Starting sling serices"

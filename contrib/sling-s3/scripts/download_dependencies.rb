@@ -13,7 +13,7 @@ DEP_PLUGIN = 'org.apache.maven.plugins:maven-dependency-plugin:2.10'
 
 # Env defaults
 $remote_repo = ENV.fetch("REMOTE_REPO",'https://repository.apache.org/content/repositories/snapshots')
-$local_repo = ENV.fetch("LOCAL_REPO",'~/.m2/repository')
+$local_repo = ENV.fetch("LOCAL_REPO", File.expand_path("~/.m2/repository"))
 # If set, copy artifacts to OUTPUT location, default is ~/.m2 only
 $output = ENV["OUTPUT"]
 
@@ -27,6 +27,7 @@ end.parse!
 
 puts "local_repo=#{$local_repo}" if $verbose
 puts "output=#{$output}" if $verbose
+FileUtils.mkdir_p $output if !$output.nil?
 
 def run cmd
   output = ""

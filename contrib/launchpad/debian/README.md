@@ -22,10 +22,16 @@ Supported run modes are:
 Each of these are supported by building crank files using the sling-s3 module to aggregate configuration templates into usable configurations.
 
 * SLING_EXEC=/opt/sling - Location for all binaries & scripts.
-* SLING_CFG=/etc/sling - Tree of config file templates from which final.crantstart files are built. Editing any of these config templates triggers a rebuild of the target/crank* files.
+* SLING_CFG=/etc/sling - Tree of config file templates from which final.crantstart files are built. Editing any of these config templates triggers a rebuild of the target/crank\* files.
 * SLING_DEFAULTS=/etc/default/sling - Defaults file for location & path setup and to override any of the crank settings.
 * SLING_DATA=/var/lib/sling - Local sling data dir.
 * SLING_LOG_DIR=/var/log/sling - Sling log data.
+
+Additional bundles can be loaded in any of the defined runmodes by creating packages containing the crankstart config and dependent jars:
+/etc/sling/crank\*/\*.txt             - crankstart commands required
+/opt/sling/contrib.<package-name>   - additional bundle dependencies
+
+At start time, all /etc/sling/crank*/*.txt files are concatenated as defined by the /etc/sling/Makefile and sling is started with the runmode defined in /etc/default/sling. The init script link all the jars into one repo folder.
 
 TODO:
 * Support clustered configurations.

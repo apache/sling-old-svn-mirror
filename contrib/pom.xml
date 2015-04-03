@@ -109,6 +109,7 @@
           <module>extensions/distribution/core</module>
           <module>extensions/distribution/sample</module>
           <module>extensions/distribution/it</module>
+          <module>extensions/oak-s3</module>
           <module>extensions/reqanalyzer</module>
           <module>extensions/resourcemerger</module>
           <module>extensions/rewriter</module>
@@ -137,7 +138,7 @@
           <module>scripting/xproc</module>
           <module>launchpad/karaf</module>
           <module>launchpad/testing</module>
-          <!--module>launchpad/debian</module-->
+          <module>launchpad/debian</module>
     </modules>
     <profiles>
         <profile>

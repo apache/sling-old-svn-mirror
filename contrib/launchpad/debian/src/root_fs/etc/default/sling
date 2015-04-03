@@ -63,9 +63,6 @@ SLING_DATA=/var/lib/sling
 SLING_LOG_DIR=/var/log/sling
 
 START_LOG_FILE=$SLING_LOG_DIR/startup.log
-
-# Define where to load dependencies from
-M2REPO="${SLING_EXEC}/contrib"
 SLING_SCRIPTS=${SLING_EXEC}/scripts
 CRANKSTART_ENV=${SLING_SCRIPTS}/crankstart.sh
 
