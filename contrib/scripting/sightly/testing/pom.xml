@@ -125,6 +125,7 @@
                     <dependenciesToScan>
                         <dependency>io.sightly:io.sightly.tck</dependency>
                     </dependenciesToScan>
+                    <runOrder>alphabetical</runOrder>
                     <excludes>
                         <exclude>${failsafe.exclude}</exclude>
                     </excludes>
@@ -235,7 +236,7 @@
                         <bundle>
                             <groupId>org.apache.sling</groupId>
                             <artifactId>org.apache.sling.scripting.sightly.js.provider</artifactId>
-                            <version>1.0.0</version>
+                            <version>1.0.1-SNAPSHOT</version>
                             <startLevel>20</startLevel>
                         </bundle>
                         <bundle>
