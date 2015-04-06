@@ -37,6 +37,8 @@ public class SlingSpecificsSightlyIT {
     private static final String SLING_TEMPLATE = "/sightly/template.html";
     private static final String SLING_TEMPLATE_BAD_IDENTIFIER = "/sightly/template.bad-id.html";
     private static final String SLING_JS_USE = "/sightly/use.jsuse.html";
+    private static final String SLING_JS_DEPENDENCY_RESOLUTION = "/sightly/use-sibling-dependency-resolution.html";
+    private static final String SLING_USE_INHERITANCE = "/sightly/useinheritance.html";
 
     @BeforeClass
     public static void init() {
@@ -105,6 +107,23 @@ public class SlingSpecificsSightlyIT {
         assertEquals("use", HTMLExtractor.innerHTML(url, pageContent, "#resource-getName"));
         assertEquals("/apps/sightly/scripts/use", HTMLExtractor.innerHTML(url, pageContent, "#resource-resourceType"));
         assertEquals("/apps/sightly/scripts/use", HTMLExtractor.innerHTML(url, pageContent, "#resource-getResourceType"));
+    }
+
+    @Test
+    public void testJSUseAPISiblingDependencies() {
+        String url = launchpadURL + SLING_JS_DEPENDENCY_RESOLUTION;
+        String pageContent = client.getStringContent(url, 200);
+        assertEquals("/apps/sightly/scripts/siblingdeps/dependency.js", HTMLExtractor.innerHTML(url, pageContent, "#js-rep-res"));
+    }
+
+    @Test
+    public void testUseAPIInheritance() {
+        String url = launchpadURL + SLING_USE_INHERITANCE;
+        String pageContent = client.getStringContent(url, 200);
+        assertEquals("child.javaobject", HTMLExtractor.innerHTML(url, pageContent, "#javaobj"));
+        assertEquals("child.javascriptobject", HTMLExtractor.innerHTML(url, pageContent, "#javascriptobj"));
+        assertEquals("child.ecmaobject", HTMLExtractor.innerHTML(url, pageContent, "#ecmaobj"));
+        assertEquals("child.template", HTMLExtractor.innerHTML(url, pageContent, "#templateobj"));
     }
 
 }
