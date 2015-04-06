@@ -20,5 +20,13 @@
     "text.txt": {
       "jcr:primaryType": "nt:unstructured",
       "sling:resourceType": "/apps/sightly/scripts/text"
+    },
+    "useinheritance": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "/apps/sightly/scripts/useinheritance/child"
+    },
+    "use-sibling-dependency-resolution": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "/apps/sightly/scripts/siblingdeps/component"
     }
 }
