@@ -57,7 +57,6 @@ module.exports = function(grunt) {
 		                  'bootstrap/dist/js/bootstrap.min.js',
 		                  'select2/select2.min.js',
 		                  'jquery/dist/jquery.min.js',
-		                  'jquery/dist/jquery.min.map',
 		                  'bootbox/bootbox.min.js',
 		                  'jstree/dist/jstree.min.js'
 		                 ], // Actual pattern(s) to match.
@@ -74,7 +73,6 @@ module.exports = function(grunt) {
 	            src: [
 	                  'select2/select2.css',
 	                  'select2/select2.png',
-	                  'select2/select2-spinner.gif',
 	                  'animate.css/animate.min.css',
 	                  'jstree/dist/themes/default/style.min.css',
 	                  'jstree/dist/themes/default/32px.png',
@@ -117,6 +115,8 @@ module.exports = function(grunt) {
 	    },
         webdriver: {
             options: {
+            	host: 'localhost',
+            	port: 8080
             },
             chrome: {
                 tests: [e2eTestSpecFolder],
