@@ -508,7 +508,7 @@ public class ClusterTest {
         instance1Restarted = Instance.newClusterInstance("/var/discovery/clusterA/", "instance1", instance2,
                 false, Integer.MAX_VALUE /* no timeout */, 1, instance1.slingId);
         instance4 = Instance.newClusterInstance("/var/discovery/clusterB/", "instance4", instance3,
-                false, 5 /* sec*/, MIN_EVENT_DELAY);
+                false, 20 /* sec*/, MIN_EVENT_DELAY);
         for(int i=0; i<3; i++) {
             runHeartbeatOnceWith(instance1Restarted, instance2, instance3, instance4, instance5);
             assertTrue(pingConnector(instance3, instance2));
