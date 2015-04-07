@@ -18,7 +18,6 @@
  */
 package org.apache.sling.installer.provider.jcr.impl;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.jcr.RepositoryException;
@@ -75,7 +74,7 @@ class RootFolderListener implements EventListener {
         // we only do the global scan for node changes
         boolean globalScan = false;
         // copy watched folders
-        final List<WatchedFolder> checkFolders = new ArrayList<WatchedFolder>(cfg.getWatchedFolders());
+        final List<WatchedFolder> checkFolders = cfg.cloneWatchedFolders();
         while(it.hasNext()) {
             final Event e = it.nextEvent();
             logger.debug("Got event {}", e);
@@ -87,7 +86,7 @@ class RootFolderListener implements EventListener {
 
                 for(final WatchedFolder folder : checkFolders) {
                     if ( path.startsWith(folder.getPathWithSlash()) ) {
-                        folder.onEvent(it);
+                        folder.markForScan();
                         checkFolders.remove(folder);
                         break;
                     }

@@ -96,11 +96,10 @@ class MiscUtil {
     }
 
     /** Get the WatchedFolders of supplied JcrInstaller */
-    @SuppressWarnings({ "unchecked"})
-    static Collection<WatchedFolder> getWatchedFolders(JcrInstaller installer) throws Exception {
+    static Collection<WatchedFolder> getWatchedFolders(final JcrInstaller installer) {
         final InstallerConfig cfg = installer.getConfiguration();
 
-        return cfg.getWatchedFolders();
+        return cfg.cloneWatchedFolders();
     }
 
     /** Wait long enough for all changes in content to be processed by JcrInstaller */

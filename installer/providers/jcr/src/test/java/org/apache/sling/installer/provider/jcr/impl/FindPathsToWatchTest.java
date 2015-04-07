@@ -24,8 +24,6 @@ import javax.jcr.Session;
 
 import org.apache.sling.commons.testing.jcr.EventHelper;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
-import org.apache.sling.installer.provider.jcr.impl.JcrInstaller;
-import org.apache.sling.installer.provider.jcr.impl.WatchedFolder;
 import org.apache.sling.jcr.api.SlingRepository;
 
 /** Verify that the JcrInstaller finds all folders that must
@@ -125,10 +123,9 @@ public class FindPathsToWatchTest extends RepositoryTestBase {
     }
 
     public void testDeleteWatchedFolders() throws Exception {
-        final Collection<WatchedFolder> wf = MiscUtil.getWatchedFolders(installer);
-        assertEquals("activate() must find all watched folders", contentHelper.WATCHED_FOLDERS.length, wf.size());
+        assertEquals("activate() must find all watched folders", contentHelper.WATCHED_FOLDERS.length, MiscUtil.getWatchedFolders(installer).size());
         contentHelper.cleanupContent();
         MiscUtil.waitAfterContentChanges(eventHelper, installer);
-        assertEquals("After deleting content, no more folders must be watched", 0, wf.size());
+        assertEquals("After deleting content, no more folders must be watched", 0, MiscUtil.getWatchedFolders(installer).size());
     }
 }
