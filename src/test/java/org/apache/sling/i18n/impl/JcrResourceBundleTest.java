@@ -89,7 +89,7 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
                         @Override
                         public Resource next() {
                             final Node node = nodes.nextNode();
-                            return new TestResource(node);
+                            return new TestResource(resolver, node);
                         }
 
                         @Override
@@ -113,10 +113,8 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
             @Override
             public Resource getResource(String path) {
                 try {
-                    Node n = getSession().getNode(path);
-                    if (n != null) {
-                        return new TestResource(n);
-                    }
+                    final Node n = getSession().getNode(path);
+                    return new TestResource(resolver, n);
 
                 } catch (NamingException ne) {
                      //ignore
@@ -132,9 +130,34 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
             }
 
             @Override
-            public Iterator<Resource> listChildren(Resource parent) {
-                // TODO Auto-generated method stub
-                return null;
+            public Iterator<Resource> listChildren(final Resource parent) {
+                try {
+                    final Node n = getSession().getNode(parent.getPath());
+                    final NodeIterator nodes = n.getNodes();
+                    return new Iterator<Resource>() {
+                        @Override
+                        public boolean hasNext() {
+                            return nodes.hasNext();
+                        }
+
+                        @Override
+                        public Resource next() {
+                            final Node node = nodes.nextNode();
+                            return new TestResource(resolver, node);
+                        }
+
+                        @Override
+                        public void remove() {
+                            throw new UnsupportedOperationException("remove");
+                        }
+                    };
+                } catch ( final RepositoryException re) {
+                    // ignore
+                    return null;
+                } catch ( final NamingException e) {
+                    // ignore
+                    return null;
+                }
             }
 
             @Override
@@ -626,10 +649,13 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
 
     private class TestResource extends AbstractResource {
 
-        private Node node = null;
-        public TestResource(Node xnode) {
-            super();
-            node = xnode;
+        private final Node node;
+
+        private final ResourceResolver resolver;
+
+        public TestResource(final ResourceResolver resolver, final Node xnode) {
+            this.node = xnode;
+            this.resolver = resolver;
         }
 
         @Override
@@ -646,8 +672,7 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
 
         @Override
         public ResourceResolver getResourceResolver() {
-            // TODO Auto-generated method stub
-            return null;
+            return this.resolver;
         }
 
         @Override
@@ -675,6 +700,12 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
                     }
                     if ( node.hasProperty(JcrResourceBundle.PROP_BASENAME) ) {
                         props.put(JcrResourceBundle.PROP_BASENAME, node.getProperty(JcrResourceBundle.PROP_BASENAME).getString());
+                    }
+                    if ( node.hasProperty(JcrResourceBundle.PROP_KEY) ) {
+                        props.put(JcrResourceBundle.PROP_KEY, node.getProperty(JcrResourceBundle.PROP_KEY).getString());
+                    }
+                    if ( node.hasProperty(JcrResourceBundle.PROP_VALUE) ) {
+                        props.put(JcrResourceBundle.PROP_VALUE, node.getProperty(JcrResourceBundle.PROP_VALUE).getString());
                     }
                     return (AdapterType)new ValueMapDecorator(props);
                 } catch ( final RepositoryException re ) {
