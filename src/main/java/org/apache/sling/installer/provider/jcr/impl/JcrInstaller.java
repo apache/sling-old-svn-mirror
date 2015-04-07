@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -261,13 +260,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
                 }
 
                 // Scan watchedFolders and register resources with installer
-                final List<InstallableResource> resources = new LinkedList<InstallableResource>();
-                for(final WatchedFolder f : cfg.getWatchedFolders()) {
-                    f.start();
-                    final WatchedFolder.ScanResult r = f.scan();
-                    logger.debug("Startup: {} provides resources {}", f, r.toAdd);
-                    resources.addAll(r.toAdd);
-                }
+                final List<InstallableResource> resources = cfg.scanWatchedFolders();
                 logger.debug("Registering {} resources with OSGi installer: {}", resources.size(), resources);
                 installer.registerResources(URL_SCHEME, resources.toArray(new InstallableResource[resources.size()]));
                 this.active.set(true);
@@ -470,7 +463,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
         final String path = n.getPath();
         final int priority = cfg.getFolderNameFilter().getPriority(path);
         if (priority > 0) {
-            addWatchedFolder(cfg, new WatchedFolder(session, path, priority, cfg.getConverters()));
+            cfg.addWatchedFolder(new WatchedFolder(session, path, priority, cfg.getConverters()));
         }
         final int depth = path.split("/").length;
         if(depth > cfg.getMaxWatchedFolderDepth()) {
@@ -484,24 +477,6 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
     }
 
     /**
-     * Add WatchedFolder to our list if it doesn't exist yet.
-     */
-    private void addWatchedFolder(final InstallerConfig cfg, final WatchedFolder toAdd)
-    throws RepositoryException {
-        WatchedFolder existing = null;
-        for(WatchedFolder wf : cfg.getWatchedFolders()) {
-            if (wf.getPath().equals(toAdd.getPath())) {
-                existing = wf;
-                break;
-            }
-        }
-        if (existing == null) {
-            toAdd.start();
-            cfg.getWatchedFolders().add(toAdd);
-        }
-    }
-
-    /**
      * Add new folders to watch if any have been detected
      * @return a list of InstallableResource that must be unregistered,
      *  	for folders that have been removed
@@ -509,25 +484,12 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
     private List<String> updateFoldersList(final InstallerConfig cfg, final Session session) throws Exception {
         logger.debug("Updating folder list.");
 
-	    for(String root : cfg.getRoots()) {
+	    for(final String root : cfg.getRoots()) {
 	        findPathsToWatch(cfg, session, root);
 	    }
 
         // Check all WatchedFolder, in case some were deleted
-        final List<String> removedResources = new LinkedList<String>();
-
-        final Iterator<WatchedFolder> i = cfg.getWatchedFolders().iterator();
-        while ( i.hasNext() ) {
-            final WatchedFolder wf = i.next();
-
-            logger.debug("Item {} exists? {}", wf.getPath(), session.itemExists(wf.getPath()));
-            if (!session.itemExists(wf.getPath())) {
-                logger.info("Deleting {}, path does not exist anymore", wf);
-                removedResources.addAll(wf.scan().toRemove);
-                wf.stop();
-                i.remove();
-            }
-        }
+        final List<String> removedResources = cfg.checkForRemovedWatchedFolders(session);
 
         return removedResources;
     }
@@ -554,7 +516,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
         try {
             boolean didRefresh = false;
 
-            if (anyWatchFolderNeedsScan(cfg)) {
+            if (cfg.anyWatchFolderNeedsScan()) {
                 session.refresh(false);
                 didRefresh = true;
                 if (scanningIsPaused(cfg, session)) {
@@ -572,7 +534,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
 
             // Rescan WatchedFolders if needed
             boolean scanWf = false;
-            for(final WatchedFolder wf : cfg.getWatchedFolders()) {
+            for(final WatchedFolder wf : cfg.cloneWatchedFolders()) {
                 if (!wf.needsScan()) {
                     continue;
                 }
@@ -645,15 +607,6 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
                 logger.debug("Found child nodes {} at path {}. Scanning would be paused", nodeNames, cfg.getPauseScanNodePath());
             }
             return result;
-        }
-        return false;
-    }
-
-    private boolean anyWatchFolderNeedsScan(final InstallerConfig cfg) {
-        for (WatchedFolder wf : cfg.getWatchedFolders()) {
-            if (wf.needsScan()) {
-                return true;
-            }
         }
         return false;
     }
