@@ -348,7 +348,7 @@ public class JobManagerImpl
                     }
                 } else {
                     final JobHandler jh = new JobHandler(job, null, this.configuration);
-                    jh.finished(Job.JobState.DROPPED, true, -1);
+                    jh.finished(Job.JobState.DROPPED, true, null);
                 }
             }
         } else {
@@ -864,7 +864,7 @@ public class JobManagerImpl
             if ( forward && !stopped ) {
                 // mark the job as stopped
                 final JobHandler jh = new JobHandler(job, null, this.configuration);
-                jh.finished(JobState.STOPPED, true, -1);
+                jh.finished(JobState.STOPPED, true, null);
             }
         }
     }

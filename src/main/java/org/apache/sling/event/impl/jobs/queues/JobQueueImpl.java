@@ -503,8 +503,10 @@ public class JobQueueImpl
 
     private static final class RescheduleInfo {
         public boolean      reschedule = false;
+        // processing time is only set of state is SUCCEEDED
         public long         processingTime;
         public Job.JobState state;
+        public String       notificationTopic;
     }
 
     private RescheduleInfo handleReschedule(final JobHandler handler, final Job.JobState resultState) {
@@ -516,7 +518,7 @@ public class JobQueueImpl
                     this.logger.debug("Finished job {}", Utility.toString(handler.getJob()));
                 }
                 info.processingTime = System.currentTimeMillis() - handler.started;
-                NotificationUtility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_FINISHED, handler.getJob(), info.processingTime);
+                info.notificationTopic = NotificationConstants.TOPIC_JOB_FINISHED;
                 break;
             case QUEUED : // check if we exceeded the number of retries
                 final int retries = (Integer) handler.getJob().getProperty(Job.PROPERTY_JOB_RETRIES);
@@ -527,21 +529,21 @@ public class JobQueueImpl
                     if ( this.logger.isDebugEnabled() ) {
                         this.logger.debug("Cancelled job {}", Utility.toString(handler.getJob()));
                     }
-                    NotificationUtility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_CANCELLED, handler.getJob(), null);
+                    info.notificationTopic = NotificationConstants.TOPIC_JOB_CANCELLED;
                 } else {
                     info.reschedule = true;
                     handler.getJob().retry();
                     if ( this.logger.isDebugEnabled() ) {
                         this.logger.debug("Failed job {}", Utility.toString(handler.getJob()));
                     }
-                    NotificationUtility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_FAILED, handler.getJob(), null);
+                    info.notificationTopic = NotificationConstants.TOPIC_JOB_FAILED;
                 }
                 break;
             default : // consumer cancelled the job (STOPPED, GIVEN_UP, ERROR)
                 if ( this.logger.isDebugEnabled() ) {
                     this.logger.debug("Cancelled job {}", Utility.toString(handler.getJob()));
                 }
-                NotificationUtility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_CANCELLED, handler.getJob(), null);
+                info.notificationTopic = NotificationConstants.TOPIC_JOB_CANCELLED;
                 break;
         }
 
@@ -586,6 +588,7 @@ public class JobQueueImpl
         } else {
             this.reschedule(handler);
         }
+        NotificationUtility.sendNotification(this.services.eventAdmin, rescheduleInfo.notificationTopic, handler.getJob(), rescheduleInfo.processingTime);
 
         return rescheduleInfo.reschedule;
     }

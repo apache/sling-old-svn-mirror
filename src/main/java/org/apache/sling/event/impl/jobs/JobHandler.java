@@ -113,7 +113,7 @@ public class JobHandler {
      */
     public void finished(final Job.JobState state,
                           final boolean keepJobInHistory,
-                          final long duration) {
+                          final Long duration) {
         final boolean isSuccess = (state == Job.JobState.SUCCEEDED);
         final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {
