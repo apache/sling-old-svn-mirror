@@ -10,12 +10,12 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.log</artifactId>
-            <version>4.0.1-SNAPSHOT</version>
+            <version>4.0.2</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.logservice</artifactId>
-            <version>1.0.2</version>
+            <version>1.0.4</version>
         </bundle>
         <bundle>
             <groupId>org.slf4j</groupId>
@@ -174,12 +174,12 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.discovery.impl</artifactId>
-            <version>1.0.12</version>
+            <version>1.1.0</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.event</artifactId>
-            <version>3.5.4</version>
+            <version>3.6.0</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
