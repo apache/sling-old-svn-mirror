@@ -77,10 +77,6 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
         try {
             session = getSession(resourceResolver);
 
-            // TODO : no tokens
-
-            final String[] paths = request.getPaths();
-
             String packageGroup = "sling/distribution";
             String packageName = getType() + "_" + System.currentTimeMillis() + "_" +  UUID.randomUUID();
 
