@@ -18,6 +18,9 @@
  */
 package org.apache.sling.installer.provider.jcr.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.Event;
@@ -38,14 +41,18 @@ class RootFolderListener implements EventListener {
     private final RescanTimer timer;
     private final String watchedPath;
 
-    RootFolderListener(final Session session, final String path, final RescanTimer timer)
+    private final InstallerConfig cfg;
+
+    RootFolderListener(final Session session, final String path, final RescanTimer timer, final InstallerConfig cfg)
     throws RepositoryException {
         this.timer = timer;
         this.watchedPath = path;
+        this.cfg = cfg;
 
-        int eventTypes = Event.NODE_ADDED | Event.NODE_REMOVED;
-        boolean isDeep = true;
-        boolean noLocal = true;
+        final int eventTypes = Event.NODE_ADDED | Event.NODE_REMOVED
+                | Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED;
+        final boolean isDeep = true;
+        final boolean noLocal = true;
         session.getWorkspace().getObservationManager().addEventListener(this, eventTypes, watchedPath,
                 isDeep, null, null, noLocal);
 
@@ -65,14 +72,32 @@ class RootFolderListener implements EventListener {
      * Schedule a scan.
      */
     public void onEvent(final EventIterator it) {
-        // we don't care about the events
-        // they are only logged if debug log level
-        if ( logger.isDebugEnabled() ) {
-            while(it.hasNext()) {
-                final Event e = it.nextEvent();
-                logger.debug("Got event {}", e);
+        // we only do the global scan for node changes
+        boolean globalScan = false;
+        // copy watched folders
+        final List<WatchedFolder> checkFolders = new ArrayList<WatchedFolder>(cfg.getWatchedFolders());
+        while(it.hasNext()) {
+            final Event e = it.nextEvent();
+            logger.debug("Got event {}", e);
+            if ( e.getType() == Event.NODE_ADDED || e.getType() == Event.NODE_REMOVED ) {
+                globalScan = true;
+            }
+            try {
+                final String path = e.getPath();
+
+                for(final WatchedFolder folder : checkFolders) {
+                    if ( path.startsWith(folder.getPathWithSlash()) ) {
+                        folder.onEvent(it);
+                        checkFolders.remove(folder);
+                        break;
+                    }
+                }
+            } catch ( final RepositoryException re ) {
+                logger.warn("Error while getting path from event", re);
             }
         }
-        timer.scheduleScan();
+        if ( globalScan ) {
+            timer.scheduleScan();
+        }
     }
 }

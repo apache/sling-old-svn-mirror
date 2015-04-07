@@ -47,6 +47,7 @@ class WatchedFolder implements EventListener{
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final String path;
+    private final String pathWithSlash;
     private final int priority;
     private final Session session;
     private final Collection <JcrInstaller.NodeConverter> converters;
@@ -72,6 +73,7 @@ class WatchedFolder implements EventListener{
         }
 
         this.path = path;
+        this.pathWithSlash = path.concat("/");
         this.converters = converters;
         this.priority = priority;
 
@@ -85,20 +87,20 @@ class WatchedFolder implements EventListener{
                 | Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED;
         final boolean isDeep = true;
         final boolean noLocal = true;
-        session.getWorkspace().getObservationManager().addEventListener(this, eventTypes, path,
-                isDeep, null, null, noLocal);
+//        session.getWorkspace().getObservationManager().addEventListener(this, eventTypes, path,
+//                isDeep, null, null, noLocal);
         this.needsScan = true;
 
         log.info("Watching folder {} (priority {})", path, priority);
     }
 
     public void stop() {
-    	try {
+/*    	try {
 	    	session.getWorkspace().getObservationManager().removeEventListener(this);
     	} catch(RepositoryException re) {
     		log.warn("RepositoryException in stop()", re);
     	}
-    }
+*/    }
 
     @Override
     public String toString() {
@@ -107,6 +109,10 @@ class WatchedFolder implements EventListener{
 
     public String getPath() {
         return path;
+    }
+
+    public String getPathWithSlash() {
+        return this.pathWithSlash;
     }
 
     /**
