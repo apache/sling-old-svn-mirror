@@ -20,6 +20,7 @@ package org.apache.sling.testing.mock.jcr;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import javax.jcr.ItemNotFoundException;
@@ -128,4 +129,11 @@ public class MockNodeTest {
         this.node1.getPrimaryItem();
     }
 
+    @Test
+    public void testNtFileNode() throws RepositoryException {
+        Node ntFile = this.session.getRootNode().addNode("testFile", JcrConstants.NT_FILE);
+        assertNotNull(ntFile.getProperty(JcrConstants.JCR_CREATED).getDate());
+        assertNotNull(ntFile.getProperty("jcr:createdBy").getString());
+    }
+    
 }

@@ -67,9 +67,9 @@ abstract class AbstractItem implements Item {
 
     @Override
     public boolean isNew() {
-        return false;
+        return itemData.isNew();
     }
-
+    
     @Override
     public Item getAncestor(final int depth) throws RepositoryException {
         if (depth < 0 || depth > getDepth()) {
