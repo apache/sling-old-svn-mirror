@@ -33,10 +33,6 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.util.TraversingItemVisitor;
-
 import org.apache.jackrabbit.commons.json.JsonHandler;
 import org.apache.jackrabbit.commons.json.JsonParser;
 import org.apache.sling.api.resource.Resource;
@@ -284,30 +280,28 @@ public class JcrResourceBundle extends ResourceBundle {
         }
     }
 
-    private void loadSlingMessageDictionary(Resource dictionaryResource, final Map<String, Object> targetDictionary) {
+    /**
+     * Depth-first traversal of a resource tree
+     */
+    private void scanForSlingMessages(final Resource rsrc, final Map<String, Object> targetDictionary) {
+        final ValueMap vm = rsrc.adaptTo(ValueMap.class);
+        if ( vm != null ) {
+            final String value = vm.get(PROP_VALUE, String.class);
+            if ( value != null ) {
+                final String key = vm.get(PROP_KEY, rsrc.getName());
+                targetDictionary.put(key, value);
+            }
+        }
+
+        for(final Resource c : rsrc.getChildren()) {
+            scanForSlingMessages(c, targetDictionary);
+        }
+    }
+
+    private void loadSlingMessageDictionary(final Resource dictionaryResource, final Map<String, Object> targetDictionary) {
         log.info("Loading sling:Message dictionary: {}", dictionaryResource.getPath());
 
-        TraversingItemVisitor.Default visitor = new TraversingItemVisitor.Default() {
-            @Override
-            protected void entering(Node node, int level) throws RepositoryException {
-                if (node.isNodeType(NT_MESSAGE) && node.hasProperty(PROP_VALUE)) {
-                    String key;
-                    if (node.hasProperty(PROP_KEY)) {
-                        key = node.getProperty(PROP_KEY).getString();
-                    } else {
-                        key = node.getName();
-                    }
-                    String value = node.getProperty(PROP_VALUE).getString();
-                    targetDictionary.put(key, value);
-                }
-            }
-        };
-        try {
-            Node node = dictionaryResource.adaptTo(Node.class);
-            visitor.visit(node);
-        } catch (RepositoryException e) {
-            log.error("Could not read sling:Message dictionary: " + dictionaryResource.getPath(), e);
-        }
+        this.scanForSlingMessages(dictionaryResource, targetDictionary);
     }
 
     private Set<String> loadPotentialLanguageRoots(ResourceResolver resourceResolver, Locale locale, String baseName) {
@@ -316,9 +310,8 @@ public class JcrResourceBundle extends ResourceBundle {
         final String localeRFC4646String = toRFC4646String(locale);
         final String localeRFC4646StringLower = localeRFC4646String.toLowerCase();
 
-        Set<String> paths = new LinkedHashSet<String>();
-        @SuppressWarnings("deprecation")
-        Iterator<Resource> bundles = resourceResolver.findResources(QUERY_LANGUAGE_ROOTS, "xpath");
+        final Set<String> paths = new LinkedHashSet<String>();
+        final Iterator<Resource> bundles = resourceResolver.findResources(QUERY_LANGUAGE_ROOTS, "xpath");
         while (bundles.hasNext()) {
             Resource bundle = bundles.next();
             ValueMap properties = bundle.adaptTo(ValueMap.class);
