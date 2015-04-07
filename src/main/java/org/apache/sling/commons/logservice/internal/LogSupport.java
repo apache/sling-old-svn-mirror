@@ -38,6 +38,7 @@ import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.log.LogEntry;
 import org.osgi.service.log.LogListener;
 import org.osgi.service.log.LogService;
+import org.osgi.service.startlevel.StartLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -347,7 +348,12 @@ public class LogSupport implements SynchronousBundleListener, ServiceListener,
                 message = "FrameworkEvent PACKAGES REFRESHED";
                 break;
             case FrameworkEvent.STARTLEVEL_CHANGED:
-                message = "FrameworkEvent STARTLEVEL CHANGED";
+                // bundle must be the system bundle
+                final Bundle bundle = event.getBundle();
+                // StartLevel service is always there
+                final ServiceReference slRef = bundle.getBundleContext().getServiceReference(StartLevel.class.getName());
+                final StartLevel sl = (StartLevel) bundle.getBundleContext().getService(slRef);
+                message = "FrameworkEvent STARTLEVEL CHANGED to " + sl.getStartLevel();
                 break;
             case FrameworkEvent.WARNING:
                 message = "FrameworkEvent WARNING";
@@ -359,7 +365,7 @@ public class LogSupport implements SynchronousBundleListener, ServiceListener,
                 message = "FrameworkEvent " + event.getType();
         }
 
-        LogEntry entry = new LogEntryImpl(event.getBundle(), null, level,
+        final LogEntry entry = new LogEntryImpl(event.getBundle(), null, level,
             message, exception);
         fireLogEvent(entry);
     }
