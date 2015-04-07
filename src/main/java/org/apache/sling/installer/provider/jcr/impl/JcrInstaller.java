@@ -212,7 +212,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
                 // open session
                 session = repository.loginAdministrative(repository.getDefaultWorkspace());
 
-                for (String path : cfg.getRoots()) {
+                for (final String path : cfg.getRoots()) {
                     listeners.add(new RootFolderListener(session, path, updateFoldersListTimer));
                     logger.debug("Configured root folder: {}", path);
                 }
@@ -288,7 +288,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
             }
             try {
                 if (session != null) {
-                    for(RootFolderListener wfc : listeners) {
+                    for(final RootFolderListener wfc : listeners) {
                         wfc.cleanup(session);
                     }
                     session.getWorkspace().getObservationManager().removeEventListener(this);
@@ -572,7 +572,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
 
             // Rescan WatchedFolders if needed
             boolean scanWf = false;
-            for(WatchedFolder wf : cfg.getWatchedFolders()) {
+            for(final WatchedFolder wf : cfg.getWatchedFolders()) {
                 if (!wf.needsScan()) {
                     continue;
                 }
