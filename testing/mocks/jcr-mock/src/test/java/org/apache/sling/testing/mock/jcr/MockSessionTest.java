@@ -247,4 +247,17 @@ public class MockSessionTest {
         this.session.removeItem("/foo/");
         assertFalse("Removing /foo/ should succeed", this.session.nodeExists("/foo"));
     }
+    
+    @Test
+    public void testNewState() throws RepositoryException {
+        Node node = this.session.getRootNode().addNode("foo");
+        Property property = node.setProperty("testProp", "value123");
+        assertTrue(node.isNew());
+        assertTrue(property.isNew());
+        
+        this.session.save();
+        assertFalse(node.isNew());
+        assertFalse(property.isNew());
+    }
+    
 }

@@ -40,6 +40,7 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
 import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter;
@@ -64,6 +65,13 @@ class MockNode extends AbstractItem implements Node {
         ItemData itemData = ItemData.newNode(path, new MockNodeType(primaryNodeTypeName));
         Node node = new MockNode(itemData, getSession());
         getMockedSession().addItem(itemData);
+        
+        // special handling for some node types
+        if (StringUtils.equals(primaryNodeTypeName, JcrConstants.NT_FILE)) {
+            node.setProperty(JcrConstants.JCR_CREATED, Calendar.getInstance());
+            node.setProperty("jcr:createdBy", getMockedSession().getUserID());
+        }
+        
         return node;
     }
 

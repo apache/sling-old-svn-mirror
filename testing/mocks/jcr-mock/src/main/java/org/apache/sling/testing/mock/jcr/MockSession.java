@@ -239,7 +239,10 @@ class MockSession implements Session {
 
     @Override
     public void save() throws RepositoryException {
-        // do nothing
+        // reset new flags
+        for (ItemData itemData : this.items.values()) {
+            itemData.setIsNew(false);
+        }
     }
 
     @Override
