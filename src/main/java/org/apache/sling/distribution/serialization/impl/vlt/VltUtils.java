@@ -21,6 +21,7 @@ package org.apache.sling.distribution.serialization.impl.vlt;
 
 
 
+import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.vault.fs.api.ImportMode;
 import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.api.WorkspaceFilter;
@@ -96,9 +97,45 @@ public class VltUtils {
         inf.setProperties(props);
 
         opts.setMetaInf(inf);
-        opts.setRootPath("/");
+
+        String root = getClosestRoot(filter.getFilterSets());
+        opts.setRootPath(root);
+        opts.setMountPath(root);
 
         return opts;
+    }
+
+
+    private static String getClosestRoot(List<PathFilterSet> filterSets) {
+
+        String closestRoot = null;
+
+        for (PathFilterSet filterSet : filterSets) {
+            String root = filterSet.getRoot();
+
+            if (closestRoot == null) {
+                closestRoot = root;
+            } else {
+                while(!root.startsWith(closestRoot)) {
+                    closestRoot = Text.getRelativeParent(closestRoot, 1);
+                }
+            }
+
+            if (closestRoot.length() < 2) {
+                break;
+            }
+        }
+
+        if (closestRoot != null) {
+            closestRoot = Text.getRelativeParent(closestRoot, 1);
+        }
+
+        if (closestRoot == null || !closestRoot.startsWith("/")) {
+            closestRoot = "/";
+        }
+
+        return closestRoot;
+
     }
 
     public static ImportOptions getImportOptions(AccessControlHandling aclHandling, ImportMode importMode) {

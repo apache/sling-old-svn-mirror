@@ -70,6 +70,7 @@ public class JcrVaultDistributionPackage extends AbstractDistributionPackage imp
     public void delete() {
         Node node = jcrPackage.getNode();
         try {
+            jcrPackage.close();
             node.remove();
             session.save();
         } catch (RepositoryException e) {

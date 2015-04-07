@@ -1,15 +1,19 @@
 package org.apache.sling.distribution.serialization.impl.vlt;
 
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.vault.fs.api.ImportMode;
 import org.apache.jackrabbit.vault.fs.api.WorkspaceFilter;
 import org.apache.jackrabbit.vault.fs.io.AccessControlHandling;
 import org.apache.jackrabbit.vault.fs.io.ImportOptions;
+import org.apache.jackrabbit.vault.packaging.ExportOptions;
 import org.apache.jackrabbit.vault.packaging.JcrPackage;
 import org.apache.jackrabbit.vault.packaging.JcrPackageDefinition;
 import org.apache.jackrabbit.vault.packaging.JcrPackageManager;
 import org.apache.jackrabbit.vault.packaging.PackageId;
 import org.apache.jackrabbit.vault.packaging.Packaging;
+import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
@@ -22,8 +26,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.UUID;
 /**
  * a {@link org.apache.sling.distribution.serialization.DistributionPackageBuilder} based on Apache Jackrabbit FileVault.
@@ -57,24 +63,21 @@ public class JcrVaultDistributionPackageBuilder  extends AbstractDistributionPac
         Session session = null;
         try {
             session = getSession(resourceResolver);
-            JcrPackageManager packageManager = packaging.getPackageManager(session);
-
-            final String[] paths = request.getPaths();
 
             String packageGroup = PACKAGE_GROUP;
             String packageName = getType() + "_" + System.currentTimeMillis() + "_" +  UUID.randomUUID();
 
-
             WorkspaceFilter filter = VltUtils.createFilter(request);
-
-            final JcrPackage jcrPackage = packageManager.create(packageGroup, packageName, VERSION);
-            final JcrPackageDefinition jcrPackageDefinition = jcrPackage.getDefinition();
-
-
-            jcrPackageDefinition.setFilter(filter, true);
+            ExportOptions opts = VltUtils.getExportOptions(filter, packageGroup, packageName, VERSION);
 
             log.debug("assembling package {}", packageGroup + '/' + packageName + "-" + VERSION);
-            packageManager.assemble(jcrPackage, null);
+
+            VaultPackage vaultPackage = packaging.getPackageManager().assemble(session, opts, (File) null);
+
+            JcrPackageManager packageManager = packaging.getPackageManager(session);
+            JcrPackage jcrPackage = packageManager.upload(vaultPackage.getFile(), true, true, null);
+            vaultPackage.close();
+
             return new JcrVaultDistributionPackage(getType(), jcrPackage, session);
         } catch (Exception e) {
             throw new DistributionPackageBuildingException(e);
