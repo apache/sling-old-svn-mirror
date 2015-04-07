@@ -18,6 +18,8 @@
  */
 package org.apache.sling.launchpad.base.impl;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -95,15 +97,24 @@ public class DefaultStartupHandler
     /** MBean startup listener. */
     private final StartupListener mbeanStartupListener;
 
+    /** The started time. */
+    private final long startedAt;
+
+    private volatile Object[] logService;
+
     /**
      * Constructor.
      * @param context Bundle context
      * @param logger  Logger
      * @param manager The startup manager
      */
-    public DefaultStartupHandler(final BundleContext context, final Logger logger, final StartupManager manager) {
+    public DefaultStartupHandler(final BundleContext context,
+            final Logger logger,
+            final StartupManager manager,
+            final long startedAt) {
         this.logger = logger;
         this.bundleContext = context;
+        this.startedAt = startedAt;
         this.startupMode = manager.getMode();
         this.targetStartLevel = manager.getTargetStartLevel();
 
@@ -133,7 +144,7 @@ public class DefaultStartupHandler
                         if (listener != null) {
                             try {
                                 listener.inform(startupMode, finished.get());
-                            } catch (Throwable t) {
+                            } catch (final Throwable t) {
                                 logger.log(Logger.LOG_ERROR, "Error calling StartupListener " + listener, t);
                             }
                         }
@@ -156,7 +167,7 @@ public class DefaultStartupHandler
         }
 
         this.bundleContext.registerService(StartupHandler.class.getName(), this, null);
-        logger.log(Logger.LOG_INFO, "Started startup handler with target start level="
+        this.log(Logger.LOG_INFO, "Started startup handler with target start level="
                + String.valueOf(this.targetStartLevel) + ", and expected bundle count=" + String.valueOf(this.expectedBundlesCount));
         final Thread t = new Thread(this);
         t.start();
@@ -211,7 +222,7 @@ public class DefaultStartupHandler
      */
     private void incStartLevel() {
         final int newLevel = this.startLevelService.getStartLevel() + 1;
-        logger.log(Logger.LOG_DEBUG, "Increasing start level to " + String.valueOf(newLevel));
+        this.log(Logger.LOG_DEBUG, "Increasing start level to " + String.valueOf(newLevel));
         this.startLevelService.setStartLevel(newLevel);
     }
 
@@ -220,7 +231,7 @@ public class DefaultStartupHandler
      */
     @Override
     public void waitWithStartup(final boolean flag) {
-        logger.log(Logger.LOG_DEBUG, "Wait with startup " + flag);
+        this.log(Logger.LOG_DEBUG, "Wait with startup " + flag);
         if ( flag ) {
             this.startupShouldWait.incrementAndGet();
         } else {
@@ -260,7 +271,7 @@ public class DefaultStartupHandler
         if ( finished.get() ) {
             return;
         }
-        logger.log(Logger.LOG_DEBUG, "Received framework event " + event);
+        this.log(Logger.LOG_DEBUG, "Received framework event " + event);
 
         if ( !this.useIncremental ) {
             // restart
@@ -279,7 +290,7 @@ public class DefaultStartupHandler
                 } else {
                     this.enqueue(true);
                     final int startLevel = this.startLevelService.getStartLevel();
-                    logger.log(Logger.LOG_INFO, "Startup progress " + String.valueOf(startLevel) + '/' + String.valueOf(targetStartLevel));
+                    this.log(Logger.LOG_DEBUG, "Startup progress " + String.valueOf(startLevel) + '/' + String.valueOf(targetStartLevel));
                     final float ratio = (float) startLevel / (float) targetStartLevel;
                     this.startupProgress(ratio);
                 }
@@ -287,18 +298,66 @@ public class DefaultStartupHandler
         }
     }
 
+    private void log(final int level, final String msg) {
+        log(null, level, msg, null);
+    }
+
+    private void log(final int level, final String msg, final Throwable t) {
+        log(null, level, msg, t);
+    }
+
+    private void log(final ServiceReference<?> sRef, final int level, final String msg, final Throwable t) {
+        boolean loggedWithService = false;
+        if ( this.logService == null ) {
+            final ServiceReference<?> ref = this.bundleContext.getServiceReference("org.osgi.service.log.LogService");
+            if ( ref != null ) {
+                final Object ls = this.bundleContext.getService(ref);
+                if ( ls != null ) {
+                    final Class<?>[] formalParams = {
+                            ServiceReference.class,
+                            Integer.TYPE,
+                            String.class,
+                            Throwable.class
+                        };
+
+                    try {
+                        final Method logMethod = ls.getClass().getMethod("log", formalParams);
+                        logMethod.setAccessible(true);
+                        logService = new Object[] { ls, logMethod };
+                    } catch (final NoSuchMethodException ex) {
+                        // no need to log
+                    }
+                }
+            }
+        }
+        if ( this.logService != null ) {
+            final Object[] params = {sRef, new Integer(level), msg, t};
+            try {
+                ((Method) this.logService[1]).invoke(this.logService[0], params);
+                loggedWithService = true;
+            } catch (final InvocationTargetException ex) {
+                // no need to log
+            } catch (final IllegalAccessException ex) {
+                // no need to log
+            }
+        }
+        if ( !loggedWithService ) {
+            logger.log(level, msg);
+        }
+    }
+
     /**
      * Notify finished startup
      */
     private void startupFinished() {
-        logger.log(Logger.LOG_INFO, "Startup finished.");
+        this.log(Logger.LOG_INFO, "Startup finished in " + String.valueOf(System.currentTimeMillis() - this.startedAt) + "ms");
         this.finished.set(true);
 
         for (final StartupListener listener : this.listenerTracker.getServices(new StartupListener[0])) {
             try {
                 listener.startupFinished(this.startupMode);
             } catch (Throwable t) {
-                logger.log(Logger.LOG_ERROR, "Error calling StartupListener " + listener, t);
+                this.log(Logger.LOG_ERROR, "Error calling StartupListener " + listener, t);
             }
         }
         if ( this.mbeanStartupListener != null ) {
@@ -326,8 +385,8 @@ public class DefaultStartupHandler
         for (final StartupListener listener : this.listenerTracker.getServices(new StartupListener[0])) {
             try {
                 listener.startupProgress(ratio);
-            } catch (Throwable t) {
-                logger.log(Logger.LOG_ERROR, "Error calling StartupListener " + listener, t);
+            } catch (final Throwable t) {
+                this.log(Logger.LOG_ERROR, "Error calling StartupListener " + listener, t);
             }
         }
         if ( this.mbeanStartupListener != null ) {
@@ -341,13 +400,13 @@ public class DefaultStartupHandler
     @Override
     public void bundleChanged(final BundleEvent event) {
         if (!finished.get()) {
-            logger.log(Logger.LOG_DEBUG, "Received bundle event " + event);
+            this.log(Logger.LOG_DEBUG, "Received bundle event " + event);
 
             if (event.getType() == BundleEvent.RESOLVED || event.getType() == BundleEvent.STARTED) {
                 // Add (if not existing) bundle to active bundles and refresh progress bar
                 activeBundles.add(event.getBundle().getSymbolicName());
 
-                logger.log(Logger.LOG_INFO, "Startup progress " + String.valueOf(activeBundles.size()) + '/' + String.valueOf(expectedBundlesCount));
+                this.log(Logger.LOG_DEBUG, "Startup progress " + String.valueOf(activeBundles.size()) + '/' + String.valueOf(expectedBundlesCount));
                 final float ratio = (float) activeBundles.size() / (float) expectedBundlesCount;
                 this.startupProgress(ratio);
             } else if (event.getType() == BundleEvent.STOPPED) {
