@@ -658,5 +658,6 @@ public class JcrResourceProvider
         } catch (final RepositoryException ignore) {
             log.warn("Unable to refresh session.", ignore);
         }
+        this.helper.clearCache();
     }
 }
