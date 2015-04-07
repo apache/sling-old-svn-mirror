@@ -77,7 +77,7 @@ import org.slf4j.LoggerFactory;
     @Property(name=Constants.SERVICE_RANKING, intValue=100)
 })
 @Service(value=UpdateHandler.class)
-public class JcrInstaller implements EventListener, UpdateHandler, ManagedService {
+public class JcrInstaller implements UpdateHandler, ManagedService {
 
 	public static final long RUN_LOOP_DELAY_MSEC = 500L;
 	public static final String URL_SCHEME = "jcrinstall";
@@ -183,7 +183,8 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
 
     /** Thread that can be cleanly stopped with a flag */
     private final static AtomicInteger bgThreadCounter = new AtomicInteger();
-    class StoppableThread extends Thread {
+
+    class StoppableThread extends Thread implements EventListener {
 
         /** Used for synchronizing. */
         final Object lock = new Object();
@@ -212,12 +213,12 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
                 session = repository.loginAdministrative(repository.getDefaultWorkspace());
 
                 for (String path : cfg.getRoots()) {
-                    listeners.add(new RootFolderListener(session, cfg.getFolderNameFilter(), path, updateFoldersListTimer));
+                    listeners.add(new RootFolderListener(session, path, updateFoldersListTimer));
                     logger.debug("Configured root folder: {}", path);
                 }
 
                 // Watch for events on the root - that might be one of our root folders
-                session.getWorkspace().getObservationManager().addEventListener(JcrInstaller.this,
+                session.getWorkspace().getObservationManager().addEventListener(this,
                         Event.NODE_ADDED | Event.NODE_REMOVED,
                         "/",
                         false, // isDeep
@@ -234,8 +235,8 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
                         try {
                             while (events.hasNext()) {
                                 final Event e = events.nextEvent();
-                                JcrInstaller.this.checkChanges(cfg, e.getIdentifier());
-                                JcrInstaller.this.checkChanges(cfg, e.getPath());
+                                checkChanges(e.getIdentifier());
+                                checkChanges(e.getPath());
                             }
                         } catch (final RepositoryException re) {
                             logger.warn("RepositoryException in onEvent", re);
@@ -255,7 +256,7 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
 
 
                 // Find paths to watch and create WatchedFolders to manage them
-                for(String root : cfg.getRoots()) {
+                for(final String root : cfg.getRoots()) {
                     findPathsToWatch(cfg, session, root);
                 }
 
@@ -290,7 +291,7 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
                     for(RootFolderListener wfc : listeners) {
                         wfc.cleanup(session);
                     }
-                    session.getWorkspace().getObservationManager().removeEventListener(JcrInstaller.this);
+                    session.getWorkspace().getObservationManager().removeEventListener(this);
                     if ( moveEventListener != null ) {
                         session.getWorkspace().getObservationManager().removeEventListener(moveEventListener);
                         moveEventListener = null;
@@ -304,6 +305,36 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
                 session = null;
             }
             listeners.clear();
+        }
+
+        /**
+         * @see javax.jcr.observation.EventListener#onEvent(javax.jcr.observation.EventIterator)
+         */
+        public void onEvent(final EventIterator it) {
+            // Got a DELETE or ADD on root - schedule folders rescan if one
+            // of our root folders is impacted
+            try {
+                while(it.hasNext()) {
+                    final Event e = it.nextEvent();
+                    logger.debug("Got event {}", e);
+
+                    this.checkChanges(e.getPath());
+                }
+            } catch(final RepositoryException re) {
+                logger.warn("RepositoryException in onEvent", re);
+            }
+        }
+
+        /**
+         * Check for changes in any of the root folders
+         */
+        private void checkChanges(final String path) {
+            for(final String root : cfg.getRoots()) {
+                if (path.startsWith(root)) {
+                    logger.info("Got event for root {}, scheduling scanning of new folders", root);
+                    updateFoldersListTimer.scheduleScan();
+                }
+            }
         }
 
         @Override
@@ -501,18 +532,6 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
         return removedResources;
     }
 
-    /**
-     * Check for changes in any of the root folders
-     */
-    private void checkChanges(final InstallerConfig cfg, final String path) {
-        for(String root : cfg.getRoots()) {
-            if (path.startsWith(root)) {
-                logger.info("Got event for root {}, scheduling scanning of new folders", root);
-                updateFoldersListTimer.scheduleScan();
-            }
-        }
-    }
-
     InstallerConfig getConfiguration() {
         InstallerConfig cfg = null;
         final StoppableThread st = this.backgroundThread;
@@ -524,28 +543,6 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
 
     Session getSession() {
         return this.backgroundThread.session;
-    }
-
-    /**
-     * @see javax.jcr.observation.EventListener#onEvent(javax.jcr.observation.EventIterator)
-     */
-    public void onEvent(final EventIterator it) {
-        // Got a DELETE or ADD on root - schedule folders rescan if one
-        // of our root folders is impacted
-        // get configuration
-        final InstallerConfig cfg = this.getConfiguration();
-        if ( cfg != null ) {
-            try {
-                while(it.hasNext()) {
-                    final Event e = it.nextEvent();
-                    logger.debug("Got event {}", e);
-
-                    this.checkChanges(cfg, e.getPath());
-                }
-            } catch(RepositoryException re) {
-                logger.warn("RepositoryException in onEvent", re);
-            }
-        }
     }
 
     /**

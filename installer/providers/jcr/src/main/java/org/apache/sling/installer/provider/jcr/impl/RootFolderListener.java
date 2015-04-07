@@ -27,16 +27,19 @@ import javax.jcr.observation.EventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Listen for JCR events under one of our roots, to find out
- *  when new WatchedFolders must be created, or when some might
- *  have been deleted.
+/**
+ * Listen for JCR events under one of our roots, to find out
+ * when new WatchedFolders must be created, or when some might
+ * have been deleted.
  */
 class RootFolderListener implements EventListener {
-    protected final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final RescanTimer timer;
     private final String watchedPath;
 
-    RootFolderListener(Session session, FolderNameFilter fnf, String path, RescanTimer timer) throws RepositoryException {
+    RootFolderListener(final Session session, final String path, final RescanTimer timer)
+    throws RepositoryException {
         this.timer = timer;
         this.watchedPath = path;
 
@@ -46,7 +49,7 @@ class RootFolderListener implements EventListener {
         session.getWorkspace().getObservationManager().addEventListener(this, eventTypes, watchedPath,
                 isDeep, null, null, noLocal);
 
-        log.info("Watching {} to detect potential changes in subfolders", watchedPath);
+        logger.info("Watching {} to detect potential changes in subfolders", watchedPath);
     }
 
     @Override
@@ -54,15 +57,21 @@ class RootFolderListener implements EventListener {
         return getClass().getSimpleName() + " (" + watchedPath + ")";
     }
 
-    void cleanup(Session session) throws RepositoryException {
+    void cleanup(final Session session) throws RepositoryException {
         session.getWorkspace().getObservationManager().removeEventListener(this);
     }
 
-    /** Schedule a scan */
-    public void onEvent(EventIterator it) {
-        while(it.hasNext()) {
-            final Event e = it.nextEvent();
-            log.debug("Got event {}", e);
+    /**
+     * Schedule a scan.
+     */
+    public void onEvent(final EventIterator it) {
+        // we don't care about the events
+        // they are only logged if debug log level
+        if ( logger.isDebugEnabled() ) {
+            while(it.hasNext()) {
+                final Event e = it.nextEvent();
+                logger.debug("Got event {}", e);
+            }
         }
         timer.scheduleScan();
     }
