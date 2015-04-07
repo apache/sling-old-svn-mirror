@@ -32,6 +32,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
+
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.util.TraversingItemVisitor;
@@ -258,14 +259,12 @@ public class JcrResourceBundle extends ResourceBundle {
             public void value(double value) throws IOException {}
         });
 
-        InputStream stream = resource.adaptTo(InputStream.class);
+        final InputStream stream = resource.adaptTo(InputStream.class);
         if (stream != null) {
             String encoding = "utf-8";
-            ResourceMetadata metadata = resource.getResourceMetadata();
-            if (metadata != null) { // test does not implement metadata
-                if (metadata.getCharacterEncoding() != null) {
-                    encoding = metadata.getCharacterEncoding();
-                }
+            final ResourceMetadata metadata = resource.getResourceMetadata();
+            if (metadata.getCharacterEncoding() != null) {
+                encoding = metadata.getCharacterEncoding();
             }
 
             try {
