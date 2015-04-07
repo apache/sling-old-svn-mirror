@@ -18,6 +18,7 @@
  */
 package org.apache.sling.installer.provider.jcr.impl;
 
+import java.util.Iterator;
 import java.util.List;
 
 import javax.jcr.RepositoryException;
@@ -42,10 +43,13 @@ class RootFolderListener implements EventListener {
 
     private final InstallerConfig cfg;
 
+    private final String pathWithSlash;
+
     RootFolderListener(final Session session, final String path, final RescanTimer timer, final InstallerConfig cfg)
     throws RepositoryException {
         this.timer = timer;
         this.watchedPath = path;
+        this.pathWithSlash = path;
         this.cfg = cfg;
 
         final int eventTypes = Event.NODE_ADDED | Event.NODE_REMOVED
@@ -73,8 +77,15 @@ class RootFolderListener implements EventListener {
     public void onEvent(final EventIterator it) {
         // we only do the global scan for node changes
         boolean globalScan = false;
-        // copy watched folders
+        // copy watched folders and remove all for other roots
         final List<WatchedFolder> checkFolders = cfg.cloneWatchedFolders();
+        final Iterator<WatchedFolder> i = checkFolders.iterator();
+        while ( i.hasNext() ) {
+            final WatchedFolder wf = i.next();
+            if ( !wf.getPathWithSlash().startsWith(this.pathWithSlash)) {
+                i.remove();
+            }
+        }
         while(it.hasNext()) {
             final Event e = it.nextEvent();
             logger.debug("Got event {}", e);
@@ -84,10 +95,12 @@ class RootFolderListener implements EventListener {
             try {
                 final String path = e.getPath();
 
-                for(final WatchedFolder folder : checkFolders) {
+                final Iterator<WatchedFolder> ii = checkFolders.iterator();
+                while ( ii.hasNext() ) {
+                    final WatchedFolder folder = ii.next();
                     if ( path.startsWith(folder.getPathWithSlash()) ) {
                         folder.markForScan();
-                        checkFolders.remove(folder);
+                        ii.remove();
                         break;
                     }
                 }
