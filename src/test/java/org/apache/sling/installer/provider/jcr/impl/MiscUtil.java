@@ -25,6 +25,7 @@ import java.util.Hashtable;
 
 import org.apache.sling.commons.testing.jcr.EventHelper;
 import org.apache.sling.installer.api.OsgiInstaller;
+import org.apache.sling.installer.provider.jcr.impl.JcrInstaller.StoppableThread;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -98,9 +99,17 @@ class MiscUtil {
     /** Get the WatchedFolders of supplied JcrInstaller */
     @SuppressWarnings({ "unchecked"})
     static Collection<WatchedFolder> getWatchedFolders(JcrInstaller installer) throws Exception {
-        final Field f = installer.getClass().getDeclaredField("watchedFolders");
-        f.setAccessible(true);
-        return (Collection<WatchedFolder>)f.get(installer);
+        // get background thread
+        final Field threadField = installer.getClass().getDeclaredField("backgroundThread");
+        threadField.setAccessible(true);
+        final JcrInstaller.StoppableThread thread = (StoppableThread) threadField.get(installer);
+
+        // get configuration from thread
+        final Field configField = thread.getClass().getDeclaredField("cfg");
+        configField.setAccessible(true);
+        final InstallerConfig cfg = (InstallerConfig) configField.get(thread);
+
+        return cfg.getWatchedFolders();
     }
 
     /** Wait long enough for all changes in content to be processed by JcrInstaller */
