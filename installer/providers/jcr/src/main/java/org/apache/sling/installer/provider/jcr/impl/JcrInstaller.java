@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -162,9 +163,6 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
     @Reference
     private OsgiInstaller installer;
 
-    /** List of watched folders */
-    private volatile List<WatchedFolder> watchedFolders;
-
     /** The component context. */
     private volatile ComponentContext componentContext;
 
@@ -257,14 +255,13 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
 
 
                 // Find paths to watch and create WatchedFolders to manage them
-                watchedFolders = new LinkedList<WatchedFolder>();
                 for(String root : cfg.getRoots()) {
-                    findPathsToWatch(cfg, session, root, watchedFolders);
+                    findPathsToWatch(cfg, session, root);
                 }
 
                 // Scan watchedFolders and register resources with installer
                 final List<InstallableResource> resources = new LinkedList<InstallableResource>();
-                for(final WatchedFolder f : watchedFolders) {
+                for(final WatchedFolder f : cfg.getWatchedFolders()) {
                     f.start();
                     final WatchedFolder.ScanResult r = f.scan();
                     logger.debug("Startup: {} provides resources {}", f, r.toAdd);
@@ -284,7 +281,7 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
             while ( running.get() ) {
                 try {
                     Thread.sleep(10);
-                } catch (InterruptedException e) {
+                } catch (final InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
             }
@@ -307,8 +304,6 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
                 session = null;
             }
             listeners.clear();
-
-            watchedFolders = null;
         }
 
         @Override
@@ -416,7 +411,7 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
     /** Find the paths to watch under rootPath, according to our folderNameFilter,
      * 	and add them to result */
     private void findPathsToWatch(final InstallerConfig cfg, final Session session,
-            final String rootPath, final List<WatchedFolder> result) throws RepositoryException {
+            final String rootPath) throws RepositoryException {
         Session s = null;
 
         try {
@@ -426,7 +421,7 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
             } else {
                 logger.debug("Bundles root node {} found, looking for bundle folders inside it", rootPath);
                 final Node n = (Node)s.getItem(rootPath);
-                findPathsUnderNode(cfg, session, n, result);
+                findPathsUnderNode(cfg, session, n);
             }
         } finally {
             if (s != null) {
@@ -440,11 +435,11 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
      * to do the same.
      */
     void findPathsUnderNode(final InstallerConfig cfg, final Session session,
-            final Node n, final List<WatchedFolder> result) throws RepositoryException {
+            final Node n) throws RepositoryException {
         final String path = n.getPath();
         final int priority = cfg.getFolderNameFilter().getPriority(path);
         if (priority > 0) {
-            result.add(new WatchedFolder(session, path, priority, cfg.getConverters()));
+            addWatchedFolder(cfg, new WatchedFolder(session, path, priority, cfg.getConverters()));
         }
         final int depth = path.split("/").length;
         if(depth > cfg.getMaxWatchedFolderDepth()) {
@@ -453,17 +448,17 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
         }
         final NodeIterator it = n.getNodes();
         while (it.hasNext()) {
-            findPathsUnderNode(cfg, session, it.nextNode(), result);
+            findPathsUnderNode(cfg, session, it.nextNode());
         }
     }
 
     /**
      * Add WatchedFolder to our list if it doesn't exist yet.
      */
-    private void addWatchedFolder(final WatchedFolder toAdd)
+    private void addWatchedFolder(final InstallerConfig cfg, final WatchedFolder toAdd)
     throws RepositoryException {
         WatchedFolder existing = null;
-        for(WatchedFolder wf : watchedFolders) {
+        for(WatchedFolder wf : cfg.getWatchedFolders()) {
             if (wf.getPath().equals(toAdd.getPath())) {
                 existing = wf;
                 break;
@@ -471,44 +466,39 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
         }
         if (existing == null) {
             toAdd.start();
-            watchedFolders.add(toAdd);
+            cfg.getWatchedFolders().add(toAdd);
         }
     }
 
-    /** Add new folders to watch if any have been detected
-     *  @return a list of InstallableResource that must be unregistered,
+    /**
+     * Add new folders to watch if any have been detected
+     * @return a list of InstallableResource that must be unregistered,
      *  	for folders that have been removed
      */
     private List<String> updateFoldersList(final InstallerConfig cfg, final Session session) throws Exception {
         logger.debug("Updating folder list.");
 
-        final List<String> result = new LinkedList<String>();
-
-        final List<WatchedFolder> newFolders = new ArrayList<WatchedFolder>();
 	    for(String root : cfg.getRoots()) {
-	        findPathsToWatch(cfg, session, root, newFolders);
-	    }
-	    for(WatchedFolder wf : newFolders) {
-	        addWatchedFolder(wf);
+	        findPathsToWatch(cfg, session, root);
 	    }
 
         // Check all WatchedFolder, in case some were deleted
-        final List<WatchedFolder> toRemove = new ArrayList<WatchedFolder>();
-        for(WatchedFolder wf : watchedFolders) {
-            logger.debug("Item {} exists? {}", wf.getPath(), session.itemExists(wf.getPath()));
+        final List<String> removedResources = new LinkedList<String>();
 
-            if(!session.itemExists(wf.getPath())) {
-                result.addAll(wf.scan().toRemove);
+        final Iterator<WatchedFolder> i = cfg.getWatchedFolders().iterator();
+        while ( i.hasNext() ) {
+            final WatchedFolder wf = i.next();
+
+            logger.debug("Item {} exists? {}", wf.getPath(), session.itemExists(wf.getPath()));
+            if (!session.itemExists(wf.getPath())) {
+                logger.info("Deleting {}, path does not exist anymore", wf);
+                removedResources.addAll(wf.scan().toRemove);
                 wf.stop();
-                toRemove.add(wf);
+                i.remove();
             }
         }
-        for(final WatchedFolder wf : toRemove) {
-            logger.info("Deleting {}, path does not exist anymore", wf);
-            watchedFolders.remove(wf);
-        }
 
-        return result;
+        return removedResources;
     }
 
     /**
@@ -567,7 +557,7 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
         try {
             boolean didRefresh = false;
 
-            if (anyWatchFolderNeedsScan()) {
+            if (anyWatchFolderNeedsScan(cfg)) {
                 session.refresh(false);
                 didRefresh = true;
                 if (scanningIsPaused(cfg, session)) {
@@ -585,7 +575,7 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
 
             // Rescan WatchedFolders if needed
             boolean scanWf = false;
-            for(WatchedFolder wf : watchedFolders) {
+            for(WatchedFolder wf : cfg.getWatchedFolders()) {
                 if (!wf.needsScan()) {
                     continue;
                 }
@@ -662,8 +652,8 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
         return false;
     }
 
-    private boolean anyWatchFolderNeedsScan() {
-        for (WatchedFolder wf : watchedFolders) {
+    private boolean anyWatchFolderNeedsScan(final InstallerConfig cfg) {
+        for (WatchedFolder wf : cfg.getWatchedFolders()) {
             if (wf.needsScan()) {
                 return true;
             }

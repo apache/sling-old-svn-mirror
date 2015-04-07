@@ -21,6 +21,8 @@ package org.apache.sling.installer.provider.jcr.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Dictionary;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.installer.provider.jcr.impl.JcrInstaller.NodeConverter;
@@ -43,13 +45,16 @@ public class InstallerConfig {
     private final FolderNameFilter folderNameFilter;
 
     /** The root folders that we watch */
-    private final String [] roots;
+    private final String[] roots;
 
     /** The path for new configurations. */
     private final String newConfigPath;
 
     /** The path for pauseInstallation property */
     private final String pauseScanNodePath;
+
+    /** List of watched folders */
+    private final List<WatchedFolder> watchedFolders = new LinkedList<WatchedFolder>();
 
     public InstallerConfig(
             final Logger logger,
@@ -75,7 +80,7 @@ public class InstallerConfig {
 
         // Configurable folder regexp, system property overrides default value
         String folderNameRegexp = (String)getPropertyValue(logger, ctx, cfg, JcrInstaller.FOLDER_NAME_REGEXP_PROPERTY);
-        if(folderNameRegexp != null) {
+        if (folderNameRegexp != null) {
             folderNameRegexp = folderNameRegexp.trim();
             logger.debug("Using configured ({}) folder name regexp '{}'", JcrInstaller.FOLDER_NAME_REGEXP_PROPERTY, folderNameRegexp);
         } else {
@@ -149,5 +154,9 @@ public class InstallerConfig {
 
     public String getNewConfigPath() {
         return this.newConfigPath;
+    }
+
+    public List<WatchedFolder> getWatchedFolders() {
+        return this.watchedFolders;
     }
 }
