@@ -32,6 +32,7 @@ import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.JobTopicTraverser;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
+import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
 import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
 import org.apache.sling.event.impl.support.Environment;
@@ -83,19 +84,21 @@ public class UpgradeTask {
     private void upgradeBridgedJobs() {
         final String path = configuration.getLocalJobsPath() + '/' + JobImpl.PROPERTY_BRIDGED_EVENT;
         final ResourceResolver resolver = configuration.createResourceResolver();
-        try {
-            final Resource rootResource = resolver.getResource(path);
-            if ( rootResource != null ) {
-                upgradeBridgedJobs(rootResource);
-            }
-            if ( caps.isLeader() ) {
-                final Resource unassignedRoot = resolver.getResource(configuration.getUnassignedJobsPath() + '/' + JobImpl.PROPERTY_BRIDGED_EVENT);
-                if ( unassignedRoot != null ) {
-                    upgradeBridgedJobs(unassignedRoot);
+        if ( resolver != null ) {
+            try {
+                final Resource rootResource = resolver.getResource(path);
+                if ( rootResource != null ) {
+                    upgradeBridgedJobs(rootResource);
                 }
+                if ( caps.isLeader() ) {
+                    final Resource unassignedRoot = resolver.getResource(configuration.getUnassignedJobsPath() + '/' + JobImpl.PROPERTY_BRIDGED_EVENT);
+                    if ( unassignedRoot != null ) {
+                        upgradeBridgedJobs(unassignedRoot);
+                    }
+                }
+            } finally {
+                resolver.close();
             }
-        } finally {
-            resolver.close();
         }
     }
 
@@ -105,7 +108,11 @@ public class UpgradeTask {
      */
     private void upgradeBridgedJobs(final Resource topicResource) {
         final String topicName = topicResource.getName().replace('.', '/');
-        final QueueInfo info = configuration.getQueueConfigurationManager().getQueueInfo(topicName);
+        final QueueConfigurationManager qcm = configuration.getQueueConfigurationManager();
+        if ( qcm == null ) {
+            return;
+        }
+        final QueueInfo info = qcm.getQueueInfo(topicName);
         JobTopicTraverser.traverse(logger, topicResource, new JobTopicTraverser.ResourceCallback() {
 
             @Override
@@ -150,13 +157,15 @@ public class UpgradeTask {
      */
     private void processJobsFromPreviousVersions() {
         final ResourceResolver resolver = configuration.createResourceResolver();
-        try {
-            this.processJobsFromPreviousVersions(resolver.getResource(configuration.getPreviousVersionAnonPath()));
-            this.processJobsFromPreviousVersions(resolver.getResource(configuration.getPreviousVersionIdentifiedPath()));
-        } catch ( final PersistenceException pe ) {
-            this.logger.warn("Problems moving jobs from previous version.", pe);
-        } finally {
-            resolver.close();
+        if ( resolver != null ) {
+            try {
+                this.processJobsFromPreviousVersions(resolver.getResource(configuration.getPreviousVersionAnonPath()));
+                this.processJobsFromPreviousVersions(resolver.getResource(configuration.getPreviousVersionIdentifiedPath()));
+            } catch ( final PersistenceException pe ) {
+                this.logger.warn("Problems moving jobs from previous version.", pe);
+            } finally {
+                resolver.close();
+            }
         }
     }
 
@@ -237,7 +246,12 @@ public class UpgradeTask {
             final List<InstanceDescription> potentialTargets = caps.getPotentialTargets("/", null);
             String targetId = null;
             if ( potentialTargets != null && potentialTargets.size() > 0 ) {
-                final QueueInfo info = configuration.getQueueConfigurationManager().getQueueInfo(topic);
+                final QueueConfigurationManager qcm = configuration.getQueueConfigurationManager();
+                if ( qcm == null ) {
+                    resolver.revert();
+                    return;
+                }
+                final QueueInfo info = qcm.getQueueInfo(topic);
                 logger.debug("Found queue {} for {}", info.queueConfiguration, topic);
                 targetId = caps.detectTarget(topic, vm, info);
                 if ( targetId != null ) {

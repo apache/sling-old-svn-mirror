@@ -61,6 +61,9 @@ public class FindUnfinishedJobsTask {
     private void initialScan() {
         logger.debug("Scanning repository for unfinished jobs...");
         final ResourceResolver resolver = configuration.createResourceResolver();
+        if ( resolver == null ) {
+            return;
+        }
         try {
             final Resource baseResource = resolver.getResource(configuration.getLocalJobsPath());
 
