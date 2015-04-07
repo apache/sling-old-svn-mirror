@@ -213,7 +213,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
                 session = repository.loginAdministrative(repository.getDefaultWorkspace());
 
                 for (final String path : cfg.getRoots()) {
-                    listeners.add(new RootFolderListener(session, path, updateFoldersListTimer));
+                    listeners.add(new RootFolderListener(session, path, updateFoldersListTimer, cfg));
                     logger.debug("Configured root folder: {}", path);
                 }
 
