@@ -652,8 +652,7 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
 
         @Override
         public ResourceMetadata getResourceMetadata() {
-            // TODO Auto-generated method stub
-            return null;
+            return new ResourceMetadata();
         }
 
         @Override
