@@ -243,16 +243,19 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
     /**
      * Create a new resource resolver for reading and writing the resource tree.
      * The resolver needs to be closed by the client.
-     * @return A resource resolver
+     * @return A resource resolver or {@code null} if the component is already deactivated.
      * @throws RuntimeException if the resolver can't be created.
      */
     public ResourceResolver createResourceResolver() {
         ResourceResolver resolver = null;
-        try {
-            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-        } catch ( final LoginException le) {
-            logger.error("Unable to create new resource resolver: " + le.getMessage(), le);
-            throw new RuntimeException(le);
+        final ResourceResolverFactory factory = this.resourceResolverFactory;
+        if ( factory != null ) {
+            try {
+                resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
+            } catch ( final LoginException le) {
+                logger.error("Unable to create new resource resolver: " + le.getMessage(), le);
+                throw new RuntimeException(le);
+            }
         }
         return resolver;
     }
