@@ -143,7 +143,9 @@ public class StatisticsManager implements EventHandler {
 
             if ( event.getTopic().equals(NotificationConstants.TOPIC_JOB_ADDED) ) {
                 this.globalStatistics.incQueued();
-                queueStats.incQueued();
+                if ( queueStats != null ) {
+                    queueStats.incQueued();
+                }
 
             } else if ( event.getTopic().equals(NotificationConstants.TOPIC_JOB_CANCELLED) ) {
                 ts.addCancelled();
