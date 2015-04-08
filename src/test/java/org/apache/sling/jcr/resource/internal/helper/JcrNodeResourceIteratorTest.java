@@ -101,4 +101,24 @@ public class JcrNodeResourceIteratorTest extends TestCase {
         }
     }
 
+    public void testRoot() throws RepositoryException {
+        String path = "/child";
+        Node node = new MockNode(path);
+        NodeIterator ni = new MockNodeIterator(new Node[] { node });
+        JcrNodeResourceIterator ri = new JcrNodeResourceIterator(null, "/", null, ni, getHelperData());
+
+        assertTrue(ri.hasNext());
+        Resource res = ri.next();
+        assertEquals(path, res.getPath());
+        assertEquals(node.getPrimaryNodeType().getName(), res.getResourceType());
+
+        assertFalse(ri.hasNext());
+
+        try {
+            ri.next();
+            fail("Expected no element in the iterator");
+        } catch (NoSuchElementException nsee) {
+            // expected
+        }
+    }
 }
