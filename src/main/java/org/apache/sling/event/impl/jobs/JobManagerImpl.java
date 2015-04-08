@@ -350,6 +350,7 @@ public class JobManagerImpl
                     final JobHandler jh = new JobHandler(job, null, this.configuration);
                     jh.finished(Job.JobState.DROPPED, true, null);
                 }
+                this.configuration.getAuditLogger().debug("REMOVE OK : {}", jobId);
             }
         } else {
             logger.debug("Job for removal does not exist (anymore): {}", jobId);
@@ -768,6 +769,13 @@ public class JobManagerImpl
                         jobName,
                         jobProperties,
                         info);
+                if ( info.targetId != null ) {
+                    this.configuration.getAuditLogger().debug("ASSIGN OK {} : {}",
+                            info.targetId, job.getId());
+                } else {
+                    this.configuration.getAuditLogger().debug("UNASSIGN OK : {}",
+                            job.getId());
+                }
                 return job;
             } catch (final PersistenceException re ) {
                 // something went wrong, so let's log it
@@ -950,15 +958,50 @@ public class JobManagerImpl
             if ( errors != null ) {
                 errors.add(errorMessage);
             }
+            this.configuration.getAuditLogger().debug("ADD FAILED topic={}{}{}, properties={} : {}",
+                    new Object[] {topic,
+                                  name == null ? "" : ",name=",
+                                  name == null ? "" : name,
+                                  properties,
+                                  errorMessage});
             return null;
         }
         if ( name != null ) {
             Utility.logDeprecated(logger, "Job is using deprecated name feature: " + Utility.toString(topic, name, properties));
         }
-        Job result = this.addJobInteral(topic, name, properties, errors);
-        if ( result == null && name != null ) {
-            result = this.getJobByName(name);
+        final List<String> errorList = new ArrayList<String>();
+        Job result = this.addJobInteral(topic, name, properties, errorList);
+        if ( errors != null ) {
+            errors.addAll(errorList);
         }
+        if ( result == null ) {
+            if ( name != null ) {
+                result = this.getJobByName(name);
+            }
+            if ( result == null ) {
+                this.configuration.getAuditLogger().debug("ADD FAILED topic={}{}{}, properties={} : {}",
+                        new Object[] {topic,
+                                      name == null ? "" : ",name=",
+                                      name == null ? "" : name,
+                                      properties,
+                                      errorList});
+            } else {
+                this.configuration.getAuditLogger().debug("ADD DUP topic={}{}{}, properties={} : {}",
+                        new Object[] {topic,
+                                      name == null ? "" : ",name=",
+                                      name == null ? "" : name,
+                                      properties,
+                                      result.getId()});
+            }
+        } else {
+            this.configuration.getAuditLogger().debug("ADD OK topic={}{}{}, properties={} : {}",
+                    new Object[] {topic,
+                                  name == null ? "" : ",name=",
+                                  name == null ? "" : name,
+                                  properties,
+                                  result.getId()});
+        }
+
         return result;
     }
 

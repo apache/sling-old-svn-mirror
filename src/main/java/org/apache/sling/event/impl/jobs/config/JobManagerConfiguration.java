@@ -85,6 +85,9 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
     /** Logger. */
     private final Logger logger = LoggerFactory.getLogger("org.apache.sling.event.impl.jobs");
 
+    /** Audit Logger. */
+    private final Logger auditLogger = LoggerFactory.getLogger("org.apache.sling.event.jobs.audit");
+
     /** Default resource path for jobs. */
     public static final String DEFAULT_REPOSITORY_PATH = "/var/eventing/jobs";
 
@@ -604,5 +607,13 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
         synchronized ( retryList ) {
             return retryList.get(jobId);
         }
+    }
+
+    /**
+     * The audit logger is logging actions for auditing.
+     * @return The logger
+     */
+    public Logger getAuditLogger() {
+        return this.auditLogger;
     }
 }

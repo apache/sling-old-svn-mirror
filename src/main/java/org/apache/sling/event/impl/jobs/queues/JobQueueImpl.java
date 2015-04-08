@@ -273,6 +273,7 @@ public class JobQueueImpl
                 handler.started = System.currentTimeMillis();
 
                 if ( handler.getConsumer() != null ) {
+                    this.services.configuration.getAuditLogger().debug("START OK : {}", job.getId());
                     final long queueTime = handler.started - job.getProperty(JobImpl.PROPERTY_JOB_QUEUED, Calendar.class).getTime().getTime();
                     NotificationUtility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_STARTED, job, queueTime);
                     synchronized ( this.processingJobsLists ) {
@@ -559,6 +560,7 @@ public class JobQueueImpl
     private boolean finishedJob(final String jobId,
                                 final Job.JobState resultState,
                                 final boolean isAsync) {
+        this.services.configuration.getAuditLogger().debug("FINISHED {} : {}", resultState, jobId);
         this.logger.debug("Received finish for job {}, resultState={}", jobId, resultState);
 
         // get job handler
