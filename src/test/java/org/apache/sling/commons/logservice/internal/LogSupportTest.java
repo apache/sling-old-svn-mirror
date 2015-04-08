@@ -32,12 +32,14 @@ import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogEntry;
 import org.osgi.service.log.LogService;
+import org.osgi.service.startlevel.StartLevel;
 import org.slf4j.Logger;
 
 public class LogSupportTest {
     @Test @SuppressWarnings("unchecked")
     public void testServiceEvent() throws Exception {
-        LogSupport ls = new LogSupport();
+        StartLevel startLevel = Mockito.mock(StartLevel.class);
+        LogSupport ls = new LogSupport(startLevel);
         Field lf = LogSupport.class.getDeclaredField("loggers");
         lf.setAccessible(true);
         Map<Long, Logger> loggers = (Map<Long, Logger>) lf.get(ls);
@@ -77,7 +79,8 @@ public class LogSupportTest {
         ServiceReference sr = Mockito.mock(ServiceReference.class);
         LogEntry le = new LogEntryImpl(b, sr, LogService.LOG_DEBUG, "test", null);
 
-        LogSupport ls = new LogSupport();
+        StartLevel startLevel = Mockito.mock(StartLevel.class);
+        LogSupport ls = new LogSupport(startLevel);
         Field lf = LogSupport.class.getDeclaredField("loggers");
         lf.setAccessible(true);
         Map<Long, Logger> loggers = (Map<Long, Logger>) lf.get(ls);
@@ -107,7 +110,8 @@ public class LogSupportTest {
         Exception e = new Exception();
         LogEntry le = new LogEntryImpl(b, null, LogService.LOG_ERROR, "my-error-msg", e);
 
-        LogSupport ls = new LogSupport();
+        StartLevel startLevel = Mockito.mock(StartLevel.class);
+        LogSupport ls = new LogSupport(startLevel);
         Field lf = LogSupport.class.getDeclaredField("loggers");
         lf.setAccessible(true);
         Map<Long, Logger> loggers = (Map<Long, Logger>) lf.get(ls);
