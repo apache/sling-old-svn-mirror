@@ -170,6 +170,12 @@ public class CheckTopologyTask {
                                                     ResourceHelper.getOrCreateResource(resolver, newPath, props);
                                                     resolver.delete(rsrc);
                                                     resolver.commit();
+                                                    final String jobId = vm.get(ResourceHelper.PROPERTY_JOB_ID, String.class);
+                                                    if ( targetId != null ) {
+                                                        configuration.getAuditLogger().debug("REASSIGN OK {} : {}", targetId, jobId);
+                                                    } else {
+                                                        configuration.getAuditLogger().debug("REUNASSIGN OK : {}", jobId);
+                                                    }
                                                 } catch ( final PersistenceException pe ) {
                                                     logger.warn("Unable to move stale job from " + rsrc.getPath() + " to " + newPath, pe);
                                                     resolver.refresh();
@@ -270,6 +276,8 @@ public class CheckTopologyTask {
                                     ResourceHelper.getOrCreateResource(resolver, newPath, props);
                                     resolver.delete(rsrc);
                                     resolver.commit();
+                                    final String jobId = vm.get(ResourceHelper.PROPERTY_JOB_ID, String.class);
+                                    configuration.getAuditLogger().debug("REASSIGN OK {} : {}", targetId, jobId);
                                 } catch ( final PersistenceException pe ) {
                                     logger.warn("Unable to move unassigned job from " + rsrc.getPath() + " to " + newPath, pe);
                                     resolver.refresh();
@@ -305,6 +313,8 @@ public class CheckTopologyTask {
                                 ResourceHelper.getOrCreateResource(resolver, newPath, props);
                                 resolver.delete(rsrc);
                                 resolver.commit();
+                                final String jobId = vm.get(ResourceHelper.PROPERTY_JOB_ID, String.class);
+                                configuration.getAuditLogger().debug("REUNASSIGN OK : {}", jobId);
                             } catch ( final PersistenceException pe ) {
                                 logger.warn("Unable to unassigned job from " + rsrc.getPath() + " to " + newPath, pe);
                                 resolver.refresh();
