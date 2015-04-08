@@ -130,12 +130,12 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
         return null;
     }
 
-    private String getPath(Node node) throws RepositoryException {
+    private String getPath(final Node node) throws RepositoryException {
         final String path;
         if (parentPath == null) {
             path = node.getPath();
         } else {
-            path = String.format("%s/%s", parentPath, node.getName());
+            path = String.format("%s/%s", "/".equals(parentPath) ? "" : parentPath, node.getName());
         }
         return helper.pathMapper.mapJCRPathToResourcePath(path);
     }
