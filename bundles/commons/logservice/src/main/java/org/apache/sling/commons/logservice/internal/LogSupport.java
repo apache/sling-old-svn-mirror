@@ -70,7 +70,7 @@ public class LogSupport implements SynchronousBundleListener, ServiceListener,
     // The loggers by bundle id used for logging messages originated from
     // specific bundles
     @SuppressWarnings("serial")
-    private Map<Long, Logger> loggers = new LinkedHashMap<Long, Logger>(16,
+    private final Map<Long, Logger> loggers = new LinkedHashMap<Long, Logger>(16,
         0.75f, true) {
         private static final int MAX_SIZE = 50;
 
@@ -81,11 +81,14 @@ public class LogSupport implements SynchronousBundleListener, ServiceListener,
     };
 
     // the worker thread actually sending LogEvents to LogListeners
-    private LogEntryDispatcher logEntryDispatcher;
+    private final LogEntryDispatcher logEntryDispatcher;
 
-    /* package */LogSupport() {
+    private final StartLevel startLevelService;
+
+    /* package */LogSupport(final StartLevel startLevelService) {
         logEntryDispatcher = new LogEntryDispatcher(this);
         logEntryDispatcher.start();
+        this.startLevelService = startLevelService;
     }
 
     /* package */void shutdown() {
@@ -348,12 +351,7 @@ public class LogSupport implements SynchronousBundleListener, ServiceListener,
                 message = "FrameworkEvent PACKAGES REFRESHED";
                 break;
             case FrameworkEvent.STARTLEVEL_CHANGED:
-                // bundle must be the system bundle
-                final Bundle bundle = event.getBundle();
-                // StartLevel service is always there
-                final ServiceReference slRef = bundle.getBundleContext().getServiceReference(StartLevel.class.getName());
-                final StartLevel sl = (StartLevel) bundle.getBundleContext().getService(slRef);
-                message = "FrameworkEvent STARTLEVEL CHANGED to " + sl.getStartLevel();
+                message = "FrameworkEvent STARTLEVEL CHANGED to " + this.startLevelService.getStartLevel();
                 break;
             case FrameworkEvent.WARNING:
                 message = "FrameworkEvent WARNING";

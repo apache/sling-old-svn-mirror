@@ -319,9 +319,8 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
             }
 
             @Override
-            public boolean isResourceType(Resource resource, String resourceType) {
-                // TODO Auto-generated method stub
-                return false;
+            public boolean isResourceType(final Resource resource, final String resourceType) {
+                return resourceType.equals(resource.getResourceType());
             }
 
             @Override
@@ -660,8 +659,11 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
 
         @Override
         public String getResourceType() {
-            // TODO Auto-generated method stub
-            return null;
+            try {
+                return this.node.getPrimaryNodeType().getName();
+            } catch ( final RepositoryException re) {
+                return "<unknown>";
+            }
         }
 
         @Override
@@ -706,6 +708,14 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
                     }
                     if ( node.hasProperty(JcrResourceBundle.PROP_VALUE) ) {
                         props.put(JcrResourceBundle.PROP_VALUE, node.getProperty(JcrResourceBundle.PROP_VALUE).getString());
+                    }
+                    if ( node.hasProperty(JcrResourceBundle.PROP_MIXINS) ) {
+                        final Value[] values = node.getProperty(JcrResourceBundle.PROP_MIXINS).getValues();
+                        final String[] names = new String[values.length];
+                        for(int i=0;i<values.length;i++) {
+                            names[i] = values[i].getString();
+                        }
+                        props.put(JcrResourceBundle.PROP_MIXINS, names);
                     }
                     return (AdapterType)new ValueMapDecorator(props);
                 } catch ( final RepositoryException re ) {
