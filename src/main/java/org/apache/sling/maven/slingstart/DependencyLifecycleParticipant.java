@@ -117,25 +117,26 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
 
         ModelUtils.storeEffectiveModel(project, effectiveModel);
 
-        // start with base artifact
-        final org.apache.sling.provisioning.model.Artifact base = ModelUtils.getBaseArtifact(effectiveModel);
-        final String[] classifiers = new String[] {null, BuildConstants.CLASSIFIER_APP, BuildConstants.CLASSIFIER_WEBAPP};
-        for(final String c : classifiers) {
-            final Dependency dep = new Dependency();
-            dep.setGroupId(base.getGroupId());
-            dep.setArtifactId(base.getArtifactId());
-            dep.setVersion(base.getVersion());
-            dep.setType(base.getType());
-            dep.setClassifier(c);
-            if ( BuildConstants.CLASSIFIER_WEBAPP.equals(c) ) {
-                dep.setType(BuildConstants.TYPE_WAR);
+        if ( project.getPackaging().equals(BuildConstants.PACKAGING_SLINGSTART ) ) {
+            // start with base artifact
+            final org.apache.sling.provisioning.model.Artifact base = ModelUtils.getBaseArtifact(effectiveModel);
+            final String[] classifiers = new String[] {null, BuildConstants.CLASSIFIER_APP, BuildConstants.CLASSIFIER_WEBAPP};
+            for(final String c : classifiers) {
+                final Dependency dep = new Dependency();
+                dep.setGroupId(base.getGroupId());
+                dep.setArtifactId(base.getArtifactId());
+                dep.setVersion(base.getVersion());
+                dep.setType(base.getType());
+                dep.setClassifier(c);
+                if ( BuildConstants.CLASSIFIER_WEBAPP.equals(c) ) {
+                    dep.setType(BuildConstants.TYPE_WAR);
+                }
+                dep.setScope(PROVIDED);
+
+                log.debug("- adding dependency " + dep);
+                project.getDependencies().add(dep);
             }
-            dep.setScope(PROVIDED);
-
-            log.debug("- adding dependency " + dep);
-            project.getDependencies().add(dep);
         }
-
         addDependencies(effectiveModel, log, project);
     }
 
