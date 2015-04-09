@@ -32,6 +32,7 @@ import javax.script.SimpleScriptContext;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
@@ -185,21 +186,18 @@ public class JsEnvironment {
     private boolean isResourceOverlay(Resource resourceA, Resource resourceB) {
         String resourceBSuperType = resourceB.getResourceSuperType();
         if (StringUtils.isNotEmpty(resourceBSuperType)) {
+            ResourceResolver resolver = resourceA.getResourceResolver();
             String parentResourceType = resourceA.getResourceType();
             if ("nt:file".equals(parentResourceType)) {
                 parentResourceType = ResourceUtil.getParent(resourceA.getPath());
             }
-            if (resourceBSuperType.equals(parentResourceType)) {
-                return true;
-            }
-            Resource parentB = resourceB.getResourceResolver().getResource(resourceBSuperType);
-            resourceBSuperType = parentB.getResourceSuperType();
-            while (!"/".equals(parentB.getPath()) && StringUtils.isNotEmpty(resourceBSuperType)) {
-                if (resourceBSuperType.equals(parentResourceType)) {
+            Resource parentB = resolver.getResource(resourceBSuperType);
+            while (parentB != null && !"/".equals(parentB.getPath()) && StringUtils.isNotEmpty(resourceBSuperType)) {
+                if (parentB.getPath().equals(parentResourceType)) {
                     return true;
                 }
-                parentB = parentB.getParent();
                 resourceBSuperType = parentB.getResourceSuperType();
+                parentB = resolver.getResource(resourceBSuperType);
             }
         }
         return false;
