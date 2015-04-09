@@ -1,0 +1,10 @@
+[feature name=launchpad-testing]
+  # additional configuration for testing
+
+[configurations]
+  integrationTestsConfig
+    message="This test config should be loaded at startup"
+
+  org.apache.sling.servlets.resolver.SlingServletResolver
+    # Set the servlet resolver's cache size to zero for testing
+    servletresolver.cacheSize=I"0"
