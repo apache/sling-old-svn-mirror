@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.launchpad.test-bundles</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>partialbundlelist</packaging>
+    <packaging>slingfeature</packaging>
 
     <name>Apache Sling Launchpad Test Bundles</name>
     <description>Bundles required for testing Apache Sling</description>
@@ -38,7 +38,8 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.sling</groupId>
-                <artifactId>maven-launchpad-plugin</artifactId>
+                <artifactId>slingstart-maven-plugin</artifactId>
+                <version>1.0.5-SNAPSHOT</version>
                 <extensions>true</extensions>
             </plugin>
         </plugins>
