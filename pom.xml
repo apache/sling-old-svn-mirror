@@ -236,7 +236,7 @@
                         <bundle>
                             <groupId>org.apache.sling</groupId>
                             <artifactId>org.apache.sling.scripting.sightly.js.provider</artifactId>
-                            <version>1.0.2</version>
+                            <version>1.0.4</version>
                             <startLevel>20</startLevel>
                         </bundle>
                         <bundle>
