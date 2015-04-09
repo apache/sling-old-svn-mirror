@@ -21,7 +21,7 @@
     </parent>
 
     <artifactId>org.apache.sling.launchpad</artifactId>
-    <packaging>war</packaging>
+    <packaging>slingstart</packaging>
     <version>8-SNAPSHOT</version>
 
     <name>Apache Sling Launchpad Application Builder</name>
@@ -37,7 +37,6 @@
 
 
     <properties>
-        <oak.version>1.0.12</oak.version>
         <!--
             Jetty default port (override with -D)
         -->
@@ -78,10 +77,6 @@
                         <goals>
                             <goal>verify-legal-files</goal>
                         </goals>
-                        <configuration>
-                            <!-- TODO required for now due to missing legal files in bundleListConfig.zip -->
-                            <strict>false</strict>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -104,106 +99,14 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.sling</groupId>
-                <artifactId>maven-launchpad-plugin</artifactId>
+                <artifactId>slingstart-maven-plugin</artifactId>
+                <version>1.0.5-SNAPSHOT</version>
                 <extensions>true</extensions>
                 <configuration>
-                    <includeDefaultBundles>false</includeDefaultBundles>
-                    <bundlesDirectory>install</bundlesDirectory>
-                    <bootDirectory>bundles</bootDirectory>
-                    <jarWebSupport>
-                        <bundles>
-                          <bundle>
-                                <groupId>org.apache.felix</groupId>
-                                <artifactId>org.apache.felix.http.api</artifactId>
-                                <version>2.3.2</version>
-                                <startLevel>5</startLevel>
-                            </bundle>
-                            <bundle>
-                                <groupId>org.apache.felix</groupId>
-                                <artifactId>org.apache.felix.http.servlet-api</artifactId>
-                                <version>1.0.1</version>
-                                <startLevel>5</startLevel>
-                            </bundle>
-                            <bundle>
-                                <groupId>org.apache.felix</groupId>
-                                <artifactId>org.apache.felix.http.jetty</artifactId>
-                                <version>2.3.2</version>
-                                <startLevel>5</startLevel>
-                            </bundle>
-                        </bundles>
-                    </jarWebSupport>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>prepare-package-war</id>
-                        <goals>
-                            <goal>prepare-package</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>prepare-package-jar</id>
-                        <goals>
-                            <goal>prepare-package</goal>
-                        </goals>
-                        <configuration>
-                            <packaging>jar</packaging>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>attach-bundle-list</id>
-                        <goals>
-                            <goal>attach-bundle-list</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>create-bundle-jar</id>
-                        <goals>
-                            <goal>create-bundle-jar</goal>
-                        </goals>
-                        <configuration>
-                            <resources>
-                                <!-- Legal stuff -->
-                                <resource>
-                                    <directory>${project.build.directory}/maven-shared-archive-resources</directory>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>create-standalone-jar</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                        <configuration>
-                            <classifier>standalone</classifier>
-                            <archive>
-                                <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
-                                <manifest>
-                                    <addDefaultImplementationEntries>
-                                        true
-                            		</addDefaultImplementationEntries>
-                                </manifest>
-                            </archive>
-                        </configuration>
-
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptors>
-                        <descriptor>src/main/assembly/bin.xml</descriptor>
-                    </descriptors>
+                    <createWebapp>true</createWebapp>
                 </configuration>
             </plugin>
+
 
             <plugin>
                 <groupId>org.mortbay.jetty</groupId>
@@ -237,42 +140,12 @@
                 </configuration>
             </plugin>
 
-            <!-- Include sling-webapp launcher classes and resources -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-war-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addDefaultImplementationEntries>
-                                true
-                            </addDefaultImplementationEntries>
-                        </manifest>
-                    </archive>
-                    <packagingExcludes>WEB-INF/classes/resources/**,WEB-INF/classes/META-INF/**</packagingExcludes>
-                    <webResources>
-                        <!-- the configuration resources -->
-                        <resource>
-                            <directory>
-                                ${project.build.directory}/launchpad-bundles
-                            </directory>
-                            <targetPath>WEB-INF</targetPath>
-                        </resource>
-                        <!-- ensure the legalize stuff is in the war -->
-                        <webResource>
-                            <targetPath />
-                            <filtering>false</filtering>
-                            <directory>${project.build.directory}/maven-shared-archive-resources</directory>
-                        </webResource>
-                    </webResources>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
                 <configuration>
                     <preparationGoals>
-                        launchpad:check-bundle-list-for-snapshots clean verify
+                        clean verify
                     </preparationGoals>
                 </configuration>
             </plugin>
@@ -302,23 +175,6 @@
         </plugins>
     </reporting>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.launchpad.base</artifactId>
-            <version>4.6.1-2.5.9-SNAPSHOT</version>
-            <classifier>webapp</classifier>
-            <type>war</type>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.launchpad.base</artifactId>
-            <version>4.6.1-2.5.9-SNAPSHOT</version>
-            <classifier>app</classifier>
-            <scope>provided</scope>
-        </dependency>
-    </dependencies>
 
     <repositories>
         <repository>

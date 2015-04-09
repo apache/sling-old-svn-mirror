@@ -1,0 +1,64 @@
+# This is the OAK feature.
+[feature name=oak]
+
+[variables]
+    oak.version=1.0.12
+
+# The segment node store is used via a configuration
+[artifacts startLevel=10 runModes=oak]
+    org.apache.felix/org.apache.felix.jaas/0.0.2
+
+[artifacts startLevel=15 runModes=oak]
+    org.apache.sling/org.apache.sling.jcr.oak.server/0.0.2-SNAPSHOT
+    com.google.guava/guava/15.0
+    org.apache.jackrabbit/oak-core/${oak.version}
+    org.apache.jackrabbit/oak-commons/${oak.version}
+    org.apache.jackrabbit/oak-mk-api/${oak.version}
+    org.apache.jackrabbit/oak-lucene/${oak.version}
+    org.apache.jackrabbit/oak-blob/${oak.version}
+
+[artifacts startLevel=15 runModes=oak_mongo]
+    org.mongodb/mongo-java-driver/2.12.2
+
+[configurations runModes=oak]
+  org.apache.felix.jaas.Configuration.factory-GuestLoginModule
+    jaas.controlFlag="optional"
+    jaas.classname="org.apache.jackrabbit.oak.spi.security.authentication.GuestLoginModule"
+    jaas.ranking=I"300"
+
+  org.apache.felix.jaas.Configuration.factory-LoginModuleImpl
+    jaas.controlFlag="required"
+    jaas.classname="org.apache.jackrabbit.oak.security.authentication.user.LoginModuleImpl"
+
+  org.apache.felix.jaas.Configuration.factory-TokenLoginModule
+    jaas.controlFlag="sufficient"
+    jaas.classname="org.apache.jackrabbit.oak.security.authentication.token.TokenLoginModule"
+    jaas.ranking=I"200"
+
+  org.apache.felix.jaas.ConfigurationSpi
+    jaas.defaultRealmName="jackrabbit.oak"
+    jaas.configProviderName="FelixJaasProvider"
+  
+  org.apache.jackrabbit.oak.security.authentication.AuthenticationConfigurationImpl
+    org.apache.jackrabbit.oak.authentication.configSpiName="FelixJaasProvider"
+
+  org.apache.jackrabbit.oak.security.user.UserConfigurationImpl
+    groupsPath="/home/groups"
+    usersPath="/home/users"
+    defaultDepth="1"
+    importBehavior="besteffort"  
+
+  org.apache.jackrabbit.oak.spi.security.user.action.DefaultAuthorizableActionProvider
+    enabledActions=["org.apache.jackrabbit.oak.spi.security.user.action.AccessControlAction"]
+    userPrivilegeNames=["jcr:all"]
+    groupPrivilegeNames=["jcr:read"]
+
+[configurations runModes=oak_tar]
+  org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService
+    name="Default\ NodeStore"
+    repository.home="sling/oak/repository"
+
+[configurations runModes=oak_mongo]
+  org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService
+    mongouri="mongodb://localhost:27017"
+    db="sling"
