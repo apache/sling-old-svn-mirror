@@ -1,0 +1,5 @@
+# The :launchpad feature defines Sling's launchpad version
+# Only a single artifact is allowed within this feature.
+#
+[feature name=:launchpad]
+    org.apache.sling/org.apache.sling.launchpad.base/4.6.1-2.5.9-SNAPSHOT
