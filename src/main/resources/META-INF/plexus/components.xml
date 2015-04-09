@@ -85,9 +85,9 @@
       <implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler</implementation>
       <configuration>
         <type>slingstart</type>
-        <includesDependencies>true</includesDependencies>
-        <language>java</language>
-        <extension>jar</extension>
+        <includesDependencies>false</includesDependencies>
+        <language>txt</language>
+        <extension>txt</extension>
         <addedToClasspath>false</addedToClasspath>
       </configuration>
     </component>
