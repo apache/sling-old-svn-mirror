@@ -18,29 +18,6 @@
  */
 package org.apache.sling.testing.mock.sling.servlet;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.Calendar;
-import java.util.Enumeration;
-import java.util.LinkedHashMap;
-import java.util.ListResourceBundle;
-import java.util.Locale;
-import java.util.Map;
-import java.util.ResourceBundle;
-
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpSession;
-
 import org.apache.commons.lang3.CharEncoding;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -53,6 +30,28 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.osgi.framework.BundleContext;
+
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpSession;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.Calendar;
+import java.util.Enumeration;
+import java.util.LinkedHashMap;
+import java.util.ListResourceBundle;
+import java.util.Locale;
+import java.util.Map;
+import java.util.ResourceBundle;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class MockSlingHttpServletRequestTest {
@@ -107,6 +106,14 @@ public class MockSlingHttpServletRequestTest {
         assertNull(request.getResource());
         request.setResource(resource);
         assertSame(resource, request.getResource());
+    }
+
+    @Test
+    public void testResourceAdaptTo() {
+        assertNull(request.getResource());
+        request.setResource(resource);
+        assertSame(resource, request.getResource());
+        assertSame(resource, request.adaptTo(Resource.class));
     }
 
     @Test
