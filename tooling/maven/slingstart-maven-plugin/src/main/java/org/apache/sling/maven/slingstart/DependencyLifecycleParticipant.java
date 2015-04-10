@@ -25,8 +25,12 @@ import java.util.Map;
 import org.apache.maven.AbstractMavenLifecycleParticipant;
 import org.apache.maven.MavenExecutionException;
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.DefaultArtifact;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
+import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
+import org.apache.maven.artifact.resolver.ArtifactResolutionException;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
+import org.apache.maven.artifact.versioning.VersionRange;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Plugin;
@@ -106,7 +110,7 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
                     allDependencies.add(key + ":" + d.getClassifier() + ":" + d.getType());
                 } else {
                     // "external" dependency, we can already resolve it
-                    final File modelFile = ModelUtils.getSlingstartArtifact(artifactHandlerManager, resolver, project, session, d);
+                    final File modelFile = getSlingstartArtifact(artifactHandlerManager, resolver, project, session, d);
                     resolvedModelDependencies.add(modelFile);
                     allDependencies.add(modelFile);
                 }
@@ -186,5 +190,28 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
         } else {
             return defaultValue;
         }
+    }
+
+    private static File getSlingstartArtifact(final ArtifactHandlerManager artifactHandlerManager,
+            final ArtifactResolver resolver,
+            final MavenProject project,
+            final MavenSession session,
+            final Dependency d)
+    throws MavenExecutionException {
+        final Artifact prjArtifact = new DefaultArtifact(d.getGroupId(),
+                d.getArtifactId(),
+                VersionRange.createFromVersion(d.getVersion()),
+                Artifact.SCOPE_PROVIDED,
+                d.getType(),
+                d.getClassifier(),
+                artifactHandlerManager.getArtifactHandler(d.getType()));
+        try {
+            resolver.resolve(prjArtifact, project.getRemoteArtifactRepositories(), session.getLocalRepository());
+        } catch (final ArtifactResolutionException e) {
+            throw new MavenExecutionException("Unable to get artifact for " + d, e);
+        } catch (final ArtifactNotFoundException e) {
+            throw new MavenExecutionException("Unable to get artifact for " + d, e);
+        }
+        return prjArtifact.getFile();
     }
 }
