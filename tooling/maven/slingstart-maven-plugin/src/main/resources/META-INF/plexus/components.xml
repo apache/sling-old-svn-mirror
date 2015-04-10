@@ -26,13 +26,12 @@
         <lifecycles>
           <lifecycle>
             <id>default</id>
-            <!-- START SNIPPET: bundle-lifecycle -->
             <phases>
+              <validate>org.apache.sling:slingstart-maven-plugin:prepare</validate>
               <package>org.apache.sling:slingstart-maven-plugin:attach-slingfeature</package>
               <install>org.apache.maven.plugins:maven-install-plugin:install</install>
               <deploy>org.apache.maven.plugins:maven-deploy-plugin:deploy</deploy>
             </phases>
-            <!-- END SNIPPET: bundle-lifecycle -->
           </lifecycle>
         </lifecycles>
       </configuration>
@@ -45,8 +44,8 @@
         <lifecycles>
           <lifecycle>
             <id>default</id>
-            <!-- START SNIPPET: bundle-lifecycle -->
             <phases>
+              <validate>org.apache.sling:slingstart-maven-plugin:prepare</validate>
               <process-resources>org.apache.maven.plugins:maven-resources-plugin:resources</process-resources>
               <compile>org.apache.maven.plugins:maven-compiler-plugin:compile</compile>
               <process-test-resources>
@@ -62,7 +61,6 @@
               <install>org.apache.maven.plugins:maven-install-plugin:install</install>
               <deploy>org.apache.maven.plugins:maven-deploy-plugin:deploy</deploy>
             </phases>
-            <!-- END SNIPPET: bundle-lifecycle -->
           </lifecycle>
         </lifecycles>
       </configuration>

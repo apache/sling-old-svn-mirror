@@ -323,7 +323,11 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
      * Return the base artifact
      */
     private Artifact getBaseArtifact(final Model model, final String classifier, final String type) throws MojoExecutionException {
-        final org.apache.sling.provisioning.model.Artifact baseArtifact = ModelUtils.getBaseArtifact(model);
+        final ModelUtils.SearchResult result = ModelUtils.findBaseArtifact(model);
+        if ( result.errorMessage != null ) {
+            throw new MojoExecutionException(result.errorMessage);
+        }
+        final org.apache.sling.provisioning.model.Artifact baseArtifact = result.artifact;
 
         final Artifact a = ModelUtils.getArtifact(this.project,  this.mavenSession, this.artifactHandlerManager, this.resolver,
                 baseArtifact.getGroupId(),

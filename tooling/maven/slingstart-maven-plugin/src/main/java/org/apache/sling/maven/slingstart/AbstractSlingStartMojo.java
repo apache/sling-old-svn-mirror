@@ -28,7 +28,7 @@ import org.apache.maven.project.MavenProjectHelper;
 public abstract class AbstractSlingStartMojo extends AbstractMojo {
 
     @Parameter(defaultValue="${basedir}/src/main/provisioning")
-    private File systemsDirectory;
+    private File modelDirectory;
 
     @Parameter(property = "project", readonly = true, required = true)
     protected MavenProject project;
