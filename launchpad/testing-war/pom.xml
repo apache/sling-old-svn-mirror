@@ -149,8 +149,10 @@
                 <artifactId>slingstart-maven-plugin</artifactId>
                 <version>1.0.5-SNAPSHOT</version>
                 <extensions>true</extensions>
+                <configuration>
+                    <createWebapp>true</createWebapp>
+                </configuration>
             </plugin>
-
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-scr-plugin</artifactId>
@@ -196,40 +198,15 @@
             </plugin>
             
             <plugin>
-                <groupId>org.codehaus.cargo</groupId>
-                <artifactId>cargo-maven2-plugin</artifactId>
-                <version>1.4.13</version>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-maven-plugin</artifactId>
+                <version>9.2.10.v20150310</version>
                 <configuration>
-                    <wait>${integration.test.wait}</wait>
-                    <container>
-                        <containerId>jetty8x</containerId>
-                        <type>embedded</type>
-                        <systemProperties>
-                            <test.sling.home>
-                                ${basedir}/${cargo.sling.home}
-                            </test.sling.home>
-                        </systemProperties>
-                    </container>
-                    <deployer>
-                        <type>war</type>
-                    </deployer>
-                    <deployable>
-                        <location>${project.build.directory}/${project.build.finalName}.war</location>
-                        <properties>
-                            <context>/${http.base.path}</context>
-                        </properties>
-                    </deployable>
-                    <configuration>
-                        <home>${project.build.directory}/cargo</home>
-                        <properties>
-                            <cargo.servlet.port>
-                                ${http.port}
-                            </cargo.servlet.port>
-                            <!--
-                                <cargo.jvmargs>-Xdebug -Xnoagent -Xrunjdwp:transport=dt_socket,address=30333,server=y,suspend=y</cargo.jvmargs>
-                            -->
-                        </properties>
-                    </configuration>
+                    <httpConnector>
+                        <port>${http.port}</port>
+                    </httpConnector>
+                    <contextPath>${http.base.path}</contextPath>
+                    <war>${project.build.directory}/${project.build.finalName}.war</war>
                 </configuration>
             </plugin>
         </plugins>
@@ -284,6 +261,18 @@
                                             **/launchpad/testing/TestAll.java
                                         </include>
                                     </includes>
+                           <systemPropertyVariables>
+                                <launchpad.http.server.url>http://${test.host}:${http.port}/</launchpad.http.server.url>
+                                <launchpad.webdav.server.url>http://${test.host}:${http.port}/${webdav.workspace.path}</launchpad.webdav.server.url>
+                             <!--
+                                <HttpTestBase.readyTimeoutSeconds>${HttpTestBase.readyTimeoutSeconds}</HttpTestBase.readyTimeoutSeconds>
+                                -->
+                                <!-- Additional readyness checks, SLING-3235 and SLING-4261 
+                                <launchpad.ready.1>GET:/system/console/status-Configurations/configuration-status-20131115-101714.txt:200:config.comment.*setup the JSP engine for running tests</launchpad.ready.1>
+                                <launchpad.ready.2>GET:/.EXPORTED_PACKAGES.txt?package=org.apache.sling.api:200:PACKAGE FOUND.*org.apache.sling.api</launchpad.ready.2>
+                                <launchpad.ready.3>GET:/system/sling/junit/org.apache.sling.launchpad.testservices.serversidetests.WriteableResourcesTest.json:200:WriteableResourcesTest</launchpad.ready.3>
+                                -->
+                            </systemPropertyVariables>
                                     <systemProperties>
                                         <!--
                                             WARNING: make sure these URLs are consistent with the
@@ -314,24 +303,46 @@
                                                 /${http.base.path}
                                             </value>
                                         </property>
+                                <!-- Additional readyness checks, SLING-3235 and SLING-4261 -->
+                                        <property>
+                                            <name>launchpad.ready.1</name>
+                                            <value>
+                                                GET:/system/console/status-Configurations/configuration-status-20131115-101714.txt:200:config.comment.*setup the JSP engine for running tests
+                                            </value>
+                                        </property>
+                                        <property>
+                                            <name>launchpad.ready.2</name>
+                                            <value>
+                                                GET:/.EXPORTED_PACKAGES.txt?package=org.apache.sling.api:200:PACKAGE FOUND.*org.apache.sling.api
+                                            </value>
+                                        </property>
+                                        <property>
+                                            <name>launchpad.ready.3</name>
+                                            <value>
+                                                GET:/system/sling/junit/org.apache.sling.launchpad.testservices.serversidetests.WriteableResourcesTest.json:200:WriteableResourcesTest
+                                            </value>
+                                        </property>
                                     </systemProperties>
                                 </configuration>
                             </execution>
                         </executions>
                     </plugin>
                     <plugin>
-                        <groupId>org.codehaus.cargo</groupId>
-                        <artifactId>cargo-maven2-plugin</artifactId>
+                        <groupId>org.eclipse.jetty</groupId>
+                        <artifactId>jetty-maven-plugin</artifactId>
                         <executions>
                             <execution>
-                                <id>start-container</id>
+                                <id>start-jetty</id>
                                 <phase>pre-integration-test</phase>
                                 <goals>
-                                    <goal>start</goal>
+                                    <goal>deploy-war</goal>
                                 </goals>
+                                <configuration>
+                                    <scanIntervalSeconds>0</scanIntervalSeconds>
+                                </configuration>
                             </execution>
                             <execution>
-                                <id>stop-container</id>
+                                <id>stop-jetty</id>
                                 <phase>post-integration-test</phase>
                                 <goals>
                                     <goal>stop</goal>
