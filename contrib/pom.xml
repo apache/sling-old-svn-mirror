@@ -118,7 +118,6 @@
           <module>extensions/superimposing</module>
           <module>extensions/tenant</module>
           <module>extensions/urlrewriter</module>
-          <module>extensions/validation</module>
           <module>extensions/xss</module>
           <module>jcr/compiler</module>
           <module>jcr/jackrabbit-client</module>
