@@ -230,19 +230,19 @@
                         <bundle>
                             <groupId>org.apache.sling</groupId>
                             <artifactId>org.apache.sling.scripting.sightly</artifactId>
-                            <version>1.0.2</version>
+                            <version>1.0.3-SNAPSHOT</version>
                             <startLevel>20</startLevel>
                         </bundle>
                         <bundle>
                             <groupId>org.apache.sling</groupId>
                             <artifactId>org.apache.sling.scripting.sightly.js.provider</artifactId>
-                            <version>1.0.4</version>
+                            <version>1.0.5-SNAPSHOT</version>
                             <startLevel>20</startLevel>
                         </bundle>
                         <bundle>
                             <groupId>org.apache.sling</groupId>
                             <artifactId>org.apache.sling.scripting.sightly.testing-content</artifactId>
-                            <version>1.0.4</version>
+                            <version>1.0.5-SNAPSHOT</version>
                             <startLevel>20</startLevel>
                         </bundle>
                         <bundle>
