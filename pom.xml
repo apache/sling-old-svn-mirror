@@ -32,10 +32,9 @@
     </modules>
 
     <scm>
-        <connection>scm:git:https://github.com/raducotescu/org.apache.sling.validation.git</connection>
-        <developerConnection>scm:git:git@github.com:raducotescu/org.apache.sling.validation.git</developerConnection>
-        <tag>HEAD</tag>
-        <url>https://github.com/raducotescu/org.apache.sling.validation</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/validation</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/validation</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/validation</url>
     </scm>
 
     <name>Apache Sling Validation Framework Builder</name>
