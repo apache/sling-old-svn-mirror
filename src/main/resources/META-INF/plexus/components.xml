@@ -84,8 +84,8 @@
       <configuration>
         <type>slingstart</type>
         <includesDependencies>false</includesDependencies>
-        <language>txt</language>
-        <extension>txt</extension>
+        <language>java</language>
+        <extension>jar</extension>
         <addedToClasspath>false</addedToClasspath>
       </configuration>
     </component>
