@@ -21,10 +21,8 @@ package org.apache.sling.scripting.thymeleaf.internal.dialect;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.scr.annotations.*;
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.scripting.thymeleaf.internal.processor.attr.*;
 import org.osgi.framework.Constants;
 import org.thymeleaf.dialect.AbstractDialect;
@@ -44,6 +42,9 @@ public final class SlingDialect extends AbstractDialect {
 
     public static final String PREFIX = "sling";
 
+    @Reference
+    private DynamicClassLoaderManager dynamicClassLoaderManager;
+
     @Override
     public String getPrefix() {
         return PREFIX;
@@ -58,7 +59,7 @@ public final class SlingDialect extends AbstractDialect {
         processors.add(new SlingReplaceSuffixAttrProcessor());
         processors.add(new SlingResourceTypeAttrProcessor());
         processors.add(new SlingUnwrapAttrProcessor());
-        processors.add(new SlingAdaptToAttrProcessor());
+        processors.add(new SlingAdaptToAttrProcessor(dynamicClassLoaderManager));
         return processors;
     }
 

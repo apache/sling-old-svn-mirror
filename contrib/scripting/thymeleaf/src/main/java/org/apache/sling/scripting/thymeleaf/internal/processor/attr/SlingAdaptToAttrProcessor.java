@@ -24,8 +24,12 @@ public class SlingAdaptToAttrProcessor extends AbstractAttrProcessor {
 	public static final String VAR_ATTRIBUTE_NAME = "data-sling-var";
 	public static final String ADAPTABLE_ATTRIBUTE_NAME = "data-sling-adaptable";
 
-	public SlingAdaptToAttrProcessor() {
+	private DynamicClassLoaderManager dynamicClassLoaderManager;
+
+
+	public SlingAdaptToAttrProcessor(DynamicClassLoaderManager dynamicClassLoaderManager) {
 		super(ATTRIBUTE_NAME);
+		this.dynamicClassLoaderManager = dynamicClassLoaderManager;
 	}
 
 	@Override
@@ -46,7 +50,7 @@ public class SlingAdaptToAttrProcessor extends AbstractAttrProcessor {
 			final Configuration configuration = arguments.getConfiguration();
 			final IStandardExpressionParser parser = StandardExpressions.getExpressionParser(configuration);
 			final IStandardExpression expression = parser.parseExpression(configuration, arguments, adaptableValue);
-			final Adaptable adaptable = (Adaptable) expression.execute(configuration, arguments);
+			Adaptable adaptable = (Adaptable) expression.execute(configuration, arguments);
 
 			Class<?> adaptToClass = classLoader.loadClass(adaptTo);
 
@@ -72,6 +76,10 @@ public class SlingAdaptToAttrProcessor extends AbstractAttrProcessor {
 	}
 
 	private ClassLoader getClassLoader(SlingHttpServletRequest request){
+		if(dynamicClassLoaderManager != null){
+			return dynamicClassLoaderManager.getDynamicClassLoader();
+		}
+
 		final SlingBindings bindings = (SlingBindings) request.getAttribute(SlingBindings.class.getName());
 		final SlingScriptHelper scriptHelper = bindings.getSling();
 		final DynamicClassLoaderManager dynamicClassLoaderManager = scriptHelper.getService(DynamicClassLoaderManager.class);
