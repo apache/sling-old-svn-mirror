@@ -107,7 +107,8 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
                 // if it's a project from the current reactor build, we can't resolve it right now
                 final String key = d.getGroupId() + ":" + d.getArtifactId() + ":" + d.getVersion();
                 if ( projectMap.containsKey(key) ) {
-                    allDependencies.add(key + ":" + d.getClassifier() + ":" + d.getType());
+                    allDependencies.add(key + ":" + (d.getClassifier() != null ? d.getClassifier() : "")
+                                            + ":" + (d.getType() != null ? d.getType() : ""));
                 } else {
                     // "external" dependency, we can already resolve it
                     final File modelFile = getSlingstartArtifact(artifactHandlerManager, resolver, project, session, d);
