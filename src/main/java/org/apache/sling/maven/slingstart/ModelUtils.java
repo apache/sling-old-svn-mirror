@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.maven.MavenExecutionException;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DefaultArtifact;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
@@ -36,6 +37,7 @@ import org.apache.maven.artifact.resolver.ArtifactResolutionException;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.artifact.versioning.VersionRange;
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.sling.provisioning.model.Feature;
@@ -50,33 +52,44 @@ import org.codehaus.plexus.logging.Logger;
 
 public abstract class ModelUtils {
 
+    private static final String EXT_TXT = ".txt";
+    private static final String EXT_MODEL = ".model";
+
     /**
-     * Read all model files from the directory in alphabetical order
-     * @param logger
+     * Read all model files from the directory in alphabetical order.
+     * Only files ending with .txt or .model are read.
+     *
+     * @param startingModel The model into which the read models are merged or {@code null}
+     * @param modelDirectory The directory to scan for models
+     * @param project The current maven project
+     * @param session The current maven session
+     * @param logger The logger
      */
     private static Model readLocalModel(final Model startingModel,
-            final File systemsDirectory,
+            final File modelDirectory,
             final MavenProject project,
             final MavenSession session,
             final Logger logger)
     throws MojoExecutionException {
         final Model result = (startingModel != null ? startingModel : new Model());
         final List<String> candidates = new ArrayList<String>();
-        if ( systemsDirectory != null && systemsDirectory.exists() ) {
-            for(final File f : systemsDirectory.listFiles() ) {
-                if ( f.isFile() && f.getName().endsWith(".txt") && !f.getName().startsWith(".") ) {
-                    candidates.add(f.getName());
+        if ( modelDirectory != null && modelDirectory.exists() ) {
+            for(final File f : modelDirectory.listFiles() ) {
+                if ( f.isFile() && !f.getName().startsWith(".") ) {
+                    if ( f.getName().endsWith(EXT_TXT) || f.getName().endsWith(EXT_MODEL) ) {
+                        candidates.add(f.getName());
+                    }
                 }
             }
             Collections.sort(candidates);
         }
         if ( candidates.size() == 0 ) {
-            throw new MojoExecutionException("No model files found in " + systemsDirectory);
+            throw new MojoExecutionException("No model files found in " + modelDirectory);
         }
         for(final String name : candidates) {
             logger.debug("Reading model " + name + " in project " + project.getId());
             try {
-                final File f = new File(systemsDirectory, name);
+                final File f = new File(modelDirectory, name);
                 final FileReader reader = new FileReader(f);
                 try {
                     final Model current = ModelReader.read(reader, f.getAbsolutePath());
@@ -89,7 +102,7 @@ public abstract class ModelUtils {
                     IOUtils.closeQuietly(reader);
                 }
             } catch ( final IOException io) {
-                throw new MojoExecutionException("Unable to read " + name, io);
+                throw new MojoExecutionException("Unable to read model at " + name, io);
             }
         }
 
@@ -104,30 +117,32 @@ public abstract class ModelUtils {
     /**
      * Read the full model
      */
-    public static Model readFullModel(final File systemsDirectory,
+    public static Model readFullModel(final File modelDirectory,
             final List<File> dependentModels,
             final MavenProject project,
             final MavenSession session,
             final Logger logger)
     throws MojoExecutionException {
         try {
-            // check dependent models
+            // read dependent models
             Model depModel = null;
-            for(final File file : dependentModels) {
-                FileReader r = null;
-                try {
-                    r = new FileReader(file);
-                    if ( depModel == null ) {
-                        depModel = new Model();
+            if ( dependentModels != null ) {
+                for(final File file : dependentModels) {
+                    FileReader r = null;
+                    try {
+                        r = new FileReader(file);
+                        if ( depModel == null ) {
+                            depModel = new Model();
+                        }
+                        final Model readModel = ModelReader.read(r, file.getAbsolutePath());
+                        final Map<Traceable, String> errors = ModelUtility.validate(readModel);
+                        if (errors != null ) {
+                            throw new MojoExecutionException("Invalid model at " + file + " : " + errors);
+                        }
+                        ModelUtility.merge(depModel, readModel);
+                    } finally {
+                        IOUtils.closeQuietly(r);
                     }
-                    final Model readModel = ModelReader.read(r, file.getAbsolutePath());
-                    final Map<Traceable, String> errors = ModelUtility.validate(readModel);
-                    if (errors != null ) {
-                        throw new MojoExecutionException("Invalid model at " + file + " : " + errors);
-                    }
-                    ModelUtility.merge(depModel, readModel);
-                } finally {
-                    IOUtils.closeQuietly(r);
                 }
             }
             if ( depModel != null ) {
@@ -137,7 +152,7 @@ public abstract class ModelUtils {
                 }
             }
 
-            final Model result = readLocalModel(depModel, systemsDirectory, project, session, logger);
+            final Model result = readLocalModel(depModel, modelDirectory, project, session, logger);
 
             return result;
         } catch ( final IOException ioe) {
@@ -145,31 +160,69 @@ public abstract class ModelUtils {
         }
     }
 
-    public static org.apache.sling.provisioning.model.Artifact getBaseArtifact(final Model model) throws MojoExecutionException {
+    public static final class SearchResult {
+        public org.apache.sling.provisioning.model.Artifact artifact;
+        public String errorMessage;
+    }
+
+    public static SearchResult findBaseArtifact(final Model model) throws MojoExecutionException {
+        final SearchResult result = new SearchResult();
         final Feature base = model.getFeature(ModelConstants.FEATURE_LAUNCHPAD);
         if ( base == null ) {
-            throw new MojoExecutionException("No launchpad feature found.");
-        }
-        // get global run mode
-        final RunMode runMode = base.getRunMode(null);
-        if ( runMode == null ) {
-            throw new MojoExecutionException("No global run mode found in launchpad feature.");
-        }
-        if ( runMode.getArtifactGroups().isEmpty() ) {
-            throw new MojoExecutionException("No base artifacts defined.");
-        }
-        if ( runMode.getArtifactGroups().size() > 1 ) {
-            throw new MojoExecutionException("Base run mode should only have a single start level.");
-        }
-        org.apache.sling.provisioning.model.Artifact firstArtifact = null;
-        for(final org.apache.sling.provisioning.model.Artifact a : runMode.getArtifactGroups().get(0)) {
-            if ( firstArtifact == null ) {
-                firstArtifact = a;
+            result.errorMessage = "No launchpad feature found.";
+        } else {
+            // get global run mode
+            final RunMode runMode = base.getRunMode();
+            if ( runMode == null ) {
+                result.errorMessage = "No global run mode found in launchpad feature.";
             } else {
-                throw new MojoExecutionException("Base run mode should contain exactly one artifact.");
+                if ( runMode.getArtifactGroups().isEmpty() ) {
+                    result.errorMessage = "No base artifacts defined.";
+                } else if ( runMode.getArtifactGroups().size() > 1 ) {
+                    result.errorMessage = "Base run mode should only have a single start level.";
+                } else {
+                    org.apache.sling.provisioning.model.Artifact firstArtifact = null;
+                    for(final org.apache.sling.provisioning.model.Artifact a : runMode.getArtifactGroups().get(0)) {
+                        if ( firstArtifact == null ) {
+                            firstArtifact = a;
+                        } else {
+                            result.errorMessage = "Base run mode should contain exactly one artifact.";
+                            break;
+                        }
+                    }
+                    if ( firstArtifact == null ) {
+                        result.errorMessage = "No base artifacts defined.";
+                    }
+                    if ( result.errorMessage == null ) {
+                        result.artifact = firstArtifact;
+                    }
+                }
             }
         }
-        return firstArtifact;
+        return result;
+    }
+
+    public static File getSlingstartArtifact(final ArtifactHandlerManager artifactHandlerManager,
+            final ArtifactResolver resolver,
+            final MavenProject project,
+            final MavenSession session,
+            final Dependency d)
+    throws MavenExecutionException {
+        final Artifact prjArtifact = new DefaultArtifact(d.getGroupId(),
+                d.getArtifactId(),
+                VersionRange.createFromVersion(d.getVersion()),
+                Artifact.SCOPE_PROVIDED,
+                d.getType(),
+                d.getClassifier(),
+                artifactHandlerManager.getArtifactHandler(d.getType()));
+        try {
+            resolver.resolve(prjArtifact, project.getRemoteArtifactRepositories(), session.getLocalRepository());
+        } catch (final ArtifactResolutionException e) {
+            throw new MavenExecutionException("Unable to get artifact for " + d, e);
+        } catch (final ArtifactNotFoundException e) {
+            throw new MavenExecutionException("Unable to get artifact for " + d, e);
+        }
+        return prjArtifact.getFile();
     }
 
     /**
@@ -212,74 +265,120 @@ public abstract class ModelUtils {
     }
 
     private static final String RAW_MODEL_TXT = Model.class.getName() + "/raw.txt";
-    private static final String EFFECTIVE_MODEL_TXT = Model.class.getName() + "/effective.txt";
+    private static final String RAW_MODEL_DEPS = Model.class.getName() + "/raw.deps";
 
-    private static final String RAW_MODEL = Model.class.getName() + "/raw";
     private static final String EFFECTIVE_MODEL = Model.class.getName() + "/effective";
+    private static final String RAW_MODEL = Model.class.getName() + "/raw";
 
     /**
-     * Store the raw model in the project.
+     * Store the model info from the dependency lifecycle participant
      * @param project The maven project
-     * @param model The model
+     * @param model The local model
+     * @param dependencies The dependencies (either String or File objects)
      * @throws IOException If writing fails
      */
-    public static void storeRawModel(final MavenProject project, final Model model)
+    public static void storeModelInfo(final MavenProject project, final Model model, final List<Object> dependencies)
     throws IOException {
+        // we have to serialize as the dependency lifecycle participant uses a different class loader (!)
         final StringWriter w = new StringWriter();
         ModelWriter.write(w, model);
         project.setContextValue(RAW_MODEL_TXT, w.toString());
+        project.setContextValue(RAW_MODEL_DEPS, dependencies);
+    }
+
+    public static void prepareModel(final MavenProject project,
+            final MavenSession session,
+            final ArtifactHandlerManager artifactHandlerManager,
+            final ArtifactResolver resolver)
+    throws MojoExecutionException {
+        final String contents = (String)project.getContextValue(RAW_MODEL_TXT);
+        final Model localModel;
+        try {
+            localModel = ModelReader.read(new StringReader(contents), null);
+        } catch ( final IOException ioe) {
+            throw new MojoExecutionException("Unable to read cached model.", ioe);
+        }
+        final List<File> modelDependencies = new ArrayList<File>();
+        @SuppressWarnings("unchecked")
+        final List<Object> localDeps = (List<Object>)project.getContextValue(RAW_MODEL_DEPS);
+        for(final Object o : localDeps) {
+            if ( o instanceof String ) {
+                final String[] info = ((String)o).split(":");
+                final Dependency dep = new Dependency();
+                dep.setGroupId(info[0]);
+                dep.setArtifactId(info[1]);
+                dep.setVersion(info[2]);
+                if ( info[3] != null && info[3].length() > 0 ) {
+                    dep.setClassifier(info[3]);
+                }
+                if ( info[4] != null && info[4].length() > 0 ) {
+                    dep.setType(info[4]);
+                }
+                try {
+                    modelDependencies.add(getSlingstartArtifact(artifactHandlerManager, resolver, project, session, dep));
+                } catch ( final MavenExecutionException mee) {
+                    throw new MojoExecutionException(mee.getMessage(), mee.getCause());
+                }
+            } else {
+                modelDependencies.add((File)o);
+            }
+        }
+        // read dependent models
+        Model depModel = null;
+        for(final File file : modelDependencies) {
+            FileReader r = null;
+            try {
+                r = new FileReader(file);
+                if ( depModel == null ) {
+                    depModel = new Model();
+                }
+                final Model readModel = ModelReader.read(r, file.getAbsolutePath());
+                final Map<Traceable, String> errors = ModelUtility.validate(readModel);
+                if (errors != null ) {
+                    throw new MojoExecutionException("Invalid model at " + file + " : " + errors);
+                }
+                ModelUtility.merge(depModel, readModel);
+            } catch ( final IOException ioe) {
+                throw new MojoExecutionException("Unable to read model from " + file, ioe);
+            } finally {
+                IOUtils.closeQuietly(r);
+            }
+        }
+
+        final Model rawModel;
+        if ( depModel != null ) {
+            ModelUtility.merge(depModel, localModel);
+            final Map<Traceable, String> errors = ModelUtility.validate(depModel);
+            if (errors != null ) {
+                throw new MojoExecutionException("Invalid model : " + errors);
+            }
+            rawModel = depModel;
+        } else {
+            rawModel = localModel;
+        }
+
+        // store raw model
+        project.setContextValue(RAW_MODEL, rawModel);
+        // create and store effective model
+        final Model effectiveModel = ModelUtility.getEffectiveModel(rawModel, null);
+        project.setContextValue(EFFECTIVE_MODEL, effectiveModel);
+    }
+
+    /**
+     * Get the effective model from the project
+     * @param project The maven projet
+     * @return The effective model
+     */
+    public static Model getEffectiveModel(final MavenProject project) {
+        return (Model)project.getContextValue(EFFECTIVE_MODEL);
     }
 
     /**
      * Get the raw model from the project
      * @param project The maven projet
      * @return The raw model
-     * @throws MojoExecutionException If reading fails
      */
-    public static Model getRawModel(final MavenProject project) throws MojoExecutionException {
-        Model result = (Model)project.getContextValue(RAW_MODEL);
-        if ( result == null ) {
-            final String contents = (String)project.getContextValue(RAW_MODEL_TXT);
-            try {
-                result = ModelReader.read(new StringReader(contents), null);
-                project.setContextValue(RAW_MODEL, result);
-            } catch ( final IOException ioe) {
-                throw new MojoExecutionException("Unable to read cached model.", ioe);
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Store the effective model in the project.
-     * @param project The maven project
-     * @param model The model
-     * @throws IOException If writing fails
-     */
-    public static void storeEffectiveModel(final MavenProject project, final Model model)
-    throws IOException {
-        final StringWriter w = new StringWriter();
-        ModelWriter.write(w, model);
-        project.setContextValue(EFFECTIVE_MODEL_TXT, w.toString());
-    }
-
-    /**
-     * Get the effective model from the project
-     * @param project The maven projet
-     * @return The raw model
-     * @throws MojoExecutionException If reading fails
-     */
-    public static Model getEffectiveModel(final MavenProject project) throws MojoExecutionException {
-        Model result = (Model)project.getContextValue(EFFECTIVE_MODEL);
-        if ( result == null ) {
-            final String contents = (String)project.getContextValue(EFFECTIVE_MODEL_TXT);
-            try {
-                result = ModelUtility.getEffectiveModel(ModelReader.read(new StringReader(contents), null), null);
-                project.setContextValue(EFFECTIVE_MODEL, result);
-            } catch ( final IOException ioe) {
-                throw new MojoExecutionException("Unable to read cached model.", ioe);
-            }
-        }
-        return result;
+    public static Model getRawModel(final MavenProject project) {
+        return (Model)project.getContextValue(RAW_MODEL);
     }
 }
