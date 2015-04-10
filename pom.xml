@@ -84,10 +84,8 @@
         -->
         <integration.test.wait>false</integration.test.wait>
 
-        <resources.bundles.path>${project.build.directory}/launchpad-bundles/resources/bundles</resources.bundles.path>
-
-        <slf4j.version>1.5.11</slf4j.version>
-        <logback.version>0.9.20</logback.version>
+        <slf4j.version>1.7.6</slf4j.version>
+        <logback.version>1.1.2</logback.version>
     </properties>
 
     <build>
@@ -200,10 +198,11 @@
             <plugin>
                 <groupId>org.codehaus.cargo</groupId>
                 <artifactId>cargo-maven2-plugin</artifactId>
+                <version>1.4.13</version>
                 <configuration>
                     <wait>${integration.test.wait}</wait>
                     <container>
-                        <containerId>jetty6x</containerId>
+                        <containerId>jetty8x</containerId>
                         <type>embedded</type>
                         <systemProperties>
                             <test.sling.home>
@@ -211,13 +210,15 @@
                             </test.sling.home>
                         </systemProperties>
                     </container>
-                    <deployables>
-                        <deployable>
-                            <properties>
-                                <context>/${http.base.path}</context>
-                            </properties>
-                        </deployable>
-                    </deployables>
+                    <deployer>
+                        <type>war</type>
+                    </deployer>
+                    <deployable>
+                        <location>${project.build.directory}/${project.build.finalName}.war</location>
+                        <properties>
+                            <context>/${http.base.path}</context>
+                        </properties>
+                    </deployable>
                     <configuration>
                         <home>${project.build.directory}/cargo</home>
                         <properties>
