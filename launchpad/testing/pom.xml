@@ -383,7 +383,7 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad</artifactId>
             <version>8-SNAPSHOT</version>
-            <type>slingstart</type>
+            <type>slingfeature</type>
             <classifier>slingfeature</classifier>
         </dependency>
 
