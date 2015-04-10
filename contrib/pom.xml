@@ -112,7 +112,9 @@
           <module>extensions/oak-s3</module>
           <module>extensions/reqanalyzer</module>
           <module>extensions/resourcemerger</module>
+          <module>extensions/resource-inventory</module>
           <module>extensions/rewriter</module>
+          <module>extensions/security</module>
           <module>extensions/slf4j-mdc</module>
           <module>extensions/sling-query</module>
           <module>extensions/superimposing</module>
