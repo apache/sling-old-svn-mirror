@@ -18,9 +18,7 @@ package org.apache.sling.maven.slingstart;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.maven.AbstractMavenLifecycleParticipant;
 import org.apache.maven.MavenExecutionException;
@@ -71,25 +69,19 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
 
     @Override
     public void afterProjectsRead(final MavenSession session) throws MavenExecutionException {
-        log.info("Searching for slingstart projects...");
-        try {
-            final Map<String, MavenProject> projectMap = new HashMap<String, MavenProject>();
-            for (final MavenProject project : session.getProjects()) {
-                projectMap.put(project.getGroupId() + ":" + project.getArtifactId() + ":" + project.getVersion(),
-                        project);
-            }
-
+        log.debug("Searching for slingstart projects...");
             for (final MavenProject project : session.getProjects()) {
                 for (Plugin plugin : project.getBuild().getPlugins()) {
                     if (plugin.getArtifactId().equals(PLUGIN_ID)) {
-                        addDependencies(artifactHandlerManager, resolver, log,
-                                session, project, plugin);
+                        try {
+                            addDependencies(artifactHandlerManager, resolver, log,
+                                    session, project, plugin);
+                        } catch (final Exception e) {
+                            throw new MavenExecutionException("Unable to determine plugin-based dependencies for project " + project, e);
+                        }
                     }
                 }
             }
-        } catch (final Exception e) {
-            throw new MavenExecutionException("Unable to determine plugin-based dependencies", e);
-        }
     }
 
     public static void addDependencies(final ArtifactHandlerManager artifactHandlerManager,
