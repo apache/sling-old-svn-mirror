@@ -17,12 +17,9 @@
 package org.apache.sling.maven.slingstart;
 
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
-import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
@@ -39,19 +36,9 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
     )
 public class PrepareSlingStartMojo extends AbstractSlingStartMojo {
 
-    @Component
-    private ArtifactHandlerManager artifactHandlerManager;
-
-    /**
-     * Used to look up Artifacts in the remote repository.
-     *
-     */
-    @Component
-    private ArtifactResolver resolver;
-
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        ModelUtils.prepareModel(this.project, this.mavenSession, this.artifactHandlerManager, this.resolver);
+        ModelUtils.prepareModel(this.project, this.mavenSession);
 
         if ( project.getPackaging().equals(BuildConstants.PACKAGING_SLINGSTART ) ) {
             // add dependencies for base artifact

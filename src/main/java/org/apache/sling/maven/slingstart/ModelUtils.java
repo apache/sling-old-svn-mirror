@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.maven.MavenExecutionException;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DefaultArtifact;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
@@ -202,29 +201,6 @@ public abstract class ModelUtils {
         return result;
     }
 
-    public static File getSlingstartArtifact(final ArtifactHandlerManager artifactHandlerManager,
-            final ArtifactResolver resolver,
-            final MavenProject project,
-            final MavenSession session,
-            final Dependency d)
-    throws MavenExecutionException {
-        final Artifact prjArtifact = new DefaultArtifact(d.getGroupId(),
-                d.getArtifactId(),
-                VersionRange.createFromVersion(d.getVersion()),
-                Artifact.SCOPE_PROVIDED,
-                d.getType(),
-                d.getClassifier(),
-                artifactHandlerManager.getArtifactHandler(d.getType()));
-        try {
-            resolver.resolve(prjArtifact, project.getRemoteArtifactRepositories(), session.getLocalRepository());
-        } catch (final ArtifactResolutionException e) {
-            throw new MavenExecutionException("Unable to get artifact for " + d, e);
-        } catch (final ArtifactNotFoundException e) {
-            throw new MavenExecutionException("Unable to get artifact for " + d, e);
-        }
-        return prjArtifact.getFile();
-    }
-
     /**
      * Get a resolved Artifact from the coordinates provided
      *
@@ -287,9 +263,7 @@ public abstract class ModelUtils {
     }
 
     public static void prepareModel(final MavenProject project,
-            final MavenSession session,
-            final ArtifactHandlerManager artifactHandlerManager,
-            final ArtifactResolver resolver)
+            final MavenSession session)
     throws MojoExecutionException {
         final String contents = (String)project.getContextValue(RAW_MODEL_TXT);
         final Model localModel;
@@ -314,11 +288,7 @@ public abstract class ModelUtils {
                 if ( info[4] != null && info[4].length() > 0 ) {
                     dep.setType(info[4]);
                 }
-                try {
-                    modelDependencies.add(getSlingstartArtifact(artifactHandlerManager, resolver, project, session, dep));
-                } catch ( final MavenExecutionException mee) {
-                    throw new MojoExecutionException(mee.getMessage(), mee.getCause());
-                }
+                modelDependencies.add(getSlingstartArtifact(project, session, dep));
             } else {
                 modelDependencies.add((File)o);
             }
@@ -362,6 +332,38 @@ public abstract class ModelUtils {
         // create and store effective model
         final Model effectiveModel = ModelUtility.getEffectiveModel(rawModel, null);
         project.setContextValue(EFFECTIVE_MODEL, effectiveModel);
+    }
+
+    private static File getSlingstartArtifact(final MavenProject project,
+            final MavenSession session,
+            final Dependency dep)
+    throws MojoExecutionException {
+        for (final MavenProject p : session.getProjects()) {
+            // we only need to find the group id / artifact id, version is correct anyway
+            if ( p.getGroupId().equals(dep.getGroupId())
+                 && p.getArtifactId().equals(dep.getArtifactId()) ) {
+
+                for(final Artifact a : p.getAttachedArtifacts()) {
+                    if ( equals(a.getType(), dep.getType() ) && equals(a.getClassifier(), dep.getClassifier())) {
+                        if ( a.getFile() != null ) {
+                            return a.getFile();
+                        }
+                    }
+                }
+                break;
+            }
+        }
+        throw new MojoExecutionException("Unable to find dependency build artifact " + dep);
+    }
+
+    private final static boolean equals(final String a, final String b) {
+        if ( a == null && b == null ) {
+            return true;
+        }
+        if ( a == null ) {
+            return false;
+        }
+        return a.equals(b);
     }
 
     /**
