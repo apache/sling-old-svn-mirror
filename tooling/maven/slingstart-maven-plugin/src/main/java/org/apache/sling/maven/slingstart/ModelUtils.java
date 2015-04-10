@@ -278,6 +278,7 @@ public abstract class ModelUtils {
         for(final Object o : localDeps) {
             if ( o instanceof String ) {
                 final String[] info = ((String)o).split(":");
+
                 final Dependency dep = new Dependency();
                 dep.setGroupId(info[0]);
                 dep.setArtifactId(info[1]);
@@ -343,6 +344,13 @@ public abstract class ModelUtils {
             if ( p.getGroupId().equals(dep.getGroupId())
                  && p.getArtifactId().equals(dep.getArtifactId()) ) {
 
+                // check main artifact first
+                if ( dep.getClassifier() == null && p.getPackaging().equals(dep.getType()) ) {
+                    if ( p.getArtifact() != null && p.getArtifact().getFile() != null ) {
+                        return p.getArtifact().getFile();
+                    }
+                }
+                // followed by attached artifacts
                 for(final Artifact a : p.getAttachedArtifacts()) {
                     if ( equals(a.getType(), dep.getType() ) && equals(a.getClassifier(), dep.getClassifier())) {
                         if ( a.getFile() != null ) {
