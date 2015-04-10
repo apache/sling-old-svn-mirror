@@ -1,0 +1,20 @@
+# Additional bundles for the Sling launchpad tests
+[feature name=launchpad-test-bundles]
+
+[artifacts startLevel=1]
+  org.apache.sling/org.apache.sling.servlets.compat/1.0.3-SNAPSHOT
+
+[artifacts]
+  org.apache.sling/org.apache.sling.junit.core/1.0.11-SNAPSHOT
+  org.apache.sling/org.apache.sling.junit.remote/1.0.11-SNAPSHOT
+  org.apache.sling/org.apache.sling.junit.scriptable/1.0.11-SNAPSHOT
+  org.apache.sling/org.apache.sling.launchpad.test-fragment/2.0.9-SNAPSHOT
+  org.apache.sling/org.apache.sling.launchpad.test-services/2.0.8
+  
+[artifacts runModes=jackrabbit,oak]
+  # Add some run modes to verify that one of these run modes is active. 
+  org.apache.sling/org.apache.sling.launchpad.test-services/2.0.9-SNAPSHOT
+
+[artifacts runModes=failingtests]
+  # Used to verify that a bundle with an inactive run mode is not installed
+  org.apache.sling/org.apache.sling.testing.samples.failingtests/1.0.6
