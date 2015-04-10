@@ -46,8 +46,6 @@ public class JcrResourceBundle extends ResourceBundle {
 
     private static final Logger log = LoggerFactory.getLogger(JcrResourceBundle.class);
 
-    static final String RT_MESSAGE_ENTRY = "sling:MessageEntry";
-
     static final String MIXIN_MESSAGE = "sling:Message";
 
     static final String PROP_KEY = "sling:key";
@@ -290,26 +288,10 @@ public class JcrResourceBundle extends ResourceBundle {
     private void scanForSlingMessages(final Resource rsrc, final Map<String, Object> targetDictionary) {
         final ValueMap vm = rsrc.adaptTo(ValueMap.class);
         if ( vm != null ) {
-            // resource type check, as in JCR a mixin might be used, a simple resource type checking
-            // does unfortunately not work
-            boolean checked = rsrc.isResourceType(RT_MESSAGE_ENTRY);
-            if ( !checked ) {
-                final String[] mixins = vm.get(PROP_MIXINS, String[].class);
-                if ( mixins != null ) {
-                    for(final String m : mixins) {
-                        if ( MIXIN_MESSAGE.equals(m) ) {
-                            checked = true;
-                            break;
-                        }
-                    }
-                }
-            }
-            if ( checked ) {
-                final String value = vm.get(PROP_VALUE, String.class);
-                if ( value != null ) {
-                    final String key = vm.get(PROP_KEY, rsrc.getName());
-                    targetDictionary.put(key, value);
-                }
+            final String value = vm.get(PROP_VALUE, String.class);
+            if ( value != null ) {
+                final String key = vm.get(PROP_KEY, rsrc.getName());
+                targetDictionary.put(key, value);
             }
         }
 
