@@ -20,13 +20,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>15</version>
+        <version>22</version>
         <relativePath/>
     </parent>
-    <modelVersion>4.0.0</modelVersion>
 
     <artifactId>org.apache.sling.validation.examples</artifactId>
     <version>1.0.0-SNAPSHOT</version>
@@ -38,21 +38,18 @@
     <properties>
         <sling.java.version>6</sling.java.version>
     </properties>
+    
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/validation/examples</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/validation/examples</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/validation/examples</url>
+    </scm>
 
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-scr-plugin</artifactId>
-                <version>1.11.0</version>
-                <executions>
-                    <execution>
-                        <id>generate-scr-descriptor</id>
-                        <goals>
-                            <goal>scr</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -96,12 +93,6 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>javax.jcr</groupId>
-            <artifactId>jcr</artifactId>
-            <version>2.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.api</artifactId>
             <version>2.4.2</version>
@@ -115,7 +106,6 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.annotations</artifactId>
-            <version>1.9.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -137,5 +127,4 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
-
 </project>

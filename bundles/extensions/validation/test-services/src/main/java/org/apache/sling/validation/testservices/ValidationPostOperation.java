@@ -18,6 +18,8 @@
  */
 package org.apache.sling.validation.testservices;
 
+import java.util.List;
+
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -25,7 +27,6 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.servlets.post.AbstractPostOperation;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.PostOperation;
@@ -36,16 +37,12 @@ import org.apache.sling.validation.api.ValidationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.RepositoryException;
-import java.util.List;
-
 @Component()
 @Service(PostOperation.class)
 @Properties({
         @Property(
                 name = PostOperation.PROP_OPERATION_NAME,
-                value = "validation",
-                propertyPrivate = true
+                value = "validation"
         )
 })
 public class ValidationPostOperation extends AbstractPostOperation {
@@ -56,7 +53,7 @@ public class ValidationPostOperation extends AbstractPostOperation {
     private ValidationService validationService;
 
     @Override
-    protected void doRun(SlingHttpServletRequest request, PostResponse response, List<Modification> changes) throws RepositoryException {
+    protected void doRun(SlingHttpServletRequest request, PostResponse response, List<Modification> changes) {
         if (response instanceof ValidationPostResponse) {
             ValidationPostResponse vpr = (ValidationPostResponse) response;
             ValueMap requestParameters = request.adaptTo(ValueMap.class);
