@@ -21,6 +21,8 @@ package org.apache.sling.validation.api;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
+
 /**
  * A {@code ValidationModel} defines the validation rules that a resource tree has to pass.
  */
@@ -31,14 +33,14 @@ public interface ValidationModel {
      *
      * @return the properties set (never {@code null}, but might be empty set)
      */
-    Set<ResourceProperty> getResourceProperties();
+	@Nonnull Set<ResourceProperty> getResourceProperties();
 
     /**
      * Returns the type of resource this model validates.
      *
      * @return the validated resource type, never {@code null}
      */
-    String getValidatedResourceType();
+	@Nonnull String getValidatedResourceType();
 
     /**
      * Returns the paths under which resources will be validated by this model. 
@@ -47,13 +49,13 @@ public interface ValidationModel {
      *
      * @return a path array. Is never {@code null} nor an empty array
      */
-    String[] getApplicablePaths();
+	@Nonnull String[] getApplicablePaths();
 
     /**
      * Returns the expected children for a resource validated by this model.
      *
      * @return the children list (can be empty if there are no children), never {@code null}
      */
-    List<ChildResource> getChildren();
+	@Nonnull List<ChildResource> getChildren();
 
 }
