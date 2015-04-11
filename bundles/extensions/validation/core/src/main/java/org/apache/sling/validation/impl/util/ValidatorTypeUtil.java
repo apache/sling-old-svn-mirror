@@ -18,6 +18,8 @@
  */
 package org.apache.sling.validation.impl.util;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.TypeVariable;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -42,10 +44,15 @@ public class ValidatorTypeUtil {
             if (entry.getKey().getGenericDeclaration() instanceof Class<?>) {
                 Class clazz = (Class)entry.getKey().getGenericDeclaration();
                 if (clazz.equals(Validator.class)) {
+                	// Java6 doesn't return the class for array types due to this bug: http://bugs.java.com/view_bug.do?bug_id=5041784
+                	if (type instanceof GenericArrayType) {
+                		// as a workaround make a new array class out of the generic component type encapsulated in the generic array type
+                    	type = Array.newInstance((Class<?>) ((GenericArrayType)type).getGenericComponentType(), 0).getClass();
+                    }
                     if (type instanceof Class<?>) {
                         return (Class)type;
                     }
-                    // type may also be a parmeterized type (e.g. for Collection<String>), this is not allowed!
+                    // type may also be a parameterized type (e.g. for Collection<String>), this is not allowed!
                     else {
                         throw new IllegalArgumentException("Validators may not use parameterized types as type parameter. Only simple class types and arrays of class types are allowed.");
                     }
