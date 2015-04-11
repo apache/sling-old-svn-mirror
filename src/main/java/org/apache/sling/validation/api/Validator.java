@@ -21,9 +21,12 @@ package org.apache.sling.validation.api;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.api.exceptions.SlingValidationException;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * A {@code Validator} is responsible for validating a single piece of information according to an internal constraint.
  */
+@ConsumerType
 public interface Validator <T> {
 
     /**

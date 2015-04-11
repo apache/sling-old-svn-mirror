@@ -21,6 +21,8 @@ package org.apache.sling.validation.api;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+
 /**
  * A {@code ValidationResult} contains validation information about a validated property / child resource.
  */
@@ -38,7 +40,7 @@ public interface ValidationResult {
      * keys of the returned {@link Map} will contain the validated resource's properties (or child resources' properties) names; the
      * associated values will be the actual failure messages.
      *
-     * @return the validation's failure messages
+     * @return the validation's failure messages (never {@code null})
      */
-    Map<String, List<String>> getFailureMessages();
+    @Nonnull Map<String, List<String>> getFailureMessages();
 }

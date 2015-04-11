@@ -20,13 +20,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>15</version>
-        <relativePath />
+        <version>22</version>
     </parent>
-    <modelVersion>4.0.0</modelVersion>
 
     <artifactId>org.apache.sling.validation.api</artifactId>
     <version>1.0.0-SNAPSHOT</version>
@@ -35,41 +34,38 @@
     <name>Apache Sling Validation Framework API</name>
     <description>The Apache Sling Validation Framework API</description>
 
+ 	<properties>
+        <sling.java.version>6</sling.java.version>
+    </properties>
+    
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/validation/api</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/validation/api</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/validation/api</url>
+    </scm>
+    
     <build>
-        <plugins>
-            <!--<plugin>-->
-                <!--<groupId>org.apache.felix</groupId>-->
-                <!--<artifactId>maven-scr-plugin</artifactId>-->
-                <!--<version>1.11.0</version>-->
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<id>generate-scr-descriptor</id>-->
-                        <!--<goals>-->
-                            <!--<goal>scr</goal>-->
-                        <!--</goals>-->
-                    <!--</execution>-->
-                <!--</executions>-->
-            <!--</plugin>-->
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <instructions>
-                        <Export-Package>
-                            org.apache.sling.validation.api;version=1.0.0,
-                            org.apache.sling.validation.api.exceptions;version=1.0.0
-                        </Export-Package>
-                    </instructions>
-                </configuration>
-            </plugin>
-        </plugins>
+    	<plugins>
+	    	<plugin>
+		        <groupId>org.apache.felix</groupId>
+		        <artifactId>maven-bundle-plugin</artifactId>
+		        <extensions>true</extensions>
+	         </plugin>
+    	</plugins>
     </build>
+    
     <dependencies>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.api</artifactId>
             <version>2.4.2</version>
+            <scope>provided</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>3.0.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
