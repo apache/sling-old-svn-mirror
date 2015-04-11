@@ -28,8 +28,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 
-import javax.jcr.query.Query;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
@@ -378,7 +376,7 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
             for (String searchPath : searchPaths) {
                 final String queryString = String.format(MODEL_XPATH_QUERY, searchPath, Constants.VALIDATION_MODEL_RESOURCE_TYPE,
                         Constants.VALIDATED_RESOURCE_TYPE, validatedResourceType);
-                Iterator<Resource> models = rr.findResources(queryString, Query.XPATH);
+                Iterator<Resource> models = rr.findResources(queryString, "xpath");
                 while (models.hasNext()) {
                     Resource model = models.next();
                     LOG.info("Found validation model resource {}.", model.getPath());
