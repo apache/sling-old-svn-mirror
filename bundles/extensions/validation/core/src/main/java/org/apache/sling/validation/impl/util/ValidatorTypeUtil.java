@@ -42,7 +42,7 @@ public class ValidatorTypeUtil {
             type = entry.getValue();
             // check if this is really the type argument defined on the interface {@link Validator}
             if (entry.getKey().getGenericDeclaration() instanceof Class<?>) {
-                Class clazz = (Class)entry.getKey().getGenericDeclaration();
+                Class<?> clazz = (Class<?>)entry.getKey().getGenericDeclaration();
                 if (clazz.equals(Validator.class)) {
                 	// Java6 doesn't return the class for array types due to this bug: http://bugs.java.com/view_bug.do?bug_id=5041784
                 	if (type instanceof GenericArrayType) {
@@ -50,7 +50,7 @@ public class ValidatorTypeUtil {
                     	type = Array.newInstance((Class<?>) ((GenericArrayType)type).getGenericComponentType(), 0).getClass();
                     }
                     if (type instanceof Class<?>) {
-                        return (Class)type;
+                        return (Class<?>)type;
                     }
                     // type may also be a parameterized type (e.g. for Collection<String>), this is not allowed!
                     else {
