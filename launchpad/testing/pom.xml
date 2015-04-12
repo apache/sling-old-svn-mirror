@@ -379,28 +379,12 @@
     </profiles>
 
     <dependencies>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.launchpad</artifactId>
-            <version>8-SNAPSHOT</version>
-            <type>slingfeature</type>
-            <classifier>slingfeature</classifier>
-        </dependency>
-
       <!-- The integration tests -->
         <dependency>
              <groupId>org.apache.sling</groupId>
              <artifactId>org.apache.sling.launchpad.integration-tests</artifactId>
              <version>1.0.1-SNAPSHOT</version>
              <scope>test</scope>
-        </dependency>
-
-      <!-- The test services bundles -->
-        <dependency>
-             <groupId>org.apache.sling</groupId>
-             <artifactId>org.apache.sling.launchpad.test-bundles</artifactId>
-             <version>0.0.1-SNAPSHOT</version>
-             <type>slingfeature</type>
         </dependency>
 
         <!-- Dependencies for the Test Build and Run -->
