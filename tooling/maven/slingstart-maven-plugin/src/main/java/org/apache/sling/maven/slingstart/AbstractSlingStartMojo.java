@@ -25,6 +25,9 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 
+/**
+ * Base class for all slingstart mojos.
+ */
 public abstract class AbstractSlingStartMojo extends AbstractMojo {
 
     @Parameter(defaultValue="${basedir}/src/main/provisioning")

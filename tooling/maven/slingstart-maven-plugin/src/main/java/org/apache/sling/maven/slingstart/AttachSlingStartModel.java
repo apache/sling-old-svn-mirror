@@ -31,8 +31,7 @@ import org.apache.sling.provisioning.model.Model;
 import org.apache.sling.provisioning.model.io.ModelWriter;
 
 /**
- * Attaches the subsystem as a project artifact.
- *
+ * Attaches the model as a project artifact.
  */
 @Mojo(
         name = "attach-slingfeature",
@@ -44,12 +43,15 @@ public class AttachSlingStartModel extends AbstractSlingStartMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        final Model model = ModelUtils.getRawModel(this.project);
+        final Model model = ProjectHelper.getRawModel(this.project);
 
-        final File outputFile = new File(this.project.getBuild().getDirectory() + File.separatorChar + "slingstart.txt");
+        // write the model
+        final File outputFile = new File(this.project.getBuild().getDirectory() + File.separatorChar + BuildConstants.MODEL_ARTIFACT_NAME);
         outputFile.getParentFile().mkdirs();
+
         Writer writer = null;
         try {
+
 
             writer = new FileWriter(outputFile);
             ModelWriter.write(writer, model);
@@ -64,7 +66,8 @@ public class AttachSlingStartModel extends AbstractSlingStartMojo {
             project.getArtifact().setFile(outputFile);
         } else {
             // otherwise attach it as an additional artifact
-            projectHelper.attachArtifact(project, BuildConstants.PACKAGING_PARTIAL_SYSTEM, BuildConstants.CLASSIFIER_PARTIAL_SYSTEM, outputFile);
+            projectHelper.attachArtifact(project, BuildConstants.PACKAGING_PARTIAL_SYSTEM,
+                    BuildConstants.CLASSIFIER_PARTIAL_SYSTEM, outputFile);
         }
     }
 }
