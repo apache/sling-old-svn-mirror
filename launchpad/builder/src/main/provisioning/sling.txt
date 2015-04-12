@@ -99,7 +99,7 @@
     org.apache.tika/tika-bundle/1.2
 
 [artifacts startLevel=15]
-    commons-io/commons-io/1.4
+    commons-io/commons-io/2.4
     org.apache.sling/org.apache.sling.jcr.jcr-wrapper/2.0.0
     org.apache.sling/org.apache.sling.jcr.api/2.2.0
     org.apache.sling/org.apache.sling.jcr.base/2.2.2
