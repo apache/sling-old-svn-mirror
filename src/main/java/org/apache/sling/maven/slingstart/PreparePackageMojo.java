@@ -28,6 +28,7 @@ import java.util.TreeSet;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.felix.cm.file.ConfigurationHandler;
+import org.apache.maven.MavenExecutionException;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
@@ -90,7 +91,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        final Model model = ModelUtils.getEffectiveModel(this.project);
+        final Model model = ProjectHelper.getEffectiveModel(this.project);
 
         this.prepareGlobal(model);
         this.prepareStandaloneApp(model);
@@ -323,24 +324,24 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
      * Return the base artifact
      */
     private Artifact getBaseArtifact(final Model model, final String classifier, final String type) throws MojoExecutionException {
-        final ModelUtils.SearchResult result = ModelUtils.findBaseArtifact(model);
-        if ( result.errorMessage != null ) {
-            throw new MojoExecutionException(result.errorMessage);
-        }
-        final org.apache.sling.provisioning.model.Artifact baseArtifact = result.artifact;
+        try {
+            final org.apache.sling.provisioning.model.Artifact baseArtifact = ModelUtils.findBaseArtifact(model);
 
-        final Artifact a = ModelUtils.getArtifact(this.project,  this.mavenSession, this.artifactHandlerManager, this.resolver,
-                baseArtifact.getGroupId(),
-                baseArtifact.getArtifactId(),
-                baseArtifact.getVersion(),
-                type,
-                classifier);
-        if (a == null) {
-            throw new MojoExecutionException(
-                    String.format("Project doesn't have a base dependency of groupId %s and artifactId %s",
-                            baseArtifact.getGroupId(), baseArtifact.getArtifactId()));
+            final Artifact a = ModelUtils.getArtifact(this.project,  this.mavenSession, this.artifactHandlerManager, this.resolver,
+                    baseArtifact.getGroupId(),
+                    baseArtifact.getArtifactId(),
+                    baseArtifact.getVersion(),
+                    type,
+                    classifier);
+            if (a == null) {
+                throw new MojoExecutionException(
+                        String.format("Project doesn't have a base dependency of groupId %s and artifactId %s",
+                                baseArtifact.getGroupId(), baseArtifact.getArtifactId()));
+            }
+            return a;
+        } catch ( final MavenExecutionException mee) {
+            throw new MojoExecutionException(mee.getMessage(), mee.getCause());
         }
-        return a;
     }
 
     /**
