@@ -37,6 +37,9 @@ public class ServerConfiguration implements Serializable {
     /** The port to use. */
     private String port;
 
+    /** The control port to use. */
+    private String controlPort;
+
     /** The context path. */
     private String contextPath;
 
@@ -124,6 +127,14 @@ public class ServerConfiguration implements Serializable {
         this.folder = folder.getAbsoluteFile();
     }
 
+    public String getControlPort() {
+        return controlPort;
+    }
+
+    public void setControlPort(String controlPort) {
+        this.controlPort = controlPort;
+    }
+
     /**
      * Get the server
      * @return The server
@@ -143,6 +154,7 @@ public class ServerConfiguration implements Serializable {
         copy.setOpts(this.getOpts());
         copy.setInstances(1);
         copy.setFolder(this.getFolder());
+        copy.setControlPort(this.getControlPort());
 
         return copy;
     }
@@ -150,7 +162,8 @@ public class ServerConfiguration implements Serializable {
     @Override
     public String toString() {
         return "LaunchpadConfiguration [id=" + id + ", runmode=" + runmode
-                + ", port=" + port + ", contextPath=" + contextPath
+                + ", port=" + port + ", controlPort=" + controlPort
+                + ", contextPath=" + contextPath
                 + ", vmOpts=" + vmOpts + ", opts=" + opts + ", instances="
                 + instances + ", folder=" + folder + "]";
     }
