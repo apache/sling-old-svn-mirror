@@ -10,7 +10,7 @@ Getting Started
 ===============
 
 This component uses a Maven (http://maven.apache.org/) build environment. 
-It requires a Java 5 JDK (or higher) and Maven (http://maven.apache.org/)
+It requires a Java 6 JDK (or higher) and Maven (http://maven.apache.org/)
 3.0.4 or later. We recommend to use the latest Maven version.
 
 If you have Maven installed, you can compile and
@@ -45,9 +45,9 @@ in the top-level directory of the Sling source code.
 
 2) Start the generated jar with
 
-	 java -jar target/org.apache.sling.launchpad-7-standalone.jar 
+	 java -jar target/org.apache.sling.launchpad-8.jar 
 	 
-Use the correct version number instead of 7, if needed.
+Use the correct version number instead of 8, if needed.
 
 3) Browse Sling in:
 
@@ -72,5 +72,5 @@ in the top-level directory of the Sling source code.
         
   OR
   
-   Deploy target/org.apache.sling.launchpad-7.war to your favorite application
+   Deploy target/org.apache.sling.launchpad-8.war to your favorite application
    server or servlet container.
