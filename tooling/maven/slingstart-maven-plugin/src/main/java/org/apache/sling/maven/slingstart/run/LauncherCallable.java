@@ -163,6 +163,10 @@ public class LauncherCallable implements Callable<ProcessDescription> {
             args.add(this.configuration.getPort());
         }
 
+        if ( this.configuration.getControlPort() != null ) {
+            args.add("-c");
+            args.add(this.configuration.getControlPort());
+        }
         if ( this.configuration.getRunmode() != null ) {
             args.add("-Dsling.run.modes=" + this.configuration.getRunmode());
         }
