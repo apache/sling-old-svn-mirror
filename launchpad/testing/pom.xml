@@ -79,6 +79,9 @@
         
         <slf4j.version>1.7.6</slf4j.version>
         <logback.version>1.1.2</logback.version>
+
+        <min.port>41000</min.port>
+        <max.port>41199</max.port>
     </properties>
 
     <build>
@@ -115,6 +118,8 @@
                                 <portName>http.port</portName>
                                 <portName>sling.control.port</portName>
                             </portNames>
+                            <minPortNumber>${min.port}</minPortNumber>
+                            <maxPortNumber>${max.port}</maxPortNumber>
                         </configuration>
                     </execution>
                 </executions>
@@ -219,11 +224,11 @@
                             <servers>
                                 <server>
                                     <port>${http.port}</port>
+                                    <controlPort>${sling.control.port}</controlPort>
                                 </server>
                             </servers>
                             <!-- TODO 
                             <controlHost>${test.host}</controlHost>
-                            <controlPort>${sling.control.port}</controlPort>
                             -->
                         </configuration>
                     </plugin>
@@ -310,6 +315,8 @@
                 </plugins>
             </build>
         </profile>
+<!-- 
+ 
         <profile>
             <id>emma</id>
             <build>
@@ -335,6 +342,7 @@
                 </plugins>
             </build>
         </profile>
+        -->
         <profile>
             <id>emma-report</id>
             <build>
@@ -376,8 +384,41 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>port-java6</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <jdk>1.6</jdk>
+            </activation>
+            <properties>
+                <min.port>41200</min.port>
+                <max.port>41399</max.port>
+            </properties>
+        </profile>
+        <profile>
+            <id>port-java7</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <jdk>1.7</jdk>
+            </activation>
+            <properties>
+                <min.port>41400</min.port>
+                <max.port>41599</max.port>
+            </properties>
+        </profile>
+        <profile>
+            <id>port-java8</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <jdk>1.8</jdk>
+            </activation>
+            <properties>
+                <min.port>41600</min.port>
+                <max.port>41799</max.port>
+            </properties>
+        </profile>
     </profiles>
-
+    
     <dependencies>
       <!-- The integration tests -->
         <dependency>
