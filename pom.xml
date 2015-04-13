@@ -172,8 +172,6 @@
                 <plugins>
                     <plugin>
                         <artifactId>maven-failsafe-plugin</artifactId>
-                        <!-- Version newer than the one declared in the parent pom -->
-                        <version>2.16</version>
                         <executions>
                             <execution>
                                 <goals>
@@ -197,6 +195,7 @@
                             <systemPropertyVariables>
                                 <launchpad.http.server.url>http://${test.host}:${http.port}/</launchpad.http.server.url>
                                 <launchpad.webdav.server.url>http://${test.host}:${http.port}/${webdav.workspace.path}</launchpad.webdav.server.url>
+                                <launchpad.servlet.context>${http.base.path}</launchpad.servlet.context>
                              <!--
                                 <HttpTestBase.readyTimeoutSeconds>${HttpTestBase.readyTimeoutSeconds}</HttpTestBase.readyTimeoutSeconds>
                                 -->
@@ -225,6 +224,8 @@
                                 <server>
                                     <port>${http.port}</port>
                                     <controlPort>${sling.control.port}</controlPort>
+                                    <runmode>${sling.run.modes}</runmode>
+                                    <contextPath>${http.base.path}</contextPath>
                                 </server>
                             </servers>
                             <!-- TODO 
