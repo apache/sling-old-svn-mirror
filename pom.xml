@@ -47,9 +47,6 @@
         <!-- HTTP port to use when running mvn launchpad:run -->
         <run.http.port>8888</run.http.port>
 
-        <!-- Timeout when checking for Sling readyness before starting tests -->
-        <HttpTestBase.readyTimeoutSeconds>62</HttpTestBase.readyTimeoutSeconds>
-
         <!-- path suffix for HTTP access to Sling -->
         <http.base.path />
 
@@ -75,8 +72,6 @@
         -->
         <integration.test.wait>false</integration.test.wait>
 
-        <resources.bundles.path>${project.build.directory}/launchpad-bundles/resources/bundles</resources.bundles.path>
-        
         <slf4j.version>1.7.6</slf4j.version>
         <logback.version>1.1.2</logback.version>
 
@@ -142,20 +137,6 @@
             </plugin>
         </plugins>
     </build>
-    <reporting>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                  <!-- No javadocs -->
-                    <excludePackageNames>
-                        org.apache.sling
-                    </excludePackageNames>
-                </configuration>
-            </plugin>
-        </plugins>
-    </reporting>
 
     <profiles>
         <profile>
