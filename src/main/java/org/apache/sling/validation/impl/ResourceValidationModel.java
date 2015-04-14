@@ -28,17 +28,22 @@ import org.apache.sling.validation.api.ChildResource;
 import org.apache.sling.validation.api.ResourceProperty;
 import org.apache.sling.validation.api.ValidationModel;
 
-public class JCRValidationModel implements ValidationModel {
+/**
+ * 
+ * @author kwindszus
+ *
+ */
+public class ResourceValidationModel implements ValidationModel {
 
     private final @Nonnull Set<ResourceProperty> resourceProperties;
     private final @Nonnull String validatedResourceType;
     private final @Nonnull String[] applicablePaths;
-    private final String jcrPath;
+    private final String path;
     private final @Nonnull List<ChildResource> children;
 
-    public JCRValidationModel(String jcrPath, @Nonnull Set<ResourceProperty> resourceProperties, @Nonnull String validatedResourceType,
+    public ResourceValidationModel(String path, @Nonnull Set<ResourceProperty> resourceProperties, @Nonnull String validatedResourceType,
                               String[] applicablePaths, @Nonnull List<ChildResource> children) {
-        this.jcrPath = jcrPath;
+        this.path = path;
         this.resourceProperties = resourceProperties;
         this.validatedResourceType = validatedResourceType;
         // if this property was not set
@@ -79,7 +84,7 @@ public class JCRValidationModel implements ValidationModel {
         return children;
     }
 
-    public String getJcrPath() {
-        return jcrPath;
+    public String getPath() {
+        return path;
     }
 }

@@ -42,9 +42,9 @@ import org.apache.sling.validation.impl.ParameterizedValidatorImpl;
 import org.apache.sling.validation.impl.ResourcePropertyImpl;
 
 /**
- * Helps building validation related objects from JCR content trees.
+ * Helps building validation related objects from Sling resources.
  */
-public class JCRBuilder {
+public class ResourceValidationBuilder {
 
     /**
      * Creates a set of the properties that a resource is expected to have, together with the associated validators.
