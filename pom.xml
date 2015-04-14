@@ -242,61 +242,7 @@
                 <sling.it.excludedGroups>org.apache.sling.commons.testing.junit.categories.JackrabbitOnly</sling.it.excludedGroups>
             </properties>
         </profile>
-        <profile>
-            <id>pax-web</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.sling</groupId>
-                        <artifactId>maven-launchpad-plugin</artifactId>
-                        <configuration>
-                            <jarWebSupport>
-                                <groupId>org.ops4j.pax.web</groupId>
-                                <artifactId>pax-web-service</artifactId>
-                                <version>0.6.0</version>
-                            </jarWebSupport>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>exclude-initial-content</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.sling</groupId>
-                        <artifactId>maven-launchpad-plugin</artifactId>
-                        <configuration>
-                            <bundleExclusions>
-                                <bundle>
-                                    <groupId>org.apache.sling</groupId>
-                                    <artifactId>org.apache.sling.launchpad.content</artifactId>
-                                </bundle>
-                            </bundleExclusions>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>test-reactor-sling-bundles</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.sling</groupId>
-                        <artifactId>maven-launchpad-plugin</artifactId>
-                        <configuration>
-                            <rewriteRuleFiles>
-                                <rewriteRuleFile>
-                                    ${basedir}/src/test/rules/reactor.drl
-                                </rewriteRuleFile>
-                            </rewriteRuleFiles>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
+
 <!-- 
  
         <profile>
