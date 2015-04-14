@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
@@ -48,11 +50,11 @@ public class JCRBuilder {
      * Creates a set of the properties that a resource is expected to have, together with the associated validators.
      *
      * @param validatorsMap      a map containing {@link Validator}s as values and their class names as values
-     * @param propertiesResource the resource identifying the properties node from a validation model's structure
+     * @param propertiesResource the resource identifying the properties node from a validation model's structure (might be {@code null})
      * @return a set of properties or an empty set if no properties are defined
      * @see ResourceProperty
      */
-    public static Set<ResourceProperty> buildProperties(Map<String, Validator<?>> validatorsMap, Resource propertiesResource) {
+    public static @Nonnull Set<ResourceProperty> buildProperties(@Nonnull Map<String, Validator<?>> validatorsMap, Resource propertiesResource) {
         Set<ResourceProperty> properties = new HashSet<ResourceProperty>();
         if (propertiesResource != null) {
             for (Resource property : propertiesResource.getChildren()) {
@@ -105,13 +107,14 @@ public class JCRBuilder {
      * @param validatorsMap          a map containing {@link Validator}s as values and their class names as values
      * @return a list of all the children resources; the list will be empty if there are no children resources
      */
-    public static List<ChildResource> buildChildren(Resource modelResource, Resource rootResource,
-                                                    Map<String, Validator<?>> validatorsMap) {
+    public static @Nonnull List<ChildResource> buildChildren(@Nonnull Resource modelResource, @Nonnull Resource rootResource,
+                                                    @Nonnull Map<String, Validator<?>> validatorsMap) {
         List<ChildResource> children = new ArrayList<ChildResource>();
         Resource childrenResource = rootResource.getChild(Constants.CHILDREN);
         if (childrenResource != null) {
             for (Resource child : childrenResource.getChildren()) {
-                ChildResource childResource = new ChildResourceImpl(modelResource, child, validatorsMap, buildChildren(modelResource, child, validatorsMap));
+                @SuppressWarnings("null")
+				ChildResource childResource = new ChildResourceImpl(modelResource, child, validatorsMap, buildChildren(modelResource, child, validatorsMap));
                 children.add(childResource);
             }
         }

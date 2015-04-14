@@ -24,11 +24,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+
 import org.apache.sling.validation.api.ValidationResult;
 
 public class ValidationResultImpl implements ValidationResult {
 
-    private Map<String, List<String>> failureMessages;
+    private final @Nonnull Map<String, List<String>> failureMessages;
     private boolean isValid;
 
     public ValidationResultImpl() {
@@ -41,8 +43,9 @@ public class ValidationResultImpl implements ValidationResult {
         return isValid;
     }
 
-    @Override
-    public Map<String, List<String>> getFailureMessages() {
+    @SuppressWarnings("null")
+	@Override
+    public @Nonnull Map<String, List<String>> getFailureMessages() {
         return Collections.unmodifiableMap(failureMessages);
     }
 
