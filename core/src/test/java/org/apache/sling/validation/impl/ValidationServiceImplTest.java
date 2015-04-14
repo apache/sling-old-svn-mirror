@@ -491,7 +491,7 @@ public class ValidationServiceImplTest {
                 Assert.assertNotNull("Could not find validation model for 'sling/validation/test'", vm);
                 
                 ValidationResult vr = validationService.validate(testResource, vm);
-                assertFalse(vr.isValid());
+                assertFalse("resource should have been considered invalid", vr.isValid());
                 assertThat(vr.getFailureMessages(), Matchers.hasKey("child1/grandChild1/hello"));
                 assertThat(vr.getFailureMessages().keySet(), Matchers.hasSize(1));
             }
