@@ -43,6 +43,7 @@
 
         <!-- path suffix for HTTP access to Sling -->
         <http.base.path />
+        <sling.java.version>7</sling.java.version>
     </properties>
 
     <build>
