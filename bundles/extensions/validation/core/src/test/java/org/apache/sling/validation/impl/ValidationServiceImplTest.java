@@ -19,6 +19,7 @@
 package org.apache.sling.validation.impl;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -29,6 +30,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.annotation.Nonnull;
 
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.LoginException;
@@ -55,7 +58,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.powermock.reflect.Whitebox;
@@ -71,6 +73,7 @@ public class ValidationServiceImplTest {
     private static ResourceResolverFactory rrf;
     private static Resource appsValidatorsRoot;
     private static Resource libsValidatorsRoot;
+    private static Map<String, Object> primaryTypeUnstructuredMap;
     private ValidationServiceImpl validationService;
     private ResourceResolver rr;
 
@@ -90,6 +93,9 @@ public class ValidationServiceImplTest {
                     (Map<String, Object>) null, "sling:Folder", true);
             rr.close();
         }
+        
+        primaryTypeUnstructuredMap = new HashMap<String, Object>();
+        primaryTypeUnstructuredMap.put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
     }
 
     @AfterClass
@@ -138,11 +144,13 @@ public class ValidationServiceImplTest {
             // BEST MATCHING PATH = /apps/validation/1; assume the applicable paths contain /apps/validation/2
             ValidationModel vm = validationService.getValidationModel("sling/validation/test",
                     "/apps/validation/1/resource");
+            Assert.assertNotNull("Could not find validation model for 'sling/validation/test'", vm);
             assertThat(vm.getApplicablePaths(), Matchers.hasItemInArray("/apps/validation/2"));
 
             // BEST MATCHING PATH = /apps/validation; assume the applicable paths contain /apps/validation but not
             // /apps/validation/1
             vm = validationService.getValidationModel("sling/validation/test", "/apps/validation/resource");
+            Assert.assertNotNull("Could not find validation model for 'sling/validation/test'", vm);
             assertThat(vm.getApplicablePaths(), Matchers.hasItemInArray("/apps/validation"));
             assertThat(vm.getApplicablePaths(), Matchers.not(Matchers.hasItemInArray("/apps/validation/1")));
         } finally {
@@ -174,9 +182,11 @@ public class ValidationServiceImplTest {
             // BEST MATCHING PATH = /apps/validation/1; assume the applicable paths contain /apps/validation/2
             ValidationModel vm = validationService.getValidationModel("sling/validation/test",
                     "/apps/validation/1/resource");
+            Assert.assertNotNull("Could not find validation model for 'sling/validation/test'", vm);
             assertThat(vm.getApplicablePaths(), Matchers.hasItemInArray("/apps/validation/2"));
 
             vm = validationService.getValidationModel("sling/validation/test", "/apps/validation/3/resource");
+            Assert.assertNotNull("Could not find validation model for 'sling/validation/test'", vm);
             assertThat(vm.getApplicablePaths(), Matchers.hasItemInArray("/apps/validation/3"));
 
         } finally {
@@ -244,11 +254,10 @@ public class ValidationServiceImplTest {
 
             ValidationModel vm = validationService.getValidationModel("sling/validation/test",
                     "/apps/validation/1/resource");
-            HashMap<String, Object> hashMap = new HashMap<String, Object>() {
-                {
-                    put("field1", "1");
-                }
-            };
+            Assert.assertNotNull("Could not find validation model for 'sling/validation/test'", vm);
+            HashMap<String, Object> hashMap = new HashMap<String, Object>();
+            hashMap.put("field1", "1");
+                
             ValueMap map = new ValueMapDecorator(hashMap);
             ValidationResult vr = validationService.validate(map, vm);
 
@@ -269,9 +278,10 @@ public class ValidationServiceImplTest {
         
         Validator<String> myValidator = new Validator<String>() {
             @Override
-            public String validate(String data, ValueMap valueMap, ValueMap arguments)
+            public String validate(@Nonnull String data, @Nonnull ValueMap valueMap, @Nonnull ValueMap arguments)
                     throws SlingValidationException {
-                Assert.assertNotNull("ValueMap parameter for validate should never be null", valueMap);
+            	Assert.assertNotNull("data parameter for validate should never be null", data);
+                Assert.assertNotNull("valueMap parameter for validate should never be null", valueMap);
                 Assert.assertNotNull("arguments parameter for validate should never be null", arguments);
                 return null;
             }
@@ -290,11 +300,9 @@ public class ValidationServiceImplTest {
 
             ValidationModel vm = validationService.getValidationModel("sling/validation/test",
                     "/apps/validation/1/resource");
-            HashMap<String, Object> hashMap = new HashMap<String, Object>() {
-                {
-                    put("field1", "1");
-                }
-            };
+            Assert.assertNotNull("Could not find validation model for 'sling/validation/test'", vm);
+            HashMap<String, Object> hashMap = new HashMap<String, Object>();
+            hashMap.put("field1", "1");
             ValueMap map = new ValueMapDecorator(hashMap);
             validationService.validate(map, vm);
         } finally {
@@ -324,14 +332,14 @@ public class ValidationServiceImplTest {
                     property4);
             ValidationModel vm = validationService.getValidationModel("sling/validation/test",
                     "/apps/validation/1/resource");
+            Assert.assertNotNull("Could not find validation model for 'sling/validation/test'", vm);
+            
             // this should not be detected as missing property
-            HashMap<String, Object> hashMap = new HashMap<String, Object>() {
-                {
-                    put("field1", new String[] {});
-                    put("field2", new String[] { "null" });
-                    put("field3", "");
-                }
-            };
+            HashMap<String, Object> hashMap = new HashMap<String, Object>();
+            hashMap.put("field1", new String[] {});
+            hashMap.put("field2", new String[] { "null" });
+            hashMap.put("field3", "");
+            
             ValueMap map = new ValueMapDecorator(hashMap);
             ValidationResult vr = validationService.validate(map, vm);
             Map<String, List<String>> expectedFailureMessages = new HashMap<String, List<String>>();
@@ -360,11 +368,10 @@ public class ValidationServiceImplTest {
             }
             ValidationModel vm = validationService.getValidationModel("sling/validation/test",
                     "/apps/validation/1/resource");
-            HashMap<String, Object> hashMap = new HashMap<String, Object>() {
-                {
-                    put("field2", "1");
-                }
-            };
+            Assert.assertNotNull("Could not find validation model for 'sling/validation/test'", vm);
+            
+            HashMap<String, Object> hashMap = new HashMap<String, Object>();
+            hashMap.put("field2", "1");
             ValueMap map = new ValueMapDecorator(hashMap);
             ValidationResult vr = validationService.validate(map, vm);
             Assert.assertTrue(vr.isValid());
@@ -390,11 +397,10 @@ public class ValidationServiceImplTest {
 
             ValidationModel vm = validationService.getValidationModel("sling/validation/test",
                     "/apps/validation/1/resource");
-            HashMap<String, Object> hashMap = new HashMap<String, Object>() {
-                {
-                    put("field1", "");
-                }
-            };
+            Assert.assertNotNull("Could not find validation model for 'sling/validation/test'", vm);
+            
+            HashMap<String, Object> hashMap = new HashMap<String, Object>();
+            hashMap.put("field1", "");
             ValueMap map = new ValueMapDecorator(hashMap);
             ValidationResult vr = validationService.validate(map, vm);
             Assert.assertFalse(vr.isValid());
@@ -425,12 +431,11 @@ public class ValidationServiceImplTest {
                     "sling/validation/test", new String[] { "/apps/validation" }, field1, field2);
             ValidationModel vm = validationService.getValidationModel("sling/validation/test",
                     "/apps/validation/1/resource");
-            HashMap<String, Object> hashMap = new HashMap<String, Object>() {
-                {
-                    put("field1", "HelloWorld");
-                    put("field2", "HelloWorld");
-                }
-            };
+            Assert.assertNotNull("Could not find validation model for 'sling/validation/test'", vm);
+            
+            HashMap<String, Object> hashMap = new HashMap<String, Object>();
+            hashMap.put("field1", "HelloWorld");
+            hashMap.put("field2", "HelloWorld");
             ValueMap map = new ValueMapDecorator(hashMap);
             ValidationResult vr = validationService.validate(map, vm);
             assertFalse(vr.isValid());
@@ -469,38 +474,27 @@ public class ValidationServiceImplTest {
                 ModifiableValueMap mvm = testResource.adaptTo(ModifiableValueMap.class);
                 mvm.put("field1", "1");
 
-                Resource childResource = rr.create(testResource, "child1", new HashMap<String, Object>() {
-                    {
-                        put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
-                    }
-                });
-
-                Resource resourceChild = rr.create(testResource, "child1", new HashMap<String, Object>() {
-                    {
-                        put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
-                    }
-                });
+                Resource resourceChild = rr.create(testResource, "child1", primaryTypeUnstructuredMap);
                 mvm = resourceChild.adaptTo(ModifiableValueMap.class);
                 mvm.put("hello", "1");
 
                 // /apps/validation/1/resource/child1/grandChild1 will miss its mandatory "hello" property
-                Resource resourceGrandChild = rr.create(resourceChild, "grandChild1", new HashMap<String, Object>() {
-                    {
-                        put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
-                    }
-                });
+                Resource resourceGrandChild = rr.create(resourceChild, "grandChild1", primaryTypeUnstructuredMap);
                 rr.commit();
 
                 mvm = resourceGrandChild.adaptTo(ModifiableValueMap.class);
                 mvm.put("field1", "1");
                 rr.commit();
+                
+                ValidationModel vm = validationService.getValidationModel("sling/validation/test",
+                        "/apps/validation/1/resource");
+                Assert.assertNotNull("Could not find validation model for 'sling/validation/test'", vm);
+                
+                ValidationResult vr = validationService.validate(testResource, vm);
+                assertFalse(vr.isValid());
+                assertThat(vr.getFailureMessages(), Matchers.hasKey("child1/grandChild1/hello"));
+                assertThat(vr.getFailureMessages().keySet(), Matchers.hasSize(1));
             }
-            ValidationModel vm = validationService.getValidationModel("sling/validation/test",
-                    "/apps/validation/1/resource");
-            ValidationResult vr = validationService.validate(testResource, vm);
-            assertFalse(vr.isValid());
-            assertThat(vr.getFailureMessages(), Matchers.hasKey("child1/grandChild1/hello"));
-            assertThat(vr.getFailureMessages().keySet(), Matchers.hasSize(1));
         } finally {
             if (model1 != null) {
                 rr.delete(model1);
@@ -532,14 +526,12 @@ public class ValidationServiceImplTest {
             ModifiableValueMap mvm = testResource.adaptTo(ModifiableValueMap.class);
             mvm.put("field1", "1");
 
-            rr.create(testResource, "child2", new HashMap<String, Object>() {
-                {
-                    put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
-                }
-            });
+            rr.create(testResource, "child2",primaryTypeUnstructuredMap);
             rr.commit();
             ValidationModel vm = validationService.getValidationModel("sling/validation/test",
                     "/apps/validation/1/resource");
+            Assert.assertNotNull("Could not find validation model for 'sling/validation/test'", vm);
+            
             ValidationResult vr = validationService.validate(testResource, vm);
             assertTrue(vr.isValid());
         } finally {
@@ -573,36 +565,26 @@ public class ValidationServiceImplTest {
 
                 testResource = ResourceUtil.getOrCreateResource(rr, "/apps/validation/1/resource",
                         JcrConstants.NT_UNSTRUCTURED, JcrConstants.NT_UNSTRUCTURED, true);
-                Resource childResource = rr.create(testResource, "child1", new HashMap<String, Object>() {
-                    {
-                        put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
-                    }
-                });
+                rr.create(testResource, "child1", primaryTypeUnstructuredMap);
 
                 ModifiableValueMap mvm = testResource.adaptTo(ModifiableValueMap.class);
                 mvm.put("field1", "1");
 
-                Resource resourceChild = rr.create(testResource, "child1", new HashMap<String, Object>() {
-                    {
-                        put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
-                    }
-                });
+                Resource resourceChild = rr.create(testResource, "child1", primaryTypeUnstructuredMap);
                 mvm = resourceChild.adaptTo(ModifiableValueMap.class);
                 mvm.put("hello", "test");
 
-                Resource resourceGrandChild = rr.create(resourceChild, "grandChild1", new HashMap<String, Object>() {
-                    {
-                        put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
-                    }
-                });
+                Resource resourceGrandChild = rr.create(resourceChild, "grandChild1", primaryTypeUnstructuredMap);
                 mvm = resourceGrandChild.adaptTo(ModifiableValueMap.class);
                 mvm.put("hello", "test");
                 rr.commit();
+                
+                ValidationModel vm = validationService.getValidationModel("sling/validation/test",
+                        "/apps/validation/1/resource");
+                assertNotNull("Could not get validation model for ", vm);
+                ValidationResult vr = validationService.validate(testResource, vm);
+                assertTrue(vr.isValid());
             }
-            ValidationModel vm = validationService.getValidationModel("sling/validation/test",
-                    "/apps/validation/1/resource");
-            ValidationResult vr = validationService.validate(testResource, vm);
-            assertTrue(vr.isValid());
         } finally {
             if (model1 != null) {
                 rr.delete(model1);
@@ -636,33 +618,23 @@ public class ValidationServiceImplTest {
             ModifiableValueMap mvm = testResource.adaptTo(ModifiableValueMap.class);
             mvm.put("field1", "1");
 
-            Resource childResource = rr.create(testResource, "child1", new HashMap<String, Object>() {
-                {
-                    put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
-                }
-            });
+            Resource childResource = rr.create(testResource, "child1", primaryTypeUnstructuredMap);
 
             mvm = childResource.adaptTo(ModifiableValueMap.class);
             mvm.put("hello", "test");
 
-            Resource resourceChild = rr.create(testResource, "child2", new HashMap<String, Object>() {
-                {
-                    put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
-                }
-            });
+            Resource resourceChild = rr.create(testResource, "child2", primaryTypeUnstructuredMap);
             mvm = resourceChild.adaptTo(ModifiableValueMap.class);
             mvm.put("hello2", "test");
 
-            Resource resourceGrandChild = rr.create(resourceChild, "grandChild1", new HashMap<String, Object>() {
-                {
-                    put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
-                }
-            });
+            Resource resourceGrandChild = rr.create(resourceChild, "grandChild1", primaryTypeUnstructuredMap);
             mvm = resourceGrandChild.adaptTo(ModifiableValueMap.class);
             mvm.put("hello", "test");
             rr.commit();
             ValidationModel vm = validationService.getValidationModel("sling/validation/test",
                     "/apps/validation/1/resource");
+            Assert.assertNotNull("Could not find validation model for 'sling/validation/test'", vm);
+            
             ValidationResult vr = validationService.validate(testResource, vm);
             assertFalse(vr.isValid());
             // check for correct error message
@@ -699,15 +671,14 @@ public class ValidationServiceImplTest {
                     "sling/validation/test", new String[] { "/apps/validation" }, property, otherProperty);
             ValidationModel vm = validationService.getValidationModel("sling/validation/test",
                     "/apps/validation/1/resource");
-            HashMap<String, Object> hashMap = new HashMap<String, Object>() {
-                {
-                    put("property1", "testvalue1");
-                    put("property2", "test1value1"); // does not match validator pattern
-                    put("property3", "testvalue1");
-                    put("property4", "1testvalue1"); // does not match validator pattern
-                    put("property5", "invalid"); // does not match property name pattern
-                }
-            };
+            Assert.assertNotNull("Could not find validation model for 'sling/validation/test'", vm);
+            
+            HashMap<String, Object> hashMap = new HashMap<String, Object>();
+            hashMap.put("property1", "testvalue1");
+            hashMap.put("property2", "test1value1"); // does not match validator pattern
+            hashMap.put("property3", "testvalue1");
+            hashMap.put("property4", "1testvalue1"); // does not match validator pattern
+            hashMap.put("property5", "invalid"); // does not match property name pattern
             ValueMap map = new ValueMapDecorator(hashMap);
             ValidationResult vr = validationService.validate(map, vm);
             assertFalse(vr.isValid());
@@ -740,11 +711,10 @@ public class ValidationServiceImplTest {
                     "sling/validation/test", new String[] { "/apps/validation" }, property);
             ValidationModel vm = validationService.getValidationModel("sling/validation/test",
                     "/apps/validation/1/resource");
-            HashMap<String, Object> hashMap = new HashMap<String, Object>() {
-                {
-                    put("field1", new String[] { "testvalue1", "test2value", "testvalue3" });
-                }
-            };
+            Assert.assertNotNull("Could not find validation model for 'sling/validation/test'", vm);
+            
+            HashMap<String, Object> hashMap = new HashMap<String, Object>();
+            hashMap.put("field1", new String[] { "testvalue1", "test2value", "testvalue3" });
             ValueMap map = new ValueMapDecorator(hashMap);
             ValidationResult vr = validationService.validate(map, vm);
             assertFalse(vr.isValid());
@@ -823,7 +793,7 @@ public class ValidationServiceImplTest {
                     "sling/validation/test2", JcrConstants.NT_UNSTRUCTURED, true);
             values = grandChildResource.adaptTo(ModifiableValueMap.class);
             values.put("field2", "somvalue");
-            ValidationResult vr = validationService.validateAllResourceTypesInResource(resource, true,
+            validationService.validateAllResourceTypesInResource(resource, true,
                     Collections.singleton(JcrConstants.NT_UNSTRUCTURED));
         } finally {
             if (resource != null) {
@@ -946,16 +916,8 @@ public class ValidationServiceImplTest {
     private Resource createValidationModelChildResource(Resource parentResource, String name, String nameRegex,
             boolean isOptional, TestProperty... properties) throws PersistenceException {
         ResourceResolver rr = parentResource.getResourceResolver();
-        Resource modelChildren = rr.create(parentResource, Constants.CHILDREN, new HashMap<String, Object>() {
-            {
-                put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
-            }
-        });
-        Resource child = rr.create(modelChildren, name, new HashMap<String, Object>() {
-            {
-                put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
-            }
-        });
+        Resource modelChildren = rr.create(parentResource, Constants.CHILDREN, primaryTypeUnstructuredMap);
+        Resource child = rr.create(modelChildren, name, primaryTypeUnstructuredMap);
         ModifiableValueMap mvm = child.adaptTo(ModifiableValueMap.class);
         if (nameRegex != null) {
             mvm.put(Constants.NAME_REGEX, nameRegex);

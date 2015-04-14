@@ -24,6 +24,8 @@ import java.lang.reflect.TypeVariable;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.annotation.Nonnull;
+
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.apache.sling.validation.api.Validator;
 
@@ -34,7 +36,7 @@ public class ValidatorTypeUtil {
      * @param validator
      * @return the type parametrization value on the {@link Validator} interface
      */
-    public static Class<?> getValidatorType(Validator<?> validator) {
+    public static @Nonnull Class<?> getValidatorType(Validator<?> validator) {
         // get all type arguments from the current validator class up to the Validator interface
         Map<TypeVariable<?>, java.lang.reflect.Type> typeMap = TypeUtils.getTypeArguments(validator.getClass(), Validator.class);
         java.lang.reflect.Type type = null;

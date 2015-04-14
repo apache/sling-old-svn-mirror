@@ -19,7 +19,8 @@
 package org.apache.sling.validation.impl.util;
 
 import java.util.Collection;
-import java.util.Map;
+
+import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.api.Validator;
@@ -31,6 +32,7 @@ import org.apache.sling.validation.impl.util.examplevalidators.IntegerValidator;
 import org.apache.sling.validation.impl.util.examplevalidators.StringArrayValidator;
 import org.apache.sling.validation.impl.util.examplevalidators.StringValidator;
 import org.apache.sling.validation.impl.validators.RegexValidator;
+import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
@@ -60,7 +62,7 @@ public class ValidatorTypeUtilTest {
     private class InnerStringValidator implements Validator<String> {
 
         @Override
-        public String validate(String data, ValueMap valueMap, ValueMap arguments)
+        public String validate(@Nonnull String data, @Nonnull ValueMap valueMap, @Nonnull ValueMap arguments)
                 throws SlingValidationException {
             return null;
         }
@@ -77,7 +79,7 @@ public class ValidatorTypeUtilTest {
     public void testGetValidatorTypeWithAnonymousClass() {
         Assert.assertThat((Class<String>)ValidatorTypeUtil.getValidatorType(new Validator<String>() {
             @Override
-            public String validate(String data, ValueMap valueMap, ValueMap arguments)
+            public String validate(@Nonnull String data, @Nonnull ValueMap valueMap, @Nonnull ValueMap arguments)
                     throws SlingValidationException {
                 return null;
             }
@@ -95,7 +97,7 @@ public class ValidatorTypeUtilTest {
     public void testGetValidatorTypeWithCollectionType() {
         ValidatorTypeUtil.getValidatorType(new Validator<Collection<String>>() {
             @Override
-            public String validate(Collection<String> data, ValueMap valueMap, ValueMap arguments)
+            public String validate(@Nonnull Collection<String> data, @Nonnull ValueMap valueMap, @Nonnull ValueMap arguments)
                     throws SlingValidationException {
                 return null;
             }
@@ -104,7 +106,7 @@ public class ValidatorTypeUtilTest {
     
     private class InnerStringValidatorWithAdditionalBaseClass extends GenericTypeParameterBaseClass<Integer> implements Validator<String> {
         @Override
-        public String validate(String data, ValueMap valueMap, ValueMap arguments)
+        public String validate(@Nonnull String data, @Nonnull ValueMap valueMap, @Nonnull ValueMap arguments)
                 throws SlingValidationException {
             return null;
         }
@@ -112,6 +114,7 @@ public class ValidatorTypeUtilTest {
     
     @Test
     public void testGetValidatorTypeWithUnrelatedSuperClass() {
-        Assert.assertThat((Class<String>)ValidatorTypeUtil.getValidatorType(new InnerStringValidatorWithAdditionalBaseClass()), Matchers.equalTo(String.class));
+    	// http://stackoverflow.com/questions/24093000/how-do-i-match-a-class-against-a-specific-class-instance-in-a-hamcrest-matche
+        Assert.assertThat((Class<?>)ValidatorTypeUtil.getValidatorType(new InnerStringValidatorWithAdditionalBaseClass()), Matchers.is(CoreMatchers.<Class<?>>equalTo(String.class)));
     }
 }
