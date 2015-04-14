@@ -18,8 +18,8 @@ package org.apache.sling.models.impl.sightly;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.script.Bindings;
+import javax.script.SimpleBindings;
 import javax.servlet.ServletRequest;
 
 import org.apache.felix.scr.annotations.Component;
@@ -31,7 +31,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.models.factory.ModelFactory;
-import org.apache.sling.scripting.sightly.impl.engine.extension.use.UseProviderUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.use.ProviderOutcome;
 import org.apache.sling.scripting.sightly.use.UseProvider;
@@ -66,8 +65,7 @@ public class ModelFactoryUseProvider implements UseProvider {
     private DynamicClassLoaderManager dynamicClassLoaderManager = null;
     
     @Override
-    public ProviderOutcome provide(final String identifier,
-            final RenderContext renderContext, final Bindings arguments) {
+    public ProviderOutcome provide(final String identifier, final RenderContext renderContext, final Bindings arguments) {
         final Class<?> cls;
         try {
             cls = dynamicClassLoaderManager.getDynamicClassLoader().loadClass(identifier);
@@ -77,7 +75,7 @@ public class ModelFactoryUseProvider implements UseProvider {
             return ProviderOutcome.failure();
         }
         Bindings globalBindings = renderContext.getBindings();
-        Bindings bindings = UseProviderUtils.merge(globalBindings, arguments);
+        Bindings bindings = merge(globalBindings, arguments);
         Resource resource = (Resource) bindings.get(SlingBindings.RESOURCE);
         if (resource == null) {
             return ProviderOutcome.failure(new IllegalStateException("Could not get resource from bindings"));
@@ -142,5 +140,12 @@ public class ModelFactoryUseProvider implements UseProvider {
                 request.setAttribute(key, value);
             }
         }
+    }
+
+    private SimpleBindings merge(Bindings former, Bindings latter) {
+        SimpleBindings bindings = new SimpleBindings();
+        bindings.putAll(former);
+        bindings.putAll(latter);
+        return bindings;
     }
 }
