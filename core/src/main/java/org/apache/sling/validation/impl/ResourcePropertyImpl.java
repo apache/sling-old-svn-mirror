@@ -21,18 +21,20 @@ package org.apache.sling.validation.impl;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import javax.annotation.Nonnull;
+
 import org.apache.sling.validation.api.ParameterizedValidator;
 import org.apache.sling.validation.api.ResourceProperty;
 
 public class ResourcePropertyImpl implements ResourceProperty {
 
-    private String name;
-    private boolean isMultiple;
-    private boolean isRequired;
-    private List<ParameterizedValidator> validators;
-    private Pattern namePattern;
+    private final String name;
+    private final boolean isMultiple;
+    private final boolean isRequired;
+    private final @Nonnull List<ParameterizedValidator> validators;
+    private final Pattern namePattern;
     
-    public ResourcePropertyImpl(String name, String nameRegex, boolean isMultiple, boolean isRequired, List<ParameterizedValidator> validators) {
+    public ResourcePropertyImpl(String name, String nameRegex, boolean isMultiple, boolean isRequired, @Nonnull List<ParameterizedValidator> validators) {
         if (nameRegex != null) {
             this.name = null;
             this.namePattern = Pattern.compile(nameRegex);
@@ -66,7 +68,7 @@ public class ResourcePropertyImpl implements ResourceProperty {
     }
 
     @Override
-    public List<ParameterizedValidator> getValidators() {
+    public @Nonnull List<ParameterizedValidator> getValidators() {
         return validators;
     }
 

@@ -27,6 +27,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.Component;
@@ -84,18 +88,21 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
             policy = ReferencePolicy.DYNAMIC,
             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE
     )
+    
+    @Nonnull 
     Map<String, Validator<?>> validators = new ConcurrentHashMap<String, Validator<?>>();
 
     @Reference
     private ThreadPoolManager tpm = null;
 
     // ValidationService ###################################################################################################################
-    @Override
-    public ValidationModel getValidationModel(String validatedResourceType, String resourcePath) {
-        if (resourcePath == null) {
-            throw new IllegalArgumentException("ValidationService.getValidationModel - cannot accept null as resource path");
-        }
-        if (validatedResourceType == null) {
+    
+    
+    
+    @SuppressWarnings("unused")
+	public @CheckForNull ValidationModel getValidationModel(@Nonnull String validatedResourceType, String resourcePath) {
+        // https://bugs.eclipse.org/bugs/show_bug.cgi?id=459256
+    	if (validatedResourceType == null) {
             throw new IllegalArgumentException("ValidationService.getValidationModel - cannot accept null as resource type. Resource path was: " + resourcePath);
         }
         validatedResourceType = getRelativeResourceType(validatedResourceType);
@@ -117,18 +124,19 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
         return model;
     }
 
-    @Override
-    public ValidationModel getValidationModel(Resource resource) {
+    @SuppressWarnings("null")
+	@Override
+    public @CheckForNull ValidationModel getValidationModel(@Nonnull Resource resource) {
         return getValidationModel(resource.getResourceType(), resource.getPath());
     }
 
     @Override
-    public ValidationResult validate(Resource resource, ValidationModel model) {
-        return validate(resource, model, "");
+    public @Nonnull ValidationResult validate(@Nonnull Resource resource, @Nonnull ValidationModel model) {
+        return new ValidationResultImpl(); //validate(resource, model, "");
     }
     
-    protected ValidationResult validate(Resource resource, ValidationModel model, String relativePath) {
-        if (resource == null || model == null) {
+    protected @Nonnull ValidationResult validate(@Nonnull Resource resource, @Nonnull ValidationModel model, @Nonnull String relativePath) {
+        if (resource == null || model == null || relativePath == null) {
             throw new IllegalArgumentException("ValidationService.validate - cannot accept null parameters");
         }
         ValidationResultImpl result = new ValidationResultImpl();
@@ -148,7 +156,8 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
      * @return a relative resource type (without the leading search path)
      * @throws IllegalArgumentException in case the resource type is starting with a "/" but not with any of the search paths.
      */
-    protected String getRelativeResourceType(String resourceType) throws IllegalArgumentException {
+    @SuppressWarnings("null")
+	protected @Nonnull String getRelativeResourceType(@Nonnull String resourceType) throws IllegalArgumentException {
         if (resourceType.startsWith("/")) {
             LOG.debug("try to strip the search path from the resource type");
             ResourceResolver rr = null;
@@ -185,17 +194,18 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
         // validate children resources, if any
         for (ChildResource childResource : childResources) {
             // if a pattern is set we validate all children matching that pattern
-            if (childResource.getNamePattern() != null) {
+        	Pattern pattern = childResource.getNamePattern();
+            if (pattern != null) {
                 boolean foundMatch = false;
                 for (Resource child : resource.getChildren()) {
-                    Matcher matcher = childResource.getNamePattern().matcher(child.getName());
+                    Matcher matcher = pattern.matcher(child.getName());
                     if (matcher.matches()) {
                        validateChildResource(child, relativePath, childResource, result);
                        foundMatch = true;
                     }
                 }
                 if (!foundMatch && childResource.isRequired()) {
-                    result.addFailureMessage(relativePath + childResource.getNamePattern().pattern(), "Missing required child resource.");
+                    result.addFailureMessage(relativePath + pattern.pattern(), "Missing required child resource.");
                 }
             } else {
                 Resource expectedResource = resource.getChild(childResource.getName());
@@ -214,7 +224,7 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
     }
 
     @Override
-    public ValidationResult validate(ValueMap valueMap, ValidationModel model) {
+    public @Nonnull ValidationResult validate(@Nonnull ValueMap valueMap, @Nonnull ValidationModel model) {
         if (valueMap == null || model == null) {
             throw new IllegalArgumentException("ValidationResult.validate - cannot accept null parameters");
         }
@@ -224,7 +234,7 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
     }    
 
     @Override
-    public ValidationResult validateAllResourceTypesInResource(Resource resource, boolean enforceValidation, Set<String> ignoredResourceTypes)
+    public @Nonnull ValidationResult validateAllResourceTypesInResource(@Nonnull Resource resource, boolean enforceValidation, Set<String> ignoredResourceTypes)
             throws IllegalStateException, IllegalArgumentException, SlingValidationException {
         if (ignoredResourceTypes == null) {
             ignoredResourceTypes = Collections.emptySet();
@@ -247,7 +257,6 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
     }
 
     // OSGi ################################################################################################################################
-    @SuppressWarnings("unused")
     protected void activate(ComponentContext componentContext) {
         threadPool = tpm.get("Validation Service Thread Pool");
         ResourceResolver rr = null;
@@ -282,7 +291,6 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
         }
     }
 
-    @SuppressWarnings("unused")
     protected void deactivate(ComponentContext componentContext) {
         if (threadPool != null) {
             tpm.release(threadPool);
@@ -299,10 +307,11 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
             throw new IllegalArgumentException("ValueMap may not be null");
         }
         for (ResourceProperty resourceProperty : resourceProperties) {
-            if (resourceProperty.getNamePattern() != null) {
+        	Pattern pattern = resourceProperty.getNamePattern();
+            if (pattern != null) {
                 boolean foundMatch = false;
                 for (String key : valueMap.keySet()) {
-                    if (resourceProperty.getNamePattern().matcher(key).matches()) {
+                    if (pattern.matcher(key).matches()) {
                         foundMatch = true;
                         validateValueMap(key, valueMap, relativePath, resourceProperty, result);
                     }
@@ -363,7 +372,7 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
      * @param validatedResourceType the type of resource for which to scan the JCR repository for validation models
      * @return a {@link Trie} with the validation models; an empty trie if no model is found
      */
-    private Trie<JCRValidationModel> searchAndStoreValidationModel(String validatedResourceType) {
+    private Trie<JCRValidationModel> searchAndStoreValidationModel(@Nonnull String validatedResourceType) {
         Trie<JCRValidationModel> modelsForResourceType = null;
         ResourceResolver rr = null;
         JCRValidationModel vm;
@@ -455,9 +464,8 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
         return true;
     }
     
-   
-    
-    private void validatePropertyValue(ValidationResultImpl result, String property, String relativePath, ValueMap valueMap, List<ParameterizedValidator> validators) {
+    @SuppressWarnings("null")
+	private void validatePropertyValue(ValidationResultImpl result, String property, String relativePath, ValueMap valueMap, List<ParameterizedValidator> validators) {
         for (ParameterizedValidator validator : validators) {
             // convert the type always to an array
             Class<?> type = validator.getType();
@@ -469,7 +477,7 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
                     throw new SlingValidationException("Could not generate array class for type " + type, e);
                 }
             }
-            
+            // it is already validated here that the property exists in the value map
             Object[] typedValue = (Object[])valueMap.get(property, type);
             // see https://issues.apache.org/jira/browse/SLING-4178 for why the second check is necessary
             if (typedValue == null || (typedValue.length > 0 && typedValue[0] == null)) {
@@ -484,23 +492,22 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
                 validateValue(result, typedValue, property, relativePath, valueMap, validator);
             } else {
                 // call validate for each entry in the array (supports both singlevalue and multivalue)
-                if (typedValue.getClass().isArray()) {
-                    Object[] array = (Object[])typedValue;
-                    if (array.length == 1) {
-                        validateValue(result, array[0], property, relativePath, valueMap, validator);
-                    } else {
-                        int n = 0;
-                        for (Object item : array) {
-                            validateValue(result, item, property + "[" + n++ + "]", relativePath, valueMap, validator);
-                        }
-                    }
-                }
+                @Nonnull Object[] array = (Object[])typedValue;
+                if (array.length == 1) {
+                   validateValue(result, array[0], property, relativePath, valueMap, validator);
+                } else {
+					int n = 0;
+					for (Object item : array) {
+						validateValue(result, item, property + "[" + n++ + "]",
+								relativePath, valueMap, validator);
+					}
+				}
             }
         }
     }
     
     @SuppressWarnings("rawtypes")
-    private void validateValue(ValidationResultImpl result, Object value, String property, String relativePath, ValueMap valueMap, ParameterizedValidator validator) {
+    private void validateValue(ValidationResultImpl result, @Nonnull Object value, String property, String relativePath, @Nonnull ValueMap valueMap, ParameterizedValidator validator) {
         try {
             @SuppressWarnings("unchecked")
             String validatorMessage = ((Validator)validator.getValidator()).validate(value, valueMap, validator.getParameters());

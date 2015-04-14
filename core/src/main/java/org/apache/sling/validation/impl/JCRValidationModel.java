@@ -21,6 +21,8 @@ package org.apache.sling.validation.impl;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.validation.api.ChildResource;
 import org.apache.sling.validation.api.ResourceProperty;
@@ -28,14 +30,14 @@ import org.apache.sling.validation.api.ValidationModel;
 
 public class JCRValidationModel implements ValidationModel {
 
-    private Set<ResourceProperty> resourceProperties;
-    private String validatedResourceType;
-    private String[] applicablePaths;
-    private String jcrPath;
-    private List<ChildResource> children;
+    private final @Nonnull Set<ResourceProperty> resourceProperties;
+    private final @Nonnull String validatedResourceType;
+    private final @Nonnull String[] applicablePaths;
+    private final String jcrPath;
+    private final @Nonnull List<ChildResource> children;
 
-    public JCRValidationModel(String jcrPath, Set<ResourceProperty> resourceProperties, String validatedResourceType,
-                              String[] applicablePaths, List<ChildResource> children) {
+    public JCRValidationModel(String jcrPath, @Nonnull Set<ResourceProperty> resourceProperties, @Nonnull String validatedResourceType,
+                              String[] applicablePaths, @Nonnull List<ChildResource> children) {
         this.jcrPath = jcrPath;
         this.resourceProperties = resourceProperties;
         this.validatedResourceType = validatedResourceType;
@@ -58,22 +60,22 @@ public class JCRValidationModel implements ValidationModel {
     }
 
     @Override
-    public Set<ResourceProperty> getResourceProperties() {
+    public @Nonnull Set<ResourceProperty> getResourceProperties() {
         return resourceProperties;
     }
 
     @Override
-    public String getValidatedResourceType() {
+    public @Nonnull String getValidatedResourceType() {
         return validatedResourceType;
     }
 
     @Override
-    public String[] getApplicablePaths() {
+    public @Nonnull String[] getApplicablePaths() {
         return applicablePaths;
     }
 
     @Override
-    public List<ChildResource> getChildren() {
+    public @Nonnull List<ChildResource> getChildren() {
         return children;
     }
 

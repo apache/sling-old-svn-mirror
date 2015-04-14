@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
+
 import org.apache.sling.api.resource.AbstractResourceVisitor;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.validation.api.ValidationModel;
@@ -31,7 +33,7 @@ public class ValidationResourceVisitor extends AbstractResourceVisitor {
 
     private final ValidationServiceImpl validationService;
     private final boolean enforceValidation;
-    private final ValidationResultImpl result;
+    private final @Nonnull ValidationResultImpl result;
     private final Set<String> ignoredResourceTypes;
     private final String rootResourcePath;
 
@@ -48,7 +50,8 @@ public class ValidationResourceVisitor extends AbstractResourceVisitor {
     protected void visit(Resource resource) {
         if (isValidSubResource(resource)) {
             // JCR will return then primary type instead!!
-            ValidationModel model = validationService.getValidationModel(resource);
+            @SuppressWarnings("null")
+			ValidationModel model = validationService.getValidationModel(resource);
             if (model == null) {
                 if (enforceValidation) {
                     throw new IllegalArgumentException("No model for resource type " + resource.getResourceType() + " found.");
@@ -86,7 +89,7 @@ public class ValidationResourceVisitor extends AbstractResourceVisitor {
         return true;
     }
 
-    public ValidationResultImpl getResult() {
+    public @Nonnull ValidationResultImpl getResult() {
         return result;
     }
 

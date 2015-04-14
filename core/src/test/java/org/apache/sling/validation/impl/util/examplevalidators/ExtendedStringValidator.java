@@ -18,13 +18,15 @@
  */
 package org.apache.sling.validation.impl.util.examplevalidators;
 
+import javax.annotation.Nonnull;
+
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.api.exceptions.SlingValidationException;
 
 public class ExtendedStringValidator extends AbstractValidatorWithAdditionalType<Boolean, String, Integer> {
 
     @Override
-    public String validate(String data, ValueMap valueMap, ValueMap arguments)
+    public String validate(@Nonnull String data, @Nonnull ValueMap valueMap, @Nonnull ValueMap arguments)
             throws SlingValidationException {
         return null;
     }
