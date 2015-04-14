@@ -14,7 +14,7 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.validation.api.ChildResource;
 import org.apache.sling.validation.api.ResourceProperty;
 import org.apache.sling.validation.api.Validator;
-import org.apache.sling.validation.impl.util.JCRBuilder;
+import org.apache.sling.validation.impl.util.ResourceValidationBuilder;
 
 /**
  * Implements a {@link ChildResource}
@@ -51,7 +51,7 @@ public class ChildResourceImpl implements ChildResource {
             namePattern = null;
         }
         isRequired = !PropertiesUtil.toBoolean(childrenProperties.get(Constants.OPTIONAL), false);
-        properties = JCRBuilder.buildProperties(validatorsMap, childResource.getChild(Constants.PROPERTIES));
+        properties = ResourceValidationBuilder.buildProperties(validatorsMap, childResource.getChild(Constants.PROPERTIES));
         this.children = children;
     }
 
