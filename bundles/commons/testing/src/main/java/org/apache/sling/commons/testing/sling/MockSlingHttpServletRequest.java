@@ -24,7 +24,6 @@ import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
-
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.Cookie;
@@ -398,6 +397,9 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
     }
 
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+        if (type != null && type.isAssignableFrom(Resource.class)) {
+            return (AdapterType) getResource();
+        }
         return null;
     }
 }

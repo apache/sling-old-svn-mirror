@@ -110,6 +110,14 @@ public class MockSlingHttpServletRequestTest {
     }
 
     @Test
+    public void testResourceAdaptTo() {
+        assertNull(request.getResource());
+        request.setResource(resource);
+        assertSame(resource, request.getResource());
+        assertSame(resource, request.adaptTo(Resource.class));
+    }
+
+    @Test
     public void testContextPath() {
         assertNull(request.getContextPath());
         request.setContextPath("/ctx");
