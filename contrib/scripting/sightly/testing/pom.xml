@@ -43,9 +43,6 @@
     </scm>
 
     <properties>
-        <!-- HTTP port to use when running mvn slingstart:start -Dlaunchpad.keep.running=true -->
-        <http.port>8080</http.port>
-
         <!-- Timeout when checking for Sling readyness before starting tests -->
         <HttpTestBase.readyTimeoutSeconds>62</HttpTestBase.readyTimeoutSeconds>
 
