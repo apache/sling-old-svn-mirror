@@ -132,7 +132,7 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
 
     @Override
     public @Nonnull ValidationResult validate(@Nonnull Resource resource, @Nonnull ValidationModel model) {
-        return new ValidationResultImpl(); //validate(resource, model, "");
+        return validate(resource, model, "");
     }
     
     protected @Nonnull ValidationResult validate(@Nonnull Resource resource, @Nonnull ValidationModel model, @Nonnull String relativePath) {
