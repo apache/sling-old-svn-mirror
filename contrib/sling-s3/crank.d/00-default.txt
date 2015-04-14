@@ -2,5 +2,4 @@
 defaults port 8080
 defaults sling.home sling
 defaults log.file logs/error.log
-defaults oak.version 1.0.12
 defaults customBlobStore false

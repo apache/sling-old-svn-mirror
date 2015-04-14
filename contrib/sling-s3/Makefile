@@ -39,7 +39,7 @@ contrib/crankstart.jar:
 	wget http://central.maven.org/maven2/org/apache/sling/org.apache.sling.crankstart.launcher/1.0.0/org.apache.sling.crankstart.launcher-1.0.0.jar -O contrib/crankstart.jar
 
 update-bundles:
-	rm -f crank.d/*-sling-startlevel-*.txt
+	rm -f crank.d/*-provisioning-*.txt
 	$(BUNDLES)
 
 install-deps: contrib/crankstart.jar
