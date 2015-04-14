@@ -1,8 +1,6 @@
 #!/usr/bin/env ruby
 
 require 'open-uri'
-require 'rexml/document'
-include REXML
 
 def parse_bundle_list name
   url = "http://svn.apache.org/repos/asf/sling/trunk/launchpad/builder/src/main/provisioning/#{name}"
