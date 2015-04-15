@@ -31,5 +31,3 @@
     # Set the servlet resolver's cache size to zero for testing
     servletresolver.cacheSize=I"0"
 
-[settings]
-  sling.system.packages.class.com.vladium.emma.rt.RT=com.vladium.emma.rt
