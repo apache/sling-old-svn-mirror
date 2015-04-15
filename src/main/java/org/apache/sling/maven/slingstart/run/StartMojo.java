@@ -342,6 +342,10 @@ public class StartMojo extends AbstractMojo {
             launchpadConfiguration.setPort(String.valueOf(PortHelper.getNextAvailablePort()));
         }
 
+        if ( launchpadConfiguration.getControlPort() == null ) {
+            launchpadConfiguration.setControlPort(String.valueOf(PortHelper.getNextAvailablePort()));
+        }
+
         // set the id of the launchpad
         if ( launchpadConfiguration.getId() == null || launchpadConfiguration.getId().trim().length() == 0 ) {
             String runMode = launchpadConfiguration.getRunmode();
