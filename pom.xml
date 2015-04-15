@@ -74,7 +74,6 @@
                             <directory>${basedir}</directory>
                             <includes>
                                 <include>derby.log</include>
-                                <include>sling</include>
                             </includes>
                         </fileset>
                         <fileset>
