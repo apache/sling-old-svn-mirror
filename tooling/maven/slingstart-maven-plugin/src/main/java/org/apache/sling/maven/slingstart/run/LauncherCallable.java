@@ -171,7 +171,9 @@ public class LauncherCallable implements Callable<ProcessDescription> {
         if ( this.configuration.getRunmode() != null && this.configuration.getRunmode().length() > 0 ) {
             args.add("-Dsling.run.modes=" + this.configuration.getRunmode());
         }
-        args.add("start");
+        if ( !this.environment.isShutdownOnExit() ) {
+            args.add("start");
+        }
 
         builder.command(args.toArray(new String[args.size()]));
         builder.directory(this.configuration.getFolder());
