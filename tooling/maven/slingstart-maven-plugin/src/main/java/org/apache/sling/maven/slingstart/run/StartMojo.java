@@ -66,7 +66,7 @@ public class StartMojo extends AbstractMojo {
      * Set this to "true" to skip starting the launchpad
      *
      */
-    @Parameter(property = "launchpad.skip", defaultValue = "false")
+    @Parameter(property = "maven.test.skip", defaultValue = "false")
     protected boolean skipLaunchpad;
 
     /**
