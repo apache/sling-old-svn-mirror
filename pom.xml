@@ -64,8 +64,11 @@
                         <fileset>
                             <directory>${basedir}</directory>
                             <includes>
-                                <include>sling</include>
+                                <include>derby.log</include>
                             </includes>
+                        </fileset>
+                        <fileset>
+                            <directory>sling</directory>
                         </fileset>
                     </filesets>
                 </configuration>
