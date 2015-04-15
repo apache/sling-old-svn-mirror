@@ -100,15 +100,6 @@
                     <war>${project.build.directory}/${project.build.finalName}.war</war>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>emma-maven-plugin</artifactId>
-                <configuration>
-                    <filters>
-                        <filter>-*</filter>
-                    </filters>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 </project>
