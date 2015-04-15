@@ -74,10 +74,11 @@
                             <directory>${basedir}</directory>
                             <includes>
                                 <include>derby.log</include>
-                                <include>cachedir</include>
                                 <include>sling</include>
-                                <include>jackrabbit</include>
                             </includes>
+                        </fileset>
+                        <fileset>
+                            <directory>sling</directory>
                         </fileset>
                     </filesets>
                 </configuration>
