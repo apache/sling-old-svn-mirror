@@ -56,21 +56,8 @@
         <!-- hostname for integration tests -->
         <test.host>localhost</test.host>
 
-        <!--
-            Defines which tests are for the "integration-testing" phase
-        -->
-        <integration.test.code.path>
-            **/launchpad/webapp/integrationtest
-        </integration.test.code.path>
-
         <!-- optionally exclude some integration tests  -->
         <failsafe.exclude></failsafe.exclude>
-
-        <!--
-            Set this to true to stop mvn once the integration test Jetty instance is
-            started. Useful to manually test the integration testing webapp.
-        -->
-        <integration.test.wait>false</integration.test.wait>
 
         <slf4j.version>1.7.6</slf4j.version>
         <logback.version>1.1.2</logback.version>
@@ -81,23 +68,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <artifactId>maven-clean-plugin</artifactId>
-                <configuration>
-                    <filesets>
-                        <fileset>
-                            <directory>${basedir}</directory>
-                            <includes>
-                                <include>derby.log</include>
-                                <include>cachedir</include>
-                                <include>sling/**</include>
-                                <include>jackrabbit</include>
-                                <include>coverage.ec</include>
-                            </includes>
-                        </fileset>
-                    </filesets>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
@@ -124,89 +94,59 @@
                 <artifactId>slingstart-maven-plugin</artifactId>
                 <version>1.0.5-SNAPSHOT</version>
                 <extensions>true</extensions>
+                <executions>
+                    <execution>
+                         <id>start-container</id>
+                        <goals>
+                            <goal>start</goal>
+                            <goal>stop</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <servers>
+                        <server>
+                            <port>${http.port}</port>
+                            <controlPort>${sling.control.port}</controlPort>
+                            <runmode>${sling.run.modes}</runmode>
+                            <contextPath>${http.base.path}</contextPath>
+                        </server>
+                    </servers>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <dependenciesToScan>
+                        <dependency>org.apache.sling:org.apache.sling.launchpad.integration-tests</dependency>
+                    </dependenciesToScan>
+                    <includes>
+                        <include>**/*Test.java</include>
+                        <include>**/*IT.java</include>
+                    </includes>
+                    <excludes>
+                        <exclude>${failsafe.exclude}</exclude>
+                    </excludes>
+                    <excludedGroups>${sling.it.excludedGroups}</excludedGroups>
+                    <systemPropertyVariables>
+                        <launchpad.http.server.url>http://${test.host}:${http.port}/</launchpad.http.server.url>
+                        <launchpad.webdav.server.url>http://${test.host}:${http.port}/${webdav.workspace.path}</launchpad.webdav.server.url>
+                        <launchpad.servlet.context>${http.base.path}</launchpad.servlet.context>
+                    </systemPropertyVariables>
+                </configuration>
             </plugin>
         </plugins>
     </build>
 
     <profiles>
-        <profile>
-            <!--
-                Run the integration tests.
-            -->
-            <id>integrationTesting</id>
-            <activation>
-                <property>
-                    <name>!maven.test.skip</name>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-failsafe-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <goals>
-                                    <goal>integration-test</goal>
-                                    <goal>verify</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <dependenciesToScan>
-                                <dependency>org.apache.sling:org.apache.sling.launchpad.integration-tests</dependency>
-                            </dependenciesToScan>
-                            <includes>
-                                <include>**/*Test.java</include>
-                                <include>**/*IT.java</include>
-                            </includes>
-                            <excludes>
-                                <exclude>${failsafe.exclude}</exclude>
-                            </excludes>
-                            <excludedGroups>${sling.it.excludedGroups}</excludedGroups>
-                            <systemPropertyVariables>
-                                <launchpad.http.server.url>http://${test.host}:${http.port}/</launchpad.http.server.url>
-                                <launchpad.webdav.server.url>http://${test.host}:${http.port}/${webdav.workspace.path}</launchpad.webdav.server.url>
-                                <launchpad.servlet.context>${http.base.path}</launchpad.servlet.context>
-                             <!--
-                                <HttpTestBase.readyTimeoutSeconds>${HttpTestBase.readyTimeoutSeconds}</HttpTestBase.readyTimeoutSeconds>
-                                -->
-                                <!-- Additional readyness checks, SLING-3235 and SLING-4261 
-                                <launchpad.ready.1>GET:/system/console/status-Configurations/configuration-status-20131115-101714.txt:200:config.comment.*setup the JSP engine for running tests</launchpad.ready.1>
-                                <launchpad.ready.2>GET:/.EXPORTED_PACKAGES.txt?package=org.apache.sling.api:200:PACKAGE FOUND.*org.apache.sling.api</launchpad.ready.2>
-                                <launchpad.ready.3>GET:/system/sling/junit/org.apache.sling.launchpad.testservices.serversidetests.WriteableResourcesTest.json:200:WriteableResourcesTest</launchpad.ready.3>
-                                -->
-                            </systemPropertyVariables>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.sling</groupId>
-                        <artifactId>slingstart-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>start-container</id>
-                                <goals>
-                                    <goal>start</goal>
-                                    <goal>stop</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <servers>
-                                <server>
-                                    <port>${http.port}</port>
-                                    <controlPort>${sling.control.port}</controlPort>
-                                    <runmode>${sling.run.modes}</runmode>
-                                    <contextPath>${http.base.path}</contextPath>
-                                </server>
-                            </servers>
-                            <!-- TODO 
-                            <controlHost>${test.host}</controlHost>
-                            -->
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
         <profile>
             <id>jackrabbit</id>
             <activation>
