@@ -125,16 +125,6 @@
                 <version>1.0.5-SNAPSHOT</version>
                 <extensions>true</extensions>
             </plugin>
-
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>emma-maven-plugin</artifactId>
-                <configuration>
-                    <filters>
-                        <filter>-*</filter>
-                    </filters>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 
@@ -241,76 +231,6 @@
             <properties>
                 <sling.it.excludedGroups>org.apache.sling.commons.testing.junit.categories.JackrabbitOnly</sling.it.excludedGroups>
             </properties>
-        </profile>
-
-<!-- 
- 
-        <profile>
-            <id>emma</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.sling</groupId>
-                        <artifactId>maven-launchpad-plugin</artifactId>
-                        <configuration>
-                            <rewriteRuleFiles combine.children="append">
-                                <rewriteRuleFile>
-                                    ${basedir}/src/test/rules/emma.drl
-                                </rewriteRuleFile>
-                            </rewriteRuleFiles>
-                        </configuration>
-                        <dependencies>
-                            <dependency>
-                                <groupId>emma</groupId>
-                                <artifactId>emma</artifactId>
-                                <version>2.0.5312</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        -->
-        <profile>
-            <id>emma-report</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>exec-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>emma-report</id>
-                                <phase>validate</phase>
-                                <goals>
-                                    <goal>java</goal>
-                                </goals>
-                                <configuration>
-                                    <mainClass>emma</mainClass>
-                                    <arguments>
-                                        <argument>report</argument>
-                                        <argument>-r</argument>
-                                        <argument>html</argument>
-                                        <argument>-in</argument>
-                                        <argument>${user.dir}/coverage.em,${user.dir}/coverage.ec</argument>
-                                        <argument>-sp</argument>
-                                        <argument>${sourceDirs}</argument>
-                                    </arguments>
-                                    <includePluginDependencies>true</includePluginDependencies>
-                                    <includeProjectDependencies>false</includeProjectDependencies>
-                                </configuration>
-                            </execution>
-                        </executions>
-                        <dependencies>
-                            <dependency>
-                                <groupId>emma</groupId>
-                                <artifactId>emma</artifactId>
-                                <version>2.0.5312</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>port-java6</id>
