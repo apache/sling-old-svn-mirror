@@ -21,6 +21,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Arrays;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -76,6 +77,7 @@ public class Main {
             System.out.println("Slingstart application: " + this.appJar);
             System.out.println("Main class: " + MAIN_CLASS_DEF);
             System.out.println("Listener Port: " + String.valueOf(this.listenerPort));
+            System.out.println("Arguments: " + Arrays.toString(this.startupArgs));
             System.out.println(DELIM);
         }
 

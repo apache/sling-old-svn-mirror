@@ -23,6 +23,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
+import java.lang.ProcessBuilder.Redirect;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -164,18 +165,19 @@ public class LauncherCallable implements Callable<ProcessDescription> {
         }
 
         if ( this.configuration.getControlPort() != null ) {
-            args.add("-c");
+            args.add("-j");
             args.add(this.configuration.getControlPort());
         }
-        if ( this.configuration.getRunmode() != null ) {
+        if ( this.configuration.getRunmode() != null && this.configuration.getRunmode().length() > 0 ) {
             args.add("-Dsling.run.modes=" + this.configuration.getRunmode());
         }
+        args.add("start");
 
         builder.command(args.toArray(new String[args.size()]));
         builder.directory(this.configuration.getFolder());
         builder.redirectErrorStream(true);
-//        builder.redirectOutput(Redirect.INHERIT);
-//        builder.redirectError(Redirect.INHERIT);
+        builder.redirectOutput(Redirect.INHERIT);
+        builder.redirectError(Redirect.INHERIT);
 
         logger.info("Starting Launchpad " + this.configuration.getId() +  "...");
         logger.debug("Launchpad cmd: " + builder.command());

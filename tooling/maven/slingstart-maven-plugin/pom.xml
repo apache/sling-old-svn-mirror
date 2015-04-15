@@ -31,7 +31,7 @@
     </description>
 
     <properties>
-        <sling.java.version>6</sling.java.version>
+        <sling.java.version>7</sling.java.version>
         <maven.version>3.0.5</maven.version>
     </properties>
 
