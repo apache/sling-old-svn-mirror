@@ -134,6 +134,16 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
         assertEquals(child.getPath(), script.eval("resource.getParent().getPath()", data));
     }
 
+    public void testParent() throws Exception {
+        Node child = node.addNode("child");
+        Node grandChild = child.addNode("grandchild");
+
+        final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
+        data.put("resource", new TestResource(grandChild));
+
+        assertEquals(child.getPath(), script.eval("resource.parent.path", data));
+    }
+
     public void testIsResourceType() throws Exception {
         final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
         data.put("resource", new TestResource(node));
