@@ -23,7 +23,7 @@ import javax.jcr.version.VersionHistory;
 public class ScriptableVersionHistory extends ScriptableNode {
 
     public static final String CLASSNAME = "VersionHistory";
-    public static final Class<?> [] WRAPPED_CLASSES = { VersionHistory.class };
+    private static final Class<?> [] WRAPPED_CLASSES = { VersionHistory.class };
 
     private VersionHistory versionHistory;
 

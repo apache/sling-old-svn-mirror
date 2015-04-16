@@ -140,8 +140,8 @@ public class ScriptableNodeTest extends RepositoryScriptingTestBase {
 
     public void testViaPropertyNoWrappersCal() throws Exception {
         assertEquals(
-                testCal,
-                script.eval("calProperty.value.getDate()", data)
+                testCal.getTimeInMillis(),
+                script.eval("calProperty.value.getDate().getTimeInMillis()", data)
         );
     }
 

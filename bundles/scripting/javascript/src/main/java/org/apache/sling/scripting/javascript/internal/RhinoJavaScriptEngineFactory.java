@@ -21,10 +21,11 @@ package org.apache.sling.scripting.javascript.internal;
 import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Set;
-
 import javax.script.ScriptEngine;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
@@ -197,7 +198,7 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory
     }
 
     // ---------- SCR integration
-
+    @Activate
     protected void activate(ComponentContext context) {
         Dictionary<?, ?> props = context.getProperties();
         boolean debugging = getProperty(
@@ -236,6 +237,7 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory
         log.info("Activated with optimization level {}", optimizationLevel);
     }
 
+    @Deactivate
     protected void deactivate(ComponentContext context) {
 
         // remove the root scope
@@ -279,7 +281,7 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory
                     if (SlingWrapper.class.isAssignableFrom(clazz)) {
 
                         // SlingWrappers can map to several classes if needed
-                        final SlingWrapper hostWrapper = (SlingWrapper) clazz.newInstance();;
+                        final SlingWrapper hostWrapper = (SlingWrapper) clazz.newInstance();
                         for (Class<?> c : hostWrapper.getWrappedClasses()) {
                             getWrapFactory().registerWrapper(c,
                                 hostWrapper.getClassName());

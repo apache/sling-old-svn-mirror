@@ -23,7 +23,7 @@ import javax.jcr.version.Version;
 public class ScriptableVersion extends ScriptableNode {
 
     public static final String CLASSNAME = "Version";
-    public static final Class<?> [] WRAPPED_CLASSES = { Version.class };
+    private static final Class<?> [] WRAPPED_CLASSES = { Version.class };
 
     private Version version;
 
