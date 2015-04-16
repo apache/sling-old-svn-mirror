@@ -134,6 +134,11 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
         return id;
     }
 
+
+    public void close() {
+        // there's nothing to close
+    }
+
     public void delete() {
         // there's nothing to delete
     }

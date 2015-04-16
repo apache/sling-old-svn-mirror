@@ -98,6 +98,10 @@ public class ResourceSharedDistributionPackage implements SharedDistributionPack
         return distributionPackage.createInputStream();
     }
 
+    public void close() {
+        distributionPackage.close();
+    }
+
     public void delete() {
         Resource resource = getProxyResource();
         try {

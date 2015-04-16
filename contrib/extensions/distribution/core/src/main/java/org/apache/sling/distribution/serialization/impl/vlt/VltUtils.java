@@ -82,7 +82,7 @@ public class VltUtils {
         return filterSet;
     }
 
-    public static ExportOptions getExportOptions(WorkspaceFilter filter,
+    public static ExportOptions getExportOptions(WorkspaceFilter filter, String[] packageRoots,
                                                  String packageGroup,
                                                  String packageName,
                                                  String packageVersion) {
@@ -98,7 +98,7 @@ public class VltUtils {
 
         opts.setMetaInf(inf);
 
-        String root = getClosestRoot(filter.getFilterSets());
+        String root = getPackageRoot(filter.getFilterSets(), packageRoots);
         opts.setRootPath(root);
         opts.setMountPath(root);
 
@@ -106,35 +106,41 @@ public class VltUtils {
     }
 
 
-    private static String getClosestRoot(List<PathFilterSet> filterSets) {
+    /**
+     * Picks a package root that dominates all filter sets. If there is none then "/" is returned.
+     */
+    private static String getPackageRoot(List<PathFilterSet> filterSets, String[] packageRoots) {
 
-        String closestRoot = null;
+        String packageRoot = null;
 
-        for (PathFilterSet filterSet : filterSets) {
-            String root = filterSet.getRoot();
+        if (packageRoots != null && packageRoots.length > 0) {
+            for (String currentRoot : packageRoots) {
+                boolean filtersHaveCommonRoot = true;
 
-            if (closestRoot == null) {
-                closestRoot = root;
-            } else {
-                while(!root.startsWith(closestRoot)) {
-                    closestRoot = Text.getRelativeParent(closestRoot, 1);
+
+                for (PathFilterSet filterSet : filterSets) {
+                    String filterSetRoot = filterSet.getRoot();
+
+                    if (!filterSetRoot.startsWith(currentRoot)) {
+                        filtersHaveCommonRoot = false;
+                    }
+                }
+
+                if (filtersHaveCommonRoot) {
+                    packageRoot = currentRoot;
+                    break;
                 }
             }
 
-            if (closestRoot.length() < 2) {
-                break;
-            }
         }
 
-        if (closestRoot != null) {
-            closestRoot = Text.getRelativeParent(closestRoot, 1);
+
+
+        if (packageRoot == null || !packageRoot.startsWith("/")) {
+            packageRoot = "/";
         }
 
-        if (closestRoot == null || !closestRoot.startsWith("/")) {
-            closestRoot = "/";
-        }
-
-        return closestRoot;
+        return packageRoot;
 
     }
 

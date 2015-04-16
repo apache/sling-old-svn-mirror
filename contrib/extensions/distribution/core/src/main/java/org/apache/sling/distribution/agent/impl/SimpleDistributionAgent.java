@@ -230,6 +230,10 @@ public class SimpleDistributionAgent implements DistributionAgent {
         } catch (Exception e) {
             log.error("an error happened during dispatching items to the queue(s)", e);
             distributionResponses.add(new SimpleDistributionResponse(DistributionRequestState.DROPPED, e.toString()));
+        } finally {
+            if (distributionPackage != null) {
+                distributionPackage.close();
+            }
         }
 
         return distributionResponses;
@@ -357,11 +361,12 @@ public class SimpleDistributionAgent implements DistributionAgent {
     private boolean processQueueItem(String queueName, DistributionQueueItem queueItem) {
         boolean success = false;
         ResourceResolver agentResourceResolver = null;
+        DistributionPackage distributionPackage = null;
         try {
 
             agentResourceResolver = getAgentResourceResolver();
 
-            DistributionPackage distributionPackage = distributionPackageExporter.getPackage(agentResourceResolver, queueItem.getId());
+            distributionPackage = distributionPackageExporter.getPackage(agentResourceResolver, queueItem.getId());
 
             if (distributionPackage != null) {
                 distributionPackage.getInfo().fillInfo(queueItem.getPackageInfo());
@@ -385,6 +390,9 @@ public class SimpleDistributionAgent implements DistributionAgent {
             log.info("cannot obtain resource resolver", e);
         } finally {
             ungetAgentResourceResolver(agentResourceResolver);
+            if (distributionPackage != null) {
+                distributionPackage.close();
+            }
         }
         return success;
     }

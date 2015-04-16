@@ -62,12 +62,14 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
     private ImportMode importMode;
 
     private AccessControlHandling aclHandling;
+    private final String[] packageRoots;
 
-    public FileVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling) {
+    public FileVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots) {
         super(type);
         this.packaging = packaging;
         this.importMode = importMode;
         this.aclHandling = aclHandling;
+        this.packageRoots = packageRoots;
     }
 
     @Override
@@ -81,7 +83,7 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
             String packageName = getType() + "_" + System.currentTimeMillis() + "_" +  UUID.randomUUID();
 
             WorkspaceFilter filter = VltUtils.createFilter(request);
-            ExportOptions opts = VltUtils.getExportOptions(filter, packageGroup, packageName, VERSION);
+            ExportOptions opts = VltUtils.getExportOptions(filter, packageRoots, packageGroup, packageName, VERSION);
 
             log.debug("assembling package {}", packageGroup + '/' + packageName + "-" + VERSION);
             File tmpFile = File.createTempFile("rp-vlt-create-" + System.nanoTime(), ".zip");

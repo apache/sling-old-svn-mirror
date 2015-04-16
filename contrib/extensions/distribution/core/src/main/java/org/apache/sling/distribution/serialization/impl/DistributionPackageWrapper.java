@@ -54,6 +54,10 @@ public  class DistributionPackageWrapper implements DistributionPackage {
         return distributionPackage.createInputStream();
     }
 
+    public void close() {
+        distributionPackage.close();
+    }
+
     public void delete() {
         distributionPackage.delete();
     }
