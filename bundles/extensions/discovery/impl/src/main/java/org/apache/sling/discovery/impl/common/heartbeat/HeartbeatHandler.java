@@ -493,10 +493,46 @@ public class HeartbeatHandler implements Runnable, StartupListener {
         // the currently live instances.
 
         // initiate a new voting
+        doStartNewVoting(resourceResolver, liveInstances);
+    }
+
+    private void doStartNewVoting(final ResourceResolver resourceResolver,
+            final Set<String> liveInstances) throws PersistenceException {
         String votingId = nextVotingId;
         nextVotingId = UUID.randomUUID().toString();
 
         VotingView.newVoting(resourceResolver, config, votingId, slingId, liveInstances);
+    }
+
+    /**
+     * Management function to trigger the otherwise algorithm-dependent
+     * start of a new voting.
+     * This can make sense when explicitly trying to force a leader
+     * change (which is otherwise not allowed by the discovery API)
+     */
+    public void startNewVoting() {
+        logger.info("startNewVoting: explicitly starting new voting...");
+        ResourceResolver resourceResolver = null;
+        try {
+            resourceResolver = getResourceResolver();
+            final Resource clusterNodesRes = ResourceHelper.getOrCreateResource(
+                    resourceResolver, config.getClusterInstancesPath());
+            final Set<String> liveInstances = ViewHelper.determineLiveInstances(
+                    clusterNodesRes, config);
+            doStartNewVoting(resourceResolver, liveInstances);
+            logger.info("startNewVoting: explicit new voting was started.");
+        } catch (LoginException e) {
+            logger.error("startNewVoting: could not log in administratively: " + e,
+                    e);
+        } catch (PersistenceException e) {
+            logger.error(
+                    "startNewVoting: encountered a persistence exception during view check: "
+                            + e, e);
+        } finally {
+            if (resourceResolver != null) {
+                resourceResolver.close();
+            }
+        }
     }
 
 }
