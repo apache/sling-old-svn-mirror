@@ -20,6 +20,7 @@ package org.apache.sling.discovery.impl.setup;
 
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -182,6 +183,10 @@ public class MockedResource extends SyntheticResource {
                             node.setProperty(arg0, (Calendar)arg1);
                         } else if (arg1 instanceof Boolean) {
                             node.setProperty(arg0, (Boolean)arg1);
+                        } else if (arg1 instanceof Date) {
+                            final Calendar c = Calendar.getInstance();
+                            c.setTime((Date)arg1);
+                            node.setProperty(arg0, c);
                         } else {
                             throw new UnsupportedOperationException();
                         }
