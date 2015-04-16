@@ -34,6 +34,7 @@ import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 import javax.script.SimpleScriptContext;
 
+import org.apache.sling.commons.testing.osgi.MockBundle;
 import org.apache.sling.commons.testing.osgi.MockComponentContext;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ScriptableObject;
@@ -121,7 +122,7 @@ public class ScriptEngineHelper {
     private static class RhinoMockComponentContext extends MockComponentContext {
 
         private RhinoMockComponentContext() {
-            super(null, null);
+            super(new MockBundle(0));
         }
 
         @Override

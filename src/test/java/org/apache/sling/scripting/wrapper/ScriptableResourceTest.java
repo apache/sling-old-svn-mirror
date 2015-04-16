@@ -93,6 +93,53 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
             data));
     }
 
+    public void testChildren() throws Exception {
+        node.addNode("first-child");
+        node.addNode("second-child");
+
+        final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
+        data.put("resource", new TestResource(node));
+
+        assertEquals(2.0, script.eval("resource.getChildren().length", data));
+        assertEquals("first-child", script.eval("resource.getChildren()[0].name", data));
+    }
+
+    public void testListChildren() throws Exception {
+        Node firstChild = node.addNode("first-child");
+        node.addNode("second-child");
+
+        final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
+        data.put("resource", new TestResource(node));
+
+        assertEquals(2.0, script.eval("resource.listChildren().length", data));
+        assertEquals(firstChild.getPath(), script.eval("resource.listChildren()[0].path", data));
+    }
+
+    public void testGetChild() throws Exception {
+        Node child = node.addNode("child");
+
+        final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
+        data.put("resource", new TestResource(node));
+
+        assertEquals(child.getPath(), script.eval("resource.getChild('./child').path", data));
+    }
+
+    public void testGetParent() throws Exception {
+        Node child = node.addNode("child");
+        Node grandChild = child.addNode("grandchild");
+
+        final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
+        data.put("resource", new TestResource(grandChild));
+
+        assertEquals(child.getPath(), script.eval("resource.getParent().getPath()", data));
+    }
+
+    public void testIsResourceType() throws Exception {
+        final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
+        data.put("resource", new TestResource(node));
+        assertEquals(Boolean.TRUE, script.eval("resource.isResourceType('" + RESOURCE_TYPE + "')", data));
+    }
+
     public void testResourceSuperType() throws Exception {
         // set resource and resource super type
         node.setProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY,
