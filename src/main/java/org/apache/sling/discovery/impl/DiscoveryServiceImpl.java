@@ -24,8 +24,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -61,7 +63,9 @@ import org.apache.sling.discovery.impl.topology.TopologyViewImpl;
 import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistry;
 import org.apache.sling.discovery.impl.topology.connector.ConnectorRegistry;
 import org.apache.sling.settings.SlingSettingsService;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -130,11 +134,34 @@ public class DiscoveryServiceImpl implements DiscoveryService {
     /** whether or not there is a delayed event sending pending **/
     private boolean delayedEventPending = false;
 
+    private ServiceRegistration mbeanRegistration;
+
+    protected void registerMBean(BundleContext bundleContext) {
+        if (this.mbeanRegistration!=null) {
+            try{
+                if ( this.mbeanRegistration != null ) {
+                    this.mbeanRegistration.unregister();
+                    this.mbeanRegistration = null;
+                }
+            } catch(Exception e) {
+                logger.error("registerMBean: Error on unregister: "+e, e);
+            }
+        }
+        try {
+            final Dictionary<String, String> mbeanProps = new Hashtable<String, String>();
+            mbeanProps.put("jmx.objectname", "org.apache.sling:type=discovery,name=DiscoveryServiceImpl");
+
+            final DiscoveryServiceMBeanImpl mbean = new DiscoveryServiceMBeanImpl(heartbeatHandler);
+            this.mbeanRegistration = bundleContext.registerService(DiscoveryServiceMBeanImpl.class.getName(), mbean, mbeanProps);
+        } catch (Throwable t) {
+            logger.warn("registerMBean: Unable to register DiscoveryServiceImpl MBean", t);
+        }
+    }
     /**
      * Activate this service
      */
     @Activate
-    protected void activate() {
+    protected void activate(final BundleContext bundleContext) {
         logger.debug("DiscoveryServiceImpl activating...");
 
         if (settingsService == null) {
@@ -195,6 +222,8 @@ public class DiscoveryServiceImpl implements DiscoveryService {
                 }
             }
         }
+        
+        registerMBean(bundleContext);        
 
         logger.debug("DiscoveryServiceImpl activated.");
     }
@@ -226,6 +255,14 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         logger.debug("DiscoveryServiceImpl deactivated.");
         synchronized (lock) {
             activated = false;
+        }
+        try{
+            if ( this.mbeanRegistration != null ) {
+                this.mbeanRegistration.unregister();
+                this.mbeanRegistration = null;
+            }
+        } catch(Exception e) {
+            logger.error("deactivate: Error on unregister: "+e, e);
         }
     }
 
