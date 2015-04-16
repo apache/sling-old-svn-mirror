@@ -112,4 +112,8 @@ public class MockFactory {
 
         return cc;
     }
+
+    public static BundleContext mockBundleContext() {
+        return mockComponentContext().getBundleContext();
+    }
 }
