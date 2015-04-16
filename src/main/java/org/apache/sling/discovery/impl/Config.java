@@ -91,6 +91,13 @@ public class Config {
     @Property
     public static final String LEADER_ELECTION_REPOSITORY_DESCRIPTOR_NAME_KEY = "leaderElectionRepositoryDescriptor";
     
+    /**
+     * Whether or not (default false) the leaderElectionRepositoryDescriptor should be inverted (if that one
+     * is configured at all).
+     */
+    @Property(boolValue=false)
+    public static final String INVERT_REPOSITORY_DESCRIPTOR_NAME_KEY = "invertRepositoryDescriptor";
+    
     /** URLs where to join a topology, eg http://localhost:4502/libs/sling/topology/connector */
     @Property(cardinality=1024)
     public static final String TOPOLOGY_CONNECTOR_URLS_KEY = "topologyConnectorUrls";
@@ -171,6 +178,8 @@ public class Config {
 
     private String leaderElectionRepositoryDescriptor ;
 
+    private boolean invertRepositoryDescriptor = false; /* default: false */
+    
     /** True when auto-stop of a local-loop is enabled. Default is false. **/
     private boolean autoStopLocalLoopEnabled;
     
@@ -301,6 +310,12 @@ public class Config {
                 null);
         logger.debug("configure: leaderElectionRepositoryDescriptor='{}'",
                 this.leaderElectionRepositoryDescriptor);
+        
+        this.invertRepositoryDescriptor = PropertiesUtil.toBoolean(
+                properties.get(INVERT_REPOSITORY_DESCRIPTOR_NAME_KEY),
+                false /* default: false*/);
+        logger.debug("configure: invertRepositoryDescriptor='{}'",
+                this.invertRepositoryDescriptor);
 
         delayInitEventUntilVoted = PropertiesUtil.toBoolean(properties.get(DELAY_INIT_EVENT_UNTIL_VOTED), true);
         autoStopLocalLoopEnabled = PropertiesUtil.toBoolean(properties.get(AUTO_STOP_LOCAL_LOOP_ENABLED), false);
@@ -428,6 +443,18 @@ public class Config {
      */
     public String getLeaderElectionRepositoryDescriptor() {
         return leaderElectionRepositoryDescriptor;
+    }
+    
+    /**
+     * Returns true when the value of the repository descriptor identified
+     * via the property 'leaderElectionRepositoryDescriptor' should be 
+     * inverted - only applies when 'leaderElectionRepositoryDescriptor' 
+     * is configured of course.
+     * @return true when property resulting from 'leaderElectionRepositoryDescriptor'
+     * should be inverted, false if it should remain unchanged.
+     */
+    public boolean shouldInvertRepositoryDescriptor() {
+        return invertRepositoryDescriptor;
     }
 
     /**

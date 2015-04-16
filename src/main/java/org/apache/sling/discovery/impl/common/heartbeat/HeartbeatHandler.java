@@ -366,7 +366,8 @@ public class HeartbeatHandler implements Runnable, StartupListener {
                 String currentTimeMillisStr = String.format("%0"
                         + maxLongLength + "d", System.currentTimeMillis());
 
-                String prefix = "0";
+                final boolean shouldInvertRepositoryDescriptor = config.shouldInvertRepositoryDescriptor();
+                String prefix = (shouldInvertRepositoryDescriptor ? "1" : "0");
 
                 String leaderElectionRepositoryDescriptor = config.getLeaderElectionRepositoryDescriptor();
                 if (leaderElectionRepositoryDescriptor!=null && leaderElectionRepositoryDescriptor.length()!=0) {
@@ -377,13 +378,22 @@ public class HeartbeatHandler implements Runnable, StartupListener {
                     if ( session != null ) {
                         String value = session.getRepository()
                                 .getDescriptor(leaderElectionRepositoryDescriptor);
-                        if (value != null && value.equalsIgnoreCase("true")) {
-                            prefix = "1";
+                        if (value != null) {
+                            if (value.equalsIgnoreCase("true")) {
+                                if (!shouldInvertRepositoryDescriptor) {
+                                    prefix = "1";
+                                } else {
+                                    prefix = "0";
+                                }
+                            }
                         }
                     }
                 }
-                resourceMap.put("leaderElectionId", prefix + "_"
-                        + currentTimeMillisStr + "_" + slingId);
+                final String newLeaderElectionId = prefix + "_"
+                        + currentTimeMillisStr + "_" + slingId;
+                resourceMap.put("leaderElectionId", newLeaderElectionId);
+                resourceMap.put("leaderElectionIdCreatedAt", new Date());
+                logger.debug("issueClusterLocalHeartbeat: set leaderElectionId to "+newLeaderElectionId);
                 resetLeaderElectionId = false;
             }
             resourceResolver.commit();
