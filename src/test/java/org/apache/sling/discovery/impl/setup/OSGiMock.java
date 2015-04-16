@@ -27,6 +27,8 @@ import java.util.List;
 import javax.jcr.Session;
 
 import org.apache.sling.commons.testing.jcr.RepositoryProvider;
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,10 +75,16 @@ public class OSGiMock {
 		            logger.info("activate: activating "+aService+"...");
 		            method.invoke(aService, null);
                     logger.info("activate: activating "+aService+" done.");
-		        } else {
+		        } else if (method.getParameterTypes().length==1 && (method.getParameterTypes()[0]==ComponentContext.class)){
                     logger.info("activate: activating "+aService+"...");
 		            method.invoke(aService, MockFactory.mockComponentContext());
                     logger.info("activate: activating "+aService+" done.");
+		        } else if (method.getParameterTypes().length==1 && (method.getParameterTypes()[0]==BundleContext.class)){
+                    logger.info("activate: activating "+aService+"...");
+                    method.invoke(aService, MockFactory.mockBundleContext());
+                    logger.info("activate: activating "+aService+" done.");
+		        } else {
+		            throw new IllegalStateException("unsupported activate variant: "+method);
 		        }
 		    }
 		}
