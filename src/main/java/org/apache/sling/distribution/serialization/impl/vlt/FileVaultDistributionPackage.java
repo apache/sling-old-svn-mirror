@@ -74,9 +74,11 @@ public class FileVaultDistributionPackage extends AbstractDistributionPackage im
     }
 
     public void delete() {
-        close();
         try {
-            File file = new File(id);
+            File file = pkg.getFile();
+
+            close();
+
             if (file.exists()) {
                 file.delete();
             }

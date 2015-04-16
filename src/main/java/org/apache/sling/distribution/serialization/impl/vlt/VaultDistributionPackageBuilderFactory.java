@@ -36,6 +36,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
+import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.serialization.DistributionPackageBuildingException;
@@ -84,8 +85,14 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
     /**
      * ACL handling property for file vault package builder
      */
-    @Property(label = "Acl Handling", description = "The vltacl handling mode for created packages.")
+    @Property(label = "Acl Handling", description = "The vlt acl handling mode for created packages.")
     public static final String ACL_HANDLING = "aclHandling";
+
+    /**
+     * ACL handling property for file vault package builder
+     */
+    @Property(label = "Package Roots", description = "The package roots to be used for created packages. (this is useful for assembling packages with an user that cannot read above the package root)")
+    public static final String PACKAGE_ROOTS = "package.roots";
 
     @Reference
     private Packaging packaging;
@@ -100,6 +107,8 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
         String type = PropertiesUtil.toString(config.get(TYPE), null);
         String importModeString = PropertiesUtil.toString(config.get(IMPORT_MODE), null);
         String aclHandlingString = PropertiesUtil.toString(config.get(ACL_HANDLING), null);
+        String[] packageRoots = PropertiesUtil.toStringArray(config.get(PACKAGE_ROOTS), null);
+        packageRoots = SettingsUtils.removeEmptyEntries(packageRoots);
 
         ImportMode importMode = null;
         if (importMode != null) {
@@ -111,9 +120,9 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
             aclHandling= AccessControlHandling.valueOf(aclHandlingString);
         }
         if ("filevlt".equals(type)) {
-            packageBuilder = new ResourceSharedDistributionPackageBuilder(new FileVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling));
+            packageBuilder = new ResourceSharedDistributionPackageBuilder(new FileVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots));
         } else  {
-            packageBuilder = new ResourceSharedDistributionPackageBuilder(new JcrVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling));
+            packageBuilder = new ResourceSharedDistributionPackageBuilder(new JcrVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots));
         }
     }
 

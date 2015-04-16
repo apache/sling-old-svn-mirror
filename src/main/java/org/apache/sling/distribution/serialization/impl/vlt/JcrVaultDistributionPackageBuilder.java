@@ -48,14 +48,16 @@ public class JcrVaultDistributionPackageBuilder  extends AbstractDistributionPac
     private final Packaging packaging;
     private ImportMode importMode;
     private AccessControlHandling aclHandling;
+    private final String[] packageRoots;
 
-    public JcrVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling) {
+    public JcrVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots) {
         super(type);
 
         this.packaging = packaging;
 
         this.importMode = importMode;
         this.aclHandling = aclHandling;
+        this.packageRoots = packageRoots;
     }
 
     @Override
@@ -68,7 +70,7 @@ public class JcrVaultDistributionPackageBuilder  extends AbstractDistributionPac
             String packageName = getType() + "_" + System.currentTimeMillis() + "_" +  UUID.randomUUID();
 
             WorkspaceFilter filter = VltUtils.createFilter(request);
-            ExportOptions opts = VltUtils.getExportOptions(filter, packageGroup, packageName, VERSION);
+            ExportOptions opts = VltUtils.getExportOptions(filter, packageRoots, packageGroup, packageName, VERSION);
 
             log.debug("assembling package {}", packageGroup + '/' + packageName + "-" + VERSION);
 
