@@ -31,9 +31,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Resource in JavaScript has following signature: [Object] getData(); [Object]
- * data [Item] getItem(); [Item] item [String] getResourceType(); [String] type
- * [String] getPath(); [String] path
+ * Resource in JavaScript has following signature:
+ * <ul>
+ * <li>[String] getName()</li>
+ * <li>[String] name</li>
+ * <li>[Object] getResourceMetadata()</li>
+ * <li>[Object] resourceMetadata</li>
+ * <li>[String] getPath()</li>
+ * <li>[String] path</li>
+ * <li>[String] getResourceType()</li>
+ * <li>[String] resourceType</li>
+ * <li>[String] getResourceSuperType()</li>
+ * <li>[String] resourceSuperType</li>
+ * <li>[Resource] getParent()</li>
+ * <li>[Resource] parent</li>
+ * <li>[ResourceResolver] getResourceResolver()</li>
+ * <li>[ResourceResolver] resourceResolver</li>
+ * <li>[Resource] getChild(String)</li>
+ * <li>[Resource[]] getChildren()</li>
+ * <li>[Resource[]] listChildren()</li>
+ * <li>[Boolean] isResourceType(String)</li>
  */
 public class ScriptableResource extends ScriptableObject implements
         SlingWrapper {
@@ -119,6 +136,16 @@ public class ScriptableResource extends ScriptableObject implements
         return new NativeArray(IteratorUtils.toArray(resource.listChildren()));
     }
 
+    /**
+     * Maps getParent() method as parent property.
+     */
+    public Object jsGet_parent() {
+        return this.jsFunction_getParent();
+    }
+
+    /**
+     * Maps getParent() method as getParent() method.
+     */
     public Object jsFunction_getParent() {
         return resource.getParent();
     }
