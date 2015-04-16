@@ -19,6 +19,8 @@
 package org.apache.sling.discovery.impl.topology;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
@@ -39,6 +41,38 @@ import org.junit.Test;
 
 public class TopologyViewImplTest {
 
+    @Test
+    public void testForcedLeaderChangeCompare() throws Exception {
+        // create view 1 with first instance the leader
+        final String slingId1 = UUID.randomUUID().toString();
+        final TopologyViewImpl view1 = TopologyTestHelper.createTopologyView(UUID
+                .randomUUID().toString(), slingId1);
+        final DefaultInstanceDescriptionImpl id2 = TopologyTestHelper.addInstanceDescription(view1, TopologyTestHelper
+                .createInstanceDescription(view1.getClusterViews().iterator()
+                        .next()));
+        final String slingId2 = id2.getSlingId();
+        final DefaultInstanceDescriptionImpl id3 = TopologyTestHelper.addInstanceDescription(view1, TopologyTestHelper
+                .createInstanceDescription(view1.getClusterViews().iterator()
+                        .next()));
+        final String slingId3 = id3.getSlingId();
+        
+        // now create view 2 with exactly the same instances as above, but the second instance the leader
+        TopologyViewImpl view2 = TopologyTestHelper.cloneTopologyView(view1, slingId2);
+        // make sure we've chosen a new leader:
+        assertNotEquals(view1.getClusterViews().iterator().next().getLeader().getSlingId(),
+                view2.getClusterViews().iterator().next().getLeader().getSlingId());
+        // and now test the compare method which should catch the leader change
+        assertTrue(view1.compareTopology(view2)==Type.TOPOLOGY_CHANGED);
+        
+        // same thing now with view3 which takes slingId3 as the leader
+        TopologyViewImpl view3 = TopologyTestHelper.cloneTopologyView(view1, slingId3);
+        // make sure we've chosen a new leader:
+        assertNotEquals(view1.getClusterViews().iterator().next().getLeader().getSlingId(),
+                view3.getClusterViews().iterator().next().getLeader().getSlingId());
+        // and now test the compare method which should catch the leader change
+        assertTrue(view1.compareTopology(view3)==Type.TOPOLOGY_CHANGED);
+    }
+    
     @Test
     public void testCompare() throws Exception {
 

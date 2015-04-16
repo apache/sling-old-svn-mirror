@@ -94,6 +94,10 @@ public class TopologyViewImpl implements TopologyView {
             	logger.debug("compareTopology: cluster view id does not match");
                 return Type.TOPOLOGY_CHANGED;
             }
+            if (!instance.isLeader()==matchingInstance.isLeader()) {
+                logger.debug("compareTopology: leaders differ");
+                return Type.TOPOLOGY_CHANGED;
+            }
             if (!instance.getProperties().equals(
                     matchingInstance.getProperties())) {
                 propertiesChanged = true;

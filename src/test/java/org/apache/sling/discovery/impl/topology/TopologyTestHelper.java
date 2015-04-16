@@ -146,4 +146,15 @@ public class TopologyTestHelper {
         return instance;
     }
 
+    public static TopologyViewImpl cloneTopologyView(TopologyViewImpl view,
+            String newLeader) throws NoSuchFieldException {
+        final TopologyViewImpl clone = cloneTopologyView(view);
+        final DefaultClusterViewImpl cluster = (DefaultClusterViewImpl) clone.getClusterViews().iterator().next();
+        for (Iterator it = cluster.getInstances().iterator(); it.hasNext();) {
+            DefaultInstanceDescriptionImpl id = (DefaultInstanceDescriptionImpl) it.next();
+            PrivateAccessor.setField(id, "isLeader", id.getSlingId().equals(newLeader));
+        }
+        return clone;
+    }
+
 }
