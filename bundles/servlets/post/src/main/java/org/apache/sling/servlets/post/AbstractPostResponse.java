@@ -358,6 +358,15 @@ public abstract class AbstractPostResponse implements PostResponse {
     protected Object getProperty(String name) {
         return properties.get(name);
     }
+    
+    protected boolean isSafeReferer(){
+        String referer = getReferer();
+        if (referer.startsWith("http://") || referer.startsWith("https://")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
     protected abstract void doSend(HttpServletResponse response) throws IOException;
 

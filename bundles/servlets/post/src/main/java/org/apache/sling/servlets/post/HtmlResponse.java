@@ -48,6 +48,11 @@ public class HtmlResponse extends AbstractPostResponse {
     private static final String TEMPLATE_NAME = "HtmlResponse.html";
 
     /**
+     * name of the html safe referer template
+     */
+    private static final String NO_GO_BACK_TEMPLATE_NAME = "HtmlNoGoBackResponse.html";
+    
+    /**
      * list of changes
      */
     private final StringBuilder changes = new StringBuilder();
@@ -112,7 +117,15 @@ public class HtmlResponse extends AbstractPostResponse {
         setProperty(PN_CHANGE_LOG, changes.toString());
 
         Writer out = response.getWriter();
-        InputStream template = getClass().getResourceAsStream(TEMPLATE_NAME);
+        
+        String templateName;
+        if(isSafeReferer()) {
+            templateName = TEMPLATE_NAME;
+        } else {
+            templateName = NO_GO_BACK_TEMPLATE_NAME;
+        }
+        
+        InputStream template = getClass().getResourceAsStream(templateName);
         Reader in = new BufferedReader(new InputStreamReader(template));
         StringBuilder varBuffer = new StringBuilder();
         int state = 0;
