@@ -226,7 +226,7 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         .with(new InitialContent())
         .with(new ExtraSlingContent())
 
-        .with(JcrConflictHandler.JCR_CONFLICT_HANDLER)
+        .with(JcrConflictHandler.createJcrConflictHandler())
         .with(new EditorHook(new VersionEditorProvider()))
 
         .with(securityProvider)
