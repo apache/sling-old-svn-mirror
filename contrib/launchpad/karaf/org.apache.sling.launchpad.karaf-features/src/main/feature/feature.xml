@@ -300,13 +300,11 @@
     <feature>scr</feature>
     <feature version="${project.version}">jackrabbit-sling</feature>
     <feature version="${project.version}">tika-sling</feature>
-    <bundle>mvn:org.apache.jackrabbit/oak-core/1.0.12</bundle>
-    <bundle>mvn:org.apache.jackrabbit/oak-commons/1.0.12</bundle>
-    <bundle>mvn:org.apache.jackrabbit/oak-mk/1.0.12</bundle>
-    <bundle>mvn:org.apache.jackrabbit/oak-mk-api/1.0.12</bundle>
-    <bundle>mvn:org.apache.jackrabbit/oak-mk-remote/1.0.12</bundle>
-    <bundle>mvn:org.apache.jackrabbit/oak-lucene/1.0.12</bundle>
-    <bundle>mvn:org.apache.jackrabbit/oak-blob/1.0.12</bundle>
+    <bundle>mvn:org.apache.jackrabbit/oak-core/1.2.0</bundle>
+    <bundle>mvn:org.apache.jackrabbit/oak-commons/1.2.0</bundle>
+    <bundle>mvn:org.apache.jackrabbit/oak-mk-api/1.2.0</bundle>
+    <bundle>mvn:org.apache.jackrabbit/oak-lucene/1.2.0</bundle>
+    <bundle>mvn:org.apache.jackrabbit/oak-blob/1.2.0</bundle>
     <!-- bundle dependencies -->
     <bundle dependency="true">mvn:com.google.guava/guava/15.0</bundle>
   </feature>
