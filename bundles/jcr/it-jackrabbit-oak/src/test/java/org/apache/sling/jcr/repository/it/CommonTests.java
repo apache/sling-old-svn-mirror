@@ -150,10 +150,10 @@ public abstract class CommonTests {
         
         // Optionally add webconsole
         if(webconsole) {
-            opt.add(mavenBundle("org.apache.felix", "org.apache.felix.webconsole", "4.2.2"));
+            opt.add(mavenBundle("org.apache.felix", "org.apache.felix.webconsole", "4.2.6"));
             opt.add(mavenBundle("org.apache.felix", "org.apache.felix.webconsole.plugins.ds", "1.0.0"));
             opt.add(mavenBundle("org.apache.felix", "org.apache.felix.webconsole.plugins.packageadmin", "1.0.0"));
-            opt.add(mavenBundle("org.apache.felix", "org.apache.felix.webconsole.plugins.event", "1.0.2"));
+            opt.add(mavenBundle("org.apache.felix", "org.apache.felix.webconsole.plugins.event", "1.1.0"));
             opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.webconsole", "1.0.2"));
             opt.add(mavenBundle("org.apache.geronimo.bundles", "json", "20090211_1"));
         }
@@ -181,8 +181,8 @@ public abstract class CommonTests {
         opt.add(mavenBundle("org.apache.servicemix.bundles", "org.apache.servicemix.bundles.concurrent", "1.3.4_1"));
 
         opt.add(mavenBundle("org.apache.geronimo.bundles", "commons-httpclient", "3.1_1"));
-        opt.add(mavenBundle("org.apache.tika", "tika-core", "1.2"));
-        opt.add(mavenBundle("org.apache.tika", "tika-bundle", "1.2"));
+        opt.add(mavenBundle("org.apache.tika", "tika-core", "1.6"));
+        opt.add(mavenBundle("org.apache.tika", "tika-bundle", "1.6"));
 
         opt.add(mavenBundle("org.apache.felix", "org.apache.felix.http.jetty", "2.2.2"));
         opt.add(mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.3.2"));
@@ -190,32 +190,32 @@ public abstract class CommonTests {
         opt.add(mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.0"));
         opt.add(mavenBundle("org.apache.felix", "org.apache.felix.inventory", "1.0.4"));
 
-        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.osgi", "2.2.0"));
-        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.json", "2.0.6"));
-        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.mime", "2.1.4"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.osgi", "2.2.2"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.json", "2.0.10"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.mime", "2.1.8"));
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.classloader", "1.3.2"));
-        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.scheduler", "2.4.2"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.scheduler", "2.4.6"));
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.threads", "3.2.0"));
 
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.launchpad.api", "1.1.0"));
-        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.auth.core", "1.1.6"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.auth.core", "1.3.6"));
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.discovery.api", "1.0.0"));
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.discovery.standalone", "1.0.0"));
 
-        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.api", "2.8.0"));
-        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.settings", "1.3.0"));
-        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.resourceresolver", "1.1.6"));
-        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.adapter", "2.1.0"));
-        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.resource", "2.3.12"));
-        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.classloader", "3.2.0"));
-        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.contentloader", "2.1.8"));
-        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.engine", "2.3.8"));
-        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.event", "3.2.0"));
-        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.serviceusermapper", "1.0.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.api", "2.9.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.settings", "1.3.6"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.resourceresolver", "1.2.4"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.adapter", "2.1.2"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.resource", "2.5.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.classloader", "3.2.2"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.contentloader", "2.1.10"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.engine", "2.4.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.event", "3.6.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.serviceusermapper", "1.2.0"));
         
-        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.testing.tools", "1.0.6"));
-        opt.add(mavenBundle("org.apache.httpcomponents", "httpcore-osgi", "4.1.2"));
-        opt.add(mavenBundle("org.apache.httpcomponents", "httpclient-osgi", "4.1.2"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.testing.tools", "1.0.8"));
+        opt.add(mavenBundle("org.apache.httpcomponents", "httpcore-osgi", "4.4.1"));
+        opt.add(mavenBundle("org.apache.httpcomponents", "httpclient-osgi", "4.4.1"));
 
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.jcr-wrapper", "2.0.0"));
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.api", "2.2.0"));

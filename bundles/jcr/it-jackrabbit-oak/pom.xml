@@ -50,7 +50,7 @@
             WARNING make sure oak.version and sling.oak.server.version 
             are in sync with bundles/jcr/oak-server
         -->
-        <oak.version>1.0.12</oak.version>
+        <oak.version>1.2.0</oak.version>
         <sling.oak.server.version>${project.version}</sling.oak.server.version>
         
         <!-- optionally activate the webconsole -->
@@ -165,6 +165,17 @@
                     </filesets>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>jackrabbit/**</exclude>
+                        <exclude>sling/**</exclude>
+                        <exclude>derby.log</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
@@ -194,7 +205,7 @@
         <dependency>
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-core</artifactId>
-            <version>1.4</version>
+            <version>1.6</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -272,7 +283,7 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-commons</artifactId>
-            <version>2.7.1</version>
+            <version>2.10.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
