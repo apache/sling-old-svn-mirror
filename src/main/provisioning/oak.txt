@@ -20,7 +20,7 @@
 [feature name=oak]
 
 [variables]
-    oak.version=1.0.12
+    oak.version=1.2.0
 
 # The segment node store is used via a configuration
 [artifacts startLevel=10 runModes=oak]
@@ -31,7 +31,6 @@
     com.google.guava/guava/15.0
     org.apache.jackrabbit/oak-core/${oak.version}
     org.apache.jackrabbit/oak-commons/${oak.version}
-    org.apache.jackrabbit/oak-mk-api/${oak.version}
     org.apache.jackrabbit/oak-lucene/${oak.version}
     org.apache.jackrabbit/oak-blob/${oak.version}
 
