@@ -119,7 +119,7 @@
   <feature name="sling-extension-event" version="${project.version}">
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-extension-discovery</feature>
-    <bundle>mvn:org.apache.sling/org.apache.sling.event/3.5.4</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.event/3.6.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.event.dea/1.0.0</bundle>
   </feature>
   <feature name="sling-extension-explorer" version="${project.version}">
@@ -169,7 +169,7 @@
   <feature name="sling-installer-provider-jcr" version="${project.version}">
     <feature version="${project.version}">sling-installer</feature>
     <feature version="${project.version}">sling-jcr</feature>
-    <bundle>mvn:org.apache.sling/org.apache.sling.installer.provider.jcr/3.1.14</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.installer.provider.jcr/3.1.16</bundle>
   </feature>
   <!-- Apache Sling Launchpad -->
   <feature name="sling-launchpad-content" version="${project.version}">
@@ -414,7 +414,7 @@
     <feature version="${project.version}">sling-extension-xss</feature>
     <feature version="${project.version}">sling-jcr-compiler</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly/1.0.2</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.4</bundle>
     <!-- bundle dependencies -->
     <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.rhino/1.7R2_4</bundle>
   </feature>
