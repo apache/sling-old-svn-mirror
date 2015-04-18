@@ -31,6 +31,7 @@
     com.google.guava/guava/15.0
     org.apache.jackrabbit/oak-core/${oak.version}
     org.apache.jackrabbit/oak-commons/${oak.version}
+    org.apache.jackrabbit/oak-mk-api/${oak.version}
     org.apache.jackrabbit/oak-lucene/${oak.version}
     org.apache.jackrabbit/oak-blob/${oak.version}
 
