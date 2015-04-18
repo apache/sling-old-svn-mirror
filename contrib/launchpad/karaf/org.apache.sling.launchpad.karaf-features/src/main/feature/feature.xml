@@ -371,6 +371,10 @@
     <feature version="${project.version}">sling</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.resourcemerger/1.2.8</bundle>
   </feature>
+  <feature name="sling-extension-security" version="${project.version}">
+    <feature version="${project.version}">sling</feature>
+    <bundle>mvn:org.apache.sling/org.apache.sling.security/1.0.10</bundle>
+  </feature>
   <feature name="sling-extension-urlrewriter" version="${project.version}">
     <feature version="${project.version}">sling</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.urlrewriter/0.0.2</bundle>
