@@ -124,12 +124,6 @@
             <version>2.2.8</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit-jcr-commons</artifactId>
-            <version>2.7.1</version>
-            <scope>provided</scope>
-        </dependency>
         <!-- used for getting type information of validators -->
         <dependency>
             <groupId>org.apache.commons</groupId>
