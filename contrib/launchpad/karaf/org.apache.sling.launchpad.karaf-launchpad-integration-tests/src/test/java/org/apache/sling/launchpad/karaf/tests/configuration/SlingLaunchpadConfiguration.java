@@ -112,8 +112,8 @@ public class SlingLaunchpadConfiguration {
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.launchpad.test-fragment").version("2.0.9-SNAPSHOT"),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.testing.samples.failingtests").version("1.0.7-SNAPSHOT"),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.testing.tools").version("1.0.9-SNAPSHOT"),
-            mavenBundle().groupId("org.apache.httpcomponents").artifactId("httpcore-osgi").version("4.4"),
-            mavenBundle().groupId("org.apache.httpcomponents").artifactId("httpclient-osgi").version("4.4")
+            mavenBundle().groupId("org.apache.httpcomponents").artifactId("httpcore-osgi").version("4.4.1"),
+            mavenBundle().groupId("org.apache.httpcomponents").artifactId("httpclient-osgi").version("4.4.1")
         );
     }
 
