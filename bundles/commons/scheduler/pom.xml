@@ -85,10 +85,12 @@
                             !weblogic.jdbc.jts,
                             !weblogic.jdbc.vendor.oracle,
                             org.apache.sling.discovery;resolution:=optional,
+                            !org.apache.sling.settings;resolution:=optional,
                             *                        
                         </Import-Package>
                         <DynamicImport-Package>
                             org.apache.sling.discovery;version="[1.0,2)",
+                            org.apache.sling.settings;version="[1.0,2)",
                             commonj.work,
                             com.mchange.v2.c3p0,
                             javax.ejb,
@@ -163,6 +165,12 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.discovery.api</artifactId>
+            <version>1.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.settings</artifactId>
             <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>

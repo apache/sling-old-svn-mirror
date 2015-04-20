@@ -91,6 +91,9 @@ public class QuartzScheduler implements BundleListener {
     /** Map key for the bundle information (Long). */
     static final String DATA_MAP_BUNDLE_ID = "QuartzJobScheduler.bundleId";
 
+    /** Map key for the bundle information (Long). */
+    static final String DATA_MAP_SERVICE_ID = "QuartzJobScheduler.serviceId";
+
     /** The quartz scheduler. */
     private volatile org.quartz.Scheduler scheduler;
 
@@ -252,6 +255,7 @@ public class QuartzScheduler implements BundleListener {
      * @return
      */
     private JobDataMap initDataMap(final Long    bundleId,
+                                   final Long    serviceId,
                                    final String  jobName,
                                    final Object  job,
                                    final InternalScheduleOptions options) {
@@ -263,6 +267,9 @@ public class QuartzScheduler implements BundleListener {
         jobDataMap.put(DATA_MAP_LOGGER, this.logger);
         if ( bundleId != null ) {
             jobDataMap.put(DATA_MAP_BUNDLE_ID, bundleId);
+        }
+        if ( serviceId != null ) {
+            jobDataMap.put(DATA_MAP_SERVICE_ID, serviceId);
         }
         if ( options.configuration != null ) {
             jobDataMap.put(DATA_MAP_CONFIGURATION, options.configuration);
@@ -304,13 +311,14 @@ public class QuartzScheduler implements BundleListener {
      * @see org.apache.sling.commons.scheduler.Scheduler#addJob(java.lang.String, java.lang.Object, java.util.Map, java.lang.String, boolean)
      */
     public void addJob(final Long bundleId,
+                       final Long serviceId,
                        final String name,
                        final Object job,
                        final Map<String, Serializable>    config,
                        final String schedulingExpression,
                        final boolean canRunConcurrently)
     throws SchedulerException {
-        this.scheduleJob(bundleId, job,
+        this.scheduleJob(bundleId, serviceId, job,
                 EXPR(schedulingExpression).name(name).config(config).canRunConcurrently(canRunConcurrently));
     }
 
@@ -318,19 +326,21 @@ public class QuartzScheduler implements BundleListener {
      * @see org.apache.sling.commons.scheduler.Scheduler#addPeriodicJob(java.lang.String, java.lang.Object, java.util.Map, long, boolean)
      */
     public void addPeriodicJob(final Long bundleId,
+                               final Long serviceId,
                                final String name,
                                final Object job,
                                final Map<String, Serializable> config,
                                final long period,
                                final boolean canRunConcurrently)
     throws SchedulerException {
-        this.addPeriodicJob(bundleId, name, job, config, period, canRunConcurrently, false);
+        this.addPeriodicJob(bundleId, serviceId, name, job, config, period, canRunConcurrently, false);
     }
 
     /**
      * @see org.apache.sling.commons.scheduler.Scheduler#addPeriodicJob(java.lang.String, java.lang.Object, java.util.Map, long, boolean, boolean)
      */
     public void addPeriodicJob(final Long bundleId,
+            final Long serviceId,
             final String name,
             final Object job,
             final Map<String, Serializable> config,
@@ -338,7 +348,7 @@ public class QuartzScheduler implements BundleListener {
             final boolean canRunConcurrently,
             final boolean startImmediate)
     throws SchedulerException {
-        this.scheduleJob(bundleId, job,
+        this.scheduleJob(bundleId, serviceId, job,
                 PERIODIC(period, startImmediate).name(name).config(config).canRunConcurrently(canRunConcurrently));
     }
 
@@ -361,18 +371,22 @@ public class QuartzScheduler implements BundleListener {
     /**
      * @see org.apache.sling.commons.scheduler.Scheduler#fireJob(java.lang.Object, java.util.Map)
      */
-    public void fireJob(final Long bundleId, final Object job, final Map<String, Serializable> config)
+    public void fireJob(final Long bundleId,
+            final Long serviceId,
+            final Object job, final Map<String, Serializable> config)
     throws SchedulerException {
-        this.scheduleJob(bundleId, job,
+        this.scheduleJob(bundleId, serviceId, job,
                 NOW().config(config));
     }
 
     /**
      * @see org.apache.sling.commons.scheduler.Scheduler#fireJobAt(java.lang.String, java.lang.Object, java.util.Map, java.util.Date)
      */
-    public void fireJobAt(final Long bundleId, final String name, final Object job, final Map<String, Serializable> config, final Date date)
+    public void fireJobAt(final Long bundleId,
+            final Long serviceId,
+            final String name, final Object job, final Map<String, Serializable> config, final Date date)
     throws SchedulerException {
-        this.scheduleJob(bundleId, job,
+        this.scheduleJob(bundleId, serviceId, job,
                 AT(date).name(name).config(config));
     }
 
@@ -380,11 +394,12 @@ public class QuartzScheduler implements BundleListener {
      * @see org.apache.sling.commons.scheduler.Scheduler#fireJob(java.lang.Object, java.util.Map, int, long)
      */
     public boolean fireJob(final Long bundleId,
+                           final Long serviceId,
                            final Object job,
                            final Map<String, Serializable> config,
                            final int times,
                            final long period) {
-        return this.schedule(bundleId, job,
+        return this.schedule(bundleId, serviceId, job,
                 NOW(times, period).config(config));
     }
 
@@ -392,13 +407,14 @@ public class QuartzScheduler implements BundleListener {
      * @see org.apache.sling.commons.scheduler.Scheduler#fireJobAt(java.lang.String, java.lang.Object, java.util.Map, java.util.Date, int, long)
      */
     public boolean fireJobAt(final Long bundleId,
+                             final Long serviceId,
                              final String name,
                              final Object job,
                              final Map<String, Serializable> config,
                              final Date date,
                              final int times,
                              final long period) {
-        return this.schedule(bundleId, job,
+        return this.schedule(bundleId, serviceId, job,
                 AT(date, times, period).name(name).config(config));
     }
 
@@ -574,9 +590,9 @@ public class QuartzScheduler implements BundleListener {
     /**
      * @see org.apache.sling.commons.scheduler.Scheduler#schedule(java.lang.Object, org.apache.sling.commons.scheduler.ScheduleOptions)
      */
-    public boolean schedule(final Long bundleId, final Object job, final ScheduleOptions options) {
+    public boolean schedule(final Long bundleId, final Long serviceId, final Object job, final ScheduleOptions options) {
         try {
-            this.scheduleJob(bundleId, job, options);
+            this.scheduleJob(bundleId, serviceId, job, options);
             return true;
         } catch (final IllegalArgumentException iae) {
             // ignore this and return false
@@ -615,7 +631,7 @@ public class QuartzScheduler implements BundleListener {
      * @throws SchedulerException if the job can't be scheduled
      * @throws IllegalArgumentException If the preconditions are not met
      */
-    private void scheduleJob(final Long bundleId, final Object job, final ScheduleOptions options)
+    private void scheduleJob(final Long bundleId, final Long serviceId, final Object job, final ScheduleOptions options)
     throws SchedulerException {
         this.checkJob(job);
 
@@ -657,7 +673,7 @@ public class QuartzScheduler implements BundleListener {
             final Trigger trigger = opts.trigger.withIdentity(name).build();
 
             // create the data map
-            final JobDataMap jobDataMap = this.initDataMap(bundleId, name, job, opts);
+            final JobDataMap jobDataMap = this.initDataMap(bundleId, serviceId, name, job, opts);
 
             final JobDetail detail = this.createJobDetail(name, jobDataMap, opts.canRunConcurrently);
 

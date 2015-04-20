@@ -132,7 +132,8 @@ public class WhiteboardHandler {
         }
         final String expression = (String)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_EXPRESSION);
         if ( expression != null ) {
-            this.scheduler.schedule(ref.getBundle().getBundleId(), job, this.scheduler.EXPR(expression)
+            this.scheduler.schedule(ref.getBundle().getBundleId(), (Long)ref.getProperty(Constants.SERVICE_ID),
+                    job, this.scheduler.EXPR(expression)
                     .name(name)
                     .canRunConcurrently((concurrent != null ? concurrent : true))
                     .onInstancesOnly(runOnOpts));
@@ -155,7 +156,8 @@ public class WhiteboardHandler {
                         this.logger.debug("Ignoring service {} : scheduler times is less than 1.", ref);
                     } else {
                         final int t = (times != null ? times : -1);
-                        this.scheduler.schedule(ref.getBundle().getBundleId(), job, this.scheduler.AT(date, t, period)
+                        this.scheduler.schedule(ref.getBundle().getBundleId(), (Long)ref.getProperty(Constants.SERVICE_ID),
+                                job, this.scheduler.AT(date, t, period)
                                 .name(name)
                                 .canRunConcurrently((concurrent != null ? concurrent : true))
                                 .onInstancesOnly(runOnOpts));
