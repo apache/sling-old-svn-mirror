@@ -77,7 +77,7 @@ public class SimpleDistributionQueueProvider implements DistributionQueueProvide
         return queueMap.values();
     }
 
-    public void enableQueueProcessing(@Nonnull DistributionQueueProcessor queueProcessor) {
+    public void enableQueueProcessing(@Nonnull DistributionQueueProcessor queueProcessor, String... queueNames) {
         ScheduleOptions options = scheduler.NOW(-1, 10)
                 .canRunConcurrently(false)
                 .name(getJobName());

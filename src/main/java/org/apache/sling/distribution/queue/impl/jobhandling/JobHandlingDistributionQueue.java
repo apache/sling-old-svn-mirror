@@ -52,10 +52,13 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
 
     private final JobManager jobManager;
 
-    JobHandlingDistributionQueue(String name, String topic, JobManager jobManager) {
+    private final boolean isActive;
+
+    JobHandlingDistributionQueue(String name, String topic, JobManager jobManager, boolean isActive) {
         this.name = name;
         this.topic = topic;
         this.jobManager = jobManager;
+        this.isActive = isActive;
     }
 
     @Nonnull
@@ -204,7 +207,11 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
     }
 
     public DistributionQueueState getState() {
-        return DistributionQueueUtils.calculateState(this);
+        if (!isActive) {
+            return DistributionQueueState.PAUSED;
+        } else {
+            return DistributionQueueUtils.calculateState(this);
+        }
     }
 
 }

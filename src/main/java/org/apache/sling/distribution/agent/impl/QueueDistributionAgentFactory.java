@@ -160,8 +160,8 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
         DistributionRequestType[] allowedRequests = new DistributionRequestType[] { DistributionRequestType.ADD, DistributionRequestType.DELETE };
 
 
-        return new SimpleDistributionAgent(agentName, false, serviceName,
-                null, packageExporter, requestAuthorizationStrategy,
+        return new SimpleDistributionAgent(agentName, false, null,
+                serviceName, null, packageExporter, requestAuthorizationStrategy,
                 queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory, distributionLog, allowedRequests, allowedRoots);
     }
 }

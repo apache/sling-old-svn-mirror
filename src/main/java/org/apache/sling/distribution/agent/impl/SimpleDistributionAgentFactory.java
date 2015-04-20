@@ -32,6 +32,7 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
+import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
@@ -92,6 +93,10 @@ public class SimpleDistributionAgentFactory extends AbstractDistributionAgentFac
 
     @Property(boolValue = true, label = "Queue Processing Enabled", description = "Whether or not the distribution agent should process packages in the queues.")
     public static final String QUEUE_PROCESSING_ENABLED = "queue.processing.enabled";
+
+    @Property(cardinality = 100, label = "Passive queues", description = "List of queues that should be disabled." +
+            "These queues will gather all the packages until they are removed explicitly.")
+    public static final String PASSIVE_QUEUES = "passiveQueues";
 
 
     @Property(name = "packageExporter.target", label = "Exporter", description = "The target reference for the DistributionPackageExporter used to receive (export) the distribution packages," +
@@ -155,11 +160,13 @@ public class SimpleDistributionAgentFactory extends AbstractDistributionAgentFac
         String serviceName = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
 
         boolean queueProcessingEnabled = PropertiesUtil.toBoolean(config.get(QUEUE_PROCESSING_ENABLED), true);
+        String[] passiveQueues = PropertiesUtil.toStringArray(config.get(PASSIVE_QUEUES), new String[0]);
+        passiveQueues = SettingsUtils.removeEmptyEntries(passiveQueues);
 
         DistributionQueueProvider queueProvider =  new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
         DistributionQueueDispatchingStrategy dispatchingStrategy = new SingleQueueDispatchingStrategy();
-        return new SimpleDistributionAgent(agentName, queueProcessingEnabled, serviceName,
-                packageImporter, packageExporter, requestAuthorizationStrategy,
+        return new SimpleDistributionAgent(agentName, queueProcessingEnabled, passiveQueues,
+                serviceName, packageImporter, packageExporter, requestAuthorizationStrategy,
                 queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory, distributionLog, null, null);
 
     }
