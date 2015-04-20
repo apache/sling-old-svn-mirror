@@ -19,11 +19,13 @@
 package org.apache.sling.discovery.impl.cluster;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import java.util.UUID;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
+import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.impl.cluster.helpers.AssertingTopologyEventListener;
 import org.apache.sling.discovery.impl.setup.Instance;
@@ -186,7 +188,18 @@ public class TopologyEventTest {
         instance1 = Instance.newStandaloneInstance("/var/discovery/impl/", 
                 "firstInstanceB", true, 20 /* heartbeat-timeout */, 5 /*min event delay*/,
                 UUID.randomUUID().toString(), false /*delayInitEventUntilVoted*/);
-        AssertingTopologyEventListener l1 = new AssertingTopologyEventListener("instance1.l1");
+        AssertingTopologyEventListener l1 = new AssertingTopologyEventListener("instance1.l1") {
+            private volatile boolean firstEvent = false;
+            @Override
+            public void handleTopologyEvent(TopologyEvent event) {
+                super.handleTopologyEvent(event);
+                if (firstEvent) {
+                    // only handle the first event - that one must be INIT with isCurrent==false
+                    assertFalse(event.getNewView().isCurrent());
+                    firstEvent = false;
+                }
+            }
+        };
         l1.addExpected(Type.TOPOLOGY_INIT);
         instance1.bindTopologyEventListener(l1);
         
@@ -257,6 +270,21 @@ public class TopologyEventTest {
         assertEquals(2, l2.getEvents().size());
         assertEquals(0, l1Two.getUnexpectedCount());
         assertEquals(2, l1Two.getEvents().size());
+        
+        // now meanwhile - for SLING-4638 : register a listener 'late':
+        // this one should get an INIT with a newView that has isCurrent()==false
+        AssertingTopologyEventListener late = new AssertingTopologyEventListener("instance1.late") {
+            @Override
+            public void handleTopologyEvent(TopologyEvent event) {
+                super.handleTopologyEvent(event);
+                // also check if the newView has isCurrent==false
+                assertFalse(event.getNewView().isCurrent());
+                // plus lets now directly ask the discovery service for getTopology and check that
+                assertFalse(instance1.getDiscoveryService().getTopology().isCurrent());
+            }
+        };
+        late.addExpected(Type.TOPOLOGY_INIT);
+        instance1.bindTopologyEventListener(late);
 
         // wait until CHANGED is sent - which is 3 sec after CHANGING
         l1.addExpected(Type.TOPOLOGY_CHANGED);
