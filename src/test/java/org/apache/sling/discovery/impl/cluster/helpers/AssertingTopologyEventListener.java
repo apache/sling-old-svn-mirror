@@ -18,6 +18,11 @@
  */
 package org.apache.sling.discovery.impl.cluster.helpers;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -72,6 +77,43 @@ public class AssertingTopologyEventListener implements TopologyEventListener {
                 unexpectedEvents_.add(event);
             }
             throw er;
+        }
+        try{
+        switch(event.getType()) {
+        case PROPERTIES_CHANGED: {
+            assertNotNull(event.getOldView());
+            assertNotNull(event.getNewView());
+            assertTrue(event.getNewView().isCurrent());
+            assertFalse(event.getOldView().isCurrent());
+            break;
+        }
+        case TOPOLOGY_CHANGED: {
+            assertNotNull(event.getOldView());
+            assertNotNull(event.getNewView());
+            assertTrue(event.getNewView().isCurrent());
+            assertFalse(event.getOldView().isCurrent());
+            break;
+        }
+        case TOPOLOGY_CHANGING: {
+            assertNotNull(event.getOldView());
+            assertNull(event.getNewView());
+            assertFalse(event.getOldView().isCurrent());
+            break;
+        }
+        case TOPOLOGY_INIT: {
+            assertNull(event.getOldView());
+            assertNotNull(event.getNewView());
+            // cannot make any assertions on event.getNewView().isCurrent()
+            // as that can be true or false
+            break;
+        }
+        }
+        } catch(RuntimeException re) {
+            logger.error("RuntimeException: "+re, re);
+            throw re;
+        } catch(AssertionError e) {
+            logger.error("AssertionError: "+e, e);
+            throw e;
         }
         events_.add(event);
     }
