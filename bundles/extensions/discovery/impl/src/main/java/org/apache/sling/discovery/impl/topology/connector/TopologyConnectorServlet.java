@@ -42,7 +42,6 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.cluster.ClusterViewService;
-import org.apache.sling.discovery.impl.common.heartbeat.HeartbeatHandler;
 import org.apache.sling.discovery.impl.topology.announcement.Announcement;
 import org.apache.sling.discovery.impl.topology.announcement.AnnouncementFilter;
 import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistry;
@@ -79,9 +78,6 @@ public class TopologyConnectorServlet extends HttpServlet {
 
     @Reference
     private ClusterViewService clusterViewService;
-
-    @Reference
-    private HeartbeatHandler heartbeatHandler;
 
     @Reference
     private HttpService httpService;
