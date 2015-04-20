@@ -194,10 +194,6 @@ public class DiscoveryServiceImpl implements DiscoveryService {
 
             TopologyViewImpl newView = (TopologyViewImpl) getTopology();
             final boolean isIsolatedView = isIsolated(newView);
-            if (isIsolatedView) {
-                // SLING-4638 : mark newView as old (corresponds to isolated)
-                newView.markOld();
-            }
             if (config.isDelayInitEventUntilVoted() && isIsolatedView) {
                 // SLING-3750: just issue a log.info about the delaying
                 logger.info("activate: this instance is in isolated mode and must yet finish voting before it can send out TOPOLOGY_INIT.");
