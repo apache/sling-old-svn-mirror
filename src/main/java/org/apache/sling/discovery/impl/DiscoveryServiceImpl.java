@@ -131,8 +131,12 @@ public class DiscoveryServiceImpl implements DiscoveryService {
     /** the old view previously valid and sent to the TopologyEventListeners **/
     private TopologyViewImpl oldView;
 
-    /** whether or not there is a delayed event sending pending **/
-    private boolean delayedEventPending = false;
+    /** 
+     * whether or not there is a delayed event sending pending.
+     * Marked volatile to allow getTopology() to read this without need for
+     * synchronized(lock) (which would be deadlock-prone). (introduced with SLING-4638).
+     **/
+    private volatile boolean delayedEventPending = false;
 
     private ServiceRegistration mbeanRegistration;
 
@@ -174,6 +178,7 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         slingId = settingsService.getSlingId();
 
         oldView = (TopologyViewImpl) getTopology();
+        oldView.markOld();
 
         // make sure the first heartbeat is issued as soon as possible - which
         // is right after this service starts. since the two (discoveryservice
@@ -189,6 +194,10 @@ public class DiscoveryServiceImpl implements DiscoveryService {
 
             TopologyViewImpl newView = (TopologyViewImpl) getTopology();
             final boolean isIsolatedView = isIsolated(newView);
+            if (isIsolatedView) {
+                // SLING-4638 : mark newView as old (corresponds to isolated)
+                newView.markOld();
+            }
             if (config.isDelayInitEventUntilVoted() && isIsolatedView) {
                 // SLING-3750: just issue a log.info about the delaying
                 logger.info("activate: this instance is in isolated mode and must yet finish voting before it can send out TOPOLOGY_INIT.");
@@ -281,8 +290,15 @@ public class DiscoveryServiceImpl implements DiscoveryService {
             this.eventListeners = currentList
                     .toArray(new TopologyEventListener[currentList.size()]);
             if (activated && !initEventDelayed) {
+                final TopologyViewImpl topology = (TopologyViewImpl) getTopology();
+                if (delayedEventPending) {
+                    // that means that for other TopologyEventListeners that were already bound
+                    // and in general: the topology is currently CHANGING
+                    // so we must reflect this with the isCurrent() flag (SLING-4638)
+                    topology.markOld();
+                }
                 sendTopologyEvent(eventListener, new TopologyEvent(
-                        Type.TOPOLOGY_INIT, null, getTopology()));
+                        Type.TOPOLOGY_INIT, null, topology));
             }
         }
     }
@@ -481,7 +497,10 @@ public class DiscoveryServiceImpl implements DiscoveryService {
                 .listInstances(localClusterView);
         topology.addInstances(attachedInstances);
 
-        // TODO: isCurrent() might be wrong!!!
+        // SLING-4638: set 'current' correctly
+        if (isIsolated(topology) || delayedEventPending) {
+            topology.markOld();
+        }
 
         return topology;
     }
@@ -534,7 +553,7 @@ public class DiscoveryServiceImpl implements DiscoveryService {
             }
             logger.info("handlePotentialTopologyChange: new view is no longer isolated sending delayed TOPOLOGY_INIT now.");
             final TopologyEvent initEvent = new TopologyEvent(Type.TOPOLOGY_INIT, null,
-                    newView);
+                    newView); // SLING-4638: OK: newView is current==true as we're just coming out of initEventDelayed first time.
             for (final TopologyEventListener da : eventListeners) {
                 sendTopologyEvent(da, initEvent);
             }
@@ -745,6 +764,8 @@ public class DiscoveryServiceImpl implements DiscoveryService {
 	            return;
 	        }
 	        logger.error("forcedShutdown: sending TOPOLOGY_CHANGING to all listeners");
+	        // SLING-4638: make sure the oldView is really marked as old:
+	        oldView.markOld();
             for (final TopologyEventListener da : eventListeners) {
                 sendTopologyEvent(da, new TopologyEvent(Type.TOPOLOGY_CHANGING, oldView,
                         null));
