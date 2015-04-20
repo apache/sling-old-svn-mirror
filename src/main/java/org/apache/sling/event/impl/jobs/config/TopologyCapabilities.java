@@ -69,6 +69,9 @@ public class TopologyCapabilities {
     /** JobManagerConfiguration. */
     private final JobManagerConfiguration jobManagerConfiguration;
 
+    /** Topology view. */
+    private final TopologyView view;
+
     public static final class InstanceDescriptionComparator implements Comparator<InstanceDescription> {
 
         private final String localClusterId;
@@ -145,6 +148,7 @@ public class TopologyCapabilities {
             this.instanceMap.put(desc.getSlingId(), desc);
         }
         this.instanceCapabilities = newCaps;
+        this.view = view;
     }
 
     /**
@@ -169,7 +173,7 @@ public class TopologyCapabilities {
      * @return {@code true} if still active.
      */
     public boolean isActive() {
-        return this.active;
+        return this.active && this.view.isCurrent();
     }
 
     /**
