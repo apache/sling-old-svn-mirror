@@ -53,7 +53,7 @@ public class SchedulerServiceFactory implements Scheduler {
      * @see org.apache.sling.commons.scheduler.Scheduler#schedule(java.lang.Object, org.apache.sling.commons.scheduler.ScheduleOptions)
      */
     public boolean schedule(final Object job, final ScheduleOptions options) {
-        return this.scheduler.schedule(this.bundleId, job, options);
+        return this.scheduler.schedule(this.bundleId, null, job, options);
     }
 
     /**
@@ -104,7 +104,7 @@ public class SchedulerServiceFactory implements Scheduler {
     public void addJob(final String name, final Object job,
             final Map<String, Serializable> config, final String schedulingExpression,
             final boolean canRunConcurrently) throws Exception {
-        this.scheduler.addJob(this.bundleId, name, job, config, schedulingExpression, canRunConcurrently);
+        this.scheduler.addJob(this.bundleId, null, name, job, config, schedulingExpression, canRunConcurrently);
     }
 
     /**
@@ -113,7 +113,7 @@ public class SchedulerServiceFactory implements Scheduler {
     public void addPeriodicJob(final String name, final Object job,
             final Map<String, Serializable> config, final long period,
             final boolean canRunConcurrently) throws Exception {
-        this.scheduler.addPeriodicJob(this.bundleId, name, job, config, period, canRunConcurrently);
+        this.scheduler.addPeriodicJob(this.bundleId, null, name, job, config, period, canRunConcurrently);
     }
 
     /**
@@ -123,7 +123,7 @@ public class SchedulerServiceFactory implements Scheduler {
             final Map<String, Serializable> config, final long period,
             final boolean canRunConcurrently, final boolean startImmediate)
             throws Exception {
-        this.scheduler.addPeriodicJob(this.bundleId, name, job, config, period, canRunConcurrently, startImmediate);
+        this.scheduler.addPeriodicJob(this.bundleId, null, name, job, config, period, canRunConcurrently, startImmediate);
     }
 
     /**
@@ -131,7 +131,7 @@ public class SchedulerServiceFactory implements Scheduler {
      */
     public void fireJob(final Object job, final Map<String, Serializable> config)
             throws Exception {
-        this.scheduler.fireJob(this.bundleId, job, config);
+        this.scheduler.fireJob(this.bundleId, null, job, config);
     }
 
     /**
@@ -139,7 +139,7 @@ public class SchedulerServiceFactory implements Scheduler {
      */
     public boolean fireJob(final Object job, final Map<String, Serializable> config,
             final int times, final long period) {
-        return this.scheduler.fireJob(this.bundleId, job, config, times, period);
+        return this.scheduler.fireJob(this.bundleId, null, job, config, times, period);
     }
 
     /**
@@ -147,7 +147,7 @@ public class SchedulerServiceFactory implements Scheduler {
      */
     public void fireJobAt(final String name, final Object job,
             final Map<String, Serializable> config, final Date date) throws Exception {
-        this.scheduler.fireJob(this.bundleId, job, config);
+        this.scheduler.fireJob(this.bundleId, null, job, config);
     }
 
     /**
@@ -155,7 +155,7 @@ public class SchedulerServiceFactory implements Scheduler {
      */
     public boolean fireJobAt(final String name, final Object job,
             final Map<String, Serializable> config, final Date date, final int times, final long period) {
-        return this.scheduler.fireJobAt(this.bundleId, name, job, config, date, times, period);
+        return this.scheduler.fireJobAt(this.bundleId, null, name, job, config, date, times, period);
     }
 
     public void removeJob(final String name) throws NoSuchElementException {

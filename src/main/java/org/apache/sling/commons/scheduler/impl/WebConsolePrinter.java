@@ -72,6 +72,7 @@ public class WebConsolePrinter {
                 pw.println(s.getSchedulerName());
                 pw.print  ("Id     : ");
                 pw.println(s.getSchedulerInstanceId());
+                pw.println();
                 final List<String> groups = s.getJobGroupNames();
                 for(final String group : groups) {
                     final Set<JobKey> keys = s.getJobKeys(GroupMatcher.jobGroupEquals(group));
@@ -96,11 +97,46 @@ public class WebConsolePrinter {
                             if ( runOn != null ) {
                                 pw.print(", runOn: ");
                                 pw.print(Arrays.toString(runOn));
-                            }
+                                // check run on information
+                                if ( runOn.length == 1 &&
+                                     (org.apache.sling.commons.scheduler.Scheduler.VALUE_RUN_ON_LEADER.equals(runOn[0]) || org.apache.sling.commons.scheduler.Scheduler.VALUE_RUN_ON_SINGLE.equals(runOn[0])) ) {
+                                    if ( QuartzJobExecutor.DISCOVERY_AVAILABLE.get() ) {
+                                        if ( QuartzJobExecutor.DISCOVERY_INFO_AVAILABLE.get() ) {
+                                            if ( !QuartzJobExecutor.IS_LEADER.get() ) {
+                                                pw.print(" (inactive: not leader)");
+                                            }
+                                        } else {
+                                            pw.print(" (inactive: no discovery info)");
+                                        }
+                                    } else {
+                                        pw.print(" (inactive: no discovery)");
+                                    }
+                                } else { // sling IDs
+                                    final String myId = QuartzJobExecutor.SLING_ID;
+                                    if ( myId == null ) {
+                                        pw.print(" (inactive: no Sling settings)");
+                                    } else {
+                                        boolean schedule = false;
+                                        for(final String id : runOn ) {
+                                            if ( myId.equals(id) ) {
+                                                schedule = true;
+                                                break;
+                                            }
+                                        }
+                                        if ( !schedule ) {
+                                            pw.print(" (inactive: Sling ID)");
+                                        }
+                                    }
+                                }                            }
                             final Long bundleId = (Long)detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_BUNDLE_ID);
                             if ( bundleId != null ) {
                                 pw.print(", bundleId: ");
                                 pw.print(String.valueOf(bundleId));
+                            }
+                            final Long serviceId = (Long)detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_SERVICE_ID);
+                            if ( serviceId != null ) {
+                                pw.print(", serviceId: ");
+                                pw.print(String.valueOf(serviceId));
                             }
                             pw.println();
                             for(final Trigger trigger : s.getTriggersOfJob(key)) {
@@ -119,5 +155,6 @@ public class WebConsolePrinter {
         } else {
             pw.println("Status : not active");
         }
+        pw.println();
     }
 }
