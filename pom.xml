@@ -85,7 +85,7 @@
                             !weblogic.jdbc.jts,
                             !weblogic.jdbc.vendor.oracle,
                             org.apache.sling.discovery;resolution:=optional,
-                            !org.apache.sling.settings;resolution:=optional,
+                            org.apache.sling.settings;resolution:=optional,
                             *                        
                         </Import-Package>
                         <DynamicImport-Package>
