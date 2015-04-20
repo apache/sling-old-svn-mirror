@@ -58,7 +58,7 @@ public class JobHandlingDistributionQueueTest {
         when(jobManager.createJob(topic)).thenReturn(builder);
         when(jobManager.findJobs(JobManager.QueryType.ALL, topic, -1)).thenReturn(Collections.<Job>emptySet());
         when(builder.properties(any(Map.class))).thenReturn(builder);
-        DistributionQueue queue = new JobHandlingDistributionQueue("aname", topic, jobManager);
+        DistributionQueue queue = new JobHandlingDistributionQueue("aname", topic, jobManager, true);
         DistributionQueueItem distributionQueueItem = mock(DistributionQueueItem.class);
         DistributionPackageInfo packageInfo = new DistributionPackageInfo();
         packageInfo.setPaths(new String[]{"/foo"});
@@ -80,7 +80,7 @@ public class JobHandlingDistributionQueueTest {
         when(jobManager.createJob(topic)).thenReturn(builder);
         when(jobManager.findJobs(JobManager.QueryType.ALL, topic, -1)).thenReturn(Collections.<Job>emptySet());
         when(builder.properties(any(Map.class))).thenReturn(builder);
-        DistributionQueue queue = new JobHandlingDistributionQueue("aname", topic, jobManager);
+        DistributionQueue queue = new JobHandlingDistributionQueue("aname", topic, jobManager, true);
         DistributionQueueItem distributionQueueItem = mock(DistributionQueueItem.class);
         DistributionPackageInfo packageInfo = new DistributionPackageInfo();
         packageInfo.setPaths(new String[]{"/foo"});

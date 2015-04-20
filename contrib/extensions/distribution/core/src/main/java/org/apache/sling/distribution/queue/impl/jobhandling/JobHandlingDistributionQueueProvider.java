@@ -19,8 +19,14 @@
 package org.apache.sling.distribution.queue.impl.jobhandling;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Dictionary;
+import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueException;
@@ -47,6 +53,7 @@ public class JobHandlingDistributionQueueProvider implements DistributionQueuePr
     private ServiceRegistration jobConsumer = null;
 
     private BundleContext context;
+    private Set<String> processingQueueNames = null;
 
 
     public JobHandlingDistributionQueueProvider(String name, JobManager jobManager, BundleContext context) {
@@ -61,23 +68,39 @@ public class JobHandlingDistributionQueueProvider implements DistributionQueuePr
     @Nonnull
     public DistributionQueue getQueue(@Nonnull String queueName) throws DistributionQueueException {
         String topic = JobHandlingDistributionQueue.DISTRIBUTION_QUEUE_TOPIC + '/' + name + "/" + queueName;
-        return new JobHandlingDistributionQueue(queueName, topic, jobManager);
+        boolean isActive = jobConsumer != null && (processingQueueNames == null ||  processingQueueNames.contains(queueName));
+
+        return new JobHandlingDistributionQueue(queueName, topic, jobManager, isActive);
     }
 
 
-    public void enableQueueProcessing(@Nonnull DistributionQueueProcessor queueProcessor) throws DistributionQueueException {
+    public void enableQueueProcessing(@Nonnull DistributionQueueProcessor queueProcessor, String... queueNames) throws DistributionQueueException {
         if (jobConsumer != null) {
             throw new DistributionQueueException("job already registered");
         }
         // eventually register job consumer for sling job handling based queues
         Dictionary<String, Object> jobProps = new Hashtable<String, Object>();
-        String topic = JobHandlingDistributionQueue.DISTRIBUTION_QUEUE_TOPIC + '/' + name;
-        String childTopic = topic + "/*";
-        jobProps.put(JobConsumer.PROPERTY_TOPICS, new String[]{topic, childTopic});
+        String mainTopic = JobHandlingDistributionQueue.DISTRIBUTION_QUEUE_TOPIC + '/' + name;
+
+        List<String> topicList = new ArrayList<String>();
+        if (queueNames == null) {
+            topicList.add(mainTopic + "/*");
+            processingQueueNames = null;
+        } else {
+            for (String queueName : queueNames) {
+                topicList.add(mainTopic + "/" + queueName);
+            }
+            processingQueueNames = new HashSet<String>(Arrays.asList(queueNames));
+        }
+
+        jobProps.put(JobConsumer.PROPERTY_TOPICS, topicList.toArray(new String[0]));
+
         log.info("registering job consumer for agent {}", name);
         log.info("qp: {}, jp: {}", queueProcessor, jobProps);
         jobConsumer = context.registerService(JobConsumer.class.getName(), new DistributionAgentJobConsumer(queueProcessor), jobProps);
         log.info("job consumer for agent {} registered", name);
+
+
     }
 
     public void disableQueueProcessing() {
@@ -86,6 +109,7 @@ public class JobHandlingDistributionQueueProvider implements DistributionQueuePr
             log.info("job consumer for agent {} unregistered", name);
             jobConsumer = null;
         }
+        processingQueueNames = null;
         log.info("unregistering job consumer for agent {}", name);
 
     }

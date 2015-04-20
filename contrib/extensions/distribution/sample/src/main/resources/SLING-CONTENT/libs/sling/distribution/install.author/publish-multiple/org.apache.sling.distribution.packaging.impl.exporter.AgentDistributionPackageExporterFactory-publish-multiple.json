@@ -1,0 +1,8 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "publish-multiple-passivequeue1",
+
+    "agent.target": "(name=publish-multiple)",
+
+    "queue": "passivequeue1"
+}

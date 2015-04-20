@@ -59,43 +59,50 @@ public abstract class DistributionIntegrationTestBase {
         publishClient = new SlingClient(publish.getServerBaseUrl(), publish.getServerUsername(), publish.getServerPassword());
 
         try {
-            assertExists(authorClient, authorAgentConfigUrl("publish"));
 
-            // change the url for publish agent and wait for it to start
             String remoteImporterUrl = publish.getServerBaseUrl() + importerUrl("default");
-
-
-            authorClient.setProperties(authorAgentConfigUrl("publish"),
-                    "packageImporter.endpoints", remoteImporterUrl);
-
-
-            Thread.sleep(3000);
-
-            assertExists(authorClient, agentUrl("publish"));
-
-
-            assertExists(authorClient, authorAgentConfigUrl("publish-multiple"));
-            setArrayProperties(author, authorAgentConfigUrl("publish-multiple"),
-                    "packageImporter.endpoints", remoteImporterUrl, remoteImporterUrl + "badaddress");
-
-
-            Thread.sleep(3000);
-
-            assertExists(authorClient, agentUrl("publish-multiple"));
-
-            assertExists(authorClient, authorAgentConfigUrl("publish-reverse"));
-
             String remoteExporterUrl = publish.getServerBaseUrl() + exporterUrl("reverse");
 
-            authorClient.setProperties(authorAgentConfigUrl("publish-reverse"), "packageExporter.endpoints", remoteExporterUrl);
 
-            Thread.sleep(3000);
-            assertExists(authorClient, agentUrl("publish-reverse"));
 
-            assertExists(publishClient, exporterUrl("reverse"));
-            assertExists(publishClient, exporterUrl("default"));
-            assertExists(publishClient, importerUrl("default"));
+            {
+                assertExists(authorClient, authorAgentConfigUrl("publish"));
 
+                authorClient.setProperties(authorAgentConfigUrl("publish"),
+                        "packageImporter.endpoints", remoteImporterUrl);
+
+
+                Thread.sleep(3000);
+
+                assertExists(authorClient, agentUrl("publish"));
+            }
+
+
+            {
+                assertExists(authorClient, authorAgentConfigUrl("publish-multiple"));
+                setArrayProperties(author, authorAgentConfigUrl("publish-multiple"),
+                        "packageImporter.endpoints", remoteImporterUrl, remoteImporterUrl + "badaddress");
+
+
+                Thread.sleep(3000);
+
+                assertExists(authorClient, agentUrl("publish-multiple"));
+                assertExists(authorClient, exporterUrl("publish-multiple-passivequeue1"));
+
+            }
+
+            {
+                assertExists(authorClient, authorAgentConfigUrl("publish-reverse"));
+
+                authorClient.setProperties(authorAgentConfigUrl("publish-reverse"), "packageExporter.endpoints", remoteExporterUrl);
+
+                Thread.sleep(3000);
+                assertExists(authorClient, agentUrl("publish-reverse"));
+
+                assertExists(publishClient, exporterUrl("reverse"));
+                assertExists(publishClient, exporterUrl("default"));
+                assertExists(publishClient, importerUrl("default"));
+            }
 
         } catch (Exception ex) {
             throw new RuntimeException(ex);

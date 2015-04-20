@@ -69,7 +69,7 @@ public class SimpleDistributionAgentTest {
         ResourceResolverFactory resolverFactory = mock(ResourceResolverFactory.class);
 
         SimpleDistributionAgent agent = new SimpleDistributionAgent(name,
-                false, "serviceName", packageImporter,
+                false, null, "serviceName", packageImporter,
                 packageExporter, packageExporterStrategy,
                 queueProvider, distributionHandler,
                 distributionEventFactory, resolverFactory, mock(DefaultDistributionLog.class), null, null);
@@ -99,7 +99,7 @@ public class SimpleDistributionAgentTest {
         DistributionEventFactory distributionEventFactory = mock(DistributionEventFactory.class);
         ResourceResolverFactory resolverFactory = mock(ResourceResolverFactory.class);
         SimpleDistributionAgent agent = new SimpleDistributionAgent(name,
-                false, "subServiceName", packageImporter,
+                false, null, "subServiceName", packageImporter,
                 packageExporter, packageExporterStrategy,
                 queueProvider,
                 distributionHandler, distributionEventFactory, resolverFactory, mock(DefaultDistributionLog.class), null, null);
@@ -133,7 +133,7 @@ public class SimpleDistributionAgentTest {
         ResourceResolverFactory resolverFactory = mock(ResourceResolverFactory.class);
 
         SimpleDistributionAgent agent = new SimpleDistributionAgent(name,
-                false, "serviceName", packageImporter,
+                false, null, "serviceName", packageImporter,
                 packageExporter, packageExporterStrategy,
                 queueProvider, distributionHandler,
                 distributionEventFactory, resolverFactory, mock(DefaultDistributionLog.class), null, null);
@@ -163,7 +163,7 @@ public class SimpleDistributionAgentTest {
         ResourceResolverFactory resolverFactory = mock(ResourceResolverFactory.class);
 
         SimpleDistributionAgent agent = new SimpleDistributionAgent(name,
-                false, "serviceName", packageImporter,
+                false, null, "serviceName", packageImporter,
                 packageExporter, packageExporterStrategy,
                 queueProvider, distributionHandler,
                 distributionEventFactory, resolverFactory, mock(DefaultDistributionLog.class), null, null);
@@ -186,7 +186,7 @@ public class SimpleDistributionAgentTest {
         ResourceResolverFactory resolverFactory = mock(ResourceResolverFactory.class);
 
         SimpleDistributionAgent agent = new SimpleDistributionAgent(name,
-                false, "serviceName", packageImporter,
+                false, null, "serviceName", packageImporter,
                 packageExporter, packageExporterStrategy,
                 queueProvider, distributionHandler,
                 distributionEventFactory, resolverFactory, mock(DefaultDistributionLog.class), null, null);
@@ -208,7 +208,7 @@ public class SimpleDistributionAgentTest {
         ResourceResolverFactory resolverFactory = mock(ResourceResolverFactory.class);
 
         SimpleDistributionAgent agent = new SimpleDistributionAgent(name,
-                false, "serviceName", packageImporter,
+                false, null, "serviceName", packageImporter,
                 packageExporter, packageExporterStrategy,
                 queueProvider, distributionHandler,
                 distributionEventFactory, resolverFactory, mock(DefaultDistributionLog.class), null, null);
@@ -236,7 +236,7 @@ public class SimpleDistributionAgentTest {
         ));
 
         SimpleDistributionAgent agent = new SimpleDistributionAgent(name,
-                false, "serviceName", packageImporter,
+                false, null, "serviceName", packageImporter,
                 packageExporter, packageExporterStrategy,
                 queueProvider, queueDistributionStrategy,
                 distributionEventFactory, resolverFactory, mock(DefaultDistributionLog.class), null, new String[] { "/content" });
@@ -275,7 +275,7 @@ public class SimpleDistributionAgentTest {
         ));
 
         SimpleDistributionAgent agent = new SimpleDistributionAgent(name,
-                false, "serviceName", packageImporter,
+                false, null, "serviceName", packageImporter,
                 packageExporter, packageExporterStrategy,
                 queueProvider, queueDistributionStrategy,
                 distributionEventFactory, resolverFactory, mock(DefaultDistributionLog.class), null, new String[] { "/content" });

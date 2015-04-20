@@ -131,17 +131,9 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
             try {
                 DistributionQueue queue = agent.getQueue(queueName);
 
-                DistributionAgentState agentState = agent.getState();
-
                 result.put(SLING_RESOURCE_TYPE, DistributionResourceTypes.AGENT_QUEUE_RESOURCE_TYPE);
 
-                // if the agent is paused report also the queues as paused.
-                // TODO: to this at java API level
-                if (DistributionAgentState.PAUSED.equals(agentState)) {
-                    result.put("state", DistributionQueueState.PAUSED.name());
-                } else {
-                    result.put("state", queue.getState().name());
-                }
+                result.put("state", queue.getState().name());
                 result.put("empty", queue.isEmpty());
                 result.put("itemsCount", queue.getItemsCount());
 

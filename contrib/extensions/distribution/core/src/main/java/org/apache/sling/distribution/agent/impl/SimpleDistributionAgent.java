@@ -19,12 +19,16 @@
 package org.apache.sling.distribution.agent.impl;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
@@ -90,9 +94,11 @@ public class SimpleDistributionAgent implements DistributionAgent {
     private final DefaultDistributionLog log;
     private final DistributionRequestType[] allowedRequests;
     private final String[] allowedRoots;
+    private final String[] passiveQueues;
 
     public SimpleDistributionAgent(String name,
                                    boolean queueProcessingEnabled,
+                                   String[] passiveQueues,
                                    String subServiceName,
                                    DistributionPackageImporter distributionPackageImporter,
                                    DistributionPackageExporter distributionPackageExporter,
@@ -107,6 +113,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
         this.log = log;
         this.allowedRequests = allowedRequests;
         this.allowedRoots = allowedRoots;
+        this.passiveQueues = passiveQueues;
 
         // check configuration is valid
         if (name == null
@@ -306,7 +313,15 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
         if (!isPassive()) {
             try {
-                queueProvider.enableQueueProcessing(new PackageQueueProcessor());
+
+                Set<String> allQueues = new HashSet<String>(queueDistributionStrategy.getQueueNames());
+
+                if (passiveQueues != null) {
+                    Set<String> passiveQueues = new HashSet<String>(Arrays.asList(this.passiveQueues));
+                    allQueues.removeAll(passiveQueues);
+                }
+
+                queueProvider.enableQueueProcessing(new PackageQueueProcessor(), allQueues.toArray(new String[0]));
             } catch (DistributionQueueException e) {
                 log.error("cannot enable queue processing", e);
             }
@@ -475,7 +490,6 @@ public class SimpleDistributionAgent implements DistributionAgent {
     class PackageQueueProcessor implements DistributionQueueProcessor {
         public boolean process(@Nonnull String queueName, @Nonnull DistributionQueueItem queueItem) {
             try {
-
                 log.debug("queue {} processing item {}", queueName, queueItem);
 
                 boolean success = processQueueItem(queueName, queueItem);
