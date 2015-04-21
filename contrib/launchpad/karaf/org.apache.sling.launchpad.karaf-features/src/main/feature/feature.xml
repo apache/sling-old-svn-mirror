@@ -61,7 +61,7 @@
     <feature version="${project.version}">commons-sling</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.api/2.9.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.auth.core/1.3.6</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.engine/2.4.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.engine/2.4.2</bundle>
     <!-- org.apache.sling.resourceresolver requires jcr -->
     <bundle>mvn:org.apache.sling/org.apache.sling.resourceresolver/1.2.4</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.serviceusermapper/1.2.0</bundle>
@@ -141,7 +141,7 @@
   </feature>
   <feature name="sling-extension-resource-inventory" version="${project.version}">
     <feature version="${project.version}">sling</feature>
-    <bundle>mvn:org.apache.sling/org.apache.sling.resource.inventory/1.0.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.resource.inventory/1.0.4</bundle>
     <!-- bundle dependencies -->
     <bundle dependency="true">mvn:org.apache.commons/commons-lang3/3.3</bundle>
   </feature>
@@ -169,7 +169,7 @@
   </feature>
   <feature name="sling-installer-provider-file" version="${project.version}">
     <feature version="${project.version}">sling-installer</feature>
-    <bundle>mvn:org.apache.sling/org.apache.sling.installer.provider.file/1.0.4</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.installer.provider.file/1.1.0</bundle>
   </feature>
   <feature name="sling-installer-provider-jcr" version="${project.version}">
     <feature version="${project.version}">sling-installer</feature>
@@ -267,7 +267,7 @@
   <feature name="sling-scripting-javascript" version="${project.version}">
     <feature version="${project.version}">sling-scripting</feature>
     <feature version="${project.version}">sling-jcr</feature>
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.javascript/2.0.12</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.javascript/2.0.16</bundle>
   </feature>
   <feature name="sling-scripting-jsp" version="${project.version}">
     <feature version="${project.version}">sling-scripting</feature>
@@ -349,11 +349,11 @@
     <feature version="${project.version}">sling-extension-healthcheck</feature>
     <feature version="${project.version}">jackrabbit-sling</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.distribution.api/0.1.0</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.distribution.core/0.1.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.distribution.core/0.1.1</bundle>
     <!-- bundle dependencies -->
     <bundle dependency="true">mvn:org.apache.httpcomponents/httpcore-osgi/4.4.1</bundle>
     <bundle dependency="true">mvn:org.apache.httpcomponents/httpclient-osgi/4.4.1</bundle>
-    <bundle dependency="true">mvn:org.apache.jackrabbit.vault/org.apache.jackrabbit.vault/3.1.16</bundle>
+    <bundle dependency="true">mvn:org.apache.jackrabbit.vault/org.apache.jackrabbit.vault/3.1.18</bundle>
   </feature>
   <feature name="sling-extension-healthcheck" version="${project.version}">
     <feature version="${project.version}">sling</feature>
@@ -421,7 +421,7 @@
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly/1.0.2</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.4</bundle>
     <!-- bundle dependencies -->
-    <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.rhino/1.7R2_4</bundle>
+    <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.rhino/1.7R5_1</bundle>
   </feature>
   <feature name="sling-scripting-thymeleaf" version="${project.version}">
     <feature version="${project.version}">sling</feature>
