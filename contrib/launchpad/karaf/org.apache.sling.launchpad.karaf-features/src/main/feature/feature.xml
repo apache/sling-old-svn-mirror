@@ -148,6 +148,11 @@
   <feature name="sling-extension-threaddump" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.extensions.threaddump/0.2.2</bundle>
   </feature>
+  <feature name="sling-extension-validation" version="${project.version}">
+    <feature version="${project.version}">sling</feature>
+    <bundle>mvn:org.apache.sling/org.apache.sling.validation.api/1.0.0-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.validation.core/1.0.0-SNAPSHOT</bundle>
+  </feature>
   <!-- Apache Sling Fragments -->
   <feature name="sling-fragments" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.fragment.activation/1.0.2</bundle>
