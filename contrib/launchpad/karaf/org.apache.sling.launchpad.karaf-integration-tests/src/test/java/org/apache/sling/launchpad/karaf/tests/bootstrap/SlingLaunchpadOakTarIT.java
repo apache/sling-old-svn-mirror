@@ -37,7 +37,7 @@ import static org.junit.Assert.assertNotNull;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class SlingLaunchpadOakIT extends KarafTestSupport {
+public class SlingLaunchpadOakTarIT extends KarafTestSupport {
 
     @Inject
     @Filter(timeout = 300000)
@@ -46,7 +46,7 @@ public class SlingLaunchpadOakIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling-launchpad-oak")
+            addBootFeature("sling-launchpad-oak-tar")
         );
     }
 

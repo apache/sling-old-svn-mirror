@@ -195,11 +195,40 @@
     <!-- bundle dependencies -->
     <bundle dependency="true">mvn:org.apache.derby/derby/10.10.2.0</bundle>
   </feature>
-  <feature name="sling-launchpad-oak" version="${project.version}">
+  <feature name="sling-launchpad-oak" version="${project.version}"><!-- hidden="true" -->
     <!-- Sling with Oak Repository and Felix Web Console -->
-    <config name="org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService">
-      name=Default\ NodeStore
-      repository.home=sling/oak/repository
+    <!-- http://jackrabbit.apache.org/oak/docs/osgi_config.html -->
+    <config name="org.apache.felix.jaas.Configuration.factory-GuestLoginModule">
+      jaas.controlFlag=optional
+      jaas.classname=org.apache.jackrabbit.oak.spi.security.authentication.GuestLoginModule
+      jaas.ranking=I"300"
+    </config>
+    <config name="org.apache.felix.jaas.Configuration.factory-LoginModuleImpl">
+      jaas.controlFlag=required
+      jaas.classname=org.apache.jackrabbit.oak.security.authentication.user.LoginModuleImpl
+    </config>
+    <config name="org.apache.felix.jaas.Configuration.factory-TokenLoginModule">
+      jaas.controlFlag=sufficient
+      jaas.classname=org.apache.jackrabbit.oak.security.authentication.token.TokenLoginModule
+      jaas.ranking=I"200"
+    </config>
+    <config name="org.apache.felix.jaas.ConfigurationSpi">
+      jaas.defaultRealmName=jackrabbit.oak
+      jaas.configProviderName=FelixJaasProvider
+    </config>
+    <config name="org.apache.jackrabbit.oak.security.authentication.AuthenticationConfigurationImpl">
+      org.apache.jackrabbit.oak.authentication.configSpiName=FelixJaasProvider
+    </config>
+    <config name="org.apache.jackrabbit.oak.security.user.UserConfigurationImpl">
+      groupsPath=/home/groups
+      usersPath=/home/users
+      defaultDepth=1
+      importBehavior=besteffort
+    </config>
+    <config name="org.apache.jackrabbit.oak.spi.security.user.action.DefaultAuthorizableActionProvider">
+      enabledActions=["org.apache.jackrabbit.oak.spi.security.user.action.AccessControlAction"]
+      userPrivilegeNames=["jcr:all"]
+      groupPrivilegeNames=["jcr:read"]
     </config>
     <feature version="${project.version}">infrastructure-sling</feature>
     <feature version="${project.version}">webconsole-sling</feature>
@@ -211,6 +240,22 @@
     <feature version="${project.version}">sling-installer</feature>
     <feature version="${project.version}">sling-extension-adapter</feature>
     <feature version="${project.version}">sling-extension-bundleresource</feature>
+  </feature>
+  <feature name="sling-launchpad-oak-tar" version="${project.version}">
+    <config name="org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService">
+      name=Default\ NodeStore
+      repository.home=sling/oak/repository
+    </config>
+    <feature version="${project.version}">sling-launchpad-oak</feature>
+  </feature>
+  <feature name="sling-launchpad-oak-mongo" version="${project.version}">
+    <config name="org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService">
+      mongouri=mongodb://localhost:27017
+      db=sling
+    </config>
+    <feature version="${project.version}">sling-launchpad-oak</feature>
+    <!-- bundle dependencies -->
+    <bundle dependency="true">mvn:org.mongodb/mongo-java-driver/2.13.1</bundle>
   </feature>
   <!-- Apache Sling JCR -->
   <feature name="sling-jcr" version="${project.version}">
