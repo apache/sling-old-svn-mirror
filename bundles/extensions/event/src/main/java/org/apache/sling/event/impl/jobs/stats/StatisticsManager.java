@@ -27,6 +27,7 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.event.impl.jobs.InternalJobState;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.notifications.NotificationUtility;
 import org.apache.sling.event.jobs.Job;
@@ -48,9 +49,6 @@ import org.osgi.service.event.EventHandler;
     @Property(name=EventConstants.EVENT_TOPIC,
           value={NotificationConstants.TOPIC_JOB_ADDED,
                  NotificationConstants.TOPIC_JOB_STARTED,
-                 NotificationConstants.TOPIC_JOB_CANCELLED,
-                 NotificationConstants.TOPIC_JOB_FAILED,
-                 NotificationConstants.TOPIC_JOB_FINISHED,
                  NotificationConstants.TOPIC_JOB_REMOVED})
 })
 public class StatisticsManager implements EventHandler {
@@ -147,28 +145,6 @@ public class StatisticsManager implements EventHandler {
                     queueStats.incQueued();
                 }
 
-            } else if ( event.getTopic().equals(NotificationConstants.TOPIC_JOB_CANCELLED) ) {
-                ts.addCancelled();
-                this.globalStatistics.cancelledJob();
-                if ( queueStats != null ) {
-                    queueStats.cancelledJob();
-                }
-
-            } else if ( event.getTopic().equals(NotificationConstants.TOPIC_JOB_FAILED) ) {
-                ts.addFailed();
-                this.globalStatistics.failedJob();
-                if ( queueStats != null ) {
-                    queueStats.failedJob();
-                }
-
-            } else if ( event.getTopic().equals(NotificationConstants.TOPIC_JOB_FINISHED) ) {
-                final Long time = (Long)event.getProperty(NotificationUtility.PROPERTY_TIME);
-                ts.addFinished(time == null ? -1 : time);
-                this.globalStatistics.finishedJob(time == null ? -1 : time);
-                if ( queueStats != null ) {
-                    queueStats.finishedJob(time == null ? -1 : time);
-                }
-
             } else if ( event.getTopic().equals(NotificationConstants.TOPIC_JOB_STARTED) ) {
                 final Long time = (Long)event.getProperty(NotificationUtility.PROPERTY_TIME);
                 ts.addActivated(time == null ? -1 : time);
@@ -186,5 +162,42 @@ public class StatisticsManager implements EventHandler {
                 }
             }
         }
+    }
+
+    public void jobEnded(final String queueName,
+            final String topic,
+            final InternalJobState state,
+            final long processingTime) {
+        final StatisticsImpl queueStats = getStatisticsForQueue(queueName);
+
+        TopicStatisticsImpl ts = (TopicStatisticsImpl)this.topicStatistics.get(topic);
+        if ( ts == null ) {
+            this.topicStatistics.putIfAbsent(topic, new TopicStatisticsImpl(topic));
+            ts = (TopicStatisticsImpl)this.topicStatistics.get(topic);
+        }
+
+        if ( state == InternalJobState.CANCELLED ) {
+            ts.addCancelled();
+            this.globalStatistics.cancelledJob();
+            if ( queueStats != null ) {
+                queueStats.cancelledJob();
+            }
+
+        } else if ( state == InternalJobState.FAILED ) {
+            ts.addFailed();
+            this.globalStatistics.failedJob();
+            if ( queueStats != null ) {
+                queueStats.failedJob();
+            }
+
+        } else if ( state == InternalJobState.SUCCEEDED ) {
+            ts.addFinished(processingTime);
+            this.globalStatistics.finishedJob(processingTime);
+            if ( queueStats != null ) {
+                queueStats.finishedJob(processingTime);
+            }
+
+        }
+
     }
 }
