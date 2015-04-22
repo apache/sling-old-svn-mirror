@@ -27,27 +27,27 @@ public class TopicStatisticsImpl implements TopicStatistics {
 
     private final String topic;
 
-    private long lastActivated = -1;
+    private volatile long lastActivated = -1;
 
-    private long lastFinished = -1;
+    private volatile long lastFinished = -1;
 
-    private long averageWaitingTime;
+    private volatile long averageWaitingTime;
 
-    private long averageProcessingTime;
+    private volatile long averageProcessingTime;
 
-    private long waitingTime;
+    private volatile long waitingTime;
 
-    private long processingTime;
+    private volatile long processingTime;
 
-    private long waitingCount;
+    private volatile long waitingCount;
 
-    private long processingCount;
+    private volatile long processingCount;
 
-    private long finishedJobs;
+    private volatile long finishedJobs;
 
-    private long failedJobs;
+    private volatile long failedJobs;
 
-    private long cancelledJobs;
+    private volatile long cancelledJobs;
 
     /** Constructor. */
     public TopicStatisticsImpl(final String topic) {
