@@ -51,10 +51,6 @@
     <!-- bundle dependencies (commons-fileupload) -->
     <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
   </feature>
-  <!-- Apache Derby -->
-  <feature name="derby-sling" version="${project.version}">
-    <bundle dependency="true">mvn:org.apache.derby/derby/10.10.2.0</bundle>
-  </feature>
   <!-- Apache Sling -->
   <feature name="sling" version="${project.version}">
     <feature version="${project.version}">infrastructure-sling</feature>
@@ -182,7 +178,7 @@
     <feature version="${project.version}">sling-auth-form</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.launchpad.content/2.0.8</bundle>
   </feature>
-  <feature name="sling-launchpad-jackrabbit" version="${project.version}">
+  <feature name="sling-launchpad-jackrabbit-derby" version="${project.version}">
     <!-- Sling with Jackrabbit Repository and Felix Web Console -->
     <feature version="${project.version}">infrastructure-sling</feature>
     <feature version="${project.version}">webconsole-sling</feature>
@@ -197,6 +193,8 @@
     <feature version="${project.version}">sling-scripting-jsp</feature>
     <feature version="${project.version}">sling-extension-adapter</feature>
     <feature version="${project.version}">sling-extension-bundleresource</feature>
+    <!-- bundle dependencies -->
+    <bundle dependency="true">mvn:org.apache.derby/derby/10.10.2.0</bundle>
   </feature>
   <feature name="sling-launchpad-oak" version="${project.version}">
     <!-- Sling with Oak Repository and Felix Web Console -->
@@ -233,7 +231,6 @@
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.webdav/2.2.2</bundle>
   </feature>
   <!-- Apache Sling JCR Jackrabbit -->
-  <!-- TODO needs a database impl! -->
   <feature name="sling-jcr-jackrabbit" version="${project.version}">
     <feature version="${project.version}">sling-jcr</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.jackrabbit.server/2.2.0</bundle>

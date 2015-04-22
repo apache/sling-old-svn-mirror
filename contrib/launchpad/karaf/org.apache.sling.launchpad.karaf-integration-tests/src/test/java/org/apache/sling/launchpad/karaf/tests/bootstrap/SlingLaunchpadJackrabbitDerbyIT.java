@@ -32,12 +32,14 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.ops4j.pax.exam.util.Filter;
+import org.osgi.framework.Bundle;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class SlingLaunchpadJackrabbitIT extends KarafTestSupport {
+public class SlingLaunchpadJackrabbitDerbyIT extends KarafTestSupport {
 
     @Inject
     @Filter(timeout = 300000)
@@ -46,8 +48,15 @@ public class SlingLaunchpadJackrabbitIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling-launchpad-jackrabbit")
+            addBootFeature("sling-launchpad-jackrabbit-derby")
         );
+    }
+
+    @Test
+    public void testDerby() {
+        final Bundle bundle = findBundle("derby");
+        assertNotNull(bundle);
+        assertEquals(Bundle.RESOLVED, bundle.getState());
     }
 
     @Test
