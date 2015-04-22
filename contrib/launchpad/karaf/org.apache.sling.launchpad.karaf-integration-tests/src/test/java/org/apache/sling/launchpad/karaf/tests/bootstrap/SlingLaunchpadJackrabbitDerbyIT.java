@@ -56,7 +56,7 @@ public class SlingLaunchpadJackrabbitDerbyIT extends KarafTestSupport {
     public void testDerby() {
         final Bundle bundle = findBundle("derby");
         assertNotNull(bundle);
-        assertEquals(Bundle.RESOLVED, bundle.getState());
+        assertEquals(Bundle.ACTIVE, bundle.getState());
     }
 
     @Test

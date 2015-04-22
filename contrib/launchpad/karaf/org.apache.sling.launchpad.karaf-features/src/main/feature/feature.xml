@@ -193,7 +193,7 @@
     <feature version="${project.version}">sling-extension-adapter</feature>
     <feature version="${project.version}">sling-extension-bundleresource</feature>
     <!-- bundle dependencies -->
-    <bundle dependency="true">mvn:org.apache.derby/derby/10.10.2.0</bundle>
+    <bundle dependency="true">mvn:org.apache.derby/derby/10.11.1.1</bundle>
   </feature>
   <feature name="sling-launchpad-oak" version="${project.version}"><!-- hidden="true" -->
     <!-- Sling with Oak Repository and Felix Web Console -->
