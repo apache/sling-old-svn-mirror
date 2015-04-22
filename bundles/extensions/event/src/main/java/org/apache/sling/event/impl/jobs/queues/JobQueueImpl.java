@@ -276,7 +276,11 @@ public class JobQueueImpl
                 if ( handler.getConsumer() != null ) {
                     this.services.configuration.getAuditLogger().debug("START OK : {}", job.getId());
                     final long queueTime = handler.started - job.getProperty(JobImpl.PROPERTY_JOB_QUEUED, Calendar.class).getTime().getTime();
+                    // update statistics
+                    this.services.statisticsManager.jobStarted(this.queueName, job.getTopic(), queueTime);
+                    // send notification
                     NotificationUtility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_STARTED, job, queueTime);
+
                     synchronized ( this.processingJobsLists ) {
                         this.processingJobsLists.put(job.getId(), handler);
                     }
