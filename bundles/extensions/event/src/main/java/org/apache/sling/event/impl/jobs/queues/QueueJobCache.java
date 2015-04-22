@@ -171,6 +171,7 @@ public class QueueJobCache {
                         handler = new JobHandler(job, consumer, this.configuration);
                         if ( (consumer != null || (job.isBridgedEvent() && jobConsumerManager.supportsBridgedEvents())) ) {
                             if ( !handler.startProcessing(queue) ) {
+                                statisticsManager.jobDequeued(queue.getName(), handler.getJob().getTopic());
                                 if ( logger.isDebugEnabled() ) {
                                     logger.debug("Discarding removed job {}", Utility.toString(job));
                                 }
@@ -178,6 +179,7 @@ public class QueueJobCache {
                                 retry = true;
                             }
                         } else {
+                            statisticsManager.jobDequeued(queue.getName(), handler.getJob().getTopic());
                             // no consumer on this instance, assign to another instance
                             handler.reassign();
 

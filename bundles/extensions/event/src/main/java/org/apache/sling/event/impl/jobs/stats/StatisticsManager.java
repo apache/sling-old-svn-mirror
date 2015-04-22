@@ -23,32 +23,19 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.event.impl.jobs.InternalJobState;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
-import org.apache.sling.event.jobs.Job;
-import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.Statistics;
 import org.apache.sling.event.jobs.TopicStatistics;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventConstants;
-import org.osgi.service.event.EventHandler;
 
 /**
  * The statistics manager keeps track of all statistics related tasks.
- * The statistics are updated through OSGi event by using the special
- * job notification events.
  */
-@Component(immediate=true)
-@Service(value={EventHandler.class, StatisticsManager.class})
-@Properties({
-    @Property(name=EventConstants.EVENT_TOPIC,
-          value={NotificationConstants.TOPIC_JOB_REMOVED})
-})
-public class StatisticsManager implements EventHandler {
+@Component
+@Service(value=StatisticsManager.class)
+public class StatisticsManager {
 
     /** The job manager configuration. */
     @Reference
@@ -120,27 +107,6 @@ public class StatisticsManager implements EventHandler {
         return queueStats;
     }
 
-    /**
-     * Handle all job notification events and update the statistics.
-     */
-    @Override
-    public void handleEvent(final Event event) {
-        final String topic = (String)event.getProperty(NotificationConstants.NOTIFICATION_PROPERTY_JOB_TOPIC);
-        if ( topic != null ) { // this is just a sanity check
-            final String queueName = (String)event.getProperty(Job.PROPERTY_JOB_QUEUE_NAME);
-            final StatisticsImpl queueStats = getStatisticsForQueue(queueName);
-
-            if ( event.getTopic().equals(NotificationConstants.TOPIC_JOB_REMOVED) ) {
-                this.globalStatistics.decQueued();
-                this.globalStatistics.cancelledJob();
-                if ( queueStats != null ) {
-                    queueStats.decQueued();
-                    queueStats.cancelledJob();
-                }
-            }
-        }
-    }
-
     public void jobEnded(final String queueName,
             final String topic,
             final InternalJobState state,
@@ -202,6 +168,15 @@ public class StatisticsManager implements EventHandler {
         this.globalStatistics.incQueued();
         if ( queueStats != null ) {
             queueStats.incQueued();
+        }
+    }
+
+    public void jobDequeued(final String queueName, final String topic) {
+        final StatisticsImpl queueStats = getStatisticsForQueue(queueName);
+
+        this.globalStatistics.decQueued();
+        if ( queueStats != null ) {
+            queueStats.decQueued();
         }
     }
 }
