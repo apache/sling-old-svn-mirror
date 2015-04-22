@@ -27,6 +27,7 @@
 # the same goes for the oak_tar and oak_mongo runmodes
 [settings]
     sling.run.mode.install.options=jackrabbit,oak|oak_tar,oak_mongo
+    repository.home=${sling.home}/repository
 
 [artifacts]
     org.slf4j/slf4j-api/1.7.6
