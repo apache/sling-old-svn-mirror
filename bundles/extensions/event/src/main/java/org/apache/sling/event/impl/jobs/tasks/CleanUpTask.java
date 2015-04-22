@@ -105,35 +105,37 @@ public class CleanUpTask {
             if ( resolver != null ) {
                 try {
                     final Resource parentResource = resolver.getResource(this.configuration.getLocksPath());
-                    final Calendar startDate = Calendar.getInstance();
-                    startDate.add(Calendar.MINUTE, -2);
+                    if ( parentResource != null ) {
+                        final Calendar startDate = Calendar.getInstance();
+                        startDate.add(Calendar.MINUTE, -2);
 
-                    this.lockCleanup(caps, candidates, parentResource, startDate);
-                    final BatchResourceRemover remover = new BatchResourceRemover();
-                    boolean batchRemove = true;
-                    for(final Resource lockResource : candidates) {
-                        if ( caps.isActive() ) {
-                            try {
-                                if ( batchRemove ) {
-                                    remover.delete(lockResource);
-                                } else {
-                                    resolver.delete(lockResource);
-                                    resolver.commit();
+                        this.lockCleanup(caps, candidates, parentResource, startDate);
+                        final BatchResourceRemover remover = new BatchResourceRemover();
+                        boolean batchRemove = true;
+                        for(final Resource lockResource : candidates) {
+                            if ( caps.isActive() ) {
+                                try {
+                                    if ( batchRemove ) {
+                                        remover.delete(lockResource);
+                                    } else {
+                                        resolver.delete(lockResource);
+                                        resolver.commit();
+                                    }
+                                } catch ( final PersistenceException pe) {
+                                    batchRemove = false;
+                                    this.ignoreException(pe);
+                                    resolver.refresh();
                                 }
-                            } catch ( final PersistenceException pe) {
-                                batchRemove = false;
-                                this.ignoreException(pe);
-                                resolver.refresh();
+                            } else {
+                                break;
                             }
-                        } else {
-                            break;
                         }
-                    }
-                    try {
-                        resolver.commit();
-                    } catch ( final PersistenceException pe) {
-                        this.ignoreException(pe);
-                        resolver.refresh();
+                        try {
+                            resolver.commit();
+                        } catch ( final PersistenceException pe) {
+                            this.ignoreException(pe);
+                            resolver.refresh();
+                        }
                     }
                 } finally {
                     resolver.close();
