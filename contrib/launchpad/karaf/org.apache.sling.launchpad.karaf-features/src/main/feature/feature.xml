@@ -55,6 +55,8 @@
   <feature name="sling" version="${project.version}">
     <feature version="${project.version}">infrastructure-sling</feature>
     <feature version="${project.version}">commons-sling</feature>
+    <feature version="${project.version}">sling-commons-scheduler</feature>
+    <feature version="${project.version}">sling-commons-threads</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.api/2.9.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.auth.core/1.3.6</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.engine/2.4.2</bundle>
@@ -71,9 +73,7 @@
     <!-- (not using org.apache.sling.commons.logservice) -->
     <bundle>mvn:org.apache.sling/org.apache.sling.commons.mime/2.1.8</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.commons.osgi/2.2.2</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.commons.scheduler/2.4.6</bundle>
     <!-- (not using org.apache.sling.commons.testing) -->
-    <bundle>mvn:org.apache.sling/org.apache.sling.commons.threads/3.2.0</bundle>
     <!-- Apache Sling Launchpad -->
     <bundle>mvn:org.apache.sling/org.apache.sling.launchpad.api/1.1.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.launchpad.karaf/${project.version}</bundle>
@@ -85,6 +85,18 @@
   <feature name="sling-auth-form" version="${project.version}">
     <feature version="${project.version}">sling</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.auth.form/1.0.6</bundle>
+  </feature>
+  <!-- Apache Sling Commons -->
+  <feature name="sling-commons-scheduler" version="${project.version}">
+    <feature>scr</feature>
+    <feature version="${project.version}">sling-commons-threads</feature>
+    <bundle>mvn:org.apache.sling/org.apache.sling.commons.scheduler/2.4.6</bundle>
+    <!-- bundle dependencies -->
+    <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
+    <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
+  </feature>
+  <feature name="sling-commons-threads" version="${project.version}">
+    <bundle>mvn:org.apache.sling/org.apache.sling.commons.threads/3.2.0</bundle>
   </feature>
   <!-- Apache Sling Extensions -->
   <feature name="sling-extension-adapter" version="${project.version}">
