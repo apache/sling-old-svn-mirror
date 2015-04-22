@@ -256,9 +256,7 @@ public class TimedEventSender
 
                     event = null;
                 } else if (NotificationConstants.TOPIC_JOB_FINISHED.equals(event.getTopic())){
-                    // stopScheduling() puts this event on the queue, but the intention is unclear to me.
-                    // as the threadStarted flag ensures the background thread is only started once, we must not stop
-                    // the thread, otherwise its never started again upon topology changes.
+                    // stopScheduling() puts this event on the queue, to wake up this thread
                     event = null;
                 } else {
                     // to ensure the event is reset to null in any case, in order to take from the queue again
