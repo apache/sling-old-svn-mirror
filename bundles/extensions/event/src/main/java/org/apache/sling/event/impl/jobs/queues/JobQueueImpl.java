@@ -135,7 +135,7 @@ public class JobQueueImpl
                         final InternalQueueConfiguration config,
                         final QueueServices services,
                         final Set<String> topics) {
-        final QueueJobCache cache = new QueueJobCache(services.configuration, config.getType(), topics);
+        final QueueJobCache cache = new QueueJobCache(services.configuration, name, services.statisticsManager, config.getType(), topics);
         if ( cache.isEmpty() ) {
             return null;
         }
@@ -213,7 +213,8 @@ public class JobQueueImpl
                 boolean started = false;
                 this.lock.writeLock().lock();
                 try {
-                    final JobHandler handler = this.cache.getNextJob(this.services.jobConsumerManager, this, this.doFullCacheSearch.getAndSet(false));
+                    final JobHandler handler = this.cache.getNextJob(this.services.jobConsumerManager,
+                            this.services.statisticsManager, this, this.doFullCacheSearch.getAndSet(false));
                     if ( handler != null ) {
                         started = true;
                         this.threadPool.execute(new Runnable() {
@@ -503,7 +504,7 @@ public class JobQueueImpl
      * @param handler The job handler
      */
     private void requeue(final JobHandler handler) {
-        this.cache.reschedule(handler);
+        this.cache.reschedule(this.queueName, handler, this.services.statisticsManager);
         this.startJobs();
     }
 

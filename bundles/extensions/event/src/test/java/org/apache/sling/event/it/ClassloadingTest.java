@@ -209,7 +209,7 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
                             && finishedEvents.size() == 0
                             && jobManager.findJobs(JobManager.QueryType.ALL, TOPIC + "/failed", -1,
                                     (Map<String, Object>[]) null).size() == 1
-                            && jobManager.getStatistics().getNumberOfQueuedJobs() == 1
+                            && jobManager.getStatistics().getNumberOfQueuedJobs() == 0
                             && jobManager.getStatistics().getNumberOfActiveJobs() == 0;
                 }
 

@@ -46,8 +46,7 @@ import org.osgi.service.event.EventHandler;
 @Service(value={EventHandler.class, StatisticsManager.class})
 @Properties({
     @Property(name=EventConstants.EVENT_TOPIC,
-          value={NotificationConstants.TOPIC_JOB_ADDED,
-                 NotificationConstants.TOPIC_JOB_REMOVED})
+          value={NotificationConstants.TOPIC_JOB_REMOVED})
 })
 public class StatisticsManager implements EventHandler {
 
@@ -131,19 +130,7 @@ public class StatisticsManager implements EventHandler {
             final String queueName = (String)event.getProperty(Job.PROPERTY_JOB_QUEUE_NAME);
             final StatisticsImpl queueStats = getStatisticsForQueue(queueName);
 
-            TopicStatisticsImpl ts = (TopicStatisticsImpl)this.topicStatistics.get(topic);
-            if ( ts == null ) {
-                this.topicStatistics.putIfAbsent(topic, new TopicStatisticsImpl(topic));
-                ts = (TopicStatisticsImpl)this.topicStatistics.get(topic);
-            }
-
-            if ( event.getTopic().equals(NotificationConstants.TOPIC_JOB_ADDED) ) {
-                this.globalStatistics.incQueued();
-                if ( queueStats != null ) {
-                    queueStats.incQueued();
-                }
-
-            } else if ( event.getTopic().equals(NotificationConstants.TOPIC_JOB_REMOVED) ) {
+            if ( event.getTopic().equals(NotificationConstants.TOPIC_JOB_REMOVED) ) {
                 this.globalStatistics.decQueued();
                 this.globalStatistics.cancelledJob();
                 if ( queueStats != null ) {
@@ -205,6 +192,16 @@ public class StatisticsManager implements EventHandler {
         this.globalStatistics.addActive(queueTime);
         if ( queueStats != null ) {
             queueStats.addActive(queueTime);
+        }
+    }
+
+    public void jobQueued(final String queueName,
+            final String topic) {
+        final StatisticsImpl queueStats = getStatisticsForQueue(queueName);
+
+        this.globalStatistics.incQueued();
+        if ( queueStats != null ) {
+            queueStats.incQueued();
         }
     }
 }
