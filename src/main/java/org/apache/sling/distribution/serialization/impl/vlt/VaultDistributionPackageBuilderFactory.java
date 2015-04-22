@@ -111,7 +111,7 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
         packageRoots = SettingsUtils.removeEmptyEntries(packageRoots);
 
         ImportMode importMode = null;
-        if (importMode != null) {
+        if (importModeString != null) {
             importMode = ImportMode.valueOf(importModeString);
         }
 
