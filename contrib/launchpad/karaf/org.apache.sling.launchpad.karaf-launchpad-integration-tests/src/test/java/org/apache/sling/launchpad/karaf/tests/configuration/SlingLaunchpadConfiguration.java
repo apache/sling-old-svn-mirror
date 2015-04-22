@@ -94,7 +94,7 @@ public class SlingLaunchpadConfiguration {
             editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresRepositories", "," + featureRepository()),
             editConfigurationFilePut("etc/org.ops4j.pax.web.cfg", "org.osgi.service.http.port", Integer.toString(httpPort)),
             mavenBundle().groupId("org.ops4j.base").artifactId("ops4j-base-io").version("1.4.0"),
-            addBootFeature("sling-launchpad-jackrabbit"),
+            addBootFeature("sling-launchpad-jackrabbit-derby"),
             addBootFeature("sling-launchpad-content"),
             addBootFeature("sling-jcr-jackrabbit-security"),
             addBootFeature("sling-auth-form"),
