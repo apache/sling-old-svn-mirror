@@ -37,6 +37,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.impl.EventingThreadPool;
+import org.apache.sling.event.impl.jobs.InternalJobState;
 import org.apache.sling.event.impl.jobs.JobHandler;
 import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.JobTopicTraverser;
@@ -507,7 +508,7 @@ public class JobQueueImpl
         // processing time is only set of state is SUCCEEDED
         public long         processingTime;
         public Job.JobState state;
-        public String       notificationTopic;
+        public InternalJobState       finalState;
     }
 
     private RescheduleInfo handleReschedule(final JobHandler handler, final Job.JobState resultState) {
@@ -519,7 +520,7 @@ public class JobQueueImpl
                     this.logger.debug("Finished job {}", Utility.toString(handler.getJob()));
                 }
                 info.processingTime = System.currentTimeMillis() - handler.started;
-                info.notificationTopic = NotificationConstants.TOPIC_JOB_FINISHED;
+                info.finalState = InternalJobState.SUCCEEDED;
                 break;
             case QUEUED : // check if we exceeded the number of retries
                 final int retries = (Integer) handler.getJob().getProperty(Job.PROPERTY_JOB_RETRIES);
@@ -530,21 +531,21 @@ public class JobQueueImpl
                     if ( this.logger.isDebugEnabled() ) {
                         this.logger.debug("Cancelled job {}", Utility.toString(handler.getJob()));
                     }
-                    info.notificationTopic = NotificationConstants.TOPIC_JOB_CANCELLED;
+                    info.finalState = InternalJobState.CANCELLED;
                 } else {
                     info.reschedule = true;
                     handler.getJob().retry();
                     if ( this.logger.isDebugEnabled() ) {
                         this.logger.debug("Failed job {}", Utility.toString(handler.getJob()));
                     }
-                    info.notificationTopic = NotificationConstants.TOPIC_JOB_FAILED;
+                    info.finalState = InternalJobState.FAILED;
                 }
                 break;
             default : // consumer cancelled the job (STOPPED, GIVEN_UP, ERROR)
                 if ( this.logger.isDebugEnabled() ) {
                     this.logger.debug("Cancelled job {}", Utility.toString(handler.getJob()));
                 }
-                info.notificationTopic = NotificationConstants.TOPIC_JOB_CANCELLED;
+                info.finalState = InternalJobState.CANCELLED;
                 break;
         }
 
@@ -580,7 +581,7 @@ public class JobQueueImpl
             return false;
         }
 
-        // handle the reschedule, a new job might be returned with updated reschedule info!
+        // handle the rescheduling of the job
         final RescheduleInfo rescheduleInfo = this.handleReschedule(handler, resultState);
 
         if ( !rescheduleInfo.reschedule ) {
@@ -590,7 +591,15 @@ public class JobQueueImpl
         } else {
             this.reschedule(handler);
         }
-        NotificationUtility.sendNotification(this.services.eventAdmin, rescheduleInfo.notificationTopic, handler.getJob(), rescheduleInfo.processingTime);
+        // update statistics
+        this.services.statisticsManager.jobEnded(this.queueName,
+                handler.getJob().getTopic(),
+                rescheduleInfo.finalState,
+                rescheduleInfo.processingTime);
+        // send notification
+        NotificationUtility.sendNotification(this.services.eventAdmin,
+                rescheduleInfo.finalState.getTopic(),
+                handler.getJob(), rescheduleInfo.processingTime);
 
         return rescheduleInfo.reschedule;
     }
