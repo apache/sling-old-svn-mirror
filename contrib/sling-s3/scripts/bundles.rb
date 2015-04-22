@@ -3,7 +3,7 @@
 require 'open-uri'
 
 def parse_bundle_list name
-  url = "http://svn.apache.org/repos/asf/sling/trunk/launchpad/builder/src/main/provisioning/#{name}"
+  url = "https://raw.githubusercontent.com/apache/sling/trunk/launchpad/builder/src/main/provisioning/#{name}"
   sections = []
   section = nil
   open(url).each_line do |line|
