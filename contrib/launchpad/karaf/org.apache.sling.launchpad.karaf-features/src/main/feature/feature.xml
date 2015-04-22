@@ -182,7 +182,6 @@
     <!-- Sling with Jackrabbit Repository and Felix Web Console -->
     <feature version="${project.version}">infrastructure-sling</feature>
     <feature version="${project.version}">webconsole-sling</feature>
-    <feature version="${project.version}">derby-sling</feature>
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-servlets</feature>
     <feature version="${project.version}">sling-jcr-jackrabbit</feature>
