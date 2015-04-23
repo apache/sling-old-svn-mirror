@@ -206,12 +206,22 @@ class MergingResourceProvider implements ResourceProvider {
                 return null;
             }
 
+            boolean first = true;
             while (resources.hasNext()) {
                 final Resource resource = resources.next();
-                // check parent for hiding
-                // SLING 3521 : if parent is not readable, nothing is hidden
-                final Resource parent = resource.getParent();
-                final boolean hidden = (parent == null ? false : new ParentHidingHandler(parent).isHidden(holder.name));
+
+                final boolean hidden;
+                if (first) {
+                    // The ParentHidingHandler does not have to be executed for the first resource because it isn't an
+                    // overlay. This can drastically improve the performance in some cases.
+                    hidden = false;
+                    first = false;
+                } else {
+                    // check parent for hiding
+                    // SLING 3521 : if parent is not readable, nothing is hidden
+                    final Resource parent = resource.getParent();
+                    hidden = (parent == null ? false : new ParentHidingHandler(parent).isHidden(holder.name));
+                }
                 if (hidden) {
                     holder.resources.clear();
                 } else if (!ResourceUtil.isNonExistingResource(resource)) {
