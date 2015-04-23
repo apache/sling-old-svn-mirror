@@ -38,6 +38,7 @@ import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.entity.ContentType;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
@@ -60,18 +61,18 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
     private final DistributionEndpoint distributionEndpoint;
     private final DistributionPackageBuilder packageBuilder;
     protected final DistributionTransportSecretProvider secretProvider;
-    private final int maxNumberOfPackages;
+    private final int maxPullItems;
 
     public SimpleHttpDistributionTransport(DefaultDistributionLog log, DistributionEndpoint distributionEndpoint,
                                            DistributionPackageBuilder packageBuilder,
                                            DistributionTransportSecretProvider secretProvider,
-                                           int maxNumberOfPackages) {
+                                           int maxPullItems) {
         this.log = log;
 
         this.distributionEndpoint = distributionEndpoint;
         this.packageBuilder = packageBuilder;
         this.secretProvider = secretProvider;
-        this.maxNumberOfPackages = maxNumberOfPackages;
+        this.maxPullItems = maxPullItems;
     }
 
     public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionTransportException {
@@ -147,6 +148,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
             try {
 
                 int pulls = 0;
+                int maxNumberOfPackages = DistributionRequestType.PULL.equals(distributionRequest.getRequestType()) ? maxPullItems : 1;
                 while (pulls < maxNumberOfPackages
                         && (httpResponse = executor.execute(req).returnResponse()).getStatusLine().getStatusCode() == 200) {
                     HttpEntity entity = httpResponse.getEntity();
