@@ -27,7 +27,6 @@ import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.resourcemerger.impl.StubResource;
@@ -43,8 +42,8 @@ import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
             label = "Root", description = "Root path at which merged resources will be available."),
     @Property(name=MergedResourcePicker.READ_ONLY, boolValue=true,
     label="Read Only",
-    description="Specifies if the resources are read-only or can be modified.")
-
+    description="Specifies if the resources are read-only or can be modified."),
+    @Property(name=MergedResourcePicker.TRAVERSE_PARENT, boolValue=true, propertyPrivate=true)
 })
 public class OverridingResourcePicker implements MergedResourcePicker {
 

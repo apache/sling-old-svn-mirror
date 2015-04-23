@@ -81,7 +81,7 @@ public class MergedResourceProviderTest {
                                           .resource("/libs/a/Y/c")
                                         .commit();
 
-        this.provider = new CRUDMergingResourceProvider("/merged", new MergingResourcePicker());
+        this.provider = new CRUDMergingResourceProvider("/merged", new MergingResourcePicker(), false);
     }
 
     @Test public void testHideChildren() {

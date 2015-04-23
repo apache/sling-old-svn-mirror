@@ -39,12 +39,16 @@ class MergingResourceProvider implements ResourceProvider {
 
     private final boolean readOnly;
 
+    protected final boolean traverseHierarchie;
+
     MergingResourceProvider(final String mergeRootPath,
             final MergedResourcePicker picker,
-            final boolean readOnly) {
+            final boolean readOnly,
+            final boolean traverseHierarchie) {
         this.mergeRootPath = mergeRootPath;
         this.picker = picker;
         this.readOnly = readOnly;
+        this.traverseHierarchie = traverseHierarchie;
     }
 
     protected static final class ExcludeEntry {
@@ -70,7 +74,7 @@ class MergingResourceProvider implements ResourceProvider {
 
         private List<ExcludeEntry> entries = new ArrayList<ExcludeEntry>();
 
-        public ParentHidingHandler(final Resource parent) {
+        public ParentHidingHandler(final Resource parent, final boolean traverseParent) {
             final ValueMap parentProps = parent.getValueMap();
             final String[] childrenToHideArray = parentProps.get(MergedResourceConstants.PN_HIDE_CHILDREN, String[].class);
             if (childrenToHideArray != null) {
@@ -94,6 +98,9 @@ class MergingResourceProvider implements ResourceProvider {
                                 break;
                             }
                         }
+                    }
+                    if ( !traverseParent ) {
+                        break;
                     }
                     previousAncestorName = ancestor.getName();
                     ancestor = ancestor.getParent();
@@ -220,7 +227,7 @@ class MergingResourceProvider implements ResourceProvider {
                     // check parent for hiding
                     // SLING 3521 : if parent is not readable, nothing is hidden
                     final Resource parent = resource.getParent();
-                    hidden = (parent == null ? false : new ParentHidingHandler(parent).isHidden(holder.name));
+                    hidden = (parent == null ? false : new ParentHidingHandler(parent, this.traverseHierarchie).isHidden(holder.name));
                 }
                 if (hidden) {
                     holder.resources.clear();
@@ -249,7 +256,7 @@ class MergingResourceProvider implements ResourceProvider {
 
             while (resources.hasNext()) {
                 Resource parentResource = resources.next();
-                final ParentHidingHandler handler = new ParentHidingHandler(parentResource);
+                final ParentHidingHandler handler = new ParentHidingHandler(parentResource, this.traverseHierarchie);
                 for (final Resource child : parentResource.getChildren()) {
                     final String rsrcName = child.getName();
                     ResourceHolder holder = null;

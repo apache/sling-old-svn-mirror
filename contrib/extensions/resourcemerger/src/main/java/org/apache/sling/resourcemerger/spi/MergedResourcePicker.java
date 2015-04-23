@@ -51,6 +51,14 @@ public interface MergedResourcePicker {
     String READ_ONLY = "merge.readOnly";
 
     /**
+     * Service property name specifying whether the parent hierarchy is
+     * traversed to check for hiding properties. If not specified this
+     * property defaults to <code>false</code>. The value of this
+     * property must be of type Boolean.
+     */
+    String TRAVERSE_PARENT = "merge.traverseParent";
+
+    /**
      * Method invoked by the MergingResourceProvider to identify the resources to be merged for a given
      * relative path. The resources returned may be either resources returned from the ResourceResolver
      * directory or an instance of NonExistingResource.

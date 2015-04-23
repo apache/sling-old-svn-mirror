@@ -59,7 +59,7 @@ public class OverridingResourceProviderTest {
      * /apps/a/1/c
      * /apps/a/2/c
      * /apps/a/3
-     * 
+     *
      * /apps/a/2 has the super type of /apps/a/1
      * /apps/a/3 has the super type of /apps/a/2
      */
@@ -87,7 +87,7 @@ public class OverridingResourceProviderTest {
                     .resource("/apps/a/3").p(SUPER_TYPE, "a/2")
                     .commit();
 
-        this.provider = new MergingResourceProvider("/override", new OverridingResourcePicker(), true);
+        this.provider = new MergingResourceProvider("/override", new OverridingResourcePicker(), false, true);
     }
 
     @Test
