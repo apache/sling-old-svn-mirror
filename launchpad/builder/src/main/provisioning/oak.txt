@@ -74,7 +74,6 @@
 [configurations runModes=oak_tar]
   org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService
     name="Default\ NodeStore"
-    repository.home="sling/oak/repository"
 
 [configurations runModes=oak_mongo]
   org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService
