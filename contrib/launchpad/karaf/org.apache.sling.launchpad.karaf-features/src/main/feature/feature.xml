@@ -228,6 +228,9 @@
       jaas.defaultRealmName=jackrabbit.oak
       jaas.configProviderName=FelixJaasProvider
     </config>
+    <config name="org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService">
+      localIndexDir=sling/oak/repository/index
+    </config>
     <config name="org.apache.jackrabbit.oak.security.authentication.AuthenticationConfigurationImpl">
       org.apache.jackrabbit.oak.authentication.configSpiName=FelixJaasProvider
     </config>
