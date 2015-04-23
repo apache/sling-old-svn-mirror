@@ -54,9 +54,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 @Service({ AsyncHealthCheckExecutor.class })
-@Component(label = "Apache Sling Async Health Check Executor",
-        description = "Runs async health checks",
-        metatype = true, immediate = true)
+@Component(immediate = true)
 public class AsyncHealthCheckExecutor implements ServiceListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(AsyncHealthCheckExecutor.class);
