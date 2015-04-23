@@ -40,8 +40,9 @@ public class CRUDMergingResourceProvider
     implements ModifyingResourceProvider {
 
     public CRUDMergingResourceProvider(final String mergeRootPath,
-            final MergedResourcePicker picker) {
-        super(mergeRootPath, picker, false);
+            final MergedResourcePicker picker,
+            final boolean traverseHierarchie) {
+        super(mergeRootPath, picker, false, traverseHierarchie);
     }
 
     private static final class ExtendedResourceHolder {
@@ -71,7 +72,7 @@ public class CRUDMergingResourceProvider
                 // check parent for hiding
                 final Resource parent = rsrc.getParent();
                 if ( parent != null ) {
-                    final boolean hidden = new ParentHidingHandler(parent).isHidden(holder.name);
+                    final boolean hidden = new ParentHidingHandler(parent, this.traverseHierarchie).isHidden(holder.name);
                     if ( hidden ) {
                         holder.resources.clear();
                     } else {
