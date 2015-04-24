@@ -135,6 +135,10 @@
           <module>scripting/python</module>
           <module>scripting/sightly</module>
           <module>scripting/ruby</module>
+	      <module>scripting/scala/script</module>
+          <module>scripting/scala/config</module>
+          <module>scripting/scala/samples/hello-world</module>
+          <module>scripting/scala/samples/forum</module>
           <module>scripting/thymeleaf</module>
           <module>scripting/velocity</module>
           <module>scripting/xproc</module>
@@ -153,18 +157,6 @@
             </activation>
             <modules>
                 <module>launchpad/testing</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>java6plus</id>
-            <activation>
-                <jdk>[1.6,)</jdk>
-            </activation>
-            <modules>
-                <module>scripting/scala/script</module>
-                <module>scripting/scala/config</module>
-                <module>scripting/scala/samples/hello-world</module>
-                <module>scripting/scala/samples/forum</module>
             </modules>
         </profile>
     </profiles>
