@@ -24,6 +24,7 @@ import java.util.Map;
 import org.apache.sling.api.resource.ValueMap;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class ValueMapDecoratorTest {
@@ -64,8 +65,26 @@ public class ValueMapDecoratorTest {
 	}
 	
 	@Test
+	@Ignore("SLING-4658")
+	public void testGettingSingleValuesFromMultiValueEntries() {
+		map.put("prop1", new String[] {"test", "test2"});
+		map.put("prop2", new String[] {"1", "2"});
+		Assert.assertEquals("First element from underlying array should be returned", "test", valueMap.get("prop1", String.class));
+		Assert.assertEquals("First element from underlying array should be returned", Integer.valueOf(1), valueMap.get("prop1", Integer.class));
+	}
+	
+	@Test
 	public void testGettingInvalidEntryWithDefaultValue() {
 		Assert.assertEquals(Integer.valueOf(1), valueMap.get("prop1", 1));
 		Assert.assertEquals("test", valueMap.get("prop1", "test"));
 	}
+	
+	@Test
+	public void testPrimitiveTypes() {
+		map.put("prop1", new String[] {"1", "2"});
+		Assert.assertNull("ValueMap should not support conversion to primitive type", valueMap.get("prop1", int.class));
+		Assert.assertNull("ValueMap should not support conversion to array of primitive type", valueMap.get("prop1", int[].class));
+	}
+	
+	
 }
