@@ -995,13 +995,10 @@ public class SlingServletResolver
             return false;
         }
 
-        final Dictionary<String, Object> params = new Hashtable<String, Object>();
-        params.put(ResourceProvider.ROOTS, provider.getServletPaths());
-        params.put(Constants.SERVICE_DESCRIPTION, "ServletResourceProvider for Servlets at "
-                + Arrays.asList(provider.getServletPaths()));
-
-        final ServiceRegistration reg = context.getBundleContext()
-                .registerService(ResourceProvider.SERVICE_NAME, provider, params);
+        final ServiceRegistration reg = context.getBundleContext().registerService(
+            ResourceProvider.SERVICE_NAME,
+            provider,
+            createServiceProperties(reference, provider));
 
         LOGGER.info("Registered {}", provider.toString());
         synchronized (this.servletsByReference) {
@@ -1009,6 +1006,23 @@ public class SlingServletResolver
         }
 
         return true;
+    }
+
+    private Dictionary<String, Object> createServiceProperties(final ServiceReference reference,
+            final ServletResourceProvider provider) {
+
+        final Dictionary<String, Object> params = new Hashtable<String, Object>();
+        params.put(ResourceProvider.ROOTS, provider.getServletPaths());
+        params.put(Constants.SERVICE_DESCRIPTION,
+            "ServletResourceProvider for Servlets at " + Arrays.asList(provider.getServletPaths()));
+
+        // inherit service ranking
+        Object rank = reference.getProperty(Constants.SERVICE_RANKING);
+        if (rank instanceof Integer) {
+            params.put(Constants.SERVICE_RANKING, rank);
+        }
+
+        return params;
     }
 
     private void destroyAllServlets(final Collection<ServiceReference> refs) {
