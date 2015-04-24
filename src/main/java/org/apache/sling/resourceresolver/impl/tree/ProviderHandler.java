@@ -43,12 +43,22 @@ import org.slf4j.LoggerFactory;
  * The provider handler is the common base class for the
  * {@link ResourceProviderHandler} and the
  * {@link ResourceProviderFactoryHandler}.
+ * <p>
+ * The natural ordering for instances of this class is according to the
+ * OSGi Service ranking order:
+ * <ol>
+ * <li>An instance with a higher service.ranking property is compared less
+ *    than an instance with a lower service.ranking property.</li>
+ * <li>If service.ranking properties are equal, the service with the
+ *    lower service.id is compared less than the service with the higher
+ *    service.id</li>
+ * </ol>
  */
 public abstract class ProviderHandler implements Comparable<ProviderHandler> {
 
     /** Default logger */
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    
+
     /** Service properties. */
     private final Map<String, Object> properties;
 
@@ -314,28 +324,21 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
             return 0; // same service
         }
 
-        Object rankObj = this.getProperties().get(Constants.SERVICE_RANKING);
+        Object thisRankObj = this.getProperties().get(Constants.SERVICE_RANKING);
         Object otherRankObj = other.getProperties().get(Constants.SERVICE_RANKING);
 
-        // If no rank, then spec says it defaults to zero.
-        rankObj = (rankObj == null) ? new Integer(0) : rankObj;
-        otherRankObj = (otherRankObj == null) ? new Integer(0) : otherRankObj;
-
-        // If rank is not Integer, then spec says it defaults to zero.
-        Integer rank = (rankObj instanceof Integer)
-            ? (Integer) rankObj : new Integer(0);
-        Integer otherRank = (otherRankObj instanceof Integer)
-            ? (Integer) otherRankObj : new Integer(0);
+        // If rank is not specified or not an Integer, then spec says it defaults to zero.
+        Integer thisRank = (thisRankObj instanceof Integer) ? (Integer) thisRankObj : Integer.valueOf(0);
+        Integer otherRank = (otherRankObj instanceof Integer) ? (Integer) otherRankObj : Integer.valueOf(0);
 
         // Sort by rank in ascending order.
-        if (rank.compareTo(otherRank) < 0) {
-            return -1; // lower rank
-        } else if (rank.compareTo(otherRank) > 0) {
-            return 1; // higher rank
+        int rankOrder = thisRank.compareTo(otherRank);
+        if (rankOrder != 0) {
+            return (rankOrder > 0) ? -1 : 1;
         }
 
         // If ranks are equal, then sort by service id in descending order.
-        return (this.serviceId.compareTo(other.serviceId) < 0) ? 1 : -1;
+        return (this.serviceId.compareTo(other.serviceId) > 0) ? 1 : -1;
     }
 
     /**
