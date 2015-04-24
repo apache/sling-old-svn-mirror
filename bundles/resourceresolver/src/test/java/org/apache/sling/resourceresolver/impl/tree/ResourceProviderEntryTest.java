@@ -25,6 +25,7 @@ import static org.junit.Assert.fail;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.sling.api.resource.AbstractResource;
@@ -43,7 +44,7 @@ import org.osgi.framework.Constants;
 public class ResourceProviderEntryTest {
 
     private static final Map<String, String> EMPTY_PARAMS = Collections.emptyMap();
-    
+
     private ResourceResolver rootResolver;
 
     private ResourceProviderEntry root;
@@ -249,6 +250,36 @@ public class ResourceProviderEntryTest {
         }
     }
 
+    @Test public void testOrderingWithoutRanking() {
+        final Map<String, Object> props1 = new HashMap<String, Object>();
+        props1.put(Constants.SERVICE_ID, 1L);
+        final ProviderHandler ph1 = new MyProviderHandler(props1);
+
+        assertEquals(0, ph1.compareTo(ph1));
+
+        final Map<String, Object> props2 = new HashMap<String, Object>();
+        props2.put(Constants.SERVICE_ID, 2L);
+        final ProviderHandler ph2 = new MyProviderHandler(props2);
+
+        assertEquals(-1, ph1.compareTo(ph2));
+        assertEquals(1, ph2.compareTo(ph1));
+    }
+
+    @Test public void testOrderingWithRanking() {
+        final Map<String, Object> props1 = new HashMap<String, Object>();
+        props1.put(Constants.SERVICE_ID, 1L);
+        props1.put(Constants.SERVICE_RANKING, 50);
+        final ProviderHandler ph1 = new MyProviderHandler(props1);
+
+        final Map<String, Object> props2 = new HashMap<String, Object>();
+        props2.put(Constants.SERVICE_ID, 2L);
+        props2.put(Constants.SERVICE_RANKING, 150);
+        final ProviderHandler ph2 = new MyProviderHandler(props2);
+
+        assertEquals(1, ph1.compareTo(ph2));
+        assertEquals(-1, ph2.compareTo(ph1));
+    }
+
     private void assertEqualsResolver(final ResourceResolver resolver, final Resource res) {
         assertEquals(resolver, res.getResourceResolver());
     }
@@ -296,5 +327,28 @@ public class ResourceProviderEntryTest {
         public boolean hasChildren() {
 			return false;
 		}
+    }
+
+    private static class MyProviderHandler extends ProviderHandler {
+
+        public MyProviderHandler(Map<String, Object> properties) {
+            super(properties);
+        }
+
+        @Override
+        public Resource getResource(ResourceResolverContext ctx, ResourceResolver resourceResolver, String path,
+                Map<String, String> parameters) {
+            return null;
+        }
+
+        @Override
+        public Iterator<Resource> listChildren(ResourceResolverContext ctx, Resource parent) {
+            return null;
+        }
+
+        @Override
+        public ResourceProvider getResourceProvider(ResourceResolverContext ctx) {
+            return null;
+        }
     }
 }
