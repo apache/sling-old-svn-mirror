@@ -71,7 +71,7 @@ for POM_FILE in $(ls -1 $DIST_CHECKOUT/*.pom); do
     # check for artifact presence in sling.xml
     OBR_KEY="$ARTIFACT_ID/$VERSION"
     ALREADY_EXISTS=$(grep -c $OBR_KEY $OBR_FILE)
-    if [ $ALREADY_EXISTS = 1 ]; then
+    if [ $ALREADY_EXISTS != 0 ]; then
         # no need to process files already included
         continue
     fi
