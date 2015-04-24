@@ -25,6 +25,7 @@
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
         <version>8</version>
+        <relativePath />
     </parent>
 
     <groupId>org.apache.sling</groupId>
@@ -142,11 +143,22 @@
           <module>scripting/thymeleaf</module>
           <module>scripting/velocity</module>
           <module>scripting/xproc</module>
-          <module>launchpad/karaf</module>
           <module>launchpad/testing</module>
-          <module>launchpad/debian</module>
+                <module>launchpad/karaf</module>
     </modules>
     <profiles>
+        <profile>
+            <!--
+              Allow the debian package to be excluded, as it might be slow/stopping
+            -->
+            <id>debian</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <modules>
+                <module>launchpad/debian</module>
+            </modules>
+        </profile>
         <profile>
             <!--
               Allow the integration tests to be excluded, as they might be slow
