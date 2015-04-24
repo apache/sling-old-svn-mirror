@@ -19,7 +19,9 @@
 package org.apache.sling.api.wrappers;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -95,17 +97,27 @@ public class ValueMapDecorator implements ValueMap {
     private <T> T[] convertToArray(Object obj, Class<T> type) {
         if (obj.getClass().isArray()) {
             final Object[] array = (Object[]) obj;
-			@SuppressWarnings("unchecked")
-			final T[] result = (T[]) Array.newInstance(type, array.length);
+            List<Object> resultList = new ArrayList<Object>();
             for (int i = 0; i < array.length; i++) {
-                result[i] = convert(array[i], type);
+                T singleValueResult = convert(array[i], type);
+                if (singleValueResult != null) {
+                    resultList.add(singleValueResult);
+                }
             }
-            return result;
+            if (resultList.isEmpty()) {
+                return null;
+            }
+            return resultList.toArray((T[]) Array.newInstance(type, resultList.size()));
         } else {
             @SuppressWarnings("unchecked")
-            final T[] result = (T[]) Array.newInstance(type, 1);
-            result[0] = convert(obj, type);
-            return result;
+            final T singleValueResult = convert(obj, type);
+            // return null for type conversion errors instead of single element array with value null
+            if (singleValueResult == null) {
+                return null;
+            }
+            final T[] arrayResult = (T[]) Array.newInstance(type, 1);
+            arrayResult[0] = singleValueResult;
+            return arrayResult;
         }
     }
 
