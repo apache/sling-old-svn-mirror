@@ -20,21 +20,29 @@
 # Dependencies
 [artifacts]
   org.apache.sling/org.apache.sling.launchpad/8-SNAPSHOT/slingstart
+  org.apache.sling/org.apache.sling.launchpad.test-bundles/0.0.1-SNAPSHOT/slingfeature
 
-  org.apache.sling/org.apache.sling.launchpad.test-services/2.0.9-SNAPSHOT
-  org.apache.sling/org.apache.sling.launchpad.test-services-war/2.0.9-SNAPSHOT/war
-  org.codehaus.groovy/groovy-all/1.8.2
-  
-[artifacts startLevel=15]
-  org.apache.sling/org.apache.sling.scripting.python/2.0.3-SNAPSHOT
+# Scala
+  org.apache.servicemix.bundles/org.apache.servicemix.bundles.scala-library/2.8.1_1
+  org.apache.servicemix.bundles/org.apache.servicemix.bundles.scala-compiler/2.8.1_1
   org.apache.sling/org.apache.sling.scripting.scala.script/0.9.0-SNAPSHOT
   org.apache.sling/org.apache.sling.scripting.scala.config/0.9.0-SNAPSHOT
   org.apache.sling/org.apache.sling.scripting.scala.hello-world/0.9.0-SNAPSHOT
   org.apache.sling/org.apache.sling.scripting.scala.forum/0.9.0-SNAPSHOT
-  org.apache.servicemix.bundles/org.apache.servicemix.bundles.scala-library/2.8.1_1
-  org.apache.servicemix.bundles/org.apache.servicemix.bundles.scala-compiler/2.8.1_1
-  org.apache.sling/org.apache.sling.scripting.groovy/1.0.1-SNAPSHOT
+  
+# Python
+  org.apache.sling/org.apache.sling.scripting.python/2.0.3-SNAPSHOT
+
+# xproc
   org.apache.sling/org.apache.sling.scripting.xproc/2.0.0-SNAPSHOT
+
+# apt parser
   org.apache.sling/org.apache.sling.extensions.apt.servlet/2.0.3-SNAPSHOT
   org.apache.sling/org.apache.sling.extensions.apt.parser/2.0.3-SNAPSHOT
+
+# path based rtp
   org.apache.sling.samples/org.apache.sling.samples.path-based.rtp/2.0.5-SNAPSHOT
+
+# groovy
+  org.codehaus.groovy/groovy-all/1.8.2
+  org.apache.sling/org.apache.sling.scripting.groovy/1.0.1-SNAPSHOT
