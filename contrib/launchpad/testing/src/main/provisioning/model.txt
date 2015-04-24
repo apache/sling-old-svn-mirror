@@ -22,6 +22,10 @@
   org.apache.sling/org.apache.sling.launchpad/8-SNAPSHOT/slingstart
   org.apache.sling/org.apache.sling.launchpad.test-bundles/0.0.1-SNAPSHOT/slingfeature
 
+# Auth 
+  org.apache.sling/org.apache.sling.auth.selector/1.0.7-SNAPSHOT
+  org.apache.sling/org.apache.sling.auth.openid/1.0.5-SNAPSHOT
+
 # Scala
   org.apache.servicemix.bundles/org.apache.servicemix.bundles.scala-library/2.8.1_1
   org.apache.servicemix.bundles/org.apache.servicemix.bundles.scala-compiler/2.8.1_1
