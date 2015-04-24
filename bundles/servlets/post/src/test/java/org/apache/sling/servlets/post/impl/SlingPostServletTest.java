@@ -91,9 +91,14 @@ public class SlingPostServletTest extends TestCase {
         String encodedUtf8 = "%D0%94%D1%80%D1%83%D0%B3%D0%B0";
         testRedirection("/", "/fred", "*.html", "/fred.html");
         testRedirection("/xyz/", "/xyz/"+utf8Path, "*", "/xyz/"+encodedUtf8);
-        testRedirection("/", "/fred/abc", "http://forced", "http://forced");
-        testRedirection("/", "/fred/"+utf8Path, "http://forced/xyz/*", "http://forced/xyz/"+encodedUtf8);
+        testRedirection("/", "/fred/"+utf8Path, "/xyz/*", "/xyz/"+encodedUtf8);
         testRedirection("/", "/fred/"+utf8Path, null, null);
+        // test redirect with host information
+        testRedirection("/", "/fred/abc", "http://forced", null);
+        testRedirection("/", "/fred/abc", "//forced.com/test", null);
+        testRedirection("/", "/fred/abc", "https://forced.com/test", null);
+        // invalid URI
+        testRedirection("/", "/fred/abc", "file://c:\\Users\\workspace\\test.java", null);
     }
 
     private void testRedirection(String requestPath, String resourcePath, String redirect, String expected) 
