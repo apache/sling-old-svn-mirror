@@ -85,6 +85,19 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>src/main/resources/SLING-INF/res/sling-test/sling/from-bundle/foo.txt</exclude>
+                        <exclude>src/main/resources/SLING-INF/res/sling-test/sling/SLING-1733/sling-1733.txt</exclude>
+                        <exclude>src/main/resources/SLING-INF/content/property-types-test.json</exclude>
+                        <exclude>src/main/resources/SLING-INF/content/ROOT.json</exclude>
+                        <exclude>src/main/resources/SLING-INF/install/org.apache.sling.scripting.jsp.JspScriptEngineFactory.json</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.sling</groupId>
                 <artifactId>maven-sling-plugin</artifactId>
                 <executions>
