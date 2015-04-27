@@ -63,22 +63,30 @@ public class CRUDMergingResourceProvider
         holder.count = 0;
 
         // Loop over resources
+        boolean isUnderlying = true;
         final Iterator<Resource> iter = this.picker.pickResources(resolver, relativePath).iterator();
         while ( iter.hasNext() ) {
             final Resource rsrc = iter.next();
             holder.count++;
             holder.highestResourcePath = rsrc.getPath();
-            if ( !ResourceUtil.isNonExistingResource(rsrc) ) {
-                // check parent for hiding
-                final Resource parent = rsrc.getParent();
-                if ( parent != null ) {
-                    final boolean hidden = new ParentHidingHandler(parent, this.traverseHierarchie).isHidden(holder.name);
-                    if ( hidden ) {
-                        holder.resources.clear();
-                    } else {
-                        holder.resources.add(rsrc);
-                    }
+
+            if (!ResourceUtil.isNonExistingResource(rsrc)) {
+                final boolean hidden;
+                if (isUnderlying) {
+                    hidden = false;
+                } else {
+                    // check parent for hiding
+                    // SLING 3521 : if parent is not readable, nothing is hidden
+                    final Resource parent = rsrc.getParent();
+                    hidden = (parent == null ? false : new ParentHidingHandler(parent, this.traverseHierarchie).isHidden(holder.name));
                 }
+                if (hidden) {
+                    holder.resources.clear();
+                } else {
+                    holder.resources.add(rsrc);
+                }
+            } else {
+                isUnderlying = false;
             }
         }
 
