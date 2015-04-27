@@ -33,7 +33,6 @@ import java.util.ListResourceBundle;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
-
 import javax.servlet.AsyncContext;
 import javax.servlet.DispatcherType;
 import javax.servlet.RequestDispatcher;
@@ -726,4 +725,12 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+        AdapterType adapted = super.adaptTo(type);
+        if (adapted == null && Resource.class.equals(type) && getResource() != null) {
+            adapted = (AdapterType) getResource();
+        }
+        return adapted;
+    }
 }
