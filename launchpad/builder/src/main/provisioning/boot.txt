@@ -43,5 +43,5 @@
     org.apache.sling/org.apache.sling.launchpad.installer/1.2.2
     org.apache.sling/org.apache.sling.installer.core/3.6.2
     org.apache.sling/org.apache.sling.installer.provider.file/1.1.0
-    org.apache.felix/org.apache.felix.configadmin/1.8.2
+    org.apache.felix/org.apache.felix.configadmin/1.8.4
     org.apache.felix/org.apache.felix.eventadmin/1.4.2
