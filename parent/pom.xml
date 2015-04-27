@@ -351,6 +351,7 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                                 <goal>scr</goal>
                             </goals>
                             <configuration>
+                                <strictMode>true</strictMode>
                                 <properties>
                                     <service.vendor>The Apache Software Foundation</service.vendor>
                                 </properties>
