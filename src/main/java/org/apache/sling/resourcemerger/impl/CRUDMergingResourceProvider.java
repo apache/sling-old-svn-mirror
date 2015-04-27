@@ -70,23 +70,20 @@ public class CRUDMergingResourceProvider
             holder.count++;
             holder.highestResourcePath = rsrc.getPath();
 
-            if (!ResourceUtil.isNonExistingResource(rsrc)) {
-                final boolean hidden;
-                if (isUnderlying) {
-                    hidden = false;
-                } else {
-                    // check parent for hiding
-                    // SLING 3521 : if parent is not readable, nothing is hidden
-                    final Resource parent = rsrc.getParent();
-                    hidden = (parent == null ? false : new ParentHidingHandler(parent, this.traverseHierarchie).isHidden(holder.name));
-                }
-                if (hidden) {
-                    holder.resources.clear();
-                } else {
-                    holder.resources.add(rsrc);
-                }
-            } else {
+            final boolean hidden;
+            if (isUnderlying) {
                 isUnderlying = false;
+                hidden = false;
+            } else {
+                // check parent for hiding
+                // SLING 3521 : if parent is not readable, nothing is hidden
+                final Resource parent = rsrc.getParent();
+                hidden = (parent == null ? false : new ParentHidingHandler(parent, this.traverseHierarchie).isHidden(holder.name));
+            }
+            if (hidden) {
+                holder.resources.clear();
+            } else if (!ResourceUtil.isNonExistingResource(rsrc)) {
+                holder.resources.add(rsrc);
             }
         }
 
