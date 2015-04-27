@@ -83,6 +83,15 @@
                     </instructions>
                 </configuration>
             </plugin>
+           <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>derby.log</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
             <!-- plain unit tests -->
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
