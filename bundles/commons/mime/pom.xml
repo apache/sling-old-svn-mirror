@@ -67,6 +67,16 @@
                     </instructions>
                 </configuration>
             </plugin>
+           <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>src/main/resources/res/jquery.treeTable.css</exclude>
+                        <exclude>src/main/resources/res/jquery.treeTable.min.js</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <reporting>
