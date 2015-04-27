@@ -70,6 +70,10 @@ class MergingResourceProvider implements ResourceProvider {
         }
     }
 
+    /**
+     * Class to check whether a child resource must be hidden. It should not be instantiated for the underlying resource
+     * tree (which is /libs by default) because this check is expensive.
+     */
     protected static final class ParentHidingHandler {
 
         private List<ExcludeEntry> entries = new ArrayList<ExcludeEntry>();
@@ -213,16 +217,14 @@ class MergingResourceProvider implements ResourceProvider {
                 return null;
             }
 
-            boolean first = true;
+            boolean isUnderlying = true;
             while (resources.hasNext()) {
                 final Resource resource = resources.next();
 
                 final boolean hidden;
-                if (first) {
-                    // The ParentHidingHandler does not have to be executed for the first resource because it isn't an
-                    // overlay. This can drastically improve the performance in some cases.
+                if (isUnderlying) {
                     hidden = false;
-                    first = false;
+                    isUnderlying = false;
                 } else {
                     // check parent for hiding
                     // SLING 3521 : if parent is not readable, nothing is hidden
@@ -254,9 +256,12 @@ class MergingResourceProvider implements ResourceProvider {
 
             final Iterator<Resource> resources = picker.pickResources(resolver, relativePath).iterator();
 
+            boolean isUnderlying = true;
             while (resources.hasNext()) {
                 Resource parentResource = resources.next();
-                final ParentHidingHandler handler = new ParentHidingHandler(parentResource, this.traverseHierarchie);
+                final ParentHidingHandler handler = !isUnderlying ? new ParentHidingHandler(parentResource, this.traverseHierarchie) : null;
+                isUnderlying = false;
+
                 for (final Resource child : parentResource.getChildren()) {
                     final String rsrcName = child.getName();
                     ResourceHolder holder = null;
@@ -294,11 +299,13 @@ class MergingResourceProvider implements ResourceProvider {
                         candidates.remove(candidates.size() - 1);
                     }
                 }
-                final Iterator<ResourceHolder> iter = candidates.iterator();
-                while (iter.hasNext()) {
-                    final ResourceHolder holder = iter.next();
-                    if (handler.isHidden(holder.name)) {
-                        iter.remove();
+                if (handler != null) {
+                    final Iterator<ResourceHolder> iter = candidates.iterator();
+                    while (iter.hasNext()) {
+                        final ResourceHolder holder = iter.next();
+                        if (handler.isHidden(holder.name)) {
+                            iter.remove();
+                        }
                     }
                 }
             }
