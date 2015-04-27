@@ -25,8 +25,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.junit.RendererFactory;
 import org.apache.sling.junit.Renderer;
+import org.apache.sling.junit.RendererFactory;
 import org.apache.sling.junit.TestSelector;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
@@ -40,9 +40,9 @@ public class HtmlRenderer extends RunListener implements Renderer,RendererFactor
 
     public static final String EXTENSION = "html";
     private PrintWriter output;
-    
+
     /** @inheritDoc */
-    public Renderer createRenderer() { 
+    public Renderer createRenderer() {
         return new HtmlRenderer();
     }
 
@@ -50,9 +50,9 @@ public class HtmlRenderer extends RunListener implements Renderer,RendererFactor
     public boolean appliesTo(TestSelector s) {
         // This is our default renderer, applies to the empty
         // extension as well
-        return EXTENSION.equals(s.getExtension()) || "".equals(s.getExtension()); 
+        return EXTENSION.equals(s.getExtension()) || "".equals(s.getExtension());
     }
-    
+
     /** @inheritDoc */
     public String getExtension() {
         return EXTENSION;
@@ -64,7 +64,7 @@ public class HtmlRenderer extends RunListener implements Renderer,RendererFactor
         HtmlFilter.escape(output, str);
         output.println("</p>");
     }
-    
+
     /** @inheritDoc */
     public void list(String cssClass, Collection<String> data) {
         output.println("<ul class='testNames'>");
@@ -75,18 +75,18 @@ public class HtmlRenderer extends RunListener implements Renderer,RendererFactor
         }
         output.println("</ul>");
     }
-    
+
     /** @inheritDoc */
     public void title(int level, String title) {
         output.print("<h" + level + ">");
         HtmlFilter.escape(output, title);
         output.print("</h" + level + ">");
     }
-    
+
     /** @inheritDoc */
     public void link(String info, String url, String method) {
         output.println("<div class='link'>");
-        
+
         if("POST".equalsIgnoreCase(method)) {
             output.print("<form method='POST' action='");
             output.print(url);
@@ -102,7 +102,7 @@ public class HtmlRenderer extends RunListener implements Renderer,RendererFactor
             HtmlFilter.escape(output, info);
             output.println("</a>");
         }
-        
+
         output.println("</div>");
     }
 
@@ -115,7 +115,7 @@ public class HtmlRenderer extends RunListener implements Renderer,RendererFactor
         response.setCharacterEncoding("UTF-8");
         output = response.getWriter();
         output.println("<html><head>");
-        output.println("<link rel='stylesheet' type='text/css' href='" + JUnitServlet.CSS + "'/>");
+        output.println("<link rel='stylesheet' type='text/css' href='" + ServletProcessor.CSS + "'/>");
         output.print("<title>");
         HtmlFilter.escape(output, pageTitle);
         output.println("</title>");
@@ -123,19 +123,19 @@ public class HtmlRenderer extends RunListener implements Renderer,RendererFactor
         HtmlFilter.escape(output, pageTitle);
         output.println("</h1>");
     }
-    
+
     /** @inheritDoc */
     public void cleanup() {
         output.println("</body>");
         output.println("</html>");
         output = null;
     }
-    
+
     /** @inheritDoc */
     public RunListener getRunListener() {
         return this;
     }
-    
+
     @Override
     public void testFailure(Failure failure) throws Exception {
         super.testFailure(failure);
@@ -173,7 +173,7 @@ public class HtmlRenderer extends RunListener implements Renderer,RendererFactor
         HtmlFilter.escape(output, String.valueOf(value));
         output.println("</span>");
     }
-    
+
     @Override
     public void testRunFinished(Result result) throws Exception {
         super.testRunFinished(result);
@@ -185,7 +185,7 @@ public class HtmlRenderer extends RunListener implements Renderer,RendererFactor
         } else {
             cssClass += "success";
         }
-        
+
         output.println("<p class='testRun'>");
         output.print("TEST RUN FINISHED: ");
         counter("tests", "testCount", result.getRunCount());
