@@ -57,6 +57,20 @@
     <url>http://svn.apache.org/viewvc/sling/trunk/launchpad/integration-tests</url>
   </scm>
 
+  <build>
+      <plugins>
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>src/main/resources/**</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>        
+      </plugins>
+  </build>
+  
   <profiles>
     <profile>
       <!--
