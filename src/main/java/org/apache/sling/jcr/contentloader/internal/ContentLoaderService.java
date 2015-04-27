@@ -33,7 +33,6 @@ import javax.jcr.Value;
 import javax.jcr.lock.LockException;
 
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.commons.mime.MimeTypeService;
@@ -55,19 +54,11 @@ import org.slf4j.LoggerFactory;
  * </ul>
  *
  */
-@Component(
-    metatype = false
+@Component
+@Property(
+    name = Constants.SERVICE_DESCRIPTION,
+    value = "Apache Sling Content Loader Implementation"
 )
-@Properties({
-    @Property(
-        name = Constants.SERVICE_VENDOR,
-        value = "The Apache Software Foundation"
-    ),
-    @Property(
-        name = Constants.SERVICE_DESCRIPTION,
-        value = "Apache Sling Content Loader Implementation"
-    )
-})
 public class ContentLoaderService implements SynchronousBundleListener, BundleHelper {
 
     public static final String PROPERTY_CONTENT_LOADED = "content-loaded";

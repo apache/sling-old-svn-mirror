@@ -23,8 +23,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.jcr.contentloader.ContentReader;
 import org.apache.sling.jcr.contentloader.ImportOptions;
 
@@ -32,12 +30,10 @@ import org.apache.sling.jcr.contentloader.ImportOptions;
  * Base class that takes care of the details that are common to bundle content
  * loader and the POST operation "import" loader.
  */
-@Component
 public abstract class BaseImportLoader extends JcrXmlImporter {
 
     public static final String EXT_JCR_XML = ".jcr.xml";
 
-    @Reference
     private ContentReaderWhiteboard contentReaderWhiteboard;
 
     // This constructor is meant to be used by the OSGi
@@ -47,6 +43,16 @@ public abstract class BaseImportLoader extends JcrXmlImporter {
     // This constructor is meant to be used by non-OSGi
     public BaseImportLoader(ContentReaderWhiteboard contentReaderWhiteboard) {
         this.contentReaderWhiteboard = contentReaderWhiteboard;
+    }
+
+    protected void bindContentReaderWhiteboard(final ContentReaderWhiteboard service) {
+        this.contentReaderWhiteboard = service;
+    }
+
+    protected void unbindContentReaderWhiteboard(final ContentReaderWhiteboard service) {
+        if ( this.contentReaderWhiteboard == service ) {
+            this.contentReaderWhiteboard = null;
+        }
     }
 
     public Map<String, ContentReader> getContentReaders() {

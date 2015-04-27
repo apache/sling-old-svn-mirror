@@ -28,9 +28,10 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.contentloader.ContentImportListener;
@@ -50,16 +51,12 @@ import org.slf4j.LoggerFactory;
  */
 @Component
 @Service(ContentImporter.class)
-@Properties({
-    @Property(
-        name = Constants.SERVICE_VENDOR,
-        value = "The Apache Software Foundation"
-    ),
-    @Property(
+@Property(
         name = Constants.SERVICE_DESCRIPTION,
         value = "Apache Sling JCR Content Import Service"
     )
-})
+@Reference(name="contentReaderWhiteboard", cardinality=ReferenceCardinality.MANDATORY_UNARY,
+           policy=ReferencePolicy.DYNAMIC, referenceInterface=ContentReaderWhiteboard.class)
 public class DefaultContentImporter extends BaseImportLoader implements ContentHelper, ContentImporter {
 
     /**
