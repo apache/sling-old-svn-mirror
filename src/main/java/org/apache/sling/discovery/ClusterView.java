@@ -26,6 +26,9 @@ import aQute.bnd.annotation.ProviderType;
  * A ClusterView represents the instances of a cluster that are
  * up and running and that all can see each other at a certain point in time.
  * <p>
+ * 'Seeing each other'/A cluster refers to being hooked to the same underlying
+ * persistence layer/jcr repository.
+ * <p>
  * A ClusterView can also consist of just one single instance.
  */
 @ProviderType
