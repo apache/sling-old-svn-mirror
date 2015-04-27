@@ -324,5 +324,6 @@ new org.apache.sling.reseditor.JSTreeAdapter(jsTreeAdapterSettings, treeControll
 	    </div>
 	  </div>
 	</div>
+	<div id="last-element"></div>
 </body>
 </html>
