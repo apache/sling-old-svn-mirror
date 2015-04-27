@@ -115,6 +115,8 @@
               <configuration>
                 <excludes>
                   <exclude>frontend/**</exclude>
+                  <exclude>src/main/resources/SLING-INF/libs/sling/resource-editor-static-content/generated/3rd_party/**/*</exclude>
+                  <exclude>src/main/resources/SLING-INF/libs/sling/resource-editor/servlet-nodes.json</exclude>
                 </excludes>
               </configuration>
             </plugin>		    
