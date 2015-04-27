@@ -230,7 +230,20 @@
           </systemPropertyVariables>
         </configuration>
       </plugin>
-    </plugins>
+           <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>src/main/resources/res/ui/jquery.autocomplete.css</exclude>
+                        <exclude>src/main/resources/res/ui/jquery.autocomplete.min.js</exclude>
+                        <exclude>src/main/resources/res/ui/prettify.css</exclude>
+                        <exclude>src/main/resources/res/ui/prettify.js</exclude>
+                        <exclude>README.md</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+     </plugins>
   </build>
 
 

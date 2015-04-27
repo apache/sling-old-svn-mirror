@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.sling.commons.log.logback.internal;
 
 import java.io.File;
@@ -13,6 +31,20 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.sling.commons.log.logback.internal.AppenderTracker.AppenderInfo;
+import org.apache.sling.commons.log.logback.internal.util.SlingRollingFileAppender;
+import org.apache.sling.commons.log.logback.internal.util.SlingStatusPrinter;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
+import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -34,19 +66,6 @@ import ch.qos.logback.core.status.OnConsoleStatusListener;
 import ch.qos.logback.core.status.StatusListener;
 import ch.qos.logback.core.status.StatusListenerAsList;
 import ch.qos.logback.core.status.StatusUtil;
-import org.apache.sling.commons.log.logback.internal.AppenderTracker.AppenderInfo;
-import org.apache.sling.commons.log.logback.internal.util.SlingRollingFileAppender;
-import org.apache.sling.commons.log.logback.internal.util.SlingStatusPrinter;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceFactory;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
-import org.slf4j.LoggerFactory;
-import org.slf4j.bridge.SLF4JBridgeHandler;
 
 public class LogbackManager extends LoggerContextAwareBase {
     private static final String JUL_SUPPORT = "org.apache.sling.commons.log.julenabled";
@@ -454,6 +473,7 @@ public class LogbackManager extends LoggerContextAwareBase {
 
     private class OsgiIntegrationListener implements LoggerContextListener {
 
+        @Override
         public boolean isResetResistant() {
             // The integration listener has to survive resets from other causes
             // like reset when Logback detects change in config file and reloads
@@ -462,9 +482,11 @@ public class LogbackManager extends LoggerContextAwareBase {
             return true;
         }
 
+        @Override
         public void onStart(LoggerContext context) {
         }
 
+        @Override
         public void onReset(LoggerContext context) {
             addInfo("OsgiIntegrationListener : context reset detected. Adding LogManager to context map and firing"
                 + " listeners");
@@ -491,9 +513,11 @@ public class LogbackManager extends LoggerContextAwareBase {
             }
         }
 
+        @Override
         public void onStop(LoggerContext context) {
         }
 
+        @Override
         public void onLevelChange(Logger logger, Level level) {
         }
 
@@ -578,6 +602,7 @@ public class LogbackManager extends LoggerContextAwareBase {
             this.configFile = configFile;
         }
 
+        @Override
         public void perform(JoranConfigurator configurator) throws JoranException {
             final String path = configFile.getAbsolutePath();
             addInfo("Configuring from " + path);
@@ -608,6 +633,7 @@ public class LogbackManager extends LoggerContextAwareBase {
     }
 
     private class DefaultCallback extends ConfiguratorCallback {
+        @Override
         public void perform(JoranConfigurator configurator) throws JoranException {
             configurator.doConfigure(getMainUrl());
         }
@@ -754,6 +780,7 @@ public class LogbackManager extends LoggerContextAwareBase {
     private class PluginServiceFactory implements ServiceFactory {
         private Object instance;
 
+        @Override
         public Object getService(Bundle bundle, ServiceRegistration registration) {
             synchronized (this) {
                 if (this.instance == null) {
@@ -763,6 +790,7 @@ public class LogbackManager extends LoggerContextAwareBase {
             }
         }
 
+        @Override
         public void ungetService(Bundle bundle, ServiceRegistration registration, Object service) {
         }
     }
