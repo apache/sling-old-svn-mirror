@@ -44,6 +44,8 @@
     </scm>
 
     <properties>
+        <sling.java.version>7</sling.java.version>
+        
         <!-- HTTP port to use when running mvn launchpad:run -->
         <run.http.port>8888</run.http.port>
 
