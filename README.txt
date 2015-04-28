@@ -33,15 +33,8 @@ integration-tests module.
 
 To run individual tests, see the README.txt in that module.
 
-Use mvn launchpad:run to start this test instance, allows you to run
-and debug individual tests against it. The standard MAVEN_OPTS environment
-variable can be used to activate debugging of the Sling instance that's 
+Use mvn slingstart:run -Dlaunchpad.keep.running=true to start this test instance.
+It allows you to run and debug individual tests against it. The standard MAVEN_OPTS 
+environment variable can be used to activate debugging of the Sling instance that's 
 being tested.
 
-Using Reactor Builds
-----------------
-This project includes a Maven profile which with rewrite the bundle list to
-use the latest version of all Sling projects which were built in the same reactor
-build. To use this profile, execute the following command from the root project:
-
-    mvn -P test-reactor-sling-bundles clean install
