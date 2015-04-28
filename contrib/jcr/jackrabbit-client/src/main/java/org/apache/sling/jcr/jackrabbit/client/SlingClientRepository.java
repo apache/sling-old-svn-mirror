@@ -28,8 +28,13 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.References;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.AbstractSlingRepository;
+import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.service.log.LogService;
 
 /**
@@ -38,11 +43,24 @@ import org.osgi.service.log.LogService;
  */
 @Component(name="org.apache.sling.jcr.jackrabbit.client.SlingClientRepository", metatype=true,
     description="%repository.description", label="%repository.name", configurationFactory=true,
-    policy=ConfigurationPolicy.REQUIRE)
+    policy=ConfigurationPolicy.REQUIRE,
+    inherit=false)
 @Properties({
     @Property(name="service.description", value="Factory for non-embedded JCR Repository Instances"),
     @Property(name="java.naming.factory.initial", value="org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory"),
-    @Property(name="java.naming.provider.url", value="http://sling.apache.org")
+    @Property(name="java.naming.provider.url", value="http://sling.apache.org"),
+    @Property(name=AbstractSlingRepository.PROPERTY_DEFAULT_WORKSPACE),
+    @Property(name=AbstractSlingRepository.PROPERTY_ANONYMOUS_USER, value=AbstractSlingRepository.DEFAULT_ANONYMOUS_USER),
+    @Property(name=AbstractSlingRepository.PROPERTY_ANONYMOUS_PASS, value=AbstractSlingRepository.DEFAULT_ANONYMOUS_PASS),
+    @Property(name=AbstractSlingRepository.PROPERTY_ADMIN_USER, value=AbstractSlingRepository.DEFAULT_ADMIN_USER),
+    @Property(name=AbstractSlingRepository.PROPERTY_ADMIN_PASS, value=AbstractSlingRepository.DEFAULT_ADMIN_PASS),
+    @Property(name=AbstractSlingRepository.PROPERTY_LOGIN_ADMIN_ENABLED, boolValue = AbstractSlingRepository.DEFAULT_LOGIN_ADMIN_ENABLED),
+    @Property(name=AbstractSlingRepository.PROPERTY_POLL_ACTIVE, intValue=AbstractSlingRepository.DEFAULT_POLL_ACTIVE),
+    @Property(name=AbstractSlingRepository.PROPERTY_POLL_INACTIVE, intValue=AbstractSlingRepository.DEFAULT_POLL_INACTIVE)
+})
+@References({
+    @Reference(name="log", referenceInterface=LogService.class, policy=ReferencePolicy.DYNAMIC, cardinality=ReferenceCardinality.MANDATORY_UNARY),
+    @Reference(name="serviceUserMapper", referenceInterface=ServiceUserMapper.class, policy=ReferencePolicy.DYNAMIC, cardinality=ReferenceCardinality.MANDATORY_UNARY)
 })
 public class SlingClientRepository extends AbstractSlingRepository
         implements Repository, SlingRepository {
