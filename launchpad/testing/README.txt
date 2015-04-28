@@ -33,7 +33,7 @@ integration-tests module.
 
 To run individual tests, see the README.txt in that module.
 
-Use mvn slingstart:run -Dlaunchpad.keep.running=true to start this test instance.
+Use mvn slingstart:start -Dlaunchpad.keep.running=true to start this test instance.
 It allows you to run and debug individual tests against it. The standard MAVEN_OPTS 
 environment variable can be used to activate debugging of the Sling instance that's 
 being tested.
