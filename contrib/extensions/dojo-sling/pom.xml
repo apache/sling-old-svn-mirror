@@ -73,6 +73,15 @@
                     </instructions>
                 </configuration>
             </plugin>
+           <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>src/main/resources/SLING-INF/content/dojox/data/demo/README-JCR.txt</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
