@@ -36,8 +36,6 @@ import org.thymeleaf.dialect.AbstractDialect;
 import org.thymeleaf.processor.IProcessor;
 
 @Component(
-    label = "Apache Sling Scripting Thymeleaf “Sling Dialect”",
-    description = "Sling dialect for Sling Scripting Thymeleaf",
     immediate = true
 )
 @Service
