@@ -34,7 +34,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.osgi.framework.BundleContext;
 
-@Component(name = "org.apache.sling.scripting.velocity.VelocityScriptEngineService", label = "%auth.name", description = "%auth.description")
+@Component(name = "org.apache.sling.scripting.velocity.VelocityScriptEngineService")
 @Service( value = VelocityScriptEngineService.class )
 public class VelocityScriptEngineService {
 	
