@@ -41,8 +41,8 @@ import org.apache.sling.rewriter.ProcessorManager;
 @Component
 @Service(value=Filter.class)
 @Properties({
-    @Property(name="sling.filter.scope",value={"request", "error"},propertyPrivate=true),
-    @Property(name="service.ranking",intValue=-2500,propertyPrivate=true)
+    @Property(name="sling.filter.scope",value={"request", "error"}),
+    @Property(name="service.ranking",intValue=-2500)
 })
 public class RewriterFilter implements Filter {
 
