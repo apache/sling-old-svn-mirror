@@ -56,6 +56,16 @@
                     <scalaVersion>2.8.1</scalaVersion>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>SCALA-LICENSE.txt</exclude>
+                        <exclude>src/main/resources/META-INF/SCALA-LICENSE.txt</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
