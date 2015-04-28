@@ -35,7 +35,7 @@ import org.apache.sling.scripting.api.BindingsValuesProvider;
 @Component()
 @Service(BindingsValuesProvider.class)
 @Properties({
-        @Property(name = "javax.script.name", value = "sightly", propertyPrivate = true)
+        @Property(name = "javax.script.name", value = "sightly")
 })
 public class SightlyBindingsValuesProvider implements BindingsValuesProvider {
 
