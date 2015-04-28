@@ -114,6 +114,16 @@
                     </execution>
                 </executions>
             </plugin>
+           <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>src/main/dojo-override/dojo/_base/_loader/hostenv_rhino.js</exclude>
+                        <exclude>src/main/resources/META-INF/LICENSE_dojo</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
             
             <plugin>
                 <groupId>org.apache.felix</groupId>
