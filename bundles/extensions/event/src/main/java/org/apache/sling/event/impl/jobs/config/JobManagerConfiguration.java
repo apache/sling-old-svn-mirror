@@ -24,6 +24,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -80,7 +81,7 @@ import org.slf4j.LoggerFactory;
     @Property(name=JobManagerConfiguration.PROPERTY_BACKGROUND_LOAD_DELAY,
               longValue=JobManagerConfiguration.DEFAULT_BACKGROUND_LOAD_DELAY, propertyPrivate=true),
 })
-public class JobManagerConfiguration implements TopologyEventListener, ConfigurationChangeListener {
+public class JobManagerConfiguration implements TopologyEventListener {
 
     /** Logger. */
     private final Logger logger = LoggerFactory.getLogger("org.apache.sling.event.impl.jobs");
@@ -176,6 +177,9 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
     @Reference
     private Scheduler scheduler;
 
+    /** Is this still active? */
+    private final AtomicBoolean active = new AtomicBoolean(false);
+
     /** The topology capabilities. */
     private volatile TopologyCapabilities topologyCapabilities;
 
@@ -221,6 +225,7 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
         } finally {
             resolver.close();
         }
+        this.active.set(true);
         this.queueConfigManager.addListener(this);
     }
 
@@ -239,8 +244,13 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
      */
     @Deactivate
     protected void deactivate() {
-        this.stopProcessing(true);
+        this.active.set(false);
+        this.stopProcessing();
         this.queueConfigManager.removeListener();
+    }
+
+    public boolean isActive() {
+        return this.active.get();
     }
 
     /**
@@ -441,15 +451,10 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
      * This method is invoked by the queue configuration manager
      * whenever the queue configuration changes.
      */
-    @Override
-    public void configurationChanged(final boolean active) {
+    public void queueConfigurationChanged() {
         final TopologyCapabilities caps = this.topologyCapabilities;
-        if ( caps != null ) {
-            this.stopProcessing(false);
-
-            if ( active ) {
-                this.startProcessing(Type.PROPERTIES_CHANGED, caps, true);
-            }
+        if ( caps != null && this.isActive() ) {
+            this.startProcessing(Type.PROPERTIES_CHANGED, caps, true);
         }
     }
 
@@ -457,16 +462,15 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
      * Stop processing
      * @param deactivate Whether to deactivate the capabilities
      */
-    private void stopProcessing(final boolean deactivate) {
+    private void stopProcessing() {
         logger.debug("Stopping job processing...");
-        boolean notify = this.topologyCapabilities != null;
-        // deactivate old capabilities - this stops all background processes
-        if ( deactivate && this.topologyCapabilities != null ) {
-            this.topologyCapabilities.deactivate();
-        }
-        this.topologyCapabilities = null;
+        final TopologyCapabilities caps = this.topologyCapabilities;
 
-        if ( notify ) {
+        if ( caps != null ) {
+            // deactivate old capabilities - this stops all background processes
+            caps.deactivate();
+            this.topologyCapabilities = null;
+
             // stop all listeners
             this.notifiyListeners();
         }
@@ -545,13 +549,13 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
         synchronized ( this.listeners ) {
 
             if ( event.getType() == Type.TOPOLOGY_CHANGING ) {
-               this.stopProcessing(true);
+               this.stopProcessing();
 
             } else if ( event.getType() == Type.TOPOLOGY_INIT
                 || event.getType() == Type.TOPOLOGY_CHANGED
                 || event.getType() == Type.PROPERTIES_CHANGED ) {
 
-                this.stopProcessing(true);
+                this.stopProcessing();
 
                 this.startProcessing(event.getType(), new TopologyCapabilities(event.getNewView(), this), false);
             }

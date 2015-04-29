@@ -173,7 +173,7 @@ public class TopologyCapabilities {
      * @return {@code true} if still active.
      */
     public boolean isActive() {
-        return this.active && this.view.isCurrent();
+        return this.active && this.jobManagerConfiguration.isActive() && this.view.isCurrent();
     }
 
     /**
