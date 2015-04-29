@@ -179,6 +179,11 @@ public class QueueManager
             jbq.maintain();
         }
 
+        // full topic scan is done every third run
+        if ( schedulerRuns % 3 == 0 ) {
+            this.fullTopicScan();
+        }
+
         // we only do a full clean up on every fifth run
         final boolean doFullCleanUp = (schedulerRuns % 5 == 0);
 
@@ -351,23 +356,27 @@ public class QueueManager
             logger.debug("Topology changed {}", active);
             this.isActive.set(active);
             if ( active ) {
-                final Set<String> topics = this.initialScan();
-                final Map<QueueInfo, Set<String>> mapping = this.updateTopicMapping(topics);
-                // start queues
-                for(final Map.Entry<QueueInfo, Set<String>> entry : mapping.entrySet() ) {
-                    this.start(entry.getKey(), entry.getValue());
-                }
+                fullTopicScan();
             } else {
                 this.restart();
             }
         }
     }
 
+    private void fullTopicScan() {
+        logger.debug("Scanning repository for existing topics...");
+        final Set<String> topics = this.scanTopics();
+        final Map<QueueInfo, Set<String>> mapping = this.updateTopicMapping(topics);
+        // start queues
+        for(final Map.Entry<QueueInfo, Set<String>> entry : mapping.entrySet() ) {
+            this.start(entry.getKey(), entry.getValue());
+        }
+    }
+
     /**
      * Scan the resource tree for topics.
      */
-    private Set<String> initialScan() {
-        logger.debug("Scanning repository for existing topics...");
+    private Set<String> scanTopics() {
         final Set<String> topics = new HashSet<String>();
 
         final ResourceResolver resolver = this.configuration.createResourceResolver();
