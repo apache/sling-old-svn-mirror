@@ -28,6 +28,9 @@ public class ServerConfiguration implements Serializable {
 
     private static final String DEFAULT_VM_OPTS = "-Xmx1024m -XX:MaxPermSize=256m -Djava.awt.headless=true";
 
+    // http://docs.oracle.com/javase/7/docs/technotes/guides/jpda/conninv.html#Invocation
+    private static final String DEFAULT_VM_DEBUG_OPTS = "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8000";
+
     /** The unique id. */
     private String id;
 
@@ -45,6 +48,9 @@ public class ServerConfiguration implements Serializable {
 
     /** The vm options. */
     private String vmOpts = DEFAULT_VM_OPTS;
+
+    /** Attach a debugger to the forked JVM. If set to "true", the process will allow a debugger to attach on port 8000. If set to some other string, that string will be appended to the vmOpts, allowing you to configure arbitrary debuggability options (without overwriting the other options specified through the vmOpts parameter).*/
+    private String debug;
 
     /** Additional application options. */
     private String opts;
@@ -103,6 +109,21 @@ public class ServerConfiguration implements Serializable {
         this.vmOpts = vmOpts;
     }
 
+    /**
+     * @return the debugging options to use or {@code null}. Should be appended to the ones being returned by {@link #getVmOpts()}.
+     * @see <a href="http://docs.oracle.com/javase/7/docs/technotes/guides/jpda/conninv.html#Invocation">JPDA Sun VM Invocation Options</a>
+     */
+    public String getVmDebugOpts() {
+        if (Boolean.valueOf(debug).equals(Boolean.TRUE)) {
+            return DEFAULT_VM_DEBUG_OPTS;
+        }
+        return debug;
+    }
+
+    public void setDebug(final String debug) {
+        this.debug = debug;
+    }
+
     public String getOpts() {
         return opts;
     }
@@ -151,6 +172,7 @@ public class ServerConfiguration implements Serializable {
         copy.setPort(this.getPort());
         copy.setContextPath(this.getContextPath());
         copy.setVmOpts(this.getVmOpts());
+        copy.setDebug(this.debug);
         copy.setOpts(this.getOpts());
         copy.setInstances(1);
         copy.setFolder(this.getFolder());
@@ -164,7 +186,7 @@ public class ServerConfiguration implements Serializable {
         return "LaunchpadConfiguration [id=" + id + ", runmode=" + runmode
                 + ", port=" + port + ", controlPort=" + controlPort
                 + ", contextPath=" + contextPath
-                + ", vmOpts=" + vmOpts + ", opts=" + opts + ", instances="
+                + ", vmOpts=" + vmOpts + ", vmDebugOpts=" + getVmDebugOpts() + ", opts=" + opts + ", instances="
                 + instances + ", folder=" + folder + "]";
     }
 }
