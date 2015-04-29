@@ -172,6 +172,7 @@
         <module>bundles/extensions/bundleresource</module>
         <module>bundles/extensions/dea</module>
         <module>bundles/extensions/discovery/api</module>
+        <module>bundles/extensions/discovery/commons</module>
         <module>bundles/extensions/discovery/impl</module>
         <module>bundles/extensions/discovery/support</module>
         <module>bundles/extensions/discovery/standalone</module>
