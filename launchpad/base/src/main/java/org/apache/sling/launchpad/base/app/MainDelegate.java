@@ -190,7 +190,7 @@ public class MainDelegate implements Launcher {
                     // Display port number on console, in case HttpService doesn't. This is logged as late as
                     // possible in order to pick up defaults from the Sling property files, although system
                     // property substitutions will be missed.
-                    info("HTTP server port: " + commandLine.get(PROP_PORT), null);
+                    info("HTTP server port: " + properties.get(PROP_PORT), null);
                 }
             };
 
