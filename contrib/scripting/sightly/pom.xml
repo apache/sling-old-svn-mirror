@@ -55,6 +55,7 @@
         <module>repl</module>
         <module>testing-content</module>
         <module>testing</module>
+        <module>models-use-provider</module>
     </modules>
 
 </project>
