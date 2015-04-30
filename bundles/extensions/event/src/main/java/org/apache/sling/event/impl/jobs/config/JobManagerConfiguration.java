@@ -63,7 +63,7 @@ import org.slf4j.LoggerFactory;
            label="Apache Sling Job Manager",
            description="This is the central service of the job handling.",
            name="org.apache.sling.event.impl.jobs.jcr.PersistenceHandler")
-@Service(value={JobManagerConfiguration.class, TopologyEventListener.class})
+@Service(value={JobManagerConfiguration.class})
 @Properties({
     @Property(name=JobManagerConfiguration.PROPERTY_DISABLE_DISTRIBUTION,
               boolValue=JobManagerConfiguration.DEFAULT_DISABLE_DISTRIBUTION,
