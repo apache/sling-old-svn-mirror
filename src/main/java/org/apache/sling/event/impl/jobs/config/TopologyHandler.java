@@ -60,6 +60,7 @@ public class TopologyHandler implements TopologyEventListener, Runnable {
     @Deactivate
     protected void deactivate() {
         this.isActive.set(false);
+        this.queue.clear();
         try {
             this.queue.put(new QueueItem());
         } catch ( final InterruptedException ie) {
