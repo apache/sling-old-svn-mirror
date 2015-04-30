@@ -206,6 +206,7 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
         return item;
     }
 
+    @Nonnull
     public DistributionQueueState getState() {
         if (!isActive) {
             return DistributionQueueState.PAUSED;

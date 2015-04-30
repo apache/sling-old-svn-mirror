@@ -18,6 +18,7 @@
  */
 package org.apache.sling.distribution.serialization.impl.vlt;
 
+import javax.annotation.Nonnull;
 import javax.jcr.Session;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -62,6 +63,7 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
     private ImportMode importMode;
 
     private AccessControlHandling aclHandling;
+
     private final String[] packageRoots;
 
     public FileVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots) {
@@ -73,7 +75,7 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
     }
 
     @Override
-    protected DistributionPackage createPackageForAdd(ResourceResolver resourceResolver, DistributionRequest request)
+    protected DistributionPackage createPackageForAdd(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request)
             throws DistributionPackageBuildingException {
         Session session = null;
         try {
@@ -97,7 +99,7 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
     }
 
     @Override
-    protected DistributionPackage readPackageInternal(ResourceResolver resourceResolver, final InputStream stream)
+    protected DistributionPackage readPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull final InputStream stream)
             throws DistributionPackageReadingException {
         log.debug("reading a stream");
         DistributionPackage pkg = null;
@@ -123,7 +125,7 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
 
 
     @Override
-    protected DistributionPackage getPackageInternal(ResourceResolver resourceResolver, String id) {
+    protected DistributionPackage getPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull String id) {
         DistributionPackage distributionPackage = null;
         try {
             File file = new File(id);
@@ -139,7 +141,7 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
 
 
     @Override
-    public boolean installPackageInternal(ResourceResolver resourceResolver, DistributionPackage distributionPackage) throws DistributionPackageReadingException {
+    public boolean installPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageReadingException {
         log.debug("reading a distribution package stream");
 
         Session session = null;

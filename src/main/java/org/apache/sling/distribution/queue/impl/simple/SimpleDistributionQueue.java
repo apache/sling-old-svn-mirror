@@ -18,6 +18,7 @@
  */
 package org.apache.sling.distribution.queue.impl.simple;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.util.Calendar;
 import java.util.Map;
@@ -88,6 +89,7 @@ public class SimpleDistributionQueue implements DistributionQueue {
         }
     }
 
+    @CheckForNull
     public DistributionQueueItem getHead() {
         DistributionQueueItem element = queue.peek();
         if (element != null) {
@@ -107,6 +109,7 @@ public class SimpleDistributionQueue implements DistributionQueue {
         return queue.size();
     }
 
+    @Nonnull
     public DistributionQueueState getState() {
         return DistributionQueueUtils.calculateState(this);
     }
@@ -117,6 +120,7 @@ public class SimpleDistributionQueue implements DistributionQueue {
         return queue;
     }
 
+    @CheckForNull
     public DistributionQueueItem getItem(@Nonnull String id) {
         DistributionQueueItem toRemove = null;
         for (DistributionQueueItem item : queue) {
@@ -129,6 +133,7 @@ public class SimpleDistributionQueue implements DistributionQueue {
     }
 
 
+    @CheckForNull
     public DistributionQueueItem remove(@Nonnull String id) {
         DistributionQueueItem toRemove =getItem(id);
 

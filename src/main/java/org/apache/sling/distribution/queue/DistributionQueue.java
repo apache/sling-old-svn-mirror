@@ -91,6 +91,7 @@ public interface DistributionQueue {
      * @return the item, or {@code null} if the item with the given id
      * doesn't exist
      */
+    @CheckForNull
     DistributionQueueItem getItem(@Nonnull String packageId);
 
     /**
@@ -100,6 +101,7 @@ public interface DistributionQueue {
      * @return the removed item, or {@code null} if the item with the given id
      * doesn't exist
      */
+    @CheckForNull
     DistributionQueueItem remove(@Nonnull String packageId);
 
 
@@ -119,5 +121,6 @@ public interface DistributionQueue {
      * returns the state of the queue
      * @return the queue state
      */
+    @Nonnull
     DistributionQueueState getState();
 }
