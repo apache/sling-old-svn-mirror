@@ -77,7 +77,7 @@ public class FileVaultDistributionPackageBuilderTest {
 
 
         FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder("filevlt", packaging, null, null, null);
-        DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, new String[]{"/"});
+        DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
         DistributionPackage distributionPackage = fileVaultdistributionPackageBuilder.createPackageForAdd(resourceResolver, request);
         assertNotNull(distributionPackage);
     }

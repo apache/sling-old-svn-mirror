@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.UUID;
 
+import javax.annotation.Nonnull;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
@@ -75,7 +76,7 @@ public class JcrVaultDistributionPackageBuilder  extends AbstractDistributionPac
     }
 
     @Override
-    protected DistributionPackage createPackageForAdd(ResourceResolver resourceResolver, DistributionRequest request) throws DistributionPackageBuildingException {
+    protected DistributionPackage createPackageForAdd(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionPackageBuildingException {
         Session session = null;
         try {
             session = getSession(resourceResolver);
@@ -103,7 +104,7 @@ public class JcrVaultDistributionPackageBuilder  extends AbstractDistributionPac
     }
 
     @Override
-    protected DistributionPackage readPackageInternal(ResourceResolver resourceResolver, InputStream stream) throws DistributionPackageReadingException {
+    protected DistributionPackage readPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageReadingException {
         Session session = null;
         try {
             session = getSession(resourceResolver);
@@ -120,7 +121,7 @@ public class JcrVaultDistributionPackageBuilder  extends AbstractDistributionPac
     }
 
     @Override
-    protected boolean installPackageInternal(ResourceResolver resourceResolver, DistributionPackage distributionPackage) throws DistributionPackageReadingException {
+    protected boolean installPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageReadingException {
         Session session = null;
         try {
             session = getSession(resourceResolver);
@@ -143,7 +144,7 @@ public class JcrVaultDistributionPackageBuilder  extends AbstractDistributionPac
     }
 
     @Override
-    protected DistributionPackage getPackageInternal(ResourceResolver resourceResolver, String id) {
+    protected DistributionPackage getPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull String id) {
         Session session = null;
         try {
             session = getSession(resourceResolver);

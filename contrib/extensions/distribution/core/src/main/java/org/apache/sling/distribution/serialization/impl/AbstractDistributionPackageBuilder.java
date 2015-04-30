@@ -49,7 +49,6 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         this.type = type;
     }
 
-
     public String getType() {
         return type;
     }
@@ -79,12 +78,11 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
 
     @CheckForNull
     public DistributionPackage readPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageReadingException {
-        DistributionPackage distributionPackage = null;
+
         if (!stream.markSupported()) {
             stream = new BufferedInputStream(stream);
         }
-        distributionPackage = SimpleDistributionPackage.fromStream(stream, type);
-
+        DistributionPackage distributionPackage = SimpleDistributionPackage.fromStream(stream, type);
 
         stream.mark(-1);
 
@@ -116,7 +114,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         return installed;
     }
 
-    private boolean installDeletePackage(ResourceResolver resourceResolver, DistributionPackage distributionPackage) throws DistributionPackageReadingException {
+    private boolean installDeletePackage(@Nonnull ResourceResolver resourceResolver, @CheckForNull DistributionPackage distributionPackage) throws DistributionPackageReadingException {
         Session session = null;
         try {
             if (distributionPackage != null) {
@@ -138,6 +136,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         return false;
     }
 
+    @CheckForNull
     public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String id) {
         DistributionPackage distributionPackage = SimpleDistributionPackage.fromIdString(id, type);
 
@@ -168,17 +167,19 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         }
     }
 
-    protected abstract DistributionPackage createPackageForAdd(ResourceResolver resourceResolver, DistributionRequest request)
+    @CheckForNull
+    protected abstract DistributionPackage createPackageForAdd(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request)
             throws DistributionPackageBuildingException;
 
-
-    protected abstract DistributionPackage readPackageInternal(ResourceResolver resourceResolver, InputStream stream)
+    @CheckForNull
+    protected abstract DistributionPackage readPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream)
             throws DistributionPackageReadingException;
 
 
-    protected abstract boolean installPackageInternal(ResourceResolver resourceResolver, DistributionPackage distributionPackage)
+    protected abstract boolean installPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage)
             throws DistributionPackageReadingException;
 
-    protected abstract DistributionPackage getPackageInternal(ResourceResolver resourceResolver, String id);
+    @CheckForNull
+    protected abstract DistributionPackage getPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull String id);
 
 }

@@ -73,7 +73,7 @@ public class ResourceSharedDistributionPackage implements SharedDistributionPack
             deleteHolderResource(holderName);
 
             Resource holderRoot = getHolderRootResource();
-            if (!holderRoot.hasChildren()) {
+            if (holderRoot != null && !holderRoot.hasChildren()) {
                 delete();
             }
         } catch (PersistenceException e) {
