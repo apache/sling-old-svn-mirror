@@ -34,6 +34,10 @@ public interface TopologyEventListener {
 	 * Inform the service about an event in the topology - or in the discovery
 	 * of the topology.
 	 * <p>
+	 * Implementors of this method must ensure that this method returns quickly
+	 * and that no locks are being acquired that could cause deadlocks (ie the
+	 * framework might call this method holding locks).
+	 * <p>
 	 * The <code>TopologyEvent</code> contains details about what changed.
 	 * The supported event types are:
 	 * <ul>
