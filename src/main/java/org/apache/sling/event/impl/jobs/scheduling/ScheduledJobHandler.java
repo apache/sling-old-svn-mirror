@@ -538,4 +538,8 @@ public class ScheduledJobHandler implements Runnable {
             this.logger.debug("Ignored exception " + e.getMessage(), e);
         }
     }
+
+    public void maintenance() {
+        this.addFullScan();
+    }
 }
