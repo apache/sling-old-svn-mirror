@@ -20,4 +20,4 @@
 # Only a single artifact is allowed within this feature.
 #
 [feature name=:launchpad]
-    org.apache.sling/org.apache.sling.launchpad.base/5.0.0-2.6.1-SNAPSHOT
+    org.apache.sling/org.apache.sling.launchpad.base/5.0.0-2.6.0
