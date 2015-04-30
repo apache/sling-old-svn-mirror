@@ -409,4 +409,13 @@ public class ScheduleInfoImpl implements ScheduleInfo, Serializable {
         }
         return null;
     }
+
+    @Override
+    public String toString() {
+        return "ScheduleInfo [scheduleType=" + scheduleType
+                + ", dayOfWeek=" + dayOfWeek + ", hourOfDay=" + hourOfDay
+                + ", minuteOfHour=" + minuteOfHour + ", at=" + at
+                + ", monthOfYear=" + monthOfYear + ", expression=" + expression
+                + "]";
+    }
 }

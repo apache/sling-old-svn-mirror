@@ -146,7 +146,10 @@ public abstract class ResourceHelper {
      * @return The filtered node name.
      */
     public static String filterName(final String resourceName) {
-        final StringBuilder sb  = new StringBuilder(resourceName.length());
+        if ( resourceName == null ) {
+            return null;
+        }
+        final StringBuilder sb = new StringBuilder(resourceName.length());
         char lastAdded = 0;
 
         for(int i=0; i < resourceName.length(); i++) {
