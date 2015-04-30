@@ -29,12 +29,14 @@ See the Subversion documentation for other source control features.
 Integration tests
 -----------------
 This module runs number of integration tests provided by the sibling 
-integration-tests module.
+integration-tests module. By default the instance is started, then the 
+integration-tests are executed and the instance is being shutdown again.
 
-To run individual tests, see the README.txt in that module.
+To run individual tests, see the README.txt in the integration-tests module.
 
 Use mvn slingstart:start -Dlaunchpad.keep.running=true to start this test instance.
-It allows you to run and debug individual tests against it. The standard MAVEN_OPTS 
-environment variable can be used to activate debugging of the Sling instance that's 
-being tested.
+It allows you to run and debug individual tests against it (on client-side). 
+To debug this instance on server-side start with mvn slingstart:run -Dlaunchpad.keep.running=true -Ddebug.
+That allows to connect to it via Java Remote Debugging on port 8000.
+You can stop the instance via Ctrl+C.
 

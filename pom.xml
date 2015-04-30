@@ -46,8 +46,7 @@
     <properties>
         <sling.java.version>7</sling.java.version>
         
-        <!-- HTTP port to use when running mvn launchpad:run -->
-        <run.http.port>8888</run.http.port>
+        <sling.default.vm.options>-Xmx1024m -XX:MaxPermSize=256m -Djava.awt.headless=true</sling.default.vm.options>
 
         <!-- path suffix for HTTP access to Sling -->
         <http.base.path />
@@ -112,6 +111,7 @@
                             <controlPort>${sling.control.port}</controlPort>
                             <runmode>${sling.run.modes}</runmode>
                             <contextPath>${http.base.path}</contextPath>
+                            <vmOpts>${sling.vm.options}</vmOpts>
                         </server>
                     </servers>
                 </configuration>
@@ -206,6 +206,28 @@
                 <min.port>41600</min.port>
                 <max.port>41799</max.port>
             </properties>
+        </profile>
+        <profile>
+             <id>debug</id>
+             <activation>
+                <property>
+                    <name>debug</name>
+                </property>
+             </activation>
+             <properties>
+                <sling.vm.options>${sling.default.vm.options} -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8000</sling.vm.options>
+             </properties>
+        </profile>
+        <profile>
+             <id>no-debug</id>
+             <activation>
+                <property>
+                    <name>!debug</name>
+                </property>
+             </activation>
+             <properties>
+                <sling.vm.options>${sling.default.vm.options}</sling.vm.options>
+             </properties>
         </profile>
     </profiles>
     
