@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.event.impl.jobs;
+package org.apache.sling.event.impl.jobs.scheduling;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -26,42 +26,72 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.impl.support.ScheduleInfoImpl;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobBuilder.ScheduleBuilder;
 import org.apache.sling.event.jobs.ScheduleInfo;
 import org.apache.sling.event.jobs.ScheduledJobInfo;
 
+/**
+ * The job schedule information.
+ * It holds all required information like
+ * - the name of the schedule
+ * - the job topic
+ * - the job properties
+ * - scheduling information
+ */
 public class ScheduledJobInfoImpl implements ScheduledJobInfo, Serializable {
 
     private static final long serialVersionUID = 1L;
 
     private final String scheduleName;
 
-    private final String jobTopic;
-
-    private final Map<String, Object> jobProperties;
-
     private final JobSchedulerImpl jobScheduler;
 
-    private List<ScheduleInfo> scheduleInfos;
+    private final AtomicBoolean isSuspended = new AtomicBoolean(false);
 
-    private AtomicBoolean isSuspended;
+    private volatile List<ScheduleInfo> scheduleInfos;
 
+    private volatile String jobTopic;
+
+    private volatile Map<String, Object> jobProperties;
+
+    /**
+     * Create a new info object
+     * @param jobScheduler The job scheduler
+     * @param scheduleName The unique name
+     */
     public ScheduledJobInfoImpl(final JobSchedulerImpl jobScheduler,
-            final String jobTopic,
-            final Map<String, Object> jobProperties,
             final String scheduleName) {
         this.jobScheduler = jobScheduler;
         this.scheduleName = scheduleName;
-        this.jobTopic = jobTopic;
-        this.jobProperties = jobProperties;
     }
 
-    public void update(final boolean isSuspended,
-            final List<ScheduleInfo> scheduleInfos) {
+    /**
+     * Update/set the job related information
+     * @param jobTopic      The job topic
+     * @param jobProperties The job properties
+     */
+    public void update(final String jobTopic,
+            final Map<String, Object> jobProperties) {
+        final boolean isSuspended = jobProperties.remove(ResourceHelper.PROPERTY_SCHEDULE_SUSPENDED) != null;
+        @SuppressWarnings("unchecked")
+        final List<ScheduleInfo> scheduleInfos = (List<ScheduleInfo>) jobProperties.remove(ResourceHelper.PROPERTY_SCHEDULE_INFO);
+
+        this.jobTopic = jobTopic;
+        this.jobProperties = jobProperties;
         this.scheduleInfos = Collections.unmodifiableList(scheduleInfos);
-        this.isSuspended = new AtomicBoolean(isSuspended);
+
+        this.isSuspended.set(isSuspended);
+    }
+
+    /**
+     * Update the scheduling information
+     * @param scheduleInfos The new schedule
+     */
+    public void update(final List<ScheduleInfo> scheduleInfos) {
+        this.scheduleInfos =  Collections.unmodifiableList(scheduleInfos);
     }
 
     /**
@@ -115,7 +145,7 @@ public class ScheduledJobInfoImpl implements ScheduledJobInfo, Serializable {
      */
     @Override
     public void unschedule() {
-        this.jobScheduler.unschedule(this);
+        this.jobScheduler.unscheduleJob(this);
     }
 
     /**

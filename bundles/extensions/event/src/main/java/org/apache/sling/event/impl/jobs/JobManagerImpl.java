@@ -49,11 +49,11 @@ import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
 import org.apache.sling.event.impl.jobs.notifications.NotificationUtility;
 import org.apache.sling.event.impl.jobs.queues.JobQueueImpl;
 import org.apache.sling.event.impl.jobs.queues.QueueManager;
+import org.apache.sling.event.impl.jobs.scheduling.JobSchedulerImpl;
 import org.apache.sling.event.impl.jobs.stats.StatisticsManager;
 import org.apache.sling.event.impl.jobs.tasks.CleanUpTask;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
-import org.apache.sling.event.impl.support.ScheduleInfoImpl;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.Job.JobState;
 import org.apache.sling.event.jobs.JobBuilder;
@@ -123,7 +123,7 @@ public class JobManagerImpl
     private CleanUpTask maintenanceTask;
 
     /** Job Scheduler. */
-    private JobSchedulerImpl jobScheduler;
+    private org.apache.sling.event.impl.jobs.scheduling.JobSchedulerImpl jobScheduler;
 
     /**
      * Activate this component.
@@ -131,7 +131,7 @@ public class JobManagerImpl
      */
     @Activate
     protected void activate(final Map<String, Object> props) throws LoginException {
-        this.jobScheduler = new JobSchedulerImpl(this.configuration, this.scheduler, this);
+        this.jobScheduler = new org.apache.sling.event.impl.jobs.scheduling.JobSchedulerImpl(this.configuration, this.scheduler, this);
         this.maintenanceTask = new CleanUpTask(this.configuration);
 
         logger.info("Apache Sling Job Manager started on instance {}", Environment.APPLICATION_ID);
@@ -903,49 +903,6 @@ public class JobManagerImpl
         return this.jobScheduler.getScheduledJobs(topic, limit, templates);
     }
 
-    public ScheduledJobInfo addScheduledJob(final String topic,
-            final String jobName,
-            final Map<String, Object> properties,
-            final String scheduleName,
-            final boolean isSuspended,
-            final List<ScheduleInfoImpl> scheduleInfos,
-            final List<String> errors) {
-        final List<String> msgs = new ArrayList<String>();
-        if ( scheduleName == null || scheduleName.length() == 0 ) {
-            msgs.add("Schedule name not specified");
-        }
-        final String errorMessage = Utility.checkJob(topic, properties);
-        if ( errorMessage != null ) {
-            msgs.add(errorMessage);
-        }
-        if ( scheduleInfos.size() == 0 ) {
-            msgs.add("No schedule defined for " + scheduleName);
-        }
-        for(final ScheduleInfoImpl info : scheduleInfos) {
-            info.check(msgs);
-        }
-        if ( msgs.size() == 0 ) {
-            try {
-                final ScheduledJobInfo info = this.jobScheduler.writeJob(topic, jobName, properties, scheduleName, isSuspended, scheduleInfos);
-                if ( info != null ) {
-                    return info;
-                }
-                msgs.add("Unable to persist scheduled job.");
-            } catch ( final PersistenceException pe) {
-                msgs.add("Unable to persist scheduled job: " + scheduleName);
-                logger.warn("Unable to persist scheduled job", pe);
-            }
-        } else {
-            for(final String msg : msgs) {
-                logger.warn(msg);
-            }
-        }
-        if ( errors != null ) {
-            errors.addAll(msgs);
-        }
-        return null;
-    }
-
     /**
      * Internal method to add a job
      */
@@ -1016,5 +973,9 @@ public class JobManagerImpl
             return this.addJob(job.getTopic(), job.getName(), job.getProperties());
         }
         return null;
+    }
+
+    public JobSchedulerImpl getJobScheduler() {
+        return this.jobScheduler;
     }
 }
