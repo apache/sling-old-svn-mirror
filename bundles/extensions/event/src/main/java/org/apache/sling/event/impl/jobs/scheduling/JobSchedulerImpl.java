@@ -538,4 +538,8 @@ public class JobSchedulerImpl
         }
         return null;
     }
+
+    public void maintenance() {
+        this.scheduledJobHandler.maintenance();
+    }
 }

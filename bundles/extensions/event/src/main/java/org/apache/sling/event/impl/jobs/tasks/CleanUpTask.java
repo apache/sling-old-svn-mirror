@@ -31,6 +31,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
+import org.apache.sling.event.impl.jobs.scheduling.JobSchedulerImpl;
 import org.apache.sling.event.impl.support.BatchResourceRemover;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,14 +49,18 @@ public class CleanUpTask {
     /** Job manager configuration. */
     private final JobManagerConfiguration configuration;
 
+    /** Job scheduler. */
+    private final JobSchedulerImpl jobScheduler;
+
     /** We count the scheduler runs. */
     private volatile long schedulerRuns;
 
     /**
      * Constructor
      */
-    public CleanUpTask(final JobManagerConfiguration config) {
+    public CleanUpTask(final JobManagerConfiguration config, final JobSchedulerImpl jobScheduler) {
         this.configuration = config;
+        this.jobScheduler = jobScheduler;
     }
 
     /**
@@ -75,6 +80,10 @@ public class CleanUpTask {
                 cleanUpUnassignedPath = null;
             }
 
+            // job scheduler is handled every third run
+            if ( schedulerRuns % 3 == 1 ) {
+                this.jobScheduler.maintenance();
+            }
             if ( schedulerRuns % 60 == 0 ) { // full clean up is done every hour
                 this.fullEmptyFolderCleanup(topologyCapabilities, this.configuration.getLocalJobsPath());
                 if ( cleanUpUnassignedPath != null ) {

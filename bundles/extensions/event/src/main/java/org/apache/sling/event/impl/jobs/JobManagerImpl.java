@@ -120,7 +120,7 @@ public class JobManagerImpl
     @Reference
     private QueueManager qManager;
 
-    private CleanUpTask maintenanceTask;
+    private volatile CleanUpTask maintenanceTask;
 
     /** Job Scheduler. */
     private org.apache.sling.event.impl.jobs.scheduling.JobSchedulerImpl jobScheduler;
@@ -132,7 +132,7 @@ public class JobManagerImpl
     @Activate
     protected void activate(final Map<String, Object> props) throws LoginException {
         this.jobScheduler = new org.apache.sling.event.impl.jobs.scheduling.JobSchedulerImpl(this.configuration, this.scheduler, this);
-        this.maintenanceTask = new CleanUpTask(this.configuration);
+        this.maintenanceTask = new CleanUpTask(this.configuration, this.jobScheduler);
 
         logger.info("Apache Sling Job Manager started on instance {}", Environment.APPLICATION_ID);
     }
