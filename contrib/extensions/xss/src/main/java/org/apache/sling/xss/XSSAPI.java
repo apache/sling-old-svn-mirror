@@ -129,6 +129,24 @@ public interface XSSAPI {
      */
     public String getValidMultiLineComment(@Nullable String comment, @Nullable String defaultComment);
 
+    /**
+     * Validate a JSON string
+     *
+     * @param json          the JSON string to validate
+     * @param defaultJson   the default value to use if {@code json} is {@code null} or not valid
+     * @return a valid JSON string
+     */
+    public String getValidJSON(@Nullable String json, @Nullable String defaultJson);
+
+    /**
+     * Validate an XML string
+     *
+     * @param xml           the XML string to validate
+     * @param defaultXml    the default value to use if {@code xml} is {@code null} or not valid
+     * @return a valid XML string
+     */
+    public String getValidXML(@Nullable String xml, @Nullable String defaultXml);
+
     // =============================================================================================
     // ENCODERS
     //
