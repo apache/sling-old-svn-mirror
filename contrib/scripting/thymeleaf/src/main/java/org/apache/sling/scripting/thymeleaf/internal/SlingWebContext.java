@@ -35,11 +35,7 @@ import org.thymeleaf.context.VariablesMap;
 import org.thymeleaf.context.WebContextExecutionInfo;
 import org.thymeleaf.util.Validate;
 
-public class SlingWebContext implements SlingContext, IWebContext {
-
-    private final Locale locale;
-
-    private final VariablesMap<String, Object> variables = new VariablesMap<String, Object>();
+public final class SlingWebContext implements SlingContext, IWebContext {
 
     private final SlingHttpServletRequest servletRequest;
 
@@ -47,10 +43,17 @@ public class SlingWebContext implements SlingContext, IWebContext {
 
     private final ServletContext servletContext;
 
-    public SlingWebContext(final SlingHttpServletRequest servletRequest, final SlingHttpServletResponse servletResponse, final ServletContext servletContext, final Locale locale, final Map<String, ?> variables) {
+    private final ResourceResolver resourceResolver;
+
+    private final Locale locale;
+
+    private final VariablesMap<String, Object> variables = new VariablesMap<String, Object>();
+
+    public SlingWebContext(final SlingHttpServletRequest servletRequest, final SlingHttpServletResponse servletResponse, final ServletContext servletContext, final ResourceResolver resourceResolver, final Locale locale, final Map<String, ?> variables) {
         this.servletRequest = servletRequest;
         this.servletResponse = servletResponse;
         this.servletContext = servletContext;
+        this.resourceResolver = resourceResolver;
         this.locale = locale;
         this.variables.putAll(variables);
     }
@@ -76,6 +79,21 @@ public class SlingWebContext implements SlingContext, IWebContext {
     }
 
     @Override
+    public ResourceResolver getResourceResolver() {
+        return resourceResolver;
+    }
+
+    @Override
+    public Locale getLocale() {
+        return locale;
+    }
+
+    @Override
+    public VariablesMap<String, Object> getVariables() {
+        return variables;
+    }
+
+    @Override
     public VariablesMap<String, String[]> getRequestParameters() {
         throw new UnsupportedOperationException("Deprecated method is not supported.");
     }
@@ -93,21 +111,6 @@ public class SlingWebContext implements SlingContext, IWebContext {
     @Override
     public VariablesMap<String, Object> getApplicationAttributes() {
         throw new UnsupportedOperationException("Deprecated method is not supported.");
-    }
-
-    @Override
-    public ResourceResolver getResourceResolver() {
-        return servletRequest.getResourceResolver();
-    }
-
-    @Override
-    public VariablesMap<String, Object> getVariables() {
-        return variables;
-    }
-
-    @Override
-    public Locale getLocale() {
-        return locale;
     }
 
     @Override
