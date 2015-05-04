@@ -23,7 +23,7 @@ Browse to http://localhost:8181/fling.html
 To install the required bundles/features on _Apache Karaf_ run the commands below:
 
     karaf@root()> feature:repo-add mvn:org.apache.sling/org.apache.sling.launchpad.karaf-features/0.1.1-SNAPSHOT/xml/features
-    karaf@root()> feature:install sling-launchpad-jackrabbit
+    karaf@root()> feature:install sling-launchpad-jackrabbit-derby
     karaf@root()> feature:install sling-extension-models
     karaf@root()> feature:install sling-extension-query
     karaf@root()> feature:install sling-scripting-thymeleaf
