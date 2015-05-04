@@ -35,26 +35,44 @@ import org.slf4j.LoggerFactory;
 public class JcrEventDistributionTrigger extends AbstractJcrEventTrigger implements DistributionTrigger {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private final String[] ignoredPathsPatterns;
 
-    public JcrEventDistributionTrigger(SlingRepository repository, String path, String serviceName) {
+    public JcrEventDistributionTrigger(SlingRepository repository, String path, String serviceName, String[] ignoredPathsPatterns) {
         super(repository, path, serviceName);
+        this.ignoredPathsPatterns = ignoredPathsPatterns;
     }
 
     @Override
     protected DistributionRequest processEvent(Event event) throws RepositoryException {
         log.info("triggering distribution from jcr event {}", event);
         DistributionRequest distributionRequest = null;
-        Object pathProperty = event.getPath();
-        if (pathProperty != null) {
-            String replicatingPath = String.valueOf(pathProperty);
-            int type = event.getType();
-            if (Event.PROPERTY_REMOVED == type || Event.PROPERTY_CHANGED == type || Event.PROPERTY_ADDED == type) {
-                replicatingPath = replicatingPath.substring(0, replicatingPath.lastIndexOf('/'));
-            }
-            distributionRequest = new SimpleDistributionRequest(Event.NODE_REMOVED ==
-                    type ? DistributionRequestType.DELETE : DistributionRequestType.ADD, replicatingPath);
+        String replicatingPath = getNodePathFromEvent(event);
+        if (!isIgnoredPath(replicatingPath)) {
+
+            distributionRequest = new SimpleDistributionRequest(Event.NODE_REMOVED == event.getType() ?
+                    DistributionRequestType.DELETE : DistributionRequestType.ADD, replicatingPath);
             log.info("distributing {}", distributionRequest);
+
         }
         return distributionRequest;
+    }
+
+
+    boolean isIgnoredPath(String path) {
+        if (path == null) {
+            return true;
+        }
+
+        if (ignoredPathsPatterns == null || ignoredPathsPatterns.length == 0) {
+            return false;
+        }
+
+        for (String pattern : ignoredPathsPatterns) {
+            if (path.matches(pattern)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
