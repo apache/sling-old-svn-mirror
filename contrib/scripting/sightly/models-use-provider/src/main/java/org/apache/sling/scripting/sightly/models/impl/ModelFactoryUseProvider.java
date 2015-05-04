@@ -41,19 +41,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Sightly {@code UseProvider} which will instantiate a referenced Sling Model.
+ * Sightly {@link UseProvider} which will instantiate a referenced Sling Model.
+ * For that it tries to use the {@link ModelFactory#createModel(Object, Class)} first with the adaptable {@link Resource} 
+ * then with the adaptable {@link SlingHttpServletRequest}.
  * It will always fail with an exception (i.e. no other {@code UseProvider} is asked afterwards and the exception is being rethrown)
  * in case the following two preconditions are fulfilled:
- * 1. the given identifier specifies a class which can be loaded by the DynamicClassLoader
- * 2. the loaded class has a Model annotation
- * In case any of those preconditions are not fulfilled, the other registered UseProviders are used!
+ * <ol>
+ * <li>the given identifier specifies a class which can be loaded by the DynamicClassLoader</li>
+ * <li>the loaded class has a Model annotation</li>
+ * </ol>
+ * In case any of those preconditions are not fulfilled the other registered UseProviders are used!
  */
 @Component
 @Service
 /*
  * must have a higher priority than org.apache.sling.scripting.sightly.impl.engine.extension.use.JavaUseProvider but lower than 
  * org.apache.sling.scripting.sightly.impl.engine.extension.use.RenderUnitProvider to kick in 
- * before the JavaUserProvider but after the RenderUnitProvider
+ * before the JavaUseProvider but after the RenderUnitProvider
  */
 @Property(name = Constants.SERVICE_RANKING, intValue = { 95 }) 
 public class ModelFactoryUseProvider implements UseProvider {
