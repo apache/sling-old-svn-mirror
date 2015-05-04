@@ -29,6 +29,7 @@ import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExportException;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
+import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
@@ -146,7 +147,7 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
         public void delete() {
             String id = distributionPackage.getId();
             DistributionQueueItem item = queue.remove(id);
-            super.delete();
+            DistributionPackageUtils.releaseOrDelete(distributionPackage, queue.getName());
         }
     }
 }
