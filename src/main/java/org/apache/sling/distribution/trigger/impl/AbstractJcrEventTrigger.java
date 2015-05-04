@@ -24,10 +24,15 @@ import javax.jcr.Session;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.distribution.trigger.DistributionTriggerException;
@@ -60,7 +65,6 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
         this.repository = repository;
         this.path = path;
         this.serviceUser = serviceUser;
-
     }
 
     public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
@@ -98,19 +102,40 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
 
         public void onEvent(EventIterator eventIterator) {
             log.info("handling event {}");
+            List<DistributionRequest> requestList = new ArrayList<DistributionRequest>();
+
             while (eventIterator.hasNext()) {
                 Event event = eventIterator.nextEvent();
                 try {
                     if (DistributionJcrUtils.isSafe(event)) {
                         DistributionRequest request = processEvent(event);
                         if (request != null) {
-                            requestHandler.handle(request);
+                            addToList(request, requestList);
                         }
+
                     }
                 } catch (RepositoryException e) {
                     log.error("Error while handling event {}", event, e);
                 }
             }
+
+            for (DistributionRequest request: requestList) {
+                requestHandler.handle(request);
+            }
+        }
+    }
+
+    private void addToList(DistributionRequest request, List<DistributionRequest> requestList) {
+        DistributionRequest lastRequest = requestList.isEmpty()? null : requestList.get(requestList.size() - 1);
+
+        if (lastRequest == null || lastRequest.getRequestType() == null || !lastRequest.getRequestType().equals(request.getRequestType())) {
+            requestList.add(request);
+        } else {
+            List<String> allPaths = new ArrayList<String>();
+            allPaths.addAll(Arrays.asList(lastRequest.getPaths()));
+            allPaths.addAll(Arrays.asList(request.getPaths()));
+            lastRequest = new SimpleDistributionRequest(lastRequest.getRequestType(), allPaths.toArray(new String[0]));
+            requestList.set(requestList.size() - 1, lastRequest);
         }
     }
 
@@ -166,6 +191,22 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
         return cachedSession != null ? cachedSession
                 : (cachedSession = repository.loginAdministrative(null)); // TODO: change after SLING-4312
                 // : (cachedSession = repository.loginService(serviceUser, null));
+    }
+
+
+    protected String getNodePathFromEvent(Event event) throws RepositoryException {
+        String eventPath = event.getPath();
+        int type = event.getType();
+
+        if (eventPath == null) {
+            return null;
+        }
+
+        if (Event.PROPERTY_REMOVED == type || Event.PROPERTY_CHANGED == type || Event.PROPERTY_ADDED == type) {
+            eventPath = eventPath.substring(0, eventPath.lastIndexOf('/'));
+        }
+
+        return eventPath;
     }
 
 

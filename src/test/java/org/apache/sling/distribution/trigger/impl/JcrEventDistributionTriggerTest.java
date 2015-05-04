@@ -39,7 +39,7 @@ public class JcrEventDistributionTriggerTest {
         SlingRepository repository = mock(SlingRepository.class);
         String path = "/some/path";
         String serviceName = "serviceId";
-        JcrEventDistributionTrigger jcrEventdistributionTrigger = new JcrEventDistributionTrigger(repository, path, serviceName);
+        JcrEventDistributionTrigger jcrEventdistributionTrigger = new JcrEventDistributionTrigger(repository, path, serviceName, null);
         Event event = mock(Event.class);
         DistributionRequest distributionRequest = jcrEventdistributionTrigger.processEvent(event);
         assertNull(distributionRequest);
@@ -50,7 +50,7 @@ public class JcrEventDistributionTriggerTest {
         SlingRepository repository = mock(SlingRepository.class);
         String path = "/some/path";
         String serviceName = "serviceId";
-        JcrEventDistributionTrigger jcrEventdistributionTrigger = new JcrEventDistributionTrigger(repository, path, serviceName);
+        JcrEventDistributionTrigger jcrEventdistributionTrigger = new JcrEventDistributionTrigger(repository, path, serviceName, null);
         Event event = mock(Event.class);
         when(event.getPath()).thenReturn("/some/path/generating/event");
         DistributionRequest distributionRequest = jcrEventdistributionTrigger.processEvent(event);

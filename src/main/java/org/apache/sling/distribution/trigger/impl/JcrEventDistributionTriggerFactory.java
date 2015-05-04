@@ -27,6 +27,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
+import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.distribution.trigger.DistributionTriggerException;
@@ -52,8 +53,14 @@ public class JcrEventDistributionTriggerFactory implements DistributionTrigger {
     /**
      * jcr event trigger path property
      */
-    @Property(label = "Path", description = "The path for whcih changes are distributed.")
+    @Property(label = "Path", description = "The path for which changes are distributed.")
     public static final String PATH = "path";
+
+    /**
+     * jcr event trigger path property
+     */
+    @Property(cardinality = 100, label = "Ignored Paths Patterns", description = "The paths matching one of these patterns will be ignored.")
+    public static final String IGNORED_PATHS_PATTERNS = "ignoredPathsPatterns";
 
     /**
      * jcr event trigger service user property
@@ -73,8 +80,11 @@ public class JcrEventDistributionTriggerFactory implements DistributionTrigger {
     public void activate(BundleContext bundleContext, Map<String, Object> config) {
         String path = PropertiesUtil.toString(config.get(PATH), null);
         String serviceName = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
+        String[] ignoredPathsPatterns = PropertiesUtil.toStringArray(config.get(IGNORED_PATHS_PATTERNS), null);
+        ignoredPathsPatterns = SettingsUtils.removeEmptyEntries(ignoredPathsPatterns);
 
-        trigger =  new JcrEventDistributionTrigger(repository, path, serviceName);
+
+        trigger =  new JcrEventDistributionTrigger(repository, path, serviceName, ignoredPathsPatterns);
         trigger.enable();
     }
 
