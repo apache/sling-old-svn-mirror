@@ -32,7 +32,6 @@ import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
@@ -48,16 +47,11 @@ public class UnitChangeMonitor {
     private static final Logger LOG = LoggerFactory.getLogger(UnitChangeMonitor.class);
 
     private Map<String, Long> slyScriptsMap = new ConcurrentHashMap<String, Long>();
-    private Map<String, Long> slySourcesMap = new ConcurrentHashMap<String, Long>();
     private Map<String, Long> slyJavaUseMap = new ConcurrentHashMap<String, Long>();
     private ServiceRegistration eventHandlerServiceRegistration;
-    private String[] searchPaths;
 
     @Reference
     private ResourceResolverFactory rrf = null;
-
-    @Reference
-    private SlingSettingsService slingSettings = null;
 
     /**
      * Returns the last modified date for a Sightly script.
@@ -70,20 +64,6 @@ public class UnitChangeMonitor {
             return 0;
         }
         Long date = slyScriptsMap.get(script);
-        return date != null ? date : 0;
-    }
-
-    /**
-     * Returns the last modified date of a generated Java source file.
-     *
-     * @param file the full path of the generated source file
-     * @return the file's last modified date or 0 if there's no information about the file
-     */
-    public long getLastModifiedDateForJavaSourceFile(String file) {
-        if (file == null) {
-            return 0;
-        }
-        Long date = slySourcesMap.get(file);
         return date != null ? date : 0;
     }
 
@@ -113,12 +93,13 @@ public class UnitChangeMonitor {
     }
 
     @Activate
+    @SuppressWarnings(value = {"unused", "unchecked"})
     protected void activate(ComponentContext componentContext) {
         ResourceResolver adminResolver = null;
         try {
             adminResolver = rrf.getAdministrativeResourceResolver(null);
             StringBuilder eventHandlerFilteredPaths = new StringBuilder("(|");
-            searchPaths = adminResolver.getSearchPath();
+            String[] searchPaths = adminResolver.getSearchPath();
             for (String sp : searchPaths) {
                 // Sightly script changes
                 eventHandlerFilteredPaths.append("(path=").append(sp).append("**/*.").append(SightlyScriptEngineFactory.EXTENSION).append(
@@ -126,8 +107,7 @@ public class UnitChangeMonitor {
                 // Sightly Java Use-API objects
                 eventHandlerFilteredPaths.append("(path=").append(sp).append("**/*.java").append(")");
             }
-            String basePath = UnitLoader.DEFAULT_REPO_BASE_PATH + "/" + slingSettings.getSlingId() + "/sightly/";
-            eventHandlerFilteredPaths.append("(path=").append(basePath).append("**/*.java))");
+            eventHandlerFilteredPaths.append(")");
             Dictionary eventHandlerProperties = new Hashtable();
             eventHandlerProperties.put(EventConstants.EVENT_FILTER, eventHandlerFilteredPaths.toString());
             eventHandlerProperties.put(EventConstants.EVENT_TOPIC, new String[]{SlingConstants.TOPIC_RESOURCE_ADDED, SlingConstants
@@ -153,6 +133,7 @@ public class UnitChangeMonitor {
     }
 
     @Deactivate
+    @SuppressWarnings("unused")
     protected void deactivate(ComponentContext componentContext) {
         if (eventHandlerServiceRegistration != null) {
             eventHandlerServiceRegistration.unregister();
@@ -163,24 +144,16 @@ public class UnitChangeMonitor {
         String path = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
         String topic = event.getTopic();
         if (SlingConstants.TOPIC_RESOURCE_ADDED.equals(topic) || SlingConstants.TOPIC_RESOURCE_CHANGED.equals(topic)) {
-            if (path.startsWith(UnitLoader.DEFAULT_REPO_BASE_PATH)) {
-                slySourcesMap.put(path, System.currentTimeMillis());
-            } else {
-                if (path.endsWith(".java")) {
-                    slyJavaUseMap.put(path, System.currentTimeMillis());
-                } else if (path.endsWith(SightlyScriptEngineFactory.EXTENSION)) {
-                    slyScriptsMap.put(path, System.currentTimeMillis());
-                }
+            if (path.endsWith(".java")) {
+                slyJavaUseMap.put(path, System.currentTimeMillis());
+            } else if (path.endsWith(SightlyScriptEngineFactory.EXTENSION)) {
+                slyScriptsMap.put(path, System.currentTimeMillis());
             }
         } else if (SlingConstants.TOPIC_RESOURCE_REMOVED.equals(topic)) {
-            if (path.startsWith(UnitLoader.DEFAULT_REPO_BASE_PATH)) {
-                slySourcesMap.remove(path);
-            } else {
-                if (path.endsWith(".java")) {
-                    slyJavaUseMap.remove(path);
-                } else if (path.endsWith(SightlyScriptEngineFactory.EXTENSION)) {
-                    slyScriptsMap.remove(path);
-                }
+            if (path.endsWith(".java")) {
+                slyJavaUseMap.remove(path);
+            } else if (path.endsWith(SightlyScriptEngineFactory.EXTENSION)) {
+                slyScriptsMap.remove(path);
             }
         }
     }

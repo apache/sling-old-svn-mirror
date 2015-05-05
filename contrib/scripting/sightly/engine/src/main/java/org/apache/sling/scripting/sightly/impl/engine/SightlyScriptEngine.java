@@ -21,7 +21,6 @@ package org.apache.sling.scripting.sightly.impl.engine;
 
 import java.io.Reader;
 import java.util.Collections;
-
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngineFactory;
@@ -37,17 +36,13 @@ import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
 import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderUnit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The Sightly Script engine
  */
 public class SightlyScriptEngine extends AbstractSlingScriptEngine {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SightlyScriptEngine.class);
     private static final Bindings EMPTY_BINDINGS = new SimpleBindings(Collections.<String, Object>emptyMap());
-    private static final int MAX_CLASSLOADER_RETRIES = 5;
 
     private final UnitLoader unitLoader;
     private final ExtensionRegistryService extensionRegistryService;
@@ -81,6 +76,8 @@ public class SightlyScriptEngine extends AbstractSlingScriptEngine {
         try {
             request.setAttribute(SlingBindings.class.getName(), slingBindings);
             evaluateScript(scriptResource, globalBindings, scriptResourceResolver);
+        } catch (Exception e) {
+            throw new ScriptException(e);
         } finally {
             request.setAttribute(SlingBindings.class.getName(), oldValue);
             Thread.currentThread().setContextClassLoader(old);
@@ -89,7 +86,7 @@ public class SightlyScriptEngine extends AbstractSlingScriptEngine {
         return null;
     }
 
-    private void evaluateScript(Resource scriptResource, Bindings bindings, ResourceResolver scriptResourceResolver) {
+    private void evaluateScript(Resource scriptResource, Bindings bindings, ResourceResolver scriptResourceResolver) throws Exception {
         RenderContextImpl renderContext = new RenderContextImpl(bindings, extensionRegistryService.extensions(), scriptResourceResolver);
         RenderUnit renderUnit = unitLoader.createUnit(scriptResource, bindings, renderContext);
         renderUnit.render(renderContext, EMPTY_BINDINGS);

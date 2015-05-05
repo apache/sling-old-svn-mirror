@@ -31,16 +31,12 @@ public class SourceIdentifier {
     private final String className;
     private final Resource resource;
     private final String packageName;
-    private final String sourceFileName;
-    private final String sourceFullPath;
     private final String fullyQualifiedName;
 
-    public SourceIdentifier(Resource resource, String classNamePrefix, String basePath) {
+    public SourceIdentifier(Resource resource, String classNamePrefix) {
         this.resource = resource;
         this.className = buildClassName(resource, classNamePrefix);
         this.packageName = buildPackageName(resource);
-        this.sourceFileName = buildSourceFileName(this.className);
-        this.sourceFullPath = buildSourceFullPath(resource, basePath, this.sourceFileName);
         this.fullyQualifiedName = buildFullyQualifiedName(packageName, className);
     }
 
@@ -54,14 +50,6 @@ public class SourceIdentifier {
 
     public String getPackageName() {
         return packageName;
-    }
-
-    public String getSourceFileName() {
-        return sourceFileName;
-    }
-
-    public String getSourceFullPath() {
-        return sourceFullPath;
     }
 
     public String getFullyQualifiedName() {
@@ -84,15 +72,6 @@ public class SourceIdentifier {
                 .replaceAll("/", ".")
                 .substring(1)
                 .replaceAll("-", "_");
-    }
-
-    private String buildSourceFileName(String className) {
-        return className + ".java";
-    }
-
-    private String buildSourceFullPath(Resource resource, String basePath, String sourceFileName) {
-        String sourceParentPath = basePath + ResourceUtil.getParent(resource.getPath());
-        return sourceParentPath + "/" + sourceFileName;
     }
 
     private String getExtension(String scriptName) {

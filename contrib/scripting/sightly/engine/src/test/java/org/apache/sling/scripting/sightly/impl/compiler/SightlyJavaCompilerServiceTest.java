@@ -18,16 +18,19 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.impl.compiler;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.compiler.CompilationResult;
+import org.apache.sling.commons.compiler.CompilationUnit;
 import org.apache.sling.commons.compiler.CompilerMessage;
+import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.commons.compiler.Options;
-import org.apache.sling.jcr.compiler.JcrJavaCompiler;
 import org.apache.sling.scripting.sightly.impl.engine.UnitChangeMonitor;
 import org.junit.After;
 import org.junit.Before;
@@ -38,6 +41,7 @@ import org.mockito.stubbing.Answer;
 import org.powermock.reflect.Whitebox;
 
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -97,17 +101,18 @@ public class SightlyJavaCompilerServiceTest {
         Resource pojoResource = Mockito.mock(Resource.class);
         ResourceResolver resolver = Mockito.mock(ResourceResolver.class);
         when(resolver.getResource(pojoPath)).thenReturn(pojoResource);
-        JcrJavaCompiler jcrJavaCompiler = Mockito.mock(JcrJavaCompiler.class);
+        when(pojoResource.adaptTo(InputStream.class)).thenReturn(IOUtils.toInputStream("DUMMY"));
+        JavaCompiler javaCompiler = Mockito.mock(JavaCompiler.class);
         CompilationResult compilationResult = Mockito.mock(CompilationResult.class);
         when(compilationResult.getErrors()).thenReturn(new ArrayList<CompilerMessage>());
-        when(jcrJavaCompiler.compile(Mockito.any(String[].class), Mockito.any(Options.class))).thenReturn(compilationResult);
+        when(javaCompiler.compile(Mockito.any(CompilationUnit[].class), Mockito.any(Options.class))).thenReturn(compilationResult);
         when(compilationResult.loadCompiledClass(className)).thenAnswer(new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
                 return MockPojo.class;
             }
         });
-        Whitebox.setInternalState(compiler, "jcrJavaCompiler", jcrJavaCompiler);
+        Whitebox.setInternalState(compiler, "javaCompiler", javaCompiler);
         Object obj = compiler.getInstance(resolver, null, className);
         assertTrue("Expected to obtain a " + MockPojo.class.getName() + " object.", obj instanceof MockPojo);
     }

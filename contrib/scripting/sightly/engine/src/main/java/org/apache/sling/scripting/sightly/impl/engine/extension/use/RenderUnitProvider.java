@@ -82,8 +82,12 @@ public class RenderUnitProvider implements UseProvider {
                 errorMessage.append(".");
                 return ProviderOutcome.failure(new SightlyException(errorMessage.toString()));
             }
-            RenderUnit renderUnit = unitLoader.createUnit(renderUnitResource, globalBindings, (RenderContextImpl) renderContext);
-            return ProviderOutcome.success(renderUnit);
+            try {
+                RenderUnit renderUnit = unitLoader.createUnit(renderUnitResource, globalBindings, (RenderContextImpl) renderContext);
+                return ProviderOutcome.success(renderUnit);
+            } catch (Exception e) {
+                return ProviderOutcome.failure(e);
+            }
         }
         return ProviderOutcome.failure();
     }

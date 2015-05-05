@@ -20,8 +20,7 @@
 # Dependencies
 [artifacts]
   org.apache.sling/org.apache.sling.launchpad/8-SNAPSHOT/slingstart
-  org.apache.sling/org.apache.sling.launchpad.installer/1.2.2
-  org.apache.sling/org.apache.sling.jcr.compiler/2.1.0
+  org.apache.sling/org.apache.sling.commons.fsclassloader/1.0.0
   org.apache.sling/org.apache.sling.i18n/2.2.10
   javax.mail/mail/1.4.7
   org.apache.sling/org.apache.sling.xss/1.0.2

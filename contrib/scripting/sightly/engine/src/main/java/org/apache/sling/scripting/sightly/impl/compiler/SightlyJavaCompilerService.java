@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
@@ -41,8 +42,8 @@ import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.compiler.CompilationResult;
 import org.apache.sling.commons.compiler.CompilationUnit;
 import org.apache.sling.commons.compiler.CompilerMessage;
+import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.commons.compiler.Options;
-import org.apache.sling.jcr.compiler.JcrJavaCompiler;
 import org.apache.sling.scripting.sightly.ResourceResolution;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.impl.engine.UnitChangeMonitor;
@@ -66,7 +67,7 @@ public class SightlyJavaCompilerService {
     private ClassLoaderWriter classLoaderWriter = null;
 
     @Reference
-    private JcrJavaCompiler jcrJavaCompiler = null;
+    private JavaCompiler javaCompiler = null;
 
     @Reference
     private UnitChangeMonitor unitChangeMonitor = null;
@@ -99,7 +100,11 @@ public class SightlyJavaCompilerService {
                 if (pojoResource != null) {
                     // clear the cache as we need to recompile the POJO object
                     unitChangeMonitor.clearJavaUseObject(pojoPath);
-                    return compileSource(pojoResource, className);
+                    try {
+                        return compileSource(IOUtils.toString(pojoResource.adaptTo(InputStream.class), "UTF-8"), className);
+                    } catch (IOException e) {
+                        throw new SightlyException(String.format("Unable to compile class %s from %s.", className, pojoPath), e);
+                    }
                 } else {
                     throw new SightlyException(String.format("Resource %s identifying class %s has been removed.", pojoPath, className));
                 }
@@ -111,7 +116,11 @@ public class SightlyJavaCompilerService {
                     // the object definitely doesn't come from a bundle so we should attempt to compile it from the repo
                     Resource pojoResource = resolver.getResource(pojoPath);
                     if (pojoResource != null) {
-                        return compileSource(pojoResource, className);
+                        try {
+                            return compileSource(IOUtils.toString(pojoResource.adaptTo(InputStream.class), "UTF-8"), className);
+                        } catch (IOException e) {
+                            throw new SightlyException(String.format("Unable to compile class %s from %s.", className, pojoPath), e);
+                        }
                     }
                 }
             }
@@ -127,18 +136,17 @@ public class SightlyJavaCompilerService {
     }
 
     /**
-     * Compiles a class using the passed fully qualified classname and based on the resource that represents the class' source.
+     * Compiles a class using the passed fully qualified class name and its source code.
      *
-     * @param javaResource resource that constitutes the class' source
-     * @param fqcn         fully qualified name of the class to compile
+     * @param sourceCode the source code from which to generate the class
+     * @param fqcn       fully qualified name of the class to compile
      * @return object instance of the class to compile
      * @throws CompilerException in case of any runtime exception
      */
-    public Object compileSource(Resource javaResource, String fqcn) {
-        LOG.debug("Compiling Sightly based Java class from resource: " + javaResource.getPath());
+    public Object compileSource(String sourceCode, String fqcn) {
         try {
-            CompilationUnit compilationUnit = new SightlyCompilationUnit(javaResource, fqcn);
-            return compileJavaResource(compilationUnit, javaResource.getPath());
+            CompilationUnit compilationUnit = new SightlyCompilationUnit(sourceCode, fqcn);
+            return compileJavaResource(compilationUnit);
         } catch (Exception e) {
             throw new CompilerException(CompilerException.CompilerExceptionCause.COMPILER_ERRORS, e);
         }
@@ -235,15 +243,14 @@ public class SightlyJavaCompilerService {
      * Compiles a class stored in the repository and returns an instance of the compiled class.
      *
      * @param compilationUnit a compilation unit
-     * @param scriptPath      the path of the script to compile
      * @return instance of compiled class
      * @throws Exception
      */
-    private Object compileJavaResource(CompilationUnit compilationUnit, String scriptPath) throws Exception {
+    private Object compileJavaResource(CompilationUnit compilationUnit) throws Exception {
         writeLock.lock();
         try {
             long start = System.currentTimeMillis();
-            CompilationResult compilationResult = jcrJavaCompiler.compile(new String[]{scriptPath}, options);
+            CompilationResult compilationResult = javaCompiler.compile(new CompilationUnit[]{compilationUnit}, options);
             long end = System.currentTimeMillis();
             List<CompilerMessage> errors = compilationResult.getErrors();
             if (errors != null && errors.size() > 0) {
@@ -329,36 +336,29 @@ public class SightlyJavaCompilerService {
         return buffer.toString();
     }
 
-    class SlingResourceCompilationUnit implements CompilationUnit {
-        private final Resource resource;
+    class SightlyCompilationUnit implements CompilationUnit {
 
-        public SlingResourceCompilationUnit(Resource resource) {
-            this.resource = resource;
-        }
-
-        public Reader getSource() throws IOException {
-            return new InputStreamReader(resource.adaptTo(InputStream.class), "UTF-8");
-        }
-
-        public String getMainClassName() {
-            return getJavaNameFromPath(resource.getPath());
-        }
-
-        public long getLastModified() {
-            return resource.getResourceMetadata().getModificationTime();
-        }
-    }
-
-    class SightlyCompilationUnit extends SlingResourceCompilationUnit {
         private String fqcn;
+        private String sourceCode;
 
-        public SightlyCompilationUnit(Resource resource, String fqcn) {
-            super(resource);
+        SightlyCompilationUnit(String sourceCode, String fqcn) throws Exception {
+            this.sourceCode = sourceCode;
             this.fqcn = fqcn;
         }
 
+        @Override
+        public Reader getSource() throws IOException {
+            return new InputStreamReader(IOUtils.toInputStream(sourceCode, "UTF-8"));
+        }
+
+        @Override
         public String getMainClassName() {
             return fqcn;
+        }
+
+        @Override
+        public long getLastModified() {
+            return System.currentTimeMillis();
         }
     }
 
@@ -372,7 +372,7 @@ public class SightlyJavaCompilerService {
 
         private Character symbol;
 
-        private AmbiguousPathSymbol(Character symbol) {
+        AmbiguousPathSymbol(Character symbol) {
             this.symbol = symbol;
         }
 
