@@ -81,7 +81,9 @@ public class VltRepositoryFactory implements RepositoryFactory {
             // marking the repository as disconnected allows us to keep using it
             // (eg for node type registry lookups) although the server is stopped
             //TODO we might come up with a proper online/offline handling here
-            r.disconnected();
+            if ( r != null ) {
+            	r.disconnected();
+            }
         }
     }
 
