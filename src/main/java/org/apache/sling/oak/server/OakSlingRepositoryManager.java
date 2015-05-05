@@ -43,9 +43,11 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.commons.jackrabbit.authorization.AccessControlUtils;
 import org.apache.jackrabbit.oak.Oak;
 import org.apache.jackrabbit.oak.api.ContentRepository;
+import org.apache.jackrabbit.oak.jcr.osgi.OsgiRepository;
 import org.apache.jackrabbit.oak.osgi.OsgiWhiteboard;
 import org.apache.jackrabbit.oak.plugins.commit.ConflictValidatorProvider;
 import org.apache.jackrabbit.oak.plugins.commit.JcrConflictHandler;
@@ -248,7 +250,7 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         }
 
         final ContentRepository contentRepository = oak.createContentRepository();
-        return new JcrRepositoryHacks(contentRepository, whiteboard, securityProvider, observationQueueLength, commitRateLimiter);
+        return new OsgiRepository(contentRepository, whiteboard, securityProvider, observationQueueLength, commitRateLimiter);
     }
 
     @Override
@@ -306,7 +308,7 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         this.indexEditorProvider.stop();
         this.oakExecutorServiceReference.unregister();
         this.oakExecutorServiceReference = null;
-        ((JcrRepositoryHacks) repository).shutdown();
+        ((JackrabbitRepository) repository).shutdown();
         this.adminUserName = null;
     }
 
