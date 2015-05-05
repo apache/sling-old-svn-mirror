@@ -35,15 +35,18 @@ public class LaunchpadEnvironment {
     private final boolean cleanWorkingDirectory;
     private final boolean shutdownOnExit;
     private final int readyTimeOutSec;
+    private final String debug;
 
     public LaunchpadEnvironment(final File launchpadJar,
                                 final boolean cleanWorkingDirectory,
                                 final boolean shutdownOnExit,
-                                final int readyTimeOutSec) {
+                                final int readyTimeOutSec,
+                                final String debug) {
         this.launchpadJar = launchpadJar;
         this.cleanWorkingDirectory = cleanWorkingDirectory;
         this.shutdownOnExit = shutdownOnExit;
         this.readyTimeOutSec = readyTimeOutSec;
+        this.debug = debug;
     }
 
     public boolean isShutdownOnExit() {
@@ -137,4 +140,13 @@ public class LaunchpadEnvironment {
             }
         }
     }
+
+    /**
+     * 
+     * @return the global debug parameter for all Sling instances. Set through {@link StartMojo#debug}.
+     */
+    public String getDebug() {
+        return debug;
+    }
+
 }

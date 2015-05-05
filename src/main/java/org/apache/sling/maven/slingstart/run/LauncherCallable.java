@@ -141,7 +141,7 @@ public class LauncherCallable implements Callable<ProcessDescription> {
 
         args.add("java");
         add(args, this.configuration.getVmOpts());
-        add(args, this.configuration.getVmDebugOpts());
+        add(args, this.configuration.getVmDebugOpts(this.environment.getDebug()));
 
         args.add("-cp");
         args.add("bin");
