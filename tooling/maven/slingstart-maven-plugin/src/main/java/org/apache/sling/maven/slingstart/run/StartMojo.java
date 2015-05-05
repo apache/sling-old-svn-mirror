@@ -74,6 +74,13 @@ public class StartMojo extends AbstractMojo {
      */
     @Parameter
     private List<ServerConfiguration> servers;
+    
+    /**
+     * Overwrites debug parameter of all server configurations (if set).
+     * Attaches a debugger to the forked JVM. If set to "true", the process will allow a debugger to attach on port 8000. If set to some other string, that string will be appended to the vmOpts, allowing you to configure arbitrary debuggability options (without overwriting the other options specified through the vmOpts parameter of the servers).
+     */
+    @Parameter(property = "launchpad.debug")
+    protected String debug;
 
     /**
      * Ready timeout in seconds. If the launchpad has not been started in this
@@ -189,7 +196,8 @@ public class StartMojo extends AbstractMojo {
         final LaunchpadEnvironment env = new LaunchpadEnvironment(this.findLaunchpadJar(),
                 this.cleanWorkingDirectory,
                 !this.keepLaunchpadRunning,
-                this.launchpadReadyTimeOutSec);
+                this.launchpadReadyTimeOutSec,
+                this.debug);
 
         // create callables
         final Collection<LauncherCallable> tasks = new LinkedList<LauncherCallable>();

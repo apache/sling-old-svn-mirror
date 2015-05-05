@@ -110,10 +110,18 @@ public class ServerConfiguration implements Serializable {
     }
 
     /**
+     * Returns the debugging options derived from the passed globalDebug parameter and the debug field (where the globalDebug parameter has precedence over the local field)
+     * @param globalDebug the global debug options (may be {@code null}).
      * @return the debugging options to use or {@code null}. Should be appended to the ones being returned by {@link #getVmOpts()}.
      * @see <a href="http://docs.oracle.com/javase/7/docs/technotes/guides/jpda/conninv.html#Invocation">JPDA Sun VM Invocation Options</a>
      */
-    public String getVmDebugOpts() {
+    public String getVmDebugOpts(String globalDebug) {
+        if (globalDebug != null) {
+            if (Boolean.valueOf(globalDebug).equals(Boolean.TRUE)) {
+                return DEFAULT_VM_DEBUG_OPTS;
+            }
+            return globalDebug;
+        }
         if (Boolean.valueOf(debug).equals(Boolean.TRUE)) {
             return DEFAULT_VM_DEBUG_OPTS;
         }
@@ -186,7 +194,7 @@ public class ServerConfiguration implements Serializable {
         return "LaunchpadConfiguration [id=" + id + ", runmode=" + runmode
                 + ", port=" + port + ", controlPort=" + controlPort
                 + ", contextPath=" + contextPath
-                + ", vmOpts=" + vmOpts + ", vmDebugOpts=" + getVmDebugOpts() + ", opts=" + opts + ", instances="
+                + ", vmOpts=" + vmOpts + ", vmDebugOpts=" + getVmDebugOpts(null) + ", opts=" + opts + ", instances="
                 + instances + ", folder=" + folder + "]";
     }
 }
