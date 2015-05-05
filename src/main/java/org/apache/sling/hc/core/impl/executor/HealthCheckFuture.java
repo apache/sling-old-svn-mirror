@@ -69,7 +69,7 @@ class HealthCheckFuture extends FutureTask<ExecutionResult> {
                     }
 
                 } catch (final Exception e) {
-                    resultFromHealthCheck = new Result(Result.Status.HEALTH_CHECK_ERROR, "Exception during execution of '" + metadata.getName() + "': " + e, e);
+                    resultFromHealthCheck = new Result(Result.Status.CRITICAL, "Exception during execution of '" + metadata.getName() + "': " + e, e);
                 } finally {
                     // unget service ref
                     bundleContext.ungetService(metadata.getServiceReference());
