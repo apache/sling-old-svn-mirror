@@ -20,7 +20,7 @@
 [feature name=oak]
 
 [variables]
-    oak.version=1.2.0
+    oak.version=1.2.2
 
 # The segment node store is used via a configuration
 [artifacts startLevel=10 runModes=oak]
