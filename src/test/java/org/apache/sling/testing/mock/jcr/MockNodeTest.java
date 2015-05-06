@@ -37,6 +37,9 @@ import org.apache.jackrabbit.JcrConstants;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class MockNodeTest {
 
     private Session session;
@@ -77,11 +80,12 @@ public class MockNodeTest {
     @Test
     public void testGetProperties() throws RepositoryException {
         PropertyIterator properties = this.node1.getProperties();
-        assertEquals(1, properties.getSize());
-        assertEquals(this.prop1, properties.next());
+        Map<String, Property> props = propertiesToMap(properties);
+        assertEquals(2, properties.getSize());
+        assertEquals(this.prop1, props.get("prop1"));
 
         assertTrue(this.node1.hasProperties());
-        assertFalse(this.node11.hasProperties());
+        assertTrue(this.node11.hasProperties());
 
         properties = this.node1.getProperties("^prop.*$");
         assertEquals(1, properties.getSize());
@@ -89,6 +93,15 @@ public class MockNodeTest {
 
         properties = this.node1.getProperties("unknown?");
         assertEquals(0, properties.getSize());
+    }
+
+    private Map<String, Property> propertiesToMap(PropertyIterator properties) throws RepositoryException {
+        final HashMap<String, Property> props = new HashMap<String, Property>();
+        while (properties.hasNext()) {
+            final Property property = properties.nextProperty();
+            props.put(property.getName(), property);
+        }
+        return props;
     }
 
     @Test
