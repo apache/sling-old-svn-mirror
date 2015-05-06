@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
@@ -31,6 +32,7 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import com.google.common.collect.Iterables;
 import org.apache.jackrabbit.JcrConstants;
 import org.junit.Before;
 import org.junit.Test;
@@ -87,6 +89,20 @@ public class MockNodeTest {
 
         properties = this.node1.getProperties("unknown?");
         assertEquals(0, properties.getSize());
+    }
+
+    @Test
+    public void testPrimaryType() throws RepositoryException {
+        assertEquals("nt:unstructured", this.node1.getPrimaryNodeType().getName());
+        assertEquals("nt:unstructured", this.node1.getProperty("jcr:primaryType").getString());
+        final PropertyIterator properties = this.node1.getProperties();
+        while (properties.hasNext()) {
+            final Property property = properties.nextProperty();
+            if (JcrConstants.JCR_PRIMARYTYPE.equals(property.getName())) {
+                return;
+            }
+        }
+        fail("Properties did not include jcr:primaryType");
     }
 
     @Test
