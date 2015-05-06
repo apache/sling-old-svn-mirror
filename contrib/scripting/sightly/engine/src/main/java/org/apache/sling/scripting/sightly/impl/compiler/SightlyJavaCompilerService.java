@@ -21,6 +21,7 @@ package org.apache.sling.scripting.sightly.impl.compiler;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,6 +47,7 @@ import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.commons.compiler.Options;
 import org.apache.sling.scripting.sightly.ResourceResolution;
 import org.apache.sling.scripting.sightly.SightlyException;
+import org.apache.sling.scripting.sightly.impl.engine.SightlyEngineConfiguration;
 import org.apache.sling.scripting.sightly.impl.engine.UnitChangeMonitor;
 import org.apache.sling.scripting.sightly.impl.engine.UnitLoader;
 import org.slf4j.Logger;
@@ -71,6 +73,9 @@ public class SightlyJavaCompilerService {
 
     @Reference
     private UnitChangeMonitor unitChangeMonitor = null;
+
+    @Reference
+    private SightlyEngineConfiguration sightlyEngineConfiguration = null;
 
     private Options options;
 
@@ -145,6 +150,12 @@ public class SightlyJavaCompilerService {
      */
     public Object compileSource(String sourceCode, String fqcn) {
         try {
+            if (sightlyEngineConfiguration.isDevMode()) {
+                String path = "/" + fqcn.replaceAll("\\.", "/") + ".java";
+                OutputStream os = classLoaderWriter.getOutputStream(path);
+                IOUtils.write(sourceCode, os, "UTF-8");
+                IOUtils.closeQuietly(os);
+            }
             CompilationUnit compilationUnit = new SightlyCompilationUnit(sourceCode, fqcn);
             return compileJavaResource(compilationUnit);
         } catch (Exception e) {

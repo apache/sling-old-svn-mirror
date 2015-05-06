@@ -31,6 +31,7 @@ import org.apache.sling.commons.compiler.CompilationUnit;
 import org.apache.sling.commons.compiler.CompilerMessage;
 import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.commons.compiler.Options;
+import org.apache.sling.scripting.sightly.impl.engine.SightlyEngineConfiguration;
 import org.apache.sling.scripting.sightly.impl.engine.UnitChangeMonitor;
 import org.junit.After;
 import org.junit.Before;
@@ -42,6 +43,7 @@ import org.powermock.reflect.Whitebox;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -50,11 +52,15 @@ public class SightlyJavaCompilerServiceTest {
 
     private SightlyJavaCompilerService compiler;
     private UnitChangeMonitor ucm;
+    private SightlyEngineConfiguration sightlyEngineConfiguration;
 
     @Before
     public void setUp() throws Exception {
         compiler = new SightlyJavaCompilerService();
         ucm = spy(new UnitChangeMonitor());
+        sightlyEngineConfiguration = mock(SightlyEngineConfiguration.class);
+        when(sightlyEngineConfiguration.isDevMode()).thenReturn(false);
+        Whitebox.setInternalState(compiler, "sightlyEngineConfiguration", sightlyEngineConfiguration);
         Whitebox.setInternalState(compiler, "unitChangeMonitor", ucm);
     }
 

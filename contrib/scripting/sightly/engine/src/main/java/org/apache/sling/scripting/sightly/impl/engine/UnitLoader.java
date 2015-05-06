@@ -103,8 +103,7 @@ public class UnitLoader {
         Object obj;
         if (needsUpdate(sourceIdentifier)) {
             String sourceCode = getSourceCodeForScript(adminResolver, sourceIdentifier, bindings, encoding, renderContext);
-            obj = sightlyJavaCompilerService.compileSource(sourceCode, sourceIdentifier
-                    .getFullyQualifiedName());
+            obj = sightlyJavaCompilerService.compileSource(sourceCode, sourceIdentifier.getFullyQualifiedName());
         } else {
             obj = sightlyJavaCompilerService.getInstance(adminResolver, null, sourceIdentifier.getFullyQualifiedName());
         }
