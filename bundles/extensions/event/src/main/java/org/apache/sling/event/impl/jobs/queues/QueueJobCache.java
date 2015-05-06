@@ -88,7 +88,6 @@ public class QueueJobCache {
         this.configuration = configuration;
         this.queueType = queueType;
         this.topics = new ConcurrentSkipListSet<String>(topics);
-        this.topicsWithNewJobs.addAll(topics);
         this.fillCache(queueName, statisticsManager);
     }
 
