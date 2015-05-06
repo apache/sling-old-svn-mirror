@@ -65,6 +65,7 @@ class MockNode extends AbstractItem implements Node {
         ItemData itemData = ItemData.newNode(path, new MockNodeType(primaryNodeTypeName));
         Node node = new MockNode(itemData, getSession());
         getMockedSession().addItem(itemData);
+        node.setProperty(JcrConstants.JCR_PRIMARYTYPE, primaryNodeTypeName);
         
         // special handling for some node types
         if (StringUtils.equals(primaryNodeTypeName, JcrConstants.NT_FILE)) {
