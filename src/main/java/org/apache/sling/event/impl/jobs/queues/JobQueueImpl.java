@@ -119,6 +119,7 @@ public class JobQueueImpl
     /** Lock for close/start. */
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
+    /** Sleeping until is only set for ordered queues if a job is rescheduled. */
     private volatile long isSleepingUntil = -1;
 
     /**
@@ -198,15 +199,9 @@ public class JobQueueImpl
 
     /**
      * Start the job queue.
-     */
-    public void startJobs() {
-        startJobs(false);
-    }
-    /**
-     * Start the job queue.
      * This method might be called concurrently, therefore we use a guard
      */
-    private void startJobs(boolean justOne) {
+    public void startJobs() {
         if ( this.startJobsGuard.compareAndSet(false, true) ) {
             // we start as many jobs in parallel as possible
             while ( this.running && !this.isOutdated.get() && !this.isSuspended() && this.available.tryAcquire() ) {
@@ -245,12 +240,9 @@ public class JobQueueImpl
                                     currentThread.setName(oldName);
                                 }
                                 // and try to launch another job
-                                startJobs(true);
+                                startJobs();
                             }
                         });
-                        if ( justOne ) {
-                            break;
-                        }
                     } else {
                         // no job available, stop look
                         break;
@@ -794,23 +786,31 @@ public class JobQueueImpl
             handler.addToRetryList();
             final Date fireDate = new Date();
             fireDate.setTime(System.currentTimeMillis() + delay);
-            this.isSleepingUntil = fireDate.getTime();
+            if ( this.configuration.getType() == Type.ORDERED ) {
+                this.isSleepingUntil = fireDate.getTime();
+            }
 
             final String jobName = "Waiting:" + queueName + ":" + handler.hashCode();
             final Runnable t = new Runnable() {
                 @Override
                 public void run() {
-                    isSleepingUntil = -1;
-                    if ( handler.removeFromRetryList() ) {
-                        requeue(handler);
+                    try {
+                        if ( handler.removeFromRetryList() ) {
+                            requeue(handler);
+                        }
+                    } finally {
+                        if ( configuration.getType() == Type.ORDERED ) {
+                            isSleepingUntil = -1;
+                            cache.setIsBlocked(false);
+                            startJobs();
+                        }
                     }
-                    if ( configuration.getType() == Type.ORDERED ) {
-                        cache.setIsBlocked(false);
-                    }
-                    startJobs();
                 }
             };
-            services.scheduler.schedule(t, services.scheduler.AT(fireDate).name(jobName));
+            if ( !services.scheduler.schedule(t, services.scheduler.AT(fireDate).name(jobName)) ) {
+                // if scheduling fails run the thread directly
+                t.run();
+            }
         } else {
             // put directly into queue
             this.requeue(handler);
