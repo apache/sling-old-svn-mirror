@@ -26,7 +26,7 @@ under the License.
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>22</version>
-        <relativePath>../../../parent/pom.xml</relativePath>
+        <relativePath/>
     </parent>
     <artifactId>sling-server</artifactId>
     <packaging>jar</packaging>

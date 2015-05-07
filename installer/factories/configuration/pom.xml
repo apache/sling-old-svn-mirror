@@ -22,7 +22,7 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>22</version>
-        <relativePath>../../../parent/pom.xml</relativePath>
+        <relativePath/>
     </parent>
 
     <artifactId>org.apache.sling.installer.factory.configuration</artifactId>
