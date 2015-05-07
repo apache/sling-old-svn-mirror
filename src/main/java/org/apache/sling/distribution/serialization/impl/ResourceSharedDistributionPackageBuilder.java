@@ -49,6 +49,10 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
 
     private final DistributionPackageBuilder distributionPackageBuilder;
 
+    // use a global repolock for syncing access to the shared package root
+    // TODO: this can be finegrained when we will allow configurable package roots
+    private final static Object repolock = new Object();
+
     public ResourceSharedDistributionPackageBuilder(DistributionPackageBuilder distributionPackageExporter) {
         this.distributionPackageBuilder = distributionPackageExporter;
     }
@@ -69,8 +73,7 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
             String packageName = generateNameFromId(resourceResolver, distributionPackage);
             String packagePath = getPathFromName(packageName);
 
-
-            return new ResourceSharedDistributionPackage(resourceResolver, packageName, packagePath, distributionPackage);
+            return new ResourceSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
         }
         catch (PersistenceException e) {
             throw new DistributionPackageBuildingException(e);
@@ -89,7 +92,7 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
             String packageName = generateNameFromId(resourceResolver, distributionPackage);
             String packagePath = getPathFromName(packageName);
 
-            return new ResourceSharedDistributionPackage(resourceResolver, packageName, packagePath, distributionPackage);
+            return new ResourceSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
         }
         catch (PersistenceException e) {
             throw new DistributionPackageReadingException(e);
@@ -110,7 +113,7 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
             return null;
         }
         String packagePath = getPathFromName(packageName);
-        return new ResourceSharedDistributionPackage(resourceResolver, packageName, packagePath, distributionPackage);
+        return new ResourceSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
     }
 
     public boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageReadingException {
@@ -125,33 +128,37 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
     }
 
 
-    private String generateNameFromId(ResourceResolver resourceResolver, DistributionPackage distributionPackage) throws PersistenceException {
-        String name = PACKAGE_NAME_PREFIX + "_" + System.currentTimeMillis() + "_" +  UUID.randomUUID();
+    private  String generateNameFromId(ResourceResolver resourceResolver, DistributionPackage distributionPackage) throws PersistenceException {
 
-        Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put(PN_ORIGINAL_ID, distributionPackage.getId());
+            String name = PACKAGE_NAME_PREFIX + "_" + System.currentTimeMillis() + "_" +  UUID.randomUUID();
 
-        // save the info just for debugging purposes
-        if (distributionPackage.getInfo().getRequestType() != null) {
-            properties.put(PN_ORIGINAL_REQUEST_TYPE, distributionPackage.getInfo().getRequestType());
+            Map<String, Object> properties = new HashMap<String, Object>();
+            properties.put(PN_ORIGINAL_ID, distributionPackage.getId());
 
+            // save the info just for debugging purposes
+            if (distributionPackage.getInfo().getRequestType() != null) {
+                properties.put(PN_ORIGINAL_REQUEST_TYPE, distributionPackage.getInfo().getRequestType());
+
+            }
+            if (distributionPackage.getInfo().getPaths() != null) {
+                properties.put(PN_ORIGINAL_PATHS, distributionPackage.getInfo().getPaths());
+            }
+
+            String packagePath = getPathFromName(name);
+
+            Resource resource = ResourceUtil.getOrCreateResource(resourceResolver, packagePath,
+                    "sling:Folder", "sling:Folder", false);
+
+            ModifiableValueMap valueMap = resource.adaptTo(ModifiableValueMap.class);
+            valueMap.putAll(properties);
+
+        synchronized (repolock) {
+            resourceResolver.create(resource, ResourceSharedDistributionPackage.REFERENCE_ROOT_NODE,
+                    Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object)"sling:Folder"));
+
+            resourceResolver.commit();
         }
-        if (distributionPackage.getInfo().getPaths() != null) {
-            properties.put(PN_ORIGINAL_PATHS, distributionPackage.getInfo().getPaths());
-        }
 
-        String packagePath = getPathFromName(name);
-
-        Resource resource = ResourceUtil.getOrCreateResource(resourceResolver, packagePath,
-                "sling:Folder", "sling:Folder", false);
-
-        ModifiableValueMap valueMap = resource.adaptTo(ModifiableValueMap.class);
-        valueMap.putAll(properties);
-
-        resourceResolver.create(resource, ResourceSharedDistributionPackage.REFERENCE_ROOT_NODE,
-                Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object)"sling:Folder"));
-
-        resourceResolver.commit();
         return name;
     }
 
