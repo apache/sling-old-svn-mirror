@@ -37,6 +37,7 @@ public class ResourceSharedDistributionPackage implements SharedDistributionPack
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     protected static final String  REFERENCE_ROOT_NODE = "refs";
+    private final Object lock;
 
 
     private final ResourceResolver resourceResolver;
@@ -44,11 +45,12 @@ public class ResourceSharedDistributionPackage implements SharedDistributionPack
     private final DistributionPackage distributionPackage;
     private final String packageName;
 
-    public ResourceSharedDistributionPackage(ResourceResolver resourceResolver, String packageName, String packagePath, DistributionPackage distributionPackage) {
+    public ResourceSharedDistributionPackage(Object lock, ResourceResolver resourceResolver, String packageName, String packagePath, DistributionPackage distributionPackage) {
         this.resourceResolver = resourceResolver;
         this.packageName = packageName;
         this.packagePath = packagePath;
         this.distributionPackage = distributionPackage;
+        this.lock = lock;
     }
 
     public void acquire(@Nonnull String holderName) {
@@ -58,6 +60,9 @@ public class ResourceSharedDistributionPackage implements SharedDistributionPack
         
         try {
             createHolderResource(holderName);
+
+            log.debug("acquired package {} for holder {}", new Object[] { packagePath, holderName } );
+
         } catch (PersistenceException e) {
             log.error("cannot acquire package", e);
         }
@@ -72,10 +77,13 @@ public class ResourceSharedDistributionPackage implements SharedDistributionPack
         try {
             deleteHolderResource(holderName);
 
-            Resource holderRoot = getHolderRootResource();
-            if (holderRoot != null && !holderRoot.hasChildren()) {
-                delete();
+            boolean doPackageDelete = deleteIfEmpty();
+
+            if (doPackageDelete) {
+                distributionPackage.delete();
             }
+
+            log.debug("released package {} from holder {} delete {}", new Object[] { packagePath, holderName, doPackageDelete } );
         } catch (PersistenceException e) {
             log.error("cannot release package", e);
         }
@@ -103,13 +111,13 @@ public class ResourceSharedDistributionPackage implements SharedDistributionPack
     }
 
     public void delete() {
-        Resource resource = getProxyResource();
+
         try {
-            resourceResolver.delete(resource);
-            resourceResolver.commit();
+            deleteHolderRoot();
         } catch (PersistenceException e) {
             log.error("cannot delete shared resource", e);
         }
+
         distributionPackage.delete();
     }
 
@@ -132,8 +140,6 @@ public class ResourceSharedDistributionPackage implements SharedDistributionPack
     }
 
 
-
-
     private Resource getHolderRootResource()  {
         Resource resource = getProxyResource();
 
@@ -146,38 +152,65 @@ public class ResourceSharedDistributionPackage implements SharedDistributionPack
     }
 
     private void createHolderResource(String holderName) throws PersistenceException {
-        Resource holderRoot = getHolderRootResource();
 
-        if (holderRoot == null) {
-            return;
+        synchronized (lock) {
+            Resource holderRoot = getHolderRootResource();
+
+            if (holderRoot == null) {
+                return;
+            }
+
+            Resource holder = holderRoot.getChild(holderName);
+
+            if (holder != null) {
+                return;
+            }
+
+            resourceResolver.create(holderRoot, holderName, Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object) "sling:Folder"));
+            resourceResolver.commit();
+
         }
-
-        Resource holder = holderRoot.getChild(holderName);
-
-        if (holder != null) {
-            return;
-        }
-
-        resourceResolver.create(holderRoot, holderName, Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object) "sling:Folder"));
-        resourceResolver.commit();
-
     }
 
     private void deleteHolderResource(String holderName) throws PersistenceException {
-        Resource holderRoot = getHolderRootResource();
 
-        if (holderRoot == null) {
-            return;
+        synchronized (lock) {
+            Resource holderRoot = getHolderRootResource();
+
+            if (holderRoot == null) {
+                return;
+            }
+
+            Resource holder = holderRoot.getChild(holderName);
+
+            if (holder == null) {
+                return;
+            }
+
+            resourceResolver.delete(holder);
+            resourceResolver.commit();
+        }
+    }
+
+    private void deleteHolderRoot() throws PersistenceException {
+        synchronized (lock) {
+            Resource resource = getProxyResource();
+            resourceResolver.delete(resource);
+            resourceResolver.commit();
         }
 
-        Resource holder = holderRoot.getChild(holderName);
+    }
 
-        if (holder == null) {
-            return;
+    private boolean deleteIfEmpty() throws PersistenceException {
+        synchronized (lock) {
+            Resource holderRoot = getHolderRootResource();
+            if (holderRoot != null && !holderRoot.hasChildren()) {
+                deleteHolderRoot();
+                return true;
+            }
         }
 
-        resourceResolver.delete(holder);
-        resourceResolver.commit();
+        return false;
     }
 
 }
