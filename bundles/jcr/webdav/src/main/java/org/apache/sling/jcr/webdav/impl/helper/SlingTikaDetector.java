@@ -16,20 +16,33 @@
  */
 package org.apache.sling.jcr.webdav.impl.helper;
 
+import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
+
+import org.apache.sling.commons.contentdetection.ContentAwareMimeTypeService;
+import org.apache.sling.commons.contentdetection.FileNameExtractor;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.tika.detect.Detector;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SlingTikaDetector implements Detector {
 
-    private final MimeTypeService mimeTypeService;
+    private static final Logger log = LoggerFactory.getLogger(SlingTikaDetector.class);
 
-    public SlingTikaDetector(MimeTypeService mimeTypeService) {
+    private final MimeTypeService mimeTypeService;
+    private final FileNameExtractor fileNameExtractor;
+    private final ContentAwareMimeTypeService contentAwareMimeTypeService;
+
+
+    public SlingTikaDetector(MimeTypeService mimeTypeService,
+            ContentAwareMimeTypeService contentAwareMimeTypeService,
+            FileNameExtractor fileNameExtractor) {
         this.mimeTypeService = mimeTypeService;
+        this.fileNameExtractor = fileNameExtractor;
+        this.contentAwareMimeTypeService = contentAwareMimeTypeService;
     }
 
     public MediaType detect(InputStream rawData, Metadata metadata) {
@@ -41,41 +54,23 @@ public class SlingTikaDetector implements Detector {
         // Look for a resource name in the input metadata
         String name = metadata.get(Metadata.RESOURCE_NAME_KEY);
         if (name != null) {
-            // If the name is a URL, skip the trailing query and fragment parts
-            int question = name.indexOf('?');
-            if (question != -1) {
-                name = name.substring(0, question);
-            }
-            int hash = name.indexOf('#');
-            if (hash != -1) {
-                name = name.substring(0, hash);
-            }
 
-            // If the name is a URL or a path, skip all but the last component
-            int slash = name.lastIndexOf('/');
-            if (slash != -1) {
-                name = name.substring(slash + 1);
-            }
-            int backslash = name.lastIndexOf('\\');
-            if (backslash != -1) {
-                name = name.substring(backslash + 1);
-            }
+            name = fileNameExtractor.extract(name);
 
-            // Decode any potential URL encoding
-            int percent = name.indexOf('%');
-            if (percent != -1) {
-                try {
-                    name = URLDecoder.decode(name, "UTF-8");
-                } catch (UnsupportedEncodingException e) {
-                    throw new AssertionError("UTF-8 not supported");
-                }
-            }
-
-            // Skip any leading or trailing whitespace
-            name = name.trim();
             if (name.length() > 0) {
                 // Match the name against the registered patterns
-                String type = mimeTypeService.getMimeType(name);
+                String type = null;
+                if(contentAwareMimeTypeService != null) {
+                    try {
+                        type = contentAwareMimeTypeService.getMimeType(name, rawData);
+                    } catch (IOException e) {
+                        log.warn("Unable to detect mime type from content, falling back to filename based detection", e);
+                        type = mimeTypeService.getMimeType(name);
+                    }
+                } else {
+                    type = mimeTypeService.getMimeType(name);
+                }
+
                 if (type != null) {
                     return MediaType.parse(type);
                 }

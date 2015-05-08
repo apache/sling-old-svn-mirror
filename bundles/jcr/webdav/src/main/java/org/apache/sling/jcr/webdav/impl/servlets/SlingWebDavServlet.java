@@ -43,6 +43,8 @@ import org.apache.jackrabbit.webdav.DavLocatorFactory;
 import org.apache.jackrabbit.webdav.WebdavRequest;
 import org.apache.jackrabbit.webdav.WebdavResponse;
 import org.apache.jackrabbit.webdav.simple.SimpleWebdavServlet;
+import org.apache.sling.commons.contentdetection.ContentAwareMimeTypeService;
+import org.apache.sling.commons.contentdetection.FileNameExtractor;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.webdav.impl.handler.SlingCopyMoveManager;
@@ -143,6 +145,12 @@ public class SlingWebDavServlet extends SimpleWebdavServlet {
     @Reference
     private MimeTypeService mimeTypeService;
 
+    @Reference(target = "(detection.mode=tika)", cardinality = ReferenceCardinality.OPTIONAL_UNARY)
+    private ContentAwareMimeTypeService contentAwareMimeTypeService;
+
+    @Reference
+    private FileNameExtractor fileNameExtractor;
+
     private final SlingIOManager ioManager = new SlingIOManager(
         IOHANDLER_REF_NAME);
 
@@ -221,10 +229,12 @@ public class SlingWebDavServlet extends SimpleWebdavServlet {
         this.copyMoveManager.setComponentContext(context);
 
         resourceConfig = new SlingResourceConfig(mimeTypeService,
-            context.getProperties(),
-            ioManager,
-            propertyManager,
-            copyMoveManager);
+                contentAwareMimeTypeService,
+                context.getProperties(),
+                ioManager,
+                propertyManager,
+                copyMoveManager,
+                fileNameExtractor);
 
         // Register servlet, and set the contextPath field to signal successful
         // registration

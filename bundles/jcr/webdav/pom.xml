@@ -111,7 +111,13 @@
             <version>2.0.2-incubator</version>
             <scope>provided</scope>
         </dependency>
-        
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.contentdetection</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-server</artifactId>

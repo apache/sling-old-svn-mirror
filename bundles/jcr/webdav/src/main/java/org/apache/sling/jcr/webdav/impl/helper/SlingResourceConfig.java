@@ -25,6 +25,8 @@ import org.apache.jackrabbit.webdav.simple.DefaultItemFilter;
 import org.apache.jackrabbit.webdav.simple.ItemFilter;
 import org.apache.jackrabbit.webdav.simple.ResourceConfig;
 import org.apache.jackrabbit.webdav.simple.SimpleWebdavServlet;
+import org.apache.sling.commons.contentdetection.ContentAwareMimeTypeService;
+import org.apache.sling.commons.contentdetection.FileNameExtractor;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jcr.webdav.impl.servlets.SlingWebDavServlet;
@@ -53,11 +55,13 @@ public class SlingResourceConfig extends ResourceConfig {
     private final Dictionary<String, String> servletInitParams;
 
     public SlingResourceConfig(MimeTypeService mimeTypeService,
+            ContentAwareMimeTypeService contentAwareMimeTypeService,
             Dictionary<?, ?> config,
             IOManager ioManager,
             PropertyManager propertyManager,
-            CopyMoveManager copyMoveManager) {
-        super(new SlingTikaDetector(mimeTypeService));
+            CopyMoveManager copyMoveManager,
+            FileNameExtractor fileNameExtractor) {
+        super(new SlingTikaDetector(mimeTypeService, contentAwareMimeTypeService, fileNameExtractor));
         this.ioManager = ioManager;
         this.propertyManager = propertyManager;
         this.copyMoveManager = copyMoveManager;
