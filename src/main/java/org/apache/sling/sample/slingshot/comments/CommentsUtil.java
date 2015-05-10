@@ -14,31 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.sample.slingshot;
+package org.apache.sling.sample.slingshot.comments;
 
 
-public abstract class SlingshotConstants {
+public abstract class CommentsUtil {
 
-    /** This is the resource path for the root of our application. */
-    public static final String APP_ROOT_PATH = "/slingshot";
-
-    /** The resource type for a user. */
-    public static final String RESOURCETYPE_USER = "slingshot/User";
-
-    /** The resource type for the content. */
-    public static final String RESOURCETYPE_CONTENT = "slingshot/Content";
-
-    /** The resource type for a category. */
-    public static final String RESOURCETYPE_CATEGORY = "slingshot/Category";
-
-    /** The resource type for an item. */
-    public static final String RESOURCETYPE_ITEM = "slingshot/Item";
+    /** The resource type for a comment. */
+    public static final String RESOURCETYPE_COMMENT = "slingshot/Comment";
 
     public static final String PROPERTY_TITLE = "title";
 
     public static final String PROPERTY_DESCRIPTION = "description";
 
-    public static final String PROPERTY_LOCATION = "location";
+    public static final String PROPERTY_USER = "user";
 
-    public static final String PROPERTY_TAGS = "tags";
+    public static final String PROPERTY_CREATED = "jcr:created";
 }

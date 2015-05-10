@@ -16,26 +16,23 @@
     specific language governing permissions and limitations
     under the License.
 --%><%@page session="false" %><%
-%><%@page import="org.apache.sling.api.resource.ResourceUtil,
-                org.apache.sling.api.resource.ValueMap,
-                org.apache.sling.api.request.ResponseUtil,
-                org.apache.sling.sample.slingshot.SlingshotConstants" %><%
+%><%@page import="java.util.Iterator,
+                  java.util.List,
+                  org.apache.sling.api.resource.Resource,
+                  org.apache.sling.sample.slingshot.SlingshotConstants" %><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
-
-    final ValueMap attributes = resource.getValueMap();
-    final String title = ResponseUtil.escapeXml(attributes.get(SlingshotConstants.PROPERTY_TITLE, resource.getName()));
-%><html>
-  <head>
-    <title><%= title %></title>
-    <sling:include resource="<%= resource %>" replaceSelectors="head"/>
-  </head>
-  <body class="ui-slingshot-main">
-  <div>
-    <sling:include resource="<%= resource %>" replaceSelectors="trail"/>
-    <h1><%= title %></h1>
-    <hr/>
-    <sling:include resource="<%= resource.getChild("content") %>" replaceSelectors="itemlist"/>
-  </div>
-</body>
-</html>
+%><div class="metro ui-slingshot-content">
+ <%
+     int i = 0;
+     final Iterator<Resource> fi = resource.listChildren();
+     while ( fi.hasNext()) {
+         final Resource current = fi.next();
+         if ( current.isResourceType(SlingshotConstants.RESOURCETYPE_CATEGORY)) {
+             %>
+             <sling:include resource="<%= current %>" replaceSelectors="user"/>
+             <%
+         }
+     } 
+  %>
+</div>

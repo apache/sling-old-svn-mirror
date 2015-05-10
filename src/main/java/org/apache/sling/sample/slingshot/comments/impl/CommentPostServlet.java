@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.sample.slingshot.impl;
+package org.apache.sling.sample.slingshot.comments.impl;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -36,10 +36,12 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.sample.slingshot.SlingshotConstants;
+import org.apache.sling.sample.slingshot.comments.CommentsUtil;
+import org.apache.sling.sample.slingshot.impl.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@SlingServlet(methods="POST", resourceTypes=SlingshotConstants.RESOURCETYPE_COMMENTS)
+@SlingServlet(methods="POST", extensions="comments", resourceTypes=SlingshotConstants.RESOURCETYPE_ITEM)
 public class CommentPostServlet extends SlingAllMethodsServlet {
 
     private static final long serialVersionUID = 1L;
@@ -69,10 +71,10 @@ public class CommentPostServlet extends SlingAllMethodsServlet {
             final Resource reqResource = resolver.getResource(request.getResource().getPath());
 
             final Map<String, Object> properties = new HashMap<String, Object>();
-            properties.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, SlingshotConstants.RESOURCETYPE_COMMENT);
+            properties.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, CommentsUtil.RESOURCETYPE_COMMENT);
             properties.put(SlingshotConstants.PROPERTY_TITLE, title);
             properties.put(SlingshotConstants.PROPERTY_DESCRIPTION, description);
-            properties.put(SlingshotConstants.PROPERTY_USER, userId);
+            properties.put(CommentsUtil.PROPERTY_USER, userId);
 
             // we try it five times
             PersistenceException exception = null;
