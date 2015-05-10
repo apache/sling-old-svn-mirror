@@ -167,6 +167,10 @@ public class XSSAPIImpl implements XSSAPI {
                     .replaceAll("<", "%3C")
                     .replaceAll("`", "%60")
                     .replaceAll(" ", "%20");
+            int qMarkIx = encodedUrl.indexOf('?');
+            if (qMarkIx > 0) {
+                encodedUrl = encodedUrl.substring(0, qMarkIx) + encodedUrl.substring(qMarkIx).replaceAll(":", "%3A");
+            }
             String testHtml = LINK_PREFIX + mangleNamespaces(encodedUrl) + LINK_SUFFIX;
             // replace all & with &amp; because filterHTML will also apply this encoding
             testHtml = testHtml.replaceAll("&(?!amp)", "&amp;");
