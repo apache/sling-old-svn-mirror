@@ -21,9 +21,12 @@
                   org.apache.sling.api.resource.ValueMap,
                   org.apache.sling.api.request.ResponseUtil,
                   org.apache.sling.sample.slingshot.SlingshotConstants,
-                  org.apache.sling.sample.slingshot.SlingshotUtil"%><%
+                  org.apache.sling.sample.slingshot.SlingshotUtil,
+                  org.apache.sling.sample.slingshot.ratings.RatingsService,
+                  org.apache.sling.sample.slingshot.ratings.RatingsUtil"%><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
+    final RatingsService ratingsService = sling.getService(RatingsService.class);
     final ValueMap attributes = resource.getValueMap();
     final String title = ResponseUtil.escapeXml(attributes.get(SlingshotConstants.PROPERTY_TITLE, resource.getName()));
     final String categoryName = ResponseUtil.escapeXml(resource.getParent().getValueMap().get(SlingshotConstants.PROPERTY_TITLE, resource.getParent().getName()));
@@ -64,25 +67,25 @@
                data-show-score="true" 
                data-role="rating" 
                data-stars="5" 
-               data-score="<%= SlingshotUtil.getRating(resource) %>" 
+               data-score="<%= ratingsService.getRating(resource) %>" 
                data-static="false" 
                class="rating large" style="height: auto;">
                <ul><li></li><li></li><li></li><li></li><li></li></ul>
-               <span class="score-hint">Rating: <%= SlingshotUtil.getRating(resource) %></span>
+               <span class="score-hint">Rating: <%= ratingsService.getRating(resource) %></span>
           </div>
           <div class="fg-green rating active" id="own_rating" style="height: auto;">
-          <ul><li title="bad" class="rated"></li><li title="poor"></li><li title="regular"></li><li title="good"></li><li title="gorgeous"></li></ul><span class="score-hint">Current score: <%= SlingshotUtil.getOwnRating(resource, request.getRemoteUser()) %></span></div>
+          <ul><li title="bad" class="rated"></li><li title="poor"></li><li title="regular"></li><li title="good"></li><li title="gorgeous"></li></ul><span class="score-hint">Current score: <%= ratingsService.getRating(resource, request.getRemoteUser()) %></span></div>
                     <script>
                         $(function(){
                             $("#own_rating").rating({
                                 static: false,
-                                score: <%= SlingshotUtil.getOwnRating(resource, request.getRemoteUser()) %>,
+                                score: <%= ratingsService.getRating(resource, request.getRemoteUser()) %>,
                                 stars: 5,
                                 showHint: true,
                                 showScore: true,
                                 click: function(value, rating) {
                                     rating.rate(value);
-                                	$.post( "<%= resource.getName() %>/ratings", { <%= SlingshotConstants.PROPERTY_RATING %> : value }, function( data ) {
+                                	$.post( "<%= resource.getName() %>.ratings", { <%= RatingsUtil.PROPERTY_RATING %> : value }, function( data ) {
                                 		  $("#rating").rating("rate", data.rating);
                                 		}, "json");
                                 }

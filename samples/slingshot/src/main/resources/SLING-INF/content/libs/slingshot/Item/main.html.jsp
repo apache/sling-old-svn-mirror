@@ -21,10 +21,12 @@
                 org.apache.sling.api.resource.ValueMap,
                 org.apache.sling.sample.slingshot.SlingshotConstants,
                 org.apache.sling.sample.slingshot.SlingshotUtil,
+                org.apache.sling.sample.slingshot.ratings.RatingsService,
                 org.apache.sling.api.request.ResponseUtil" %><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
 %><%
+    final RatingsService ratingsService = sling.getService(RatingsService.class);
     final ValueMap attr = resource.getValueMap();
     final String itemTitle = attr.get(SlingshotConstants.PROPERTY_TITLE, resource.getName());
     
@@ -45,6 +47,6 @@
     </div>
     <div class="brand">
         <span class="label fg-white"><%= ResponseUtil.escapeXml(itemTitle) %></span>
-        <span class="badge bg-orange"><%= SlingshotUtil.getRating(resource) %></span>
+        <span class="badge bg-orange"><%= ratingsService.getRating(resource) %></span>
     </div>
 </div>
