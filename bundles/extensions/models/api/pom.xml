@@ -48,7 +48,7 @@
                 <extensions>true</extensions>
                 <configuration>
                    <instructions>
-                        <Export-Package>org.apache.sling.models.*,javax.inject;version=0</Export-Package>
+                        <Export-Package>org.apache.sling.models.*</Export-Package>
                         <DynamicImport-Package>org.apache.sling.validation.api.*</DynamicImport-Package>
                    </instructions>
                 </configuration>
