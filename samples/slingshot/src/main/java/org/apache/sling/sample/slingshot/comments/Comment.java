@@ -18,13 +18,46 @@ package org.apache.sling.sample.slingshot.comments;
 
 import java.util.Calendar;
 
-public interface Comment {
+public class Comment {
 
-    String getTitle();
+    private String title;
 
-    String getDescription();
+    private String text;
 
-    Calendar getCreated();
+    private Calendar created;
 
-    String getCreatedBy();
+    private String createdBy;
+
+    public String getTitle() {
+        return this.title;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public Calendar getCreated() {
+        return created;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setTitle(final String title) {
+        this.title = title;
+    }
+
+    public void setText(final String text) {
+        this.text = text;
+    }
+
+    public void setCreated(final Calendar created) {
+        this.created = created;
+    }
+
+    public void setCreatedBy(final String createdBy) {
+        this.createdBy = createdBy;
+    }
+
 }

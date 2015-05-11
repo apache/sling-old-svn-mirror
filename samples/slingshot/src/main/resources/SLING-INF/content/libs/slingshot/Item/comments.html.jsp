@@ -19,14 +19,16 @@
 %><%@page import="org.apache.sling.api.resource.Resource,
                 org.apache.sling.api.resource.ResourceUtil,
                 org.apache.sling.api.resource.ValueMap,
-                org.apache.sling.sample.slingshot.SlingshotConstants,
+                org.apache.sling.sample.slingshot.comments.CommentsService,
+                org.apache.sling.sample.slingshot.comments.CommentsUtil,
                 org.apache.sling.api.request.ResponseUtil" %><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
 %><div class="ui-slingshot-comments">
 <h3>Comments</h3>
 <%
-    final Resource parent = resource.getChild("comments");
+    final CommentsService commentsService = sling.getService(CommentsService.class);
+    final Resource parent = resource.getResourceResolver().getResource(commentsService.getCommentsResourcePath(resource));
     if ( parent == null ) {
         %><p>No comments...</p><%
     } else {
@@ -42,9 +44,10 @@
     if ( slingRequest.getAuthType() != null ) {
         %>
         <hr/><p>Leave a comment...</p>
-        <form method="POST" action="<%= request.getContextPath() %><%=resource.getName() %>/comments">
-        <p>Title: <input name="<%= SlingshotConstants.PROPERTY_TITLE %>"/></p>
-        <p>Description: <input name="<%= SlingshotConstants.PROPERTY_DESCRIPTION %>"/></p>
+        <form method="POST" action="<%= request.getContextPath() %><%=resource.getName() %>.comments">
+        <input type="hidden" name=":redirect" value="<%= request.getContextPath() %><%=resource.getPath() %>.html"/>
+        <p>Title: <input name="<%= CommentsUtil.PROPERTY_TITLE %>"/></p>
+        <p>Text: <input name="<%= CommentsUtil.PROPERTY_TEXT %>"/></p>
         <button class="ui-button ui-form-button" type="submit">Add</button>
       </form>
       <%
