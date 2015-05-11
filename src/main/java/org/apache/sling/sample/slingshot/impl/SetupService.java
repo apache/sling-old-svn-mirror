@@ -152,16 +152,20 @@ public class SetupService {
         Authorizable user = um.getAuthorizable(InternalConstants.SERVICE_USER_NAME);
         if ( user == null ) {
             logger.info("Creating user {}", InternalConstants.SERVICE_USER_NAME);
+            // TODO - jackrabbit 2 does not support creating a system user
+            // um.createSystemUser(InternalConstants.SERVICE_USER_NAME, null);
+
             um.createUser(InternalConstants.SERVICE_USER_NAME, InternalConstants.SERVICE_USER_NAME);
         }
 
         // check for service user config
         boolean exists = false;
         try {
-            if ( this.configAdmin.listConfigurations("(&("
+            final Configuration[] configs = this.configAdmin.listConfigurations("(&("
                     + ConfigurationAdmin.SERVICE_FACTORYPID + "=org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended"
                     + ")(user.mapping=" + bc.getBundle().getSymbolicName() + "*"
-                    + "))") != null ) {
+                    + "))");
+            if ( configs != null && configs.length > 0 ) {
                 exists = true;
             }
         } catch (final InvalidSyntaxException e) {

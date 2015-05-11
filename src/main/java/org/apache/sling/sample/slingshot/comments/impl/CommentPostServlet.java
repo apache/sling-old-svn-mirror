@@ -17,11 +17,7 @@
 package org.apache.sling.sample.slingshot.comments.impl;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import javax.servlet.ServletException;
 
 import org.apache.felix.scr.annotations.Reference;
@@ -29,15 +25,14 @@ import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.LoginException;
-import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.sample.slingshot.SlingshotConstants;
+import org.apache.sling.sample.slingshot.comments.Comment;
+import org.apache.sling.sample.slingshot.comments.CommentsService;
 import org.apache.sling.sample.slingshot.comments.CommentsUtil;
-import org.apache.sling.sample.slingshot.impl.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,65 +46,34 @@ public class CommentPostServlet extends SlingAllMethodsServlet {
     @Reference
     private ResourceResolverFactory factory;
 
+    @Reference
+    private CommentsService commentsService;
+
     @Override
     protected void doPost(final SlingHttpServletRequest request,
             final SlingHttpServletResponse response)
     throws ServletException, IOException {
-        final String title = request.getParameter(SlingshotConstants.PROPERTY_TITLE);
-        final String description = request.getParameter(SlingshotConstants.PROPERTY_DESCRIPTION);
+        final String title = request.getParameter(CommentsUtil.PROPERTY_TITLE);
+        final String text = request.getParameter(CommentsUtil.PROPERTY_TEXT);
 
         final String userId = request.getRemoteUser();
 
-        logger.debug("New comment from {} : {} - {}", new Object[] {userId, title, description});
+        logger.debug("New comment from {} : {} - {}", new Object[] {userId, title, text});
         // TODO - check values
 
         // save comment
         ResourceResolver resolver = null;
         try {
-            resolver = factory.getAdministrativeResourceResolver(null);
+            resolver = factory.getServiceResourceResolver(null);
 
             final Resource reqResource = resolver.getResource(request.getResource().getPath());
 
-            final Map<String, Object> properties = new HashMap<String, Object>();
-            properties.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, CommentsUtil.RESOURCETYPE_COMMENT);
-            properties.put(SlingshotConstants.PROPERTY_TITLE, title);
-            properties.put(SlingshotConstants.PROPERTY_DESCRIPTION, description);
-            properties.put(CommentsUtil.PROPERTY_USER, userId);
+            final Comment c = new Comment();
+            c.setTitle(title);
+            c.setText(text);
+            c.setCreatedBy(userId);
 
-            // we try it five times
-            PersistenceException exception = null;
-            Resource newResource = null;
-            for(int i=0; i<5; i++) {
-                try {
-                    exception = null;
-                    final String name = ResourceUtil.createUniqueChildName(reqResource, Util.filter(title));
-                    newResource = resolver.create(reqResource, name, properties);
-
-                    resolver.commit();
-                    break;
-                } catch ( final PersistenceException pe) {
-                    resolver.revert();
-                    resolver.refresh();
-                    exception = pe;
-                }
-            }
-            if ( exception != null ) {
-                throw exception;
-            }
-            // order node at the top (if jcr based)
-            final Node newNode = newResource.adaptTo(Node.class);
-            if ( newNode != null ) {
-                try {
-                    final Node parent = newNode.getParent();
-                    final Node firstNode = parent.getNodes().nextNode();
-                    if ( !firstNode.getName().equals(newNode.getName()) ) {
-                        parent.orderBefore(newNode.getName(), firstNode.getName());
-                        newNode.getSession().save();
-                    }
-                } catch ( final RepositoryException re) {
-                    logger.error("Unable to order comment to the top", re);
-                }
-            }
+            this.commentsService.addComment(reqResource, c);
         } catch ( final LoginException le ) {
             throw new ServletException("Unable to login", le);
         } finally {

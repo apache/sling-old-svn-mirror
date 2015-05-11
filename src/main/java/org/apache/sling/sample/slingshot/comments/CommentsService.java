@@ -16,17 +16,23 @@
  */
 package org.apache.sling.sample.slingshot.comments;
 
+import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
 
-public abstract class CommentsUtil {
+/**
+ * Service for handling the comments
+ */
+public interface CommentsService {
 
-    /** The resource type for a comment. */
-    public static final String RESOURCETYPE_COMMENT = "slingshot/Comment";
+    /**
+     * Return the path to the comments resource for a resource.
+     * @param resource The content resource, this is usually an item.
+     * @return The path to the comments resource or {@code null} if
+     *         the passed in content resource is not part of
+     *         Slingshot.
+     */
+    String getCommentsResourcePath(final Resource resource);
 
-    public static final String PROPERTY_TITLE = "title";
-
-    public static final String PROPERTY_TEXT = "text";
-
-    public static final String PROPERTY_USER = "user";
-
-    public static final String PROPERTY_CREATED = "jcr:created";
+    void addComment(final Resource resource, final Comment c)
+    throws PersistenceException;
 }

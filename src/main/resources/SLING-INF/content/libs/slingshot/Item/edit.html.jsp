@@ -44,12 +44,12 @@
     <h1><%= title %></h1>
     <img src="<%= request.getContextPath() %><%= imagePath %>"/>
     <form method="POST" action="<%= request.getContextPath() %><%=resource.getName() %>">
-      <input type="hidden" name=":redirect" value="<%= request.getContextPath() %><%=resource.getName() %>.html"/>
+      <input type="hidden" name=":redirect" value="<%= request.getContextPath() %><%=resource.getPath() %>.html"/>
       <p>Title: <input name="<%= SlingshotConstants.PROPERTY_TITLE %>" value="<%= title %>"/></p>
       <p>Description: <input name="<%= SlingshotConstants.PROPERTY_DESCRIPTION %>" value="<%=ResponseUtil.escapeXml(attributes.get(SlingshotConstants.PROPERTY_DESCRIPTION, ""))%>"/></p>
       <p>Location: <input name="<%= SlingshotConstants.PROPERTY_LOCATION %>" value="<%=ResponseUtil.escapeXml(attributes.get(SlingshotConstants.PROPERTY_LOCATION, ""))%>"/></p>
       <button class="ui-button ui-form-button" type="submit">Save</button>
-      <p><a href="<%= request.getContextPath() %><%=resource.getName() %>.html">Cancel</a></p>
+      <p><a href="<%= request.getContextPath() %><%=resource.getPath() %>.html">Cancel</a></p>
     </form>
   </body>
 </html>
