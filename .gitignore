@@ -1,0 +1,15 @@
+atlassian-ide-plugin.xml
+target
+.idea
+.classpath
+.project
+.settings
+.checkstyle
+*.iml
+*.ipr
+*.iws
+bin
+.vlt
+.vlt-sync-config.properties
+.vlt-sync.log
+.DS_Store

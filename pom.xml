@@ -1,0 +1,299 @@
+<?xml version="1.0"?>
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~ Licensed to the Apache Software Foundation (ASF) under one or
+  ~ more contributor license agreements. See the NOTICE file
+  ~ distributed with this work for additional information regarding
+  ~ copyright ownership. The ASF licenses this file to you under the
+  ~ Apache License, Version 2.0 (the "License"); you may not use
+  ~ this file except in compliance with the License. You may obtain
+  ~ a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0 Unless required by
+  ~ applicable law or agreed to in writing, software distributed
+  ~ under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions
+  ~ and limitations under the License.
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <!-- ======================================================================= -->
+    <!-- P A R E N T   P R O J E C T                                             -->
+    <!-- ======================================================================= -->
+    <parent>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>sling</artifactId>
+        <version>22</version>
+        <relativePath />
+    </parent>
+
+    <!-- ======================================================================= -->
+    <!-- P R O J E C T                                                           -->
+    <!-- ======================================================================= -->
+    <artifactId>org.apache.sling.xss</artifactId>
+    <packaging>bundle</packaging>
+    <version>1.0.3-SNAPSHOT</version>
+
+    <name>Apache Sling XSS Protection Bundle</name>
+    <description>
+        Apache Sling XSS Protection Bundle providing XSS protection based on the OWASP AntiSamy and OWASP Java Encoder libraries.
+    </description>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/xss</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/xss</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/xss</url>
+    </scm>
+
+    <properties>
+        <sling.java.version>6</sling.java.version>
+    </properties>
+
+    <!-- ======================================================================= -->
+    <!-- B U I L D                                                               -->
+    <!-- ======================================================================= -->
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <!-- Extend RAT configuration from parent pom -->
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <configuration>
+                        <excludes combine.children="append">
+                            <exclude>src/main/resources/ESAPI.properties</exclude>
+                            <exclude>src/main/resources/validation.properties</exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.sling</groupId>
+                <artifactId>maven-sling-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Import-Package>
+                            !bsh,
+                            !nu.xom,
+                            !org.apache.log4j.spi,
+                            !org.apache.log4j.xml,
+                            !org.w3c.dom.svg,
+                            !org.apache.avalon.framework.logger,
+                            !org.apache.commons.jxpath.*,
+                            !org.apache.commons.digester.*,
+                            !org.apache.tools.ant.taskdefs,
+                            !org.apache.xml.resolver,
+                            !org.apache.xml.resolver.readers,
+                            !org.apache.log,
+                            !sun.io,
+                            *
+                        </Import-Package>
+                        <Private-Package>
+                            org.apache.sling.xss.impl,
+                            org.apache.batik.*,
+                            org.w3c.css.sac,
+                            org.apache.xerces.*,
+                            org.apache.xml.serialize,
+                            org.apache.commons.beanutils.*;-split-package:=merge-first,
+                            org.apache.commons.configuration.*,
+                            org.apache.commons.logging.impl,
+                            org.cyberneko.html.*,
+                        </Private-Package>
+                        <Embed-Dependency>
+                            antisamy;inline=true,
+                            esapi;inline=true,
+                            encoder;inline=true
+                        </Embed-Dependency>
+                        <Sling-Initial-Content>
+                            SLING-INF/content;path:=/libs/sling/xss;overwrite:=true;ignoreImportProviders:=xml
+                        </Sling-Initial-Content>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!-- ======================================================================= -->
+    <!-- D E P E N D E N C I E S                                                 -->
+    <!-- ======================================================================= -->
+    <dependencies>
+        <dependency>
+            <groupId>org.owasp.antisamy</groupId>
+            <artifactId>antisamy</artifactId>
+            <version>1.5.2</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>nu.xom</groupId>
+                    <artifactId>com.springsource.nu.xom</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>bsh</groupId>
+                    <artifactId>bsh</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.axsl.org.w3c.dom.svg</groupId>
+                    <artifactId>svg-dom-java</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-jxpath</groupId>
+                    <artifactId>commons-jxpath</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-digester3</artifactId>
+                </exclusion>
+                <!-- #40108 - XSS protection does not work on Java 5 -->
+                <!-- Replace batik-css 1.7 with 1.6. See below.      -->
+                <exclusion>
+                    <groupId>org.apache.xmlgraphics</groupId>
+                    <artifactId>batik-css</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- <#40108 - XSS protection does not work on Java 5>  -->
+        <!-- Replace batik-css 1.7 with 1.6 to avoid breaking   -->
+        <!-- the build on Java 5. The batik-css 1.6 pom doesn't -->
+        <!-- have proper dependency metadata, so we need to     -->
+        <!-- reconstruct the full list here.                    -->
+        <!-- TODO: Remove this workaround when we dump Java 5.  -->
+        <dependency>
+            <groupId>batik</groupId>
+            <artifactId>batik-css</artifactId>
+            <version>1.6</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>batik</groupId>
+            <artifactId>batik-ext</artifactId>
+            <version>1.6</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>batik</groupId>
+            <artifactId>batik-util</artifactId>
+            <version>1.6</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>batik</groupId>
+            <artifactId>batik-gui-util</artifactId>
+            <version>1.6</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>xml-apis</groupId>
+            <artifactId>xml-apis-ext</artifactId>
+            <version>1.3.04</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- </#40108 - XSS protection does not work on Java 5> -->
+
+        <dependency>
+            <groupId>org.owasp.esapi</groupId>
+            <artifactId>esapi</artifactId>
+            <version>2.1.0</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>nu.xom</groupId>
+                    <artifactId>com.springsource.nu.xom</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>bsh</groupId>
+                    <artifactId>bsh</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.axsl.org.w3c.dom.svg</groupId>
+                    <artifactId>svg-dom-java</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-jxpath</groupId>
+                    <artifactId>commons-jxpath</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-digester3</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.owasp.encoder</groupId>
+            <artifactId>encoder</artifactId>
+            <scope>provided</scope>
+            <version>1.1.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.api</artifactId>
+            <version>2.2.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.json</artifactId>
+            <version>2.0.6</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>2.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.8.4</version>
+            <type>jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-api-mockito</artifactId>
+            <version>1.5.5</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>
