@@ -31,7 +31,7 @@
         <link rel="stylesheet" type="text/css" href="/etc/clientlibs/repl/style.css">
     </head>
 
-    <body data-sly-use.repl="repl.js">
+    <body>
         <div id="logo">&nbsp;</div>
         <h1><small>Read-Eval-Print Loop</small></h1>
 
@@ -58,7 +58,7 @@
                 </div>
                 <div id="source" class="output-view editor" data-src="/sightly/repl.template.html" data-mode="ace/mode/html"></div>
                 <iframe id="view" class="output-view hidden" src="/sightly/repl.template.html"></iframe>
-                <div id="java" class="output-view editor hidden" data-src="${repl.classPath}" data-mode="ace/mode/java"></div>
+                <div id="java" class="output-view editor hidden" data-src="/sightly/repl.java.html" data-mode="ace/mode/java"></div>
             </div>
         </div>
 
