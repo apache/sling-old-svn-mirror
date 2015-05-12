@@ -111,13 +111,13 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
         packageRoots = SettingsUtils.removeEmptyEntries(packageRoots);
 
         ImportMode importMode = null;
-        if (importModeString != null) {
-            importMode = ImportMode.valueOf(importModeString);
+        if (importModeString != null && importModeString.trim().length() > 0) {
+            importMode = ImportMode.valueOf(importModeString.trim());
         }
 
         AccessControlHandling aclHandling = null;
-        if (aclHandlingString != null) {
-            aclHandling= AccessControlHandling.valueOf(aclHandlingString);
+        if (aclHandlingString != null && aclHandlingString.trim().length() > 0) {
+            aclHandling= AccessControlHandling.valueOf(aclHandlingString.trim());
         }
         if ("filevlt".equals(type)) {
             packageBuilder = new ResourceSharedDistributionPackageBuilder(new FileVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots));

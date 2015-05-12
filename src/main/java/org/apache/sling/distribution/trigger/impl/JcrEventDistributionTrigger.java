@@ -49,8 +49,17 @@ public class JcrEventDistributionTrigger extends AbstractJcrEventTrigger impleme
         String replicatingPath = getNodePathFromEvent(event);
         if (!isIgnoredPath(replicatingPath)) {
 
-            distributionRequest = new SimpleDistributionRequest(Event.NODE_REMOVED == event.getType() ?
-                    DistributionRequestType.DELETE : DistributionRequestType.ADD, replicatingPath);
+            if (replicatingPath.contains("/rep:policy/")) {
+                int idx = replicatingPath.indexOf("/rep:policy/");
+                replicatingPath = replicatingPath.substring(0, idx) + "/rep:policy";
+
+                distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, replicatingPath);
+            }
+            else {
+                distributionRequest = new SimpleDistributionRequest(Event.NODE_REMOVED == event.getType() ?
+                        DistributionRequestType.DELETE : DistributionRequestType.ADD, replicatingPath);
+            }
+
             log.info("distributing {}", distributionRequest);
 
         }
