@@ -73,7 +73,7 @@ public class RequestAttributeInjector implements Injector, StaticInjectAnnotatio
 
         @Override
         public InjectionStrategy getInjectionStrategy() {
-            return annotation.injectonStrategy();
+            return annotation.injectionStrategy();
         }
         
         @Override
