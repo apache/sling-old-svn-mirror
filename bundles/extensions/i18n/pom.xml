@@ -7,9 +7,9 @@
     to you under the Apache License, Version 2.0 (the
     "License"); you may not use this file except in compliance
     with the License.  You may obtain a copy of the License at
-    
+
     http://www.apache.org/licenses/LICENSE-2.0
-    
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on an
     "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -35,7 +35,7 @@
         Support for creating Java I18N ResourceBundles from repository
         resources.
     </description>
-    
+
     <properties>
         <exam.version>3.3.0</exam.version>
         <url.version>1.5.2</url.version>
@@ -46,9 +46,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/i18n</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/i18n</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/i18n</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/i18n</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/i18n</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/i18n</url>
     </scm>
 
     <build>
@@ -106,8 +106,8 @@
                     </systemPropertyVariables>
                     <classpathDependencyExcludes>
                      <!-- The osgi.org dependencies cause trouble with pax exam -->
-                        <classpathDependencyExcludes>org.osgi:org.osgi.core</classpathDependencyExcludes> 
-                        <classpathDependencyExcludes>org.osgi:org.osgi.compendium</classpathDependencyExcludes> 
+                        <classpathDependencyExcludes>org.osgi:org.osgi.core</classpathDependencyExcludes>
+                        <classpathDependencyExcludes>org.osgi:org.osgi.compendium</classpathDependencyExcludes>
                     </classpathDependencyExcludes>
                 </configuration>
             </plugin>
@@ -163,8 +163,8 @@
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
         </dependency>
-        
-        <!-- Version needs to be overwritten for SLING-3954 
+
+        <!-- Version needs to be overwritten for SLING-3954
              Can be removed once we update to a new parent pom (>22) -->
         <dependency>
             <groupId>org.apache.felix</groupId>
@@ -233,7 +233,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
-            <version>1.5.0</version>            
+            <version>1.5.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
