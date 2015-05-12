@@ -99,7 +99,7 @@
         <module>tooling/maven/archetypes/bundle</module>
         <module>tooling/maven/archetypes/bundle-for-jcrinstall</module>
         <module>tooling/maven/archetypes/taglib</module>
-     
+
         <!-- The Sling API -->
         <module>bundles/api</module>
 
@@ -129,10 +129,10 @@
         <!-- Authentication Support -->
         <module>bundles/auth/core</module>
         <module>bundles/auth/form</module>
-        
+
         <!-- The Sling Engine -->
         <module>bundles/engine</module>
-        
+
         <!-- The JCR sub project -->
         <module>bundles/jcr/api</module>
         <module>bundles/jcr/base</module>
@@ -152,7 +152,7 @@
         <module>bundles/jcr/webconsole</module>
         <module>bundles/jcr/oak-server</module>
         <module>bundles/jcr/it-jackrabbit-oak</module>
-        
+
         <!-- Servlets -->
         <module>bundles/servlets/resolver</module>
         <module>bundles/servlets/get</module>
@@ -166,7 +166,8 @@
         <module>bundles/scripting/jsp</module>
         <module>bundles/scripting/jsp-taglib</module>
         <module>bundles/scripting/jsp-jstl</module>
-        
+        <module>bundles/scripting/sightly</module>
+
         <!-- Extensions -->
         <module>bundles/extensions/adapter</module>
         <module>bundles/extensions/bundleresource</module>
@@ -192,10 +193,12 @@
         <module>bundles/extensions/models/api</module>
         <module>bundles/extensions/models/impl</module>
         <module>bundles/extensions/models/integration-tests</module>
+        <module>bundles/extensions/i18n</module>
+        <module>bundles/extensions/xss</module>
 
         <!-- Testing Support -->
         <module>testing</module>
-        
+
         <!-- Installer -->
         <module>installer/core</module>
         <module>installer/console</module>
@@ -205,14 +208,14 @@
         <module>installer/factories/deploymentpck</module>
         <module>installer/factories/subsystems</module>
         <module>installer/it</module>
-        
+
         <!-- Launchpad -->
         <module>launchpad/api</module>
         <module>launchpad/base</module>
         <module>launchpad/installer</module>
         <module>launchpad/content</module>
         <module>launchpad/builder</module>
-        
+
     </modules>
 
     <profiles>
