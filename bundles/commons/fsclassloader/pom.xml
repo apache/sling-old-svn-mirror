@@ -7,9 +7,9 @@
     to you under the Apache License, Version 2.0 (the
     "License"); you may not use this file except in compliance
     with the License.  You may obtain a copy of the License at
-    
+
     http://www.apache.org/licenses/LICENSE-2.0
-    
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on an
     "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -37,9 +37,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/commons/fsclassloader</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/commons/fsclassloader</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/commons/fsclassloader</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/commons/fsclassloader</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/fsclassloader</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/commons/fsclassloader</url>
     </scm>
 
     <build>
