@@ -3,12 +3,15 @@ module.exports = function(grunt) {
 	var staticContentFolder = '../src/main/resources/SLING-INF/libs/sling/resource-editor-static-content';
 	var jspFolder = '../src/main/resources/SLING-INF/libs/sling/resource-editor';
 	var e2eTestSpecFolder = '../src/test/javascript/e2e/spec/**/*spec.js';
-	//console.log(grunt.option('host'));
+	var server = 'localhost';
+	var port = '8080';
 	
 	grunt.initConfig({
 		env : {
 		    build : {
-		    	PHANTOMJS_BIN : 'node_modules/karma-phantomjs-launcher/node_modules/phantomjs/lib/phantom/bin/phantomjs',
+		    	PHANTOMJS_BIN: 'node_modules/karma-phantomjs-launcher/node_modules/phantomjs/lib/phantom/bin/phantomjs',
+		    	SLING_SERVER: (typeof process.env.SLING_SERVER === 'undefined' || process.env.SLING_SERVER === null || '' === process.env.SLING_SERVER) ? server : process.env.SLING_SERVER,
+		    	SLING_PORT: (typeof process.env.SLING_PORT === 'undefined' || process.env.SLING_PORT === null || '' === process.env.SLING_PORT) ? port : process.env.SLING_PORT
 		    }
 		},
 	    less: {
@@ -43,7 +46,14 @@ module.exports = function(grunt) {
 				         staticContentFolder+'/js/**/*.js',
 				         jspFolder+'/*.*'
 				         ],
-				tasks : [ 'webdriver:chrome', 'webdriver:firefox' ],
+				tasks : ['env:build', 'webdriver:chrome', 'webdriver:firefox']
+			},
+			karma : {
+				files:[
+				         staticContentFolder+'/js/**/*.js',
+				         '../src/test/javascript/**/*spec.js'],
+				tasks: ['karma:desktop_build']
+				
 			}
 	    },
 	    _comment:'The google web fonts could be downloaded and copied via grunt-goog-webfont-dl. But goog-webfont-dl directly points to the global #!/usr/bin/env node and not to the local one.',
