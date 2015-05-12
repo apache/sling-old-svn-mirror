@@ -43,9 +43,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/scripting/sightly/models-use-provider</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/scripting/sightly/models-use-provider</developerConnection>
-        <url>http://svn.apache.org/repos/asf/sling/trunk/contrib/scripting/sightly/models-use-provider</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/models-use-provider</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/models-use-provider</developerConnection>
+        <url>http://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/models-use-provider</url>
     </scm>
 
     <properties>
@@ -107,7 +107,7 @@
             <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
- 
+
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.classloader</artifactId>
