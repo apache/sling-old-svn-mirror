@@ -237,6 +237,7 @@ org.apache.sling.reseditor.AddNodeController = (function() {
 		$("#nodeType").select2({
 			placeholder: "Select a node type",
 			allowClear: true,  
+			dropdownCssClass: "node_type_dd_container",
 			selectOnBlur: true,
 			data: function() { 
 			      return { results: thatAddNodeController.nodeTypeObjects } ; // Use the global variable to populate the list
@@ -261,6 +262,7 @@ org.apache.sling.reseditor.AddNodeController = (function() {
 			var select2 = $("#resourceType").select2({
 				placeholder: "Enter or select a resource type",
 				allowClear: true, 
+				dropdownCssClass: "resource_type_dd_container",
 				selectOnBlur: true,
 				data: data,
 				createSearchChoice: function(searchTerm){
@@ -268,9 +270,8 @@ org.apache.sling.reseditor.AddNodeController = (function() {
 					return {id:searchTerm, text:searchTerm};
 				}
 			}).data("select2");
-			$("#resourceType").on("select2-loaded", function() {
-				$('#addNodeDialog').append('<div class="add-node-finished"></div>');
-			});
+			$('#addNodeDialog').addClass('add-node-finished');
+//			$('#addNodeDialog').append('<div id="add-node-finished"></div>');
 		});
 	}
 	

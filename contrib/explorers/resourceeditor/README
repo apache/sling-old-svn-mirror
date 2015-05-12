@@ -14,10 +14,11 @@ o To run the build on your local machine call './grunt desktop_build' within the
 o To have the less sources automatically compiled on change call `./grunt watch:less` in the frontend directory. Press Ctrl-Z to stop watching.
 o To have the 'desktop_build' target triggered on changes in the frontend tests, less sources, JavaScript files and JSP sources use `./grunt watch:all` in the frontend directory and also press Ctrl-Z to stop watching.
 o To get the end to end tests triggered by changes use './grunt watch:e2e' in the frontend directory and also press Ctrl-Z to stop watching.
+o If you don't use 'localhost' as server and '8080' as port you can specify your values by using the environment variables 'SLING_SERVER' 'SLING_PORT'.
 
 ++ Debugging the the end to end tests ++
 o You can still use 'console.log()' and JSON.stringify(display) to inspect JSON values of a test spec.
-o You can use 'client.pause([milliseconds]);' in you test spec to pause and also inspect the browser status.
+o You can use 'client.pause([milliseconds]);' in your test spec to pause and also inspect the browser status.
 o To set breakpoints in a test spec you can use a JavaScript IDE like 'Webstorm'
 
 

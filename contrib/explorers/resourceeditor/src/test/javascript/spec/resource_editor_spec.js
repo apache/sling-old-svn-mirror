@@ -21,9 +21,10 @@ describe('The Resource Editor', function() {
 
 	it('\'s MainController', function() {
 //		it('can encode a URL', function() {
+			// Mock it!
 //			var ntManager = new de.sandroboehme.NodeTypeManager();
 			var mainControllerSettings = {
-					contextPath: "/",
+					contextPath: "/"//,
 //					nodeTypes: ntManager.getNodeTypeNames() 
 			};
 			var mainController = new org.apache.sling.reseditor.MainController(mainControllerSettings, null);

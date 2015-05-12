@@ -329,7 +329,7 @@ new org.apache.sling.reseditor.JSTreeAdapter(jsTreeAdapterSettings, treeControll
 					    <label for="nodeType">Node Type - <span class="nt-dependency-description">applicable together with node name</span> (<a class="nt-toggle" href="javascript:void(0)">show generally applicable</a>)</label>
 					    <input name="jcr:primaryType" type="hidden" id="nodeType">
 					  </div>
-					  <div class="form-group">
+					  <div class="form-group resource-type">
 					    <label for="resourceType">Sling Resource Type</label>
 					    <input name="sling:resourceType" type="hidden" id="resourceType">
 					    <span class="resource-type-not-allowed help-block" style="display:none;">The selected node type does not allow the resulting node to have a Sling resource type property.</span>

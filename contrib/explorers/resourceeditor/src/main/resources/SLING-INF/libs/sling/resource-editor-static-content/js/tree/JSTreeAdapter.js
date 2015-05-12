@@ -122,11 +122,9 @@ $(document).ready(function() {
 		"dnd" : {
 			"drop_finish" : function () {
 				console.log("drop");
-				alert("DROP"); 
 			},
 			"drag_finish" : function (data) {
 				console.log("drag");
-				alert("DRAG OK"); 
 			}
 		},
 		// the `plugins` array allows you to configure the active plugins on this instance
@@ -167,6 +165,10 @@ $(document).ready(function() {
     	treeController.configureKeyListeners(e);
     }).on('select_node.jstree', function (e, data) {
     	;
+    }).on('after_open.jstree', function(e, data){
+    	treeController.afterOpen(data.node);
+    }).on('close_node.jstree', function(e, data){
+    	treeController.beforeClose(data.node);
     });
 });
 

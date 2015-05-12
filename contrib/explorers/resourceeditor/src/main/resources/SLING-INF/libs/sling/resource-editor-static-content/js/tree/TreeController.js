@@ -81,7 +81,14 @@ org.apache.sling.reseditor.TreeController = (function() {
 		}
 		
 	}
-	
+
+	TreeController.prototype.afterOpen = function(node) {
+		$('#'+node.id).addClass("opened");
+	}
+
+	TreeController.prototype.beforeClose = function(node) {
+		$('#'+node.id).removeClass("opened");
+	}
 
 	TreeController.prototype.openNodeTarget = function(e) {
 		var url = $(e.target).parent().attr("href");
