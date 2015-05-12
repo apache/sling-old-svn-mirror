@@ -1,0 +1,21 @@
+{
+    "jcr:primaryType" : "nt:unstructured",
+    "jcr:mixinTypes" : ["mix:language"],
+    "jcr:language" : "de",
+    "hello" : {
+        "jcr:primaryType" : "sling:MessageEntry",
+        "sling:key" : "hello",
+        "sling:message" : "Hallo"
+    },
+    "hello_some_hint" : {
+        "jcr:primaryType" : "sling:MessageEntry",
+        "sling:key" : "hello ((some-hint))",
+        "sling:message" : "Hallo mit einem Hauch"
+    },
+    "world" : {
+        "jcr:primaryType" : "sling:MessageEntry",
+        "sling:key" : "world",
+        "sling:message" : "Welt"
+    }
+
+}

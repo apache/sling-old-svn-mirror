@@ -1,0 +1,14 @@
+{
+    "jcr:primaryType": "sling:Folder",
+    "grandparent": {
+        "jcr:primaryType": "sling:Folder"
+    },
+    "parent": {
+        "jcr:primaryType": "sling:Folder",
+        "sling:resourceSuperType": "/apps/sightly/scripts/useinheritance/grandparent"
+    },
+    "child": {
+        "jcr:primaryType": "sling:Folder",
+        "sling:resourceSuperType": "sightly/scripts/useinheritance/parent"
+    }
+}
