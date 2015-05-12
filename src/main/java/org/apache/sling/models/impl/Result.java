@@ -203,9 +203,13 @@ public class Result<ModelType> {
     }
 
     public void throwException(Logger log) {
-        for (int i = 0; i < failures.size() - 1; i++) {
-            failures.get(i).log(log);
+        // log all failures save the last if multiple failures exist
+        if (failures.size() > 1) {
+            for (int i = 0; i < failures.size() - 2; i++) {
+                failures.get(i).log(log);
+            }
         }
+        // throw the last failure as exception
         if (failures.size() >= 1) {
             failures.get(failures.size() - 1).throwException();
         }
