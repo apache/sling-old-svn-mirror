@@ -41,6 +41,8 @@ import static org.mockito.Mockito.when;
 public class XSSAPIImplTest {
 
     public static final String RUBBISH = "rubbish";
+    public static final String RUBBISH_JSON = "[\"rubbish\"]";
+    public static final String RUBBISH_XML = "<rubbish/>";
 
     private XSSAPI xssAPI;
 
@@ -59,6 +61,7 @@ public class XSSAPIImplTest {
             Whitebox.setInternalState(xssFilter, "defaultHandler", mockPolicyHandler);
 
             xssAPI = new XSSAPIImpl();
+            Whitebox.invokeMethod(xssAPI, "activate");
             Field filterField = XSSAPIImpl.class.getDeclaredField("xssFilter");
             filterField.setAccessible(true);
             filterField.set(xssAPI, xssFilter);
@@ -547,6 +550,94 @@ public class XSSAPIImplTest {
             String result = xssAPI.getValidMultiLineComment(source, RUBBISH);
             if (!result.equals(expected)) {
                 fail("Validating multiline comment '" + source + "', expecting '" + expected + "', but got '" + result + "'");
+            }
+        }
+    }
+
+    @Test
+    public void testGetValidJSON() {
+        String[][] testData = {
+                {null,      RUBBISH_JSON},
+                {"",        ""},
+                {"1]",      RUBBISH_JSON},
+                {"{}",      "{}"},
+                {"{1}",     RUBBISH_JSON},
+                {
+                        "{test: 'test'}",
+                        "{\"test\":\"test\"}"
+                },
+                {
+                        "{test:\"test}",
+                        RUBBISH_JSON
+                },
+                {
+                        "{test1:'test1', test2: {test21: 'test21', test22: 'test22'}}",
+                        "{\"test1\":\"test1\",\"test2\":{\"test21\":\"test21\",\"test22\":\"test22\"}}"
+                },
+                {"[]",      "[]"},
+                {"[1,2]",   "[1,2]"},
+                {"[1",      RUBBISH_JSON},
+                {
+                        "[{test: 'test'}]",
+                        "[{\"test\":\"test\"}]"
+                }
+        };
+        for (String[] aTestData : testData) {
+            String source = aTestData[0];
+            String expected = aTestData[1];
+
+            String result = xssAPI.getValidJSON(source, RUBBISH_JSON);
+            if (!result.equals(expected)) {
+                fail("Validating JSON '" + source + "', expecting '" + expected + "', but got '" + result + "'");
+            }
+        }
+    }
+
+    @Test
+    public void testGetValidXML() {
+        String[][] testData = {
+                {null,      RUBBISH_XML},
+                {"",        ""},
+                {
+                        "<t/>",
+                        "<t/>"
+                },
+                {
+                        "<t>",
+                        RUBBISH_XML
+                },
+                {
+                        "<t>test</t>",
+                        "<t>test</t>"
+                },
+                {
+                        "<t>test",
+                        RUBBISH_XML
+                },
+                {
+                        "<t t=\"t\">test</t>",
+                        "<t t=\"t\">test</t>"
+                },
+                {
+                        "<t t=\"t>test</t>",
+                        RUBBISH_XML
+                },
+                {
+                        "<t><w>xyz</w></t>",
+                        "<t><w>xyz</w></t>"
+                },
+                {
+                        "<t><w>xyz</t></w>",
+                        RUBBISH_XML
+                }
+        };
+        for (String[] aTestData : testData) {
+            String source = aTestData[0];
+            String expected = aTestData[1];
+
+            String result = xssAPI.getValidXML(source, RUBBISH_XML);
+            if (!result.equals(expected)) {
+                fail("Validating XML '" + source + "', expecting '" + expected + "', but got '" + result + "'");
             }
         }
     }

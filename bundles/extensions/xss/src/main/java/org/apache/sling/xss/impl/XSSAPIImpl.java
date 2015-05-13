@@ -16,28 +16,39 @@
  ******************************************************************************/
 package org.apache.sling.xss.impl;
 
+import java.io.StringReader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.annotation.Nonnull;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.commons.json.JSONArray;
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.xss.ProtectionContext;
 import org.apache.sling.xss.XSSAPI;
 import org.apache.sling.xss.XSSFilter;
 import org.owasp.encoder.Encode;
 import org.owasp.esapi.ESAPI;
 import org.owasp.esapi.Validator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xml.sax.InputSource;
+import org.xml.sax.XMLReader;
 
 @Component
 @Service(value = XSSAPI.class)
 public class XSSAPIImpl implements XSSAPI {
-
-    // =============================================================================================
-    // VALIDATORS
-    //
+    private static final Logger LOGGER = LoggerFactory.getLogger(XSSAPIImpl.class);
 
     @Reference
     private XSSFilter xssFilter = null;
@@ -46,9 +57,30 @@ public class XSSAPIImpl implements XSSAPI {
 
     private static final Pattern PATTERN_AUTO_DIMENSION = Pattern.compile("['\"]?auto['\"]?");
 
+    private SAXParserFactory factory;
+
+    @Activate
+    @SuppressWarnings("unused")
+    protected void activate() {
+        factory = SAXParserFactory.newInstance();
+        factory.setValidating(false);
+        factory.setNamespaceAware(true);
+    }
+
+    @Deactivate
+    @SuppressWarnings("unused")
+    protected void deactivate() {
+        factory = null;
+    }
+
+    // =============================================================================================
+    // VALIDATORS
+    //
+
     /**
      * @see org.apache.sling.xss.XSSAPI#getValidInteger(String, int)
      */
+    @Override
     public Integer getValidInteger(String integer, int defaultValue) {
         if (integer != null && integer.length() > 0) {
             try {
@@ -65,6 +97,7 @@ public class XSSAPIImpl implements XSSAPI {
     /**
      * @see org.apache.sling.xss.XSSAPI#getValidLong(String, long)
      */
+    @Override
     public Long getValidLong(String source, long defaultValue) {
         if (source != null && source.length() > 0) {
             try {
@@ -83,6 +116,7 @@ public class XSSAPIImpl implements XSSAPI {
     /**
      * @see org.apache.sling.xss.XSSAPI#getValidDimension(String, String)
      */
+    @Override
     public String getValidDimension(String dimension, String defaultValue) {
         if (dimension != null && dimension.length() > 0) {
             if (PATTERN_AUTO_DIMENSION.matcher(dimension).matches()) {
@@ -156,6 +190,8 @@ public class XSSAPIImpl implements XSSAPI {
     /**
      * @see org.apache.sling.xss.XSSAPI#getValidHref(String)
      */
+    @Override
+    @Nonnull
     public String getValidHref(final String url) {
         if (url != null && url.length() > 0) {
             // Percent-encode characters that are not allowed in unquoted
@@ -189,6 +225,7 @@ public class XSSAPIImpl implements XSSAPI {
     /**
      * @see org.apache.sling.xss.XSSAPI#getValidJSToken(String, String)
      */
+    @Override
     public String getValidJSToken(String token, String defaultValue) {
         if (token != null && token.length() > 0) {
             token = token.trim();
@@ -238,6 +275,7 @@ public class XSSAPIImpl implements XSSAPI {
     /**
      * @see org.apache.sling.xss.XSSAPI#getValidStyleToken(String, String)
      */
+    @Override
     public String getValidStyleToken(String token, String defaultValue) {
         if (token != null && token.length() > 0 && token.matches(CSS_TOKEN)) {
             return token;
@@ -249,6 +287,7 @@ public class XSSAPIImpl implements XSSAPI {
     /**
      * @see org.apache.sling.xss.XSSAPI#getValidCSSColor(String, String)
      */
+    @Override
     public String getValidCSSColor(String color, String defaultColor) {
         if (color != null && color.length() > 0) {
             color = color.trim();
@@ -272,11 +311,68 @@ public class XSSAPIImpl implements XSSAPI {
     /**
      * @see org.apache.sling.xss.XSSAPI#getValidMultiLineComment(String, String)
      */
+    @Override
     public String getValidMultiLineComment(String comment, String defaultComment) {
         if (comment != null && !comment.contains("*/")) {
             return comment;
         }
         return defaultComment;
+    }
+
+    /**
+     * @see org.apache.sling.xss.XSSAPI#getValidJSON(String, String)
+     */
+    @Override
+    public String getValidJSON(String json, String defaultJson) {
+        if (json == null) {
+            return getValidJSON(defaultJson, "");
+        }
+        json = json.trim();
+        if ("".equals(json)) {
+            return "";
+        }
+        int curlyIx = json.indexOf("{");
+        int straightIx = json.indexOf("[");
+        if (curlyIx >= 0 && (curlyIx < straightIx || straightIx < 0)) {
+            try {
+                JSONObject obj = new JSONObject(json);
+                return obj.toString();
+            } catch (JSONException e) {
+                LOGGER.debug("JSON validation failed: " + e.getMessage(), e);
+            }
+        } else {
+            try {
+                JSONArray arr = new JSONArray(json);
+                return arr.toString();
+            } catch (JSONException e) {
+                LOGGER.debug("JSON validation failed: " + e.getMessage(), e);
+            }
+        }
+        return getValidJSON(defaultJson, "");
+    }
+
+    /**
+     * @see org.apache.sling.xss.XSSAPI#getValidXML(String, String)
+     */
+    @Override
+    public String getValidXML(String xml, String defaultXml) {
+        if (xml == null) {
+            return getValidXML(defaultXml, "");
+        }
+        xml = xml.trim();
+        if ("".equals(xml)) {
+            return "";
+        }
+
+        try {
+            SAXParser parser = factory.newSAXParser();
+            XMLReader reader = parser.getXMLReader();
+            reader.parse(new InputSource(new StringReader(xml)));
+            return xml;
+        } catch (Exception e) {
+            LOGGER.debug("XML validation failed: " + e.getMessage(), e);
+        }
+        return getValidXML(defaultXml, "");
     }
 
     // =============================================================================================
@@ -286,6 +382,7 @@ public class XSSAPIImpl implements XSSAPI {
     /**
      * @see org.apache.sling.xss.XSSAPI#encodeForHTML(String)
      */
+    @Override
     public String encodeForHTML(String source) {
         return source == null ? null : Encode.forHtml(source);
     }
@@ -293,6 +390,7 @@ public class XSSAPIImpl implements XSSAPI {
     /**
      * @see org.apache.sling.xss.XSSAPI#encodeForHTMLAttr(String)
      */
+    @Override
     public String encodeForHTMLAttr(String source) {
         return source == null ? null : Encode.forHtmlAttribute(source);
     }
@@ -300,6 +398,7 @@ public class XSSAPIImpl implements XSSAPI {
     /**
      * @see org.apache.sling.xss.XSSAPI#encodeForXML(String)
      */
+    @Override
     public String encodeForXML(String source) {
         return source == null ? null : Encode.forXml(source);
     }
@@ -307,6 +406,7 @@ public class XSSAPIImpl implements XSSAPI {
     /**
      * @see org.apache.sling.xss.XSSAPI#encodeForXMLAttr(String)
      */
+    @Override
     public String encodeForXMLAttr(String source) {
         return source == null ? null : Encode.forXmlAttribute(source);
     }
@@ -314,6 +414,7 @@ public class XSSAPIImpl implements XSSAPI {
     /**
      * @see org.apache.sling.xss.XSSAPI#encodeForJSString(String)
      */
+    @Override
     public String encodeForJSString(String source) {
         return source == null ? null : Encode.forJavaScript(source);
     }
@@ -321,6 +422,7 @@ public class XSSAPIImpl implements XSSAPI {
     /**
      * @see org.apache.sling.xss.XSSAPI#encodeForCSSString(String)
      */
+    @Override
     public String encodeForCSSString(String source) {
         return source == null ? null : Encode.forCssString(source);
     }
@@ -332,6 +434,8 @@ public class XSSAPIImpl implements XSSAPI {
     /**
      * @see org.apache.sling.xss.XSSAPI#filterHTML(String)
      */
+    @Override
+    @Nonnull
     public String filterHTML(String source) {
         return xssFilter.filter(ProtectionContext.HTML_HTML_CONTENT, source);
     }
@@ -343,6 +447,7 @@ public class XSSAPIImpl implements XSSAPI {
     /**
      * @see org.apache.sling.xss.XSSAPI#getRequestSpecificAPI(org.apache.sling.api.SlingHttpServletRequest)
      */
+    @Override
     public XSSAPI getRequestSpecificAPI(final SlingHttpServletRequest request) {
         return this;
     }
@@ -350,6 +455,7 @@ public class XSSAPIImpl implements XSSAPI {
     /**
      * @see org.apache.sling.xss.XSSAPI#getResourceResolverSpecificAPI(org.apache.sling.api.resource.ResourceResolver)
      */
+    @Override
     public XSSAPI getResourceResolverSpecificAPI(final ResourceResolver resourceResolver) {
         return this;
     }
