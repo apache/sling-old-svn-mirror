@@ -252,6 +252,16 @@ public class XSSAPIImplTest {
                 // `
                 {"/test/ab`cd", "/test/ab%60cd"},
                 {"http://localhost:4502/test/ab`cd", "http://localhost:4502/test/ab%60cd"},
+                // colons in query string
+                {"/test/search.html?0_tag:id=test", "/test/search.html?0_tag%3Aid=test"},
+                { // JCR namespaces and colons in query string
+                        "/test/jcr:content/search.html?0_tag:id=test",
+                        "/test/_jcr_content/search.html?0_tag%3Aid=test"
+                },
+                { // ? in query string
+                        "/test/search.html?0_tag:id=test?ing&1_tag:id=abc",
+                        "/test/search.html?0_tag%3Aid=test?ing&1_tag%3Aid=abc",
+                }
         };
 
         for (String[] aTestData : testData) {
