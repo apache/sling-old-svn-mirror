@@ -24,7 +24,10 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javax.jcr.query.Query;
+
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.QueriableResourceProvider;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
@@ -56,6 +59,7 @@ class MockJcrResourceResolverFactory implements ResourceResolverFactory {
         this.bundleContext = bundleContext;
     }
 
+    @SuppressWarnings("deprecation")
     private ResourceResolver getResourceResolverInternal(Map<String, Object> authenticationInfo, boolean isAdmin) throws LoginException {
         Dictionary<String, Object> resourceProviderFactoryFactoryProps = new Hashtable<String, Object>();
         resourceProviderFactoryFactoryProps.put(Constants.SERVICE_VENDOR, "sling-mock");
@@ -85,6 +89,7 @@ class MockJcrResourceResolverFactory implements ResourceResolverFactory {
 
         Dictionary<Object, Object> resourceProviderProps = new Hashtable<Object, Object>();
         resourceProviderProps.put(ResourceProvider.ROOTS, new String[] { "/" });
+        resourceProviderProps.put(QueriableResourceProvider.LANGUAGES, new String[] { Query.XPATH, Query.SQL, Query.JCR_SQL2 });
 
         // setup real sling resource resolver implementation for use in mocked context
         MockResourceResolverFactoryActivator activator = new MockResourceResolverFactoryActivator();
