@@ -1,4 +1,5 @@
-/*******************************************************************************
+/**
+ * ****************************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one or
  * more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information regarding
@@ -6,14 +7,15 @@
  * Apache License, Version 2.0 (the "License"); you may not use
  * this file except in compliance with the License. You may obtain
  * a copy of the License at
- *
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0 Unless required by
  * applicable law or agreed to in writing, software distributed
  * under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions
  * and limitations under the License.
- ******************************************************************************/
+ * ****************************************************************************
+ */
 package org.apache.sling.xss;
 
 
@@ -52,7 +54,7 @@ public interface XSSAPI {
      * @return a sanitized integer
      */
     @Nullable
-    public Integer getValidInteger(@Nullable String integer, @Nullable int defaultValue);
+    Integer getValidInteger(@Nullable String integer, int defaultValue);
 
     /**
      * Validate a string which should contain a long, returning a default value if the source is
@@ -63,7 +65,7 @@ public interface XSSAPI {
      * @return a sanitized integer
      */
     @Nullable
-    public Long getValidLong(@Nullable String source, @Nullable long defaultValue);
+    Long getValidLong(@Nullable String source,long defaultValue);
 
     /**
      * Validate a string which should contain a dimension, returning a default value if the source is
@@ -74,7 +76,7 @@ public interface XSSAPI {
      * @return a sanitized dimension
      */
     @Nullable
-    public String getValidDimension(@Nullable String dimension, @Nullable String defaultValue);
+    String getValidDimension(@Nullable String dimension, @Nullable String defaultValue);
 
     /**
      * Sanitizes a URL for writing as an HTML href or src attribute value.
@@ -83,7 +85,7 @@ public interface XSSAPI {
      * @return a sanitized URL (possibly empty)
      */
     @Nonnull
-    public String getValidHref(@Nullable String url);
+    String getValidHref(@Nullable String url);
 
     /**
      * Validate a Javascript token.  The value must be either a single identifier, a literal number,
@@ -94,7 +96,7 @@ public interface XSSAPI {
      * @return a string containing a single identifier, a literal number, or a literal string token
      */
     @Nullable
-    public String getValidJSToken(@Nullable String token, @Nullable String defaultValue);
+    String getValidJSToken(@Nullable String token, @Nullable String defaultValue);
 
     /**
      * Validate a style/CSS token. Valid CSS tokens are specified at http://www.w3.org/TR/css3-syntax/
@@ -105,7 +107,7 @@ public interface XSSAPI {
      * @return a string containing sanitized style token
      */
     @Nullable
-    public String getValidStyleToken(@Nullable String token, @Nullable String defaultValue);
+    String getValidStyleToken(@Nullable String token, @Nullable String defaultValue);
 
     /**
      * Validate a CSS color value. Color values as specified at http://www.w3.org/TR/css3-color/#colorunits
@@ -117,17 +119,35 @@ public interface XSSAPI {
      * @return a string a css color value.
      */
     @Nullable
-    public String getValidCSSColor(@Nullable String color, @Nullable String defaultColor);
+    String getValidCSSColor(@Nullable String color, @Nullable String defaultColor);
 
     /**
-     * Validate multiline comment to be used inside a <script>...</script> or <style>...</style> block. Multiline
+     * Validate multi-line comment to be used inside a <script>...</script> or <style>...</style> block. Multi-line
      * comment end block is disallowed
      *
      * @param comment           the comment to be used
      * @param defaultComment    a default value to use if the comment is {@code null} or not valid.
-     * @return a valid multiline comment
+     * @return a valid multi-line comment
      */
-    public String getValidMultiLineComment(@Nullable String comment, @Nullable String defaultComment);
+    String getValidMultiLineComment(@Nullable String comment, @Nullable String defaultComment);
+
+    /**
+     * Validate a JSON string
+     *
+     * @param json          the JSON string to validate
+     * @param defaultJson   the default value to use if {@code json} is {@code null} or not valid
+     * @return a valid JSON string
+     */
+    String getValidJSON(@Nullable String json, @Nullable String defaultJson);
+
+    /**
+     * Validate an XML string
+     *
+     * @param xml           the XML string to validate
+     * @param defaultXml    the default value to use if {@code xml} is {@code null} or not valid
+     * @return a valid XML string
+     */
+    String getValidXML(@Nullable String xml, @Nullable String defaultXml);
 
     // =============================================================================================
     // ENCODERS
@@ -141,7 +161,7 @@ public interface XSSAPI {
      * @return an encoded version of the source
      */
     @Nullable
-    public String encodeForHTML(@Nullable String source);
+    String encodeForHTML(@Nullable String source);
 
     /**
      * Encodes a source string for writing to an HTML attribute value.
@@ -151,7 +171,7 @@ public interface XSSAPI {
      * @return an encoded version of the source
      */
     @Nullable
-    public String encodeForHTMLAttr(@Nullable String source);
+    String encodeForHTMLAttr(@Nullable String source);
 
     /**
      * Encodes a source string for XML element content.
@@ -161,7 +181,7 @@ public interface XSSAPI {
      * @return an encoded version of the source
      */
     @Nullable
-    public String encodeForXML(@Nullable String source);
+    String encodeForXML(@Nullable String source);
 
     /**
      * Encodes a source string for writing to an XML attribute value.
@@ -170,7 +190,7 @@ public interface XSSAPI {
      * @return an encoded version of the source
      */
     @Nullable
-    public String encodeForXMLAttr(@Nullable String source);
+    String encodeForXMLAttr(@Nullable String source);
 
     /**
      * Encodes a source string for writing to JavaScript string content.
@@ -181,7 +201,7 @@ public interface XSSAPI {
      * @return an encoded version of the source
      */
     @Nullable
-    public String encodeForJSString(@Nullable String source);
+    String encodeForJSString(@Nullable String source);
 
     /**
      * Encodes a source string for writing to CSS string content.
@@ -192,7 +212,7 @@ public interface XSSAPI {
      * @return an encoded version of the source
      */
     @Nullable
-    public String encodeForCSSString(@Nullable String source);
+    String encodeForCSSString(@Nullable String source);
 
 
     // =============================================================================================
@@ -207,7 +227,7 @@ public interface XSSAPI {
      * @return a string containing the sanitized HTML which may be an empty string if {@code source} is {@code null} or empty
      */
     @Nonnull
-    public String filterHTML(@Nullable String source);
+    String filterHTML(@Nullable String source);
 
 
     // =============================================================================================
@@ -221,7 +241,7 @@ public interface XSSAPI {
      * @param request the request from which to obtain the {@link org.apache.sling.xss.XSSAPI}
      * @return an XSSAPI service capable of validating hrefs.
      */
-    public XSSAPI getRequestSpecificAPI(SlingHttpServletRequest request);
+    XSSAPI getRequestSpecificAPI(SlingHttpServletRequest request);
 
     /**
      * Returns an XSSAPI instance capable of mapping resource URLs.
@@ -230,6 +250,6 @@ public interface XSSAPI {
      * @param resourceResolver the resolver from which to obtain the {@link org.apache.sling.xss.XSSAPI}
      * @return an XSSAPI service capable of validating hrefs.
      */
-    public XSSAPI getResourceResolverSpecificAPI(ResourceResolver resourceResolver);
+    XSSAPI getResourceResolverSpecificAPI(ResourceResolver resourceResolver);
 
 }
