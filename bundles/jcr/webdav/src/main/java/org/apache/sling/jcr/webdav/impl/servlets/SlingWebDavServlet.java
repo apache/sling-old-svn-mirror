@@ -19,6 +19,7 @@
 package org.apache.sling.jcr.webdav.impl.servlets;
 
 import java.io.IOException;
+import java.util.Map;
 
 import javax.jcr.Repository;
 import javax.jcr.Session;
@@ -27,8 +28,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
@@ -56,6 +59,7 @@ import org.apache.sling.jcr.webdav.impl.helper.SlingSessionProvider;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.ComponentException;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.http.NamespaceException;
 
@@ -130,6 +134,17 @@ public class SlingWebDavServlet extends SimpleWebdavServlet {
     @Property(TYPE_CONTENT_DEFAULT)
     public static final String TYPE_CONTENT = "type.content";
 
+    public static final String MIME_DETECTION_MODE_BASIC = "basic";
+    public static final String MIME_DETECTION_MODE_CONTENT_AWARE_MANDATORY = "contentaware.mandatory";
+    public static final String MIME_DETECTION_MODE_CONTENT_AWARE_OPTIONAL = "contentaware.optional";
+
+    @Property(value = MIME_DETECTION_MODE_CONTENT_AWARE_OPTIONAL, options = {
+            @PropertyOption(name = MIME_DETECTION_MODE_BASIC, value = "Basic"),
+            @PropertyOption(name = MIME_DETECTION_MODE_CONTENT_AWARE_OPTIONAL, value = "Content Aware (If available)"),
+            @PropertyOption(name = MIME_DETECTION_MODE_CONTENT_AWARE_MANDATORY, value = "Content Aware (Required)")})
+    public static final String MIME_DETECTION_MODE = "detection.mode";
+
+
     static final String IOHANDLER_REF_NAME = "IOHandler";
 
     static final String PROPERTYHANDLER_REF_NAME = "PropertyHandler";
@@ -146,7 +161,10 @@ public class SlingWebDavServlet extends SimpleWebdavServlet {
     private MimeTypeService mimeTypeService;
 
     @Reference(target = "(detection.mode=tika)", cardinality = ReferenceCardinality.OPTIONAL_UNARY)
-    private ContentAwareMimeTypeService contentAwareMimeTypeService;
+    private ContentAwareMimeTypeService contentAwareMimeTypeServiceRef;
+
+    private ContentAwareMimeTypeService contentAwareMimeTypeService = null;
+
 
     @Reference
     private FileNameExtractor fileNameExtractor;
@@ -167,6 +185,8 @@ public class SlingWebDavServlet extends SimpleWebdavServlet {
     private SessionProvider sessionProvider;
 
     private boolean simpleWebDavServletRegistered;
+
+    private String detectionMode;
 
     // ---------- SimpleWebdavServlet overwrites -------------------------------
 
@@ -221,41 +241,30 @@ public class SlingWebDavServlet extends SimpleWebdavServlet {
 
     // ---------- SCR integration
 
-    protected void activate(ComponentContext context)
+    protected void activate(ComponentContext context, final Map<String, Object> props)
             throws NamespaceException, ServletException {
 
+        try {
+            detectionMode = (String)props.get("detection.mode");
+            setContentAwareMimeTypeService();
+        } catch(ComponentException ex) {
+            context.disableComponent((String) props.get(Constants.SERVICE_PID));
+            throw ex;
+        }
+        registerSimpleWebDavServlet(context);
         this.ioManager.setComponentContext(context);
         this.propertyManager.setComponentContext(context);
         this.copyMoveManager.setComponentContext(context);
 
-        resourceConfig = new SlingResourceConfig(mimeTypeService,
-                contentAwareMimeTypeService,
-                context.getProperties(),
-                ioManager,
-                propertyManager,
-                copyMoveManager,
-                fileNameExtractor);
-
-        // Register servlet, and set the contextPath field to signal successful
-        // registration
-        Servlet simpleServlet = new SlingSimpleWebDavServlet(resourceConfig,
-            getRepository());
-        httpService.registerServlet(resourceConfig.getServletContextPath(),
-            simpleServlet, resourceConfig.getServletInitParams(), null);
-        simpleWebDavServletRegistered = true;
     }
 
     protected void deactivate(ComponentContext context) {
-
-        if (simpleWebDavServletRegistered) {
-            httpService.unregister(resourceConfig.getServletContextPath());
-            simpleWebDavServletRegistered = false;
-        }
-
-        this.resourceConfig = null;
+        unregisterSimpleWebDavServlet();
         this.ioManager.setComponentContext(null);
         this.propertyManager.setComponentContext(null);
         this.copyMoveManager.setComponentContext(null);
+        this.detectionMode = null;
+        this.contentAwareMimeTypeService = null;
     }
 
     public void bindIOHandler(final ServiceReference ioHandlerReference) {
@@ -293,4 +302,71 @@ public class SlingWebDavServlet extends SimpleWebdavServlet {
         }
         response.getWriter().flush();
     }
+
+    @Modified
+    protected void update(ComponentContext context, final Map<String, Object> props)
+            throws ServletException, NamespaceException {
+        if(detectionMode != null && !detectionMode.equals((String)props.get("detection.mode"))){
+            try {
+
+                //Clean up related stuff as detectionmode changed
+                unregisterSimpleWebDavServlet();
+                this.contentAwareMimeTypeService = null;
+
+                //Re-initialize
+                this.detectionMode = (String)props.get("detection.mode");
+                setContentAwareMimeTypeService();
+                registerSimpleWebDavServlet(context);
+            } catch(ComponentException ex) {
+                context.disableComponent((String) props.get(Constants.SERVICE_PID));
+                throw ex;
+            }
+        }
+    }
+
+    private void setContentAwareMimeTypeService() {
+        //string support in switch statement came from java 7 onwards :-(
+        if(MIME_DETECTION_MODE_BASIC.equals(detectionMode)) {
+            contentAwareMimeTypeService = null;
+        } else if (MIME_DETECTION_MODE_CONTENT_AWARE_OPTIONAL.equals(detectionMode)) {
+            contentAwareMimeTypeService = contentAwareMimeTypeServiceRef;
+        } else if (MIME_DETECTION_MODE_CONTENT_AWARE_MANDATORY.equals(detectionMode)) {
+            if (contentAwareMimeTypeServiceRef == null) {
+                throw new ComponentException(
+                        "Could not find any content aware detection service");
+            } else {
+                contentAwareMimeTypeService = contentAwareMimeTypeServiceRef;
+            }
+        } else {
+            contentAwareMimeTypeService = contentAwareMimeTypeServiceRef;
+        }
+    }
+
+    private void registerSimpleWebDavServlet(ComponentContext context)
+            throws ServletException, NamespaceException {
+        resourceConfig = new SlingResourceConfig(mimeTypeService,
+                contentAwareMimeTypeService,
+                context.getProperties(),
+                ioManager,
+                propertyManager,
+                copyMoveManager,
+                fileNameExtractor);
+
+        // Register servlet, and set the contextPath field to signal successful
+        // registration
+        Servlet simpleServlet = new SlingSimpleWebDavServlet(resourceConfig,
+                getRepository());
+        httpService.registerServlet(resourceConfig.getServletContextPath(),
+                simpleServlet, resourceConfig.getServletInitParams(), null);
+        simpleWebDavServletRegistered = true;
+    }
+
+    private void unregisterSimpleWebDavServlet() {
+        if (simpleWebDavServletRegistered) {
+            httpService.unregister(resourceConfig.getServletContextPath());
+            simpleWebDavServletRegistered = false;
+        }
+        this.resourceConfig = null;
+    }
+
 }
