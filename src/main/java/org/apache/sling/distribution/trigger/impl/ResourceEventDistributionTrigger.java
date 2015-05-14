@@ -85,8 +85,7 @@ public class ResourceEventDistributionTrigger implements DistributionTrigger {
                 SlingConstants.TOPIC_RESOURCE_CHANGED, SlingConstants.TOPIC_RESOURCE_REMOVED});
         log.info("trigger agent {} on path '{}'", requestHandler, path);
 
-        properties.put(EventConstants.EVENT_FILTER, "(path=" + path + "/*)");
-        properties.put(EventConstants.EVENT_FILTER, "(!(" + DEAConstants.PROPERTY_APPLICATION + "=*))");
+        properties.put(EventConstants.EVENT_FILTER, "(&(path=" + path + "/*) (!(" + DEAConstants.PROPERTY_APPLICATION + "=*)))");
 
         ServiceRegistration triggerPathEventRegistration = bundleContext.registerService(EventHandler.class.getName(),
                 new TriggerAgentEventListener(requestHandler), properties);
