@@ -91,8 +91,8 @@ public class JcrPropertyMapCacheEntry {
             failIfCannotStore(value, node);
         }
      }
-    
-    private void failIfCannotStore(final Object value, final Node node) 
+
+    private void failIfCannotStore(final Object value, final Node node)
     throws RepositoryException {
         if (value instanceof InputStream) {
             // InputStream is storable and calling createValue for nothing
@@ -149,8 +149,6 @@ public class JcrPropertyMapCacheEntry {
             values = ArrayUtils.toObject((float[])value);
         } else if (value instanceof short[]) {
             values = ArrayUtils.toObject((short[])value);
-        } else if (value instanceof long[]) {
-            values = ArrayUtils.toObject((long[])value);
         } else if (value instanceof boolean[]) {
             values = ArrayUtils.toObject((boolean[])value);
         } else if (value instanceof char[]) {
