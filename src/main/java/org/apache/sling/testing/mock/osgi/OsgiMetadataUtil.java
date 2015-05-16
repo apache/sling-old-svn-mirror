@@ -198,16 +198,24 @@ final class OsgiMetadataUtil {
             }
         }
     }
+    
+    /**
+     * @param clazz OSGi component
+     * @return XPath query fragment to find matching XML node in SCR metadata
+     */
+    private static String getComponentXPathQuery(Class clazz) {
+        return "//*[implementation/@class='" + clazz.getName() + "' or @name='" + clazz.getName() + "']";
+    }
 
     private static boolean matchesService(Class clazz, Document metadata) {
-        String query = "//*[@name='" + clazz.getName() + "']";
+        String query = getComponentXPathQuery(clazz);
         NodeList nodes = queryNodes(metadata, query);
         return nodes != null && nodes.getLength() > 0;
     }
 
     private static Set<String> getServiceInterfaces(Class clazz, Document metadata) {
         Set<String> serviceInterfaces = new HashSet<String>();
-        String query = "//*[@name='" + clazz.getName() + "']/service/provide[@interface!='']";
+        String query = getComponentXPathQuery(clazz) + "/service/provide[@interface!='']";
         NodeList nodes = queryNodes(metadata, query);
         if (nodes != null) {
             for (int i = 0; i < nodes.getLength(); i++) {
@@ -223,7 +231,7 @@ final class OsgiMetadataUtil {
 
     private static Map<String, Object> getProperties(Class clazz, Document metadata) {
         Map<String, Object> props = new HashMap<String, Object>();
-        String query = "//*[@name='" + clazz.getName() + "']/property[@name!='' and @value!='']";
+        String query = getComponentXPathQuery(clazz) + "/property[@name!='' and @value!='']";
         NodeList nodes = queryNodes(metadata, query);
         if (nodes != null) {
             for (int i = 0; i < nodes.getLength(); i++) {
@@ -238,7 +246,7 @@ final class OsgiMetadataUtil {
                 }
             }
         }
-        query = "//*[@name='" + clazz.getName() + "']/property[@name!='' and text()!='']";
+        query = getComponentXPathQuery(clazz) + "/property[@name!='' and text()!='']";
         nodes = queryNodes(metadata, query);
         if (nodes != null) {
             for (int i = 0; i < nodes.getLength(); i++) {
@@ -256,7 +264,7 @@ final class OsgiMetadataUtil {
 
     private static List<Reference> getReferences(Class clazz, Document metadata) {
         List<Reference> references = new ArrayList<Reference>();
-        String query = "//*[@name='" + clazz.getName() + "']/reference[@name!='']";
+        String query = getComponentXPathQuery(clazz) + "/reference[@name!='']";
         NodeList nodes = queryNodes(metadata, query);
         if (nodes != null) {
             for (int i = 0; i < nodes.getLength(); i++) {
@@ -268,7 +276,7 @@ final class OsgiMetadataUtil {
     }
 
     private static String getLifecycleMethodName(Class clazz, Document metadata, String methodName) {
-        String query = "//*[@name='" + clazz.getName() + "']";
+        String query = getComponentXPathQuery(clazz);
         Node node = queryNode(metadata, query);
         if (node != null) {
             return getAttributeValue(node, methodName);
