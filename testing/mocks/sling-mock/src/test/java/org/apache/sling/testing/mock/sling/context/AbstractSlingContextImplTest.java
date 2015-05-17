@@ -45,14 +45,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class SlingContextImplTest {
+public abstract class AbstractSlingContextImplTest {
 
     private SlingContextImpl context;
 
     @Before
     public void setUp() throws Exception {
         this.context = new SlingContextImpl();
-        this.context.setResourceResolverType(ResourceResolverType.RESOURCERESOLVER_MOCK);
+        this.context.setResourceResolverType(getResourceResolverType());
         this.context.setUp();
 
         context.addModelsForPackage("org.apache.sling.testing.mock.sling.context");
@@ -65,6 +65,8 @@ public class SlingContextImplTest {
     public void tearDown() throws Exception {
         this.context.tearDown();
     }
+    
+    protected abstract ResourceResolverType getResourceResolverType();
     
     @Test
     public void testContextObjects() {
