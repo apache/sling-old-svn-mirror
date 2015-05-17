@@ -241,7 +241,14 @@ final class OsgiMetadataUtil {
                 String type = getAttributeValue(node, "type");
                 if (StringUtils.equals("Integer", type)) {
                     props.put(name, Integer.parseInt(value));
-                } else {
+                }
+                else if (StringUtils.equals("Long", type)) {
+                    props.put(name, Long.parseLong(value));
+                }
+                else if (StringUtils.equals("Boolean", type)) {
+                    props.put(name, Boolean.parseBoolean(value));
+                }
+                else {
                     props.put(name, value);
                 }
             }
