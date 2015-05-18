@@ -49,7 +49,7 @@ public class MockValueMap extends ValueMapDecorator {
     }
 
     public MockValueMap(Resource resource, Map<String,Object> map) {
-        super(convertForWrite(map));
+        super(convertForWriteAll(map));
         this.resource = resource;
     }
 
@@ -109,7 +109,7 @@ public class MockValueMap extends ValueMapDecorator {
     @SuppressWarnings("unchecked")
     @Override
     public void putAll(Map<? extends String, ?> map) {
-        super.putAll((Map<? extends String, ?>)convertForWrite(map));
+        super.putAll((Map<? extends String, ?>)convertForWriteAll((Map<String, Object>)map));
     }
     
     private static Object convertForWrite(Object value) {
@@ -130,7 +130,7 @@ public class MockValueMap extends ValueMapDecorator {
         return value;
     }
     
-    private static Map<String, Object> convertForWrite(Map<String, Object> map) {
+    private static Map<String, Object> convertForWriteAll(Map<String, Object> map) {
         Map<String,Object> newMap = new HashMap<String, Object>();
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             newMap.put(entry.getKey(), convertForWrite(entry.getValue()));
