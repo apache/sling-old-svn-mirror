@@ -36,6 +36,7 @@ import org.apache.sling.crankstart.core.commands.Exit;
 import org.apache.sling.crankstart.core.commands.InstallBundle;
 import org.apache.sling.crankstart.core.commands.Log;
 import org.apache.sling.crankstart.core.commands.NullCommand;
+import org.apache.sling.crankstart.core.commands.ProvisioningModel;
 import org.apache.sling.crankstart.core.commands.SetOsgiFrameworkProperty;
 import org.apache.sling.crankstart.core.commands.StartBundles;
 import org.apache.sling.crankstart.core.commands.StartFramework;
@@ -66,6 +67,7 @@ public class CrankstartFileProcessor implements Callable<Object> {
         builtinCommands.add(new StartFramework());
         builtinCommands.add(new Configure());
         builtinCommands.add(new Defaults());
+        builtinCommands.add(new ProvisioningModel());
         builtinCommands.add(new Exit());
         
         // Need a null "classpath" command as our launcher uses it

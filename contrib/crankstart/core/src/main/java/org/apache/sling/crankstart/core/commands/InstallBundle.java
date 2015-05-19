@@ -16,6 +16,7 @@
  */
 package org.apache.sling.crankstart.core.commands;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
@@ -24,6 +25,7 @@ import org.apache.sling.crankstart.api.CrankstartCommandLine;
 import org.apache.sling.crankstart.api.CrankstartContext;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
 import org.osgi.framework.startlevel.BundleStartLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,22 +47,25 @@ public class InstallBundle implements CrankstartCommand {
     @Override
     public void execute(CrankstartContext crankstartContext, CrankstartCommandLine commandLine) throws Exception {
         final String bundleRef = commandLine.getQualifier();
-        final URL url = new URL(bundleRef);
         final BundleContext ctx = crankstartContext.getOsgiFramework().getBundleContext();
+        final int level = getStartLevel(crankstartContext);
+        installBundle(ctx, log, bundleRef, level);
+    }
+    
+    static void installBundle(BundleContext ctx, Logger log, String urlString, int startLevel) throws IOException, BundleException {
+        final URL url = new URL(urlString);
         final InputStream bundleStream = url.openStream();
         try {
-            final Bundle b = ctx.installBundle(bundleRef, url.openStream());
-            
-            final int level = getStartLevel(crankstartContext);
-            if(level > 0) {
+            final Bundle b = ctx.installBundle(urlString, url.openStream());
+            if(startLevel > 0) {
                 final BundleStartLevel bsl = (BundleStartLevel)b.adapt(BundleStartLevel.class);
                 if(bsl == null) {
-                    log.warn("Bundle does not adapt to BundleStartLevel, cannot set start level", bundleRef);
+                    log.warn("Bundle does not adapt to BundleStartLevel, cannot set start level", urlString);
                 }
-                bsl.setStartLevel(level);
+                bsl.setStartLevel(startLevel);
             }
             
-            log.info("bundle installed at start level {}: {}", level, bundleRef);
+            log.info("bundle installed at start level {}: {}", startLevel, urlString);
         } finally {
             bundleStream.close();
         }
