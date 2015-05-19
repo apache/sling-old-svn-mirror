@@ -218,34 +218,6 @@ public class CrankstartBootstrapTest {
     
     @Test
     @Retry(timeoutMsec=10000, intervalMsec=250)
-    public void testFelixFormatConfig() throws Exception {
-        setAdminCredentials();
-        final String path = "/system/console/config/configuration-status-20140606-1347+0200.txt";
-        final HttpUriRequest get = new HttpGet(baseUrl + path);
-        HttpResponse response = null;
-        try {
-            response = client.execute(get);
-            assertEquals("Expecting config dump to be available at " + get.getURI(), 200, response.getStatusLine().getStatusCode());
-            assertNotNull("Expecting response entity", response.getEntity());
-            String encoding = "UTF-8";
-            if(response.getEntity().getContentEncoding() != null) {
-                encoding = response.getEntity().getContentEncoding().getValue();
-            }
-            final String content = IOUtils.toString(response.getEntity().getContent(), encoding);
-            final String [] expected = new String[] {
-                    "array = [foo, bar.from.launcher.test]",
-                    "service.ranking.launcher.test = 54321"
-            };
-            for(String exp : expected) {
-                assertTrue("Expecting config content to contain " + exp, content.contains(exp));
-            }
-        } finally {
-            closeConnection(response);
-        }
-    }
-    
-    @Test
-    @Retry(timeoutMsec=10000, intervalMsec=250)
     public void testSpecificStartLevel() throws Exception {
         // Verify that this bundle is only installed, as it's set to start level 99
         setAdminCredentials();
@@ -276,6 +248,42 @@ public class CrankstartBootstrapTest {
                 }
             }
             assertTrue("Expecting start level to be found in JSON output", found);
+        } finally {
+            closeConnection(response);
+        }
+    }
+    
+    @Test
+    @Retry(timeoutMsec=10000, intervalMsec=250)
+    public void testEmptyConfig() throws Exception {
+        setAdminCredentials();
+        assertHttpGet(
+            "/test/config/empty.config.should.work", 
+            "empty.config.should.work#service.pid=(String)empty.config.should.work##EOC#");
+    }
+        
+    @Test
+    @Retry(timeoutMsec=10000, intervalMsec=250)
+    public void testFelixFormatConfig() throws Exception {
+        setAdminCredentials();
+        assertHttpGet(
+                "/test/config/felix.format.test", 
+                "felix.format.test#array=(String[])[foo, bar.from.launcher.test]#mongouri=(String)mongodb://localhost:27017#service.pid=(String)felix.format.test#service.ranking.launcher.test=(Integer)54321##EOC#");
+    }
+    
+    private void assertHttpGet(String path, String expectedContent) throws Exception {
+        final HttpUriRequest get = new HttpGet(baseUrl + path);
+        HttpResponse response = null;
+        try {
+            response = client.execute(get);
+            assertEquals("Expecting 200 response at " + path, 200, response.getStatusLine().getStatusCode());
+            assertNotNull("Expecting response entity", response.getEntity());
+            String encoding = "UTF-8";
+            if(response.getEntity().getContentEncoding() != null) {
+                encoding = response.getEntity().getContentEncoding().getValue();
+            }
+            final String content = IOUtils.toString(response.getEntity().getContent(), encoding);
+            assertEquals(expectedContent, content);
         } finally {
             closeConnection(response);
         }

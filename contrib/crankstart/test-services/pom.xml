@@ -34,6 +34,7 @@
                 <configuration>
                     <instructions>
                         <Private-Package>org.apache.sling.crankstart.testservices.*</Private-Package>
+                        <Export-Package></Export-Package>
                     </instructions>
                 </configuration>
             </plugin>
