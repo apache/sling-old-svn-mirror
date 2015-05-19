@@ -84,6 +84,9 @@
         <metatype:AD id="org.apache.sling.commons.log.file.buffered"
              type="Boolean" default="false" name="%log.file.buffered.name"
              description="%log.file.buffered.description" />
+        <metatype:AD id="webconsole.configurationFactory.nameHint"
+            type="String"
+            default="{org.apache.sling.commons.log.file}"/>
     </metatype:OCD>
     <metatype:Designate
         pid="org.apache.sling.commons.log.LogManager.factory.writer"
@@ -118,6 +121,9 @@
             type="String" name="%log.loggers.name"
             description="%log.loggers.description"
             cardinality="2147483647" />
+        <metatype:AD id="webconsole.configurationFactory.nameHint"
+            type="String"
+            default="{org.apache.sling.commons.log.file}: {org.apache.sling.commons.log.level}"/>
     </metatype:OCD>
     <metatype:Designate
         pid="org.apache.sling.commons.log.LogManager.factory.config"
