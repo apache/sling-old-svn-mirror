@@ -18,10 +18,13 @@
  */
 package org.apache.sling.testing.mock.osgi;
 
+import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
+import java.security.cert.X509Certificate;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Map;
 
 import org.osgi.framework.Bundle;
@@ -70,22 +73,22 @@ class MockBundle implements Bundle {
 
     // --- unsupported operations ---
     @Override
-    public Enumeration<?> findEntries(final String path, final String filePattern, final boolean recurse) {
+    public Enumeration<URL> findEntries(final String path, final String filePattern, final boolean recurse) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Enumeration<?> getEntryPaths(final String path) {
+    public Enumeration<String> getEntryPaths(final String path) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Dictionary<?, ?> getHeaders() {
+    public Dictionary<String, String> getHeaders() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Dictionary<?, ?> getHeaders(final String locale) {
+    public Dictionary<String, String> getHeaders(final String locale) {
         throw new UnsupportedOperationException();
     }
 
@@ -110,7 +113,7 @@ class MockBundle implements Bundle {
     }
 
     @Override
-    public Enumeration<?> getResources(final String name) {
+    public Enumeration<URL> getResources(final String name) {
         throw new UnsupportedOperationException();
     }
 
@@ -170,12 +173,27 @@ class MockBundle implements Bundle {
     }
 
     // this is part of org.osgi 4.2.0
-    public Map getSignerCertificates(final int signersType) {
+    public Map<X509Certificate, List<X509Certificate>> getSignerCertificates(final int signersType) {
         throw new UnsupportedOperationException();
     }
 
     // this is part of org.osgi 4.2.0
     public Version getVersion() {
+        throw new UnsupportedOperationException();
+    }
+
+    // this is part of org.osgi.core 6.0.0
+    public int compareTo(Bundle o) {
+        throw new UnsupportedOperationException();
+    }
+
+    // this is part of org.osgi.core 6.0.0
+    public <A> A adapt(Class<A> type) {
+        throw new UnsupportedOperationException();
+    }
+
+    // this is part of org.osgi.core 6.0.0
+    public File getDataFile(String filename) {
         throw new UnsupportedOperationException();
     }
 
