@@ -34,6 +34,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.serialization.DistributionPackageBuildingException;
 import org.apache.sling.distribution.serialization.DistributionPackageReadingException;
@@ -69,15 +70,19 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
             return null;
         }
 
+        String packageName = null;
         try {
-            String packageName = generateNameFromId(resourceResolver, distributionPackage);
-            String packagePath = getPathFromName(packageName);
+            packageName = generateNameFromId(resourceResolver, distributionPackage);
 
-            return new ResourceSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
         }
         catch (PersistenceException e) {
+            DistributionPackageUtils.deleteSafely(distributionPackage);
             throw new DistributionPackageBuildingException(e);
         }
+
+        String packagePath = getPathFromName(packageName);
+        return new ResourceSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
+
     }
 
     @CheckForNull
@@ -88,15 +93,19 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
             return null;
         }
 
+        String packageName = null;
         try {
-            String packageName = generateNameFromId(resourceResolver, distributionPackage);
-            String packagePath = getPathFromName(packageName);
+            packageName = generateNameFromId(resourceResolver, distributionPackage);
 
-            return new ResourceSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
         }
         catch (PersistenceException e) {
+            DistributionPackageUtils.deleteSafely(distributionPackage);
             throw new DistributionPackageReadingException(e);
         }
+
+        String packagePath = getPathFromName(packageName);
+
+        return new ResourceSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
     }
 
     public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String distributionPackageId) {
@@ -112,7 +121,9 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
         if (distributionPackage == null) {
             return null;
         }
+
         String packagePath = getPathFromName(packageName);
+
         return new ResourceSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
     }
 
@@ -130,27 +141,27 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
 
     private  String generateNameFromId(ResourceResolver resourceResolver, DistributionPackage distributionPackage) throws PersistenceException {
 
-            String name = PACKAGE_NAME_PREFIX + "_" + System.currentTimeMillis() + "_" +  UUID.randomUUID();
+        String name = PACKAGE_NAME_PREFIX + "_" + System.currentTimeMillis() + "_" +  UUID.randomUUID();
 
-            Map<String, Object> properties = new HashMap<String, Object>();
-            properties.put(PN_ORIGINAL_ID, distributionPackage.getId());
+        Map<String, Object> properties = new HashMap<String, Object>();
+        properties.put(PN_ORIGINAL_ID, distributionPackage.getId());
 
-            // save the info just for debugging purposes
-            if (distributionPackage.getInfo().getRequestType() != null) {
-                properties.put(PN_ORIGINAL_REQUEST_TYPE, distributionPackage.getInfo().getRequestType());
+        // save the info just for debugging purposes
+        if (distributionPackage.getInfo().getRequestType() != null) {
+            properties.put(PN_ORIGINAL_REQUEST_TYPE, distributionPackage.getInfo().getRequestType().toString());
 
-            }
-            if (distributionPackage.getInfo().getPaths() != null) {
-                properties.put(PN_ORIGINAL_PATHS, distributionPackage.getInfo().getPaths());
-            }
+        }
+        if (distributionPackage.getInfo().getPaths() != null) {
+            properties.put(PN_ORIGINAL_PATHS, distributionPackage.getInfo().getPaths());
+        }
 
-            String packagePath = getPathFromName(name);
+        String packagePath = getPathFromName(name);
 
-            Resource resource = ResourceUtil.getOrCreateResource(resourceResolver, packagePath,
-                    "sling:Folder", "sling:Folder", false);
+        Resource resource = ResourceUtil.getOrCreateResource(resourceResolver, packagePath,
+                "sling:Folder", "sling:Folder", false);
 
-            ModifiableValueMap valueMap = resource.adaptTo(ModifiableValueMap.class);
-            valueMap.putAll(properties);
+        ModifiableValueMap valueMap = resource.adaptTo(ModifiableValueMap.class);
+        valueMap.putAll(properties);
 
         synchronized (repolock) {
             resourceResolver.create(resource, ResourceSharedDistributionPackage.REFERENCE_ROOT_NODE,

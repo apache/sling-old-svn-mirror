@@ -26,6 +26,8 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.serialization.DistributionPackageReadingException;
 import org.slf4j.Logger;
@@ -56,25 +58,33 @@ public class LocalDistributionPackageImporter implements DistributionPackageImpo
         try {
             boolean success = packageBuilder.installPackage(resourceResolver, distributionPackage);
 
-            if (success) {
-                log.info("Distribution package read and installed for path(s) {}", Arrays.toString(distributionPackage.getInfo().getPaths()));
 
-            } else {
+            if (!success) {
                 log.warn("could not install distribution package {}", distributionPackage.getId());
             }
+
         } catch (Exception e) {
             log.error("cannot import a package from the given stream of type {}", distributionPackage.getType());
             throw new DistributionPackageImportException(e);
         }
     }
 
-    public DistributionPackage importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException {
+    public DistributionPackageInfo importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException {
+        DistributionPackage distributionPackage = null;
         try {
-            DistributionPackage distributionPackage = packageBuilder.readPackage(resourceResolver, stream);
-            importPackage(resourceResolver, distributionPackage);
-            return distributionPackage;
+            distributionPackage = packageBuilder.readPackage(resourceResolver, stream);
+
+            boolean success = packageBuilder.installPackage(resourceResolver, distributionPackage);
+
+            if (!success) {
+                log.warn("could not install distribution package {}", distributionPackage.getId());
+            }
+
+            return distributionPackage.getInfo();
         } catch (DistributionPackageReadingException e) {
             throw new DistributionPackageImportException("cannot read a package from the given stream", e);
+        } finally {
+            DistributionPackageUtils.deleteSafely(distributionPackage);
         }
     }
 

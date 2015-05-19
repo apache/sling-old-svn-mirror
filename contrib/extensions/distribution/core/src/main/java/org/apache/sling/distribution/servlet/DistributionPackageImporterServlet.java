@@ -29,6 +29,8 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.resources.DistributionResourceTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,15 +58,11 @@ public class DistributionPackageImporterServlet extends SlingAllMethodsServlet {
         InputStream stream = request.getInputStream();
         ResourceResolver resourceResolver = request.getResourceResolver();
         try {
-            DistributionPackage distributionPackage = distributionPackageImporter.importStream(resourceResolver, stream);
-            if (distributionPackage != null) {
-                log.info("Package {} imported successfully", distributionPackage);
-                distributionPackage.delete();
-                ServletJsonUtils.writeJson(response, 200, "package imported successfully");
-            } else {
-                log.warn("Cannot import distribution package from request {}", request);
-                ServletJsonUtils.writeJson(response, 400, "could not import a package from the request stream");
-            }
+            DistributionPackageInfo distributionPackageInfo = distributionPackageImporter.importStream(resourceResolver, stream);
+
+            log.info("Package {} imported successfully", distributionPackageInfo);
+            ServletJsonUtils.writeJson(response, 200, "package imported successfully");
+
         } catch (final Throwable e) {
             ServletJsonUtils.writeJson(response, 400, "an unexpected error has occurred during distribution import");
             log.error("Error during distribution import", e);
