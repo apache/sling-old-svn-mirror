@@ -65,19 +65,27 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
     private AccessControlHandling aclHandling;
 
     private final String[] packageRoots;
+    private final File tempDirectory;
 
-    public FileVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots) {
+    public FileVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots, String tempFilesFolder) {
         super(type);
         this.packaging = packaging;
         this.importMode = importMode;
         this.aclHandling = aclHandling;
         this.packageRoots = packageRoots;
+
+
+
+        tempDirectory = VltUtils.getTempFolder(tempFilesFolder);
+
+        log.info("using temp directory {}", tempDirectory == null ? tempDirectory : tempDirectory.getPath());
     }
 
     @Override
     protected DistributionPackage createPackageForAdd(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request)
             throws DistributionPackageBuildingException {
         Session session = null;
+        VaultPackage vaultPackage = null;
         try {
             session = getSession(resourceResolver);
 
@@ -88,10 +96,11 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
             ExportOptions opts = VltUtils.getExportOptions(filter, packageRoots, packageGroup, packageName, VERSION);
 
             log.debug("assembling package {}", packageGroup + '/' + packageName + "-" + VERSION);
-            File tmpFile = File.createTempFile("rp-vlt-create-" + System.nanoTime(), ".zip");
-            VaultPackage vaultPackage = packaging.getPackageManager().assemble(session, opts, tmpFile);
+
+            vaultPackage = VltUtils.createPackage(packaging.getPackageManager(), session, opts, tempDirectory);
             return new FileVaultDistributionPackage(getType(), vaultPackage);
         } catch (Exception e) {
+            VltUtils.deletePackage(vaultPackage);
             throw new DistributionPackageBuildingException(e);
         } finally {
             ungetSession(session);
@@ -102,25 +111,16 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
     protected DistributionPackage readPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull final InputStream stream)
             throws DistributionPackageReadingException {
         log.debug("reading a stream");
-        DistributionPackage pkg = null;
+        VaultPackage vaultPackage = null;
         try {
-            File tmpFile = File.createTempFile("rp-vlt-read-" + System.nanoTime(), ".zip");
-            FileOutputStream fileStream = new FileOutputStream(tmpFile);
-            IOUtils.copy(stream, fileStream);
-            IOUtils.closeQuietly(fileStream);
+            vaultPackage = VltUtils.readPackage(packaging.getPackageManager(), stream, tempDirectory);
 
-            VaultPackage vaultPackage = packaging.getPackageManager().open(tmpFile);
-
-            if (vaultPackage != null) {
-                pkg = new FileVaultDistributionPackage(getType(), vaultPackage);
-            } else {
-                log.warn("stream could not be read as a vlt package");
-            }
+            return new FileVaultDistributionPackage(getType(), vaultPackage);
 
         } catch (Exception e) {
-            throw new DistributionPackageReadingException("could not read / install the package", e);
+            VltUtils.deletePackage(vaultPackage);
+            throw new DistributionPackageReadingException("could not read package", e);
         }
-        return pkg;
     }
 
 
@@ -157,13 +157,11 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
                 return true;
             }
         } catch (Exception e) {
-            log.error("could not read / install the package", e);
+            log.error("could not install the package", e);
             throw new DistributionPackageReadingException(e);
         } finally {
             ungetSession(session);
         }
         return false;
     }
-
-
 }

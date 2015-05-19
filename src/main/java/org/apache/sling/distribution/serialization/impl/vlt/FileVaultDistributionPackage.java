@@ -75,13 +75,7 @@ public class FileVaultDistributionPackage extends AbstractDistributionPackage im
 
     public void delete() {
         try {
-            File file = pkg.getFile();
-
-            close();
-
-            if (file.exists()) {
-                file.delete();
-            }
+            VltUtils.deletePackage(pkg);
         } catch (Throwable e) {
             log.error("cannot delete file", e);
         }

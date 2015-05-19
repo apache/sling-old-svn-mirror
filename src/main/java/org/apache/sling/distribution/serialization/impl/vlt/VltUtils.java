@@ -21,6 +21,8 @@ package org.apache.sling.distribution.serialization.impl.vlt;
 
 
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.vault.fs.api.ImportMode;
 import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
@@ -32,9 +34,19 @@ import org.apache.jackrabbit.vault.fs.filter.DefaultPathFilter;
 import org.apache.jackrabbit.vault.fs.io.AccessControlHandling;
 import org.apache.jackrabbit.vault.fs.io.ImportOptions;
 import org.apache.jackrabbit.vault.packaging.ExportOptions;
+import org.apache.jackrabbit.vault.packaging.JcrPackage;
+import org.apache.jackrabbit.vault.packaging.PackageManager;
+import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.distribution.DistributionRequest;
 
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Properties;
 
@@ -162,5 +174,74 @@ public class VltUtils {
         }
 
         return opts;
+    }
+
+    public static VaultPackage createPackage(PackageManager packageManager, Session session, ExportOptions options, File tempFolder) throws IOException, RepositoryException {
+        File file = File.createTempFile("distr-vault-create-" + System.nanoTime(), ".zip", tempFolder);
+
+        try {
+            VaultPackage vaultPackage = packageManager.assemble(session, options, file);
+            return vaultPackage;
+        } catch (RepositoryException e) {
+            FileUtils.deleteQuietly(file);
+            throw e;
+        }
+    }
+
+    public static VaultPackage readPackage(PackageManager packageManager, InputStream stream, File tempFolder) throws IOException {
+        File file = File.createTempFile("distr-vault-read-" + System.nanoTime(), ".zip", tempFolder);
+        OutputStream out = FileUtils.openOutputStream(file);
+        try {
+            IOUtils.copy(stream, out);
+            return packageManager.open(file);
+        } catch (IOException e) {
+            FileUtils.deleteQuietly(file);
+            throw e;
+        } finally {
+            IOUtils.closeQuietly(stream);
+            IOUtils.closeQuietly(out);
+        }
+    }
+
+    public static void deletePackage(VaultPackage vaultPackage) {
+        if (vaultPackage == null) {
+            return;
+        }
+
+        File file = vaultPackage.getFile();
+        vaultPackage.close();
+
+        FileUtils.deleteQuietly(file);
+    }
+
+    public static void deletePackage(JcrPackage jcrPackage) {
+        if (jcrPackage == null) {
+            return;
+        }
+
+        Node node = jcrPackage.getNode();
+        jcrPackage.close();
+
+        try {
+            if (node != null) {
+                node.remove();
+            }
+        } catch (RepositoryException e) {
+            // do nothing
+        }
+    }
+
+    public static File getTempFolder(String tempFolderPath) {
+        File directory = null;
+        try {
+            directory = new File(tempFolderPath);
+            if (!directory.exists() || !directory.isDirectory()) {
+                directory = null;
+            }
+        } catch (Throwable e) {
+            directory = null;
+        }
+
+        return directory;
     }
 }

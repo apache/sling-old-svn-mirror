@@ -92,11 +92,7 @@ public class JcrVaultDistributionPackage extends AbstractDistributionPackage imp
 
     public void delete() {
         try {
-            Node node = jcrPackage.getNode();
-
-            close();
-
-            node.remove();
+            VltUtils.deletePackage(jcrPackage);
             session.save();
         } catch (Throwable e) {
             log.error("Cannot delete package", e);
