@@ -30,6 +30,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 import static org.apache.sling.distribution.it.DistributionUtils.agentUrl;
+import static org.apache.sling.distribution.it.DistributionUtils.assertEmptyFolder;
 import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
 import static org.apache.sling.distribution.it.DistributionUtils.assertPostResourceWithParameters;
 import static org.apache.sling.distribution.it.DistributionUtils.authorAgentConfigUrl;
@@ -113,23 +114,16 @@ public abstract class DistributionIntegrationTestBase {
 
     @AfterClass
     public static void checkNoPackagesLeft() throws IOException, JSONException {
-        if (authorClient.exists("/var/sling/distribution/packages")) {
-            JSONObject authorJson = getResource(author, "/var/sling/distribution/packages.1.json");
-            Iterator<String> it = authorJson.keys();
-            while (it.hasNext()) {
-                String key = it.next();
-                assertFalse(key.startsWith("distrpackage"));
-            }
-        }
 
-        if (publishClient.exists("/var/sling/distribution/packages")) {
-            JSONObject authorJson = getResource(publish, "/var/sling/distribution/packages.1.json");
-            Iterator<String> it = authorJson.keys();
-            while (it.hasNext()) {
-                String key = it.next();
-                assertFalse(key.startsWith("distrpackage"));
-            }
-        }
+
+        assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages");
+        assertEmptyFolder(author, authorClient, "/etc/packages/sling/distribution");
+        assertEmptyFolder(author, authorClient, "/var/sling/distribution/jcrpackages");
+
+
+        assertEmptyFolder(publish, publishClient, "/var/sling/distribution/packages");
+        assertEmptyFolder(publish, publishClient, "/etc/packages/sling/distribution");
+        assertEmptyFolder(publish, publishClient, "/var/sling/distribution/jcrpackages");
 
 
     }

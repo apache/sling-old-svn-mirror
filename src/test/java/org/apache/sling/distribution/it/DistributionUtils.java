@@ -21,6 +21,7 @@ package org.apache.sling.distribution.it;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -267,6 +268,32 @@ public class DistributionUtils {
 
     public static String triggerEventUrl(String triggerName) {
         return triggerRootUrl() + "/" + triggerName + ".event";
+    }
+
+
+    public static void assertEmptyFolder(SlingInstance instance, SlingClient client, String path) throws IOException, JSONException {
+
+        if (client.exists(path)) {
+            List<String> children = getChildrenForFolder(instance, path);
+
+            assertEquals(0, children.size());
+        }
+
+    }
+
+
+    public static List<String> getChildrenForFolder(SlingInstance instance, String path) throws IOException, JSONException {
+        List<String> result = new ArrayList<String>();
+        JSONObject authorJson = getResource(instance, path + ".1.json");
+        Iterator<String> it = authorJson.keys();
+        while (it.hasNext()) {
+            String key = it.next();
+
+            if (!key.contains(":")) {
+                result.add(key);
+            }
+        }
+        return result;
     }
 
 }
