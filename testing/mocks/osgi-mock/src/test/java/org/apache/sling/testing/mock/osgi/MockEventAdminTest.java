@@ -21,6 +21,7 @@ package org.apache.sling.testing.mock.osgi;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
+import java.util.Dictionary;
 import java.util.List;
 
 import org.apache.commons.lang3.ObjectUtils;
@@ -43,9 +44,9 @@ public class MockEventAdminTest {
     private static final String TOPIC_SAMPLE_ALL = "sample/*";
     private static final String TOPIC_OTHER_3 = "other/topic3";
     
-    private static final Event EVENT_SAMPLE_1 = new Event(TOPIC_SAMPLE_1, null);
-    private static final Event EVENT_SAMPLE_2 = new Event(TOPIC_SAMPLE_2, null);
-    private static final Event EVENT_OTHER_3 = new Event(TOPIC_OTHER_3, null);
+    private static final Event EVENT_SAMPLE_1 = new Event(TOPIC_SAMPLE_1, (Dictionary<String,?>)null);
+    private static final Event EVENT_SAMPLE_2 = new Event(TOPIC_SAMPLE_2, (Dictionary<String,?>)null);
+    private static final Event EVENT_OTHER_3 = new Event(TOPIC_OTHER_3, (Dictionary<String,?>)null);
     
     @Rule
     public OsgiContext context = new OsgiContext();

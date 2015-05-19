@@ -21,6 +21,7 @@ package org.apache.sling.testing.mock.osgi;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.List;
 import java.util.Set;
@@ -38,9 +39,12 @@ import org.osgi.framework.BundleListener;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Mock {@link BundleContext} implementation.
@@ -76,6 +80,11 @@ class MockBundleContext implements BundleContext {
             clazzes = new String[] { clazz };
         }
         return registerService(clazzes, service, properties);
+    }
+
+    // this is part of org.osgi.core 6.0.0
+    public <S> ServiceRegistration registerService(Class<S> clazz, S service, Dictionary<String, ?> properties) {
+        return registerService(clazz.getName(), service, properties);
     }
 
     @SuppressWarnings("unchecked")
@@ -157,6 +166,11 @@ class MockBundleContext implements BundleContext {
         }
     }
 
+    // this is part of org.osgi.core 6.0.0
+    public ServiceReference getServiceReference(Class clazz) {
+        return getServiceReference(clazz.getName());
+    }
+
     @Override
     public ServiceReference[] getServiceReferences(final String clazz, final String filter) {
         Set<ServiceReference> result = new TreeSet<ServiceReference>();
@@ -172,6 +186,11 @@ class MockBundleContext implements BundleContext {
         }
     }
 
+    // this is part of org.osgi.core 6.0.0
+    public Collection<ServiceReference> getServiceReferences(Class clazz, String filter) {
+        return ImmutableList.<ServiceReference>copyOf(getServiceReferences(clazz.getName(), filter));
+    }
+
     @Override
     public ServiceReference[] getAllServiceReferences(final String clazz, final String filter) {
         // for now just do the same as getServiceReferences
@@ -180,7 +199,7 @@ class MockBundleContext implements BundleContext {
 
     @Override
     public Object getService(final ServiceReference serviceReference) {
-        return ((MockServiceReference) serviceReference).getService();
+        return ((MockServiceReference)serviceReference).getService();
     }
 
     @Override
@@ -281,5 +300,22 @@ class MockBundleContext implements BundleContext {
     public File getDataFile(final String s) {
         throw new UnsupportedOperationException();
     }
+
+    // this is part of org.osgi.core 6.0.0
+    public Bundle getBundle(String location) {
+        throw new UnsupportedOperationException();
+    }
+
+    // this is part of org.osgi.core 6.0.0
+    public <S> ServiceRegistration registerService(Class<S> clazz, ServiceFactory factory, Dictionary<String, ?> properties) {
+        throw new UnsupportedOperationException();
+    }
+
+    // this is part of org.osgi.core 6.0.0
+    /* class org.osgi.framework.ServiceObjects does not exist in older OSGi versions
+    public ServiceObjects getServiceObjects(ServiceReference reference) {
+        throw new UnsupportedOperationException();
+    }
+    */
 
 }
