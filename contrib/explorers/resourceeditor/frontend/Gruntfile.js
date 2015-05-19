@@ -50,8 +50,10 @@ module.exports = function(grunt) {
 			},
 			karma : {
 				files:[
-				         staticContentFolder+'/js/**/*.js',
-				         '../src/test/javascript/**/*spec.js'],
+			            staticContentFolder+'/generated/3rd_party/js/**/*.js',
+			            staticContentFolder+'/js/**/*.js',
+			            '../src/test/javascript/spec/*spec.js'
+				        ],
 				tasks: ['karma:desktop_build']
 				
 			}
@@ -102,27 +104,29 @@ module.exports = function(grunt) {
 	    	    runnerPort: 9999,
 	    	    singleRun: true,
 	    	    browsers: ['Chrome', 'Firefox', 'PhantomJS'],
-	    	    plugins : ['karma-jasmine', 'karma-phantomjs-launcher', 'karma-chrome-launcher', 'karma-firefox-launcher', 'karma-ie-launcher'],
+	    	    reporters: ["spec"],
+	    	    specReporter: {maxLogLines: 5},
+	    	    plugins : ['karma-jasmine', 'karma-phantomjs-launcher', 'karma-chrome-launcher', 'karma-firefox-launcher', 'karma-ie-launcher', 
+	    	               'karma-spec-reporter'],
 	    	    frameworks: ['jasmine'],
-			    files: ['../src/test/javascript/spec/*spec.js',
+			    files: [
 			            staticContentFolder+'/generated/3rd_party/js/jquery.min.js',
 			            staticContentFolder+'/generated/3rd_party/js/**/*.js',
-			            staticContentFolder+'/js/**/*.js'
+			            staticContentFolder+'/js/**/*.js',
+			            '../src/test/javascript/spec/*spec.js'
 			           ]
 	    	},  
 	    	desktop_build: {
 	    	    singleRun: true,
 	    	    browsers: ['Chrome', 'Firefox']
 	    	},
+	    	multi_run: {
+	    	    singleRun: false,
+	    	    browsers: ['Chrome', 'Firefox']
+	    	},
 	    	build: {
 	    	    singleRun: true,
 	    	    browsers: ['PhantomJS']
-	    	},
-	    	watch: {
-	    	    reporters: 'dots',
-	    	    autoWatch: true,
-	    	    background: true,
-	    	    singleRun: false
 	    	}
 	    },
         webdriver: {

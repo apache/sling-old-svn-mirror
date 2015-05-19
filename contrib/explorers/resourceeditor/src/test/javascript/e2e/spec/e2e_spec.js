@@ -168,7 +168,7 @@ describe('A user of the Apache Sling Resource Editor', function() {
 		  client = client.url(homeURL);
 		  client
 		  .waitForExist('#last-element').click("#root li[nodename=\"aTestNode\"] i.add-icon")
-		  	.waitForVisible('#addNodeDialog.add-node-finished').click('#addNodeDialog .btn.btn-primary.submit')
+		  	.waitForVisible('#addNodeDialog.add-node-finished', 1000).click('#addNodeDialog .btn.btn-primary.submit')
 		  	// The open node animation will take longer than 500ms thus setting 2000ms as max.
 		  	.waitForExist('#root li[nodename="aTestNode"].opened', 2000).elements('#root li[nodename="aTestNode"].opened li a .jstree-themeicon', function(err, res) {
 			    client

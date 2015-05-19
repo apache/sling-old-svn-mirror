@@ -37,21 +37,13 @@ org.apache.sling.reseditor.JSTreeAdapter = (function() {
 		this.settings = settings;
 		this.treeController = treeController;
 		this.mainController = mainController;
-var pathSuffix = ".html";
-var pathEndsWithPathSuffix = settings.resourcePath.substring(settings.resourcePath.length-pathSuffix.length) == pathSuffix;
-var resourcePath = (pathEndsWithPathSuffix) ? settings.resourcePath.substring(0,settings.resourcePath.length-pathSuffix.length) : settings.resourcePath; 
-var currentNodePath = this.mainController.encodeToHTML(resourcePath);
-var paths = currentNodePath.substring(1).split("/");
-var selectingNodeWhileOpeningTree=true;
 
-var thisJSTreeAdapter = this;
+		var thisJSTreeAdapter = this;
 
 $(document).ready(function() {
 	$(window).resize( function() {
 		thisJSTreeAdapter.mainController.adjust_height();
 	});
-	
-	var selectorFromCurrentPath = treeController.getSelectorFromPath(currentNodePath);
 	
 	var scrollToPathFinished=false;
 	
@@ -62,10 +54,12 @@ $(document).ready(function() {
 	// select the tree container using jQuery
 	$("#tree")
 	.bind("loaded.jstree", function (event, data) {
-		if (currentNodePath != "/") {
-			treeController.openElement($("#tree > ul > li[nodename=''] > ul"), paths);
+		var pathElements = treeController.getPathElements(settings.resourcePath);
+		
+		if (pathElements.length >= 1 && pathElements[0] != "") {
+			treeController.openElement($("#tree > ul > li[nodename=''] > ul"), pathElements);
 		}
-		selectingNodeWhileOpeningTree=false;
+		
 		// position the info-icon
 		$('#tree-info-icon').show();
 		$('#root i:first').before($('#tree-info-icon'));

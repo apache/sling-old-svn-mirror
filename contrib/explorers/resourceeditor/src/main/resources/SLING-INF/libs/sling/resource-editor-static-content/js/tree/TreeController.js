@@ -132,6 +132,14 @@ org.apache.sling.reseditor.TreeController = (function() {
 		}
 	}
 	
+	TreeController.prototype.getPathElements = function(resourcePath){
+		var pathSuffix = ".html";
+		var pathEndsWithPathSuffix = resourcePath.substring(resourcePath.length-pathSuffix.length) == pathSuffix;
+		var resourcePathWithoutSuffix = (pathEndsWithPathSuffix) ? resourcePath.substring(0,resourcePath.length-pathSuffix.length) : resourcePath; 
+		var currentNodePath = this.mainController.encodeToHTML(resourcePathWithoutSuffix);
+		return currentNodePath.substring(1).split("/");
+	}
+	
 	TreeController.prototype.getSelectorFromPath = function(path){
 		var paths = path.substring(1).split("/");
 		return "#tree > ul [nodename='"+paths.join("'] > ul > [nodename='")+"']";
@@ -166,9 +174,7 @@ org.apache.sling.reseditor.TreeController = (function() {
 						if (paths.length>0){
 							thisTreeController.openElement($("#"+pathElementLi.attr('id')).children("ul"), paths);
 						} else  {
-							selectingNodeWhileOpeningTree=true;
-							$('#tree').jstree('select_node', pathElementLi.attr('id'), 'true'/*doesn't seem to work*/);
-							selectingNodeWhileOpeningTree=false;
+							$('#tree').jstree('select_node', pathElementLi.attr('id'), 'true');
 					        var target = $('#'+pathElementLi.attr('id')+' a:first');
 					        target.focus();
 						}
@@ -237,7 +243,7 @@ org.apache.sling.reseditor.TreeController = (function() {
 		var confirmationMsg = "You are about to delete '"+resourcePathToDelete+"' and all its sub nodes. Are you sure?";
 		var decodedResourcePath = this.mainController.decodeFromHTML(resourcePathToDelete);
 		var encodedResourcePathToDelete = this.mainController.encodeURL(decodedResourcePath);
-		bootbox.confirm(confirmationMsg, function(result) {
+		var sendDeletePost = function(result) {
 			if (result){
 		    	$.ajax({
 		        	  type: 'POST',
@@ -256,7 +262,8 @@ org.apache.sling.reseditor.TreeController = (function() {
 		        	  }
 		        });
 			}
-		});
+		};
+		bootbox.confirm(confirmationMsg, sendDeletePost);
 	}
 
 	TreeController.prototype.openAddNodeDialog = function(li) {
