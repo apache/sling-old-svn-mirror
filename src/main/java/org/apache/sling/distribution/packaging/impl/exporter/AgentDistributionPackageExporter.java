@@ -87,6 +87,8 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
                     log.info("item {} fetched from the queue", info);
                     if (distributionPackage != null) {
                         result.add(new AgentDistributionPackage(distributionPackage, queue));
+                    } else {
+                        log.warn("cannot get package {}", info);
                     }
                 } else {
                     log.warn("cannot find package builder with type {}", info.getType());

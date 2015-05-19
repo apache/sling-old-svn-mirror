@@ -46,8 +46,19 @@ public class DistributionPackageUtils {
                 log.error("package {} cannot be released from null queue", distributionPackage.getId());
             }
         } else {
-            distributionPackage.delete();
+            deleteSafely(distributionPackage);
             log.debug("package {} deleted", distributionPackage.getId());
+        }
+    }
+
+    public static void deleteSafely(DistributionPackage distributionPackage) {
+        if (distributionPackage == null) {
+            return;
+        }
+        try {
+            distributionPackage.delete();
+        } catch (Throwable t) {
+            log.error("error deleting package", t);
         }
     }
 
