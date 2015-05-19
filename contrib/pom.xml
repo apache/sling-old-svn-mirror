@@ -89,7 +89,6 @@
           <module>auth/org.apache.sling.auth.xing.oauth</module>
           <module>auth/selector</module>
 
-          <module>commons/fsclassloader</module>
           <module>commons/html</module>
 
           <module>extensions/apt/parser</module>
@@ -101,7 +100,6 @@
           <module>extensions/ftpserver</module>
           <module>extensions/gwt/sample</module>
           <module>extensions/gwt/servlet</module>
-          <module>extensions/i18n</module>
           <module>extensions/jmxprovider</module>
           <module>extensions/leak-detector</module>
           <module>extensions/mongodb</module>
@@ -121,7 +119,6 @@
           <module>extensions/superimposing</module>
           <module>extensions/tenant</module>
           <module>extensions/urlrewriter</module>
-          <module>extensions/xss</module>
           <module>jcr/compiler</module>
           <module>jcr/jackrabbit-client</module>
           <module>jcr/ocm</module>
@@ -134,7 +131,6 @@
           <module>scripting/java</module>
           <module>scripting/jst</module>
           <module>scripting/python</module>
-          <module>scripting/sightly</module>
           <module>scripting/ruby</module>
 	      <module>scripting/scala/script</module>
           <module>scripting/scala/config</module>
