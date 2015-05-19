@@ -89,10 +89,23 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
     public static final String ACL_HANDLING = "aclHandling";
 
     /**
-     * ACL handling property for file vault package builder
+     * Package roots
      */
     @Property(label = "Package Roots", description = "The package roots to be used for created packages. (this is useful for assembling packages with an user that cannot read above the package root)")
     public static final String PACKAGE_ROOTS = "package.roots";
+
+
+    /**
+     * Temp file folder
+     */
+    @Property(label = "Temp Filesystem Folder", description = "The filesystem folder where the temporary files should be saved.")
+    public static final String TEMP_FS_FOLDER = "tempFsFolder";
+
+    /**
+     * Temp file folder
+     */
+    @Property(label = "Temp JCR Folder", description = "The jcr folder where the temporary files should be saved")
+    public static final String TEMP_JCR_FOLDER = "tempJcrFolder";
 
     @Reference
     private Packaging packaging;
@@ -108,6 +121,10 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
         String importModeString = PropertiesUtil.toString(config.get(IMPORT_MODE), null);
         String aclHandlingString = PropertiesUtil.toString(config.get(ACL_HANDLING), null);
         String[] packageRoots = PropertiesUtil.toStringArray(config.get(PACKAGE_ROOTS), null);
+        String tempFsFolder = PropertiesUtil.toString(config.get(TEMP_FS_FOLDER), null);
+        String tempJcrFolder = PropertiesUtil.toString(config.get(TEMP_JCR_FOLDER), null);
+
+
         packageRoots = SettingsUtils.removeEmptyEntries(packageRoots);
 
         ImportMode importMode = null;
@@ -120,9 +137,9 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
             aclHandling= AccessControlHandling.valueOf(aclHandlingString.trim());
         }
         if ("filevlt".equals(type)) {
-            packageBuilder = new ResourceSharedDistributionPackageBuilder(new FileVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots));
+            packageBuilder = new ResourceSharedDistributionPackageBuilder(new FileVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, tempFsFolder));
         } else  {
-            packageBuilder = new ResourceSharedDistributionPackageBuilder(new JcrVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots));
+            packageBuilder = new ResourceSharedDistributionPackageBuilder(new JcrVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, tempFsFolder, tempJcrFolder));
         }
     }
 
