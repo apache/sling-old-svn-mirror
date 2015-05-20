@@ -23,7 +23,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.sling.validation.api.ValidationResult;
 
 /**
- * Thrown in case Sling Validation detected an invalid resource upon which the model should be instanciated.
+ * Thrown in case Sling Validation detected an invalid resource upon which the model should be instantiated.
  * @see <a href="http://sling.apache.org/documentation/bundles/validation.html">Sling Validation</a>
  * @see ModelFactory
  */
