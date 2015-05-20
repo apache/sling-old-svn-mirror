@@ -57,6 +57,9 @@ final class ContextResourceResolverFactory {
             case RESOURCERESOLVER_MOCK:
                 initializeResourceResolverMock(factory);
                 break;
+            case NONE:
+                initializeResourceResolverNone(factory);
+                break;
             default:
                 throw new IllegalArgumentException("Invalid resource resolver type: " + type);
             }
@@ -81,6 +84,10 @@ final class ContextResourceResolverFactory {
     }
 
     private static void initializeResourceResolverMock(ResourceResolverFactory factory) {
+        // nothing to do
+    }
+
+    private static void initializeResourceResolverNone(ResourceResolverFactory factory) {
         // nothing to do
     }
 

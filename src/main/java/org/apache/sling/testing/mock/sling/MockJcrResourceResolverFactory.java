@@ -24,51 +24,37 @@ import java.util.Map;
 
 import javax.jcr.query.Query;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.QueriableResourceProvider;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory;
-import org.apache.sling.resourceresolver.impl.CommonResourceResolverFactoryImpl;
-import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
-import org.apache.sling.resourceresolver.impl.ResourceResolverFactoryActivator;
-import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
-import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
-import org.apache.sling.serviceusermapping.ServiceUserMapper;
-import org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl;
-import org.apache.sling.testing.mock.osgi.MockEventAdmin;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.service.event.EventAdmin;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 
 import com.google.common.collect.ImmutableMap;
 
 /**
- * Mock {@link ResourceResolver} implementation. Simulates OSGi environment and
- * initiates real Sling ResourceResolver and JCR implementation, but with a
- * mocked JCR repository implementation underneath.
+ * Mock {@link ResourceResolverFactory} implementation.
+ * Uses real Sling ResourceResolverFactory in simulated OSGi environment
+ * with a mocked JCR repository implementation underneath.
  */
-class MockJcrResourceResolverFactory implements ResourceResolverFactory {
+class MockJcrResourceResolverFactory extends AbstractMockResourceResolverFactory {
 
     private final SlingRepository slingRepository;
-    private final BundleContext bundleContext;
 
     public MockJcrResourceResolverFactory(final SlingRepository repository, BundleContext bundleContext) {
+        super(bundleContext);
         this.slingRepository = repository;
-        this.bundleContext = bundleContext;
     }
 
     @SuppressWarnings("deprecation")
-    private ResourceResolver getResourceResolverInternal(Map<String, Object> authenticationInfo, boolean isAdmin) throws LoginException {
-        Dictionary<String, Object> resourceProviderFactoryFactoryProps = new Hashtable<String, Object>();
-        resourceProviderFactoryFactoryProps.put(Constants.SERVICE_VENDOR, "sling-mock");
-        resourceProviderFactoryFactoryProps.put(Constants.SERVICE_DESCRIPTION, "sling-mock");
-        resourceProviderFactoryFactoryProps.put("resource.resolver.manglenamespaces", true);
-        resourceProviderFactoryFactoryProps.put("resource.resolver.searchpath", new String[] { "/apps", "/libs" });
-
+    protected ResourceResolver getResourceResolverInternal(Map<String, Object> authenticationInfo, boolean isAdmin) throws LoginException {
         // setup mocked JCR environment
         if (bundleContext.getServiceReference(SlingRepository.class.getName()) == null) {
             bundleContext.registerService(SlingRepository.class.getName(), this.slingRepository, null);
@@ -88,69 +74,33 @@ class MockJcrResourceResolverFactory implements ResourceResolverFactory {
             resourceProvider = jcrResourceProviderFactory.getResourceProvider(authenticationInfo);
         }
 
-        Dictionary<Object, Object> resourceProviderProps = new Hashtable<Object, Object>();
-        resourceProviderProps.put(ResourceProvider.ROOTS, new String[] { "/" });
-        resourceProviderProps.put(QueriableResourceProvider.LANGUAGES, new String[] { Query.XPATH, Query.SQL, Query.JCR_SQL2 });
-        bundleContext.registerService(ResourceProvider.class.getName(), resourceProvider, resourceProviderProps);
-
-        // setup real sling resource resolver implementation for use in mocked context
-        ensureResourceResolverFactoryActivatorDependencies();
-        ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
-        MockOsgi.injectServices(activator, bundleContext);
-        MockOsgi.activate(activator, resourceProviderFactoryFactoryProps);
+        // register JCR resource provider if not already registered
+        if (!isRootServiceProviderRegistered(bundleContext)) {
+            Dictionary<Object, Object> resourceProviderProps = new Hashtable<Object, Object>();
+            resourceProviderProps.put(ResourceProvider.ROOTS, new String[] { "/" });
+            resourceProviderProps.put(QueriableResourceProvider.LANGUAGES, new String[] { Query.XPATH, Query.SQL, Query.JCR_SQL2 });
+            bundleContext.registerService(ResourceProvider.class.getName(), resourceProvider, resourceProviderProps);
+        }
         
-        CommonResourceResolverFactoryImpl commonFactoryImpl = new CommonResourceResolverFactoryImpl(activator);
-        ResourceResolverContext context = new ResourceResolverContext(true, authenticationInfo, new ResourceAccessSecurityTracker());
-        ResourceResolverImpl resourceResolver = new ResourceResolverImpl(commonFactoryImpl, context);
-        return resourceResolver;
+        return super.getResourceResolverInternal(authenticationInfo, isAdmin);
     }
     
-    /**
-     * Make sure all dependencies required by {@link ResourceResolverFactoryActivator} exist - if not register them.
-     */
-    private void ensureResourceResolverFactoryActivatorDependencies() {
-        if (bundleContext.getServiceReference(ServiceUserMapper.class.getName()) == null) {
-            ServiceUserMapper serviceUserMapper = new ServiceUserMapperImpl();
-            MockOsgi.injectServices(serviceUserMapper, bundleContext);
-            MockOsgi.activate(serviceUserMapper);
-            bundleContext.registerService(ServiceUserMapper.class.getName(), serviceUserMapper, null);
+    private boolean isRootServiceProviderRegistered(BundleContext bundleContext) {
+        try {
+            ServiceReference[] serviceReferences = bundleContext.getServiceReferences(ResourceProvider.class.getName(), null) ;
+            if (serviceReferences != null) {
+                for (ServiceReference serviceReference : serviceReferences) {
+                    String[] roots = PropertiesUtil.toStringArray(serviceReference.getProperty(ResourceProvider.ROOTS));
+                    if (ArrayUtils.contains(roots, "/")) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
-
-        if (bundleContext.getServiceReference(ResourceAccessSecurityTracker.class.getName()) == null) {
-            ResourceAccessSecurityTracker resourceAccessSecurityTracker = new ResourceAccessSecurityTracker();
-            MockOsgi.injectServices(resourceAccessSecurityTracker, bundleContext);
-            MockOsgi.activate(resourceAccessSecurityTracker);
-            bundleContext.registerService(ResourceAccessSecurityTracker.class.getName(), resourceAccessSecurityTracker, null);
-        }
-
-        if (bundleContext.getServiceReference(EventAdmin.class.getName()) == null) {
-            EventAdmin eventAdmin = new MockEventAdmin();
-            MockOsgi.injectServices(eventAdmin, bundleContext);
-            MockOsgi.activate(eventAdmin);
-            bundleContext.registerService(EventAdmin.class.getName(), eventAdmin, null);
+        catch (InvalidSyntaxException ex) {
+            throw new RuntimeException(ex);
         }
     }
-
-    @Override
-    public ResourceResolver getResourceResolver(final Map<String, Object> authenticationInfo) throws LoginException {
-        return getResourceResolverInternal(authenticationInfo, false);
-    }
-
-    @Override
-    public ResourceResolver getAdministrativeResourceResolver(final Map<String, Object> authenticationInfo)
-            throws LoginException {
-        return getResourceResolverInternal(authenticationInfo, true);
-    }
-
-    // part of Sling API 2.7
-    public ResourceResolver getServiceResourceResolver(final Map<String, Object> authenticationInfo)
-            throws LoginException {
-        return getResourceResolverInternal(authenticationInfo, true);
-    }
-
-    // part of Sling API 2.8
-    public ResourceResolver getThreadResourceResolver() {
-        throw new UnsupportedOperationException();
-    }
-
+    
 }

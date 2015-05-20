@@ -73,9 +73,11 @@ public final class MockSling {
         if (factory == null) {
             SlingRepository repository = adapter.newSlingRepository();
             if (repository == null) {
-                throw new RuntimeException("Adapter neither provides resource resolver factory nor sling repository.");
+                factory = new MockNoneResourceResolverFactory(bundleContext);
             }
-            factory = new MockJcrResourceResolverFactory(repository, bundleContext);
+            else {
+                factory = new MockJcrResourceResolverFactory(repository, bundleContext);
+            }
         }
         return factory;
     }
@@ -84,17 +86,20 @@ public final class MockSling {
         try {
             Class clazz = Class.forName(type.getResourceResolverTypeAdapterClass());
             return (ResourceResolverTypeAdapter) clazz.newInstance();
-        } catch (ClassNotFoundException ex) {
+        }
+        catch (ClassNotFoundException ex) {
             throw new RuntimeException("Unable to instantiate resourcer resolver: "
                     + type.getResourceResolverTypeAdapterClass()
                     + (type.getArtifactCoordinates() != null ? "Make sure this maven dependency is included: "
                             + type.getArtifactCoordinates() : ""), ex);
-        } catch (InstantiationException ex) {
+        }
+        catch (InstantiationException ex) {
             throw new RuntimeException("Unable to instantiate resourcer resolver: "
                     + type.getResourceResolverTypeAdapterClass()
                     + (type.getArtifactCoordinates() != null ? "Make sure this maven dependency is included: "
                             + type.getArtifactCoordinates() : ""), ex);
-        } catch (IllegalAccessException ex) {
+        }
+        catch (IllegalAccessException ex) {
             throw new RuntimeException("Unable to instantiate resourcer resolver: "
                     + type.getResourceResolverTypeAdapterClass()
                     + (type.getArtifactCoordinates() != null ? "Make sure this maven dependency is included: "

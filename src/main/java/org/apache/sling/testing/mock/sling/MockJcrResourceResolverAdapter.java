@@ -16,8 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * Mock implementation of selected Sling APIs.
- */
-@aQute.bnd.annotation.Version("1.3")
 package org.apache.sling.testing.mock.sling;
+
+import javax.jcr.Repository;
+
+import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.testing.mock.jcr.MockJcr;
+import org.apache.sling.testing.mock.sling.spi.ResourceResolverTypeAdapter;
+
+/**
+ * Resource resolver type adapter for JCR Mocks implementation.
+ */
+class MockJcrResourceResolverAdapter implements ResourceResolverTypeAdapter {
+
+    @Override
+    public ResourceResolverFactory newResourceResolverFactory() {
+        return null;
+    }
+
+    @Override
+    public SlingRepository newSlingRepository() {
+        Repository repository = MockJcr.newRepository();
+        return new MockSlingRepository(repository);
+    }
+
+}

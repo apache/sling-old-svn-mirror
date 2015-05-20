@@ -16,8 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * Mock implementation of selected Sling APIs.
- */
-@aQute.bnd.annotation.Version("1.3")
 package org.apache.sling.testing.mock.sling;
+
+import org.osgi.framework.BundleContext;
+
+/**
+ * Mock {@link ResourceResolverFactory} implementation.
+ * Uses real Sling ResourceResolverFactory in simulated OSGi environment.
+ * Resource Resolver factory has no ResourceProvider registered; you have to registere one yourself to do anything useful with it. 
+ */
+class MockNoneResourceResolverFactory extends AbstractMockResourceResolverFactory {
+
+    public MockNoneResourceResolverFactory(BundleContext bundleContext) {
+        super(bundleContext);
+    }
+}
