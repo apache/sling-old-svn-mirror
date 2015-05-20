@@ -51,7 +51,7 @@ public enum ResourceResolverType {
      * <li>This resource resolver type is quite fast.</li>
      * </ul>
      */
-    JCR_MOCK(JcrMockResourceResolverAdapter.class.getName(), null),
+    JCR_MOCK(MockJcrResourceResolverAdapter.class.getName(), null),
 
     /**
      * Uses a real JCR Jackrabbit repository.
@@ -65,7 +65,19 @@ public enum ResourceResolverType {
      * </ul>
      */
     JCR_JACKRABBIT("org.apache.sling.testing.mock.sling.jackrabbit.JackrabbitMockResourceResolverAdapter",
-            "org.apache.sling:org.apache.sling.testing.sling-mock-jackrabbit");
+            "org.apache.sling:org.apache.sling.testing.sling-mock-jackrabbit"),
+            
+    /**
+     * Provides resource resolver environment without any ResourceProvider.
+     * You have to register one yourself to do anything useful with it.
+     * <ul>
+     * <li>Uses the real Sling Resource Resolver  implementation.</li>
+     * <li>The performance of this resource resolver type depends on the resource provider registered.</li>
+     * </ul>
+     */
+    NONE(MockNoneResourceResolverAdapter.class.getName(), null);
+
+            
 
     private final String resourceResolverTypeAdapterClass;
     private final String artifactCoordinates;
