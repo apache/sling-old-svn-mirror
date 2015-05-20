@@ -40,15 +40,15 @@ public class CouchbaseNoSqlResourceProviderTransactionalIT extends AbstractNoSql
 
     @Override
     protected void registerResourceProviderFactory() {
-        context.registerInjectActivateService(
-                new CouchbaseClientImpl(),
-                ImmutableMap.<String, Object> builder()
+        context.registerInjectActivateService(new CouchbaseClientImpl(),ImmutableMap.<String, Object>builder()
                         .put(CouchbaseClient.CLIENT_ID_PROPERTY, CouchbaseNoSqlResourceProviderFactory.COUCHBASE_CLIENT_ID)
                         .put("couchbaseHosts", System.getProperty("couchbaseHosts", "localhost:8091"))
-                        .put("bucketName", System.getProperty("bucketName", "resource-test")).build());
+                        .put("bucketName", System.getProperty("bucketName", "resource-test"))
+                        .build());
 
-        context.registerInjectActivateService(new CouchbaseNoSqlResourceProviderFactory(), ImmutableMap
-                .<String, Object> builder().put(ResourceProvider.ROOTS, "/test").build());
+        context.registerInjectActivateService(new CouchbaseNoSqlResourceProviderFactory(), ImmutableMap.<String, Object>builder()
+                .put(ResourceProvider.ROOTS, "/test")
+                .build());
     }
 
     @Override
@@ -58,15 +58,13 @@ public class CouchbaseNoSqlResourceProviderTransactionalIT extends AbstractNoSql
                 Resource root = context.resourceResolver().getResource("/");
                 Resource providerRoot = root.getChild("test");
                 if (providerRoot == null) {
-                    providerRoot = context.resourceResolver().create(
-                            root,
-                            "test",
-                            ImmutableMap
-                                    .<String, Object> of(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED));
+                    providerRoot = context.resourceResolver().create(root,"test",
+                            ImmutableMap.<String, Object>of(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED));
                 }
                 this.testRoot = context.resourceResolver().create(providerRoot, UUID.randomUUID().toString(),
-                        ImmutableMap.<String, Object> of(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED));
-            } catch (PersistenceException ex) {
+                        ImmutableMap.<String, Object>of(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED));
+            }
+            catch (PersistenceException ex) {
                 throw new RuntimeException(ex);
             }
         }
