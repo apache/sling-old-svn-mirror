@@ -18,28 +18,21 @@
  */
 package org.apache.sling.nosql.couchbase.resourceprovider.integration;
 
-import java.util.UUID;
-
-import org.apache.jackrabbit.JcrConstants;
-import org.apache.sling.api.resource.PersistenceException;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.nosql.couchbase.client.CouchbaseClient;
 import org.apache.sling.nosql.couchbase.client.impl.CouchbaseClientImpl;
 import org.apache.sling.nosql.couchbase.resourceprovider.impl.CouchbaseNoSqlResourceProviderFactory;
-import org.apache.sling.nosql.generic.resource.impl.AbstractNoSqlResourceProviderTest;
+import org.apache.sling.nosql.generic.resource.impl.AbstractNoSqlResourceProviderRootTest;
 
 import com.google.common.collect.ImmutableMap;
 
 /**
  * Test basic ResourceResolver and ValueMap with different data types.
  */
-public class CouchbaseNoSqlResourceProviderIT extends AbstractNoSqlResourceProviderTest {
-
-    private Resource testRoot;
-
+public class CouchbaseNoSqlResourceProviderRootIT extends AbstractNoSqlResourceProviderRootTest {
+    
     @Override
-    protected void registerResourceProviderFactory() {
+    protected void registerResourceProviderFactoryAsRoot() {
         context.registerInjectActivateService(new CouchbaseClientImpl(), ImmutableMap.<String, Object>builder()
                         .put(CouchbaseClient.CLIENT_ID_PROPERTY, CouchbaseNoSqlResourceProviderFactory.COUCHBASE_CLIENT_ID)
                         .put("couchbaseHosts", System.getProperty("couchbaseHosts", "localhost:8091"))
@@ -47,28 +40,8 @@ public class CouchbaseNoSqlResourceProviderIT extends AbstractNoSqlResourceProvi
                         .build());
 
         context.registerInjectActivateService(new CouchbaseNoSqlResourceProviderFactory(), ImmutableMap.<String, Object>builder()
-                .put(ResourceProvider.ROOTS, "/test")
+                .put(ResourceProvider.ROOTS, "/")
                 .build());
-    }
-
-    @Override
-    protected Resource testRoot() {
-        if (this.testRoot == null) {
-            try {
-                Resource root = context.resourceResolver().getResource("/");
-                Resource providerRoot = root.getChild("test");
-                if (providerRoot == null) {
-                    providerRoot = context.resourceResolver().create(root, "test",
-                            ImmutableMap.<String, Object>of(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED));
-                }
-                this.testRoot = context.resourceResolver().create(providerRoot, UUID.randomUUID().toString(),
-                        ImmutableMap.<String, Object>of(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED));
-            }
-            catch (PersistenceException ex) {
-                throw new RuntimeException(ex);
-            }
-        }
-        return this.testRoot;
     }
 
 }
