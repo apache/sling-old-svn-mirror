@@ -113,7 +113,6 @@ public class MainDelegate implements Launcher {
 
     public void setCommandLine(Map<String, String> args) {
         commandLine = new HashMap<String, String>();
-        commandLine.put(PROP_PORT, DEFAULT_PORT);
         parseCommandLine(args, commandLine);
     }
 
@@ -160,9 +159,6 @@ public class MainDelegate implements Launcher {
         }
         final Logger logger = new SlingLogger();
 
-        // Display port number on console, in case HttpService doesn't
-        info("HTTP server port: " + commandLine.get(PROP_PORT), null);
-
         // default log level: prevent tons of needless WARN from the framework
         logger.setLogLevel(Logger.LOG_ERROR);
         if ( System.getProperty(PROP_BOOT_LOG_LEVEL) != null ) {
@@ -190,6 +186,11 @@ public class MainDelegate implements Launcher {
                     if (commandLine != null) {
                         properties.putAll(commandLine);
                     }
+
+                    // Display port number on console, in case HttpService doesn't. This is logged as late as
+                    // possible in order to pick up defaults from the Sling property files, although system
+                    // property substitutions will be missed.
+                    info("HTTP server port: " + properties.get(PROP_PORT), null);
                 }
             };
 
