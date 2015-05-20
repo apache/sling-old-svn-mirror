@@ -45,6 +45,8 @@ import org.osgi.service.event.EventAdmin;
     description = "Defines a resource provider factory with Couchbase persistence.", 
     configurationFactory = true, policy = ConfigurationPolicy.REQUIRE)
 @Service(value = ResourceProviderFactory.class)
+@Property(name = "webconsole.configurationFactory.nameHint", 
+    value = "Root paths: {" + CouchbaseNoSqlResourceProviderFactory.PROVIDER_ROOTS_PROPERTY + "}")
 public class CouchbaseNoSqlResourceProviderFactory extends AbstractNoSqlResourceProviderFactory {
 
     /**
