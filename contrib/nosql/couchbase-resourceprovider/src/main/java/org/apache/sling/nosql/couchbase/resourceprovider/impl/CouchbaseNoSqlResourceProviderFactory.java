@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -38,7 +39,11 @@ import org.osgi.service.event.EventAdmin;
  * {@link ResourceProviderFactory} implementation that uses couchbase as
  * persistence.
  */
-@Component(immediate = true)
+@Component(immediate = true, metatype = true,
+    name="org.apache.sling.nosql.couchbase.resourceprovider.CouchbaseNoSqlResourceProviderFactory.factory.config",
+    label = "Apache Sling NoSQL Couchbase Resource Provider Factory", 
+    description = "Defines a resource provider factory with Couchbase persistence.", 
+    configurationFactory = true, policy = ConfigurationPolicy.REQUIRE)
 @Service(value = ResourceProviderFactory.class)
 public class CouchbaseNoSqlResourceProviderFactory extends AbstractNoSqlResourceProviderFactory {
 
