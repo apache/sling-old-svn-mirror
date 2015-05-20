@@ -16,8 +16,6 @@
  */
 package org.apache.sling.models.impl.validation;
 
-import javax.annotation.Nonnull;
-
 import org.apache.sling.api.resource.Resource;
 
 public interface ModelValidation {
@@ -28,6 +26,6 @@ public interface ModelValidation {
      * @param required if {@code true} validation fails even if no appropriate validation model could be found.
      * @return {@code null} if validation was successful, otherwise an exception
      */
-    public abstract RuntimeException validate(@Nonnull Resource resource, boolean required);
+    public abstract RuntimeException validate(Resource resource, boolean required);
 
 }
