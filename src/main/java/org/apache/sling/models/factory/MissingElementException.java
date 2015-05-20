@@ -18,22 +18,24 @@
  */
 package org.apache.sling.models.factory;
 
+import java.lang.reflect.AnnotatedElement;
+
 /**
- * Exception which is triggered when the Model class could not be instantiated due to
- * not having a model annotation, some reflection error, invalid constructors or 
- * because some exception within the post construct method was triggered.
- * 
- * @see ModelFactory
+ * Exception which is used whenever one element (field, method or constructor) could not be set.
+ * @see MissingElementsException
  */
-public final class ModelClassException extends RuntimeException {
+public class MissingElementException extends RuntimeException {
 
-    private static final long serialVersionUID = 4323592065808565135L;
+    private static final long serialVersionUID = 5782291184414886658L;
+    private final AnnotatedElement element;
 
-    public ModelClassException(String message) {
-        super(message);
+    public MissingElementException(AnnotatedElement element, Throwable cause) {
+        super("Could not inject " + element, cause);
+        this.element = element;
     }
-    
-    public ModelClassException(String message, Throwable e) {
-        super(message, e);
+
+    public AnnotatedElement getElement() {
+        return element;
     }
+
 }
