@@ -51,7 +51,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
   
         <dependency>
@@ -65,7 +65,7 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.osgi</artifactId>
             <version>2.2.2</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         
         <dependency>
