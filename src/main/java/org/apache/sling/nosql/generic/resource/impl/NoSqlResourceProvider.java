@@ -18,6 +18,7 @@
  */
 package org.apache.sling.nosql.generic.resource.impl;
 
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -50,6 +51,9 @@ import org.osgi.service.event.EventAdmin;
  */
 public class NoSqlResourceProvider implements ResourceProvider, ModifyingResourceProvider, QueriableResourceProvider {
     
+    private static final String ROOT_PATH = "/";
+    private static final NoSqlData ROOT_DATA = new NoSqlData(ROOT_PATH, Collections.<String, Object>emptyMap());
+    
     private final NoSqlAdapter adapter;
     private final EventAdmin eventAdmin;
     private final Map<String, NoSqlData> changedResources = new HashMap<String, NoSqlData>();
@@ -64,6 +68,10 @@ public class NoSqlResourceProvider implements ResourceProvider, ModifyingResourc
     // ### READONLY ACCESS ###
     
     public Resource getResource(ResourceResolver resourceResolver, String path) {
+        if (ROOT_PATH.equals(path)) {
+            return new NoSqlResource(ROOT_DATA, resourceResolver, this);
+        }
+        
         if (!adapter.validPath(path)) {
             return null;
         }
@@ -128,7 +136,7 @@ public class NoSqlResourceProvider implements ResourceProvider, ModifyingResourc
     
     public Resource create(ResourceResolver resolver, String path, Map<String, Object> properties)
             throws PersistenceException {
-        if (!adapter.validPath(path)) {
+        if (ROOT_PATH.equals(path) || !adapter.validPath(path)) {
             throw new PersistenceException("Illegal path - unable to create resource at " + path, null, path, null);
         }
 
@@ -146,7 +154,7 @@ public class NoSqlResourceProvider implements ResourceProvider, ModifyingResourc
     }
     
     public void delete(ResourceResolver resolver, String path) throws PersistenceException {
-        if (!adapter.validPath(path)) {
+        if (ROOT_PATH.equals(path) || !adapter.validPath(path)) {
             throw new PersistenceException("Unable to delete resource at {}" + path, null, path, null);
         }
 
