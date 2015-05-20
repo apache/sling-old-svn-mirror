@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   Licensed to the Apache Software Foundation (ASF) under one
   or more contributor license agreements.  See the NOTICE file
@@ -17,25 +17,27 @@
   specific language governing permissions and limitations
   under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>22</version>
+        <relativePath/>
     </parent>
 
     <artifactId>org.apache.sling.nosql.generic</artifactId>
     <version>0.5.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling Generic NoSQL Resource Provider</name>
+    <name>Apache Sling NoSQL Generic Resource Provider</name>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/nosql-generic</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/nosql-generic</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/nosql-generic</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/nosql/generic</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/nosql/generic</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/nosql/generic</url>
     </scm>
     
     <properties>
@@ -44,10 +46,12 @@
 
     <build>
         <plugins>
+
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-scr-plugin</artifactId>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
