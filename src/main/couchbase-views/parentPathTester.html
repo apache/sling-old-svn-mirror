@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Couchbase View Tester</title>
+    <style>body { font-family: Courier }</style>
+  </head>
+  <body>
+  
+<script>
+
+var emit = function(key, value) {
+  document.write("[" + key + "]" + "<br/>");
+}
+
+var testFunction = function(doc, meta) {
+  
+  // handle only sling resource documents with a valid path
+  if (!(meta.id.indexOf("sling-resource:")==0 && doc.path && doc.data)) {
+    return;
+  }
+  var pathParts = doc.path.split("/");
+  if (pathParts.length < 3) {
+    return;
+  }
+  
+  // remove last element to get parent path
+  pathParts.pop();
+  var parentPath = pathParts.join("/");
+  emit(parentPath, null);
+};
+
+var testInput = [
+	  null,
+    "",
+    "abc",
+    "/",
+    "/content",
+    "/content/node1",
+    "/content/node1/node2",
+    "/content/node1/node2/node3",
+    "/content/node1/node2/node3/node4"
+];
+  
+</script>
+    
+    <table border="1">
+      <tr>
+	      <th>Input</th>
+	      <th>Output</th>
+	    </tr>
+<script>
+for (var i=0; i < testInput.length; i++) {
+  document.write("<tr>")
+  document.write("<td>" + testInput[i] + "</td>")
+  document.write("<td>")
+  testFunction({path: testInput[i], data: {}}, {id: "sling-resource:doc" + i});
+  document.write("</td>")
+  document.write("</tr>")
+}
+</script>
+    </table>
+  
+  </body>
+</html>
