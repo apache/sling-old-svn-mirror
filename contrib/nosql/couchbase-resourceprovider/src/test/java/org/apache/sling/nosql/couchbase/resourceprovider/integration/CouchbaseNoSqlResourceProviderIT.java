@@ -43,7 +43,7 @@ public class CouchbaseNoSqlResourceProviderIT extends AbstractNoSqlResourceProvi
         context.registerInjectActivateService(
                 new CouchbaseClientImpl(),
                 ImmutableMap.<String, Object> builder()
-                        .put(CouchbaseClient.CLIENT_ID_PROPERTY, "caravan-resourceprovider-couchbase")
+                        .put(CouchbaseClient.CLIENT_ID_PROPERTY, CouchbaseNoSqlResourceProviderFactory.COUCHBASE_CLIENT_ID)
                         .put("couchbaseHosts", System.getProperty("couchbaseHosts", "localhost:8091"))
                         .put("bucketName", System.getProperty("bucketName", "resource-test")).build());
 
