@@ -52,7 +52,7 @@ class CouchbaseNoSqlAdapter implements NoSqlAdapter {
 
     @Override
     public boolean validPath(String path) {
-        return (couchbaseClient != null);
+        return (couchbaseClient != null && couchbaseClient.isEnabled());
     }
 
     @Override
