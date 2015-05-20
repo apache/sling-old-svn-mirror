@@ -21,10 +21,10 @@ For list and delete operations two couchbase views have to be defined and publis
 Steps to create those views:
 * Log into Couchbase Console
 * Go to "Views" and select the correct bucket
-* Add a new design document via "Create Development View" and name it "_design/dev_resourceIndex" (the prefix "_design/dev_" is added automatically)
+* Add a new design document via "Create Development View" and name it "\_design/dev\_resourceIndex" (the prefix "\_design/dev\_" is added automatically)
 * Use the name "ancestorPath" for the first view that is created together with the design document
 * Paste the view code from [ancestorPath.js](src/main/couchbase-views/ancestorPath.js) into the editor and save it
-* Create another view named "parentPath", paste the view code from [parentPath.js](src/main/couchbase-views/ancestorPath.js) and save it
+* Create another view named "parentPath", paste the view code from [parentPath.js](src/main/couchbase-views/parentPath.js) and save it
 * Publish the design document so the views are production views
 
 
