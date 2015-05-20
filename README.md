@@ -13,6 +13,21 @@ Configuration on deployment
 * Additionally a factory configuration for "Apache Sling NoSQL Couchbase Resource Provider Factory" defines the root of the resource tree that should be stored in Couchbase
 
 
+Couchbase Views for path-based access
+-------------------------------------
+
+For list and delete operations two couchbase views have to be defined and published in the bucket that is used by the resource provider.
+
+Steps to create those views:
+* Log into Couchbase Console
+* Go to "Views" and select the correct bucket
+* Add a new design document via "Create Development View" and name it "_design/dev_resourceIndex" (the prefix "_design/dev_" is added automatically)
+* Use the name "ancestorPath" for the first view that is created together with the design document
+* Paste the view code from [ancestorPath.js](src/main/couchbase-views/ancestorPath.js) into the editor and save it
+* Create another view named "parentPath", paste the view code from [parentPath.js](src/main/couchbase-views/ancestorPath.js) and save it
+* Publish the design document so the views are production views
+
+
 Run integration tests
 ---------------------
 
@@ -21,3 +36,4 @@ To run the integration tests you have to set up a real couchbase server and run 
 ```
 mvn -Pcouchbase-integration-test -DcouchbaseHosts=localhost:8091 -DbucketName=test integration-test
 ```
+
