@@ -18,204 +18,71 @@
  */
 package org.apache.sling.models.impl;
 
-import java.lang.reflect.AnnotatedElement;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+/**
+ * This class encapsulates a value of a generic class in case of success or the
+ * {@link RuntimeException}s in case of an error. It is used because the
+ * different instantiation methods for models don't all allow exceptions to be
+ * thrown. Also throwing and catching exceptions would decrease the runtime performance.
+ * Therefore this class is used to throw the exception only if necessary.
+ */
+public class Result<SuccessObjectType> {
+    private final RuntimeException t;
+    private final SuccessObjectType object;
 
-import org.apache.sling.models.factory.InvalidAdaptableException;
-import org.apache.sling.models.factory.ModelClassException;
-import org.apache.sling.models.factory.MissingElementsException;
-import org.slf4j.Logger;
+    /**
+     * instantiate with one throwable (i.e. failure)
+     * 
+     * @param throwable
+     */
+    public Result(RuntimeException throwable) {
+        this.t = throwable;
+        this.object = null;
+    }
 
-public class Result<ModelType> {
+    /**
+     * instantate with a model (i.e. success)
+     * 
+     * @param model
+     */
+    public Result(SuccessObjectType object) {
+        this.object = object;
+        this.t = null;
+    }
 
-    public enum FailureType {
-        ADAPTABLE_DOES_NOT_MATCH("Adaptable is not acceptable for the model class: %s"),
-        FAILED_CALLING_POST_CONSTRUCT("Failure calling post-construct method"),
-        NO_MODEL_ANNOTATION("Provided Adapter class does not have a Model annotation: %s"),
-        NO_USABLE_CONSTRUCTOR("Unable to find a useable constructor: %s"),
-        OTHER("Unclassified problem: %s"),
-        MISSING_METHODS("Required methods %s on model %s were not able to be injected."),
-        MISSING_FIELDS("Required fields %s on model %s were not able to be injected."),
-        MISSING_CONSTRUCTOR_PARAMS("Required constructor parameters %s on model %s were not able to be injected."), 
-        ADAPTABLE_NOT_USABLE_FOR_VALIDATION("Can not call Sling Validation in case the adaptable is neiter SlingHttpServletRequest or Resource (adaptable is'%s')"),
-        VALIDATION_NOT_AVAILABLE("Sling Validation Bundle is not there, therefore no validation can be performed."),
-        VALIDATION_MODEL_NOT_FOUND("Sling Validation model could not be found"),
-        VALIDATION_MODEL_INVALID("Sling Validation model is invalid"),
-        VALIDATION_RESULT_RESOURCE_INVALID("Model is invalid according to Sling Validation");
-
-        private String message;
-
-        private FailureType(String msg) {
-            this.message = msg;
+    /**
+     * 
+     * @return the encapsulated exception
+     * @throws IllegalStateException
+     *             in case this object does not represent a failure
+     */
+    public RuntimeException getThrowable() {
+        if (t == null) {
+            throw new IllegalStateException("No throwable available");
         }
+        return t;
     }
-    
-    private static class Failure {
-        private FailureType failureType;
 
-        private Throwable failureException;
-
-        private String failureMessage;
-
-        private Set<? extends AnnotatedElement> missingElements;
-
-        private Class<?> clazz;
-
-        private String getMessage() {
-            if (failureMessage != null) {
-                return failureMessage;
-            } else if (failureType != null) {
-                return failureType.message;
-            } else {
-                return null;
-            }
+    /**
+     * 
+     * @return the encapsulated success value
+     * @throws IllegalStateException
+     *             in case this object does not represent a success
+     */
+    public SuccessObjectType getValue() {
+        if (object == null) {
+            throw new IllegalStateException(
+                    "Success object is not set, but rather an exception is encapsulated: " + t.getMessage(), t);
         }
-
-        public void log(Logger log) {
-
-            if (failureType != null) {
-                switch (failureType) {
-                case MISSING_CONSTRUCTOR_PARAMS:
-                case MISSING_FIELDS:
-                case MISSING_METHODS:
-                    log.error(String.format(failureType.message, missingElements, clazz));
-                    break;
-                case ADAPTABLE_DOES_NOT_MATCH:
-                case NO_MODEL_ANNOTATION:
-                case NO_USABLE_CONSTRUCTOR:
-                    log.error(String.format(failureType.message, clazz));
-                    break;
-                case OTHER:
-                default:
-                    log.error(getMessage(), failureException);
-                    break;
-                }
-            }
-        }
-
-        public void throwException() {
-            RuntimeException e = null;
-            if (failureType != null) {
-                final String msg = getMessage();
-                switch (failureType) {
-                case ADAPTABLE_DOES_NOT_MATCH:
-                    e = new InvalidAdaptableException(msg);
-                    break;
-                case FAILED_CALLING_POST_CONSTRUCT:
-                case NO_MODEL_ANNOTATION:
-                case NO_USABLE_CONSTRUCTOR:
-                case VALIDATION_NOT_AVAILABLE:
-                case ADAPTABLE_NOT_USABLE_FOR_VALIDATION:
-                    e = new ModelClassException(msg);
-                    break;
-                case MISSING_CONSTRUCTOR_PARAMS:
-                case MISSING_FIELDS:
-                case MISSING_METHODS:
-                    e = new MissingElementsException(failureType.message, missingElements, clazz);
-                    break;
-                case VALIDATION_MODEL_NOT_FOUND:
-                case VALIDATION_RESULT_RESOURCE_INVALID:
-                case VALIDATION_MODEL_INVALID:
-                    throw (RuntimeException)failureException;
-                default:
-                    e = new RuntimeException(msg);
-                    break;
-                }
-            }
-            if (e != null) {
-                if (failureException != null) {
-                    e.initCause(failureException);
-                }
-                throw e;
-            }
-        }
-        
+        return object;
     }
 
-    private ModelType model;
-    
-    private List<Failure> failures = new ArrayList<Failure>();
-
-    public ModelType getModel() {
-        return model;
+    /**
+     * 
+     * @return {@code true} in case this object represents a success, otherwise
+     *         {@code false}
+     */
+    public boolean wasSuccessfull() {
+        return object != null;
     }
 
-    public void logFailures(Logger log) {
-        for (Failure failure : failures) {
-            failure.log(log);
-        }
-    }
-    
-    public void addFailure(FailureType type) {
-        Failure f = new Failure();
-        f.failureType = type;
-        failures.add(f);
-    }
-
-    public void addFailure(FailureType type, Class<?> clazz) {
-        Failure f = new Failure();
-        f.failureType = type;
-        f.clazz = clazz;
-        failures.add(f);
-    }
-
-    public void addFailure(FailureType type, Throwable e) {
-        Failure f = new Failure();
-        f.failureType = type;
-        f.failureException = e;
-        failures.add(f);
-    }
-
-    public void addFailure(FailureType type, Set<? extends AnnotatedElement> requiredElements, Class<?> clazz) {
-        Failure f = new Failure();
-        f.failureType = type;
-        f.missingElements = requiredElements;
-        f.clazz = clazz;
-        failures.add(f);
-    }
-    
-    public void addFailureWithParameters(FailureType type, Object... parameters) {
-        Failure f = new Failure();
-        f.failureType = type;
-        f.failureMessage = String.format(type.message, parameters);
-        failures.add(f);
-    }
-
-    public void addFailure(FailureType type, String msg) {
-        Failure f = new Failure();
-        f.failureType = type;
-        f.failureMessage = msg;
-        failures.add(f);
-    }
-
-    public void addFailure(FailureType type, String msg, Throwable e) {
-        Failure f = new Failure();
-        f.failureType = type;
-        f.failureMessage = msg;
-        f.failureException = e;
-        failures.add(f);
-    }
-
-    public void setModel(ModelType model) {
-        this.model = model;
-    }
-
-    public void throwException(Logger log) {
-        // log all failures save the last if multiple failures exist
-        if (failures.size() > 1) {
-            for (int i = 0; i < failures.size() - 2; i++) {
-                failures.get(i).log(log);
-            }
-        }
-        // throw the last failure as exception
-        if (failures.size() >= 1) {
-            failures.get(failures.size() - 1).throwException();
-        }
-    }
-
-    public void appendFailures(Result<?> result) {
-        failures.addAll(result.failures);
-    }
 }

@@ -82,8 +82,8 @@ public class PostConstructTest {
         try {
             factory.createModel(resource, FailingPostConstuctModel.class);
         } catch (ModelClassException e) {
-            assertTrue(e.getMessage().contains("post-construct"));
-            assertEquals("FAIL", e.getCause().getMessage());
+            assertTrue(e.getMessage().contains("Post-construct"));
+            assertEquals("FAIL", e.getCause().getCause().getMessage());
             thrown = true;
         }
         assertTrue(thrown);

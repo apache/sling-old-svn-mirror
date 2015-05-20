@@ -22,8 +22,6 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.factory.InvalidResourceException;
 import org.apache.sling.models.factory.InvalidValidationModelException;
-import org.apache.sling.models.impl.Result;
-import org.apache.sling.models.impl.Result.FailureType;
 import org.apache.sling.validation.api.ValidationModel;
 import org.apache.sling.validation.api.ValidationResult;
 import org.apache.sling.validation.api.ValidationService;
@@ -41,14 +39,13 @@ public class ModelValidationImpl implements ModelValidation {
     private static final Logger log = LoggerFactory.getLogger(ModelValidationImpl.class);
     
     @Override
-    public <ModelType> boolean validate(Resource resource, boolean required, Result<ModelType> result) {
+    public RuntimeException validate(Resource resource, boolean required) {
         try {
             ValidationModel validationModel = validation.getValidationModel(resource);
             if (validationModel == null) {
                 String error = String.format("Could not find validation model for resource '%s' with type '%s'", resource.getPath(), resource.getResourceType());
                 if (required) {
-                    result.addFailure(FailureType.VALIDATION_MODEL_NOT_FOUND, new InvalidValidationModelException(error));
-                    return false;
+                    return new InvalidValidationModelException(error);
                 } else {
                     log.warn(error);
                 }
@@ -56,19 +53,17 @@ public class ModelValidationImpl implements ModelValidation {
                 try {
                     ValidationResult validationResult = validation.validate(resource, validationModel);
                     if (!validationResult.isValid()) {
-                        result.addFailure(FailureType.VALIDATION_RESULT_RESOURCE_INVALID, new InvalidResourceException(validationResult, resource.getPath()));
-                        return false;
+                        return new InvalidResourceException(validationResult, resource.getPath());
                     } 
                 } catch (SlingValidationException e) {
-                    result.addFailure(FailureType.VALIDATION_MODEL_INVALID, new InvalidValidationModelException(e));
-                    return false;
+                    return new InvalidValidationModelException(e);
                 }
             }
         } catch (IllegalStateException e) {
-            result.addFailure(FailureType.VALIDATION_MODEL_INVALID, new SlingValidationException(e.getMessage(), e));
+            return new InvalidValidationModelException(e);
         }
         
-        return true;
+        return null;
     }
 
     

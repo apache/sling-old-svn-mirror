@@ -18,13 +18,14 @@
  */
 package org.apache.sling.models.factory;
 
-import java.lang.reflect.AnnotatedElement;
+import java.util.ArrayList;
 import java.util.Collection;
 
 /**
  * Exception which is triggered whenever a Sling Model cannot be instantiated
- * due to some missing elements (i.e. required fields/methods/constructor params
+ * due to some missing elements (i.e. required fields/methods/constructor parameters
  * could not be injected).
+ * Contains a number of {@link MissingElementException}s.
  * 
  * @see ModelFactory
  *
@@ -32,29 +33,37 @@ import java.util.Collection;
 public final class MissingElementsException extends RuntimeException {
     private static final long serialVersionUID = 7870762030809272254L;
 
-    private final Collection<? extends AnnotatedElement> missingElements;
+    private Collection<MissingElementException> missingElements;
 
-    private String formatString;
-
-    private Class<?> type;
-
-    public MissingElementsException(String format, Collection<? extends AnnotatedElement> elements, Class<?> type) {
-        super();
-        this.formatString = format;
-        this.missingElements = elements;
-        this.type = type;
+    
+    public MissingElementsException(String message) {
+        super(message);
+        missingElements = new ArrayList<MissingElementException>();
     }
 
     @Override
     public String getMessage() {
-        return String.format(formatString, missingElements, type);
+        StringBuilder message = new StringBuilder(super.getMessage());
+        for (MissingElementException e : missingElements) {
+            message.append('\n');
+            message.append(e.getMessage());
+            if (e.getCause() != null) {
+                message.append(" caused by ");
+                message.append(e.getCause().getMessage());
+            }
+        }
+        return message.toString();
     }
 
-    public Class<?> getType() {
-        return type;
+    public void addMissingElementExceptions(MissingElementException e) {
+        missingElements.add(e);
     }
-
-    public Collection<? extends AnnotatedElement> getMissingElements() {
+    
+    public boolean isEmpty() {
+        return missingElements.isEmpty();
+    }
+    
+    public Collection<MissingElementException> getMissingElements() {
         return missingElements;
     }
 }
