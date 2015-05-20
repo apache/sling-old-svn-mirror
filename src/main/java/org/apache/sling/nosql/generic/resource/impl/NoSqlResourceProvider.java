@@ -116,7 +116,9 @@ public class NoSqlResourceProvider implements ResourceProvider, ModifyingResourc
 
     private boolean isDeleted(String path) {
         for (String deletedPath : deletedResources) {
-            return path.equals(deletedPath) || path.equals(deletedPath + "/");
+            if (path.equals(deletedPath) || path.equals(deletedPath + "/")) {
+                return true;
+            }
         }
         return false;
     }
