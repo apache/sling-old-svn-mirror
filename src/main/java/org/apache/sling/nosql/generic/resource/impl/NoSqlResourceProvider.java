@@ -194,6 +194,9 @@ public class NoSqlResourceProvider implements ResourceProvider, ModifyingResourc
                notifyRemoved(path);
             }
             for (NoSqlData item : changedResources.values()) {
+                if (ROOT_PATH.equals(item.getPath())) {
+                    throw new PersistenceException("Unable to store resource at {}" + item.getPath(), null, item.getPath(), null);
+                }
                 boolean created = adapter.store(item);
                 if (created) {
                     notifyAdded(item.getPath());
