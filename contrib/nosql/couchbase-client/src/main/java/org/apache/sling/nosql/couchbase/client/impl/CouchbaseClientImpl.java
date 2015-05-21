@@ -97,8 +97,8 @@ public class CouchbaseClientImpl implements CouchbaseClient {
         }
 
         try {
-            cluster = CouchbaseUtil.createCluster(couchbaseHosts);
-            bucket = CouchbaseUtil.openBucket(cluster, bucketName, bucketPassword);
+            cluster = CouchbaseEnvironmentSingleton.createCluster(couchbaseHosts);
+            bucket = CouchbaseEnvironmentSingleton.openBucket(cluster, bucketName, bucketPassword);
         }
         catch (Throwable ex) {
             enabled = false;
