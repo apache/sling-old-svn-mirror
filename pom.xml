@@ -43,7 +43,7 @@
     </scm>
 
     <properties>
-      <org.apache.jackrabbit.version>2.10.0</org.apache.jackrabbit.version>
+      <org.apache.jackrabbit.version>2.10.1</org.apache.jackrabbit.version>
       <org.apache.lucene.version>3.6.2</org.apache.lucene.version>
     </properties>
 
