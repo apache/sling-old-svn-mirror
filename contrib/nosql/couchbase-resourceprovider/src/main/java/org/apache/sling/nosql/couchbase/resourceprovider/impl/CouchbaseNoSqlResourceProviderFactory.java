@@ -30,10 +30,12 @@ import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.nosql.couchbase.client.CouchbaseClient;
+import org.apache.sling.nosql.generic.adapter.MetricsNoSqlAdapterWrapper;
 import org.apache.sling.nosql.generic.adapter.NoSqlAdapter;
 import org.apache.sling.nosql.generic.resource.AbstractNoSqlResourceProviderFactory;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.EventAdmin;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link ResourceProviderFactory} implementation that uses couchbase as
@@ -50,7 +52,7 @@ import org.osgi.service.event.EventAdmin;
 public class CouchbaseNoSqlResourceProviderFactory extends AbstractNoSqlResourceProviderFactory {
 
     /**
-     * Couchbase Client ID for Couchbase Resource Provier
+     * Couchbase Client ID for Couchbase Resource Provider
      */
     public static final String COUCHBASE_CLIENT_ID = "sling-resourceprovider-couchbase";
     
@@ -78,7 +80,8 @@ public class CouchbaseNoSqlResourceProviderFactory extends AbstractNoSqlResource
 
     @Override
     protected NoSqlAdapter getNoSqlAdapter() {
-        return noSqlAdapter;
+        // enable call logging and metrics for {@link CouchbaseNoSqlAdapter}
+        return new MetricsNoSqlAdapterWrapper(noSqlAdapter, LoggerFactory.getLogger(CouchbaseNoSqlAdapter.class));
     }
 
     @Override
