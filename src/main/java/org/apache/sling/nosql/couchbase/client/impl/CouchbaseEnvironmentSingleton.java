@@ -27,11 +27,11 @@ import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 /**
  * Manages couchbase environment.
  */
-final class CouchbaseUtil {
+final class CouchbaseEnvironmentSingleton {
 
     private static final CouchbaseEnvironment COUCHBASE_ENVIRONMENT = DefaultCouchbaseEnvironment.builder().build();
 
-    private CouchbaseUtil() {
+    private CouchbaseEnvironmentSingleton() {
         // static methods only
     }
 
@@ -52,7 +52,7 @@ final class CouchbaseUtil {
      * @return Couchbase bucket
      */
     public static Bucket openBucket(Cluster cluster, String bucketName, String bucketPassword) {
-        if (bucketPassword == null) {
+        if (bucketPassword != null) {
             return cluster.openBucket(bucketName, bucketPassword);
         }
         else {
