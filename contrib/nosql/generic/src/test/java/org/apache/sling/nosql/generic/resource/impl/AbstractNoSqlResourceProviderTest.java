@@ -208,4 +208,10 @@ public abstract class AbstractNoSqlResourceProviderTest {
         assertEquals(JcrConstants.NT_UNSTRUCTURED, resource.getResourceType());
     }
 
+    @Test
+    public void testCreateWithNullMap() throws IOException {
+        Resource resource1 = context.resourceResolver().getResource(testRoot().getPath() + "/node1");
+        context.resourceResolver().create(resource1, "nullMap", null);
+    }
+
 }

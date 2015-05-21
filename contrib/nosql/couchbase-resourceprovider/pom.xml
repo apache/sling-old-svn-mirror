@@ -81,7 +81,13 @@
             <version>1.2.1-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
-  
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.logging-mock</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.nosql.generic</artifactId>
