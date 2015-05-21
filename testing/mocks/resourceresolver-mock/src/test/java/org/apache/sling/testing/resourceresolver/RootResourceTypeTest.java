@@ -38,11 +38,18 @@ public class RootResourceTypeTest {
         resourceResolver = new MockResourceResolverFactory().getResourceResolver(null);       
     }
 
-    
+
     @Test
     public void testIsResourceResolver() {
         Resource root= resourceResolver.getResource("/");
         Assert.assertTrue(root.isResourceType("rep:root"));
     }
+
+    @Test
+    public void testGetRootParent() {
+        Resource rootParent = resourceResolver.getResource("/..");
+        Assert.assertNull(rootParent);
+    }
+
 
 }

@@ -132,8 +132,10 @@ public class MockValueMap extends ValueMapDecorator {
     
     private static Map<String, Object> convertForWriteAll(Map<String, Object> map) {
         Map<String,Object> newMap = new HashMap<String, Object>();
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            newMap.put(entry.getKey(), convertForWrite(entry.getValue()));
+        if (map != null) {
+            for (Map.Entry<String, Object> entry : map.entrySet()) {
+                newMap.put(entry.getKey(), convertForWrite(entry.getValue()));
+            }
         }
         return newMap;
     }
