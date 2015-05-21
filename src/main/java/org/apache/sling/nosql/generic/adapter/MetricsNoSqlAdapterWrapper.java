@@ -102,7 +102,7 @@ public final class MetricsNoSqlAdapterWrapper implements NoSqlAdapter {
         public void finish(String message, Object... data) {
             if (logger.isDebugEnabled()) {
                 long duration = System.currentTimeMillis() - startTime;
-                logger.debug(message + " (" + duration + "ms)", data);
+                logger.debug(message + " - " + duration + "ms", data);
             }
         }
         
