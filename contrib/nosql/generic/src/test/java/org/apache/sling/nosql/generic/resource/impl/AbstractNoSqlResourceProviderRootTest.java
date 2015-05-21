@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -74,6 +75,20 @@ public abstract class AbstractNoSqlResourceProviderRootTest {
         assertNotNull(test1);
         
         context.resourceResolver().delete(test);
+    }
+    
+    @Test(expected = PersistenceException.class)
+    public void testDeleteRootPath() throws PersistenceException {
+        Resource root = context.resourceResolver().getResource("/");
+        context.resourceResolver().delete(root);
+    }
+
+    @Test(expected = Throwable.class)
+    public void testUpdateRootPath() throws PersistenceException {
+        Resource root = context.resourceResolver().getResource("/");
+        ModifiableValueMap props = root.adaptTo(ModifiableValueMap.class);
+        props.put("prop1", "value1");
+        context.resourceResolver().commit();
     }
 
 }
