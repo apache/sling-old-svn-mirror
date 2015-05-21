@@ -148,7 +148,8 @@ public class NoSqlResourceProvider implements ResourceProvider, ModifyingResourc
         }
         
         // create new resource in changeset
-        NoSqlData data = new NoSqlData(path, NoSqlValueMap.convertForWriteAll(new HashMap<String, Object>(properties)));
+        Map<String, Object> writableMap = properties != null ? new HashMap<String, Object>(properties) : new HashMap<String, Object>();
+        NoSqlData data = new NoSqlData(path, NoSqlValueMap.convertForWriteAll(writableMap));
         changedResources.put(path, data);
         return new NoSqlResource(data, resolver, this);
     }
