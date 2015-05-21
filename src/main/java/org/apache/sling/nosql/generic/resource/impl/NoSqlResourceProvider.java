@@ -223,7 +223,6 @@ public class NoSqlResourceProvider implements ResourceProvider, ModifyingResourc
     private void notifyAdded(String path) {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(SlingConstants.PROPERTY_PATH, path);
-        props.put("event.distribute", "");
         final Event event = new Event(SlingConstants.TOPIC_RESOURCE_ADDED, props);
         this.eventAdmin.postEvent(event);
     }
@@ -231,7 +230,6 @@ public class NoSqlResourceProvider implements ResourceProvider, ModifyingResourc
     private void notifyUpdated(String path) {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(SlingConstants.PROPERTY_PATH, path);
-        props.put("event.distribute", "");
         final Event event = new Event(SlingConstants.TOPIC_RESOURCE_CHANGED, props);
         this.eventAdmin.postEvent(event);
     }    
@@ -239,7 +237,6 @@ public class NoSqlResourceProvider implements ResourceProvider, ModifyingResourc
     private void notifyRemoved(String path) {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(SlingConstants.PROPERTY_PATH, path);
-        props.put("event.distribute", "");
         final Event event = new Event(SlingConstants.TOPIC_RESOURCE_REMOVED, props);
         this.eventAdmin.postEvent(event);
     }
