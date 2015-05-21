@@ -135,13 +135,15 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
         
         // if not resource found check if this is a reference to a property
         if (resource == null && path != null) {
-            String name = ResourceUtil.getName(path);
             String parentPath = ResourceUtil.getParent(path);
-            Resource parentResource = getResourceInternal(parentPath);
-            if (parentResource!=null) {
-                ValueMap props = ResourceUtil.getValueMap(parentResource);
-                if (props.containsKey(name)) {
-                    return new MockPropertyResource(path, props, this);
+            if (parentPath != null) {
+                String name = ResourceUtil.getName(path);
+                Resource parentResource = getResourceInternal(parentPath);
+                if (parentResource!=null) {
+                    ValueMap props = ResourceUtil.getValueMap(parentResource);
+                    if (props.containsKey(name)) {
+                        return new MockPropertyResource(path, props, this);
+                    }
                 }
             }
         }
@@ -155,7 +157,9 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
         }
         
         String normalizedPath = ResourceUtil.normalize(path);
-        if ( normalizedPath.startsWith("/") ) {
+        if (normalizedPath == null) {
+            return null;
+        } else if ( normalizedPath.startsWith("/") ) {
             if ( this.deletedResources.contains(normalizedPath) ) {
                 return null;
             }
