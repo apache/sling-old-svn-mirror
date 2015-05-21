@@ -36,7 +36,7 @@
     org.apache.jackrabbit/oak-blob/${oak.version}
 
 [artifacts startLevel=15 runModes=oak_mongo]
-    org.mongodb/mongo-java-driver/2.12.2
+    org.mongodb/mongo-java-driver/2.13.0
 
 [configurations runModes=oak]
   org.apache.felix.jaas.Configuration.factory-GuestLoginModule
