@@ -24,6 +24,7 @@ import aQute.bnd.annotation.ConsumerType;
 
 /**
  * Adapter for NoSQL databases to be hooked into the Generic NoSQL resource provider.
+ * All implementors should should extend {@link AbstractNoSqlAdapter} to be compatible for future extensions.
  */
 @ConsumerType
 public interface NoSqlAdapter {
