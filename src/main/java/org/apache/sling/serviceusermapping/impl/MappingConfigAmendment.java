@@ -25,6 +25,7 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Modified;
+import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Service;
@@ -40,10 +41,13 @@ import org.slf4j.LoggerFactory;
         configurationFactory=true,
         policy=ConfigurationPolicy.REQUIRE)
 @Service(value={MappingConfigAmendment.class})
-@Property(name=Constants.SERVICE_RANKING, intValue=0, propertyPrivate=false,
-          label="Ranking",
-          description="Amendments are processed in order of their ranking, an amendment with a higher ranking has" +
-                      " precedence over a mapping with a lower ranking.")
+@Properties({
+    @Property(name=Constants.SERVICE_RANKING, intValue=0, propertyPrivate=false,
+              label="Ranking",
+              description="Amendments are processed in order of their ranking, an amendment with a higher ranking has" +
+                          " precedence over a mapping with a lower ranking."),
+    @Property(name="webconsole.configurationFactory.nameHint", value="Mapping: {user.mapping}")
+})
 public class MappingConfigAmendment implements Comparable<MappingConfigAmendment> {
 
     @Property(
