@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.util.ISO8601;
+import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
@@ -40,7 +41,7 @@ import org.apache.sling.api.wrappers.ValueMapDecorator;
  * <li>Converts InputStream to byte array and vice versa.</li>
  * </ul>
  */
-public class MockValueMap extends ValueMapDecorator {
+public class MockValueMap extends ValueMapDecorator implements ModifiableValueMap {
     
     private final Resource resource;
     
