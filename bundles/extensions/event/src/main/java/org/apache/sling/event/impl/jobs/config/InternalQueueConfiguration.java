@@ -112,7 +112,8 @@ import org.slf4j.LoggerFactory;
               propertyPrivate=false,
               label="Ranking",
               description="Integer value defining the ranking of this queue configuration. "
-                        + "If more than one queue matches a job topic, the one with the highest ranking is used.")
+                        + "If more than one queue matches a job topic, the one with the highest ranking is used."),
+    @Property(name="webconsole.configurationFactory.nameHint", value="Queue: {" + ConfigurationConstants.PROP_NAME + "}")
 })
 public class InternalQueueConfiguration
     implements QueueConfiguration, Comparable<InternalQueueConfiguration> {
