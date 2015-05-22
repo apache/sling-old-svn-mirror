@@ -19,6 +19,7 @@
 package org.apache.sling.bgservlets;
 
 import java.io.BufferedReader;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -36,9 +37,14 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /** Minimal HttpServletRequest for background processing */
 public class BackgroundHttpServletRequest implements HttpServletRequest {
 
+    private static final Logger log = LoggerFactory.getLogger(BackgroundHttpServletRequest.class);
+    
     private final String contextPath;
     private final String method;
     private final String pathInfo;
@@ -104,7 +110,7 @@ public class BackgroundHttpServletRequest implements HttpServletRequest {
         method = r.getMethod();
         pathInfo = r.getPathInfo();
         servletPath = r.getServletPath();
-        queryString = r.getQueryString();
+        queryString = filterQueryString(r.getQueryString(), parametersToRemove);
         requestURI = r.getRequestURI();
         requestURL = r.getRequestURL();
         characterEncoding = r.getCharacterEncoding();
@@ -133,6 +139,32 @@ public class BackgroundHttpServletRequest implements HttpServletRequest {
         for (String key : parametersToRemove) {
             parameters.remove(key);
         }
+    }
+    
+    private String filterQueryString(String original, String [] parametersToRemove) {
+        if(original == null) {
+            return null;
+        }
+        
+        final StringBuilder sb = new StringBuilder(original.length()); 
+        final String SEP = "&";
+        final String [] params = original.split(SEP);
+        for(String param : params) {
+            final String name = param.split("=")[0].trim();
+            boolean ignore = false;
+            for(String p : parametersToRemove) {
+                if(name.equals(p)) {
+                    ignore=true;
+                    break;
+                }
+            }
+            if(!ignore) {
+                sb.append(param).append(SEP);
+            }
+        }
+        final String result = sb.toString();
+        log.debug("Filtered query string to '{}'", result);
+        return result;
     }
 
     public String getAuthType() {
