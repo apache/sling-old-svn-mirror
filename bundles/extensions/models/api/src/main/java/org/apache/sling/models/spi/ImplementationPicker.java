@@ -18,6 +18,9 @@
  */
 package org.apache.sling.models.spi;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+
 /**
  * Defines a strategy to choose an implementation for a model if multiple are registered 
  * for the same interface or super class.
@@ -43,6 +46,6 @@ public interface ImplementationPicker {
      * @param adaptable For reference: the adaptable. May be enquired to detect the context of the adaption. Never null.
      * @return If an implementation is chosen the class is returned, otherwise null.
      */
-    Class<?> pick(Class<?> adapterType, Class<?>[] implementationsTypes, Object adaptable);
+    @CheckForNull Class<?> pick(@Nonnull Class<?> adapterType, @Nonnull Class<?>[] implementationsTypes, @Nonnull Object adaptable);
 
 }
