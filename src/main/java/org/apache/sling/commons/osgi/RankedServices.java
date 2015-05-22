@@ -43,10 +43,10 @@ import aQute.bnd.annotation.ProviderType;
  * </pre>
  * <p>2. Define bind/unbind methods that delegate to the RankedServices instance:</p>
  * <pre>
- * void bindMyService(MyService service, Map<String, Object> props) {
+ * void bindMyService(MyService service, Map&lt;String, Object&gt; props) {
  *   myServices.bind(service, props);
  * }
- * void unbindMyService(MyService service, Map<String, Object> props) {
+ * void unbindMyService(MyService service, Map&lt;String, Object&gt; props) {
  *   myServices.unbind(service, props);
  * }
  * </pre>

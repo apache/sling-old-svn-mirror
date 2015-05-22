@@ -40,19 +40,19 @@ public abstract class BundleVersionInfo<T> implements Comparable<BundleVersionIn
      */
     public static final long BND_LAST_MODIFIED_MISSING = -1L;
     
-    /** Return the source of information: underlying File or Bundle */
+    /** @return Return the source of information: underlying File or Bundle */
     public abstract T getSource();
     
-    /** True if the provided data is a valid bundle */
+    /** @return True if the provided data is a valid bundle */
     public abstract boolean isBundle();
     
-    /** Return the bundle symbolic name, null if not available */
+    /** @return Return the bundle symbolic name, null if not available */
     public abstract String getBundleSymbolicName();
     
-    /** Return the bundle version, null if not available */
+    /** @return Return the bundle version, null if not available */
     public abstract Version getVersion();
     
-    /** True if the bundle version indicates a snapshot */
+    /** @return True if the bundle version indicates a snapshot */
     public abstract boolean isSnapshot();
     
     /** Return the bundle last modification time, based on the BND_LAST_MODIFIED 
