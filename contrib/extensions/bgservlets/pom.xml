@@ -32,7 +32,7 @@
   <name>Apache Sling Background Servlets Reactor</name>
 
   <modules>
-    <module>core</module>
+    <module>engine</module>
     <module>testing</module>
   </modules>
 </project>
