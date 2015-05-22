@@ -18,6 +18,8 @@
  */
 package org.apache.sling.models.factory;
 
+import javax.annotation.Nonnull;
+
 
 /**
  * The ModelFactory instantiates Sling Model classes similar to adaptTo but is allowed to throw an exception in case
@@ -36,7 +38,7 @@ public interface ModelFactory {
      * @throws InvalidValidationModelException in case an invalid validation model was found
      * @throws InvalidResourceException in case the resource (for the Sling Model) could not be validated through Sling Validation
      */
-    public <ModelType> ModelType createModel(Object adaptable, Class<ModelType> type) throws MissingElementsException,
+    public @Nonnull <ModelType> ModelType createModel(@Nonnull Object adaptable, @Nonnull Class<ModelType> type) throws MissingElementsException,
             InvalidAdaptableException, ModelClassException, InvalidValidationModelException, InvalidResourceException;
 
     /**
@@ -46,7 +48,7 @@ public interface ModelFactory {
      * @return false in case the given class can not be created from the given adaptable
      * @throws ModelClassException in case no class with the Model annotation adapts to the requested type
      */
-    public boolean canCreateFromAdaptable(Object adaptable, Class<?> type) throws ModelClassException;
+    public boolean canCreateFromAdaptable(@Nonnull Object adaptable, @Nonnull Class<?> type) throws ModelClassException;
 
     /**
      * 
@@ -56,5 +58,5 @@ public interface ModelFactory {
      * 
      * @see org.apache.sling.models.annotations.Model
      */
-    public boolean isModelClass(Object adaptable, Class<?> type);
+    public boolean isModelClass(@Nonnull Object adaptable, @Nonnull Class<?> type);
 }
