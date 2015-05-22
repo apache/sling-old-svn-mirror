@@ -37,6 +37,8 @@
     Tracer provides support for enabling the logs for specific category at specific level and
     only for specific request. It provides a very fine level of control via config provided
     as part of HTTP request around how the logging should be performed for given category.
+
+    Refer to http://sling.apache.org/documentation/bundles/log-tracers.html
   </description>
 
   <properties>

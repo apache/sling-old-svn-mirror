@@ -66,7 +66,9 @@ import org.slf4j.Marker;
  */
 @Component(
         label = "Apache Sling Log Tracer",
-        description = "Provides support for enabling log for specific loggers on per request basis",
+        description = "Provides support for enabling log for specific loggers on per request basis. " +
+                "Refer to http://sling.apache.org/documentation/bundles/log-tracers.html for " +
+                "more details",
         policy = ConfigurationPolicy.REQUIRE,
         metatype = true
 )
