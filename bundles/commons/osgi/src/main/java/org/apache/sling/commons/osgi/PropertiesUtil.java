@@ -40,6 +40,7 @@ public class PropertiesUtil {
      * object.
      * @param propValue the property value or <code>null</code>
      * @param defaultValue the default boolean value
+     * @return Boolean value
      */
     public static boolean toBoolean(Object propValue, boolean defaultValue) {
         propValue = toObject(propValue);
@@ -57,6 +58,7 @@ public class PropertiesUtil {
      * <code>defaultValue</code> if the parameter is <code>null</code>.
      * @param propValue the property value or <code>null</code>
      * @param defaultValue the default string value
+     * @return String value
      */
     public static String toString(Object propValue, String defaultValue) {
         propValue = toObject(propValue);
@@ -70,6 +72,7 @@ public class PropertiesUtil {
      * a <code>Long</code> from the parameter's string value.
      * @param propValue the property value or <code>null</code>
      * @param defaultValue the default long value
+     * @return Long value
      */
     public static long toLong(Object propValue, long defaultValue) {
         propValue = toObject(propValue);
@@ -93,6 +96,7 @@ public class PropertiesUtil {
      * an <code>Integer</code> from the parameter's string value.
      * @param propValue the property value or <code>null</code>
      * @param defaultValue the default integer value
+     * @return Integer value
      */
     public static int toInteger(Object propValue, int defaultValue) {
         propValue = toObject(propValue);
@@ -116,6 +120,7 @@ public class PropertiesUtil {
      * a <code>Double</code> from the parameter's string value.
      * @param propValue the property value or <code>null</code>
      * @param defaultValue the default double value
+     * @return Double value
      */
     public static double toDouble(Object propValue, double defaultValue) {
         propValue = toObject(propValue);
@@ -140,6 +145,7 @@ public class PropertiesUtil {
      * <code>java.util.Collection</code>, the first collection element is returned.
      * Otherwise <code>null</code> is returned.
      * @param propValue the parameter to convert.
+     * @return Object value
      */
     public static Object toObject(Object propValue) {
         if (propValue == null) {
@@ -164,6 +170,7 @@ public class PropertiesUtil {
      * Otherwise (if the parameter is <code>null</code>) <code>null</code> is
      * returned.
      * @param propValue The object to convert.
+     * @return String array value
      */
     public static String[] toStringArray(Object propValue) {
         return toStringArray(propValue, null);
@@ -179,6 +186,7 @@ public class PropertiesUtil {
      * returned.
      * @param propValue The object to convert.
      * @param defaultArray The default array to return.
+     * @return String array value
      */
     public static String[] toStringArray(Object propValue, String[] defaultArray) {
         if (propValue == null) {
@@ -236,6 +244,7 @@ public class PropertiesUtil {
      * returned.
      * @param propValue The object to convert.
      * @param defaultArray The default array converted to map.
+     * @return Map value
      */
     public static Map<String, String> toMap(Object propValue, String[] defaultArray) {
         String[] arrayValue = toStringArray(propValue, defaultArray);
