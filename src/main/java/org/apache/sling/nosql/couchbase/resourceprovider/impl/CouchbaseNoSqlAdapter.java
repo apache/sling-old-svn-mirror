@@ -22,7 +22,7 @@ import java.util.Iterator;
 
 import org.apache.sling.nosql.couchbase.client.CouchbaseClient;
 import org.apache.sling.nosql.couchbase.client.CouchbaseKey;
-import org.apache.sling.nosql.generic.adapter.NoSqlAdapter;
+import org.apache.sling.nosql.generic.adapter.AbstractNoSqlAdapter;
 import org.apache.sling.nosql.generic.adapter.NoSqlData;
 
 import com.couchbase.client.java.Bucket;
@@ -33,7 +33,7 @@ import com.couchbase.client.java.view.Stale;
 import com.couchbase.client.java.view.ViewQuery;
 import com.couchbase.client.java.view.ViewRow;
 
-class CouchbaseNoSqlAdapter implements NoSqlAdapter {
+class CouchbaseNoSqlAdapter extends AbstractNoSqlAdapter {
 
     private static final String PN_PATH = "path";
     private static final String PN_DATA = "data";
@@ -135,12 +135,6 @@ class CouchbaseNoSqlAdapter implements NoSqlAdapter {
             deletedAny = true;
         }
         return deletedAny;
-    }
-
-    @Override
-    public Iterator<NoSqlData> query(String query, String language) {
-        // not supported
-        return null;
     }
 
 }
