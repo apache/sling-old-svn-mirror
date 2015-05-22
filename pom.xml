@@ -34,7 +34,8 @@
 
   <name>Apache Sling DataSource Provider</name>
   <description>
-    Enables creation of DataSource based on OSGi configuration
+    Enables creation of DataSource based on OSGi configuration. Refer to http://sling.apache.org/documentation/bundles/datasource-providers.html
+    for more details
   </description>
 
   <properties>
