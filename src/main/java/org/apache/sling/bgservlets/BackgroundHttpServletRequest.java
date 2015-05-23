@@ -19,10 +19,10 @@
 package org.apache.sling.bgservlets;
 
 import java.io.BufferedReader;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.Principal;
 import java.util.Enumeration;
@@ -37,6 +37,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.apache.sling.api.SlingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,11 +147,17 @@ public class BackgroundHttpServletRequest implements HttpServletRequest {
             return null;
         }
         
+        final String encoding = "UTF-8"; // recommended as per URLDecoder javadocs
         final StringBuilder sb = new StringBuilder(original.length()); 
         final String SEP = "&";
         final String [] params = original.split(SEP);
         for(String param : params) {
-            final String name = param.split("=")[0].trim();
+            String name = null;
+            try {
+                name = URLDecoder.decode(param.split("=")[0].trim(), encoding);
+            } catch(UnsupportedEncodingException uee) {
+                throw new SlingException("Unexpected UnsupportedEncodingException for " + encoding, uee);
+            }
             boolean ignore = false;
             for(String p : parametersToRemove) {
                 if(name.equals(p)) {
