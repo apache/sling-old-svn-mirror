@@ -18,16 +18,37 @@
  */
 package org.apache.sling.bgservlets;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static org.junit.Assert.assertEquals;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 import org.mockito.Mockito;
 
+@RunWith(Parameterized.class)
 public class QueryStringFilterTest {
 
+    private final String slingBgParamName;
+    
+    @Parameters(name="{0}")
+    public static List<Object[]> data() {
+        final List<Object[]> result = new ArrayList<Object[]>();
+        result.add(new Object[] { "sling:bg" });
+        result.add(new Object[] { "sling%3Abg" });
+        return result;
+    }
+    
+    public QueryStringFilterTest(String slingBgParamName) {
+        this.slingBgParamName = slingBgParamName;
+    }
+    
     private void assertFilter(String [] toRemove, String orig, String expected) {
         final HttpServletRequest mock = Mockito.mock(HttpServletRequest.class);
         Mockito.when(mock.getQueryString()).thenReturn(orig);
@@ -41,8 +62,8 @@ public class QueryStringFilterTest {
     public void testNothingToRemove() {
         final String [] toRemove =  {};
         assertFilter(toRemove, null, null);
-        assertFilter(toRemove, "sling:bg=true", "sling:bg=true&");
-        assertFilter(toRemove, "a=b&sling:bg=true", "a=b&sling:bg=true&");
+        assertFilter(toRemove, slingBgParamName + "=true", slingBgParamName + "=true&");
+        assertFilter(toRemove, "a=b&" + slingBgParamName + "=true", "a=b&" + slingBgParamName + "=true&");
         assertFilter(toRemove, "sling:bg=true&c=d", "sling:bg=true&c=d&");
         assertFilter(toRemove, "a=b&sling:bg=true&c=d", "a=b&sling:bg=true&c=d&");
     }
@@ -51,24 +72,24 @@ public class QueryStringFilterTest {
     public void testRemoveOne() {
         final String [] toRemove =  { "sling:bg" };
         assertFilter(toRemove, null, null);
-        assertFilter(toRemove, "sling:bg=true", "");
-        assertFilter(toRemove, "a=b&sling:bg=true", "a=b&");
-        assertFilter(toRemove, "sling:bg=true&c=d", "c=d&");
-        assertFilter(toRemove, "a=b&sling:bg=true&c=d", "a=b&c=d&");
-        assertFilter(toRemove, "a=b&sling:bg = true+with+spaces&c=d", "a=b&c=d&");
+        assertFilter(toRemove, slingBgParamName + "=true", "");
+        assertFilter(toRemove, "a=b&" + slingBgParamName + "=true", "a=b&");
+        assertFilter(toRemove, slingBgParamName + "=true&c=d", "c=d&");
+        assertFilter(toRemove, "a=b&" + slingBgParamName + "=true&c=d", "a=b&c=d&");
+        assertFilter(toRemove, "a=b&" + slingBgParamName + " = true+with+spaces&c=d", "a=b&c=d&");
     }
     
     @Test 
     public void testRemoveTwo() {
         final String [] toRemove =  { "sling:bg", "some_other_param" };
         assertFilter(toRemove, null, null);
-        assertFilter(toRemove, "sling:bg=true", "");
-        assertFilter(toRemove, "a=b&sling:bg=true", "a=b&");
-        assertFilter(toRemove, "sling:bg=true&c=d", "c=d&");
-        assertFilter(toRemove, "a=b&sling:bg=true&c=d", "a=b&c=d&");
-        assertFilter(toRemove, "a=b&sling:bg = true+with+spaces&c=d", "a=b&c=d&");
-        assertFilter(toRemove, "a=b&sling:bg = true+with+spaces&c=d&some_other_param=foo", "a=b&c=d&");
-        assertFilter(toRemove, "sling:bg=true&some_other_param=foo", "");
-        assertFilter(toRemove, "sling:bg=true&some_other_param=foo&", "");
+        assertFilter(toRemove, slingBgParamName + "=true", "");
+        assertFilter(toRemove, "a=b&" + slingBgParamName + "=true", "a=b&");
+        assertFilter(toRemove, slingBgParamName + "=true&c=d", "c=d&");
+        assertFilter(toRemove, "a=b&" + slingBgParamName + "=true&c=d", "a=b&c=d&");
+        assertFilter(toRemove, "a=b&" + slingBgParamName + " = true+with+spaces&c=d", "a=b&c=d&");
+        assertFilter(toRemove, "a=b&" + slingBgParamName + " = true+with+spaces&c=d&some_other_param=foo", "a=b&c=d&");
+        assertFilter(toRemove, slingBgParamName + "=true&some_other_param=foo", "");
+        assertFilter(toRemove, slingBgParamName + "=true&some_other_param=foo&", "");
     }
 }
