@@ -104,6 +104,10 @@ public class HttpTestBase extends TestCase {
     /** Need to execute javascript code */
     private final JavascriptEngine javascriptEngine = new JavascriptEngine();
 
+    public HttpTestBase() {
+        super("");
+    }
+
     /** Class that creates a test node under the given parentPath, and
      *  stores useful values for testing. Created for JspScriptingTest,
      *  older test classes do not use it, but it might simplify them.
