@@ -2,16 +2,14 @@ Apache Sling Launchpad Karaf
 ============================
 
 A repository of features and a startup handler that allow an easy deployment
-of Apache Sling on [Apache Karaf](http://karaf.apache.org). See [_Provisioning_](http://karaf.apache.org/manual/latest/users-guide/provisioning.html) for details.
+of Apache Sling on [Apache Karaf](http://karaf.apache.org). See [Provisioning](http://karaf.apache.org/manual/latest/users-guide/provisioning.html) for details.
 
 Getting Started
 ---------------
 
-1) Start Apache Karaf. See details in:
+1) [Start Apache Karaf](http://karaf.apache.org/manual/latest/quick-start.html).
 
-    http://karaf.apache.org/manual/latest/quick-start.html
-
-2) Add the Apache Sling features repository and install:
+2) Add the Apache Sling features repository and install a `sling-launchpad-*` (`jackrabbit-derby` | `oak-tar` | `oak-mongo`) feature:
 
     karaf@root()> feature:repo-add mvn:org.apache.sling/org.apache.sling.launchpad.karaf-features/0.1.1-SNAPSHOT/xml/features
     karaf@root()> feature:install sling-launchpad-jackrabbit-derby
@@ -21,6 +19,4 @@ Getting Started
     karaf@root()> feature:install sling-launchpad-content
     karaf@root()> feature:install sling-extension-explorer
 
-4) Browse to:
-
-    http://localhost:8181/
+4) Browse to http://localhost:8181/⁠.
