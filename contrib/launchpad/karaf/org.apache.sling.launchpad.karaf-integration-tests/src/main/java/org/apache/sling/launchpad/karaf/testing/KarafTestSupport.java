@@ -61,8 +61,6 @@ public abstract class KarafTestSupport {
 
     public static final String KARAF_ARTIFACT_ID = "apache-karaf";
 
-    public static final String KARAF_VERSION = "3.0.3";
-
     public static final String KARAF_NAME = "Apache Karaf";
 
     public KarafTestSupport() {
@@ -105,10 +103,6 @@ public abstract class KarafTestSupport {
         return KARAF_ARTIFACT_ID;
     }
 
-    protected String karafVersion() {
-        return KARAF_VERSION;
-    }
-
     protected String karafName() {
         return KARAF_NAME;
     }
@@ -117,7 +111,7 @@ public abstract class KarafTestSupport {
         return editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresBoot", "," + feature);
     }
 
-    protected String featureRepository() {
+    protected String featureRepositories() {
         return "mvn:org.apache.sling/org.apache.sling.launchpad.karaf-features/0.1.1-SNAPSHOT/xml/features";
     }
 
@@ -125,6 +119,7 @@ public abstract class KarafTestSupport {
         return streamBundle(
             bundle()
                 .add(KarafTestSupport.class)
+                .set(Constants.BUNDLE_MANIFESTVERSION, "2")
                 .set(Constants.BUNDLE_SYMBOLICNAME, "org.apache.sling.launchpad.karaf-integration-tests")
                 .set(Constants.EXPORT_PACKAGE, "org.apache.sling.launchpad.karaf.testing")
                 .set(Constants.IMPORT_PACKAGE, "javax.inject, org.apache.karaf.features, org.ops4j.pax.exam, org.ops4j.pax.exam.options, org.ops4j.pax.exam.util, org.ops4j.pax.tinybundles.core, org.osgi.framework, org.osgi.service.cm")
@@ -139,26 +134,25 @@ public abstract class KarafTestSupport {
         final int httpPort = findFreePort();
         return options(
             karafDistributionConfiguration()
-                .frameworkUrl(maven().groupId(karafGroupId()).artifactId(karafArtifactId()).version(karafVersion()).type("tar.gz"))
-                .karafVersion(karafVersion())
+                .frameworkUrl(maven().groupId(karafGroupId()).artifactId(karafArtifactId()).versionAsInProject().type("tar.gz"))
                 .useDeployFolder(false)
                 .name(karafName())
                 .unpackDirectory(new File("target/paxexam/" + getClass().getSimpleName())),
             keepRuntimeFolder(),
             logLevel(LogLevelOption.LogLevel.INFO),
-            editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresRepositories", "," + featureRepository()),
+            editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresRepositories", "," + featureRepositories()),
             editConfigurationFilePut("etc/org.apache.karaf.management.cfg", "rmiRegistryPort", Integer.toString(rmiRegistryPort)),
             editConfigurationFilePut("etc/org.apache.karaf.management.cfg", "rmiServerPort", Integer.toString(rmiServerPort)),
             editConfigurationFilePut("etc/org.apache.karaf.shell.cfg", "sshPort", Integer.toString(sshPort)),
             editConfigurationFilePut("etc/org.ops4j.pax.web.cfg", "org.osgi.service.http.port", Integer.toString(httpPort)),
-            mavenBundle().groupId("org.ops4j.pax.tinybundles").artifactId("tinybundles").version("2.1.1"),
-            mavenBundle().groupId("biz.aQute.bnd").artifactId("biz.aQute.bndlib").version("2.4.1"),
+            mavenBundle().groupId("org.ops4j.pax.tinybundles").artifactId("tinybundles").versionAsInProject(),
+            mavenBundle().groupId("biz.aQute.bnd").artifactId("biz.aQute.bndlib").versionAsInProject(),
             karafTestSupportBundle()
         );
     }
 
     protected Option withDerby() {
-        return mavenBundle().groupId("org.apache.derby").artifactId("derby").version("10.11.1.1");
+        return mavenBundle().groupId("org.apache.derby").artifactId("derby").versionAsInProject();
     }
 
 }

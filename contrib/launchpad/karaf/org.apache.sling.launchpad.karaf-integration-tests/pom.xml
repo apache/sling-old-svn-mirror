@@ -59,6 +59,12 @@
       <artifactId>org.osgi.compendium</artifactId>
       <scope>provided</scope>
     </dependency>
+    <!-- Apache Derby -->
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derby</artifactId>
+      <version>10.11.1.1</version>
+    </dependency>
     <!-- Apache Karaf -->
     <dependency>
       <groupId>org.apache.karaf.features</groupId>
@@ -78,6 +84,13 @@
       <artifactId>org.apache.sling.engine</artifactId>
       <version>2.4.2</version>
       <scope>test</scope>
+    </dependency>
+    <!-- bnd -->
+    <dependency>
+      <groupId>biz.aQute.bnd</groupId>
+      <artifactId>biz.aQute.bndlib</artifactId>
+      <version>2.4.1</version>
+      <scope>provided</scope>
     </dependency>
     <!-- logging -->
     <dependency>
@@ -150,6 +163,18 @@
           <source>1.6</source>
           <target>1.6</target>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.servicemix.tooling</groupId>
+        <artifactId>depends-maven-plugin</artifactId>
+        <version>1.2</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>generate-depends-file</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
