@@ -18,9 +18,11 @@ package org.apache.sling.bgservlets.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -29,9 +31,7 @@ import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.junit.Test;
 
-/** Test the DeepNodeCreator class 
- * TOO replace with the version of JCR-2687 once that's released.
- * */
+/** Test the DeepNodeCreator class **/ 
 public class DeepNodeCreatorTest {
 
     @Test
@@ -57,6 +57,7 @@ public class DeepNodeCreatorTest {
         assertTrue("Expecting deepCreate to return existing node", result == n);
     }
     
+    @Test
     public void testCreateFromRoot() throws Exception {
         final Mockery mockery = new Mockery(); 
         final DeepNodeCreator c = new DeepNodeCreator();
@@ -91,13 +92,17 @@ public class DeepNodeCreatorTest {
             allowing(foo).addNode("bar", testNodeType);
             will(returnValue(bar));
             
+            allowing(s).getRootNode();
+            will(returnValue(root));
+            
             allowing(s).save();
         }});
         
         final Node result = c.deepCreateNode(barPath, s, testNodeType);
-        assertTrue("Expecting deepCreate to return create node", result == bar);
+        assertTrue("Expecting deepCreate to return created node", result == bar);
     }
     
+    @Test
     public void testCreateWithVariousTypes() throws Exception {
         final Mockery mockery = new Mockery();
         
@@ -137,6 +142,8 @@ public class DeepNodeCreatorTest {
             allowing(bar).addNode("wii", "NT_/foo/bar.wii");
             will(returnValue(wii));
             
+            allowing(s).getRootNode();
+            
             allowing(s).save();
         }});
         
@@ -157,5 +164,47 @@ public class DeepNodeCreatorTest {
         final Node result = c.deepCreateNode(wiiPath, s, null);
         assertTrue("Expecting deepCreate to return created node", result == wii);
         assertEquals("Expecting correct count of nodeCreated calls", 2, counter.get());
+    }
+    
+    @Test
+    public void testCannotReadFoo() throws Exception {
+        final Mockery mockery = new Mockery();
+        final Session s = mockery.mock(Session.class);
+        final String fooPath = "/foo";
+        final Node foo = mockery.mock(Node.class, fooPath);
+        final String barPath = "/foo/bar";
+        final Node bar = mockery.mock(Node.class, barPath);
+        final Node root = mockery.mock(Node.class, "/");
+        
+        mockery.checking(new Expectations() {{
+            allowing(s).itemExists(with(any(String.class)));
+            will(returnValue(false));
+            
+            allowing(s).itemExists(barPath);
+            will(returnValue(true));
+            
+            allowing(s).getItem(fooPath);
+            will(returnValue(foo));
+            
+            allowing(s).getItem(barPath);
+            will(returnValue(bar));
+            
+            allowing(s).getRootNode();
+            will(returnValue(root));
+            
+            allowing(root).addNode(with(any(String.class)), with(any(String.class)));
+            will(throwException(new ItemExistsException("As if the child node was not readable")));
+            
+            allowing(s).save();
+       }});
+        
+        final DeepNodeCreator c = new DeepNodeCreator();
+        
+        try {
+            c.deepCreateNode("/foo/bar/something", s, "nt:unstructured");
+            fail("Expecting an exception as /foo is not accessible");
+        } catch(ItemExistsException asExpected) {
+            // all is good
+        }
     }
 }
