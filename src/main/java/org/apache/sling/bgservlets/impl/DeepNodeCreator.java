@@ -47,11 +47,14 @@ public class DeepNodeCreator {
         } else {
             final int slashPos = path.lastIndexOf("/");
             String parentPath = path.substring(0, slashPos);
+            Node parent = null;
             if(parentPath.length() == 0) {
-                parentPath = "/";
+                // reached the root
+                parent = session.getRootNode();
+            } else {
+                parent = deepCreateNode(parentPath, session, nodeType);
             }
             final String childPath = path.substring(slashPos + 1);
-            final Node parent = deepCreateNode(parentPath, session, nodeType);
             result = parent.addNode(childPath, getNodeType(parent, childPath, nodeType));
             nodeCreated(result);
             session.save();
