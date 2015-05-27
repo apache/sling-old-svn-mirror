@@ -20,9 +20,11 @@ package org.apache.sling.testing.mock.osgi;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -38,6 +40,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.Constants;
+import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
@@ -177,5 +180,35 @@ public class MockBundleContextTest {
     public void testGetProperty() {
         assertNull(bundleContext.getProperty("anyProperty"));
     }
+    
+    @Test
+    public void testObjectClassFilterMatches() throws InvalidSyntaxException {
+        
+        Filter filter = bundleContext.createFilter("(" + Constants.OBJECTCLASS + "=" + Integer.class.getName() + ")");
+        
+        ServiceRegistration serviceRegistration = bundleContext.registerService(Integer.class.getName(), Integer.valueOf(1), null);
+        
+        assertTrue(filter.match(serviceRegistration.getReference()));
+    }
 
+    @Test
+    public void testNestedObjectClassFilterMatches() throws InvalidSyntaxException {
+        
+        // this matches what the ServiceTracker creates
+        Filter filter = bundleContext.createFilter("((" + Constants.OBJECTCLASS + "=" + Integer.class.getName() + "))");
+        
+        ServiceRegistration serviceRegistration = bundleContext.registerService(Integer.class.getName(), Integer.valueOf(1), null);
+        
+        assertTrue(filter.match(serviceRegistration.getReference()));
+    }
+    
+    @Test
+    public void testObjectClassFilterDoesNotMatch() throws InvalidSyntaxException {
+        
+        Filter filter = bundleContext.createFilter("(" + Constants.OBJECTCLASS + "=" + Integer.class.getName() + ")");
+        
+        ServiceRegistration serviceRegistration = bundleContext.registerService(Long.class.getName(), Long.valueOf(1), null);
+        
+        assertFalse(filter.match(serviceRegistration.getReference()));
+    }
 }
