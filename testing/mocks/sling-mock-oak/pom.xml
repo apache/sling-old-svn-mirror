@@ -47,7 +47,7 @@
     </scm>
 
     <dependencies>
-  
+
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.sling-mock</artifactId>
@@ -62,7 +62,7 @@
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
-  
+
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.testing</artifactId>
