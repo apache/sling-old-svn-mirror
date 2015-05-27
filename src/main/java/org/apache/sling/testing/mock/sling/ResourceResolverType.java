@@ -74,6 +74,8 @@ public enum ResourceResolverType {
      * implementation.</li>
      * <li>The JCR repository is started on first access, this may take some
      * seconds.</li>
+     * <li>The <tt>MemoryNodeStore</tt> implementation is used, with no 
+     * customisations</li>
      * <li>Beware: The repository is not cleared for each unit test, so make
      * sure us use a unique node path for each unit test.</li>
      * </ul>
