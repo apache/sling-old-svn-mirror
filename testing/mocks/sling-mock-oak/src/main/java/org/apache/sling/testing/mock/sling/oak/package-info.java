@@ -17,7 +17,7 @@
  * under the License.
  */
 /**
- * Mock implementation of selected Sling APIs.
+ * Sling Mock Jackrabbit Oak-based Resource Resolver
  */
-@aQute.bnd.annotation.Version("1.4")
-package org.apache.sling.testing.mock.sling;
+@aQute.bnd.annotation.Version("0.1")
+package org.apache.sling.testing.mock.sling.oak;

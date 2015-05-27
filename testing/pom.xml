@@ -57,6 +57,7 @@
     <module>mocks/osgi-mock</module>
     <module>mocks/sling-mock</module>
     <module>mocks/sling-mock-jackrabbit</module>
+    <module>mocks/sling-mock-oak</module>
     <module>sling-pax-util</module>
     <module>samples/sample-tests</module>
     <module>samples/failing-tests</module>

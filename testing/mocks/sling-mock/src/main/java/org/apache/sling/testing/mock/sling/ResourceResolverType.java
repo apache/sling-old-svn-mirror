@@ -66,6 +66,20 @@ public enum ResourceResolverType {
      */
     JCR_JACKRABBIT("org.apache.sling.testing.mock.sling.jackrabbit.JackrabbitMockResourceResolverAdapter",
             "org.apache.sling:org.apache.sling.testing.sling-mock-jackrabbit"),
+
+    /**
+     * Uses a real JCR Jackrabbit Oak repository.
+     * <ul>
+     * <li>Uses the real Sling Resource Resolver and JCR Resource mapping
+     * implementation.</li>
+     * <li>The JCR repository is started on first access, this may take some
+     * seconds.</li>
+     * <li>Beware: The repository is not cleared for each unit test, so make
+     * sure us use a unique node path for each unit test.</li>
+     * </ul>
+     */
+    JCR_OAK("org.apache.sling.testing.mock.sling.oak.OakMockResourceResolverAdapter",
+            "org.apache.sling:org.apache.sling.testing.sling-mock-jackrabbit-oak"),
             
     /**
      * Provides resource resolver environment without any ResourceProvider.

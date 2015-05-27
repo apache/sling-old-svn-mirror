@@ -16,8 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.sling.testing.mock.sling.oak;
+
+import org.apache.jackrabbit.oak.jcr.Jcr;
+import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.commons.testing.jcr.RepositoryUtil;
+import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.testing.mock.sling.spi.ResourceResolverTypeAdapter;
+
 /**
- * Mock implementation of selected Sling APIs.
+ * Resource resolver type adapter for Jackrabbit Oak repository.
  */
-@aQute.bnd.annotation.Version("1.4")
-package org.apache.sling.testing.mock.sling;
+public class OakMockResourceResolverAdapter implements ResourceResolverTypeAdapter {
+
+    @Override
+    public ResourceResolverFactory newResourceResolverFactory() {
+        return null;
+    }
+
+    @Override
+    public SlingRepository newSlingRepository() {
+        
+        return new RepositoryUtil.RepositoryWrapper(new Jcr().createRepository());
+    }
+
+}

@@ -16,8 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * Mock implementation of selected Sling APIs.
- */
-@aQute.bnd.annotation.Version("1.4")
-package org.apache.sling.testing.mock.sling;
+package org.apache.sling.testing.mock.sling.oak.resource;
+
+import org.apache.sling.testing.mock.sling.ResourceResolverType;
+import org.apache.sling.testing.mock.sling.resource.AbstractJcrNamespaceTest;
+import org.junit.Ignore;
+
+//TEST IS DISABLED currently, it does not work with oak repository yet
+@Ignore
+public class JcrNamespaceTest extends AbstractJcrNamespaceTest {
+
+    @Override
+    protected ResourceResolverType getResourceResolverType() {
+        return ResourceResolverType.JCR_OAK;
+    }
+
+}
