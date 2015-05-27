@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.Reference;
@@ -36,6 +38,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
+import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceEvent;
@@ -51,11 +54,13 @@ import com.google.common.collect.ImmutableList;
  */
 class MockBundleContext implements BundleContext {
 
+    private static final Pattern SIMPLE_OBJECT_CLASS_FILTER = Pattern.compile("^\\(" + Constants.OBJECTCLASS +"="+"([a-zA-Z\\.\\$]+)" +"\\)$");
+
     private final MockBundle bundle;
     private final SortedSet<MockServiceRegistration> registeredServices = new TreeSet<MockServiceRegistration>();
     private final List<ServiceListener> serviceListeners = new ArrayList<ServiceListener>();
     private final List<BundleListener> bundleListeners = new ArrayList<BundleListener>();
-
+    
     public MockBundleContext() {
         this.bundle = new MockBundle(this);
     }
@@ -67,8 +72,26 @@ class MockBundleContext implements BundleContext {
 
     @Override
     public Filter createFilter(final String s) {
-        // return filter that denies all
+        String filter = simplifyFilter(s);
+        
+        Matcher matcher = SIMPLE_OBJECT_CLASS_FILTER.matcher(filter);
+        
+        // try to extract a single objectClass, should cover most cases
+        if ( matcher.matches() ) {
+            return new ClassNameFilter(matcher.group(1));
+        } 
+        
+        // fallback to a filter that denies all
         return new MockFilter();
+        
+    }
+
+    private String simplifyFilter(String s) {
+        // a single hardcoded simplification for now
+        if ( s.startsWith("((") && s.endsWith("))") ) {
+            return s.substring(1, s.length() - 1);
+        }
+        return s;
     }
 
     @Override
