@@ -23,7 +23,9 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -58,7 +60,7 @@ class MockBundleContext implements BundleContext {
 
     private final MockBundle bundle;
     private final SortedSet<MockServiceRegistration> registeredServices = new TreeSet<MockServiceRegistration>();
-    private final List<ServiceListener> serviceListeners = new ArrayList<ServiceListener>();
+    private final Map<ServiceListener, Filter> serviceListeners = new HashMap<ServiceListener, Filter>();
     private final List<BundleListener> bundleListeners = new ArrayList<BundleListener>();
     
     public MockBundleContext() {
@@ -237,10 +239,8 @@ class MockBundleContext implements BundleContext {
     }
 
     @Override
-    public void addServiceListener(final ServiceListener serviceListener, final String s) {
-        if (!serviceListeners.contains(serviceListener)) {
-            serviceListeners.add(serviceListener);
-        }
+    public void addServiceListener(final ServiceListener serviceListener, final String filter) {
+        serviceListeners.put(serviceListener, filter != null ? createFilter(filter) : null );
     }
 
     @Override
@@ -250,8 +250,10 @@ class MockBundleContext implements BundleContext {
 
     private void notifyServiceListeners(int eventType, ServiceReference serviceReference) {
         final ServiceEvent event = new ServiceEvent(eventType, serviceReference);
-        for (ServiceListener serviceListener : serviceListeners) {
-            serviceListener.serviceChanged(event);
+        for ( Map.Entry<ServiceListener, Filter> entry : serviceListeners.entrySet()) {
+            if ( entry.getValue() == null || entry.getValue().match(serviceReference)) {
+                entry.getKey().serviceChanged(event);
+            }
         }
     }
 
