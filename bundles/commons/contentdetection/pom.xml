@@ -34,7 +34,7 @@
     <packaging>bundle</packaging>
 
     <name>Apache Sling Content Detection Support</name>
-    <description>Support for MIME type detection on the basis of contents.</description>
+    <description>Content-based MIME type detection</description>
 
     <properties>
         <powermock.version>1.6.2</powermock.version>
@@ -42,14 +42,14 @@
 
     <dependencies>
 
-        <!-- OSGi Dependncies-->
+        <!-- OSGi Dependencies-->
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
             <scope>provided</scope>
         </dependency>
 
-        <!-- Sling Dependncies-->
+        <!-- Sling Dependencies-->
         <dependency>
             <version>2.1.9-SNAPSHOT</version>
             <groupId>org.apache.sling</groupId>
@@ -57,7 +57,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Other Dependncies-->
+        <!-- Other Dependencies-->
         <dependency>
             <version>1.2</version>
             <groupId>org.apache.tika</groupId>
@@ -65,7 +65,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Test Dependncies-->
+        <!-- Test Dependencies-->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -109,20 +109,6 @@
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
-                <configuration>
-                    <instructions>
-                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                        <Bundle-Version>${project.version}</Bundle-Version>
-                        <Export-Package>
-                            org.apache.sling.commons.contentdetection.serversidetests,
-                            org.apache.sling.commons.contentdetection
-                        </Export-Package>
-                        <Import-Package>
-                            *
-                        </Import-Package>
-                        <Sling-Test-Regexp>.*Test</Sling-Test-Regexp>
-                    </instructions>
-                </configuration>
             </plugin>
 
             <plugin>
