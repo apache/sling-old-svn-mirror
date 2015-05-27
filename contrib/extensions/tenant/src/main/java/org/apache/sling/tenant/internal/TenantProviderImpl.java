@@ -209,6 +209,8 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                     // create the tenant
                     Resource tenantRes = createTenantResource(adminResolver, tenantId, properties);
                     TenantImpl tenant = new TenantImpl(tenantRes);
+                    // Committing the tenant resource before passing it to customizers - SLING-4753
+                    adminResolver.commit();
                     customizeTenant(tenantRes, tenant);
                     adminResolver.commit();
 
