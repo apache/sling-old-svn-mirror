@@ -103,7 +103,7 @@
       <plugin>
         <groupId>org.apache.sling</groupId>
         <artifactId>slingstart-maven-plugin</artifactId>
-        <version>1.1.1-SNAPSHOT</version>
+        <version>1.1.0</version>
         <extensions>true</extensions>
         <executions>
           <execution>
@@ -121,7 +121,9 @@
               <controlPort>${sling.control.port}</controlPort>
               <runmode>jackrabbit</runmode>
               <contextPath>${http.base.path}</contextPath>
+<!-- TODO activate when never slingstart plugin is available
               <debug>${debug.options}</debug>
+-->
             </server>
           </servers>
         </configuration>
