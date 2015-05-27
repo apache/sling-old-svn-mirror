@@ -53,6 +53,7 @@ class MockServiceRegistration implements ServiceRegistration, Comparable<MockSer
         this.service = service;
         this.properties = properties != null ? properties : new Hashtable<String,Object>();
         this.properties.put(Constants.SERVICE_ID, this.serviceId);
+        this.properties.put(Constants.OBJECTCLASS, clazzes);
         this.serviceReference = new MockServiceReference(bundle, this);
         this.bundleContext = bundleContext;
         readOsgiMetadata();

@@ -18,6 +18,7 @@
  */
 package org.apache.sling.testing.mock.osgi;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
@@ -63,8 +64,11 @@ public class MockServiceReferenceTest {
 
     @Test
     public void testProperties() {
-        assertEquals(2, this.serviceReference.getPropertyKeys().length);
+        assertEquals(3, this.serviceReference.getPropertyKeys().length);
         assertEquals("value1", this.serviceReference.getProperty("customProp1"));
+        // mandatory properties set by the container
+        assertNotNull(this.serviceReference.getProperty(Constants.SERVICE_ID));
+        assertArrayEquals((String[]) this.serviceReference.getProperty(Constants.OBJECTCLASS), new String[] { String.class.getName() });
     }
 
     @Test
