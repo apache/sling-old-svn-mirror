@@ -175,12 +175,14 @@ public class QueueManager
         logger.debug("Queue manager maintenance: Starting #{}", this.schedulerRuns);
 
         // queue maintenance
-        for(final JobQueueImpl jbq : this.queues.values() ) {
-            jbq.maintain();
+        if ( this.isActive.get() ) {
+            for(final JobQueueImpl jbq : this.queues.values() ) {
+                jbq.maintain();
+            }
         }
 
         // full topic scan is done every third run
-        if ( schedulerRuns % 3 == 0 ) {
+        if ( schedulerRuns % 3 == 0 && this.isActive.get() ) {
             this.fullTopicScan();
         }
 
@@ -244,11 +246,10 @@ public class QueueManager
             }
         }
         if ( queue != null ) {
-            if ( isNewQueue ) {
-                queue.startJobs();
-            } else {
+            if ( !isNewQueue ) {
                 queue.wakeUpQueue(topics);
             }
+            queue.startJobs();
         }
     }
 
