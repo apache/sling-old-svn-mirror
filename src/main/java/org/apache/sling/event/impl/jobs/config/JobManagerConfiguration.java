@@ -501,25 +501,29 @@ public class JobManagerConfiguration implements TopologyEventListener {
         final CheckTopologyTask mt = new CheckTopologyTask(this);
         mt.fullRun(!isConfigChange, isConfigChange);
 
-        // and run checker again in some seconds (if leader)
-        // notify listeners afterwards
-        final Scheduler local = this.scheduler;
-        if ( local != null ) {
-            local.schedule(new Runnable() {
+        if ( eventType == Type.TOPOLOGY_INIT ) {
+            notifiyListeners();
+        } else {
+            // and run checker again in some seconds (if leader)
+            // notify listeners afterwards
+            final Scheduler local = this.scheduler;
+            if ( local != null ) {
+                local.schedule(new Runnable() {
 
-                    @Override
-                    public void run() {
-                        if ( newCaps.isLeader() && newCaps.isActive() ) {
-                            mt.assignUnassignedJobs();
-                        }
-                        // start listeners
-                        synchronized ( listeners ) {
-                            if ( topologyCapabilities != null && newCaps.isActive() ) {
-                                notifiyListeners();
+                        @Override
+                        public void run() {
+                            if ( newCaps.isLeader() && newCaps.isActive() ) {
+                                mt.assignUnassignedJobs();
+                            }
+                            // start listeners
+                            if ( newCaps.isActive() ) {
+                                synchronized ( listeners ) {
+                                    notifiyListeners();
+                                }
                             }
                         }
-                    }
-                }, local.AT(new Date(System.currentTimeMillis() + this.backgroundLoadDelay * 1000)));
+                    }, local.AT(new Date(System.currentTimeMillis() + this.backgroundLoadDelay * 1000)));
+            }
         }
         logger.debug("Job processing started");
     }

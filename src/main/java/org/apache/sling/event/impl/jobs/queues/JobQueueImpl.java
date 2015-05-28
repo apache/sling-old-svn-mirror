@@ -143,7 +143,7 @@ public class JobQueueImpl
         if ( cache.isEmpty() ) {
             return null;
         }
-        return new JobQueueImpl(name, config, services, topics, cache);
+        return new JobQueueImpl(name, config, services, cache);
     }
 
     /**
@@ -152,13 +152,11 @@ public class JobQueueImpl
      * @param name The queue name
      * @param config The queue configuration
      * @param services The queue services
-     * @param topics The topics handled by this queue
      * @param cache The job cache
      */
     private JobQueueImpl(final String name,
                         final InternalQueueConfiguration config,
                         final QueueServices services,
-                        final Set<String> topics,
                         final QueueJobCache cache) {
         if ( config.getOwnThreadPoolSize() > 0 ) {
             this.threadPool = new EventingThreadPool(services.threadPoolManager, config.getOwnThreadPoolSize());
@@ -492,7 +490,6 @@ public class JobQueueImpl
      */
     public void wakeUpQueue(final Set<String> topics) {
         this.cache.handleNewTopics(topics);
-        this.startJobs();
     }
 
     /**
