@@ -26,6 +26,7 @@ import org.quartz.SchedulerException;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -58,24 +59,31 @@ public class WebConsolePrinterTest {
         consolePrinter.printConfiguration(w);
         w.close();
 
-        BufferedReader reader = new BufferedReader(new FileReader(f));
+        final BufferedReader reader = new BufferedReader(new FileReader(f));
 
-        assertEquals("Apache Sling Scheduler", reader.readLine());
-        reader.readLine();
-        assertEquals("Status : active", reader.readLine());
-        assertEquals("Name   : ApacheSling", reader.readLine());
-        assertTrue(reader.readLine().startsWith("Id     : "));
-        reader.readLine();
-        assertTrue(reader.readLine().startsWith("Job : testName3"));
-        assertTrue(reader.readLine().startsWith("Trigger : Trigger 'DEFAULT.testName3'"));
-        reader.readLine();
-        assertTrue(reader.readLine().startsWith("Job : testName2"));
-        assertTrue(reader.readLine().startsWith("Trigger : Trigger 'DEFAULT.testName2'"));
-        reader.readLine();
-        assertTrue(reader.readLine().startsWith("Job : testName1"));
-        assertTrue(reader.readLine().startsWith("Trigger : Trigger 'DEFAULT.testName1'"));
-
-        f.delete();
+        try {
+            assertEquals("Apache Sling Scheduler", reader.readLine());
+            reader.readLine();
+            assertEquals("Status : active", reader.readLine());
+            assertEquals("Name   : ApacheSling", reader.readLine());
+            assertTrue(reader.readLine().startsWith("Id     : "));
+            reader.readLine();
+            assertRegexp(reader.readLine(), "^Job.*testName3.*");
+            assertRegexp(reader.readLine(), "^Trigger.*Trigger.*DEFAULT.testName3.*");
+            reader.readLine();
+            assertRegexp(reader.readLine(), "^Job.*testName2.*");
+            assertRegexp(reader.readLine(), "^Trigger.*Trigger.*DEFAULT.testName2.*");
+            reader.readLine();
+            assertRegexp(reader.readLine(), "^Job.*testName1.*");
+            assertRegexp(reader.readLine(), "^Trigger.*Trigger.*DEFAULT.testName1.*");
+        } finally {
+            reader.close();
+            f.delete();
+        }
+    }
+    
+    private void assertRegexp(String input, String regexp) {
+        assertTrue("Expecting regexp match: '" + input + "' / '" + regexp + "'", Pattern.matches(regexp, input));
     }
 
     @After
