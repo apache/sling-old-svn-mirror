@@ -32,7 +32,10 @@ public class SlingLaunchpadJackrabbitDerbyConfiguration extends SlingLaunchpadCo
         return OptionUtils.combine(launchpadConfiguration(),
             editConfigurationFilePut("etc/custom.properties", "sling.run.modes", "jackrabbit"),
             addBootFeature("sling-jcr-jackrabbit-security"),
-            addBootFeature("sling-launchpad-jackrabbit-derby")
+            addBootFeature("sling-launchpad-jackrabbit-derby"),
+            // configurations for tests
+            editConfigurationFilePut("etc/integrationTestsConfig.cfg", "message", "This test config should be loaded at startup"),
+            editConfigurationFilePut("etc/org.apache.sling.servlets.resolver.SlingServletResolver.cfg", "servletresolver.cacheSize", "0")
         );
     }
 

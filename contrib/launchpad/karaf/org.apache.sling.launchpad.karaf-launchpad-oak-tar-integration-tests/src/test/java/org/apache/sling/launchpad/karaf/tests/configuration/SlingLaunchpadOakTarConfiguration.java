@@ -31,7 +31,10 @@ public class SlingLaunchpadOakTarConfiguration extends SlingLaunchpadConfigurati
     public Option[] configuration() {
         return OptionUtils.combine(launchpadConfiguration(),
             editConfigurationFilePut("etc/custom.properties", "sling.run.modes", "oak,oak_tar"),
-            addBootFeature("sling-launchpad-oak-tar")
+            addBootFeature("sling-launchpad-oak-tar"),
+            // configurations for tests
+            editConfigurationFilePut("etc/integrationTestsConfig.cfg", "message", "This test config should be loaded at startup"),
+            editConfigurationFilePut("etc/org.apache.sling.servlets.resolver.SlingServletResolver.cfg", "servletresolver.cacheSize", "0")
         );
     }
 
