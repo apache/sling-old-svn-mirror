@@ -62,11 +62,11 @@ public class WebConsolePrinterTest {
         final BufferedReader reader = new BufferedReader(new FileReader(f));
 
         try {
-            assertEquals("Apache Sling Scheduler", reader.readLine());
+            assertRegexp(reader.readLine(), ".*Apache Sling Scheduler.*");
             reader.readLine();
-            assertEquals("Status : active", reader.readLine());
-            assertEquals("Name   : ApacheSling", reader.readLine());
-            assertTrue(reader.readLine().startsWith("Id     : "));
+            assertRegexp(reader.readLine(), ".*Status.*active.*");
+            assertRegexp(reader.readLine(), ".*Name.*ApacheSling.*");
+            assertRegexp(reader.readLine(), ".*Id.*");
             reader.readLine();
             assertRegexp(reader.readLine(), "^Job.*testName3.*");
             assertRegexp(reader.readLine(), "^Trigger.*Trigger.*DEFAULT.testName3.*");
