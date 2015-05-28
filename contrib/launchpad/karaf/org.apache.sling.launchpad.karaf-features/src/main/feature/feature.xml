@@ -73,7 +73,6 @@
     <!-- (not using org.apache.sling.commons.logservice) -->
     <bundle>mvn:org.apache.sling/org.apache.sling.commons.mime/2.1.8</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.commons.osgi/2.2.2</bundle>
-    <!-- (not using org.apache.sling.commons.testing) -->
     <!-- Apache Sling Launchpad -->
     <bundle>mvn:org.apache.sling/org.apache.sling.launchpad.api/1.1.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.launchpad.karaf/${project.version}</bundle>
