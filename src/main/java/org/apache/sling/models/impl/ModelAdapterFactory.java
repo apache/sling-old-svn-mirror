@@ -142,29 +142,29 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
     @Reference(name = "injector", referenceInterface = Injector.class,
             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    private final Map<Object, Injector> injectors = new TreeMap<Object, Injector>();
+    private final @Nonnull Map<Object, Injector> injectors = new TreeMap<Object, Injector>();
 
-    private volatile Injector[] sortedInjectors = new Injector[0];
+    private volatile @Nonnull Injector[] sortedInjectors = new Injector[0];
 
     @Reference(name = "injectAnnotationProcessorFactory", referenceInterface = InjectAnnotationProcessorFactory.class,
             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    private final Map<Object, InjectAnnotationProcessorFactory> injectAnnotationProcessorFactories = new TreeMap<Object, InjectAnnotationProcessorFactory>();
+    private final @Nonnull Map<Object, InjectAnnotationProcessorFactory> injectAnnotationProcessorFactories = new TreeMap<Object, InjectAnnotationProcessorFactory>();
 
-    private volatile InjectAnnotationProcessorFactory[] sortedInjectAnnotationProcessorFactories = new InjectAnnotationProcessorFactory[0];
+    private volatile @Nonnull InjectAnnotationProcessorFactory[] sortedInjectAnnotationProcessorFactories = new InjectAnnotationProcessorFactory[0];
     
     @Reference(name = "injectAnnotationProcessorFactory2", referenceInterface = InjectAnnotationProcessorFactory2.class,
             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    private final Map<Object, InjectAnnotationProcessorFactory2> injectAnnotationProcessorFactories2 = new TreeMap<Object, InjectAnnotationProcessorFactory2>();
+    private final @Nonnull Map<Object, InjectAnnotationProcessorFactory2> injectAnnotationProcessorFactories2 = new TreeMap<Object, InjectAnnotationProcessorFactory2>();
 
-    private volatile InjectAnnotationProcessorFactory2[] sortedInjectAnnotationProcessorFactories2 = new InjectAnnotationProcessorFactory2[0];
+    private volatile @Nonnull InjectAnnotationProcessorFactory2[] sortedInjectAnnotationProcessorFactories2 = new InjectAnnotationProcessorFactory2[0];
 
     @Reference(name = "staticInjectAnnotationProcessorFactory", referenceInterface = StaticInjectAnnotationProcessorFactory.class,
             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    private final Map<Object, StaticInjectAnnotationProcessorFactory> staticInjectAnnotationProcessorFactories = new TreeMap<Object, StaticInjectAnnotationProcessorFactory>();
+    private final @Nonnull Map<Object, StaticInjectAnnotationProcessorFactory> staticInjectAnnotationProcessorFactories = new TreeMap<Object, StaticInjectAnnotationProcessorFactory>();
 
     @Reference(name = "implementationPicker", referenceInterface = ImplementationPicker.class,
             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    private final Map<Object, ImplementationPicker> implementationPickers = new TreeMap<Object, ImplementationPicker>();
+    private final @Nonnull Map<Object, ImplementationPicker> implementationPickers = new TreeMap<Object, ImplementationPicker>();
     
     @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policyOption=ReferencePolicyOption.GREEDY)
     private ModelValidation modelValidation;
