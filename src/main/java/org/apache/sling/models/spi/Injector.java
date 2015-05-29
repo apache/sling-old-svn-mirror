@@ -38,7 +38,7 @@ public interface Injector {
      * Produce a value for an injection point.
      *
      * @param adaptable the object which should be used as the basis for value resolution.
-     * @param name the injection point name
+     * @param name the injection point name (may be only {@code null} if injector implements the {@link AcceptsNullName} interface, otherwise never {@code null})
      * @param declaredType the declared type of the injection point
      * @param element the injection point itself
      * @param callbackRegistry a registry object to register a callback object which will be
@@ -46,5 +46,5 @@ public interface Injector {
      *
      * @return the value to be injected or null if no value could be resolved
      */
-    @CheckForNull Object getValue(@Nonnull Object adaptable, @Nonnull String name, @Nonnull Type declaredType, @Nonnull AnnotatedElement element, @Nonnull DisposalCallbackRegistry callbackRegistry);
+    @CheckForNull Object getValue(@Nonnull Object adaptable, String name, @Nonnull Type declaredType, @Nonnull AnnotatedElement element, @Nonnull DisposalCallbackRegistry callbackRegistry);
 }
