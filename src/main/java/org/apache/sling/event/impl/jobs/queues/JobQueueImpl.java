@@ -528,8 +528,8 @@ public class JobQueueImpl
                 info.finalState = InternalJobState.SUCCEEDED;
                 break;
             case QUEUED : // check if we exceeded the number of retries
-                final int retries = (Integer) handler.getJob().getProperty(Job.PROPERTY_JOB_RETRIES);
-                int retryCount = (Integer)handler.getJob().getProperty(Job.PROPERTY_JOB_RETRY_COUNT);
+                final int retries = handler.getJob().getProperty(Job.PROPERTY_JOB_RETRIES, 0);
+                int retryCount = handler.getJob().getProperty(Job.PROPERTY_JOB_RETRY_COUNT, 0);
 
                 retryCount++;
                 if ( retries != -1 && retryCount > retries ) {
