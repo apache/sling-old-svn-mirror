@@ -269,7 +269,14 @@ public class JobQueueImpl
 
                 if ( handler.getConsumer() != null ) {
                     this.services.configuration.getAuditLogger().debug("START OK : {}", job.getId());
-                    final long queueTime = handler.started - job.getProperty(JobImpl.PROPERTY_JOB_QUEUED, Calendar.class).getTime().getTime();
+                    // sanity check for the queued property
+                    Calendar queued = job.getProperty(JobImpl.PROPERTY_JOB_QUEUED, Calendar.class);
+                    if ( queued == null ) {
+                        // we simply use a date of ten seconds ago
+                        queued = Calendar.getInstance();
+                        queued.setTimeInMillis(System.currentTimeMillis() - 10000);
+                    }
+                    final long queueTime = handler.started - queued.getTimeInMillis();
                     // update statistics
                     this.services.statisticsManager.jobStarted(this.queueName, job.getTopic(), queueTime);
                     // send notification
