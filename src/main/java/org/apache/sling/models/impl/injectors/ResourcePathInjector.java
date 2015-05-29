@@ -23,6 +23,8 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
@@ -53,13 +55,13 @@ public class ResourcePathInjector extends AbstractInjector implements Injector, 
     private static final Logger LOG = LoggerFactory.getLogger(ResourcePathInjector.class);
 
     @Override
-    public String getName() {
+    public @Nonnull String getName() {
         return "resource-path";
     }
 
     @Override
-    public Object getValue(Object adaptable, String name, Type declaredType, AnnotatedElement element,
-            DisposalCallbackRegistry callbackRegistry) {
+    public Object getValue(@Nonnull Object adaptable, String name, @Nonnull Type declaredType, @Nonnull AnnotatedElement element,
+            @Nonnull DisposalCallbackRegistry callbackRegistry) {
         String[] resourcePaths = null;
         Path pathAnnotation = element.getAnnotation(Path.class);
         ResourcePath resourcePathAnnotation = element.getAnnotation(ResourcePath.class);

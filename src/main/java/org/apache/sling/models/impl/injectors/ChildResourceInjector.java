@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
@@ -44,13 +46,13 @@ import org.osgi.framework.Constants;
 public class ChildResourceInjector extends AbstractInjector implements Injector, InjectAnnotationProcessorFactory2 {
 
     @Override
-    public String getName() {
+    public @Nonnull String getName() {
         return "child-resources";
     }
 
     @Override
-    public Object getValue(Object adaptable, String name, Type declaredType, AnnotatedElement element,
-            DisposalCallbackRegistry callbackRegistry) {
+    public Object getValue(@Nonnull Object adaptable, String name, @Nonnull Type declaredType, @Nonnull AnnotatedElement element,
+            @Nonnull DisposalCallbackRegistry callbackRegistry) {
         if (adaptable instanceof Resource) {
             Resource child = ((Resource) adaptable).getChild(name);
             if (child != null) {

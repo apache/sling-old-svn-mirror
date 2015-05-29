@@ -39,6 +39,8 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.beanutils.PropertyUtils;
@@ -100,7 +102,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         private List<DisposalCallback> callbacks = new ArrayList<DisposalCallback>();
 
         @Override
-        public void addDisposalCallback(DisposalCallback callback) {
+        public void addDisposalCallback(@Nonnull DisposalCallback callback) {
             callbacks.add(callback);
         }
 
@@ -189,7 +191,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     }
 
     @Override
-    public <ModelType> ModelType createModel(Object adaptable, Class<ModelType> type) throws MissingElementsException,
+    public @Nonnull <ModelType> ModelType createModel(@Nonnull Object adaptable, @Nonnull Class<ModelType> type) throws MissingElementsException,
             InvalidAdaptableException, InvalidValidationModelException, InvalidResourceException {
         if (adaptable == null) {
             throw new IllegalArgumentException("Given adaptable is null!");
@@ -205,7 +207,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     }
 
     @Override
-    public boolean canCreateFromAdaptable(Object adaptable, Class<?> modelClass) throws ModelClassException {
+    public boolean canCreateFromAdaptable(@Nonnull Object adaptable, @Nonnull Class<?> modelClass) throws ModelClassException {
         return internalCanCreateFromAdaptable(adaptable, modelClass);
     }
 
@@ -225,7 +227,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     }
 
     @Override
-    public boolean isModelClass(Object adaptable, Class<?> requestedType) {
+    public boolean isModelClass(@Nonnull Object adaptable, @Nonnull Class<?> requestedType) {
         ModelClass<?> type = getImplementationTypeForAdapterType(requestedType, adaptable);
         return type.hasModelAnnotation();
     }
@@ -382,8 +384,8 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         }
     }
 
-    private RuntimeException injectElement(final InjectableElement element, final Object adaptable, 
-            final Model modelAnnotation, final DisposalCallbackRegistry registry,
+    private @CheckForNull RuntimeException injectElement(final InjectableElement element, final Object adaptable, 
+            final Model modelAnnotation, final @Nonnull DisposalCallbackRegistry registry,
             final InjectCallback callback) {
 
         InjectAnnotationProcessor annotationProcessor = null;
@@ -998,19 +1000,19 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         }
     }
 
-    Injector[] getInjectors() {
+    @Nonnull Injector[] getInjectors() {
         return sortedInjectors;
     }
 
-    InjectAnnotationProcessorFactory[] getInjectAnnotationProcessorFactories() {
+    @Nonnull InjectAnnotationProcessorFactory[] getInjectAnnotationProcessorFactories() {
         return sortedInjectAnnotationProcessorFactories;
     }
 
-    InjectAnnotationProcessorFactory2[] getInjectAnnotationProcessorFactories2() {
+    @Nonnull InjectAnnotationProcessorFactory2[] getInjectAnnotationProcessorFactories2() {
         return sortedInjectAnnotationProcessorFactories2;
     }
 
-    Collection<StaticInjectAnnotationProcessorFactory> getStaticInjectAnnotationProcessorFactories() {
+    @Nonnull Collection<StaticInjectAnnotationProcessorFactory> getStaticInjectAnnotationProcessorFactories() {
         return staticInjectAnnotationProcessorFactories.values();
     }
 

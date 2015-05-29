@@ -18,6 +18,8 @@
  */
 package org.apache.sling.models.impl;
 
+import javax.annotation.Nonnull;
+
 /**
  * This class encapsulates a value of a generic class in case of success or the
  * {@link RuntimeException}s in case of an error. It is used because the
@@ -55,7 +57,7 @@ public class Result<SuccessObjectType> {
      * @throws IllegalStateException
      *             in case this object does not represent a failure
      */
-    public RuntimeException getThrowable() {
+    public @Nonnull RuntimeException getThrowable() {
         if (t == null) {
             throw new IllegalStateException("No throwable available");
         }
@@ -68,7 +70,7 @@ public class Result<SuccessObjectType> {
      * @throws IllegalStateException
      *             in case this object does not represent a success
      */
-    public SuccessObjectType getValue() {
+    public @Nonnull SuccessObjectType getValue() {
         if (object == null) {
             throw new IllegalStateException(
                     "Success object is not set, but rather an exception is encapsulated: " + t.getMessage(), t);

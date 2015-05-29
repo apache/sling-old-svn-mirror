@@ -19,6 +19,7 @@ package org.apache.sling.models.impl.injectors;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
 
+import javax.annotation.Nonnull;
 import javax.servlet.ServletRequest;
 
 import org.apache.felix.scr.annotations.Component;
@@ -44,7 +45,7 @@ public class BindingsInjector implements Injector, StaticInjectAnnotationProcess
     private static final Logger log = LoggerFactory.getLogger(BindingsInjector.class);
 
     @Override
-    public String getName() {
+    public @Nonnull String getName() {
         return "script-bindings";
     }
 
@@ -52,8 +53,8 @@ public class BindingsInjector implements Injector, StaticInjectAnnotationProcess
         return bindings.get(name);
     }
 
-    public Object getValue(Object adaptable, String name, Type type, AnnotatedElement element,
-            DisposalCallbackRegistry callbackRegistry) {
+    public Object getValue(@Nonnull Object adaptable, String name, @Nonnull Type type, @Nonnull AnnotatedElement element,
+            @Nonnull DisposalCallbackRegistry callbackRegistry) {
         SlingBindings bindings = getBindings(adaptable);
         if (bindings == null) {
             return null;
