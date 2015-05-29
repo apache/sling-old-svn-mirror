@@ -85,7 +85,7 @@ public class JobHandler {
             final Resource jobResource = resolver.getResource(job.getResourcePath());
             if ( jobResource != null ) {
                 final ModifiableValueMap mvm = jobResource.adaptTo(ModifiableValueMap.class);
-                mvm.put(Job.PROPERTY_JOB_RETRY_COUNT, job.getProperty(Job.PROPERTY_JOB_RETRY_COUNT));
+                mvm.put(Job.PROPERTY_JOB_RETRY_COUNT, job.getProperty(Job.PROPERTY_JOB_RETRY_COUNT, Integer.class));
                 if ( job.getProperty(Job.PROPERTY_RESULT_MESSAGE) != null ) {
                     mvm.put(Job.PROPERTY_RESULT_MESSAGE, job.getProperty(Job.PROPERTY_RESULT_MESSAGE));
                 }
