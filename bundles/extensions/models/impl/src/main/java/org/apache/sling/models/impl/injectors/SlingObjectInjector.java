@@ -55,7 +55,7 @@ public final class SlingObjectInjector implements Injector, StaticInjectAnnotati
     /**
      * Injector name
      */
-    public static final String NAME = "sling-object";
+    public static final @Nonnull String NAME = "sling-object";
 
     @Override
     public @Nonnull String getName() {
