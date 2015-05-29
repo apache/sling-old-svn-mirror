@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import javax.annotation.Nonnull;
 import javax.servlet.ServletRequest;
 
 import org.apache.commons.lang.StringUtils;
@@ -62,7 +63,7 @@ public class OSGiServiceInjector implements Injector, StaticInjectAnnotationProc
     private BundleContext bundleContext;
 
     @Override
-    public String getName() {
+    public @Nonnull String getName() {
         return "osgi-services";
     }
 
@@ -71,8 +72,8 @@ public class OSGiServiceInjector implements Injector, StaticInjectAnnotationProc
         this.bundleContext = ctx.getBundleContext();
     }
 
-    public Object getValue(Object adaptable, String name, Type type, AnnotatedElement element,
-            DisposalCallbackRegistry callbackRegistry) {
+    public Object getValue(@Nonnull Object adaptable, String name, @Nonnull Type type, @Nonnull AnnotatedElement element,
+            @Nonnull DisposalCallbackRegistry callbackRegistry) {
         OSGiService annotation = element.getAnnotation(OSGiService.class);
         String filterString = null;
         if (annotation != null) {

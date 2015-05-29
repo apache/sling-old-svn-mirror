@@ -19,6 +19,7 @@ package org.apache.sling.models.impl.injectors;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
 
+import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -57,13 +58,13 @@ public final class SlingObjectInjector implements Injector, StaticInjectAnnotati
     public static final String NAME = "sling-object";
 
     @Override
-    public String getName() {
+    public @Nonnull String getName() {
         return NAME;
     }
 
     @Override
-    public Object getValue(final Object adaptable, final String name, final Type type, final AnnotatedElement element,
-            final DisposalCallbackRegistry callbackRegistry) {
+    public Object getValue(final @Nonnull Object adaptable, final String name, final @Nonnull Type type, final @Nonnull AnnotatedElement element,
+            final @Nonnull DisposalCallbackRegistry callbackRegistry) {
 
         // only class types are supported
         if (!(type instanceof Class<?>)) {
