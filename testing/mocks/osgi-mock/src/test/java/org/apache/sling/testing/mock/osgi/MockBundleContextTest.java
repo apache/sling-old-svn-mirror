@@ -192,17 +192,6 @@ public class MockBundleContextTest {
     }
 
     @Test
-    public void testNestedObjectClassFilterMatches() throws InvalidSyntaxException {
-        
-        // this matches what the ServiceTracker creates
-        Filter filter = bundleContext.createFilter("((" + Constants.OBJECTCLASS + "=" + Integer.class.getName() + "))");
-        
-        ServiceRegistration serviceRegistration = bundleContext.registerService(Integer.class.getName(), Integer.valueOf(1), null);
-        
-        assertTrue(filter.match(serviceRegistration.getReference()));
-    }
-    
-    @Test
     public void testObjectClassFilterDoesNotMatch() throws InvalidSyntaxException {
         
         Filter filter = bundleContext.createFilter("(" + Constants.OBJECTCLASS + "=" + Integer.class.getName() + ")");
