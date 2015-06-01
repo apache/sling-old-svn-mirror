@@ -23,6 +23,7 @@ import java.util.Hashtable;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.factory.ModelClassException;
+import org.apache.sling.models.factory.PostConstructException;
 import org.apache.sling.models.testmodels.classes.FailingPostConstuctModel;
 import org.apache.sling.models.testmodels.classes.SubClass;
 import org.apache.sling.models.testmodels.classes.SubClassOverriddenPostConstruct;
@@ -81,9 +82,9 @@ public class PostConstructTest {
         boolean thrown = false;
         try {
             factory.createModel(resource, FailingPostConstuctModel.class);
-        } catch (ModelClassException e) {
+        } catch (PostConstructException e) {
             assertTrue(e.getMessage().contains("Post-construct"));
-            assertEquals("FAIL", e.getCause().getCause().getMessage());
+            assertEquals("FAIL", e.getCause().getMessage());
             thrown = true;
         }
         assertTrue(thrown);

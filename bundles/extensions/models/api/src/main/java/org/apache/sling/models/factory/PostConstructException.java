@@ -19,21 +19,17 @@
 package org.apache.sling.models.factory;
 
 /**
- * Exception which is triggered when the Model class could not be instantiated due to
- * not having a model annotation, some reflection error, invalid constructors or 
- * because some exception within the post construct method was triggered.
- * 
- * @see ModelFactory
+ * Exception which is triggered, whenever the post-construct method has thrown an exception.
  */
-public class ModelClassException extends RuntimeException {
+public class PostConstructException extends ModelClassException {
 
-    private static final long serialVersionUID = 4323592065808565135L;
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -2527043835215727726L;
 
-    public ModelClassException(String message) {
-        super(message);
+    public PostConstructException(String message, Throwable cause) {
+        super(message, cause);
     }
-    
-    public ModelClassException(String message, Throwable e) {
-        super(message, e);
-    }
+
 }
