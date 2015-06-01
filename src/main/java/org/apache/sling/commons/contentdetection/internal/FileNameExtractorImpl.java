@@ -16,14 +16,14 @@
  */
 package org.apache.sling.commons.contentdetection.internal;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.contentdetection.FileNameExtractor;
 import org.osgi.framework.Constants;
-
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 
 @Component(metatype = true, label = "%filenameextractor.service.name", description = "%filenameextractor.service.description")
 @Service(FileNameExtractor.class)
@@ -53,15 +53,20 @@ public class FileNameExtractorImpl implements FileNameExtractor {
         // Decode any potential URL encoding
         int percent = name.indexOf('%');
         if (percent != -1) {
+            final String encoding = getDefaultEncoding();
             try {
-                name = URLDecoder.decode(name, "UTF-8");
+                name = URLDecoder.decode(name, encoding);
             } catch (UnsupportedEncodingException e) {
-                throw new AssertionError("UTF-8 not supported");
+                throw new RuntimeException(encoding + " not supported??", e);
             }
         }
 
         // Skip any leading or trailing whitespace
         name = name.trim();
         return name;
+    }
+    
+    protected String getDefaultEncoding() {
+        return "UTF-8";
     }
 }
