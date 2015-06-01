@@ -20,14 +20,18 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.contentdetection.FileNameExtractor;
 import org.osgi.framework.Constants;
 
-@Component(metatype = true, label = "%filenameextractor.service.name", description = "%filenameextractor.service.description")
+@Component
 @Service(FileNameExtractor.class)
-@Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling Filename Extractor Service")
+@Properties({
+    @Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling Filename Extractor Service"),
+    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
+})
 public class FileNameExtractorImpl implements FileNameExtractor {
     public String extract(String name) {
         // If the name is a URL, skip the trailing query and fragment parts

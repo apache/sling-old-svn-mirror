@@ -28,9 +28,12 @@ public class U {
     public static Option[] paxConfig() {
         final File thisProjectsBundle = new File(System.getProperty( "bundle.file.name", "BUNDLE_FILE_NOT_SET" ));
         final String launchpadVersion = System.getProperty("sling.launchpad.version", "LAUNCHPAD_VERSION_NOT_SET");
+        final String paxVmOptions = System.getProperty("pax.vm.options", "PAX_VM_OPTIONS_NOT_SET");
         return new DefaultCompositeOption(
                 SlingPaxOptions.defaultLaunchpadOptions(launchpadVersion),
-                CoreOptions.provision(CoreOptions.bundle(thisProjectsBundle.toURI().toString()))
+                CoreOptions.provision(CoreOptions.bundle(thisProjectsBundle.toURI().toString())),
+                CoreOptions.vmOption(paxVmOptions)
+                
         ).getOptions();
     }
 }
