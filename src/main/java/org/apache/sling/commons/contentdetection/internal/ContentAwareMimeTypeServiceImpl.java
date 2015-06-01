@@ -31,11 +31,11 @@ import org.osgi.framework.Constants;
 import java.io.IOException;
 import java.io.InputStream;
 
-@Component(label = "%contentawaremime.service.name", description = "%contentawaremime.service.description")
+@Component
 @Service(value = {ContentAwareMimeTypeService.class})
-
 @Properties({
         @Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling Content Aware MIME Type Service"),
+        @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
         @Property(name = "detection.mode", value = "tika") }
 )
 public class ContentAwareMimeTypeServiceImpl implements  ContentAwareMimeTypeService {
