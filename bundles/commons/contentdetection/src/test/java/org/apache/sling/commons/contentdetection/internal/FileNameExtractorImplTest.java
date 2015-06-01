@@ -33,13 +33,6 @@ public class FileNameExtractorImplTest {
     }
 
     @Test
-    public void testExtractForBackslash() throws Exception {
-        String rawPath = "C:\\Test windows%path\\demo.jpg";
-        String expectedFileName = "demo.jpg";
-        Assert.assertEquals(expectedFileName, fileNameExtractor.extract(rawPath));
-    }
-
-    @Test
     public void testBackslashPath() throws Exception {
         String rawPath = "C:\\Test windows%path\\demo.jpg";
         String expectedFileName = "demo.jpg";
