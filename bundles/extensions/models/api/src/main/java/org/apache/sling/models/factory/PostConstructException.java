@@ -20,6 +20,7 @@ package org.apache.sling.models.factory;
 
 /**
  * Exception which is triggered, whenever the post-construct method has thrown an exception.
+ * The cause (accessible via {@link #getCause()}) is always the original exception being thrown from the post-construct method.
  */
 public class PostConstructException extends ModelClassException {
 
@@ -28,6 +29,11 @@ public class PostConstructException extends ModelClassException {
      */
     private static final long serialVersionUID = -2527043835215727726L;
 
+    /**
+     * 
+     * @param message some message
+     * @param cause the original exception being thrown in the post-construct
+     */
     public PostConstructException(String message, Throwable cause) {
         super(message, cause);
     }
