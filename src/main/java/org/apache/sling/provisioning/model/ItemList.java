@@ -17,14 +17,13 @@
 package org.apache.sling.provisioning.model;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 /**
  * Helper class to hold a list of items.
  */
-public class ItemList<T extends Comparable>
+public class ItemList<T>
     extends Commentable
     implements Iterable<T> {
 
@@ -37,7 +36,6 @@ public class ItemList<T extends Comparable>
      */
     public void add(final T item) {
         this.items.add(item);
-        Collections.sort(this.items);
     }
 
     /**
