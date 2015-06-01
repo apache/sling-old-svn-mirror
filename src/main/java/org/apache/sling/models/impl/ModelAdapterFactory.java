@@ -69,6 +69,7 @@ import org.apache.sling.models.factory.MissingElementException;
 import org.apache.sling.models.factory.MissingElementsException;
 import org.apache.sling.models.factory.ModelClassException;
 import org.apache.sling.models.factory.ModelFactory;
+import org.apache.sling.models.factory.PostConstructException;
 import org.apache.sling.models.impl.model.ConstructorParameter;
 import org.apache.sling.models.impl.model.InjectableElement;
 import org.apache.sling.models.impl.model.InjectableField;
@@ -183,7 +184,12 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     public <AdapterType> AdapterType getAdapter(Object adaptable, Class<AdapterType> type) {
         Result<AdapterType> result = internalCreateModel(adaptable, type);
         if (!result.wasSuccessfull()) {
-            log.error("Could not adapt to model", result.getThrowable());
+            // treat post-construct exception differently, because they are sometimes used for flow-control or validation purposes
+            if (result.getThrowable() instanceof PostConstructException) {
+                log.debug("Could not adapt to model", result.getThrowable());
+            } else {
+                log.error("Could not adapt to model", result.getThrowable());
+            }
             return null;
         } else {
             return result.getValue();
@@ -435,7 +441,12 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             if (defaultInjectionResult.wasSuccessfull()) {
                 // log previous injection error, if there was any
                 if (lastInjectionException != null) {
-                    log.warn("Although falling back to default value worked, injection into {} failed because of: " + lastInjectionException.getMessage(), element.getAnnotatedElement(), lastInjectionException);
+                    // treat post-construct exception differently, because they are sometimes used for flow-control or validation purposes
+                    if (lastInjectionException instanceof PostConstructException) {
+                        log.debug("Although falling back to default value worked, injection into {} failed because of: " + lastInjectionException.getMessage(), element.getAnnotatedElement(), lastInjectionException);
+                    } else {
+                        log.warn("Although falling back to default value worked, injection into {} failed because of: " + lastInjectionException.getMessage(), element.getAnnotatedElement(), lastInjectionException);
+                    }
                 }
                 wasInjectionSuccessful = defaultInjectionResult.getValue();
             } else {
@@ -547,7 +558,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         try {
             invokePostConstruct(object);
         } catch (InvocationTargetException e) {
-            return new Result<ModelType>(new ModelClassException("Post-construct method has thrown an exception for model " + modelClass.getType(), e));
+            return new Result<ModelType>(new PostConstructException("Post-construct method has thrown an exception for model " + modelClass.getType(), e.getCause()));
         } catch (IllegalAccessException e) {
             new Result<ModelType>(new ModelClassException("Could not call post-construct method for model " + modelClass.getType(), e));
         }
