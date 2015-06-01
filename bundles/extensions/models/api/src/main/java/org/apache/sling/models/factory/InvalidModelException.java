@@ -16,23 +16,18 @@
  */
 package org.apache.sling.models.factory;
 
+import org.apache.sling.models.spi.ModelValidation;
+
 /**
- * Thrown in case an invalid Sling validation model was found or no validation model was found at all 
- * (although it would be required through {@link org.apache.sling.models.annotations.ValidationStrategy.REQUIRED}).
- * Usually just wraps a {@link org.apache.sling.validation.api.exceptions.SlingValidationException}
- * @see <a href="http://sling.apache.org/documentation/bundles/validation.html">Sling Validation</a>
+ * Thrown in case the given model type could not be validated through the {@link ModelValidation}.
+ * The actual validation error message is encapsulated
  * @see ModelFactory
  */
-public class InvalidValidationModelException extends RuntimeException {
+public class InvalidModelException extends RuntimeException {
+    private static final long serialVersionUID = 366657841414210438L;
 
-    private static final long serialVersionUID = 1115037385798809055L;
-
-    public InvalidValidationModelException(String message) {
+    public InvalidModelException(String message) {
         super(message);
     }
-
-    public InvalidValidationModelException(Throwable cause) {
-        super(cause);
-    }
-
+    
 }

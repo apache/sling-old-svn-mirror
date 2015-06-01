@@ -14,18 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.models.impl.validation;
+package org.apache.sling.models.factory;
 
-import org.apache.sling.api.resource.Resource;
 
-public interface ModelValidation {
+/**
+ * Thrown in case an validation could not be performed for the given model.
+ * (although it would be required through {@link org.apache.sling.models.annotations.ValidationStrategy.REQUIRED}).
+ * Depends on the actual implementation under which exact cirumstances this is thrown.
+ * @see ModelFactory
+ */
+public class ValidationException extends RuntimeException {
 
-    /**
-     * Calls the Sling Validation for the given resource.
-     * @param resource
-     * @param required if {@code true} validation fails even if no appropriate validation model could be found.
-     * @return {@code null} if validation was successful, otherwise an exception
-     */
-    public abstract RuntimeException validate(Resource resource, boolean required);
+    private static final long serialVersionUID = 1115037385798809055L;
+
+    public ValidationException(String message) {
+        super(message);
+    }
+
+    public ValidationException(Throwable cause) {
+        super(cause);
+    }
 
 }

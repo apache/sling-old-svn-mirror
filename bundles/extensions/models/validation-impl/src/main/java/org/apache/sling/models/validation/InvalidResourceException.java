@@ -14,32 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.models.factory;
+package org.apache.sling.models.validation;
 
 import java.util.List;
 import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.sling.models.factory.InvalidModelException;
 import org.apache.sling.validation.api.ValidationResult;
 
 /**
- * Thrown in case Sling Validation detected an invalid resource upon which the model should be instantiated.
- * @see <a href="http://sling.apache.org/documentation/bundles/validation.html">Sling Validation</a>
- * @see ModelFactory
+ * Exception embedding a ValidationResult from Sling Validation.
+ *
  */
-public class InvalidResourceException extends RuntimeException {
-    private static final long serialVersionUID = 366657841414210438L;
+public class InvalidResourceException extends InvalidModelException {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -5134512515466089688L;
     private final ValidationResult result;
     private final String path;
-
-    public InvalidResourceException(ValidationResult result, String path) {
-        if (result.isValid()) {
-            throw new IllegalArgumentException("Could not create a validator exception from a valid validation result!");
-        }
-        this.path = path;
-        this.result = result;
-    }
     
+    public InvalidResourceException(String message, ValidationResult result, String path) {
+        super(message);
+        this.result = result;
+        this.path = path;
+    }
     /**
      * 
      * @return the underlying {@link ValidationResult}
