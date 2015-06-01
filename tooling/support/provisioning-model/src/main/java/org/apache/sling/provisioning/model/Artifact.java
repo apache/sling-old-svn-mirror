@@ -25,7 +25,7 @@ import java.util.Map;
  * In addition, the classifier and type can be specified as well. If no type is specified, "jar" is assumed.
  * An artifact can have any metadata.
  */
-public class Artifact extends Commentable implements Comparable {
+public class Artifact extends Commentable implements Comparable<Artifact> {
 
     /** The required group id. */
     private final String groupId;
@@ -144,10 +144,10 @@ public class Artifact extends Commentable implements Comparable {
     }
 
     @Override
-    public int compareTo(Object o) {
+    public int compareTo(final Artifact o) {
         if(o == null) return 1;
         if(!(o instanceof Artifact)) return 1;
-        return toMvnUrl().compareTo(((Artifact)o).toMvnUrl());
+        return toMvnUrl().compareTo(o.toMvnUrl());
     }
 
     /**
