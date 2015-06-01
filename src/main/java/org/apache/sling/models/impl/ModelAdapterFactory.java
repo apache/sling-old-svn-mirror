@@ -54,34 +54,32 @@ import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.ReferencePolicyOption;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.adapter.AdapterFactory;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.osgi.ServiceUtil;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.ValidationStrategy;
 import org.apache.sling.models.factory.InvalidAdaptableException;
-import org.apache.sling.models.factory.InvalidResourceException;
-import org.apache.sling.models.factory.InvalidValidationModelException;
+import org.apache.sling.models.factory.InvalidModelException;
 import org.apache.sling.models.factory.MissingElementException;
 import org.apache.sling.models.factory.MissingElementsException;
 import org.apache.sling.models.factory.ModelClassException;
 import org.apache.sling.models.factory.ModelFactory;
 import org.apache.sling.models.factory.PostConstructException;
+import org.apache.sling.models.factory.ValidationException;
 import org.apache.sling.models.impl.model.ConstructorParameter;
 import org.apache.sling.models.impl.model.InjectableElement;
 import org.apache.sling.models.impl.model.InjectableField;
 import org.apache.sling.models.impl.model.InjectableMethod;
 import org.apache.sling.models.impl.model.ModelClass;
 import org.apache.sling.models.impl.model.ModelClassConstructor;
-import org.apache.sling.models.impl.validation.ModelValidation;
 import org.apache.sling.models.spi.AcceptsNullName;
 import org.apache.sling.models.spi.DisposalCallback;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.ImplementationPicker;
 import org.apache.sling.models.spi.Injector;
+import org.apache.sling.models.spi.ModelValidation;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory2;
@@ -167,6 +165,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
     private final @Nonnull Map<Object, ImplementationPicker> implementationPickers = new TreeMap<Object, ImplementationPicker>();
     
+    // bind the service with the highest priority (if a new one comes in this service gets restarted)
     @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policyOption=ReferencePolicyOption.GREEDY)
     private ModelValidation modelValidation;
 
@@ -198,7 +197,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
     @Override
     public @Nonnull <ModelType> ModelType createModel(@Nonnull Object adaptable, @Nonnull Class<ModelType> type) throws MissingElementsException,
-            InvalidAdaptableException, InvalidValidationModelException, InvalidResourceException {
+            InvalidAdaptableException, ValidationException, InvalidModelException {
         if (adaptable == null) {
             throw new IllegalArgumentException("Given adaptable is null!");
         }
@@ -288,10 +287,10 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
                 }
             }
             if (!isAdaptable) {
-            	String msg = String.format("Adaptables (%s) are not acceptable for the model class: %s", StringUtils.join(declaredAdaptable), modelClass.getType());
-            	return new Result<ModelType>(new InvalidAdaptableException(msg)); 
+                String msg = String.format("Adaptables (%s) are not acceptable for the model class: %s", StringUtils.join(declaredAdaptable), modelClass.getType());
+                return new Result<ModelType>(new InvalidAdaptableException(msg)); 
             } else {
-                RuntimeException t = validateModel(modelAnnotation, adaptable);
+                RuntimeException t = validateModel(adaptable, modelClass.getType(), modelAnnotation);
                 if (t != null) {
                     return new Result<ModelType>(t);
                 }
@@ -318,22 +317,12 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         }
     }
     
-    private RuntimeException validateModel(Model modelAnnotation, Object adaptable) {
+    private <ModelType> RuntimeException validateModel(Object adaptable, Class<ModelType> modelType, Model modelAnnotation) {
         if (modelAnnotation.validation() != ValidationStrategy.DISABLED) {
             if (modelValidation == null) {
-                return new ModelClassException("Sling Validation Bundle is not there, therefore no validation can be performed.");
+                return new ValidationException("No active service for ModelValidation found, therefore no validation can be performed.");
             }
-            Resource resource = null;
-            if (adaptable instanceof SlingHttpServletRequest) {
-                resource = ((SlingHttpServletRequest)adaptable).getResource();
-            } else if (adaptable instanceof Resource) {
-                resource = (Resource)adaptable;
-            }
-            if (resource != null) {
-                return modelValidation.validate(resource, modelAnnotation.validation() == ValidationStrategy.REQUIRED);
-            } else {
-                return new ModelClassException("Sling Validation can only be performed if model is adaptable from either SlingHttpServletRequest or Resource.");
-            }
+            return modelValidation.validate(adaptable, modelType, modelAnnotation.validation() == ValidationStrategy.REQUIRED);
         }
         return null;
     }
