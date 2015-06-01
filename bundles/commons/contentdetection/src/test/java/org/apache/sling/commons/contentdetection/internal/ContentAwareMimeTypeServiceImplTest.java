@@ -44,8 +44,6 @@ public class ContentAwareMimeTypeServiceImplTest extends EasyMockSupport {
 
     private Detector mockDetector = EasyMock.createMock(Detector.class);
 
-    private Metadata mockMetadata = EasyMock.createMock(Metadata.class);
-
     private MimeTypeService mockMimeTypeService = EasyMock.createMock(MimeTypeService.class);
 
     @TestSubject
@@ -87,6 +85,32 @@ public class ContentAwareMimeTypeServiceImplTest extends EasyMockSupport {
     }
 
     @Test
+    public void testGetMimeTypeByString(){
+        String mimeTypeName = "testName";
+        String mimetype = "mimeType";
+
+        EasyMock.expect(mockMimeTypeService.getMimeType(mimeTypeName)).andReturn(mimetype);
+        EasyMock.replay(mockMimeTypeService);
+
+        String another = contentAwareMimeTypeService.getMimeType(mimeTypeName);
+        Assert.assertEquals(mimetype, another);
+        EasyMock.verify(mockMimeTypeService);
+    }
+
+    @Test
+    public void testGetExtension(){
+        String mimeTypeName = "testName";
+        String extension = "java";
+
+        EasyMock.expect(mockMimeTypeService.getExtension(mimeTypeName)).andReturn(extension);
+        EasyMock.replay(mockMimeTypeService);
+
+        String another = contentAwareMimeTypeService.getExtension(mimeTypeName);
+        Assert.assertEquals(extension, another);
+        EasyMock.verify(mockMimeTypeService);
+    }
+
+    @Test
     public void testGetMimeTypeWithNullContent() throws IOException {
         //Initializations
         String filename = "test.txt";
@@ -103,6 +127,42 @@ public class ContentAwareMimeTypeServiceImplTest extends EasyMockSupport {
 
         //Verification of expectations
         Assert.assertEquals(MediaType.TEXT_PLAIN.getType(), mimeType);
+        EasyMock.verify(mockMimeTypeService);
+    }
+
+    @Test
+    public void testRegisterNewMymeType() {
+        final String mimeTypeName = "test";
+        final String[] mimeTypeExtensions = new String[]{"pict", "apt", "z"};
+
+        /* The only thing ContentAwareMimeTypeServiceImpl#registerMimeType(String name, String... ext)
+         * method does is calls MimeTypeService registerMimeType(String name, String[] ext) method.
+         * So we Mock it and expect that it will be called.
+         */
+        mockMimeTypeService.registerMimeType(mimeTypeName, mimeTypeExtensions);
+        EasyMock.expectLastCall();
+        EasyMock.replay(mockMimeTypeService);
+
+        contentAwareMimeTypeService.registerMimeType(mimeTypeName, mimeTypeExtensions);
+
+        EasyMock.verify(mockMimeTypeService);
+    }
+
+    @Test
+    public void testRegisterMimeType() throws IOException {
+        byte[] byteArray = new byte[]{};
+        InputStream content = new ByteArrayInputStream(byteArray);
+
+        /* The only thing ContentAwareMimeTypeServiceImpl#registerMimeType(InputStream i)
+         * method does is calls MimeTypeService#registerMimeType(InputStream i) method.
+         * So we Mock it and expect that it will be called.
+         */
+        mockMimeTypeService.registerMimeType(content);
+        EasyMock.expectLastCall();
+        EasyMock.replay(mockMimeTypeService);
+
+        contentAwareMimeTypeService.registerMimeType(content);
+
         EasyMock.verify(mockMimeTypeService);
     }
 

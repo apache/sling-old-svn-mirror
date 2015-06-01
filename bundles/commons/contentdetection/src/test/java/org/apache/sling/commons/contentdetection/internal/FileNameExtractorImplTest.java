@@ -17,17 +17,39 @@
 
 package org.apache.sling.commons.contentdetection.internal;
 
-import junit.framework.TestCase;
 import org.apache.sling.commons.contentdetection.FileNameExtractor;
 import org.junit.Assert;
+import org.junit.Test;
 
-public class FileNameExtractorImplTest extends TestCase {
+public class FileNameExtractorImplTest {
 
     FileNameExtractor fileNameExtractor = new FileNameExtractorImpl();
 
+    @Test
     public void testExtract() throws Exception {
         String rawPath = "http://midches.com/images/uploads/default/demo.jpg#anchor?query=test";
         String expectedFileName = "demo.jpg";
+        Assert.assertEquals(expectedFileName, fileNameExtractor.extract(rawPath));
+    }
+
+    @Test
+    public void testExtractForBackslash() throws Exception {
+        String rawPath = "C:\\Test windows%path\\demo.jpg";
+        String expectedFileName = "demo.jpg";
+        Assert.assertEquals(expectedFileName, fileNameExtractor.extract(rawPath));
+    }
+
+    @Test
+    public void testBackslashPath() throws Exception {
+        String rawPath = "C:\\Test windows%path\\demo.jpg";
+        String expectedFileName = "demo.jpg";
+        Assert.assertEquals(expectedFileName, fileNameExtractor.extract(rawPath));
+    }
+
+    @Test
+    public void testDecodedURL(){
+        String rawPath = "http://example.com/demo%20test.jpg?test=true";
+        String expectedFileName = "demo test.jpg";
         Assert.assertEquals(expectedFileName, fileNameExtractor.extract(rawPath));
     }
 }
