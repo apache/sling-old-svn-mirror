@@ -32,15 +32,18 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 
+import com.google.common.collect.ImmutableMap;
+
 /**
  * Mock {@link Bundle} implementation.
  */
-class MockBundle implements Bundle {
+public final class MockBundle implements Bundle {
 
     private static volatile long bundleCounter;
 
     private final long bundleId;
     private final BundleContext bundleContext;
+    private Map<String, String> headers = ImmutableMap.<String, String>of();
 
     /**
      * Constructor
@@ -71,6 +74,26 @@ class MockBundle implements Bundle {
         return Bundle.ACTIVE;
     }
 
+    @Override
+    public Dictionary<String, String> getHeaders() {
+        return MapUtil.toDictionary(headers);
+    }
+
+    @Override
+    public Dictionary<String, String> getHeaders(final String locale) {
+        // localziation not supported, always return default headers
+        return getHeaders();
+    }
+    
+    /**
+     * Set headers for mock bundle
+     * @param value Header map
+     */
+    public void setHeaders(Map<String, String> value) {
+        this.headers = value;
+    }
+
+    
     // --- unsupported operations ---
     @Override
     public Enumeration<URL> findEntries(final String path, final String filePattern, final boolean recurse) {
@@ -79,16 +102,6 @@ class MockBundle implements Bundle {
 
     @Override
     public Enumeration<String> getEntryPaths(final String path) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Dictionary<String, String> getHeaders() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Dictionary<String, String> getHeaders(final String locale) {
         throw new UnsupportedOperationException();
     }
 
