@@ -14,7 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Version("1.1.0")
-package org.apache.sling.models.spi;
+package org.apache.sling.models.factory;
 
-import aQute.bnd.annotation.Version;
+import org.apache.sling.models.spi.ModelValidation;
+
+/**
+ * Thrown in case the given model type could not be validated through the {@link ModelValidation}.
+ * The actual validation error message is encapsulated
+ * @see ModelFactory
+ */
+public class InvalidModelException extends RuntimeException {
+    private static final long serialVersionUID = 366657841414210438L;
+
+    public InvalidModelException(String message) {
+        super(message);
+    }
+    
+}
