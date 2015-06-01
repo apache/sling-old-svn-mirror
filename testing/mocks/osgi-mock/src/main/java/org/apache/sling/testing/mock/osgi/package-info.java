@@ -19,5 +19,5 @@
 /**
  * Mock implementation of selected OSGi APIs.
  */
-@aQute.bnd.annotation.Version("2.1")
+@aQute.bnd.annotation.Version("2.2")
 package org.apache.sling.testing.mock.osgi;

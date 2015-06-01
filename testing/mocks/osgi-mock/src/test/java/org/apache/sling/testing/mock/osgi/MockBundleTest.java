@@ -27,34 +27,45 @@ import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 
+import com.google.common.collect.ImmutableMap;
+
 public class MockBundleTest {
 
     private Bundle bundle;
 
     @Before
     public void setUp() {
-        this.bundle = MockOsgi.newBundleContext().getBundle();
+        bundle = MockOsgi.newBundleContext().getBundle();
     }
 
     @Test
     public void testBundleId() {
-        assertTrue(this.bundle.getBundleId() > 0);
+        assertTrue(bundle.getBundleId() > 0);
     }
 
     @Test
     public void testBundleContxt() {
-        assertNotNull(this.bundle.getBundleContext());
+        assertNotNull(bundle.getBundleContext());
     }
 
     @Test
     public void testGetEntry() {
-        assertNotNull(this.bundle.getEntry("/META-INF/test.txt"));
-        assertNull(this.bundle.getEntry("/invalid"));
+        assertNotNull(bundle.getEntry("/META-INF/test.txt"));
+        assertNull(bundle.getEntry("/invalid"));
     }
 
     @Test
     public void testGetStatie() {
         assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
+    public void testGetHeaders() {
+        assertTrue(bundle.getHeaders().isEmpty());
+        
+        ((MockBundle)bundle).setHeaders(ImmutableMap.of("prop1", "value1"));
+        assertEquals("value1", bundle.getHeaders().get("prop1"));
+        assertEquals("value1", bundle.getHeaders("en").get("prop1"));
     }
 
 }
