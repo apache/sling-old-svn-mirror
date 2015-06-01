@@ -16,6 +16,8 @@
  */
 package org.apache.sling.provisioning.model;
 
+import java.util.Collections;
+
 
 /**
  * A artifact group holds a set of artifacts.
@@ -34,6 +36,12 @@ public class ArtifactGroup extends ItemList<Artifact>
      */
     public ArtifactGroup(final int startLevel) {
         this.level = startLevel;
+    }
+
+    @Override
+    public void add(Artifact item) {
+        super.add(item);
+        Collections.sort(super.items);
     }
 
     /**
