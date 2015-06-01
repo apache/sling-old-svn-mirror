@@ -17,31 +17,20 @@
 
 package org.apache.sling.commons.contentdetection.internal.it;
 
-import static org.junit.Assert.assertEquals;
+import java.io.File;
 
-import javax.inject.Inject;
-
-import org.apache.sling.commons.contentdetection.FileNameExtractor;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.apache.sling.paxexam.util.SlingPaxOptions;
+import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.options.DefaultCompositeOption;
 
-@RunWith(PaxExam.class)
-public class FileNameExtractorImplIT {
-
-    @Inject
-    private FileNameExtractor fileNameExtractor;
-
-    @Test
-    public void testFileNameExtractor(){
-        String rawPath = "http://midches.com/images/uploads/default/demo.jpg#anchor?query=test";
-        String expectedFileName = "demo.jpg";
-        assertEquals(expectedFileName, fileNameExtractor.extract(rawPath));
-    }
-
-    @org.ops4j.pax.exam.Configuration
-    public Option[] config() {
-        return U.paxConfig();
+public class U {
+    public static Option[] paxConfig() {
+        final File thisProjectsBundle = new File(System.getProperty( "bundle.file.name", "BUNDLE_FILE_NOT_SET" ));
+        final String launchpadVersion = System.getProperty("sling.launchpad.version", "LAUNCHPAD_VERSION_NOT_SET");
+        return new DefaultCompositeOption(
+                SlingPaxOptions.defaultLaunchpadOptions(launchpadVersion),
+                CoreOptions.provision(CoreOptions.bundle(thisProjectsBundle.toURI().toString()))
+        ).getOptions();
     }
 }

@@ -17,19 +17,15 @@
 
 package org.apache.sling.commons.contentdetection.internal.it;
 
-import org.apache.sling.commons.contentdetection.ContentAwareMimeTypeService;
-import org.apache.sling.paxexam.util.SlingPaxOptions;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.CoreOptions;
-import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.PaxExam;
-import org.ops4j.pax.exam.options.DefaultCompositeOption;
+import static org.junit.Assert.assertEquals;
 
 import javax.inject.Inject;
-import java.io.File;
 
-import static org.junit.Assert.*;
+import org.apache.sling.commons.contentdetection.ContentAwareMimeTypeService;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.junit.PaxExam;
 
 @RunWith(PaxExam.class)
 public class ContentAwareMimeTypeServiceImplIT {
@@ -46,11 +42,6 @@ public class ContentAwareMimeTypeServiceImplIT {
 
     @org.ops4j.pax.exam.Configuration
     public Option[] config() {
-        final File thisProjectsBundle = new File(System.getProperty( "bundle.file.name", "BUNDLE_FILE_NOT_SET" ));
-        final String launchpadVersion = System.getProperty("sling.launchpad.version", "LAUNCHPAD_VERSION_NOT_SET");
-        return new DefaultCompositeOption(
-                SlingPaxOptions.defaultLaunchpadOptions(launchpadVersion),
-                CoreOptions.provision(CoreOptions.bundle(thisProjectsBundle.toURI().toString()))
-        ).getOptions();
+        return U.paxConfig();
     }
 }
