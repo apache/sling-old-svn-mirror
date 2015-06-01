@@ -18,6 +18,10 @@
 package org.apache.sling.commons.contentdetection.internal.it;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 import javax.inject.Inject;
 
@@ -34,10 +38,24 @@ public class ContentAwareMimeTypeServiceImplIT {
     private ContentAwareMimeTypeService contentAwaremimeTypeService;
 
     @Test
-    public void testContentAwareMimeTypeService(){
+    public void detectFromExtension(){
         String mimeTypeName = "test.mp3";
         String mimeType = "audio/mpeg";
         assertEquals(mimeType, contentAwaremimeTypeService.getMimeType(mimeTypeName));
+    }
+
+    @Test
+    public void detectFromContent() throws IOException{
+        final String filename = "this-is-actually-a-wav-file.mp3";
+        final InputStream s = getClass().getResourceAsStream("/" + filename);
+        assertNotNull("Expecting stream to be found:" + filename, s);
+        try {
+            assertEquals("audio/x-wav", contentAwaremimeTypeService.getMimeType(filename, s));
+        } finally {
+            if(s != null) {
+                s.close();
+            }
+        }
     }
 
     @org.ops4j.pax.exam.Configuration
