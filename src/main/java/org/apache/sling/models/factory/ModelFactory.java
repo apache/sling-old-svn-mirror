@@ -34,12 +34,13 @@ public interface ModelFactory {
      * @return a new instance for the required model (never null)
      * @throws MissingElementsException in case no injector was able to inject some required values with the given types
      * @throws InvalidAdaptableException in case the given class cannot be instantiated from the given adaptable (different adaptable on the model annotation)
-     * @throws ModelClassException in case the model could not be instanciated because model annotation was missing, reflection failed, no valid constructor was found or post-construct has thrown an error
+     * @throws ModelClassException in case the model could not be instanciated because model annotation was missing, reflection failed, no valid constructor was found or post-construct could not be called
+     * @throws PostConstructException in case the post-construct method has thrown an exception itself
      * @throws InvalidValidationModelException in case an invalid validation model was found
      * @throws InvalidResourceException in case the resource (for the Sling Model) could not be validated through Sling Validation
      */
     public @Nonnull <ModelType> ModelType createModel(@Nonnull Object adaptable, @Nonnull Class<ModelType> type) throws MissingElementsException,
-            InvalidAdaptableException, ModelClassException, InvalidValidationModelException, InvalidResourceException;
+            InvalidAdaptableException, ModelClassException, PostConstructException, InvalidValidationModelException, InvalidResourceException;
 
     /**
      * 
