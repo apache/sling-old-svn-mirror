@@ -75,9 +75,7 @@ public enum ResourceResolverType {
      * <li>The JCR repository is started on first access, this may take some
      * seconds.</li>
      * <li>The <tt>MemoryNodeStore</tt> implementation is used, with no 
-     * customisations</li>
-     * <li>Beware: The repository is not cleared for each unit test, so make
-     * sure us use a unique node path for each unit test.</li>
+     * customizations.</li>
      * </ul>
      */
     JCR_OAK("org.apache.sling.testing.mock.sling.oak.OakMockResourceResolverAdapter",
