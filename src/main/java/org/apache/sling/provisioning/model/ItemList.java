@@ -24,7 +24,7 @@ import java.util.List;
 /**
  * Helper class to hold a list of items.
  */
-public class ItemList<T extends Comparable<T>>
+public class ItemList<T extends Comparable>
     extends Commentable
     implements Iterable<T> {
 
