@@ -171,8 +171,7 @@ public class OsgiContextImpl {
     @SuppressWarnings("unchecked")
     public final <ServiceType> ServiceType[] getServices(final Class<ServiceType> serviceType, final String filter) {
         try {
-            ServiceReference[] serviceReferences = bundleContext().getServiceReferences(serviceType.getName(),
-                    filter);
+            ServiceReference[] serviceReferences = bundleContext().getServiceReferences(serviceType.getName(), filter);
             if (serviceReferences != null) {
                 ServiceType[] services = (ServiceType[])Array.newInstance(serviceType, serviceReferences.length);
                 for (int i = 0; i < serviceReferences.length; i++) {

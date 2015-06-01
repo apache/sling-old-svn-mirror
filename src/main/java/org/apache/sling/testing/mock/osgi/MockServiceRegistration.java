@@ -24,9 +24,11 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.felix.framework.FilterImpl;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.OsgiMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
@@ -79,9 +81,10 @@ class MockServiceRegistration implements ServiceRegistration, Comparable<MockSer
         return this.properties;
     }
 
-    boolean matches(final String clazz, final String filter) {
+    boolean matches(final String clazz, final String filter) throws InvalidSyntaxException {
         // ignore filter for now
-        return this.clazzes.contains(clazz);
+        return this.clazzes.contains(clazz)
+                && (filter == null || new FilterImpl(filter).match(properties));
     }
     
     Set<String> getClasses() {
