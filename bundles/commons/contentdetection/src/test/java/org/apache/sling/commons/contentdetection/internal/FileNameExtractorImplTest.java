@@ -23,7 +23,13 @@ import org.junit.Test;
 
 public class FileNameExtractorImplTest {
 
-    FileNameExtractor fileNameExtractor = new FileNameExtractorImpl();
+    private String defaultEncoding = new FileNameExtractorImpl().getDefaultEncoding();
+    
+    FileNameExtractor fileNameExtractor = new FileNameExtractorImpl() {
+        protected String getDefaultEncoding() {
+            return defaultEncoding;
+        }
+    };
 
     @Test
     public void testExtract() throws Exception {
@@ -44,5 +50,24 @@ public class FileNameExtractorImplTest {
         String rawPath = "http://example.com/demo%20test.jpg?test=true";
         String expectedFileName = "demo test.jpg";
         Assert.assertEquals(expectedFileName, fileNameExtractor.extract(rawPath));
+    }
+    
+    @Test
+    public void testInvalidEncoding() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+        final String rawPath = "http://example.com/demo%20test.jpg?test=true";
+        final String oldEncoding = defaultEncoding;
+        final String badEncoding = "INVALID_ENCODING";
+        try {
+            defaultEncoding = badEncoding;
+            try {
+                fileNameExtractor.extract(rawPath);
+                Assert.fail("Expected an exception with encoding " + defaultEncoding);
+            } catch(RuntimeException re) {
+                final String msg = re.getMessage();
+                Assert.assertTrue("Expected exception message to contain " + badEncoding + " (" + msg + ")", msg.contains(badEncoding));
+            }
+        } finally {
+            defaultEncoding = oldEncoding;
+        }
     }
 }
