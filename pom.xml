@@ -463,7 +463,7 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                 <plugin>
                     <groupId>org.jacoco</groupId>
                     <artifactId>jacoco-maven-plugin</artifactId>
-                    <version>0.7.4.201502262128</version>
+                    <version>0.7.5.201505241946</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
