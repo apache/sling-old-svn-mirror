@@ -73,15 +73,16 @@ public final class CouchbaseNoSqlResourceProviderFactory extends AbstractNoSqlRe
 
     @Activate
     private void activate(ComponentContext componentContext, Map<String, Object> config) {
-        String cacheKeyPrefix = PropertiesUtil
-                .toString(config.get(CACHE_KEY_PREFIX_PROPERTY), CACHE_KEY_PREFIX_DEFAULT);
-        noSqlAdapter = new CouchbaseNoSqlAdapter(couchbaseClient, cacheKeyPrefix);
+        String cacheKeyPrefix = PropertiesUtil.toString(config.get(CACHE_KEY_PREFIX_PROPERTY), CACHE_KEY_PREFIX_DEFAULT);
+        NoSqlAdapter couchbaseAdapter = new CouchbaseNoSqlAdapter(couchbaseClient, cacheKeyPrefix);
+        
+        // enable call logging and metrics for {@link CouchbaseNoSqlAdapter}
+        noSqlAdapter = new MetricsNoSqlAdapterWrapper(couchbaseAdapter, LoggerFactory.getLogger(CouchbaseNoSqlAdapter.class));
     }
 
     @Override
     protected NoSqlAdapter getNoSqlAdapter() {
-        // enable call logging and metrics for {@link CouchbaseNoSqlAdapter}
-        return new MetricsNoSqlAdapterWrapper(noSqlAdapter, LoggerFactory.getLogger(CouchbaseNoSqlAdapter.class));
+        return noSqlAdapter;
     }
 
     @Override
