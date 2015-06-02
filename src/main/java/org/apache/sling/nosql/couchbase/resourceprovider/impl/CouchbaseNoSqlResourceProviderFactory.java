@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 @Service(value = ResourceProviderFactory.class)
 @Property(name = "webconsole.configurationFactory.nameHint", 
     value = "Root paths: {" + CouchbaseNoSqlResourceProviderFactory.PROVIDER_ROOTS_PROPERTY + "}")
-public class CouchbaseNoSqlResourceProviderFactory extends AbstractNoSqlResourceProviderFactory {
+public final class CouchbaseNoSqlResourceProviderFactory extends AbstractNoSqlResourceProviderFactory {
 
     /**
      * Couchbase Client ID for Couchbase Resource Provider

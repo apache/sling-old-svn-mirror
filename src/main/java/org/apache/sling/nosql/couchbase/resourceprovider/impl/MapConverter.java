@@ -29,7 +29,7 @@ import org.apache.commons.lang3.ArrayUtils;
  * Transforms NoSqlData maps to a valid form for couchbase JSON document.
  * All arrays have to be transformed to lists.
  */
-final class MapConverter {
+public final class MapConverter {
 
     private MapConverter() {
         // static methods only

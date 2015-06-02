@@ -33,7 +33,10 @@ import com.couchbase.client.java.view.Stale;
 import com.couchbase.client.java.view.ViewQuery;
 import com.couchbase.client.java.view.ViewRow;
 
-class CouchbaseNoSqlAdapter extends AbstractNoSqlAdapter {
+/**
+ * {@link org.apache.sling.nosql.generic.adapter.NoSqlAdapter} implementation for Couchbase.
+ */
+public final class CouchbaseNoSqlAdapter extends AbstractNoSqlAdapter {
 
     private static final String PN_PATH = "path";
     private static final String PN_DATA = "data";
