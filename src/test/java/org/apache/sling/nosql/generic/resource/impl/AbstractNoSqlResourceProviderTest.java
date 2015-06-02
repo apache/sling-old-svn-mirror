@@ -198,7 +198,7 @@ public abstract class AbstractNoSqlResourceProviderTest {
         // ensure that value map has only supported primitive types (all other supported types converted to string)
         ValueMap valueMap = resource1.getValueMap();
         for (Map.Entry<String, Object> entry : valueMap.entrySet()) {
-            assertTrue(NoSqlValueMap.isValidPrimitveType(entry.getValue().getClass()));
+            assertTrue(NoSqlValueMap.isValidType(entry.getValue().getClass()));
         }
     }
 

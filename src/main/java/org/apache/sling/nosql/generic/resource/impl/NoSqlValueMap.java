@@ -21,15 +21,9 @@ package org.apache.sling.nosql.generic.resource.impl;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Locale;
 import java.util.Map;
-
-import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.resource.ModifiableValueMap;
@@ -56,25 +50,10 @@ class NoSqlValueMap extends ValueMapDecorator implements ModifiableValueMap {
     @Override
     public <T> T get(String name, Class<T> type) {
         
-        if (type == Calendar.class) {
-            Date date = get(name, Date.class);
-            if (date != null) {
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTime(date);
-                return (T)calendar;
-            }
-            else {
-                return null;
-            }
-        }
-        else if (type == Date.class) {
-            Object value = get(name);
-            if (value instanceof String) {
-                try {
-                    return (T)getISO8601Format().parse((String)value);
-                } catch (ParseException e) {
-                    return null;
-                }
+        if (type == Date.class) {
+            Calendar value = get(name, Calendar.class);
+            if (value != null) {
+                return (T)value.getTime();
             }
         }
         else if (type == InputStream.class) {
@@ -85,13 +64,6 @@ class NoSqlValueMap extends ValueMapDecorator implements ModifiableValueMap {
             }
             else {
                 return null;
-            }
-        }
-        else if (type == byte[].class) {
-            // Support conversion from base64 string to byte array
-            Object value = get(name);
-            if (value instanceof String) {
-                return (T)DatatypeConverter.parseBase64Binary((String)value);
             }
         }
         else if ( type == null ) {
@@ -128,11 +100,10 @@ class NoSqlValueMap extends ValueMapDecorator implements ModifiableValueMap {
     }
 
     private static Object convertForWrite(Object value) {
-        if (value instanceof Calendar) {
-            value = getISO8601Format().format(((Calendar)value).getTime());
-        }
         if (value instanceof Date) {
-            value = getISO8601Format().format((Date)value);
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime((Date)value);
+            value = calendar;
         }
         else if (value instanceof InputStream) {
             // Store InputStream values as byte array
@@ -142,25 +113,27 @@ class NoSqlValueMap extends ValueMapDecorator implements ModifiableValueMap {
                 throw new RuntimeException("Unable to convert input stream to byte array.");
             }
         }
-        else if (value instanceof byte[]) {
-            value = DatatypeConverter.printBase64Binary((byte[])value);
-        }
-        else if (value != null && !isValidPrimitveType(value.getClass())) {
+        else if (value != null && !isValidType(value.getClass())) {
             throw new IllegalArgumentException("Data type not supported for NoSqlValueMap: " + value.getClass());
         }
         return value;
     }
     
-    static boolean isValidPrimitveType(Class clazz) {
+    static boolean isValidType(Class clazz) {
         if (clazz.isArray()) {
-            return isValidPrimitveType(clazz.getComponentType());
+            if (clazz.getComponentType() == byte.class) {
+                // byte only supported as array
+                return true;
+            }
+            return isValidType(clazz.getComponentType());
         }
         else {
             return clazz == String.class
                     || clazz == Integer.class
                     || clazz == Long.class
                     || clazz == Double.class
-                    || clazz == Boolean.class;
+                    || clazz == Boolean.class
+                    || Calendar.class.isAssignableFrom(clazz);
         }
     }
     
@@ -169,10 +142,6 @@ class NoSqlValueMap extends ValueMapDecorator implements ModifiableValueMap {
             map.put(entry.getKey(), convertForWrite(entry.getValue()));
         }
         return map;
-    }
-
-    private static DateFormat getISO8601Format() {
-        return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
     }
 
 }
