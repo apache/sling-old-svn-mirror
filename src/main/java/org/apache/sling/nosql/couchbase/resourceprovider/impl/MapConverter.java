@@ -35,7 +35,11 @@ public final class MapConverter {
         // static methods only
     }
 
-    static Map<String, Object> mapArrayToList(Map<String, Object> map) {
+    /**
+     * @param map Map with multi-valued arrays
+     * @return Map with multi-valued lists
+     */
+    public static Map<String, Object> mapArrayToList(Map<String, Object> map) {
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             if (entry.getValue().getClass().isArray()) {
                 Class componentType = entry.getValue().getClass().getComponentType();
@@ -59,8 +63,12 @@ public final class MapConverter {
         return map;
     }
 
+    /**
+     * @param map Map with multi-valued lists
+     * @return Map with multi-valued arrays
+     */
     @SuppressWarnings("unchecked")
-    static Map<String, Object> mapListToArray(Map<String, Object> map) {
+    public static Map<String, Object> mapListToArray(Map<String, Object> map) {
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             if (entry.getValue() instanceof List) {
                 List list = (List) entry.getValue();

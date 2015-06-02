@@ -38,8 +38,15 @@ import com.couchbase.client.java.view.ViewRow;
  */
 public final class CouchbaseNoSqlAdapter extends AbstractNoSqlAdapter {
 
-    private static final String PN_PATH = "path";
-    private static final String PN_DATA = "data";
+    /**
+     * Property holding path
+     */
+    public static final String PN_PATH = "path";
+    
+    /**
+     * Property holding properties data
+     */
+    public static final String PN_DATA = "data";
 
     private static final String VIEW_DESIGN_DOCUMENT = "resourceIndex";
     private static final String VIEW_PARENT_PATH = "parentPath";
