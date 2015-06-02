@@ -60,7 +60,7 @@ public class NoSqlResourceProvider implements ResourceProvider, ModifyingResourc
     private final Set<String> deletedResources = new HashSet<String>();
     
     public NoSqlResourceProvider(NoSqlAdapter adapter, EventAdmin eventAdmin) {
-        this.adapter = adapter;
+        this.adapter = new ValueMapConvertingNoSqlAdapter(adapter);
         this.eventAdmin = eventAdmin;
     }
 
