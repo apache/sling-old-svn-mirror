@@ -120,6 +120,7 @@
         <module>bundles/commons/log</module>
         <module>bundles/commons/logservice</module>
         <module>bundles/commons/mime</module>
+        <module>bundles/commons/contentdetection</module>
         <module>bundles/commons/osgi</module>
         <module>bundles/commons/scheduler</module>
         <module>bundles/commons/testing</module>
