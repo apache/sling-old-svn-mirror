@@ -44,6 +44,7 @@ public final class MockBundle implements Bundle {
     private final long bundleId;
     private final BundleContext bundleContext;
     private Map<String, String> headers = ImmutableMap.<String, String>of();
+    private String symbolicName = "mock-bundle";
 
     /**
      * Constructor
@@ -93,6 +94,18 @@ public final class MockBundle implements Bundle {
         this.headers = value;
     }
 
+    @Override
+    public String getSymbolicName() {
+        return this.symbolicName;
+    }
+
+    /**
+     * Set symbolic name for mock bundle
+     * @param value Symbolic name
+     */
+    public void setSymbolicName(String value) {
+        this.symbolicName = value;
+    }
     
     // --- unsupported operations ---
     @Override
@@ -132,11 +145,6 @@ public final class MockBundle implements Bundle {
 
     @Override
     public ServiceReference[] getServicesInUse() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getSymbolicName() {
         throw new UnsupportedOperationException();
     }
 
