@@ -61,11 +61,15 @@ public class MockBundleTest {
 
     @Test
     public void testGetHeaders() {
-        assertTrue(bundle.getHeaders().isEmpty());
-        
         ((MockBundle)bundle).setHeaders(ImmutableMap.of("prop1", "value1"));
         assertEquals("value1", bundle.getHeaders().get("prop1"));
         assertEquals("value1", bundle.getHeaders("en").get("prop1"));
+    }
+
+    @Test
+    public void testGetSymbolicName() throws Exception {
+        ((MockBundle)bundle).setSymbolicName("name-1");
+        assertEquals("name-1", bundle.getSymbolicName());
     }
 
 }
