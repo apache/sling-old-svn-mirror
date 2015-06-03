@@ -525,9 +525,11 @@ public class JobManagerImpl
             buf.append(ResourceHelper.RESOURCE_TYPE_JOB);
             buf.append(")[@");
             buf.append(ISO9075.encode(ResourceHelper.PROPERTY_JOB_TOPIC));
-            buf.append(" = '");
-            buf.append(topic);
-            buf.append("'");
+            if (topic != null) {
+                buf.append(" = '");
+                buf.append(topic);
+                buf.append("'");
+            }
 
             // restricting on the type - history or unfinished
             if ( isHistoryQuery ) {
