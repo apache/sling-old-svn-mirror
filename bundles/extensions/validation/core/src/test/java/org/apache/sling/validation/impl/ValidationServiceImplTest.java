@@ -127,7 +127,7 @@ public class ValidationServiceImplTest {
             @Override
             public ResourceResolver getAdministrativeResourceResolver(Map<String, Object> authenticationInfo)
                     throws LoginException {
-                // always return the same resource resolver but prevent it from being closed!
+                // always return a new resource resolver which has the query result handler bound
                 ResourceResolver resourceResolver = rrf.getAdministrativeResourceResolver(null);
                 MockJcr.addQueryResultHandler(resourceResolver.adaptTo(Session.class), prefixBasedResultHandler);
                 return resourceResolver;
@@ -803,7 +803,7 @@ public class ValidationServiceImplTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testValidateAllResourceTypesInResourceWithMissingValidator() throws Exception {
+    public void testValidateAllResourceTypesInResourceWithMissingValidationModel() throws Exception {
         validationService.validators.put("org.apache.sling.validation.impl.validators.RegexValidator",
                 new RegexValidator());
 
@@ -818,8 +818,9 @@ public class ValidationServiceImplTest {
                     JcrConstants.NT_UNSTRUCTURED, true);
             ModifiableValueMap values = resource.adaptTo(ModifiableValueMap.class);
             values.put("field2", "somvalue");
+            // this following resource type can not be validated
             Resource grandChildResource = ResourceUtil.getOrCreateResource(rr, "/content/testpage/par/testpar",
-                    "sling/validation/test2", JcrConstants.NT_UNSTRUCTURED, true);
+                    "sling/validation/test20", JcrConstants.NT_UNSTRUCTURED, true);
             values = grandChildResource.adaptTo(ModifiableValueMap.class);
             values.put("field2", "somvalue");
             validationService.validateAllResourceTypesInResource(resource, true,
