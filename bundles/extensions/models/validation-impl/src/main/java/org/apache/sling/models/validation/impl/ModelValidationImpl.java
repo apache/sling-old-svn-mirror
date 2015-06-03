@@ -77,7 +77,7 @@ public class ModelValidationImpl implements ModelValidation {
                 if (required) {
                     return new ValidationException(error);
                 } else {
-                    log.warn(error);
+                    log.debug(error);
                 }
             } else {
                 try {
@@ -92,8 +92,6 @@ public class ModelValidationImpl implements ModelValidation {
         } catch (IllegalStateException e) {
             return new ValidationException(e);
         }
-        
         return null;
     }
-
 }
