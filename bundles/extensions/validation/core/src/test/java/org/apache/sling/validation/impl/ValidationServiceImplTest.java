@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,8 +33,11 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
+import javax.jcr.Node;
+import javax.jcr.Session;
 
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
@@ -44,22 +48,24 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
+import org.apache.sling.testing.mock.jcr.MockJcr;
+import org.apache.sling.testing.mock.jcr.MockQuery;
+import org.apache.sling.testing.mock.jcr.MockQueryResult;
+import org.apache.sling.testing.mock.jcr.MockQueryResultHandler;
+import org.apache.sling.testing.mock.sling.MockSling;
+import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.validation.api.ValidationModel;
 import org.apache.sling.validation.api.ValidationResult;
 import org.apache.sling.validation.api.Validator;
 import org.apache.sling.validation.api.exceptions.SlingValidationException;
-import org.apache.sling.validation.impl.setup.MockedResourceResolver;
 import org.apache.sling.validation.impl.util.examplevalidators.DateValidator;
 import org.apache.sling.validation.impl.validators.RegexValidator;
 import org.hamcrest.Matchers;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.powermock.reflect.Whitebox;
 
 public class ValidationServiceImplTest {
@@ -76,53 +82,76 @@ public class ValidationServiceImplTest {
     private static Map<String, Object> primaryTypeUnstructuredMap;
     private ValidationServiceImpl validationService;
     private ResourceResolver rr;
+    private MockQueryResultHandler prefixBasedResultHandler;
+    private Map<String, List<Node>> validatorModelNodesPerPrefix;
 
     @BeforeClass
     public static void init() throws Exception {
-        rrf = mock(ResourceResolverFactory.class);
-        when(rrf.getAdministrativeResourceResolver(null)).thenAnswer(new Answer<ResourceResolver>() {
-            public ResourceResolver answer(InvocationOnMock invocation) throws Throwable {
-                return new MockedResourceResolver();
-            }
-        });
-        ResourceResolver rr = rrf.getAdministrativeResourceResolver(null);
-        if (rr != null) {
-            appsValidatorsRoot = ResourceUtil.getOrCreateResource(rr, APPS + "/" + VALIDATION_MODELS_RELATIVE_PATH,
-                    (Map<String, Object>) null, "sling:Folder", true);
-            libsValidatorsRoot = ResourceUtil.getOrCreateResource(rr, LIBS + "/" + VALIDATION_MODELS_RELATIVE_PATH,
-                    (Map<String, Object>) null, "sling:Folder", true);
-            rr.close();
-        }
-        
         primaryTypeUnstructuredMap = new HashMap<String, Object>();
         primaryTypeUnstructuredMap.put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
     }
 
-    @AfterClass
-    public static void beNiceAndClean() throws Exception {
-        ResourceResolver rr = rrf.getAdministrativeResourceResolver(null);
-        if (rr != null) {
-            if (appsValidatorsRoot != null) {
-                rr.delete(appsValidatorsRoot);
-            }
-            if (libsValidatorsRoot != null) {
-                rr.delete(libsValidatorsRoot);
-            }
-            rr.commit();
-            rr.close();
-        }
-    }
-
     @Before
-    public void setUp() throws LoginException {
+    public void setUp() throws LoginException, PersistenceException {
         validationService = new ValidationServiceImpl();
         validationService.validators = new HashMap<String, Validator<?>>();
-        Whitebox.setInternalState(validationService, "rrf", rrf);
+        
+        rrf = MockSling.newResourceResolverFactory(ResourceResolverType.JCR_MOCK);
+        prefixBasedResultHandler = new MockQueryResultHandler() {
+            @Override
+            public MockQueryResult executeQuery(MockQuery query) {
+                if (!"xpath".equals(query.getLanguage())) {
+                    return null;
+                }
+                String statement = query.getStatement();
+                if (statement.startsWith("/jcr:root/")) {
+                    statement = statement.substring("/jcr:root/".length() - 1);
+                }
+                // extract the first path from the statement
+                String prefix = Text.getAbsoluteParent(statement, 0);
+
+                if (validatorModelNodesPerPrefix.keySet().contains(prefix)) {
+                    return new MockQueryResult(validatorModelNodesPerPrefix.get(prefix));
+                }
+                return null;
+            }
+        };
         rr = rrf.getAdministrativeResourceResolver(null);
+        ResourceResolverFactory rrfForQuery = new ResourceResolverFactory() {
+
+            @Override
+            public ResourceResolver getResourceResolver(Map<String, Object> authenticationInfo) throws LoginException {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public ResourceResolver getAdministrativeResourceResolver(Map<String, Object> authenticationInfo)
+                    throws LoginException {
+                // always return the same resource resolver but prevent it from being closed!
+                ResourceResolver resourceResolver = rrf.getAdministrativeResourceResolver(null);
+                MockJcr.addQueryResultHandler(resourceResolver.adaptTo(Session.class), prefixBasedResultHandler);
+                return resourceResolver;
+            }
+
+        };
+        validatorModelNodesPerPrefix = new HashMap<String, List<Node>>();
+
+        Whitebox.setInternalState(validationService, "rrf", rrfForQuery);
+
+        appsValidatorsRoot = ResourceUtil.getOrCreateResource(rr, APPS + "/" + VALIDATION_MODELS_RELATIVE_PATH,
+                (Map<String, Object>) null, "sling:Folder", true);
+        libsValidatorsRoot = ResourceUtil.getOrCreateResource(rr, LIBS + "/" + VALIDATION_MODELS_RELATIVE_PATH,
+                (Map<String, Object>) null, "sling:Folder", true);
     }
 
     @After
     public void tearDown() throws PersistenceException {
+        if (appsValidatorsRoot != null) {
+            rr.delete(appsValidatorsRoot);
+        }
+        if (libsValidatorsRoot != null) {
+           rr.delete(libsValidatorsRoot);
+        }
         rr.commit();
         rr.close();
     }
@@ -870,6 +899,16 @@ public class ValidationServiceImplTest {
                 JcrResourceConstants.NT_SLING_FOLDER, true);
         if (model != null) {
             createValidationModelProperties(model, properties);
+            
+            // add to search handler (with root path)
+            String prefix = Text.getAbsoluteParent(root, 0);
+            List<Node> nodes;
+            nodes = validatorModelNodesPerPrefix.get(prefix);
+            if (nodes == null) {
+                nodes = new ArrayList<Node>();
+                validatorModelNodesPerPrefix.put(prefix, nodes);
+            }
+            nodes.add(model.adaptTo(Node.class));
         }
         return model;
     }
@@ -948,7 +987,11 @@ public class ValidationServiceImplTest {
         }
 
         TestProperty addValidator(String name, String... parameters) {
-            validators.put(name, parameters);
+            if (parameters.length == 0) {
+                validators.put(name, null);
+            } else {
+                validators.put(name, parameters);
+            }
             return this;
         }
     }
