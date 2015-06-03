@@ -57,7 +57,6 @@
                         </Private-Package>
                         <ScriptEngine-Name>${project.name}</ScriptEngine-Name>
                         <ScriptEngine-Version>${project.version}</ScriptEngine-Version>
-                        <Export-Package>javax.inject;version=0</Export-Package>
                     </instructions>
                 </configuration>
             </plugin>
@@ -138,6 +137,7 @@
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
             <version>1</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>
