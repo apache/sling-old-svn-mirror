@@ -183,8 +183,8 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     public <AdapterType> AdapterType getAdapter(Object adaptable, Class<AdapterType> type) {
         Result<AdapterType> result = internalCreateModel(adaptable, type);
         if (!result.wasSuccessfull()) {
-            // treat post-construct exception differently, because they are sometimes used for flow-control or validation purposes
-            if (result.getThrowable() instanceof PostConstructException) {
+            // treat post-construct and validation exceptions differently, because they are sometimes used for flow-control or validation purposes
+            if (result.getThrowable() instanceof PostConstructException || result.getThrowable() instanceof InvalidModelException) {
                 log.debug("Could not adapt to model", result.getThrowable());
             } else {
                 log.error("Could not adapt to model", result.getThrowable());
@@ -430,8 +430,8 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             if (defaultInjectionResult.wasSuccessfull()) {
                 // log previous injection error, if there was any
                 if (lastInjectionException != null) {
-                    // treat post-construct exception differently, because they are sometimes used for flow-control or validation purposes
-                    if (lastInjectionException instanceof PostConstructException) {
+                    // treat post-construct and validation exceptions differently, because they are sometimes used for flow-control or validation purposes
+                    if (lastInjectionException instanceof PostConstructException || lastInjectionException instanceof InvalidModelException) {
                         log.debug("Although falling back to default value worked, injection into {} failed because of: " + lastInjectionException.getMessage(), element.getAnnotatedElement(), lastInjectionException);
                     } else {
                         log.warn("Although falling back to default value worked, injection into {} failed because of: " + lastInjectionException.getMessage(), element.getAnnotatedElement(), lastInjectionException);
