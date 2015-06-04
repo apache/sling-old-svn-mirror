@@ -18,7 +18,9 @@
  */
 package org.apache.sling.testing.mock.sling.services;
 
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
@@ -48,6 +50,11 @@ public class MockSlingSettingServiceTest {
         Set<String> newRunModes = ImmutableSet.<String> builder().add("mode1").add("mode2").build();
         underTest.setRunModes(newRunModes);
         assertEquals(newRunModes, underTest.getRunModes());
+    }
+
+    @Test
+    public void slingId() {
+        assertThat(new MockSlingSettingService().getSlingId(), notNullValue());
     }
 
 }
