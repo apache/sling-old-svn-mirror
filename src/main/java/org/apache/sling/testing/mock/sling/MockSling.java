@@ -90,19 +90,19 @@ public final class MockSling {
         catch (ClassNotFoundException ex) {
             throw new RuntimeException("Unable to instantiate resourcer resolver: "
                     + type.getResourceResolverTypeAdapterClass()
-                    + (type.getArtifactCoordinates() != null ? "Make sure this maven dependency is included: "
+                    + (type.getArtifactCoordinates() != null ? ". Make sure this maven dependency is included: "
                             + type.getArtifactCoordinates() : ""), ex);
         }
         catch (InstantiationException ex) {
             throw new RuntimeException("Unable to instantiate resourcer resolver: "
                     + type.getResourceResolverTypeAdapterClass()
-                    + (type.getArtifactCoordinates() != null ? "Make sure this maven dependency is included: "
+                    + (type.getArtifactCoordinates() != null ? ". Make sure this maven dependency is included: "
                             + type.getArtifactCoordinates() : ""), ex);
         }
         catch (IllegalAccessException ex) {
             throw new RuntimeException("Unable to instantiate resourcer resolver: "
                     + type.getResourceResolverTypeAdapterClass()
-                    + (type.getArtifactCoordinates() != null ? "Make sure this maven dependency is included: "
+                    + (type.getArtifactCoordinates() != null ? ". Make sure this maven dependency is included: "
                             + type.getArtifactCoordinates() : ""), ex);
         }
     }
