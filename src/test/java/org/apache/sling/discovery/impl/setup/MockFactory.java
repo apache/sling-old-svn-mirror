@@ -83,6 +83,9 @@ public class MockFactory {
             {
                 allowing(settingsService).getSlingId();
                 will(returnValue(slingId));
+                
+                allowing(settingsService).getSlingHomePath();
+                will(returnValue("/n/a"));
             }
         });
         return settingsService;
