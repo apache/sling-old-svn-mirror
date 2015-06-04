@@ -313,7 +313,7 @@ public abstract class ModelUtility {
      * @result The value of the variable
      * @throws IllegalArgumentException If variable can't be found.
      */
-    private static String replace(final Feature feature, final String v, final VariableResolver resolver) {
+    static String replace(final Feature feature, final String v, final VariableResolver resolver) {
         if ( v == null ) {
             return null;
         }
@@ -322,12 +322,15 @@ public abstract class ModelUtility {
         int pos = -1;
         int start = 0;
         while ( ( pos = msg.indexOf('$', start) ) != -1 ) {
+            boolean escapedVariable = (pos > 0 && msg.charAt(pos - 1) == '\\');
             if ( msg.length() > pos && msg.charAt(pos + 1) == '{' && (pos == 0 || msg.charAt(pos - 1) != '$') ) {
                 final int endPos = msg.indexOf('}', pos);
                 if ( endPos != -1 ) {
                     final String name = msg.substring(pos + 2, endPos);
                     final String value;
-                    if ( resolver != null ) {
+                    if (escapedVariable) {
+                        value = "\\${" + name + "}";
+                    } else if ( resolver != null ) {
                         value = resolver.resolve(feature, name);
                     } else {
                         value = feature.getVariables().get(name);
@@ -335,7 +338,8 @@ public abstract class ModelUtility {
                     if ( value == null ) {
                         throw new IllegalArgumentException("Unknown variable: " + name);
                     }
-                    msg = msg.substring(0, pos) + value + msg.substring(endPos + 1);
+                    int startPos = escapedVariable ? pos - 1 : pos;
+                    msg = msg.substring(0, startPos) + value + msg.substring(endPos + 1);
                 }
             }
             start = pos + 1;
