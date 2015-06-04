@@ -52,6 +52,7 @@
     <module>junit/healthcheck</module>
     <module>junit/remote</module>
     <module>junit/performance</module>
+    <module>mocks/logging-mock</module>
     <module>mocks/resourceresolver-mock</module>
     <module>mocks/jcr-mock</module>
     <module>mocks/osgi-mock</module>
