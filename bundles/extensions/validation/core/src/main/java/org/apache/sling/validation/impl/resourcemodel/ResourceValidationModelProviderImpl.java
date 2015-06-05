@@ -89,15 +89,11 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
     private ServiceRegistration eventHandlerRegistration;
 
     @Activate
-    protected void activate(ComponentContext componentContext) {
+    protected void activate(ComponentContext componentContext) throws LoginException {
         threadPool = tpm.get("Validation Service Thread Pool");
         ResourceResolver rr = null;
         try {
             rr = rrf.getAdministrativeResourceResolver(null);
-        } catch (LoginException e) {
-            LOG.error("Cannot obtain a resource resolver.");
-        }
-        if (rr != null) {
             StringBuilder sb = new StringBuilder("(");
             String[] searchPaths = rr.getSearchPath();
             if (searchPaths.length > 1) {
@@ -117,10 +113,8 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
             eventHandlerRegistration = componentContext.getBundleContext().registerService(
                     EventHandler.class.getName(), this, eventHandlerProperties);
             LOG.debug("Registered event handler for validation models in {}", sb.toString());
+        } finally {
             rr.close();
-        } else {
-            LOG.warn("Null resource resolver. Cannot apply path filtering for event processing. Skipping registering this service as an "
-                    + "EventHandler");
         }
     }
 
@@ -137,6 +131,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
 
     @Override
     public void handleEvent(Event event) {
+        LOG.debug("Asynchronously invalidating models cache due to event {}", event);
         Runnable task = new Runnable() {
             @Override
             public void run() {
@@ -183,48 +178,9 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
     public @Nonnull Collection<ValidationModel> getModel(@Nonnull String relativeResourceType,
             @Nonnull Map<String, Validator<?>> validatorsMap) {
         ResourceResolver rr = null;
-        ResourceValidationModel vm;
-        Collection<ValidationModel> validationModels = new ArrayList<ValidationModel>();
         try {
             rr = rrf.getAdministrativeResourceResolver(null);
-            String[] searchPaths = rr.getSearchPath();
-            for (String searchPath : searchPaths) {
-                final String queryString = String.format(MODEL_XPATH_QUERY, searchPath,
-                        Constants.VALIDATION_MODEL_RESOURCE_TYPE, Constants.VALIDATED_RESOURCE_TYPE,
-                        relativeResourceType);
-                Iterator<Resource> models = rr.findResources(queryString, "xpath");
-                while (models.hasNext()) {
-                    Resource model = models.next();
-                    LOG.info("Found validation model resource {}.", model.getPath());
-                    String jcrPath = model.getPath();
-                    try {
-                        ValueMap validationModelProperties = model.adaptTo(ValueMap.class);
-                        String[] applicablePaths = PropertiesUtil.toStringArray(validationModelProperties.get(
-                                Constants.APPLICABLE_PATHS, String[].class));
-                        Resource r = model.getChild(Constants.PROPERTIES);
-                        Set<ResourceProperty> resourceProperties = ResourceValidationBuilder.buildProperties(
-                                validatorsMap, r);
-                        List<ChildResource> children = ResourceValidationBuilder.buildChildren(model, model,
-                                validatorsMap);
-                        if (resourceProperties.isEmpty() && children.isEmpty()) {
-                            throw new IllegalArgumentException("Neither children nor properties set.");
-                        } else {
-                            vm = new ResourceValidationModel(jcrPath, resourceProperties, relativeResourceType,
-                                    applicablePaths, children);
-                            validationModels.add(vm);
-                        }
-                    } catch (IllegalArgumentException e) {
-                        throw new IllegalStateException("Found invalid validation model in '" + jcrPath + "': "
-                                + e.getMessage(), e);
-                    }
-                }
-                if (validationModels.isEmpty()) {
-                    // do not continue to search in other search paths if some results were already found!
-                    // earlier search paths overlay lower search paths (/apps wins over /libs)
-                    // the applicable content paths do not matter here!
-                    break;
-                }
-            }
+            return getModel(rr, relativeResourceType, validatorsMap);
         } catch (LoginException e) {
             throw new IllegalStateException("Unable to obtain a resource resolver.", e);
         } finally {
@@ -232,7 +188,49 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
                 rr.close();
             }
         }
-        return validationModels;
     }
 
+    @Nonnull
+    Collection<ValidationModel> getModel(@Nonnull ResourceResolver resourceResolver,
+            @Nonnull String relativeResourceType, @Nonnull Map<String, Validator<?>> validatorsMap) {
+        ResourceValidationModel vm;
+        Collection<ValidationModel> validationModels = new ArrayList<ValidationModel>();
+        String[] searchPaths = resourceResolver.getSearchPath();
+        for (String searchPath : searchPaths) {
+            final String queryString = String.format(MODEL_XPATH_QUERY, searchPath,
+                    Constants.VALIDATION_MODEL_RESOURCE_TYPE, Constants.VALIDATED_RESOURCE_TYPE, relativeResourceType);
+            Iterator<Resource> models = resourceResolver.findResources(queryString, "xpath");
+            while (models.hasNext()) {
+                Resource model = models.next();
+                LOG.info("Found validation model resource {}.", model.getPath());
+                String jcrPath = model.getPath();
+                try {
+                    ValueMap validationModelProperties = model.adaptTo(ValueMap.class);
+                    String[] applicablePaths = PropertiesUtil.toStringArray(validationModelProperties.get(
+                            Constants.APPLICABLE_PATHS, String[].class));
+                    Resource r = model.getChild(Constants.PROPERTIES);
+                    Set<ResourceProperty> resourceProperties = ResourceValidationBuilder.buildProperties(validatorsMap,
+                            r);
+                    List<ChildResource> children = ResourceValidationBuilder.buildChildren(model, model, validatorsMap);
+                    if (resourceProperties.isEmpty() && children.isEmpty()) {
+                        throw new IllegalArgumentException("Neither children nor properties set.");
+                    } else {
+                        vm = new ResourceValidationModel(jcrPath, resourceProperties, relativeResourceType,
+                                applicablePaths, children);
+                        validationModels.add(vm);
+                    }
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalStateException("Found invalid validation model in '" + jcrPath + "': "
+                            + e.getMessage(), e);
+                }
+            }
+            if (validationModels.isEmpty()) {
+                // do not continue to search in other search paths if some results were already found!
+                // earlier search paths overlay lower search paths (/apps wins over /libs)
+                // the applicable content paths do not matter here!
+                break;
+            }
+        }
+        return validationModels;
+    }
 }
