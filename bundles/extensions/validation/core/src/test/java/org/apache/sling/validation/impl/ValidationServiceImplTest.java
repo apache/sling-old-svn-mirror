@@ -22,8 +22,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,9 +29,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
+import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.jackrabbit.JcrConstants;
@@ -69,7 +71,56 @@ import org.junit.Test;
 import org.powermock.reflect.Whitebox;
 
 public class ValidationServiceImplTest {
+    private final static class PrefixAndResourceType {
+        private final String prefix;
+        private final String resourceType;
+        
+        public PrefixAndResourceType(String prefix, String resourceType) {
+            super();
+            this.prefix = prefix;
+            this.resourceType = resourceType;
+        }
 
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((prefix == null) ? 0 : prefix.hashCode());
+            result = prime * result + ((resourceType == null) ? 0 : resourceType.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            PrefixAndResourceType other = (PrefixAndResourceType) obj;
+            if (prefix == null) {
+                if (other.prefix != null)
+                    return false;
+            } else if (!prefix.equals(other.prefix))
+                return false;
+            if (resourceType == null) {
+                if (other.resourceType != null)
+                    return false;
+            } else if (!resourceType.equals(other.resourceType))
+                return false;
+            return true;
+        }
+
+        public String getPrefix() {
+            return prefix;
+        }
+
+        public String getResourceType() {
+            return resourceType;
+        }
+    }
+    
     /**
      * Assume the validation models are stored under (/libs|/apps) + / + VALIDATION_MODELS_RELATIVE_PATH.
      */
@@ -83,7 +134,10 @@ public class ValidationServiceImplTest {
     private ValidationServiceImpl validationService;
     private ResourceResolver rr;
     private MockQueryResultHandler prefixBasedResultHandler;
-    private Map<String, List<Node>> validatorModelNodesPerPrefix;
+    private Map<PrefixAndResourceType, List<Node>> validatorModelNodesPerPrefixAndResourceType;
+    
+    // extract resource type from strings like "/jcr:root/apps//validation//*[@sling:resourceType="sling/validation/model" and @validatedResourceType="<some-resource-type>"]"
+    private static final Pattern RESOURCE_TYPE_PATTERN = Pattern.compile(".*@validatedResourceType=\"([^\"]*)\".*");
 
     @BeforeClass
     public static void init() throws Exception {
@@ -92,11 +146,13 @@ public class ValidationServiceImplTest {
     }
 
     @Before
-    public void setUp() throws LoginException, PersistenceException {
+    public void setUp() throws LoginException, PersistenceException, RepositoryException {
         validationService = new ValidationServiceImpl();
         validationService.validators = new HashMap<String, Validator<?>>();
         
         rrf = MockSling.newResourceResolverFactory(ResourceResolverType.JCR_MOCK);
+        // we must register the Sling namespace manually until https://issues.apache.org/jira/browse/SLING-4773 is solved
+        initializeJcrMock(rrf);
         prefixBasedResultHandler = new MockQueryResultHandler() {
             @Override
             public MockQueryResult executeQuery(MockQuery query) {
@@ -104,14 +160,23 @@ public class ValidationServiceImplTest {
                     return null;
                 }
                 String statement = query.getStatement();
+                // query looks like /jcr:root/apps//validation//*[@sling:resourceType="sling/validation/model" and @validatedResourceType="<some-resource-type>"]
                 if (statement.startsWith("/jcr:root/")) {
                     statement = statement.substring("/jcr:root/".length() - 1);
                 }
-                // extract the first path from the statement
+                // extract the prefix from the statement
                 String prefix = Text.getAbsoluteParent(statement, 0);
-
-                if (validatorModelNodesPerPrefix.keySet().contains(prefix)) {
-                    return new MockQueryResult(validatorModelNodesPerPrefix.get(prefix));
+                
+                // extract the resource type from the statement
+                Matcher matcher = RESOURCE_TYPE_PATTERN.matcher(statement);
+                if (!matcher.matches()) {
+                    throw new IllegalArgumentException("Can only process query statements which contain a validatedResourceType but the statement is: " + statement);
+                }
+                String resourceType = matcher.group(1);
+                
+                PrefixAndResourceType prefixAndResourceType = new PrefixAndResourceType(prefix, resourceType);
+                if (validatorModelNodesPerPrefixAndResourceType.keySet().contains(prefixAndResourceType)) {
+                    return new MockQueryResult(validatorModelNodesPerPrefixAndResourceType.get(prefixAndResourceType));
                 }
                 return null;
             }
@@ -134,7 +199,7 @@ public class ValidationServiceImplTest {
             }
 
         };
-        validatorModelNodesPerPrefix = new HashMap<String, List<Node>>();
+        validatorModelNodesPerPrefixAndResourceType = new HashMap<PrefixAndResourceType, List<Node>>();
 
         Whitebox.setInternalState(validationService, "rrf", rrfForQuery);
 
@@ -142,6 +207,21 @@ public class ValidationServiceImplTest {
                 (Map<String, Object>) null, "sling:Folder", true);
         libsValidatorsRoot = ResourceUtil.getOrCreateResource(rr, LIBS + "/" + VALIDATION_MODELS_RELATIVE_PATH,
                 (Map<String, Object>) null, "sling:Folder", true);
+    }
+    
+    /**
+     * Copied from ContextResourceResolverFactory#initializeJcrMock
+     * @param factory
+     * @throws RepositoryException
+     * @throws LoginException
+     */
+    private static void initializeJcrMock(ResourceResolverFactory factory) throws RepositoryException, LoginException {
+        // register default namespaces
+        ResourceResolver resolver = factory.getResourceResolver(null);
+        Session session = resolver.adaptTo(Session.class);
+        NamespaceRegistry namespaceRegistry = session.getWorkspace().getNamespaceRegistry();
+        namespaceRegistry.registerNamespace("sling", "http://sling.apache.org/jcr/sling/1.0");
+        resolver.close();
     }
 
     @After
@@ -903,11 +983,12 @@ public class ValidationServiceImplTest {
             
             // add to search handler (with root path)
             String prefix = Text.getAbsoluteParent(root, 0);
+            PrefixAndResourceType prefixAndResourceType = new PrefixAndResourceType(prefix, validatedResourceType);
             List<Node> nodes;
-            nodes = validatorModelNodesPerPrefix.get(prefix);
+            nodes = validatorModelNodesPerPrefixAndResourceType.get(prefixAndResourceType);
             if (nodes == null) {
                 nodes = new ArrayList<Node>();
-                validatorModelNodesPerPrefix.put(prefix, nodes);
+                validatorModelNodesPerPrefixAndResourceType.put(prefixAndResourceType, nodes);
             }
             nodes.add(model.adaptTo(Node.class));
         }
