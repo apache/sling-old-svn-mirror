@@ -51,7 +51,7 @@ public class ValidationResourceVisitor extends AbstractResourceVisitor {
         if (isValidSubResource(resource)) {
             // JCR will return then primary type instead!!
             @SuppressWarnings("null")
-			ValidationModel model = validationService.getValidationModel(resource);
+            ValidationModel model = validationService.getValidationModel(resource);
             if (model == null) {
                 if (enforceValidation) {
                     throw new IllegalArgumentException("No model for resource type " + resource.getResourceType() + " found.");
