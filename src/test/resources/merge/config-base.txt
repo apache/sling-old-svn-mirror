@@ -41,4 +41,8 @@ org.apache.test.C
       "3"
     ]
     name="C"    
+
+:bootstrap
+    uninstall bundle.a
+    uninstall bundle.b
     

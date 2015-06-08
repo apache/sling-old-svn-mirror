@@ -154,48 +154,63 @@ public abstract class ModelUtility {
             if ( mode != null ) {
                 baseConfig.getProperties().put(ModelConstants.CFG_UNPROCESSED_MODE, mode);
             }
-        }
-        final boolean baseIsRaw = baseConfig.getProperties().get(ModelConstants.CFG_UNPROCESSED) != null;
-        final boolean mergeIsRaw = mergeConfig.getProperties().get(ModelConstants.CFG_UNPROCESSED) != null;
-        // simplest case, both are raw
-        if ( baseIsRaw && mergeIsRaw ) {
-            final String cfgMode = (String)mergeConfig.getProperties().get(ModelConstants.CFG_UNPROCESSED_MODE);
-            if ( cfgMode == null || ModelConstants.CFG_MODE_OVERWRITE.equals(cfgMode) ) {
-                copyConfigurationProperties(baseConfig, mergeConfig);
-            } else {
-                final Configuration newConfig = new Configuration(baseConfig.getPid(), baseConfig.getFactoryPid());
-                getProcessedConfiguration(newConfig, baseConfig);
-                clearConfiguration(baseConfig);
-                copyConfigurationProperties(baseConfig, newConfig);
-
-                clearConfiguration(newConfig);
-                getProcessedConfiguration(newConfig, mergeConfig);
-                copyConfigurationProperties(baseConfig, newConfig);
-            }
-
-        // another simple case, both are not raw
-        } else if ( !baseIsRaw && !mergeIsRaw ) {
-            // merge mode is always overwrite
-            clearConfiguration(baseConfig);
-            copyConfigurationProperties(baseConfig, mergeConfig);
-
-        // base is not raw but merge is
-        } else if ( !baseIsRaw && mergeIsRaw ) {
-            final String cfgMode = (String)mergeConfig.getProperties().get(ModelConstants.CFG_UNPROCESSED_MODE);
-            if ( cfgMode == null || ModelConstants.CFG_MODE_OVERWRITE.equals(cfgMode) ) {
-                clearConfiguration(baseConfig);
-                copyConfigurationProperties(baseConfig, mergeConfig);
-            } else {
-                final Configuration newMergeConfig = new Configuration(mergeConfig.getPid(), mergeConfig.getFactoryPid());
-                getProcessedConfiguration(newMergeConfig, mergeConfig);
-                copyConfigurationProperties(baseConfig, newMergeConfig);
-            }
-
-            // base is raw, but merge is not raw
         } else {
-            // merge mode is always overwrite
-            clearConfiguration(baseConfig);
-            copyConfigurationProperties(baseConfig, mergeConfig);
+            final boolean baseIsRaw = baseConfig.getProperties().get(ModelConstants.CFG_UNPROCESSED) != null;
+            final boolean mergeIsRaw = mergeConfig.getProperties().get(ModelConstants.CFG_UNPROCESSED) != null;
+            // simplest case, both are raw
+            if ( baseIsRaw && mergeIsRaw ) {
+                final String cfgMode = (String)mergeConfig.getProperties().get(ModelConstants.CFG_UNPROCESSED_MODE);
+                if ( cfgMode == null || ModelConstants.CFG_MODE_OVERWRITE.equals(cfgMode) ) {
+                    copyConfigurationProperties(baseConfig, mergeConfig);
+                } else {
+                    final Configuration newConfig = new Configuration(baseConfig.getPid(), baseConfig.getFactoryPid());
+                    getProcessedConfiguration(newConfig, baseConfig);
+                    clearConfiguration(baseConfig);
+                    copyConfigurationProperties(baseConfig, newConfig);
+
+                    clearConfiguration(newConfig);
+                    getProcessedConfiguration(newConfig, mergeConfig);
+
+                    if ( baseConfig.isSpecial() ) {
+                        final String baseValue = baseConfig.getProperties().get(baseConfig.getPid()).toString();
+                        final String mergeValue = newConfig.getProperties().get(baseConfig.getPid()).toString();
+                        baseConfig.getProperties().put(baseConfig.getPid(), baseValue + "\n" + mergeValue);
+                    } else {
+                        copyConfigurationProperties(baseConfig, newConfig);
+                    }
+                }
+
+            // another simple case, both are not raw
+            } else if ( !baseIsRaw && !mergeIsRaw ) {
+                // merge mode is always overwrite
+                clearConfiguration(baseConfig);
+                copyConfigurationProperties(baseConfig, mergeConfig);
+
+            // base is not raw but merge is
+            } else if ( !baseIsRaw && mergeIsRaw ) {
+                final String cfgMode = (String)mergeConfig.getProperties().get(ModelConstants.CFG_UNPROCESSED_MODE);
+                if ( cfgMode == null || ModelConstants.CFG_MODE_OVERWRITE.equals(cfgMode) ) {
+                    clearConfiguration(baseConfig);
+                    copyConfigurationProperties(baseConfig, mergeConfig);
+                } else {
+                    final Configuration newMergeConfig = new Configuration(mergeConfig.getPid(), mergeConfig.getFactoryPid());
+                    getProcessedConfiguration(newMergeConfig, mergeConfig);
+
+                    if ( baseConfig.isSpecial() ) {
+                        final String baseValue = baseConfig.getProperties().get(baseConfig.getPid()).toString();
+                        final String mergeValue = newMergeConfig.getProperties().get(baseConfig.getPid()).toString();
+                        baseConfig.getProperties().put(baseConfig.getPid(), baseValue + "\n" + mergeValue);
+                    } else {
+                        copyConfigurationProperties(baseConfig, newMergeConfig);
+                    }
+                }
+
+                // base is raw, but merge is not raw
+            } else {
+                // merge mode is always overwrite
+                clearConfiguration(baseConfig);
+                copyConfigurationProperties(baseConfig, mergeConfig);
+            }
         }
     }
 
