@@ -117,6 +117,20 @@ public class U {
                 U.assertArtifact(g, "mvn:org.apache.sling/org.apache.sling.fragment.ws/${ws.version}/jar");
             }
         }
+        final Feature exampleFeature = m.getFeature("example");
+        final RunMode defaultExampleRM = exampleFeature.getRunMode();
+        final List<Configuration> configs = assertConfigurationsInRunMode(defaultExampleRM, 3);
+        final Configuration cfg = assertConfiguration(configs, "org.apache.sling.another.config");
+    }
+
+    public static Configuration assertConfiguration(final List<Configuration> configs, final String pid) {
+        for(final Configuration c : configs) {
+            if ( c.getPid().equals(pid) && c.getFactoryPid() == null ) {
+                return c;
+            }
+        }
+        fail("Configuration with PID " + pid + " not found in " + configs);
+        return null;
     }
 
     public static void assertArtifact(final Artifact artifact,
