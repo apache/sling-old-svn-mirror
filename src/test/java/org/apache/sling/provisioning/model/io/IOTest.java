@@ -16,14 +16,21 @@
  */
 package org.apache.sling.provisioning.model.io;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.sling.provisioning.model.Configuration;
 import org.apache.sling.provisioning.model.Model;
 import org.apache.sling.provisioning.model.ModelUtility;
-import org.apache.sling.provisioning.model.U;
 import org.apache.sling.provisioning.model.Traceable;
+import org.apache.sling.provisioning.model.U;
 import org.junit.Test;
 
 /** Read and merge our test models, write and read them again
@@ -33,7 +40,7 @@ public class IOTest {
 
     @Test public void testReadWrite() throws Exception {
         final Model result = U.readCompleteTestModel();
-        
+
         U.verifyTestModel(result, false);
 
         // Write the merged model
@@ -52,12 +59,43 @@ public class IOTest {
         if (readErrors != null ) {
             throw new Exception("Invalid read model : " + readErrors);
         }
-        
+
         // and verify the result
         U.verifyTestModel(readModel, false);
-        
+
         // Resolve variables and verify the result
         final Model effective = ModelUtility.getEffectiveModel(readModel, null);
         U.verifyTestModel(effective, true);
+    }
+
+    @Test public void testMultilineConfiguration() throws Exception {
+        final Model m = ModelUtility.getEffectiveModel(U.readCompleteTestModel(new String[] {"configadmin.txt"}), null);
+
+        final List<Configuration> configs = new ArrayList<Configuration>();
+        for(final Configuration c :  m.getFeature("configadmin").getRunMode().getConfigurations()) {
+            configs.add(c);
+        }
+
+        assertEquals(3, configs.size());
+
+        final Configuration cfgA = configs.get(0);
+        assertEquals("org.apache.test.A", cfgA.getPid());
+        assertNull(cfgA.getFactoryPid());
+        assertEquals(1, cfgA.getProperties().size());
+        assertEquals("A", cfgA.getProperties().get("name"));
+
+        final Configuration cfgB = configs.get(1);
+        assertEquals("org.apache.test.B", cfgB.getPid());
+        assertNull(cfgB.getFactoryPid());
+        assertEquals(2, cfgB.getProperties().size());
+        assertEquals("B", cfgB.getProperties().get("name"));
+        assertArrayEquals(new String[] {"one", "two", "three"}, (String[])cfgB.getProperties().get("array"));
+
+        final Configuration cfgC = configs.get(2);
+        assertEquals("org.apache.test.C", cfgC.getPid());
+        assertNull(cfgC.getFactoryPid());
+        assertEquals(2, cfgC.getProperties().size());
+        assertEquals("C", cfgC.getProperties().get("name"));
+        assertArrayEquals(new Integer[] {1,2,3}, (Integer[])cfgC.getProperties().get("array"));
     }
 }
