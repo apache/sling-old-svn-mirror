@@ -16,20 +16,22 @@
  */
 package org.apache.sling.jcr.contentloader.internal;
 
+import java.text.ParseException;
+import java.util.Calendar;
 import java.util.HashMap;
 
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
+import javax.jcr.*;
 
+import org.apache.sling.jcr.contentloader.ContentImportListener;
 import org.apache.sling.jcr.contentloader.ContentReader;
-import org.apache.sling.jcr.contentloader.ImportOptions;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JMock;
 import org.jmock.integration.junit4.JUnit4Mockery;
+import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import static org.junit.Assert.*;
 
 @RunWith(JMock.class)
 public class DefaultContentCreatorTest {
@@ -42,36 +44,13 @@ public class DefaultContentCreatorTest {
     
     Property prop;
     
-    @org.junit.Test public void willRewriteUndefinedPropertyType() throws RepositoryException {
+    @Test
+    public void willRewriteUndefinedPropertyType() throws RepositoryException {
         contentCreator = new DefaultContentCreator(null);
         parentNode = mockery.mock(Node.class);
         prop = mockery.mock(Property.class);
-        contentCreator.init(new ImportOptions(){
-
-            @Override
-            public boolean isCheckin() {
-                return false;
-            }
-
-			@Override
-			public boolean isAutoCheckout() {
-				return true;
-			}
-
-			@Override
-            public boolean isIgnoredImportProvider(String extension) {
-                return false;
-            }
-
-            @Override
-            public boolean isOverwrite() {
-                return true;
-            }
-            
-            @Override
-			public boolean isPropertyOverwrite() {
-				return true;
-			} }, new HashMap<String, ContentReader>(), null, null);
+        contentCreator.init(U.createImportOptions(true, true, true, false, false),
+                new HashMap<String, ContentReader>(), null, null);
         
         contentCreator.prepareParsing(parentNode, null);
         this.mockery.checking(new Expectations() {{
@@ -83,36 +62,13 @@ public class DefaultContentCreatorTest {
         contentCreator.createProperty("foo", PropertyType.UNDEFINED, "bar");
     }
     
-    @org.junit.Test public void willNotRewriteUndefinedPropertyType() throws RepositoryException {
+    @Test
+    public void willNotRewriteUndefinedPropertyType() throws RepositoryException {
         contentCreator = new DefaultContentCreator(null);
         parentNode = mockery.mock(Node.class);
         prop = mockery.mock(Property.class);
-        contentCreator.init(new ImportOptions(){
-
-            @Override
-            public boolean isCheckin() {
-                return false;
-            }
-
-            @Override
-			public boolean isAutoCheckout() {
-				return true;
-			}
-
-            @Override
-            public boolean isIgnoredImportProvider(String extension) {
-                return false;
-            }
-
-            @Override
-            public boolean isOverwrite() {
-                return false;
-            }
-
-			@Override
-			public boolean isPropertyOverwrite() {
-				return false;
-			} }, new HashMap<String, ContentReader>(), null, null);
+        contentCreator.init(U.createImportOptions(false, false, true, false, false),
+                new HashMap<String, ContentReader>(), null, null);
         
         contentCreator.prepareParsing(parentNode, null);
         this.mockery.checking(new Expectations() {{
@@ -123,4 +79,151 @@ public class DefaultContentCreatorTest {
         contentCreator.createProperty("foo", PropertyType.UNDEFINED, "bar");
     }
 
+    @Test
+    public void testDoesNotCreateProperty() throws RepositoryException {
+        final String propertyName = "foo";
+        prop = mockery.mock(Property.class);
+        parentNode = mockery.mock(Node.class);
+
+        this.mockery.checking(new Expectations(){{
+            oneOf(parentNode).hasProperty(propertyName); will(returnValue(true));
+            oneOf(parentNode).getProperty(propertyName); will(returnValue(prop));
+            oneOf(prop).isNew(); will(returnValue(false));
+        }});
+
+        contentCreator = new DefaultContentCreator(null);
+        contentCreator.init(U.createImportOptions(false, false, false, false, false),
+                new HashMap<String, ContentReader>(), null, null);
+        contentCreator.prepareParsing(parentNode, null);
+        //By calling this method we expect that it will returns on first if-statement
+        contentCreator.createProperty("foo", PropertyType.REFERENCE, "bar");
+        //Checking that
+        mockery.assertIsSatisfied();
+    }
+
+    @Test
+    public void testCreateReferenceProperty() throws RepositoryException {
+        final String propertyName = "foo";
+        final String propertyValue = "bar";
+        final String rootNodeName = "root";
+        final String uuid = "1b8c88d37f0000020084433d3af4941f";
+        final Session session = mockery.mock(Session.class);
+        final ContentImportListener listener = mockery.mock(ContentImportListener.class);
+        parentNode = mockery.mock(Node.class);
+        prop = mockery.mock(Property.class);
+
+        this.mockery.checking(new Expectations(){{
+            oneOf(session).itemExists(with(any(String.class))); will(returnValue(true));
+            oneOf(session).getItem(with(any(String.class))); will(returnValue(parentNode));
+
+            exactly(2).of(parentNode).getPath(); will(returnValue("/" + rootNodeName));
+            oneOf(parentNode).isNode(); will(returnValue(true));
+            oneOf(parentNode).isNodeType("mix:referenceable"); will(returnValue(true));
+            oneOf(parentNode).getUUID(); will(returnValue(uuid));
+            oneOf(parentNode).getSession(); will(returnValue(session));
+            oneOf(parentNode).hasProperty(with(any(String.class)));
+            oneOf(parentNode).setProperty(propertyName, uuid, PropertyType.REFERENCE);
+            oneOf(parentNode).getProperty(with(any(String.class)));
+            oneOf(listener).onCreate(with(any(String.class)));
+        }});
+
+        contentCreator = new DefaultContentCreator(null);
+        contentCreator.init(U.createImportOptions(false, false, false, false, false),
+                new HashMap<String, ContentReader>(), null, listener);
+        contentCreator.prepareParsing(parentNode,null);
+        contentCreator.createProperty(propertyName, PropertyType.REFERENCE, propertyValue);
+        //The only way I found how to test this method is to check numbers of methods calls
+        mockery.assertIsSatisfied();
+    }
+
+    @Test
+    public void testCreateFalseCheckedOutPreperty() throws RepositoryException {
+        parentNode = mockery.mock(Node.class);
+
+        this.mockery.checking(new Expectations(){{
+            oneOf(parentNode).hasProperty(with(any(String.class)));
+        }});
+
+        contentCreator = new DefaultContentCreator(null);
+        contentCreator.init(U.createImportOptions(false, false, false, false, false),
+                new HashMap<String, ContentReader>(), null, null);
+        contentCreator.prepareParsing(parentNode, null);
+
+        int numberOfVersionablesNodes = contentCreator.getVersionables().size();
+        contentCreator.createProperty("jcr:isCheckedOut", PropertyType.UNDEFINED, "false");
+        //Checking that list of versionables was changed
+        assertEquals(numberOfVersionablesNodes + 1, contentCreator.getVersionables().size());
+        mockery.assertIsSatisfied();
+    }
+
+    @Test
+    public void testCreateTrueCheckedOutPreperty() throws RepositoryException {
+        parentNode = mockery.mock(Node.class);
+
+        this.mockery.checking(new Expectations(){{
+            oneOf(parentNode).hasProperty(with(any(String.class)));
+        }});
+
+        contentCreator = new DefaultContentCreator(null);
+        contentCreator.init(U.createImportOptions(false, false, false, false, false),
+                new HashMap<String, ContentReader>(), null, null);
+        contentCreator.prepareParsing(parentNode, null);
+
+        int numberOfVersionablesNodes = contentCreator.getVersionables().size();
+        contentCreator.createProperty("jcr:isCheckedOut", PropertyType.UNDEFINED, "true");
+        //Checking that list of versionables doesn't changed
+        assertEquals(numberOfVersionablesNodes, contentCreator.getVersionables().size());
+        mockery.assertIsSatisfied();
+    }
+
+    @Test
+    public void testCreateDateProperty() throws RepositoryException, ParseException {
+        final String propertyName = "dateProp";
+        final String propertyValue = "2012-10-01T09:45:00.000+02:00";
+        final ContentImportListener listener = mockery.mock(ContentImportListener.class);
+        parentNode = mockery.mock(Node.class);
+        prop = mockery.mock(Property.class);
+
+        this.mockery.checking(new Expectations(){{
+            oneOf(parentNode).hasProperty(with(any(String.class)));
+            oneOf(parentNode).setProperty(with(any(String.class)), with(any(Calendar.class)));
+            oneOf(parentNode).getProperty(with(any(String.class))); will(returnValue(prop));
+            oneOf(prop).getPath(); will(returnValue(""));
+            oneOf(listener).onCreate(with(any(String.class)));
+        }});
+
+        contentCreator = new DefaultContentCreator(null);
+        contentCreator.init(U.createImportOptions(false, false, false, false, false),
+                new HashMap<String, ContentReader>(), null, listener);
+        contentCreator.prepareParsing(parentNode, null);
+
+        contentCreator.createProperty(propertyName, PropertyType.DATE, propertyValue);
+        mockery.assertIsSatisfied();
+    }
+
+    @Test
+    public void testCreatePropertyWithNewPropertyType() throws RepositoryException, ParseException {
+        final String propertyName = "foo";
+        final String propertyValue = "bar";
+        final Integer propertyType = -1;
+        final ContentImportListener listener = mockery.mock(ContentImportListener.class);
+        parentNode = mockery.mock(Node.class);
+        prop = mockery.mock(Property.class);
+
+        this.mockery.checking(new Expectations(){{
+            oneOf(parentNode).hasProperty(with(any(String.class)));
+            oneOf(parentNode).getProperty(propertyName); will(returnValue(prop));
+            oneOf(parentNode).setProperty(propertyName, propertyValue, propertyType);
+            oneOf(prop).getPath(); will(returnValue(""));
+            oneOf(listener).onCreate(with(any(String.class)));
+        }});
+
+        contentCreator = new DefaultContentCreator(null);
+        contentCreator.init(U.createImportOptions(false, false, false, false, false),
+                new HashMap<String, ContentReader>(), null, listener);
+        contentCreator.prepareParsing(parentNode, null);
+
+        contentCreator.createProperty(propertyName, propertyType, propertyValue);
+        mockery.assertIsSatisfied();
+    }
 }
