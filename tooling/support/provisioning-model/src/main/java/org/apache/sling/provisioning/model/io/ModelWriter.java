@@ -147,7 +147,7 @@ public class ModelWriter {
                             for(final Map.Entry<String, String> entry : ad.getMetadata().entrySet()) {
                                 if ( first ) {
                                     first = false;
-                                    pw.print(" { ");
+                                    pw.print(" [");
                                 } else {
                                     pw.print(", ");
                                 }
@@ -155,7 +155,7 @@ public class ModelWriter {
                                 pw.print("=");
                                 pw.print(entry.getValue());
                             }
-                            pw.print("}");
+                            pw.print("]");
                         }
                         pw.println();
                     }
@@ -182,9 +182,9 @@ public class ModelWriter {
                         }
                         pw.print(config.getPid());
                         if ( !ModelConstants.CFG_FORMAT_FELIX_CA.equals(format) ) {
-                            pw.print(" { format=}");
+                            pw.print(" [format=");
                             pw.print(format);
-                            pw.print(" }");
+                            pw.print("]");
                         }
                         pw.println();
 

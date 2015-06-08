@@ -32,7 +32,9 @@ import org.apache.sling.provisioning.model.Model;
 import org.apache.sling.provisioning.model.ModelConstants;
 import org.apache.sling.provisioning.model.RunMode;
 
-
+/**
+ * This class offers a method to read a model using a {@code Reader} instance.
+ */
 public class ModelReader {
 
     private enum CATEGORY {
@@ -56,8 +58,11 @@ public class ModelReader {
 
     /**
      * Reads the model file
-     * The reader is not closed.
-     * @throws IOException
+     * The reader is not closed. It is up to the caller to close the reader.
+     *
+     * @param reader The reader providing the model
+     * @param location Optional location string identifying the source of the model.
+     * @throws IOException If an error occurs
      */
     public static Model read(final Reader reader, final String location)
     throws IOException {
@@ -69,14 +74,14 @@ public class ModelReader {
 
     private final Model model = new Model();
 
-    private Feature feature = null;
-    private RunMode runMode = null;
-    private ArtifactGroup artifactGroup = null;
-    private Configuration config = null;
+    private Feature feature;
+    private RunMode runMode;
+    private ArtifactGroup artifactGroup;
+    private Configuration config;
 
-    private String comment = null;
+    private String comment;
 
-    private StringBuilder configBuilder = null;
+    private StringBuilder configBuilder;
 
     private LineNumberReader lineNumberReader;
 
