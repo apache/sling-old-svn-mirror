@@ -243,7 +243,7 @@ public class ModelReader {
                                               final int startPos = line.indexOf("[");
                                               if ( startPos != -1 ) {
                                                   configId = line.substring(0, startPos).trim();
-                                                  cfgPars = parseParameters(line.substring(startPos + 1, line.length() - 1).trim(), new String[] {"format"});
+                                                  cfgPars = parseParameters(line.substring(startPos + 1, line.length() - 1).trim(), new String[] {"format", "mode"});
                                               }
                                           }
                                           String format = cfgPars.get("format");
@@ -254,6 +254,15 @@ public class ModelReader {
                                               }
                                           } else {
                                               format = ModelConstants.CFG_FORMAT_FELIX_CA;
+                                          }
+                                          String cfgMode= cfgPars.get("mode");
+                                          if ( cfgMode != null ) {
+                                              if ( !ModelConstants.CFG_MODE_OVERWRITE.equals(cfgMode)
+                                                      && !ModelConstants.CFG_MODE_MERGE.equals(cfgMode) ) {
+                                                      throw new IOException(exceptionPrefix + "Unknown mode configuration parameter in line " + this.lineNumberReader.getLineNumber() + ": " + line);
+                                                  }
+                                          } else {
+                                              cfgMode = ModelConstants.CFG_MODE_OVERWRITE;
                                           }
                                           final String pid;
                                           final String factoryPid;
@@ -271,6 +280,7 @@ public class ModelReader {
                                           config = runMode.getOrCreateConfiguration(pid, factoryPid);
                                           this.init(config);
                                           config.getProperties().put(ModelConstants.CFG_UNPROCESSED_FORMAT, format);
+                                          config.getProperties().put(ModelConstants.CFG_UNPROCESSED_MODE, cfgMode);
                                           configBuilder = new StringBuilder();
                                           mode = CATEGORY.CONFIG;
                                           break;

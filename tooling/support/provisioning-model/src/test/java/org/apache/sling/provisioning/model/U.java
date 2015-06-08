@@ -52,7 +52,7 @@ public class U {
 
     /** Read the complete model from that names */
     public static Model readCompleteTestModel(final String[] names) throws Exception {
-        final Model result = new Model();
+        Model result = null;
 
         for(final String name : names) {
             final Reader reader = new InputStreamReader(U.class.getResourceAsStream("/" + name), "UTF-8");
@@ -62,7 +62,11 @@ public class U {
                 if (errors != null ) {
                     throw new Exception("Invalid model at " + name + " : " + errors);
                 }
-                ModelUtility.merge(result, current);
+                if ( result == null ) {
+                    result = current;
+                } else {
+                    ModelUtility.merge(result, current);
+                }
             } finally {
                 reader.close();
             }

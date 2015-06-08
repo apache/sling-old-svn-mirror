@@ -175,15 +175,31 @@ public class ModelWriter {
                         if ( format == null ) {
                             format = ModelConstants.CFG_FORMAT_FELIX_CA;
                         }
+                        String cfgMode = (String)config.getProperties().get(ModelConstants.CFG_UNPROCESSED_MODE);
+                        if ( cfgMode == null ) {
+                            cfgMode = ModelConstants.CFG_MODE_OVERWRITE;
+                        }
                         pw.print("  ");
                         if ( config.getFactoryPid() != null ) {
                             pw.print(config.getFactoryPid());
                             pw.print("-");
                         }
                         pw.print(config.getPid());
-                        if ( !ModelConstants.CFG_FORMAT_FELIX_CA.equals(format) ) {
-                            pw.print(" [format=");
-                            pw.print(format);
+                        final boolean isDefaultFormat = ModelConstants.CFG_FORMAT_FELIX_CA.equals(format);
+                        final boolean isDefaultMode = ModelConstants.CFG_MODE_OVERWRITE.equals(cfgMode);
+                        if ( !isDefaultFormat || !isDefaultMode ) {
+                            pw.print(" [");
+                            if ( !isDefaultFormat ) {
+                                pw.print("format=");
+                                pw.print(format);
+                                if ( !isDefaultMode ) {
+                                    pw.print(",");
+                                }
+                            }
+                            if ( !isDefaultMode) {
+                                pw.print("mode=");
+                                pw.print(cfgMode);
+                            }
                             pw.print("]");
                         }
                         pw.println();

@@ -16,8 +16,10 @@
  */
 package org.apache.sling.provisioning.model;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.util.List;
 
@@ -67,5 +69,128 @@ public class ModelUtilityTest {
         final List<Configuration> cfgs2 = U.assertConfigurationsInRunMode(model.getFeature("f").getRunMode("myrunmode"), 2);
         assertEquals("org.sling.service.runmode.A", cfgs2.get(0).getPid());
         assertEquals("org.sling.service.runmode.C", cfgs2.get(1).getPid());
+    }
+
+    @Test public void mergeRawTest() throws Exception {
+        final Model baseRaw = U.readCompleteTestModel(new String[] {"merge/config-base.txt"});
+        final Model mergeRaw = U.readCompleteTestModel(new String[] {"merge/config-merge.txt"});
+
+        ModelUtility.merge(baseRaw, mergeRaw);
+
+        final List<Configuration> cfgs = U.assertConfigurationsInRunMode(baseRaw.getFeature("configadmin").getRunMode(), 3);
+
+        final Configuration cfgA = cfgs.get(0);
+        assertEquals("org.apache.test.A", cfgA.getPid());
+        assertNull(cfgA.getFactoryPid());
+        assertEquals(1, cfgA.getProperties().size());
+        assertEquals("AA", cfgA.getProperties().get("name"));
+
+        final Configuration cfgB = cfgs.get(1);
+        assertEquals("org.apache.test.B", cfgB.getPid());
+        assertNull(cfgB.getFactoryPid());
+        assertEquals(3, cfgB.getProperties().size());
+        assertEquals("BB", cfgB.getProperties().get("name"));
+        assertEquals("bar", cfgB.getProperties().get("foo"));
+        assertArrayEquals(new String[] {"one", "two", "three"}, (String[])cfgB.getProperties().get("array"));
+
+        final Configuration cfgC = cfgs.get(2);
+        assertEquals("org.apache.test.C", cfgC.getPid());
+        assertNull(cfgC.getFactoryPid());
+        assertEquals(3, cfgC.getProperties().size());
+        assertEquals("C", cfgC.getProperties().get("name"));
+        assertEquals("bar", cfgB.getProperties().get("foo"));
+        assertArrayEquals(new Integer[] {1,2,3}, (Integer[])cfgC.getProperties().get("array"));
+    }
+
+    @Test public void mergeEffectiveTest() throws Exception {
+        final Model baseRaw = U.readCompleteTestModel(new String[] {"merge/config-base.txt"});
+        final Model mergeRaw = U.readCompleteTestModel(new String[] {"merge/config-merge.txt"});
+
+        final Model baseEffective = ModelUtility.getEffectiveModel(baseRaw, null);
+        final Model mergeEffective = ModelUtility.getEffectiveModel(mergeRaw, null);
+
+        ModelUtility.merge(baseEffective, mergeEffective);
+
+        final List<Configuration> cfgs = U.assertConfigurationsInRunMode(baseEffective.getFeature("configadmin").getRunMode(), 3);
+
+        final Configuration cfgA = cfgs.get(0);
+        assertEquals("org.apache.test.A", cfgA.getPid());
+        assertNull(cfgA.getFactoryPid());
+        assertEquals(1, cfgA.getProperties().size());
+        assertEquals("AA", cfgA.getProperties().get("name"));
+
+        final Configuration cfgB = cfgs.get(1);
+        assertEquals("org.apache.test.B", cfgB.getPid());
+        assertNull(cfgB.getFactoryPid());
+        assertEquals(2, cfgB.getProperties().size());
+        assertEquals("BB", cfgB.getProperties().get("name"));
+        assertEquals("bar", cfgB.getProperties().get("foo"));
+
+        final Configuration cfgC = cfgs.get(2);
+        assertEquals("org.apache.test.C", cfgC.getPid());
+        assertNull(cfgC.getFactoryPid());
+        assertEquals(1, cfgC.getProperties().size());
+        assertEquals("bar", cfgB.getProperties().get("foo"));
+    }
+
+    @Test public void mergeBaseRawTest() throws Exception {
+        final Model baseRaw = U.readCompleteTestModel(new String[] {"merge/config-base.txt"});
+        final Model mergeRaw = U.readCompleteTestModel(new String[] {"merge/config-merge.txt"});
+        final Model mergeEffective = ModelUtility.getEffectiveModel(mergeRaw, null);
+
+        ModelUtility.merge(baseRaw, mergeEffective);
+
+        final List<Configuration> cfgs = U.assertConfigurationsInRunMode(baseRaw.getFeature("configadmin").getRunMode(), 3);
+
+        final Configuration cfgA = cfgs.get(0);
+        assertEquals("org.apache.test.A", cfgA.getPid());
+        assertNull(cfgA.getFactoryPid());
+        assertEquals(1, cfgA.getProperties().size());
+        assertEquals("AA", cfgA.getProperties().get("name"));
+
+        final Configuration cfgB = cfgs.get(1);
+        assertEquals("org.apache.test.B", cfgB.getPid());
+        assertNull(cfgB.getFactoryPid());
+        assertEquals(2, cfgB.getProperties().size());
+        assertEquals("BB", cfgB.getProperties().get("name"));
+        assertEquals("bar", cfgB.getProperties().get("foo"));
+
+        final Configuration cfgC = cfgs.get(2);
+        assertEquals("org.apache.test.C", cfgC.getPid());
+        assertNull(cfgC.getFactoryPid());
+        assertEquals(1, cfgC.getProperties().size());
+        assertEquals("bar", cfgB.getProperties().get("foo"));
+    }
+
+    @Test public void mergeBaseEffectiveTest() throws Exception {
+        final Model baseRaw = U.readCompleteTestModel(new String[] {"merge/config-base.txt"});
+        final Model mergeRaw = U.readCompleteTestModel(new String[] {"merge/config-merge.txt"});
+        final Model baseEffective = ModelUtility.getEffectiveModel(baseRaw, null);
+
+        ModelUtility.merge(baseEffective, mergeRaw);
+
+        final List<Configuration> cfgs = U.assertConfigurationsInRunMode(baseEffective.getFeature("configadmin").getRunMode(), 3);
+
+        final Configuration cfgA = cfgs.get(0);
+        assertEquals("org.apache.test.A", cfgA.getPid());
+        assertNull(cfgA.getFactoryPid());
+        assertEquals(1, cfgA.getProperties().size());
+        assertEquals("AA", cfgA.getProperties().get("name"));
+
+        final Configuration cfgB = cfgs.get(1);
+        assertEquals("org.apache.test.B", cfgB.getPid());
+        assertNull(cfgB.getFactoryPid());
+        assertEquals(3, cfgB.getProperties().size());
+        assertEquals("BB", cfgB.getProperties().get("name"));
+        assertEquals("bar", cfgB.getProperties().get("foo"));
+        assertArrayEquals(new String[] {"one", "two", "three"}, (String[])cfgB.getProperties().get("array"));
+
+        final Configuration cfgC = cfgs.get(2);
+        assertEquals("org.apache.test.C", cfgC.getPid());
+        assertNull(cfgC.getFactoryPid());
+        assertEquals(3, cfgC.getProperties().size());
+        assertEquals("C", cfgC.getProperties().get("name"));
+        assertEquals("bar", cfgB.getProperties().get("foo"));
+        assertArrayEquals(new Integer[] {1,2,3}, (Integer[])cfgC.getProperties().get("array"));
     }
 }

@@ -43,7 +43,7 @@ public class IOTest {
 
         U.verifyTestModel(result, false);
 
-        // Write the merged model
+        // Write the merged raw model
         StringWriter writer = new StringWriter();
         try {
             ModelWriter.write(writer, result);
@@ -66,6 +66,21 @@ public class IOTest {
         // Resolve variables and verify the result
         final Model effective = ModelUtility.getEffectiveModel(readModel, null);
         U.verifyTestModel(effective, true);
+
+        // write effective model
+        writer = new StringWriter();
+        ModelWriter.write(writer, effective);
+        writer.close();
+
+        reader = new StringReader(writer.toString());
+        final Model readModel2 = ModelReader.read(reader, "memory");
+        reader.close();
+        final Map<Traceable, String> readErrors2 = ModelUtility.validate(readModel2);
+        if (readErrors2 != null ) {
+            throw new Exception("Invalid read model : " + readErrors2);
+        }
+        // and verify the result
+        U.verifyTestModel(readModel2, true);
     }
 
     @Test public void testMultilineConfiguration() throws Exception {

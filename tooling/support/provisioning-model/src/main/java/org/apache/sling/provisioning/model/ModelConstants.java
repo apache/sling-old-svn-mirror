@@ -45,11 +45,29 @@ public abstract class ModelConstants {
     /** Format of the unprocessed configuration values. */
     public static final String CFG_UNPROCESSED_FORMAT = ":rawconfig.format";
 
+    /**
+     * Format of the unprocessed configuration values.
+     * @since 1.1
+     */
+    public static final String CFG_UNPROCESSED_MODE = ":rawconfig.mode";
+
     /** Format of the Apache Felix Config Admin. */
     public static final String CFG_FORMAT_FELIX_CA = "felixca";
 
     /** Property file format. */
     public static final String CFG_FORMAT_PROPERTIES = "properties";
+
+    /**
+     * Mode for overwriting a configuration.
+     * @since 1.1
+     */
+    public static final String CFG_MODE_OVERWRITE = "overwrite";
+
+    /**
+     * Mode for merging a configuration
+     * @since 1.1
+     */
+    public static final String CFG_MODE_MERGE = "merge";
 
     /** Name of the webapp run mode. */
     public static final String RUN_MODE_WEBAPP = ":webapp";
