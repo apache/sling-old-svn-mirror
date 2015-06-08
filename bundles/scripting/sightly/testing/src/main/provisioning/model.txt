@@ -21,6 +21,7 @@
 [artifacts]
   org.apache.sling/org.apache.sling.launchpad/8-SNAPSHOT/slingstart
   org.apache.sling/org.apache.sling.scripting.sightly.testing-content/1.0.5-SNAPSHOT
+  org.apache.sling/org.apache.sling.scripting.javascript/2.0.17-SNAPSHOT
 
 # additional configuration for testing
 [configurations]
