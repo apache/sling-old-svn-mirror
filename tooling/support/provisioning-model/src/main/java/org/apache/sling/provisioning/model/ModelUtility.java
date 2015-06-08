@@ -147,6 +147,14 @@ public abstract class ModelUtility {
      */
     private static void mergeConfiguration(final Configuration baseConfig, final Configuration mergeConfig) {
         // check for merge mode
+        final boolean isNew = baseConfig.getProperties().isEmpty();
+        if ( isNew ) {
+            copyConfigurationProperties(baseConfig, mergeConfig);
+            final Object mode = mergeConfig.getProperties().get(ModelConstants.CFG_UNPROCESSED_MODE);
+            if ( mode != null ) {
+                baseConfig.getProperties().put(ModelConstants.CFG_UNPROCESSED_MODE, mode);
+            }
+        }
         final boolean baseIsRaw = baseConfig.getProperties().get(ModelConstants.CFG_UNPROCESSED) != null;
         final boolean mergeIsRaw = mergeConfig.getProperties().get(ModelConstants.CFG_UNPROCESSED) != null;
         // simplest case, both are raw
