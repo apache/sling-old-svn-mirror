@@ -24,8 +24,10 @@ import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.felix.cm.file.ConfigurationHandler;
 
@@ -125,11 +127,8 @@ public abstract class ModelUtility {
                 // configurations
                 for(final Configuration config : runMode.getConfigurations()) {
                     final Configuration found = baseRunMode.getOrCreateConfiguration(config.getPid(), config.getFactoryPid());
-                    final Enumeration<String> e = config.getProperties().keys();
-                    while ( e.hasMoreElements() ) {
-                        final String key = e.nextElement();
-                        found.getProperties().put(key, config.getProperties().get(key));
-                    }
+
+                    mergeConfiguration(found, config);
                 }
 
                 // settings
@@ -138,6 +137,79 @@ public abstract class ModelUtility {
                 }
             }
 
+        }
+    }
+
+    /**
+     * Merge two configurations
+     * @param baseConfig The base configuration.
+     * @param mergeConfig The merge configuration.
+     */
+    private static void mergeConfiguration(final Configuration baseConfig, final Configuration mergeConfig) {
+        // check for merge mode
+        final boolean baseIsRaw = baseConfig.getProperties().get(ModelConstants.CFG_UNPROCESSED) != null;
+        final boolean mergeIsRaw = mergeConfig.getProperties().get(ModelConstants.CFG_UNPROCESSED) != null;
+        // simplest case, both are raw
+        if ( baseIsRaw && mergeIsRaw ) {
+            final String cfgMode = (String)mergeConfig.getProperties().get(ModelConstants.CFG_UNPROCESSED_MODE);
+            if ( cfgMode == null || ModelConstants.CFG_MODE_OVERWRITE.equals(cfgMode) ) {
+                copyConfigurationProperties(baseConfig, mergeConfig);
+            } else {
+                final Configuration newConfig = new Configuration(baseConfig.getPid(), baseConfig.getFactoryPid());
+                getProcessedConfiguration(newConfig, baseConfig);
+                clearConfiguration(baseConfig);
+                copyConfigurationProperties(baseConfig, newConfig);
+
+                clearConfiguration(newConfig);
+                getProcessedConfiguration(newConfig, mergeConfig);
+                copyConfigurationProperties(baseConfig, newConfig);
+            }
+
+        // another simple case, both are not raw
+        } else if ( !baseIsRaw && !mergeIsRaw ) {
+            // merge mode is always overwrite
+            clearConfiguration(baseConfig);
+            copyConfigurationProperties(baseConfig, mergeConfig);
+
+        // base is not raw but merge is
+        } else if ( !baseIsRaw && mergeIsRaw ) {
+            final String cfgMode = (String)mergeConfig.getProperties().get(ModelConstants.CFG_UNPROCESSED_MODE);
+            if ( cfgMode == null || ModelConstants.CFG_MODE_OVERWRITE.equals(cfgMode) ) {
+                clearConfiguration(baseConfig);
+                copyConfigurationProperties(baseConfig, mergeConfig);
+            } else {
+                final Configuration newMergeConfig = new Configuration(mergeConfig.getPid(), mergeConfig.getFactoryPid());
+                getProcessedConfiguration(newMergeConfig, mergeConfig);
+                copyConfigurationProperties(baseConfig, newMergeConfig);
+            }
+
+            // base is raw, but merge is not raw
+        } else {
+            // merge mode is always overwrite
+            clearConfiguration(baseConfig);
+            copyConfigurationProperties(baseConfig, mergeConfig);
+        }
+    }
+
+    private static void clearConfiguration(final Configuration cfg) {
+        final Set<String> keys = new HashSet<String>();
+        final Enumeration<String> e = cfg.getProperties().keys();
+        while ( e.hasMoreElements() ) {
+            keys.add(e.nextElement());
+        }
+
+        for(final String key : keys) {
+            cfg.getProperties().remove(key);
+        }
+    }
+
+    private static void copyConfigurationProperties(final Configuration baseConfig, final Configuration mergeConfig) {
+        final Enumeration<String> e = mergeConfig.getProperties().keys();
+        while ( e.hasMoreElements() ) {
+            final String key = e.nextElement();
+            if ( !key.equals(ModelConstants.CFG_UNPROCESSED_MODE) ) {
+                baseConfig.getProperties().put(key, mergeConfig.getProperties().get(key));
+            }
         }
     }
 
@@ -204,80 +276,8 @@ public abstract class ModelUtility {
                 newRunMode.getConfigurations().setLocation(runMode.getConfigurations().getLocation());
                 for(final Configuration config : runMode.getConfigurations()) {
                     final Configuration newConfig = newRunMode.getOrCreateConfiguration(config.getPid(), config.getFactoryPid());
-                    newConfig.setComment(config.getComment());
-                    newConfig.setLocation(config.getLocation());
 
-                    // check for raw configuration
-                    final String rawConfig = (String)config.getProperties().get(ModelConstants.CFG_UNPROCESSED);
-                    if ( rawConfig != null ) {
-                        if ( config.isSpecial() ) {
-                            newConfig.getProperties().put(config.getPid(), rawConfig);
-                        } else {
-                            final String format = (String)config.getProperties().get(ModelConstants.CFG_UNPROCESSED_FORMAT);
-
-                            if ( ModelConstants.CFG_FORMAT_PROPERTIES.equals(format) ) {
-                                // properties
-                                final Properties props = new Properties();
-                                try {
-                                    props.load(new StringReader(rawConfig));
-                                } catch ( final IOException ioe) {
-                                    throw new IllegalArgumentException("Unable to read configuration properties.", ioe);
-                                }
-                                final Enumeration<Object> i = props.keys();
-                                while ( i.hasMoreElements() ) {
-                                    final String key = (String)i.nextElement();
-                                    newConfig.getProperties().put(key, props.get(key));
-                                }
-                            } else {
-                                // Apache Felix CA format
-                                // the raw format might have comments, we have to remove them first
-                                final StringBuilder sb = new StringBuilder();
-                                try {
-                                    final LineNumberReader lnr = new LineNumberReader(new StringReader(rawConfig));
-                                    String line = null;
-                                    while ((line = lnr.readLine()) != null ) {
-                                        line = line.trim();
-                                        if ( line.isEmpty() || line.startsWith("#")) {
-                                            continue;
-                                        }
-                                        sb.append(line);
-                                        sb.append('\n');
-                                    }
-                                } catch ( final IOException ioe) {
-                                    throw new IllegalArgumentException("Unable to read configuration properties: " + config, ioe);
-                                }
-
-                                ByteArrayInputStream bais = null;
-                                try {
-                                    bais = new ByteArrayInputStream(sb.toString().getBytes("UTF-8"));
-                                    @SuppressWarnings("unchecked")
-                                    final Dictionary<String, Object> props = ConfigurationHandler.read(bais);
-                                    final Enumeration<String> i = props.keys();
-                                    while ( i.hasMoreElements() ) {
-                                        final String key = i.nextElement();
-                                        newConfig.getProperties().put(key, props.get(key));
-                                    }
-                                } catch ( final IOException ioe) {
-                                    throw new IllegalArgumentException("Unable to read configuration properties: " + config, ioe);
-                                } finally {
-                                    if ( bais != null ) {
-                                        try {
-                                            bais.close();
-                                        } catch ( final IOException ignore ) {
-                                            // ignore
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        // simply copy
-                        final Enumeration<String> i = config.getProperties().keys();
-                        while ( i.hasMoreElements() ) {
-                            final String key = i.nextElement();
-                            newConfig.getProperties().put(key, config.getProperties().get(key));
-                        }
-                    }
+                    getProcessedConfiguration(newConfig, config);
                 }
 
                 newRunMode.getSettings().setComment(runMode.getSettings().getComment());
@@ -420,5 +420,82 @@ public abstract class ModelUtility {
             return null;
         }
         return errors;
+    }
+
+    private static void getProcessedConfiguration(final Configuration newConfig, final Configuration config) {
+        newConfig.setComment(config.getComment());
+        newConfig.setLocation(config.getLocation());
+
+        // check for raw configuration
+        final String rawConfig = (String)config.getProperties().get(ModelConstants.CFG_UNPROCESSED);
+        if ( rawConfig != null ) {
+            if ( config.isSpecial() ) {
+                newConfig.getProperties().put(config.getPid(), rawConfig);
+            } else {
+                final String format = (String)config.getProperties().get(ModelConstants.CFG_UNPROCESSED_FORMAT);
+
+                if ( ModelConstants.CFG_FORMAT_PROPERTIES.equals(format) ) {
+                    // properties
+                    final Properties props = new Properties();
+                    try {
+                        props.load(new StringReader(rawConfig));
+                    } catch ( final IOException ioe) {
+                        throw new IllegalArgumentException("Unable to read configuration properties.", ioe);
+                    }
+                    final Enumeration<Object> i = props.keys();
+                    while ( i.hasMoreElements() ) {
+                        final String key = (String)i.nextElement();
+                        newConfig.getProperties().put(key, props.get(key));
+                    }
+                } else {
+                    // Apache Felix CA format
+                    // the raw format might have comments, we have to remove them first
+                    final StringBuilder sb = new StringBuilder();
+                    try {
+                        final LineNumberReader lnr = new LineNumberReader(new StringReader(rawConfig));
+                        String line = null;
+                        while ((line = lnr.readLine()) != null ) {
+                            line = line.trim();
+                            if ( line.isEmpty() || line.startsWith("#")) {
+                                continue;
+                            }
+                            sb.append(line);
+                            sb.append('\n');
+                        }
+                    } catch ( final IOException ioe) {
+                        throw new IllegalArgumentException("Unable to read configuration properties: " + config, ioe);
+                    }
+
+                    ByteArrayInputStream bais = null;
+                    try {
+                        bais = new ByteArrayInputStream(sb.toString().getBytes("UTF-8"));
+                        @SuppressWarnings("unchecked")
+                        final Dictionary<String, Object> props = ConfigurationHandler.read(bais);
+                        final Enumeration<String> i = props.keys();
+                        while ( i.hasMoreElements() ) {
+                            final String key = i.nextElement();
+                            newConfig.getProperties().put(key, props.get(key));
+                        }
+                    } catch ( final IOException ioe) {
+                        throw new IllegalArgumentException("Unable to read configuration properties: " + config, ioe);
+                    } finally {
+                        if ( bais != null ) {
+                            try {
+                                bais.close();
+                            } catch ( final IOException ignore ) {
+                                // ignore
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            // simply copy
+            final Enumeration<String> i = config.getProperties().keys();
+            while ( i.hasMoreElements() ) {
+                final String key = i.nextElement();
+                newConfig.getProperties().put(key, config.getProperties().get(key));
+            }
+        }
     }
 }
