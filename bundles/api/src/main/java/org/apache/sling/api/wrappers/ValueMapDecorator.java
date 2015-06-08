@@ -221,4 +221,22 @@ public class ValueMapDecorator implements ValueMap {
     public String toString() {
         return super.toString() + " : " + this.base.toString();
     }
+
+    @Override
+    /**
+     * {@inheritDoc}
+     */
+    public int hashCode() {
+        return base.hashCode();
+    }
+
+    @Override
+    /**
+     * {@inheritDoc}
+     */
+    public boolean equals(Object obj) {
+        return base.equals(obj);
+    }
+    
+    
 }
