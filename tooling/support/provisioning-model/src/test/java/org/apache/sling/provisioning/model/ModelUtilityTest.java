@@ -20,6 +20,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
@@ -77,15 +78,21 @@ public class ModelUtilityTest {
 
         ModelUtility.merge(baseRaw, mergeRaw);
 
-        final List<Configuration> cfgs = U.assertConfigurationsInRunMode(baseRaw.getFeature("configadmin").getRunMode(), 3);
+        final List<Configuration> cfgs = U.assertConfigurationsInRunMode(baseRaw.getFeature("configadmin").getRunMode(), 4);
 
-        final Configuration cfgA = cfgs.get(0);
+        final Configuration cfgBoot = cfgs.get(0);
+        assertEquals(1, cfgBoot.getProperties().size());
+        assertTrue(cfgBoot.getProperties().get(":bootstrap").toString().contains("uninstall bundle.a"));
+        assertTrue(cfgBoot.getProperties().get(":bootstrap").toString().contains("uninstall bundle.b"));
+        assertTrue(cfgBoot.getProperties().get(":bootstrap").toString().contains("uninstall bundle.c"));
+
+        final Configuration cfgA = cfgs.get(1);
         assertEquals("org.apache.test.A", cfgA.getPid());
         assertNull(cfgA.getFactoryPid());
         assertEquals(1, cfgA.getProperties().size());
         assertEquals("AA", cfgA.getProperties().get("name"));
 
-        final Configuration cfgB = cfgs.get(1);
+        final Configuration cfgB = cfgs.get(2);
         assertEquals("org.apache.test.B", cfgB.getPid());
         assertNull(cfgB.getFactoryPid());
         assertEquals(3, cfgB.getProperties().size());
@@ -93,7 +100,7 @@ public class ModelUtilityTest {
         assertEquals("bar", cfgB.getProperties().get("foo"));
         assertArrayEquals(new String[] {"one", "two", "three"}, (String[])cfgB.getProperties().get("array"));
 
-        final Configuration cfgC = cfgs.get(2);
+        final Configuration cfgC = cfgs.get(3);
         assertEquals("org.apache.test.C", cfgC.getPid());
         assertNull(cfgC.getFactoryPid());
         assertEquals(3, cfgC.getProperties().size());
@@ -111,22 +118,26 @@ public class ModelUtilityTest {
 
         ModelUtility.merge(baseEffective, mergeEffective);
 
-        final List<Configuration> cfgs = U.assertConfigurationsInRunMode(baseEffective.getFeature("configadmin").getRunMode(), 3);
+        final List<Configuration> cfgs = U.assertConfigurationsInRunMode(baseEffective.getFeature("configadmin").getRunMode(), 4);
 
-        final Configuration cfgA = cfgs.get(0);
+        final Configuration cfgBoot = cfgs.get(0);
+        assertEquals(1, cfgBoot.getProperties().size());
+        assertTrue(cfgBoot.getProperties().get(":bootstrap").toString().contains("uninstall bundle.c"));
+
+        final Configuration cfgA = cfgs.get(1);
         assertEquals("org.apache.test.A", cfgA.getPid());
         assertNull(cfgA.getFactoryPid());
         assertEquals(1, cfgA.getProperties().size());
         assertEquals("AA", cfgA.getProperties().get("name"));
 
-        final Configuration cfgB = cfgs.get(1);
+        final Configuration cfgB = cfgs.get(2);
         assertEquals("org.apache.test.B", cfgB.getPid());
         assertNull(cfgB.getFactoryPid());
         assertEquals(2, cfgB.getProperties().size());
         assertEquals("BB", cfgB.getProperties().get("name"));
         assertEquals("bar", cfgB.getProperties().get("foo"));
 
-        final Configuration cfgC = cfgs.get(2);
+        final Configuration cfgC = cfgs.get(3);
         assertEquals("org.apache.test.C", cfgC.getPid());
         assertNull(cfgC.getFactoryPid());
         assertEquals(1, cfgC.getProperties().size());
@@ -140,22 +151,26 @@ public class ModelUtilityTest {
 
         ModelUtility.merge(baseRaw, mergeEffective);
 
-        final List<Configuration> cfgs = U.assertConfigurationsInRunMode(baseRaw.getFeature("configadmin").getRunMode(), 3);
+        final List<Configuration> cfgs = U.assertConfigurationsInRunMode(baseRaw.getFeature("configadmin").getRunMode(), 4);
 
-        final Configuration cfgA = cfgs.get(0);
+        final Configuration cfgBoot = cfgs.get(0);
+        assertEquals(1, cfgBoot.getProperties().size());
+        assertTrue(cfgBoot.getProperties().get(":bootstrap").toString().contains("uninstall bundle.c"));
+
+        final Configuration cfgA = cfgs.get(1);
         assertEquals("org.apache.test.A", cfgA.getPid());
         assertNull(cfgA.getFactoryPid());
         assertEquals(1, cfgA.getProperties().size());
         assertEquals("AA", cfgA.getProperties().get("name"));
 
-        final Configuration cfgB = cfgs.get(1);
+        final Configuration cfgB = cfgs.get(2);
         assertEquals("org.apache.test.B", cfgB.getPid());
         assertNull(cfgB.getFactoryPid());
         assertEquals(2, cfgB.getProperties().size());
         assertEquals("BB", cfgB.getProperties().get("name"));
         assertEquals("bar", cfgB.getProperties().get("foo"));
 
-        final Configuration cfgC = cfgs.get(2);
+        final Configuration cfgC = cfgs.get(3);
         assertEquals("org.apache.test.C", cfgC.getPid());
         assertNull(cfgC.getFactoryPid());
         assertEquals(1, cfgC.getProperties().size());
@@ -169,15 +184,21 @@ public class ModelUtilityTest {
 
         ModelUtility.merge(baseEffective, mergeRaw);
 
-        final List<Configuration> cfgs = U.assertConfigurationsInRunMode(baseEffective.getFeature("configadmin").getRunMode(), 3);
+        final List<Configuration> cfgs = U.assertConfigurationsInRunMode(baseEffective.getFeature("configadmin").getRunMode(), 4);
 
-        final Configuration cfgA = cfgs.get(0);
+        final Configuration cfgBoot = cfgs.get(0);
+        assertEquals(1, cfgBoot.getProperties().size());
+        assertTrue(cfgBoot.getProperties().get(":bootstrap").toString().contains("uninstall bundle.a"));
+        assertTrue(cfgBoot.getProperties().get(":bootstrap").toString().contains("uninstall bundle.b"));
+        assertTrue(cfgBoot.getProperties().get(":bootstrap").toString().contains("uninstall bundle.c"));
+
+        final Configuration cfgA = cfgs.get(1);
         assertEquals("org.apache.test.A", cfgA.getPid());
         assertNull(cfgA.getFactoryPid());
         assertEquals(1, cfgA.getProperties().size());
         assertEquals("AA", cfgA.getProperties().get("name"));
 
-        final Configuration cfgB = cfgs.get(1);
+        final Configuration cfgB = cfgs.get(2);
         assertEquals("org.apache.test.B", cfgB.getPid());
         assertNull(cfgB.getFactoryPid());
         assertEquals(3, cfgB.getProperties().size());
@@ -185,7 +206,7 @@ public class ModelUtilityTest {
         assertEquals("bar", cfgB.getProperties().get("foo"));
         assertArrayEquals(new String[] {"one", "two", "three"}, (String[])cfgB.getProperties().get("array"));
 
-        final Configuration cfgC = cfgs.get(2);
+        final Configuration cfgC = cfgs.get(3);
         assertEquals("org.apache.test.C", cfgC.getPid());
         assertNull(cfgC.getFactoryPid());
         assertEquals(3, cfgC.getProperties().size());
