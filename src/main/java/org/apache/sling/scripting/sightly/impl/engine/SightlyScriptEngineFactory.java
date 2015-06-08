@@ -27,7 +27,7 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
+import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 
 /**
@@ -47,10 +47,8 @@ public class SightlyScriptEngineFactory extends AbstractScriptEngineFactory {
     @Reference
     private ExtensionRegistryService extensionRegistryService = null;
 
-    @Reference()
-    private DynamicClassLoaderManager dynamicClassLoaderManager;
-
-    private ClassLoader dynamicClassLoader;
+    @Reference
+    private ClassLoaderWriter classLoaderWriter = null;
 
     public final static String SHORT_NAME = "sightly";
 
@@ -80,23 +78,7 @@ public class SightlyScriptEngineFactory extends AbstractScriptEngineFactory {
         return new SightlyScriptEngine(this, unitLoader, extensionRegistryService);
     }
 
-    protected void bindDynamicClassLoaderManager(final DynamicClassLoaderManager dclm) {
-        if (this.dynamicClassLoader != null) {
-            this.dynamicClassLoader = null;
-            this.dynamicClassLoaderManager = null;
-        }
-        this.dynamicClassLoaderManager = dclm;
-        dynamicClassLoader = dclm.getDynamicClassLoader();
-    }
-
-    protected void unbindDynamicClassLoaderManager(final DynamicClassLoaderManager dclm) {
-        if (this.dynamicClassLoaderManager == dclm) {
-            this.dynamicClassLoader = null;
-            this.dynamicClassLoaderManager = null;
-        }
-    }
-
     protected ClassLoader getClassLoader() {
-        return dynamicClassLoader;
+        return classLoaderWriter.getClassLoader();
     }
 }
