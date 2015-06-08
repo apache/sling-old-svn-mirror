@@ -52,7 +52,7 @@ import org.apache.sling.validation.api.spi.ValidationModelCache;
 import org.apache.sling.validation.api.spi.ValidationModelProvider;
 import org.apache.sling.validation.impl.Constants;
 import org.apache.sling.validation.impl.ValidationModelRetrieverImpl;
-import org.apache.sling.validation.impl.util.ResourceValidationBuilder;
+import org.apache.sling.validation.impl.model.ValidationModelImpl;
 import org.apache.sling.validation.impl.util.Trie;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
@@ -193,7 +193,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
     @Nonnull
     Collection<ValidationModel> getModel(@Nonnull ResourceResolver resourceResolver,
             @Nonnull String relativeResourceType, @Nonnull Map<String, Validator<?>> validatorsMap) {
-        ResourceValidationModel vm;
+        ValidationModelImpl vm;
         Collection<ValidationModel> validationModels = new ArrayList<ValidationModel>();
         String[] searchPaths = resourceResolver.getSearchPath();
         for (String searchPath : searchPaths) {
@@ -209,13 +209,12 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
                     String[] applicablePaths = PropertiesUtil.toStringArray(validationModelProperties.get(
                             Constants.APPLICABLE_PATHS, String[].class));
                     Resource r = model.getChild(Constants.PROPERTIES);
-                    Set<ResourceProperty> resourceProperties = ResourceValidationBuilder.buildProperties(validatorsMap,
-                            r);
-                    List<ChildResource> children = ResourceValidationBuilder.buildChildren(model, model, validatorsMap);
+                    List<ResourceProperty> resourceProperties = ResourceValidationModelBuilder.buildProperties(validatorsMap,r);
+                    List<ChildResource> children = ResourceValidationModelBuilder.buildChildren(model, model, validatorsMap);
                     if (resourceProperties.isEmpty() && children.isEmpty()) {
                         throw new IllegalArgumentException("Neither children nor properties set.");
                     } else {
-                        vm = new ResourceValidationModel(jcrPath, resourceProperties, relativeResourceType,
+                        vm = new ValidationModelImpl(resourceProperties, relativeResourceType,
                                 applicablePaths, children);
                         validationModels.add(vm);
                     }
@@ -224,7 +223,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
                             + e.getMessage(), e);
                 }
             }
-            if (validationModels.isEmpty()) {
+            if (!validationModels.isEmpty()) {
                 // do not continue to search in other search paths if some results were already found!
                 // earlier search paths overlay lower search paths (/apps wins over /libs)
                 // the applicable content paths do not matter here!

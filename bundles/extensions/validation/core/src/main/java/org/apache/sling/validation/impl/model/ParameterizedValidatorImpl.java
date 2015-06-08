@@ -16,21 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.impl;
+package org.apache.sling.validation.impl.model;
+
+import java.util.Map;
 
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.validation.api.ParameterizedValidator;
 import org.apache.sling.validation.api.Validator;
 import org.apache.sling.validation.impl.util.ValidatorTypeUtil;
 
 public class ParameterizedValidatorImpl implements ParameterizedValidator {
     private final @Nonnull Validator<?> validator;
-    private final @Nonnull ValueMap parameters;
+    private final @Nonnull Map<String, Object> parameters;
     private final @Nonnull Class<?> type;
     
-    public ParameterizedValidatorImpl(@Nonnull Validator<?> validator, @Nonnull ValueMap parameters) {
+    // to make it possible to implement the equals operation we rely in Map instead of ValueMap here!
+    public ParameterizedValidatorImpl(@Nonnull Validator<?> validator, @Nonnull Map<String, Object> parameters) {
         super();
         this.validator = validator;
         this.parameters = parameters;
@@ -51,7 +55,7 @@ public class ParameterizedValidatorImpl implements ParameterizedValidator {
      */
     @Override
     public @Nonnull ValueMap getParameters() {
-        return parameters;
+        return new ValueMapDecorator(parameters);
     }
     
     /* (non-Javadoc)
@@ -61,4 +65,48 @@ public class ParameterizedValidatorImpl implements ParameterizedValidator {
     public @Nonnull Class<?> getType() {
         return type;
     }
+
+    @Override
+    public String toString() {
+        return "ParameterizedValidatorImpl [validator=" + validator + ", parameters=" + parameters + ", type=" + type
+                + "]";
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((parameters == null) ? 0 : parameters.hashCode());
+        result = prime * result + ((type == null) ? 0 : type.hashCode());
+        result = prime * result + ((validator == null) ? 0 : validator.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ParameterizedValidatorImpl other = (ParameterizedValidatorImpl) obj;
+        if (parameters == null) {
+            if (other.parameters != null)
+                return false;
+        } else if (!parameters.equals(other.parameters))
+            return false;
+        if (type == null) {
+            if (other.type != null)
+                return false;
+        } else if (!type.equals(other.type))
+            return false;
+        if (validator == null) {
+            if (other.validator != null)
+                return false;
+        } else if (!validator.getClass().getName().equals(other.validator.getClass().getName()))
+            return false;
+        return true;
+    }
+    
 }

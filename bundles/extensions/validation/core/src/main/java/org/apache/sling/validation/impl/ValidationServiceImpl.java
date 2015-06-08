@@ -59,8 +59,7 @@ import org.apache.sling.validation.api.ValidationResult;
 import org.apache.sling.validation.api.ValidationService;
 import org.apache.sling.validation.api.Validator;
 import org.apache.sling.validation.api.exceptions.SlingValidationException;
-import org.apache.sling.validation.impl.resourcemodel.ResourceValidationModel;
-import org.apache.sling.validation.impl.util.ResourceValidationBuilder;
+import org.apache.sling.validation.impl.resourcemodel.ResourceValidationModelBuilder;
 import org.apache.sling.validation.impl.util.Trie;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
@@ -227,7 +226,7 @@ public class ValidationServiceImpl implements ValidationService{
         return visitor.getResult();
     }
 
-    private void validateValueMap(ValueMap valueMap, String relativePath, Set<ResourceProperty> resourceProperties,
+    private void validateValueMap(ValueMap valueMap, String relativePath, List<ResourceProperty> resourceProperties,
             ValidationResultImpl result) {
         if (valueMap == null) {
             throw new IllegalArgumentException("ValueMap may not be null");

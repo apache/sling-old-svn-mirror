@@ -31,9 +31,9 @@ public interface ValidationModel {
     /**
      * Returns the properties validated by this model.
      *
-     * @return the properties set (never {@code null}, but might be empty set)
+     * @return the properties list (never {@code null}, but might be empty list)
      */
-    @Nonnull Set<ResourceProperty> getResourceProperties();
+    @Nonnull List<ResourceProperty> getResourceProperties();
 
     /**
      * Returns the type of resource this model validates.

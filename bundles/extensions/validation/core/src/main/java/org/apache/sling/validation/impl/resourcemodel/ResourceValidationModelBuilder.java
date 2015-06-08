@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.impl.util;
+package org.apache.sling.validation.impl.resourcemodel;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,6 +25,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import javax.annotation.Nonnull;
 
@@ -36,15 +38,15 @@ import org.apache.sling.validation.api.ChildResource;
 import org.apache.sling.validation.api.ParameterizedValidator;
 import org.apache.sling.validation.api.ResourceProperty;
 import org.apache.sling.validation.api.Validator;
-import org.apache.sling.validation.impl.ChildResourceImpl;
 import org.apache.sling.validation.impl.Constants;
-import org.apache.sling.validation.impl.ParameterizedValidatorImpl;
-import org.apache.sling.validation.impl.ResourcePropertyImpl;
+import org.apache.sling.validation.impl.model.ChildResourceImpl;
+import org.apache.sling.validation.impl.model.ParameterizedValidatorImpl;
+import org.apache.sling.validation.impl.model.ResourcePropertyImpl;
 
 /**
  * Helps building validation related objects from Sling resources.
  */
-public class ResourceValidationBuilder {
+public class ResourceValidationModelBuilder {
 
     /**
      * Creates a set of the properties that a resource is expected to have, together with the associated validators.
@@ -54,8 +56,8 @@ public class ResourceValidationBuilder {
      * @return a set of properties or an empty set if no properties are defined
      * @see ResourceProperty
      */
-    public static @Nonnull Set<ResourceProperty> buildProperties(@Nonnull Map<String, Validator<?>> validatorsMap, Resource propertiesResource) {
-        Set<ResourceProperty> properties = new HashSet<ResourceProperty>();
+    public static @Nonnull List<ResourceProperty> buildProperties(@Nonnull Map<String, Validator<?>> validatorsMap, Resource propertiesResource) {
+        List<ResourceProperty> properties = new ArrayList<ResourceProperty>();
         if (propertiesResource != null) {
             for (Resource property : propertiesResource.getChildren()) {
                 String fieldName = property.getName();
@@ -87,7 +89,7 @@ public class ResourceValidationBuilder {
                                 validatorArgumentsMap.put(keyValuePair[0], keyValuePair[1]);
                             }
                         }
-                        parameterizedValidators.add(new ParameterizedValidatorImpl(v, new ValueMapDecorator(validatorArgumentsMap)));
+                        parameterizedValidators.add(new ParameterizedValidatorImpl(v, validatorArgumentsMap));
                     }
                 }
                 ResourceProperty f = new ResourcePropertyImpl(fieldName, nameRegex, propertyMultiple, propertyRequired, parameterizedValidators);
@@ -113,8 +115,23 @@ public class ResourceValidationBuilder {
         Resource childrenResource = rootResource.getChild(Constants.CHILDREN);
         if (childrenResource != null) {
             for (Resource child : childrenResource.getChildren()) {
-                @SuppressWarnings("null")
-				ChildResource childResource = new ChildResourceImpl(modelResource, child, validatorsMap, buildChildren(modelResource, child, validatorsMap));
+                // if pattern is set, always use that
+                ValueMap childrenProperties = child.adaptTo(ValueMap.class);
+                if (childrenProperties == null) {
+                    throw new IllegalStateException("Could not adapt resource " + child.getPath() + " to ValueMap");
+                }
+                final String name;
+                final String nameRegex;
+                if (childrenProperties.containsKey(Constants.NAME_REGEX)) {
+                    name = null;
+                    nameRegex = childrenProperties.get(Constants.NAME_REGEX, String.class);
+                } else {
+                    // otherwise fall back to the name
+                    name = child.getName();
+                    nameRegex = null;
+                }
+                boolean isRequired = !PropertiesUtil.toBoolean(childrenProperties.get(Constants.OPTIONAL), false);
+                ChildResource childResource = new ChildResourceImpl(name, nameRegex, isRequired, buildProperties(validatorsMap, child.getChild(Constants.PROPERTIES)), validatorsMap, buildChildren(modelResource, child, validatorsMap));
                 children.add(childResource);
             }
         }

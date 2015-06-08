@@ -56,9 +56,9 @@ public interface ChildResource {
     /**
      * Returns the properties this child resource is expected to have.
      *
-     * @return the properties set. Never {@code null}.
+     * @return the properties list. Never {@code null}.
      */
-    @Nonnull Set<ResourceProperty> getProperties();
+    @Nonnull List<ResourceProperty> getProperties();
     
     /**
      * Returns the child resources of this part of the Validation Model
