@@ -28,8 +28,10 @@ import javax.script.ScriptException;
 
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
+import org.apache.sling.commons.classloader.DynamicClassLoader;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
 import org.apache.sling.scripting.javascript.io.EspReader;
+import org.mozilla.javascript.ClassCache;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ImporterTopLevel;
 import org.mozilla.javascript.JavaScriptException;
@@ -40,12 +42,15 @@ import org.mozilla.javascript.Undefined;
 import org.mozilla.javascript.WrapFactory;
 import org.mozilla.javascript.Wrapper;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A ScriptEngine that uses the Rhino interpreter to process Sling requests with
  * server-side javascript.
  */
 public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RhinoJavaScriptEngine.class);
 
     private Scriptable rootScope;
 
@@ -171,7 +176,22 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
 
             // if properties have been replaced, reset them
             resetBoundProperties(scope, replacedProperties);
-
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            if (classLoader instanceof DynamicClassLoader) {
+                DynamicClassLoader dynamicClassLoader = (DynamicClassLoader) classLoader;
+                if (!dynamicClassLoader.isLive()) {
+                    /**
+                     * if the classloader on this thread is a dynamic class loader and it's dirty we should clear Rhino's class cache
+                     * to avoid classloader leaks
+                     */
+                    if (scope != null) {
+                        ClassCache classCache = ClassCache.get(scope);
+                        classCache.clearCaches();
+                        LOGGER.info("Detected dirty classloader on thread {}. Emptying Rhino's class cache.", Thread.currentThread()
+                                .getName());
+                    }
+                }
+            }
             Context.exit();
         }
     }
