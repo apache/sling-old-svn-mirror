@@ -19,8 +19,8 @@
 package org.apache.sling.validation.impl.model;
 
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import javax.annotation.Nonnull;
 
@@ -34,11 +34,16 @@ public class ResourcePropertyImpl implements ResourceProperty {
     private final boolean isRequired;
     private final @Nonnull List<ParameterizedValidator> validators;
     private final Pattern namePattern;
-    
-    public ResourcePropertyImpl(String name, String nameRegex, boolean isMultiple, boolean isRequired, @Nonnull List<ParameterizedValidator> validators) {
+
+    public ResourcePropertyImpl(String name, String nameRegex, boolean isMultiple, boolean isRequired,
+            @Nonnull List<ParameterizedValidator> validators) throws IllegalArgumentException {
         if (nameRegex != null) {
             this.name = null;
-            this.namePattern = Pattern.compile(nameRegex);
+            try {
+                this.namePattern = Pattern.compile(nameRegex);
+            } catch (PatternSyntaxException e) {
+                throw new IllegalArgumentException("Invalid regex given", e);
+            }
         } else {
             if (name == null) {
                 throw new IllegalArgumentException("Either name or nameRegex must be not null!");
@@ -124,7 +129,5 @@ public class ResourcePropertyImpl implements ResourceProperty {
             return false;
         return true;
     }
-    
-    
 
 }

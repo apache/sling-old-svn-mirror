@@ -21,6 +21,7 @@ package org.apache.sling.validation.impl.resourcemodel;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -45,6 +46,7 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.validation.api.ChildResource;
+import org.apache.sling.validation.api.ParameterizedValidator;
 import org.apache.sling.validation.api.ResourceProperty;
 import org.apache.sling.validation.api.ValidationModel;
 import org.apache.sling.validation.api.Validator;
@@ -52,6 +54,9 @@ import org.apache.sling.validation.api.spi.ValidationModelCache;
 import org.apache.sling.validation.api.spi.ValidationModelProvider;
 import org.apache.sling.validation.impl.Constants;
 import org.apache.sling.validation.impl.ValidationModelRetrieverImpl;
+import org.apache.sling.validation.impl.model.ChildResourceImpl;
+import org.apache.sling.validation.impl.model.ParameterizedValidatorImpl;
+import org.apache.sling.validation.impl.model.ResourcePropertyImpl;
 import org.apache.sling.validation.impl.model.ValidationModelImpl;
 import org.apache.sling.validation.impl.util.Trie;
 import org.osgi.framework.ServiceRegistration;
@@ -172,7 +177,8 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
      *            {@inheritDoc}
      * @param validatorsMap
      *            {@inheritDoc}
-     * @return a {@link Trie} with the validation models; an empty trie if no model is found
+     * @return {@inheritDoc}
+     * @throws {@inheritDoc}
      */
     @Override
     public @Nonnull Collection<ValidationModel> getModel(@Nonnull String relativeResourceType,
@@ -209,8 +215,8 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
                     String[] applicablePaths = PropertiesUtil.toStringArray(validationModelProperties.get(
                             Constants.APPLICABLE_PATHS, String[].class));
                     Resource r = model.getChild(Constants.PROPERTIES);
-                    List<ResourceProperty> resourceProperties = ResourceValidationModelBuilder.buildProperties(validatorsMap,r);
-                    List<ChildResource> children = ResourceValidationModelBuilder.buildChildren(model, model, validatorsMap);
+                    List<ResourceProperty> resourceProperties = buildProperties(validatorsMap,r);
+                    List<ChildResource> children = buildChildren(model, model, validatorsMap);
                     if (resourceProperties.isEmpty() && children.isEmpty()) {
                         throw new IllegalArgumentException("Neither children nor properties set.");
                     } else {
@@ -231,5 +237,95 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
             }
         }
         return validationModels;
+    }
+    
+    /**
+     * Creates a set of the properties that a resource is expected to have, together with the associated validators.
+     *
+     * @param validatorsMap      a map containing {@link Validator}s as values and their class names as values
+     * @param propertiesResource the resource identifying the properties node from a validation model's structure (might be {@code null})
+     * @return a set of properties or an empty set if no properties are defined
+     * @see ResourceProperty
+     */
+    private @Nonnull List<ResourceProperty> buildProperties(@Nonnull Map<String, Validator<?>> validatorsMap, Resource propertiesResource) {
+        List<ResourceProperty> properties = new ArrayList<ResourceProperty>();
+        if (propertiesResource != null) {
+            for (Resource property : propertiesResource.getChildren()) {
+                String fieldName = property.getName();
+                ValueMap propertyValueMap = property.adaptTo(ValueMap.class);
+                Boolean propertyMultiple = PropertiesUtil.toBoolean(propertyValueMap.get(Constants.PROPERTY_MULTIPLE), false);
+                Boolean propertyRequired = !PropertiesUtil.toBoolean(propertyValueMap.get(Constants.OPTIONAL), false);
+                String nameRegex = PropertiesUtil.toString(propertyValueMap.get(Constants.NAME_REGEX), null);
+                Resource validators = property.getChild(Constants.VALIDATORS);
+                List<ParameterizedValidator> parameterizedValidators = new ArrayList<ParameterizedValidator>();
+                if (validators != null) {
+                    Iterator<Resource> validatorsIterator = validators.listChildren();
+                    while (validatorsIterator.hasNext()) {
+                        Resource validator = validatorsIterator.next();
+                        ValueMap validatorProperties = validator.adaptTo(ValueMap.class);
+                        String validatorName = validator.getName();
+                        Validator<?> v = validatorsMap.get(validatorName);
+                        if (v == null) {
+                            throw new IllegalArgumentException("Could not find validator with name '" + validatorName + "'");
+                        }
+                        // get type of validator
+                        String[] validatorArguments = validatorProperties.get(Constants.VALIDATOR_ARGUMENTS, String[].class);
+                        Map<String, Object> validatorArgumentsMap = new HashMap<String, Object>();
+                        if (validatorArguments != null) {
+                            for (String arg : validatorArguments) {
+                                String[] keyValuePair = arg.split("=");
+                                if (keyValuePair.length != 2) {
+                                    continue;
+                                }
+                                validatorArgumentsMap.put(keyValuePair[0], keyValuePair[1]);
+                            }
+                        }
+                        parameterizedValidators.add(new ParameterizedValidatorImpl(v, validatorArgumentsMap));
+                    }
+                }
+                ResourceProperty f = new ResourcePropertyImpl(fieldName, nameRegex, propertyMultiple, propertyRequired, parameterizedValidators);
+                properties.add(f);
+            }
+        }
+        return properties;
+    }
+
+    /**
+     * Searches children resources from a {@code modelResource}, starting from the {@code rootResource}. If one needs all the children
+     * resources of a model, then the {@code modelResource} and the {@code rootResource} should be identical.
+     *
+     * @param modelResource          the resource describing a {@link org.apache.sling.validation.api.ValidationModel}
+     * @param rootResource           the model's resource from which to search for children (this resource has to have a {@link
+     *                               Constants#CHILDREN} node directly underneath it)
+     * @param validatorsMap          a map containing {@link Validator}s as values and their class names as values
+     * @return a list of all the children resources; the list will be empty if there are no children resources
+     */
+    private @Nonnull List<ChildResource> buildChildren(@Nonnull Resource modelResource, @Nonnull Resource rootResource,
+                                                    @Nonnull Map<String, Validator<?>> validatorsMap) {
+        List<ChildResource> children = new ArrayList<ChildResource>();
+        Resource childrenResource = rootResource.getChild(Constants.CHILDREN);
+        if (childrenResource != null) {
+            for (Resource child : childrenResource.getChildren()) {
+                // if pattern is set, always use that
+                ValueMap childrenProperties = child.adaptTo(ValueMap.class);
+                if (childrenProperties == null) {
+                    throw new IllegalStateException("Could not adapt resource " + child.getPath() + " to ValueMap");
+                }
+                final String name;
+                final String nameRegex;
+                if (childrenProperties.containsKey(Constants.NAME_REGEX)) {
+                    name = null;
+                    nameRegex = childrenProperties.get(Constants.NAME_REGEX, String.class);
+                } else {
+                    // otherwise fall back to the name
+                    name = child.getName();
+                    nameRegex = null;
+                }
+                boolean isRequired = !PropertiesUtil.toBoolean(childrenProperties.get(Constants.OPTIONAL), false);
+                ChildResource childResource = new ChildResourceImpl(name, nameRegex, isRequired, buildProperties(validatorsMap, child.getChild(Constants.PROPERTIES)), validatorsMap, buildChildren(modelResource, child, validatorsMap));
+                children.add(childResource);
+            }
+        }
+        return children;
     }
 }

@@ -16,15 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.api.spi;
+package org.apache.sling.validation.spi;
 
 import java.util.Collection;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.validation.api.ValidationModel;
-import org.apache.sling.validation.api.Validator;
+import org.apache.sling.validation.Validator;
+import org.apache.sling.validation.model.ValidationModel;
 
 /**
  * All providers of {@link ValidationModel}s must implement this interface.
@@ -40,5 +40,5 @@ public interface ValidationModelProvider {
      * @return a Collection of {@link ValidationModel}s. Never {@code null} but might be empty collection.
      * @throws IllegalStateException in case a validation model was found but it is invalid
      */
-    public @Nonnull Collection<ValidationModel> getModel(@Nonnull String relativeResourceType,  @Nonnull Map<String, Validator<?>> validatorsMap);
+    public @Nonnull Collection<ValidationModel> getModel(@Nonnull String relativeResourceType,  @Nonnull Map<String, Validator<?>> validatorsMap) throws IllegalStateException;
 }

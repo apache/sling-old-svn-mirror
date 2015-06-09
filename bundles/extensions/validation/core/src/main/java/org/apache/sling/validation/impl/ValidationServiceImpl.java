@@ -18,17 +18,11 @@
  */
 package org.apache.sling.validation.impl;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,18 +33,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.commons.threads.ThreadPool;
-import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.validation.api.ChildResource;
 import org.apache.sling.validation.api.ParameterizedValidator;
 import org.apache.sling.validation.api.ResourceProperty;
@@ -59,13 +47,6 @@ import org.apache.sling.validation.api.ValidationResult;
 import org.apache.sling.validation.api.ValidationService;
 import org.apache.sling.validation.api.Validator;
 import org.apache.sling.validation.api.exceptions.SlingValidationException;
-import org.apache.sling.validation.impl.resourcemodel.ResourceValidationModelBuilder;
-import org.apache.sling.validation.impl.util.Trie;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.component.ComponentContext;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventConstants;
-import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,9 +56,10 @@ public class ValidationServiceImpl implements ValidationService{
 
     private static final Logger LOG = LoggerFactory.getLogger(ValidationServiceImpl.class);
     
-    private ValidationModelRetriever modelRetriever;
+    @Reference
+    ValidationModelRetriever modelRetriever;
     
-    private Collection<String> searchPaths;
+    Collection<String> searchPaths;
     
     @Reference
     private ResourceResolverFactory rrf = null;

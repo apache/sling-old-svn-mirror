@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.api.spi;
+package org.apache.sling.validation.spi;
 
 public interface ValidationModelCache {
     public void invalidate();

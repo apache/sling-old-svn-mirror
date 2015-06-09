@@ -20,19 +20,14 @@ package org.apache.sling.validation.impl.model;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.validation.api.ChildResource;
 import org.apache.sling.validation.api.ResourceProperty;
 import org.apache.sling.validation.api.Validator;
-import org.apache.sling.validation.impl.resourcemodel.ResourceValidationModelBuilder;
 
 /**
  * Implements a {@link ChildResource}
@@ -47,10 +42,14 @@ public class ChildResourceImpl implements ChildResource {
 
     public ChildResourceImpl(String name, String nameRegex, boolean isRequired, List<ResourceProperty> properties, @Nonnull Map<String, Validator<?>> validatorsMap, @Nonnull List<ChildResource> children) {
         if (nameRegex != null) {
-            namePattern = Pattern.compile(nameRegex);
+            try {
+                this.namePattern = Pattern.compile(nameRegex);
+            } catch (PatternSyntaxException e) {
+                throw new IllegalArgumentException("Invalid regex given", e);
+            }
             this.name = null;
         } else {
-            if (this.name == null) {
+            if (name == null) {
                 throw new IllegalArgumentException("Either name or nameRegex must be set!");
             }
             this.name = name;

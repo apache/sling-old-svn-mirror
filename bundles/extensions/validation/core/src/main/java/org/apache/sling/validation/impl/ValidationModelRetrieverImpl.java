@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.sling.validation.impl;
 
 import java.util.Map;
@@ -24,7 +42,7 @@ import org.slf4j.LoggerFactory;
 public class ValidationModelRetrieverImpl implements ValidationModelRetriever, ValidationModelCache {
 
     /**
-     * Map of known validation models (key=validated resourceType, value=Trie of ValidationModels sorted by their
+     * Map of known validation models (key=validated resourceType, value=trie of ValidationModels sorted by their
      * allowed paths)
      */
     protected Map<String, Trie<ValidationModel>> validationModelsCache = new ConcurrentHashMap<String, Trie<ValidationModel>>();
@@ -76,27 +94,26 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever, V
         return modelsForResourceType;
     }
 
-    protected void bindModelProvider(ValidationModelProvider modelProvider, final Map<String, Object> props) {
+    protected void bindModelProvider(ValidationModelProvider modelProvider, Map<String, Object> props) {
         modelProviders.bind(modelProvider, props);
         LOG.debug("Invalidating models cache because new model provider '{}' available", modelProvider);
         validationModelsCache.clear();
     }
 
-    protected void unbindModelProvider(ValidationModelProvider modelProvider, final Map<String, Object> props) {
+    protected void unbindModelProvider(ValidationModelProvider modelProvider, Map<String, Object> props) {
         modelProviders.unbind(modelProvider, props);
         LOG.debug("Invalidating models cache because model provider '{}' is no longer available", modelProvider);
         validationModelsCache.clear();
     }
 
-    protected void bindValidator(Validator<?> validator, Map<?, ?> properties) {
+    protected void bindValidator(Validator<?> validator) {
         if (validators.put(validator.getClass().getName(), validator) != null) {
-            // TODO: improve error message
             LOG.debug("Validator with the name '{}' has been registered in the system already and was now overwritten",
                     validator.getClass().getName());
         }
     }
 
-    protected void unbindValidator(Validator<?> validator, Map<?, ?> properties) {
+    protected void unbindValidator(Validator<?> validator) {
         // also remove references to all validators in the cache
         validator = validators.remove(validator.getClass().getName());
         if (validator != null) {

@@ -33,7 +33,12 @@ public class ParameterizedValidatorImpl implements ParameterizedValidator {
     private final @Nonnull Map<String, Object> parameters;
     private final @Nonnull Class<?> type;
     
-    // to make it possible to implement the equals operation we rely in Map instead of ValueMap here!
+    /**
+     * 
+     * Only the map has proper support for equals (see https://issues.apache.org/jira/browse/SLING-4784)
+     * @param validator
+     * @param parameters
+     */
     public ParameterizedValidatorImpl(@Nonnull Validator<?> validator, @Nonnull Map<String, Object> parameters) {
         super();
         this.validator = validator;
