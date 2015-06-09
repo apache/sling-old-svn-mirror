@@ -20,12 +20,14 @@ package org.apache.sling.testing.mock.osgi;
 
 import java.io.File;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.cert.X509Certificate;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -67,8 +69,21 @@ public final class MockBundle implements Bundle {
 
     @Override
     public URL getEntry(final String name) {
+        
+        // the original implementation of this method performed getClass().getResource()
+        // however, this means that the it does not work out-of-the-box with paths
+        // returned from getEntryPaths(), which are by definition relative
+        
+        // as a fallback we make sure the resource is absolute if the relative one does
+        // not get a result, but perhaps we should enforce a relative lookup at all times
+        
         // try to load resource from classpath
-        return getClass().getResource(name);
+        URL resource = getClass().getResource(name);
+        
+        if ( resource == null || ! name.startsWith("/")) {
+            resource = getClass().getResource("/" + name);
+        }
+        return resource;
     }
 
     @Override
@@ -112,7 +127,7 @@ public final class MockBundle implements Bundle {
     public long getLastModified() {
         return lastModified;
     }
-
+    
     /**
      * Set the last modified value for the mock bundle 
      * @param lastModified last modified
@@ -120,15 +135,58 @@ public final class MockBundle implements Bundle {
     public void setLastModified(long lastModified) {
         this.lastModified = lastModified;
     }
+    
+    @Override
+    public Enumeration<String> getEntryPaths(final String path) {
+        
+        String queryPath = path.startsWith("/") ? path : "/" + path;
+        
+        URL res = getClass().getResource(queryPath);
+        if ( res == null ) {
+            return null;
+        }
+        
+        Vector<String> matching = new Vector<String>();
+        
+        try {
+            File file = new File(res.toURI());
+            if ( file.isDirectory()) {
+                for ( File entry : file.listFiles() ) {
+                    String name = entry.isDirectory() ? entry.getName() + "/" : entry.getName();
+                    matching.add(relativeWithTrailingSlash(queryPath.substring(1, queryPath.length())) + name);
+                }
+            }
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Failed opening file from " + res , e);
+        } catch ( RuntimeException e) {
+            throw new RuntimeException("Failed opening file from " + res , e);
+        }
+        
+        if ( matching.isEmpty() ) {
+            return null;
+        }
+        
+        return matching.elements();
+    }
 
+    private String relativeWithTrailingSlash(String queryPath) {
+        
+        // make relative
+        if ( queryPath.startsWith("/")) {
+            queryPath = queryPath.substring(1, queryPath.length());
+        }
+        
+        // remove trailing slash
+        if ( !queryPath.isEmpty() && !queryPath.endsWith("/") ) {
+            queryPath = queryPath +"/";
+        }
+        
+        return queryPath;
+    }
+    
     // --- unsupported operations ---
     @Override
     public Enumeration<URL> findEntries(final String path, final String filePattern, final boolean recurse) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Enumeration<String> getEntryPaths(final String path) {
         throw new UnsupportedOperationException();
     }
 
