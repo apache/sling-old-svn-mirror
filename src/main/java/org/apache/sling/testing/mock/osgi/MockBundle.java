@@ -45,6 +45,7 @@ public final class MockBundle implements Bundle {
     private final BundleContext bundleContext;
     private Map<String, String> headers = ImmutableMap.<String, String>of();
     private String symbolicName = "mock-bundle";
+    private long lastModified;
 
     /**
      * Constructor
@@ -106,7 +107,20 @@ public final class MockBundle implements Bundle {
     public void setSymbolicName(String value) {
         this.symbolicName = value;
     }
-    
+
+    @Override
+    public long getLastModified() {
+        return lastModified;
+    }
+
+    /**
+     * Set the last modified value for the mock bundle 
+     * @param lastModified last modified
+     */
+    public void setLastModified(long lastModified) {
+        this.lastModified = lastModified;
+    }
+
     // --- unsupported operations ---
     @Override
     public Enumeration<URL> findEntries(final String path, final String filePattern, final boolean recurse) {
@@ -115,11 +129,6 @@ public final class MockBundle implements Bundle {
 
     @Override
     public Enumeration<String> getEntryPaths(final String path) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public long getLastModified() {
         throw new UnsupportedOperationException();
     }
 
