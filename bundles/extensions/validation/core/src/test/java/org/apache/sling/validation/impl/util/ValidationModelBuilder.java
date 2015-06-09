@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
 import org.apache.sling.validation.api.ChildResource;
 import org.apache.sling.validation.api.ResourceProperty;
 import org.apache.sling.validation.api.ValidationModel;
@@ -43,28 +45,28 @@ public class ValidationModelBuilder {
         applicablePaths = new ArrayList<String>();
     }
     
-    public ValidationModelBuilder resourceProperty(ResourceProperty resourceProperty) {
+    public @Nonnull ValidationModelBuilder resourceProperty(@Nonnull ResourceProperty resourceProperty) {
         resourceProperties.add(resourceProperty);
         return this;
     }
     
-    public ValidationModelBuilder childResource(ChildResource childResource) {
+    public @Nonnull ValidationModelBuilder childResource(@Nonnull ChildResource childResource) {
         children.add(childResource);
         return this;
     }
     
-    public ValidationModelBuilder setApplicablePath(String applicablePath) {
+    public @Nonnull ValidationModelBuilder setApplicablePath(@Nonnull String applicablePath) {
         applicablePaths.clear();
         applicablePaths.add(applicablePath);
         return this;
     }
     
-    public ValidationModelBuilder addApplicablePath(String applicablePath) {
+    public @Nonnull ValidationModelBuilder addApplicablePath(@Nonnull String applicablePath) {
         applicablePaths.add(applicablePath);
         return this;
     }
     
-    public ValidationModel build(String validatedResourceType) {
+    public @Nonnull ValidationModel build(@Nonnull String validatedResourceType) {
         return new ValidationModelImpl(resourceProperties, validatedResourceType, applicablePaths.toArray(new String[0]), children);
     }
 }

@@ -18,8 +18,17 @@
  */
 package org.apache.sling.validation.impl;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+
 import org.apache.sling.validation.api.ValidationModel;
 
 public interface ValidationModelRetriever {
-    public ValidationModel getModel(String resourceType, String resourcePath);
+    /**
+     * A model for the given resourceType at the given resourcePath
+     * @param resourceType
+     * @param resourcePath may be {@code null} or empty
+     * @return a model which should be used for validation or null, if no validation model could be found
+     */
+    public @CheckForNull ValidationModel getModel(@Nonnull String resourceType, String resourcePath);
 }

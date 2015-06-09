@@ -119,7 +119,9 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
                     EventHandler.class.getName(), this, eventHandlerProperties);
             LOG.debug("Registered event handler for validation models in {}", sb.toString());
         } finally {
-            rr.close();
+            if (rr != null) {
+                rr.close();
+            }
         }
     }
 
@@ -212,8 +214,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
                 String jcrPath = model.getPath();
                 try {
                     ValueMap validationModelProperties = model.adaptTo(ValueMap.class);
-                    String[] applicablePaths = PropertiesUtil.toStringArray(validationModelProperties.get(
-                            Constants.APPLICABLE_PATHS, String[].class));
+                    String[] applicablePaths = PropertiesUtil.toStringArray(validationModelProperties.get(Constants.APPLICABLE_PATHS, String[].class));
                     Resource r = model.getChild(Constants.PROPERTIES);
                     List<ResourceProperty> resourceProperties = buildProperties(validatorsMap,r);
                     List<ChildResource> children = buildChildren(model, model, validatorsMap);

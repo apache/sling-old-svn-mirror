@@ -23,6 +23,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+
 import org.apache.sling.validation.api.ResourceProperty;
 import org.apache.sling.validation.api.ValidationModel;
 import org.apache.sling.validation.api.Validator;
@@ -51,7 +53,7 @@ public class ValidationModelRetrieverImplTest {
         int counter = 0;
 
         @Override
-        public Collection<ValidationModel> getModel(String relativeResourceType, Map<String, Validator<?>> validatorsMap) {
+        public @Nonnull Collection<ValidationModel> getModel(@Nonnull String relativeResourceType, @Nonnull Map<String, Validator<?>> validatorsMap) {
             // make sure the date validator is passed along
             Assert.assertThat(validatorsMap, Matchers.<String, Validator<?>>hasEntry(DateValidator.class.getName(), dateValidator));
 
@@ -61,7 +63,10 @@ public class ValidationModelRetrieverImplTest {
                     ValidationModelBuilder modelBuilder = new ValidationModelBuilder();
                     ResourcePropertyBuilder propertyBuilder = new ResourcePropertyBuilder();
                     modelBuilder.resourceProperty(propertyBuilder.build(entry.getValue()));
-                    modelBuilder.addApplicablePath(entry.getKey());
+                    String applicablePath = entry.getKey();
+                    if (applicablePath != null) {
+                        modelBuilder.addApplicablePath(applicablePath);
+                    }
                     models.add(modelBuilder.build(relativeResourceType));
                 }
             }
@@ -90,6 +95,19 @@ public class ValidationModelRetrieverImplTest {
         propertyNamePerApplicablePath.put("/content/site1/subnode", "somename3");
         
         ValidationModel model = validationModelRetriever.getModel("test/type", "/content/site1/subnode/test/somepage");
+        Assert.assertNotNull(model);
+        Assert.assertThat(model.getResourceProperties(), Matchers.hasSize(1));
+        ResourceProperty resourceProperty = model.getResourceProperties().get(0);
+        Assert.assertEquals("somename2", resourceProperty.getName());
+    }
+
+    @Test
+    public void testGetModelWithNoResourcePath() {
+        propertyNamePerApplicablePath.put("/content/site1", "somename");
+        propertyNamePerApplicablePath.put(null, "somename2");
+        propertyNamePerApplicablePath.put("/content/site1/subnode", "somename3");
+        
+        ValidationModel model = validationModelRetriever.getModel("test/type", null);
         Assert.assertNotNull(model);
         Assert.assertThat(model.getResourceProperties(), Matchers.hasSize(1));
         ResourceProperty resourceProperty = model.getResourceProperties().get(0);

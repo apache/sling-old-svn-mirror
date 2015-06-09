@@ -96,20 +96,11 @@ public class ParameterizedValidatorImpl implements ParameterizedValidator {
         if (getClass() != obj.getClass())
             return false;
         ParameterizedValidatorImpl other = (ParameterizedValidatorImpl) obj;
-        if (parameters == null) {
-            if (other.parameters != null)
-                return false;
-        } else if (!parameters.equals(other.parameters))
+        if (!parameters.equals(other.parameters))
             return false;
-        if (type == null) {
-            if (other.type != null)
-                return false;
-        } else if (!type.equals(other.type))
+        if (!type.equals(other.type))
             return false;
-        if (validator == null) {
-            if (other.validator != null)
-                return false;
-        } else if (!validator.getClass().getName().equals(other.validator.getClass().getName()))
+        if (!validator.getClass().getName().equals(other.validator.getClass().getName()))
             return false;
         return true;
     }

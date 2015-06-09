@@ -43,7 +43,6 @@ import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -307,8 +306,9 @@ public class ResourceValidationModelProviderImplTest {
                     + property.getName(), modelPropertyJCRProperties, null, true);
             if (propertyResource != null) {
                 ModifiableValueMap values = propertyResource.adaptTo(ModifiableValueMap.class);
-                if (property.getNamePattern() != null) {
-                    values.put(Constants.NAME_REGEX, property.getNamePattern().pattern());
+                Pattern pattern = property.getNamePattern();
+                if (pattern != null) {
+                    values.put(Constants.NAME_REGEX, pattern.pattern());
                 }
                 values.put(Constants.PROPERTY_MULTIPLE, property.isMultiple());
                 values.put(Constants.OPTIONAL, !property.isRequired());

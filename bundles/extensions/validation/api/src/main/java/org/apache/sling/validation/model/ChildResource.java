@@ -19,7 +19,6 @@
 package org.apache.sling.validation.model;
 
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.annotation.CheckForNull;

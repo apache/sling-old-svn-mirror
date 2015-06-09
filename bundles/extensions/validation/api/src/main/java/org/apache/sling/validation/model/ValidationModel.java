@@ -19,7 +19,6 @@
 package org.apache.sling.validation.model;
 
 import java.util.List;
-import java.util.Set;
 
 import javax.annotation.Nonnull;
 

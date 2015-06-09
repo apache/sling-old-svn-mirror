@@ -122,10 +122,7 @@ public class ResourcePropertyImpl implements ResourceProperty {
                 return false;
         } else if (!namePattern.pattern().equals(other.namePattern.pattern()))
             return false;
-        if (validators == null) {
-            if (other.validators != null)
-                return false;
-        } else if (!validators.equals(other.validators))
+        if (!validators.equals(other.validators))
             return false;
         return true;
     }

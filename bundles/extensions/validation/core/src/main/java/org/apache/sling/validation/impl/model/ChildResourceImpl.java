@@ -40,7 +40,7 @@ public class ChildResourceImpl implements ChildResource {
     private final @Nonnull List<ChildResource> children;
     private final boolean isRequired;
 
-    public ChildResourceImpl(String name, String nameRegex, boolean isRequired, List<ResourceProperty> properties, @Nonnull Map<String, Validator<?>> validatorsMap, @Nonnull List<ChildResource> children) {
+    public ChildResourceImpl(String name, String nameRegex, boolean isRequired, @Nonnull List<ResourceProperty> properties, @Nonnull Map<String, Validator<?>> validatorsMap, @Nonnull List<ChildResource> children) {
         if (nameRegex != null) {
             try {
                 this.namePattern = Pattern.compile(nameRegex);
@@ -106,10 +106,7 @@ public class ChildResourceImpl implements ChildResource {
         if (getClass() != obj.getClass())
             return false;
         ChildResourceImpl other = (ChildResourceImpl) obj;
-        if (children == null) {
-            if (other.children != null)
-                return false;
-        } else if (!children.equals(other.children))
+        if (!children.equals(other.children))
             return false;
         if (isRequired != other.isRequired)
             return false;
@@ -123,10 +120,7 @@ public class ChildResourceImpl implements ChildResource {
                 return false;
         } else if (!namePattern.pattern().equals(other.namePattern.pattern()))
             return false;
-        if (properties == null) {
-            if (other.properties != null)
-                return false;
-        } else if (!properties.equals(other.properties))
+        if (!properties.equals(other.properties))
             return false;
         return true;
     }
@@ -136,6 +130,4 @@ public class ChildResourceImpl implements ChildResource {
         return "ChildResourceImpl [name=" + name + ", namePattern=" + namePattern + ", properties=" + properties
                 + ", children=" + children + ", isRequired=" + isRequired + "]";
     }
-    
-    
 }

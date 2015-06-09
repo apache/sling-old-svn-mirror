@@ -19,9 +19,7 @@
 package org.apache.sling.validation.impl.model;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 import javax.annotation.Nonnull;
 
@@ -30,11 +28,6 @@ import org.apache.sling.validation.api.ChildResource;
 import org.apache.sling.validation.api.ResourceProperty;
 import org.apache.sling.validation.api.ValidationModel;
 
-/**
- * 
- * @author kwindszus
- *
- */
 public class ValidationModelImpl implements ValidationModel {
 
     private final @Nonnull List<ResourceProperty> resourceProperties;
@@ -43,12 +36,12 @@ public class ValidationModelImpl implements ValidationModel {
     private final @Nonnull List<ChildResource> children;
 
     public ValidationModelImpl(@Nonnull List<ResourceProperty> resourceProperties, @Nonnull String validatedResourceType,
-                              @Nonnull String[] applicablePaths, @Nonnull List<ChildResource> children) {
+                              String[] applicablePaths, @Nonnull List<ChildResource> children) {
         this.resourceProperties = resourceProperties;
         this.validatedResourceType = validatedResourceType;
-        // if this property was not set
-        if (applicablePaths.length == 0) {
-            // set this to the empty string (which matches all paths)
+        // if this property was not set or is an empty array...
+        if (applicablePaths == null || applicablePaths.length == 0) {
+            // ...set this to the empty string (which matches all paths)
             this.applicablePaths = new String[] {""};
         } else {
             for (String applicablePath : applicablePaths) {
@@ -109,20 +102,11 @@ public class ValidationModelImpl implements ValidationModel {
         ValidationModelImpl other = (ValidationModelImpl) obj;
         if (!Arrays.equals(applicablePaths, other.applicablePaths))
             return false;
-        if (children == null) {
-            if (other.children != null)
-                return false;
-        } else if (!children.equals(other.children))
+        if (!children.equals(other.children))
             return false;
-        if (resourceProperties == null) {
-            if (other.resourceProperties != null)
-                return false;
-        } else if (!resourceProperties.equals(other.resourceProperties))
+        if (!resourceProperties.equals(other.resourceProperties))
             return false;
-        if (validatedResourceType == null) {
-            if (other.validatedResourceType != null)
-                return false;
-        } else if (!validatedResourceType.equals(other.validatedResourceType))
+        if (!validatedResourceType.equals(other.validatedResourceType))
             return false;
         return true;
     }

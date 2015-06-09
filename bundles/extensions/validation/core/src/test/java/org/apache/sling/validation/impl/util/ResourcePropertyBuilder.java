@@ -7,7 +7,6 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.validation.api.ParameterizedValidator;
 import org.apache.sling.validation.api.ResourceProperty;
 import org.apache.sling.validation.api.Validator;
@@ -28,32 +27,32 @@ public class ResourcePropertyBuilder {
         this.multiple = false;
     }
 
-    public ResourcePropertyBuilder nameRegex(String nameRegex) {
+    public @Nonnull ResourcePropertyBuilder nameRegex(String nameRegex) {
         this.nameRegex = nameRegex;
         return this;
     }
     
-    public ResourcePropertyBuilder validator(@Nonnull Validator<?> validator) {
+    public @Nonnull ResourcePropertyBuilder validator(@Nonnull Validator<?> validator) {
         validators.add(new ParameterizedValidatorImpl(validator, new HashMap<String, Object>()));
         return this;
     }
 
-    public ResourcePropertyBuilder validator(@Nonnull Validator<?> validator, @Nonnull Map<String, Object> parameters) {
+    public @Nonnull ResourcePropertyBuilder validator(@Nonnull Validator<?> validator, @Nonnull Map<String, Object> parameters) {
         validators.add(new ParameterizedValidatorImpl(validator, parameters));
         return this;
     }
     
-    public ResourcePropertyBuilder optional() {
+    public @Nonnull ResourcePropertyBuilder optional() {
         this.optional = true;
         return this;
     }
     
-    public ResourcePropertyBuilder multiple() {
+    public @Nonnull ResourcePropertyBuilder multiple() {
         this.multiple = true;
         return this;
     }
     
-    public ResourceProperty build(String name) {
+    public @Nonnull ResourceProperty build(String name) {
         return new ResourcePropertyImpl(name, nameRegex, multiple, !optional, validators);
     }
 }

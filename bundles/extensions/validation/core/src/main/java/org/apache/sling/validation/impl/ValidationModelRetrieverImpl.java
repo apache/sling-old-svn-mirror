@@ -21,6 +21,7 @@ package org.apache.sling.validation.impl;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.felix.scr.annotations.Component;
@@ -36,7 +37,11 @@ import org.apache.sling.validation.api.spi.ValidationModelProvider;
 import org.apache.sling.validation.impl.util.Trie;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+/**
+ * Retrieves the most appropriate (the one with the longest matching applicablePath) model from any of the {@link ValidationModelProvider}s.
+ * Also implements a cache of all previously retrieved models.
+ *
+ */
 @Service
 @Component
 public class ValidationModelRetrieverImpl implements ValidationModelRetriever, ValidationModelCache {
@@ -59,8 +64,12 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever, V
 
     private static final Logger LOG = LoggerFactory.getLogger(ValidationModelRetrieverImpl.class);
 
+    /*
+     * (non-Javadoc)
+     * @see org.apache.sling.validation.impl.ValidationModelRetriever#getModel(java.lang.String, java.lang.String)
+     */
     @Override
-    public ValidationModel getModel(String resourceType, String resourcePath) {
+    public @CheckForNull ValidationModel getModel(@Nonnull String resourceType, String resourcePath) {
         ValidationModel model = null;
         Trie<ValidationModel> modelsForResourceType = validationModelsCache.get(resourceType);
         if (modelsForResourceType == null) {
@@ -74,7 +83,7 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever, V
         return model;
     }
     
-    private synchronized @Nonnull Trie<ValidationModel> fillTrieForResourceType(String resourceType) {
+    private synchronized @Nonnull Trie<ValidationModel> fillTrieForResourceType(@Nonnull String resourceType) {
         Trie<ValidationModel> modelsForResourceType = validationModelsCache.get(resourceType);
         // use double-checked locking (http://en.wikipedia.org/wiki/Double-checked_locking)
         if (modelsForResourceType == null) {
