@@ -43,6 +43,17 @@ public abstract class ModelUtility {
      * @param additional The additional model.
      */
     public static void merge(final Model base, final Model additional) {
+        merge(base, additional, true);
+    }
+
+    /**
+     * Merge the additional model into the base model.
+     * @param base The base model.
+     * @param additional The additional model.
+     * @param handleRemove Handle special remove run mode
+     * @since 1.2
+     */
+    public static void merge(final Model base, final Model additional, final boolean handleRemove) {
         // features
         for(final Feature feature : additional.getFeatures()) {
             final Feature baseFeature = base.getOrCreateFeature(feature.getName());
@@ -54,57 +65,59 @@ public abstract class ModelUtility {
             for(final RunMode runMode : feature.getRunModes()) {
                 // check for special remove run mode
                 String names[] = runMode.getNames();
-                if ( names != null ) {
-                    int removeIndex = -1;
-                    int index = 0;
-                    for(final String name : names) {
-                        if ( name.equals(ModelConstants.RUN_MODE_REMOVE) ) {
-                            removeIndex = index;
-                            break;
-                        }
-                        index++;
-                    }
-                    if ( removeIndex != -1 ) {
-                        String[] newNames = null;
-                        if ( names.length > 1 ) {
-                            newNames = new String[names.length - 1];
-                            index = 0;
-                            for(final String name : names) {
-                                if ( !name.equals(ModelConstants.RUN_MODE_REMOVE) ) {
-                                    newNames[index++] = name;
-                                }
+                if ( handleRemove ) {
+                    if ( names != null ) {
+                        int removeIndex = -1;
+                        int index = 0;
+                        for(final String name : names) {
+                            if ( name.equals(ModelConstants.RUN_MODE_REMOVE) ) {
+                                removeIndex = index;
+                                break;
                             }
+                            index++;
                         }
-                        names = newNames;
-                        final RunMode baseRunMode = baseFeature.getRunMode(names);
-                        if ( baseRunMode != null ) {
-
-                            // artifact groups
-                            for(final ArtifactGroup group : runMode.getArtifactGroups()) {
-                                for(final Artifact artifact : group) {
-                                    for(final ArtifactGroup searchGroup : baseRunMode.getArtifactGroups()) {
-                                        final Artifact found = searchGroup.search(artifact);
-                                        if ( found != null ) {
-                                            searchGroup.remove(found);
-                                        }
+                        if ( removeIndex != -1 ) {
+                            String[] newNames = null;
+                            if ( names.length > 1 ) {
+                                newNames = new String[names.length - 1];
+                                index = 0;
+                                for(final String name : names) {
+                                    if ( !name.equals(ModelConstants.RUN_MODE_REMOVE) ) {
+                                        newNames[index++] = name;
                                     }
                                 }
                             }
+                            names = newNames;
+                            final RunMode baseRunMode = baseFeature.getRunMode(names);
+                            if ( baseRunMode != null ) {
 
-                            // configurations
-                            for(final Configuration config : runMode.getConfigurations()) {
-                                final Configuration found = baseRunMode.getConfiguration(config.getPid(), config.getFactoryPid());
-                                if ( found != null ) {
-                                    baseRunMode.getConfigurations().remove(found);
+                                // artifact groups
+                                for(final ArtifactGroup group : runMode.getArtifactGroups()) {
+                                    for(final Artifact artifact : group) {
+                                        for(final ArtifactGroup searchGroup : baseRunMode.getArtifactGroups()) {
+                                            final Artifact found = searchGroup.search(artifact);
+                                            if ( found != null ) {
+                                                searchGroup.remove(found);
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // configurations
+                                for(final Configuration config : runMode.getConfigurations()) {
+                                    final Configuration found = baseRunMode.getConfiguration(config.getPid(), config.getFactoryPid());
+                                    if ( found != null ) {
+                                        baseRunMode.getConfigurations().remove(found);
+                                    }
+                                }
+
+                                // settings
+                                for(final Map.Entry<String, String> entry : runMode.getSettings() ) {
+                                    baseRunMode.getSettings().remove(entry.getKey());
                                 }
                             }
-
-                            // settings
-                            for(final Map.Entry<String, String> entry : runMode.getSettings() ) {
-                                baseRunMode.getSettings().remove(entry.getKey());
-                            }
+                            continue;
                         }
-                        continue;
                     }
                 }
                 final RunMode baseRunMode = baseFeature.getOrCreateRunMode(names);
