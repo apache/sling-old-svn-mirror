@@ -159,7 +159,6 @@ public class FSClassLoaderWebConsole extends AbstractWebConsolePlugin {
 		// get the file root
 		root = new File(componentContext.getBundleContext().getDataFile(""),
 				"classes");
-		root.mkdirs();
 	}
 
 	/*
