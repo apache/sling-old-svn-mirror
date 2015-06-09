@@ -385,7 +385,7 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
                     if (errors != null ) {
                         throw new MavenExecutionException("Invalid model at " + name + " : " + errors, (File)null);
                     }
-                    ModelUtility.merge(result, current);
+                    ModelUtility.merge(result, current, false);
                 } finally {
                     IOUtils.closeQuietly(reader);
                 }

@@ -99,7 +99,7 @@ public abstract class ModelUtils {
                         if ( firstArtifact == null ) {
                             firstArtifact = a;
                         } else {
-                            throw new MavenExecutionException("Base run mode should contain exactly one artifact.", (File)null);
+                            throw new MavenExecutionException("Base run mode should contain exactly one artifact: ", (File)null);
                         }
                     }
                     if ( firstArtifact == null ) {
