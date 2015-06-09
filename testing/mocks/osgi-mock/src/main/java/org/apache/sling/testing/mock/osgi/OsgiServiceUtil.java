@@ -310,7 +310,7 @@ final class OsgiServiceUtil {
             boolean isOptional = (reference.getCardinality() == ReferenceCardinality.OPTIONAL_UNARY || reference
                     .getCardinality() == ReferenceCardinality.OPTIONAL_MULTIPLE);
             if (!isOptional) {
-                throw new ReferenceViolationException("Unable to inject mandatory reference '" + reference.getName() + "' for class " + targetClass.getName());
+                throw new ReferenceViolationException("Unable to inject mandatory reference '" + reference.getName() + "' for class " + targetClass.getName() + " : no matching services were found.");
             }
         }
 
