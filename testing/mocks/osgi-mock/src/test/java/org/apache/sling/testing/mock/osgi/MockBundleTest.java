@@ -72,4 +72,9 @@ public class MockBundleTest {
         assertEquals("name-1", bundle.getSymbolicName());
     }
 
+    @Test
+    public void testGetLastModified() {
+        bundle.setLastModified(42);
+        assertEquals(42, bundle.getLastModified());
+    }
 }
