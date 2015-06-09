@@ -21,8 +21,14 @@ package org.apache.sling.testing.mock.osgi;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
+
+import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
@@ -76,5 +82,79 @@ public class MockBundleTest {
     public void testGetLastModified() {
         bundle.setLastModified(42);
         assertEquals(42, bundle.getLastModified());
+    }
+    
+    @Test
+    public void getEntryPaths_noMatches() {
+        assertNull(bundle.getEntryPaths("resources"));
+    }    
+    
+    @Test
+    public void getEntryPaths() {
+        
+        Enumeration<String> entryPaths = bundle.getEntryPaths("bundleData");
+        
+        List<String> paths = Collections.list(entryPaths);
+        
+        assertThat(paths.size(), CoreMatchers.is(1));
+        assertTrue(paths.contains("bundleData/nested/"));
+    }
+
+    @Test
+    public void getEntryPaths_leadingSlash() {
+        
+        Enumeration<String> entryPaths = bundle.getEntryPaths("bundleData");
+        
+        List<String> paths = Collections.list(entryPaths);
+        
+        assertThat(paths.size(), CoreMatchers.is(1));
+        assertTrue(paths.contains("bundleData/nested/"));
+    }
+
+    @Test
+    public void getEntryPaths_slash() {
+        
+        Enumeration<String> entryPaths = bundle.getEntryPaths("/");
+        
+        List<String> paths = Collections.list(entryPaths);
+        
+        // intentionally less precise as we don't want to be broken when e.g. test resources change 
+        assertTrue(paths.size() >= 3);
+        assertTrue(paths.contains("bundleData/"));
+        assertTrue(paths.contains("OSGI-INF/"));
+        assertTrue(paths.contains("META-INF/"));
+    }
+
+    @Test
+    public void getEntryPaths_empty() {
+        
+        Enumeration<String> entryPaths = bundle.getEntryPaths("/");
+        
+        List<String> paths = Collections.list(entryPaths);
+        
+        // intentionally less precise as we don't want to be broken when e.g. test resources change 
+        assertTrue(paths.size() >= 3);
+        assertTrue(paths.contains("bundleData/"));
+        assertTrue(paths.contains("OSGI-INF/"));
+        assertTrue(paths.contains("META-INF/"));
+    }
+    
+    @Test
+    public void getEntryPaths_noMatch() {
+        
+        assertNull(bundle.getEntryPaths("/EMPTY"));
+        assertNull(bundle.getEntryPaths("EMPTY"));
+    }
+
+    @Test
+    public void getEntryPaths_Nested() {
+
+        Enumeration<String> entryPaths = bundle.getEntryPaths("bundleData/nested");
+        
+        List<String> paths = Collections.list(entryPaths);
+        
+        assertThat(paths.size(), CoreMatchers.is(2));
+        assertTrue(paths.contains("bundleData/nested/first.txt"));
+        assertTrue(paths.contains("bundleData/nested/second.txt"));
     }
 }
