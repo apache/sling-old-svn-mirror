@@ -31,11 +31,11 @@ import com.google.common.collect.ImmutableMap;
 
 public class MockBundleTest {
 
-    private Bundle bundle;
+    private MockBundle bundle;
 
     @Before
     public void setUp() {
-        bundle = MockOsgi.newBundleContext().getBundle();
+        bundle = (MockBundle) MockOsgi.newBundleContext().getBundle();
     }
 
     @Test
@@ -61,14 +61,14 @@ public class MockBundleTest {
 
     @Test
     public void testGetHeaders() {
-        ((MockBundle)bundle).setHeaders(ImmutableMap.of("prop1", "value1"));
+        bundle.setHeaders(ImmutableMap.of("prop1", "value1"));
         assertEquals("value1", bundle.getHeaders().get("prop1"));
         assertEquals("value1", bundle.getHeaders("en").get("prop1"));
     }
 
     @Test
     public void testGetSymbolicName() throws Exception {
-        ((MockBundle)bundle).setSymbolicName("name-1");
+        bundle.setSymbolicName("name-1");
         assertEquals("name-1", bundle.getSymbolicName());
     }
 
