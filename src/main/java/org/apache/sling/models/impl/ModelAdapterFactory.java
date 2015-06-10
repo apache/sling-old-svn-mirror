@@ -57,6 +57,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.commons.osgi.RankedServices;
 import org.apache.sling.commons.osgi.ServiceUtil;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.ValidationStrategy;
@@ -141,29 +142,23 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
     @Reference(name = "injector", referenceInterface = Injector.class,
             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    private final @Nonnull Map<Object, Injector> injectors = new TreeMap<Object, Injector>();
-
-    private volatile @Nonnull Injector[] sortedInjectors = new Injector[0];
+    private final @Nonnull RankedServices<Injector> injectors = new RankedServices<Injector>();
 
     @Reference(name = "injectAnnotationProcessorFactory", referenceInterface = InjectAnnotationProcessorFactory.class,
             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    private final @Nonnull Map<Object, InjectAnnotationProcessorFactory> injectAnnotationProcessorFactories = new TreeMap<Object, InjectAnnotationProcessorFactory>();
+    private final @Nonnull RankedServices<InjectAnnotationProcessorFactory> injectAnnotationProcessorFactories = new RankedServices<InjectAnnotationProcessorFactory>();
 
-    private volatile @Nonnull InjectAnnotationProcessorFactory[] sortedInjectAnnotationProcessorFactories = new InjectAnnotationProcessorFactory[0];
-    
     @Reference(name = "injectAnnotationProcessorFactory2", referenceInterface = InjectAnnotationProcessorFactory2.class,
             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    private final @Nonnull Map<Object, InjectAnnotationProcessorFactory2> injectAnnotationProcessorFactories2 = new TreeMap<Object, InjectAnnotationProcessorFactory2>();
-
-    private volatile @Nonnull InjectAnnotationProcessorFactory2[] sortedInjectAnnotationProcessorFactories2 = new InjectAnnotationProcessorFactory2[0];
+    private final @Nonnull RankedServices<InjectAnnotationProcessorFactory2> injectAnnotationProcessorFactories2 = new RankedServices<InjectAnnotationProcessorFactory2>();
 
     @Reference(name = "staticInjectAnnotationProcessorFactory", referenceInterface = StaticInjectAnnotationProcessorFactory.class,
             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    private final @Nonnull Map<Object, StaticInjectAnnotationProcessorFactory> staticInjectAnnotationProcessorFactories = new TreeMap<Object, StaticInjectAnnotationProcessorFactory>();
+    private final @Nonnull RankedServices<StaticInjectAnnotationProcessorFactory> staticInjectAnnotationProcessorFactories = new RankedServices<StaticInjectAnnotationProcessorFactory>();
 
     @Reference(name = "implementationPicker", referenceInterface = ImplementationPicker.class,
             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    private final @Nonnull Map<Object, ImplementationPicker> implementationPickers = new TreeMap<Object, ImplementationPicker>();
+    private final @Nonnull RankedServices<ImplementationPicker> implementationPickers = new RankedServices<ImplementationPicker>();
     
     // bind the service with the highest priority (if a new one comes in this service gets restarted)
     @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policyOption=ReferencePolicyOption.GREEDY)
@@ -388,14 +383,14 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         boolean wasInjectionSuccessful = false;
 
         // find an appropriate annotation processor
-        for (InjectAnnotationProcessorFactory2 factory : sortedInjectAnnotationProcessorFactories2) {
+        for (InjectAnnotationProcessorFactory2 factory : injectAnnotationProcessorFactories2) {
             annotationProcessor = factory.createAnnotationProcessor(adaptable, element.getAnnotatedElement());
             if (annotationProcessor != null) {
                 break;
             }
         }
         if (annotationProcessor == null) {
-            for (InjectAnnotationProcessorFactory factory : sortedInjectAnnotationProcessorFactories) {
+            for (InjectAnnotationProcessorFactory factory : injectAnnotationProcessorFactories) {
                 annotationProcessor = factory.createAnnotationProcessor(adaptable, element.getAnnotatedElement());
                 if (annotationProcessor != null) {
                     break;
@@ -409,7 +404,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         RuntimeException lastInjectionException = null;
         if (injectionAdaptable != null) {
             // find the right injector
-            for (Injector injector : sortedInjectors) {
+            for (Injector injector : injectors) {
                 if (source == null || source.equals(injector.getName())) {
                     if (name != null || injector instanceof AcceptsNullName) {
                         Object value = injector.getValue(injectionAdaptable, name, element.getType(), element.getAnnotatedElement(), registry);
@@ -932,91 +927,74 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     }
 
     protected void bindInjector(final Injector injector, final Map<String, Object> props) {
-        synchronized (injectors) {
-            injectors.put(ServiceUtil.getComparableForServiceRanking(props), injector);
-            sortedInjectors = injectors.values().toArray(new Injector[injectors.size()]);
-        }
+        injectors.bind(injector, props);
     }
 
     protected void unbindInjector(final Injector injector, final Map<String, Object> props) {
-        synchronized (injectors) {
-            injectors.remove(ServiceUtil.getComparableForServiceRanking(props));
-            sortedInjectors = injectors.values().toArray(new Injector[injectors.size()]);
-        }
+        injectors.unbind(injector, props);
     }
 
     protected void bindInjectAnnotationProcessorFactory(final InjectAnnotationProcessorFactory factory, final Map<String, Object> props) {
-        synchronized (injectAnnotationProcessorFactories) {
-            injectAnnotationProcessorFactories.put(ServiceUtil.getComparableForServiceRanking(props), factory);
-            sortedInjectAnnotationProcessorFactories = injectAnnotationProcessorFactories.values().toArray(new InjectAnnotationProcessorFactory[injectAnnotationProcessorFactories.size()]);
-        }
+        injectAnnotationProcessorFactories.bind(factory, props);
     }
 
     protected void unbindInjectAnnotationProcessorFactory(final InjectAnnotationProcessorFactory factory, final Map<String, Object> props) {
-        synchronized (injectAnnotationProcessorFactories) {
-            injectAnnotationProcessorFactories.remove(ServiceUtil.getComparableForServiceRanking(props));
-            sortedInjectAnnotationProcessorFactories = injectAnnotationProcessorFactories.values().toArray(new InjectAnnotationProcessorFactory[injectAnnotationProcessorFactories.size()]);
-        }
+        injectAnnotationProcessorFactories.unbind(factory, props);
     }
+
     protected void bindInjectAnnotationProcessorFactory2(final InjectAnnotationProcessorFactory2 factory, final Map<String, Object> props) {
-        synchronized (injectAnnotationProcessorFactories2) {
-            injectAnnotationProcessorFactories2.put(ServiceUtil.getComparableForServiceRanking(props), factory);
-            sortedInjectAnnotationProcessorFactories2 = injectAnnotationProcessorFactories2.values().toArray(new InjectAnnotationProcessorFactory2[injectAnnotationProcessorFactories2.size()]);
-        }
+        injectAnnotationProcessorFactories2.bind(factory, props);
     }
 
     protected void unbindInjectAnnotationProcessorFactory2(final InjectAnnotationProcessorFactory2 factory, final Map<String, Object> props) {
-        synchronized (injectAnnotationProcessorFactories2) {
-            injectAnnotationProcessorFactories2.remove(ServiceUtil.getComparableForServiceRanking(props));
-            sortedInjectAnnotationProcessorFactories2 = injectAnnotationProcessorFactories2.values().toArray(new InjectAnnotationProcessorFactory2[injectAnnotationProcessorFactories2.size()]);
-        }
+        injectAnnotationProcessorFactories2.unbind(factory, props);
     }
 
     protected void bindStaticInjectAnnotationProcessorFactory(final StaticInjectAnnotationProcessorFactory factory, final Map<String, Object> props) {
         synchronized (staticInjectAnnotationProcessorFactories) {
-            staticInjectAnnotationProcessorFactories.put(ServiceUtil.getComparableForServiceRanking(props), factory);
-            this.adapterImplementations.setStaticInjectAnnotationProcessorFactories(staticInjectAnnotationProcessorFactories.values());
+            staticInjectAnnotationProcessorFactories.bind(factory, props);
+            this.adapterImplementations.setStaticInjectAnnotationProcessorFactories(staticInjectAnnotationProcessorFactories.get());
         }
     }
 
     protected void unbindStaticInjectAnnotationProcessorFactory(final StaticInjectAnnotationProcessorFactory factory, final Map<String, Object> props) {
         synchronized (staticInjectAnnotationProcessorFactories) {
-            staticInjectAnnotationProcessorFactories.remove(ServiceUtil.getComparableForServiceRanking(props));
-            this.adapterImplementations.setStaticInjectAnnotationProcessorFactories(staticInjectAnnotationProcessorFactories.values());
+            staticInjectAnnotationProcessorFactories.unbind(factory, props);
+            this.adapterImplementations.setStaticInjectAnnotationProcessorFactories(staticInjectAnnotationProcessorFactories.get());
         }
     }
 
     protected void bindImplementationPicker(final ImplementationPicker implementationPicker, final Map<String, Object> props) {
         synchronized (implementationPickers) {
-            implementationPickers.put(ServiceUtil.getComparableForServiceRanking(props), implementationPicker);
-            this.adapterImplementations.setImplementationPickers(implementationPickers.values());
+            implementationPickers.bind(implementationPicker, props);
+            this.adapterImplementations.setImplementationPickers(implementationPickers.get());
         }
     }
 
     protected void unbindImplementationPicker(final ImplementationPicker implementationPicker, final Map<String, Object> props) {
         synchronized (implementationPickers) {
-            implementationPickers.remove(ServiceUtil.getComparableForServiceRanking(props));
-            this.adapterImplementations.setImplementationPickers(implementationPickers.values());
+            implementationPickers.unbind(implementationPicker, props);
+            this.adapterImplementations.setImplementationPickers(implementationPickers.get());
         }
     }
 
-    @Nonnull Injector[] getInjectors() {
-        return sortedInjectors;
+    @Nonnull Collection<Injector> getInjectors() {
+        return injectors.get();
     }
 
-    @Nonnull InjectAnnotationProcessorFactory[] getInjectAnnotationProcessorFactories() {
-        return sortedInjectAnnotationProcessorFactories;
+    @Nonnull Collection<InjectAnnotationProcessorFactory> getInjectAnnotationProcessorFactories() {
+        return injectAnnotationProcessorFactories.get();
     }
 
-    @Nonnull InjectAnnotationProcessorFactory2[] getInjectAnnotationProcessorFactories2() {
-        return sortedInjectAnnotationProcessorFactories2;
+    @Nonnull Collection<InjectAnnotationProcessorFactory2> getInjectAnnotationProcessorFactories2() {
+        return injectAnnotationProcessorFactories2.get();
     }
 
     @Nonnull Collection<StaticInjectAnnotationProcessorFactory> getStaticInjectAnnotationProcessorFactories() {
-        return staticInjectAnnotationProcessorFactories.values();
+        return staticInjectAnnotationProcessorFactories.get();
     }
 
-    ImplementationPicker[] getImplementationPickers() {
+    @Nonnull ImplementationPicker[] getImplementationPickers() {
         return adapterImplementations.getImplementationPickers();
     }
 
