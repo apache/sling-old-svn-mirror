@@ -121,7 +121,7 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         private boolean stopped = false;
 
         /** eventQ contains all AsyncEvent objects that have yet to be sent - in order to be sent **/
-        private List<AsyncEvent> eventQ = new LinkedList<AsyncEvent>();
+        private final List<AsyncEvent> eventQ = new LinkedList<AsyncEvent>();
         
         /** Enqueues a particular event for asynchronous sending to a particular listener **/
         void enqueue(TopologyEventListener listener, TopologyEvent event) {
