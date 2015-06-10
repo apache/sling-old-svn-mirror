@@ -38,8 +38,8 @@ public class ModelConfigurationPrinter {
         
         // injectors
         printWriter.println("Sling Models Injectors:");
-        Injector[] injectors = modelAdapterFactory.getInjectors();
-        if (injectors == null || injectors.length == 0) {
+        Collection<Injector> injectors = modelAdapterFactory.getInjectors();
+        if (injectors.isEmpty()) {
             printWriter.println("none");
         } else {
             for (Injector injector : injectors) {
@@ -51,12 +51,12 @@ public class ModelConfigurationPrinter {
         
         // inject annotations processor factories
         printWriter.println("Sling Models Inject Annotation Processor Factories:");
-        InjectAnnotationProcessorFactory[] factories = modelAdapterFactory.getInjectAnnotationProcessorFactories();
-        InjectAnnotationProcessorFactory2[] factories2 = modelAdapterFactory.getInjectAnnotationProcessorFactories2();
+        Collection<InjectAnnotationProcessorFactory> factories = modelAdapterFactory.getInjectAnnotationProcessorFactories();
+        Collection<InjectAnnotationProcessorFactory2> factories2 = modelAdapterFactory.getInjectAnnotationProcessorFactories2();
         Collection<StaticInjectAnnotationProcessorFactory> staticFactories = modelAdapterFactory.getStaticInjectAnnotationProcessorFactories();
-        if ((factories == null || factories.length == 0)
-                && (factories2 == null || factories2.length == 0)
-                && (staticFactories == null || staticFactories.size() == 0)) {
+        if ((factories.isEmpty())
+                && (factories2.isEmpty())
+                && (staticFactories.isEmpty())) {
             printWriter.println("none");
         } else {
             for (StaticInjectAnnotationProcessorFactory factory : staticFactories) {
