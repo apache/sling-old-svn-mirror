@@ -177,6 +177,7 @@ public class SingleInstanceTest {
         AssertingTopologyEventListener assertingTopologyEventListener = new AssertingTopologyEventListener();
         assertingTopologyEventListener.addExpected(Type.TOPOLOGY_INIT);
         instance.bindTopologyEventListener(assertingTopologyEventListener);
+        Thread.sleep(500); // SLING-4755: async event sending requires some minimal wait time nowadays
         assertEquals(0, assertingTopologyEventListener.getRemainingExpectedCount());
 
         final String propertyName = UUID.randomUUID().toString();
@@ -264,5 +265,5 @@ public class SingleInstanceTest {
                 .getClass());
         logger.info("testBootstrap: end");
     }
-
+    
 }

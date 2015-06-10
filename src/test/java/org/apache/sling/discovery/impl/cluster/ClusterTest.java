@@ -28,14 +28,19 @@ import static org.junit.Assert.fail;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Semaphore;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
+import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
+import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.discovery.impl.cluster.helpers.AcceptsMultiple;
 import org.apache.sling.discovery.impl.cluster.helpers.AssertingTopologyEventListener;
@@ -1121,6 +1126,7 @@ public class ClusterTest {
         assertingTopologyEventListener.addExpected(Type.TOPOLOGY_INIT);
         assertEquals(1, assertingTopologyEventListener.getRemainingExpectedCount());
         instance1.bindTopologyEventListener(assertingTopologyEventListener);
+        Thread.sleep(500); // SLING-4755: async event sending requires some minimal wait time nowadays
         assertEquals(0, assertingTopologyEventListener.getRemainingExpectedCount());
 
         // startup instance 3
@@ -1215,4 +1221,167 @@ public class ClusterTest {
         throw new IllegalStateException("instance not found: instance="
                 + instance + ", slingId=" + slingId);
     }
+    
+    class LongRunningListener implements TopologyEventListener {
+        
+        String failMsg = null;
+        
+        boolean initReceived = false;
+        int noninitReceived;
+
+        private Semaphore changedSemaphore = new Semaphore(0);
+        
+        public void assertNoFail() {
+            if (failMsg!=null) {
+                fail(failMsg);
+            }
+        }
+        
+        public Semaphore getChangedSemaphore() {
+            return changedSemaphore;
+        }
+        
+        public void handleTopologyEvent(TopologyEvent event) {
+            if (failMsg!=null) {
+                failMsg += "/ Already failed, got another event; "+event;
+                return;
+            }
+            if (!initReceived) {
+                if (event.getType()!=Type.TOPOLOGY_INIT) {
+                    failMsg = "Expected TOPOLOGY_INIT first, got: "+event.getType();
+                    return;
+                }
+                initReceived = true;
+                return;
+            }
+            if (event.getType()==Type.TOPOLOGY_CHANGED) {
+                try {
+                    changedSemaphore.acquire();
+                } catch (InterruptedException e) {
+                    throw new Error("don't interrupt me pls: "+e);
+                }
+            }
+            noninitReceived++;
+        }
+    }
+    
+    /**
+     * Test plan:
+     *  * have a discoveryservice with two listeners registered
+     *  * one of them (the 'first' one) is long running
+     *  * during one of the topology changes, when the first
+     *    one is hit, deactivate the discovery service
+     *  * that deactivation used to block (SLING-4755) due
+     *    to synchronized(lock) which was blocked by the
+     *    long running listener. With having asynchronous
+     *    event sending this should no longer be the case
+     *  * also, once asserted that deactivation finished,
+     *    and that the first listener is still busy, make
+     *    sure that once the first listener finishes, that
+     *    the second listener still gets the event
+     * @throws Throwable 
+     */
+    @Test
+    public void testLongRunningListener() throws Throwable {
+        // let the instance1 become alone, instance2 is idle
+        instance1.getConfig().setHeartbeatTimeout(2);
+        instance2.getConfig().setHeartbeatTimeout(2);
+        instance1.runHeartbeatOnce();
+        Thread.sleep(1500);
+        instance1.runHeartbeatOnce();
+        Thread.sleep(1500);
+        instance1.runHeartbeatOnce();
+        Thread.sleep(1500);
+//        instance1.dumpRepo();
+        
+        LongRunningListener longRunningListener1 = new LongRunningListener();
+        AssertingTopologyEventListener fastListener2 = new AssertingTopologyEventListener();
+        fastListener2.addExpected(Type.TOPOLOGY_INIT);
+        longRunningListener1.assertNoFail();
+        assertEquals(1, fastListener2.getRemainingExpectedCount());
+        instance1.bindTopologyEventListener(longRunningListener1);
+        instance1.bindTopologyEventListener(fastListener2);
+        Thread.sleep(500); // SLING-4755: async event sending requires some minimal wait time nowadays
+        assertTrue(longRunningListener1.initReceived);
+        assertEquals(0, fastListener2.getRemainingExpectedCount());
+        
+        // after INIT, now do an actual change where listener1 will do a long-running handling
+        fastListener2.addExpected(Type.TOPOLOGY_CHANGING);
+        fastListener2.addExpected(Type.TOPOLOGY_CHANGED);
+        instance1.getConfig().setHeartbeatTimeout(10);
+        instance2.getConfig().setHeartbeatTimeout(10);
+        instance1.runHeartbeatOnce();
+        instance2.runHeartbeatOnce();
+        Thread.sleep(500);
+        instance1.runHeartbeatOnce();
+        instance2.runHeartbeatOnce();
+        Thread.sleep(500);
+        instance1.runHeartbeatOnce();
+        instance2.runHeartbeatOnce();
+        Thread.sleep(500);
+        
+        instance1.dumpRepo();
+        longRunningListener1.assertNoFail();
+        // nothing unexpected should arrive at listener2:
+        assertEquals(0, fastListener2.getUnexpectedCount());
+        // however, listener2 should only get one (CHANGING) event, cos the CHANGED event is still blocked
+        assertEquals(1, fastListener2.getRemainingExpectedCount());
+        // and also listener2 should only get CHANGING, the CHANGED is blocked via changedSemaphore
+        assertEquals(1, longRunningListener1.noninitReceived);
+        assertTrue(longRunningListener1.getChangedSemaphore().hasQueuedThreads());
+        Thread.sleep(2000);
+        // even after a 2sec sleep things should be unchanged:
+        assertEquals(0, fastListener2.getUnexpectedCount());
+        assertEquals(1, fastListener2.getRemainingExpectedCount());
+        assertEquals(1, longRunningListener1.noninitReceived);
+        assertTrue(longRunningListener1.getChangedSemaphore().hasQueuedThreads());
+        
+        // now let's simulate SLING-4755: deactivation while longRunningListener1 does long processing
+        // - which is simulated by waiting on changedSemaphore.
+        final List<Exception> asyncException = new LinkedList<Exception>();
+        Thread th = new Thread(new Runnable() {
+
+            public void run() {
+                try {
+                    instance1.stop();
+                } catch (Exception e) {
+                    synchronized(asyncException) {
+                        asyncException.add(e);
+                    }
+                }
+            }
+            
+        });
+        th.start();
+        logger.info("Waiting max 4 sec...");
+        th.join(4000);
+        logger.info("Done waiting max 4 sec...");
+        if (th.isAlive()) {
+            logger.warn("Thread still alive: "+th.isAlive());
+            // release before issuing fail as otherwise test will block forever
+            longRunningListener1.getChangedSemaphore().release();
+            fail("Thread was still alive");
+        }
+        logger.info("Thread was no longer alive: "+th.isAlive());
+        synchronized(asyncException) {
+            logger.info("Async exceptions: "+asyncException.size());
+            if (asyncException.size()!=0) {
+                // release before issuing fail as otherwise test will block forever
+                longRunningListener1.getChangedSemaphore().release();
+                fail("async exceptions: "+asyncException.size()+", first: "+asyncException.get(0));
+            }
+        }
+        
+        // now the test consists of
+        // a) the fact that we reached this place without unlocking the changedSemaphore
+        // b) when we now unlock the changedSemaphore the remaining events should flush through
+        longRunningListener1.getChangedSemaphore().release();
+        Thread.sleep(500);// shouldn't take long and then things should have flushed:
+        assertEquals(0, fastListener2.getUnexpectedCount());
+        assertEquals(0, fastListener2.getRemainingExpectedCount());
+        assertEquals(2, longRunningListener1.noninitReceived);
+        assertFalse(longRunningListener1.getChangedSemaphore().hasQueuedThreads());
+    }
+
+    
 }
