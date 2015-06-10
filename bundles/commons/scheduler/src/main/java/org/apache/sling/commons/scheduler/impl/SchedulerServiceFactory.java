@@ -147,7 +147,7 @@ public class SchedulerServiceFactory implements Scheduler {
      */
     public void fireJobAt(final String name, final Object job,
             final Map<String, Serializable> config, final Date date) throws Exception {
-        this.scheduler.fireJob(this.bundleId, null, job, config);
+        this.scheduler.fireJobAt(this.bundleId, null, name, job, config, date);
     }
 
     /**
