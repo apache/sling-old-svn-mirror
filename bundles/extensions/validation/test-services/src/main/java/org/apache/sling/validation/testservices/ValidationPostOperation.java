@@ -31,9 +31,9 @@ import org.apache.sling.servlets.post.AbstractPostOperation;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.PostOperation;
 import org.apache.sling.servlets.post.PostResponse;
-import org.apache.sling.validation.api.ValidationModel;
-import org.apache.sling.validation.api.ValidationResult;
-import org.apache.sling.validation.api.ValidationService;
+import org.apache.sling.validation.ValidationResult;
+import org.apache.sling.validation.ValidationService;
+import org.apache.sling.validation.model.ValidationModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

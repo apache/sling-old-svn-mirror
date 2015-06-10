@@ -27,9 +27,9 @@ import javax.inject.Inject;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.Model;
-import org.apache.sling.validation.api.ValidationModel;
-import org.apache.sling.validation.api.ValidationResult;
-import org.apache.sling.validation.api.ValidationService;
+import org.apache.sling.validation.ValidationResult;
+import org.apache.sling.validation.ValidationService;
+import org.apache.sling.validation.model.ValidationModel;
 
 @Model(adaptables = Resource.class)
 public class UserModel {
