@@ -121,6 +121,8 @@ public class TopologyEventTest {
         logger.info("testDelayedInitEvent: listener instance1.l1Two added - it expects an INIT now");
         instance1.bindTopologyEventListener(l1Two);
         
+        Thread.sleep(500); // SLING-4755: async event sending requires some minimal wait time nowadays
+
         // just because instance2 is started doesn't kick off any events yet 
         // since instance2 didn't send heartbeats yet
         assertEquals(1, l1.getEvents().size()); // one event
@@ -202,6 +204,8 @@ public class TopologyEventTest {
         };
         l1.addExpected(Type.TOPOLOGY_INIT);
         instance1.bindTopologyEventListener(l1);
+
+        Thread.sleep(500); // SLING-4755: async event sending requires some minimal wait time nowadays
         
         // when delayInitEventUntilVoted is disabled, the INIT event is sent immediately
         assertEquals(1, l1.getEvents().size());
@@ -230,6 +234,8 @@ public class TopologyEventTest {
         l1Two.addExpected(Type.TOPOLOGY_INIT);
         instance1.bindTopologyEventListener(l1Two);
         
+        Thread.sleep(500); // SLING-4755: async event sending requires some minimal wait time nowadays
+
         // just because instance2 is started doesn't kick off any events yet 
         // since instance2 didn't send heartbeats yet
         assertEquals(1, l1.getEvents().size()); // one event
