@@ -16,11 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.api;
+package org.apache.sling.validation.model;
 
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.validation.Validator;
 
 /**
  * Defines a validator instance with information about the type and the parameterization of the validator.
