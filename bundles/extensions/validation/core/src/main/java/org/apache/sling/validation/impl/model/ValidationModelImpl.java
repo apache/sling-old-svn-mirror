@@ -24,9 +24,9 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.sling.validation.api.ChildResource;
-import org.apache.sling.validation.api.ResourceProperty;
-import org.apache.sling.validation.api.ValidationModel;
+import org.apache.sling.validation.model.ChildResource;
+import org.apache.sling.validation.model.ResourceProperty;
+import org.apache.sling.validation.model.ValidationModel;
 
 public class ValidationModelImpl implements ValidationModel {
 

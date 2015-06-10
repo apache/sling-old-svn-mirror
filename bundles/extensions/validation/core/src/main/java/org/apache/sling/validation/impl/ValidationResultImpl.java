@@ -26,7 +26,7 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.validation.api.ValidationResult;
+import org.apache.sling.validation.ValidationResult;
 
 public class ValidationResultImpl implements ValidationResult {
 

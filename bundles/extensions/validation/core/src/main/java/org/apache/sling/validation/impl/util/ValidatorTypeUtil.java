@@ -27,7 +27,7 @@ import java.util.Map.Entry;
 import javax.annotation.Nonnull;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
-import org.apache.sling.validation.api.Validator;
+import org.apache.sling.validation.Validator;
 
 public class ValidatorTypeUtil {
     

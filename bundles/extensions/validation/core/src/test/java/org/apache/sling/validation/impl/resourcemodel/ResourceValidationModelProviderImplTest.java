@@ -29,16 +29,16 @@ import org.apache.sling.testing.mock.jcr.MockQueryResult;
 import org.apache.sling.testing.mock.jcr.MockQueryResultHandler;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
-import org.apache.sling.validation.api.ChildResource;
-import org.apache.sling.validation.api.ParameterizedValidator;
-import org.apache.sling.validation.api.ResourceProperty;
-import org.apache.sling.validation.api.ValidationModel;
-import org.apache.sling.validation.api.Validator;
+import org.apache.sling.validation.Validator;
 import org.apache.sling.validation.impl.Constants;
 import org.apache.sling.validation.impl.model.ChildResourceImpl;
-import org.apache.sling.validation.impl.util.ResourcePropertyBuilder;
-import org.apache.sling.validation.impl.util.ValidationModelBuilder;
+import org.apache.sling.validation.impl.model.ResourcePropertyBuilder;
+import org.apache.sling.validation.impl.model.ValidationModelBuilder;
 import org.apache.sling.validation.impl.validators.RegexValidator;
+import org.apache.sling.validation.model.ChildResource;
+import org.apache.sling.validation.model.ParameterizedValidator;
+import org.apache.sling.validation.model.ResourceProperty;
+import org.apache.sling.validation.model.ValidationModel;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Assert;
@@ -123,14 +123,12 @@ public class ResourceValidationModelProviderImplTest {
         modelProvider = new ResourceValidationModelProviderImpl();
         validatorMap = new HashMap<String, Validator<?>>();
         validatorMap.put("org.apache.sling.validation.impl.validators.RegexValidator", new RegexValidator());
-        regexValdidatorParametrization = new HashMap<String, Object>();
-        regexValdidatorParametrization.put(RegexValidator.REGEX_PARAM, "prefix.*");
 
         // one default model
         modelBuilder = new ValidationModelBuilder();
         modelBuilder.setApplicablePath("/content/site1");
         ResourcePropertyBuilder propertyBuilder = new ResourcePropertyBuilder();
-        propertyBuilder.validator(new RegexValidator(), regexValdidatorParametrization);
+        propertyBuilder.validator(new RegexValidator(), RegexValidator.REGEX_PARAM, "prefix.*");
         ResourceProperty property = propertyBuilder.build("field1");
         modelBuilder.resourceProperty(property);
 
@@ -211,7 +209,7 @@ public class ResourceValidationModelProviderImplTest {
         resourcePropertyBuilder.optional();
         ResourceProperty childproperty = resourcePropertyBuilder.build("child1property");
         modelBuilder.childResource(new ChildResourceImpl("child1", null, true,
-                Collections.singletonList(childproperty), validatorMap, Collections.<ChildResource> emptyList()));
+                Collections.singletonList(childproperty), Collections.<ChildResource> emptyList()));
         ValidationModel model1 = modelBuilder.build("sling/validation/test");
 
         // build models in JCR

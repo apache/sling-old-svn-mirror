@@ -21,7 +21,7 @@ package org.apache.sling.validation.impl;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
-import org.apache.sling.validation.api.ValidationModel;
+import org.apache.sling.validation.model.ValidationModel;
 
 public interface ValidationModelRetriever {
     /**

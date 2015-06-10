@@ -19,15 +19,13 @@
 package org.apache.sling.validation.impl.model;
 
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.validation.api.ChildResource;
-import org.apache.sling.validation.api.ResourceProperty;
-import org.apache.sling.validation.api.Validator;
+import org.apache.sling.validation.model.ChildResource;
+import org.apache.sling.validation.model.ResourceProperty;
 
 /**
  * Implements a {@link ChildResource}
@@ -40,7 +38,7 @@ public class ChildResourceImpl implements ChildResource {
     private final @Nonnull List<ChildResource> children;
     private final boolean isRequired;
 
-    public ChildResourceImpl(String name, String nameRegex, boolean isRequired, @Nonnull List<ResourceProperty> properties, @Nonnull Map<String, Validator<?>> validatorsMap, @Nonnull List<ChildResource> children) {
+    public ChildResourceImpl(String name, String nameRegex, boolean isRequired, @Nonnull List<ResourceProperty> properties, @Nonnull List<ChildResource> children) {
         if (nameRegex != null) {
             try {
                 this.namePattern = Pattern.compile(nameRegex);

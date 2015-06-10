@@ -18,6 +18,9 @@
  */
 package org.apache.sling.validation.spi;
 
+/**
+ * Validation models are cached until explicitly invalidated through this OSGi service.
+ */
 public interface ValidationModelCache {
     public void invalidate();
 }

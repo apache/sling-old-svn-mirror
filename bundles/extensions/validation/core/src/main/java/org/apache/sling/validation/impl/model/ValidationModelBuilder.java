@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.impl.util;
+package org.apache.sling.validation.impl.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,10 +24,9 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.validation.api.ChildResource;
-import org.apache.sling.validation.api.ResourceProperty;
-import org.apache.sling.validation.api.ValidationModel;
-import org.apache.sling.validation.impl.model.ValidationModelImpl;
+import org.apache.sling.validation.model.ChildResource;
+import org.apache.sling.validation.model.ResourceProperty;
+import org.apache.sling.validation.model.ValidationModel;
 
 /**
  * Builder to instantiate a {@link ValidationModel}

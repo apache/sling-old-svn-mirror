@@ -30,13 +30,14 @@ import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.RankedServices;
-import org.apache.sling.validation.api.ValidationModel;
-import org.apache.sling.validation.api.Validator;
-import org.apache.sling.validation.api.spi.ValidationModelCache;
-import org.apache.sling.validation.api.spi.ValidationModelProvider;
+import org.apache.sling.validation.Validator;
 import org.apache.sling.validation.impl.util.Trie;
+import org.apache.sling.validation.model.ValidationModel;
+import org.apache.sling.validation.spi.ValidationModelCache;
+import org.apache.sling.validation.spi.ValidationModelProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 /**
  * Retrieves the most appropriate (the one with the longest matching applicablePath) model from any of the {@link ValidationModelProvider}s.
  * Also implements a cache of all previously retrieved models.

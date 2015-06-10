@@ -26,11 +26,9 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.annotation.Nonnull;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
@@ -45,13 +43,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
-import org.apache.sling.validation.api.ChildResource;
-import org.apache.sling.validation.api.ParameterizedValidator;
-import org.apache.sling.validation.api.ResourceProperty;
-import org.apache.sling.validation.api.ValidationModel;
-import org.apache.sling.validation.api.Validator;
-import org.apache.sling.validation.api.spi.ValidationModelCache;
-import org.apache.sling.validation.api.spi.ValidationModelProvider;
+import org.apache.sling.validation.Validator;
 import org.apache.sling.validation.impl.Constants;
 import org.apache.sling.validation.impl.ValidationModelRetrieverImpl;
 import org.apache.sling.validation.impl.model.ChildResourceImpl;
@@ -59,6 +51,12 @@ import org.apache.sling.validation.impl.model.ParameterizedValidatorImpl;
 import org.apache.sling.validation.impl.model.ResourcePropertyImpl;
 import org.apache.sling.validation.impl.model.ValidationModelImpl;
 import org.apache.sling.validation.impl.util.Trie;
+import org.apache.sling.validation.model.ChildResource;
+import org.apache.sling.validation.model.ParameterizedValidator;
+import org.apache.sling.validation.model.ResourceProperty;
+import org.apache.sling.validation.model.ValidationModel;
+import org.apache.sling.validation.spi.ValidationModelCache;
+import org.apache.sling.validation.spi.ValidationModelProvider;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
@@ -264,6 +262,9 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
                     while (validatorsIterator.hasNext()) {
                         Resource validator = validatorsIterator.next();
                         ValueMap validatorProperties = validator.adaptTo(ValueMap.class);
+                        if (validatorProperties == null) {
+                            throw new IllegalStateException("Could not adapt resource " + validator.getPath() + " to ValueMap");
+                        }
                         String validatorName = validator.getName();
                         Validator<?> v = validatorsMap.get(validatorName);
                         if (v == null) {
@@ -323,7 +324,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
                     nameRegex = null;
                 }
                 boolean isRequired = !PropertiesUtil.toBoolean(childrenProperties.get(Constants.OPTIONAL), false);
-                ChildResource childResource = new ChildResourceImpl(name, nameRegex, isRequired, buildProperties(validatorsMap, child.getChild(Constants.PROPERTIES)), validatorsMap, buildChildren(modelResource, child, validatorsMap));
+                ChildResource childResource = new ChildResourceImpl(name, nameRegex, isRequired, buildProperties(validatorsMap, child.getChild(Constants.PROPERTIES)), buildChildren(modelResource, child, validatorsMap));
                 children.add(childResource);
             }
         }

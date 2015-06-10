@@ -25,13 +25,13 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.validation.api.ResourceProperty;
-import org.apache.sling.validation.api.ValidationModel;
-import org.apache.sling.validation.api.Validator;
-import org.apache.sling.validation.api.spi.ValidationModelProvider;
-import org.apache.sling.validation.impl.util.ResourcePropertyBuilder;
-import org.apache.sling.validation.impl.util.ValidationModelBuilder;
+import org.apache.sling.validation.Validator;
+import org.apache.sling.validation.impl.model.ResourcePropertyBuilder;
+import org.apache.sling.validation.impl.model.ValidationModelBuilder;
 import org.apache.sling.validation.impl.util.examplevalidators.DateValidator;
+import org.apache.sling.validation.model.ResourceProperty;
+import org.apache.sling.validation.model.ValidationModel;
+import org.apache.sling.validation.spi.ValidationModelProvider;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;

@@ -1,4 +1,4 @@
-package org.apache.sling.validation.impl.util;
+package org.apache.sling.validation.impl.model;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -7,11 +7,9 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.validation.api.ParameterizedValidator;
-import org.apache.sling.validation.api.ResourceProperty;
-import org.apache.sling.validation.api.Validator;
-import org.apache.sling.validation.impl.model.ParameterizedValidatorImpl;
-import org.apache.sling.validation.impl.model.ResourcePropertyImpl;
+import org.apache.sling.validation.Validator;
+import org.apache.sling.validation.model.ParameterizedValidator;
+import org.apache.sling.validation.model.ResourceProperty;
 
 public class ResourcePropertyBuilder {
 
@@ -36,12 +34,21 @@ public class ResourcePropertyBuilder {
         validators.add(new ParameterizedValidatorImpl(validator, new HashMap<String, Object>()));
         return this;
     }
-
-    public @Nonnull ResourcePropertyBuilder validator(@Nonnull Validator<?> validator, @Nonnull Map<String, Object> parameters) {
-        validators.add(new ParameterizedValidatorImpl(validator, parameters));
+    
+    
+    public @Nonnull ResourcePropertyBuilder validator(@Nonnull Validator<?> validator, String... parametersNamesAndValues) {
+        if (parametersNamesAndValues.length % 2 != 0) {
+            throw new IllegalArgumentException("array parametersNamesAndValues must be even! (first specify name then value, separated by comma)");
+        }
+        // convert to map
+        Map<String, Object> parameterMap = new HashMap<String, Object>();
+        for (int i=0; i<parametersNamesAndValues.length; i=i+2) {
+            parameterMap.put(parametersNamesAndValues[i], parametersNamesAndValues[i+1]);
+        }
+        validators.add(new ParameterizedValidatorImpl(validator, parameterMap));
         return this;
     }
-    
+
     public @Nonnull ResourcePropertyBuilder optional() {
         this.optional = true;
         return this;

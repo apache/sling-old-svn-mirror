@@ -24,8 +24,8 @@ import java.util.regex.PatternSyntaxException;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.validation.api.ParameterizedValidator;
-import org.apache.sling.validation.api.ResourceProperty;
+import org.apache.sling.validation.model.ParameterizedValidator;
+import org.apache.sling.validation.model.ResourceProperty;
 
 public class ResourcePropertyImpl implements ResourceProperty {
 
