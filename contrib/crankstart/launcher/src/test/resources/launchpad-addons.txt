@@ -1,0 +1,42 @@
+#
+#  Licensed to the Apache Software Foundation (ASF) under one
+#  or more contributor license agreements.  See the NOTICE file
+#  distributed with this work for additional information
+#  regarding copyright ownership.  The ASF licenses this file
+#  to you under the Apache License, Version 2.0 (the
+#  "License"); you may not use this file except in compliance
+#  with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an
+#  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#  KIND, either express or implied.  See the License for the
+#  specific language governing permissions and limitations
+#  under the License.
+#
+
+# Additional items needed to be able to start the Sling Launchpad
+# using the :crankstart feature found in this folder + this file + 
+# the standard model from launchpad/builder so that it passes 
+# the Sling integration tests. As of June 11th, 2015 this is
+# not fully working, some integration tests fail. Probably due,
+# at least in part, to run modes not being implemented yet, which
+# means we possibly get conflicting bundles.
+
+[feature name=crankstart.launchpad.addons]
+
+[artifacts]
+  org.apache.sling/org.apache.sling.launchpad.api/1.1.0
+  org.apache.sling/org.apache.sling.launchpad.karaf/0.1.1-SNAPSHOT
+  org.apache.sling/org.apache.sling.launchpad.test-services/2.0.9-SNAPSHOT
+  org.apache.sling/org.apache.sling.junit.core/1.0.10
+
+[configurations]
+  integrationTestsConfig
+    message="This test config should be loaded at startup"
+
+  org.apache.sling.servlets.resolver.SlingServletResolver
+    # Set the servlet resolver's cache size to zero for testing
+    servletresolver.cacheSize=I"0"

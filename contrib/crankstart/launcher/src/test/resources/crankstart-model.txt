@@ -22,14 +22,16 @@
 [feature name=:crankstart]
 
 [variables]
-  felix.framework.version=4.4.0
+  felix.framework.version=5.0.0
   slf4j.version = 1.6.2
   http.port = 8080
   osgi.storage.path = CRANKSTART
+  osgi.start.level = 42
   
 [settings]
   org.osgi.service.http.port = ${http.port}
   org.osgi.framework.storage = ${osgi.storage.path}
+  org.osgi.framework.startlevel.beginning = ${osgi.start.level}
   
 [artifacts]
   org.apache.felix/org.apache.felix.framework/${felix.framework.version}
