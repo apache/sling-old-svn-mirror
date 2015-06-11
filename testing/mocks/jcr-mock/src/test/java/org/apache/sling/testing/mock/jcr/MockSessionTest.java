@@ -259,5 +259,12 @@ public class MockSessionTest {
         assertFalse(node.isNew());
         assertFalse(property.isNew());
     }
+
+    @Test
+    public void testLogout() throws Exception {
+        assertTrue(session.isLive());
+        session.logout();
+        assertFalse(session.isLive());
+    }
     
 }
