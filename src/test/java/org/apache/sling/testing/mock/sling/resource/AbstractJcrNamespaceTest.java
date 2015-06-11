@@ -74,8 +74,8 @@ public abstract class AbstractJcrNamespaceTest {
         ValueMap props = ResourceUtil.getValueMap(resource);
         assertEquals("fooType", props.get("sling:resourceType"));
         
-        // without proper sling namespace definition it is expected that the JCR resource implementation cannot detect the resource type properly
-        assertEquals("nt:unstructured", resource.getResourceType());
+        // since SLING-4773 sling namespace is readly registered in the MockJcrResourceResolverAdapter, so this will still work here
+        assertEquals("fooType", resource.getResourceType());
     }
 
     @Test

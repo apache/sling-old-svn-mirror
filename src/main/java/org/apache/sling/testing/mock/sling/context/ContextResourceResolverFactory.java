@@ -18,12 +18,9 @@
  */
 package org.apache.sling.testing.mock.sling.context;
 
-import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 
 import org.apache.sling.api.resource.LoginException;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
@@ -74,12 +71,7 @@ final class ContextResourceResolverFactory {
     }
 
     private static void initializeJcrMock(ResourceResolverFactory factory) throws RepositoryException, LoginException {
-        // register default namespaces
-        ResourceResolver resolver = factory.getResourceResolver(null);
-        Session session = resolver.adaptTo(Session.class);
-        NamespaceRegistry namespaceRegistry = session.getWorkspace().getNamespaceRegistry();
-        namespaceRegistry.registerNamespace("sling", "http://sling.apache.org/jcr/sling/1.0");
-        resolver.close();
+        // nothing to do
     }
 
     private static void initializeJcrJackrabbit(ResourceResolverFactory factory) {
