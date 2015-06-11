@@ -16,20 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.impl.util.examplevalidators;
+package org.apache.sling.validation.impl;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
-import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.validation.Validator;
-import org.apache.sling.validation.exceptions.SlingValidationException;
+import org.apache.sling.validation.model.ValidationModel;
 
-public class StringValidator implements Validator<String> {
-
-    @Override
-    public String validate(@Nonnull String data, @Nonnull ValueMap valueMap, @Nonnull ValueMap arguments)
-            throws SlingValidationException {
-        return null;
-    }
-
+public interface ValidationModelRetriever {
+    /**
+     * A model for the given resourceType at the given resourcePath
+     * @param resourceType
+     * @param resourcePath may be {@code null} or empty
+     * @return a model which should be used for validation or null, if no validation model could be found
+     */
+    public @CheckForNull ValidationModel getModel(@Nonnull String resourceType, String resourcePath);
 }

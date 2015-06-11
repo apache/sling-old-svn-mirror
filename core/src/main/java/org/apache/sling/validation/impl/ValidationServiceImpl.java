@@ -18,14 +18,11 @@
  */
 package org.apache.sling.validation.impl;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,99 +30,98 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.commons.threads.ThreadPool;
-import org.apache.sling.commons.threads.ThreadPoolManager;
-import org.apache.sling.validation.api.ChildResource;
-import org.apache.sling.validation.api.ParameterizedValidator;
-import org.apache.sling.validation.api.ResourceProperty;
-import org.apache.sling.validation.api.ValidationModel;
-import org.apache.sling.validation.api.ValidationResult;
-import org.apache.sling.validation.api.ValidationService;
-import org.apache.sling.validation.api.Validator;
-import org.apache.sling.validation.api.exceptions.SlingValidationException;
-import org.apache.sling.validation.impl.util.ResourceValidationBuilder;
-import org.apache.sling.validation.impl.util.Trie;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.component.ComponentContext;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventConstants;
-import org.osgi.service.event.EventHandler;
+import org.apache.sling.validation.ValidationResult;
+import org.apache.sling.validation.ValidationService;
+import org.apache.sling.validation.Validator;
+import org.apache.sling.validation.exceptions.SlingValidationException;
+import org.apache.sling.validation.model.ChildResource;
+import org.apache.sling.validation.model.ParameterizedValidator;
+import org.apache.sling.validation.model.ResourceProperty;
+import org.apache.sling.validation.model.ValidationModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component()
-@Service(ValidationService.class)
-public class ValidationServiceImpl implements ValidationService, EventHandler {
+@Service()
+public class ValidationServiceImpl implements ValidationService{
 
     private static final Logger LOG = LoggerFactory.getLogger(ValidationServiceImpl.class);
-
-    static final String MODEL_XPATH_QUERY = "/jcr:root%s/" + Constants.MODELS_HOME + "/*[@sling:resourceType=\"%s\" and @%s=\"%s\"]";
-    static final String[] TOPICS = {SlingConstants.TOPIC_RESOURCE_REMOVED, SlingConstants.TOPIC_RESOURCE_CHANGED,
-            SlingConstants.TOPIC_RESOURCE_ADDED};
-
-    protected Map<String, Trie<ResourceValidationModel>> validationModelsCache = new ConcurrentHashMap<String, Trie<ResourceValidationModel>>();
-    private ThreadPool threadPool;
-    private ServiceRegistration eventHandlerRegistration;
-
+    
+    @Reference
+    ValidationModelRetriever modelRetriever;
+    
+    Collection<String> searchPaths;
+    
     @Reference
     private ResourceResolverFactory rrf = null;
-
-    @Reference(
-            name = "validator",
-            referenceInterface = Validator.class,
-            policy = ReferencePolicy.DYNAMIC,
-            cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE
-    )
     
-    @Nonnull 
-    Map<String, Validator<?>> validators = new ConcurrentHashMap<String, Validator<?>>();
-
-    @Reference
-    private ThreadPoolManager tpm = null;
+    
+    @Activate
+    public void activate() {
+        ResourceResolver rr = null;
+        try {
+            rr = rrf.getAdministrativeResourceResolver(null);
+            searchPaths = Arrays.asList(rr.getSearchPath());
+        } catch (LoginException e) {
+            throw new IllegalStateException("Could not login as administrator to figure out search paths", e);
+        } finally {
+            if (rr != null) {
+                rr.close();
+            }
+        }
+    }
+    
 
     // ValidationService ###################################################################################################################
     
-    
-    
     @SuppressWarnings("unused")
-	public @CheckForNull ValidationModel getValidationModel(@Nonnull String validatedResourceType, String resourcePath) {
+    public @CheckForNull ValidationModel getValidationModel(@Nonnull String validatedResourceType, String resourcePath) {
         // https://bugs.eclipse.org/bugs/show_bug.cgi?id=459256
-    	if (validatedResourceType == null) {
+        if (validatedResourceType == null) {
             throw new IllegalArgumentException("ValidationService.getValidationModel - cannot accept null as resource type. Resource path was: " + resourcePath);
         }
+        // convert to relative resource types, see https://issues.apache.org/jira/browse/SLING-4262
         validatedResourceType = getRelativeResourceType(validatedResourceType);
-        ValidationModel model = null;
-        Trie<ResourceValidationModel> modelsForResourceType = validationModelsCache.get(validatedResourceType);
-        if (modelsForResourceType != null) {
-            model = modelsForResourceType.getElementForLongestMatchingKey(resourcePath).getValue();
-        }
-        if (model == null) {
-            modelsForResourceType = searchAndStoreValidationModel(validatedResourceType);
-            if (modelsForResourceType != null) {
-                model = modelsForResourceType.getElementForLongestMatchingKey(resourcePath).getValue();
-                if (model == null) {
-                    LOG.warn("Although model for resource type {} is available, it is not allowed for path {}", validatedResourceType, resourcePath);
+        return modelRetriever.getModel(validatedResourceType, resourcePath);
+    }
+    
+    
+    /**
+     * If the given resourceType is starting with a "/", it will strip out the leading search path from the given resource type.
+     * Otherwise it will just return the given resource type (as this is already relative).
+     * @param resourceType
+     * @return a relative resource type (without the leading search path)
+     * @throws IllegalArgumentException in case the resource type is starting with a "/" but not with any of the search paths.
+     */
+    @SuppressWarnings("null")
+    protected @Nonnull String getRelativeResourceType(@Nonnull String resourceType) throws IllegalArgumentException {
+        if (resourceType.startsWith("/")) {
+            LOG.debug("try to strip the search path from the resource type");
+            for (String searchPath : searchPaths) {
+                if (resourceType.startsWith(searchPath)) {
+                    resourceType = resourceType.substring(searchPath.length());
+                    return resourceType;
                 }
             }
-            
+            throw new IllegalArgumentException(
+                    "Can only deal with resource types inside the resource resolver's search path ("
+                            + StringUtils.join(searchPaths.toArray()) + ") but given resource type " + resourceType
+                            + " is outside!");
         }
-        return model;
+        return resourceType;
     }
 
     @SuppressWarnings("null")
-	@Override
+    @Override
     public @CheckForNull ValidationModel getValidationModel(@Nonnull Resource resource) {
         return getValidationModel(resource.getResourceType(), resource.getPath());
     }
@@ -149,39 +145,7 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
         return result;
     }
 
-    /**
-     * If the given resourceType is starting with a "/", it will strip out the leading search path from the given resource type.
-     * Otherwise it will just return the given resource type (as this is already relative).
-     * @param resourceType
-     * @return a relative resource type (without the leading search path)
-     * @throws IllegalArgumentException in case the resource type is starting with a "/" but not with any of the search paths.
-     */
-    @SuppressWarnings("null")
-	protected @Nonnull String getRelativeResourceType(@Nonnull String resourceType) throws IllegalArgumentException {
-        if (resourceType.startsWith("/")) {
-            LOG.debug("try to strip the search path from the resource type");
-            ResourceResolver rr = null;
-            try {
-                rr = rrf.getAdministrativeResourceResolver(null);
-                for (String searchPath : rr.getSearchPath()) {
-                    if (resourceType.startsWith(searchPath)) {
-                        resourceType = resourceType.substring(searchPath.length());
-                        return resourceType;
-                    }
-                }
-                throw new IllegalArgumentException("Can only deal with resource types inside the resource resolver's search path (" + StringUtils.join(rr.getSearchPath()) 
-                        + ") but given resource type " + resourceType + " is outside!");
-            } catch (LoginException e) {
-                throw new IllegalStateException("Could not login as administrator to figure out search paths", e);
-            } finally {
-                if (rr != null) {
-                    rr.close();
-                }
-            }
-        }
-        return resourceType;
-        
-    }
+   
 
     /**
      * Validates a child resource with the help of the given {@code ChildResource} entry from the validation model
@@ -194,7 +158,7 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
         // validate children resources, if any
         for (ChildResource childResource : childResources) {
             // if a pattern is set we validate all children matching that pattern
-        	Pattern pattern = childResource.getNamePattern();
+            Pattern pattern = childResource.getNamePattern();
             if (pattern != null) {
                 boolean foundMatch = false;
                 for (Resource child : resource.getChildren()) {
@@ -244,64 +208,7 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
         return visitor.getResult();
     }
 
-    // EventHandler ########################################################################################################################
-    @Override
-    public void handleEvent(Event event) {
-        Runnable task = new Runnable() {
-            @Override
-            public void run() {
-                validationModelsCache.clear();
-            }
-        };
-        threadPool.execute(task);
-    }
-
-    // OSGi ################################################################################################################################
-    protected void activate(ComponentContext componentContext) {
-        threadPool = tpm.get("Validation Service Thread Pool");
-        ResourceResolver rr = null;
-        try {
-            rr = rrf.getAdministrativeResourceResolver(null);
-        } catch (LoginException e) {
-            LOG.error("Cannot obtain a resource resolver.");
-        }
-        if (rr != null) {
-            StringBuilder sb = new StringBuilder("(");
-            String[] searchPaths = rr.getSearchPath();
-            if (searchPaths.length > 1) {
-                sb.append("|");
-            }
-            for (String searchPath : searchPaths) {
-                if (searchPath.endsWith("/")) {
-                    searchPath = searchPath.substring(0, searchPath.length() - 1);
-                }
-                String path = searchPath + "/*" + Constants.MODELS_HOME;
-                sb.append("(path=").append(path).append("*)");
-            }
-            sb.append(")");
-            Dictionary<String, Object> eventHandlerProperties = new Hashtable<String, Object>();
-            eventHandlerProperties.put(EventConstants.EVENT_TOPIC, TOPICS);
-            eventHandlerProperties.put(EventConstants.EVENT_FILTER, sb.toString());
-            eventHandlerRegistration = componentContext.getBundleContext().registerService(EventHandler.class.getName(), this,
-                    eventHandlerProperties);
-            rr.close();
-        } else {
-            LOG.warn("Null resource resolver. Cannot apply path filtering for event processing. Skipping registering this service as an " +
-                    "EventHandler");
-        }
-    }
-
-    protected void deactivate(ComponentContext componentContext) {
-        if (threadPool != null) {
-            tpm.release(threadPool);
-        }
-        if (eventHandlerRegistration != null) {
-            eventHandlerRegistration.unregister();
-            eventHandlerRegistration = null;
-        }
-    }
-
-    private void validateValueMap(ValueMap valueMap, String relativePath, Set<ResourceProperty> resourceProperties,
+    private void validateValueMap(ValueMap valueMap, String relativePath, List<ResourceProperty> resourceProperties,
             ValidationResultImpl result) {
         if (valueMap == null) {
             throw new IllegalArgumentException("ValueMap may not be null");
@@ -344,125 +251,6 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
         validatePropertyValue(result, property, relativePath, valueMap, validators);
     }
 
-    /**
-     * Searches for valid validation models in the JCR repository for a certain resource type. All validation models will be returned in a
-     * {@link Trie} data structure for easy retrieval of the models using their {@code applicable paths} as trie keys.
-     * <p/>
-     * A valid content-tree {@code ValidationModel} has the following structure:
-     * <pre>
-     * validationModel
-     *      &#064;validatedResourceType
-     *      &#064;applicablePaths = [path1,path2,...] (optional)
-     *      &#064;sling:resourceType = sling/validation/model
-     *      fields
-     *          field1
-     *              &#064;fieldType
-     *              validators
-     *                  validator1
-     *                      &#064;validatorArguments = [key=value,key=value...] (optional)
-     *                  validatorN
-     *                      #064;validatorArguments = [key=value,key=value...] (optional)
-     *          fieldN
-     *              &#064;fieldType
-     *              validators
-     *                  validator1
-     *                  &#064;validatorArguments = [key=value,key=value...] (optional)
-     * </pre>
-     *
-     * @param validatedResourceType the type of resource for which to scan the JCR repository for validation models
-     * @return a {@link Trie} with the validation models; an empty trie if no model is found
-     */
-    private Trie<ResourceValidationModel> searchAndStoreValidationModel(@Nonnull String validatedResourceType) {
-        Trie<ResourceValidationModel> modelsForResourceType = null;
-        ResourceResolver rr = null;
-        ResourceValidationModel vm;
-        if (StringUtils.isBlank(validatedResourceType)) {
-            throw new IllegalArgumentException("validatedResourceType cannot be null or blank!");
-        }
-        try {
-            rr = rrf.getAdministrativeResourceResolver(null);
-            String[] searchPaths = rr.getSearchPath();
-            for (String searchPath : searchPaths) {
-                final String queryString = String.format(MODEL_XPATH_QUERY, searchPath, Constants.VALIDATION_MODEL_RESOURCE_TYPE,
-                        Constants.VALIDATED_RESOURCE_TYPE, validatedResourceType);
-                Iterator<Resource> models = rr.findResources(queryString, "xpath");
-                while (models.hasNext()) {
-                    Resource model = models.next();
-                    LOG.info("Found validation model resource {}.", model.getPath());
-                    String jcrPath = model.getPath();
-                    try {
-                        ValueMap validationModelProperties = model.adaptTo(ValueMap.class);
-                        String[] applicablePaths = PropertiesUtil.toStringArray(validationModelProperties.get(Constants.APPLICABLE_PATHS,
-                                String[].class));
-                        Resource r = model.getChild(Constants.PROPERTIES);
-                        Set<ResourceProperty> resourceProperties = ResourceValidationBuilder.buildProperties(validators, r);
-                        List<ChildResource> children = ResourceValidationBuilder.buildChildren(model, model, validators);
-                        if (resourceProperties.isEmpty() && children.isEmpty()) {
-                            throw new IllegalArgumentException("Neither children nor properties set.");
-                        } else {
-                            vm = new ResourceValidationModel(jcrPath, resourceProperties, validatedResourceType, applicablePaths, children);
-                            modelsForResourceType = validationModelsCache.get(validatedResourceType);
-                            /**
-                             * if the modelsForResourceType is null the canAcceptModel will return true: performance
-                             * optimisation so that the Trie is created only if the model is accepted
-                             */
-
-                            if (canAcceptModel(vm, searchPath, searchPaths, modelsForResourceType)) {
-                                if (modelsForResourceType == null) {
-                                    modelsForResourceType = new Trie<ResourceValidationModel>();
-                                    validationModelsCache.put(validatedResourceType, modelsForResourceType);
-                                }
-                                for (String applicablePath : vm.getApplicablePaths()) {
-                                    modelsForResourceType.insert(applicablePath, vm);
-                                }
-                            }
-                        }
-                    } catch (IllegalArgumentException e) {
-                        throw new IllegalStateException("Found invalid validation model in '" + jcrPath +"': " + e.getMessage(), e);
-                    }
-                }
-            }
-        } catch (LoginException e) {
-            throw new IllegalStateException("Unable to obtain a resource resolver.", e);
-        } finally {
-            if (rr != null) {
-                rr.close();
-            }
-        }
-        return modelsForResourceType;
-    }
-
-    /**
-     * Checks if the {@code validationModel} does not override an existing stored model given the fact that the overlaying is done based on
-     * the order in which the search paths are in the {@code searchPaths} array: the lower the index, the higher the priority.
-     *
-     * @param validationModel   the model to be checked
-     * @param currentSearchPath the current search path
-     * @param searchPaths       the available search paths
-     * @param validationModels  the existing validation models
-     * @return {@code true} if the new model can be stored, {@code false} otherwise
-     */
-    private boolean canAcceptModel(ResourceValidationModel validationModel, String currentSearchPath, String[] searchPaths,
-                                   Trie<ResourceValidationModel> validationModels) {
-        // perform null check to optimise performance in callee - no need to previously create the Trie if we're not going to accept the model
-        if (validationModels != null) {
-            String relativeModelPath = validationModel.getPath().replaceFirst(currentSearchPath, "");
-            for (String searchPath : searchPaths) {
-                if (!currentSearchPath.equals(searchPath)) {
-                    for (String applicablePath : validationModel.getApplicablePaths()) {
-                        ResourceValidationModel existingVM = validationModels.getElement(applicablePath).getValue();
-                        if (existingVM != null) {
-                            String existingModelRelativeModelPath = existingVM.getPath().replaceFirst(searchPath, "");
-                            if (existingModelRelativeModelPath.equals(relativeModelPath)) {
-                                return false;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return true;
-    }
     
     @SuppressWarnings("null")
 	private void validatePropertyValue(ValidationResultImpl result, String property, String relativePath, ValueMap valueMap, List<ParameterizedValidator> validators) {
@@ -496,12 +284,11 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
                 if (array.length == 1) {
                    validateValue(result, array[0], property, relativePath, valueMap, validator);
                 } else {
-					int n = 0;
-					for (Object item : array) {
-						validateValue(result, item, property + "[" + n++ + "]",
-								relativePath, valueMap, validator);
-					}
-				}
+                    int n = 0;
+                    for (Object item : array) {
+                        validateValue(result, item, property + "[" + n++ + "]", relativePath, valueMap, validator);
+                    }
+                }
             }
         }
     }
@@ -525,14 +312,4 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
         }
     }
     
-    // OSGi ################################################################################################################################
-    protected void bindValidator(Validator<?> validator, Map<?, ?> properties) {
-        validators.put(validator.getClass().getName(), validator);
-    }
-
-    protected void unbindValidator(Validator<?> validator, Map<?, ?> properties) {
-        // also remove references to all validators in the cache
-        validationModelsCache.clear();
-        validators.remove(validator.getClass().getName());
-    }
 }

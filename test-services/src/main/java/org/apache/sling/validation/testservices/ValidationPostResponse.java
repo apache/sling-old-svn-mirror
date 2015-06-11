@@ -18,18 +18,19 @@
  */
 package org.apache.sling.validation.testservices;
 
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.servlets.post.AbstractPostResponse;
-import org.apache.sling.validation.api.ValidationResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.JSONObject;
+import org.apache.sling.servlets.post.AbstractPostResponse;
+import org.apache.sling.validation.ValidationResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ValidationPostResponse extends AbstractPostResponse {
 

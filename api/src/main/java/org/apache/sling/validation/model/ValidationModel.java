@@ -16,10 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.api;
+package org.apache.sling.validation.model;
 
 import java.util.List;
-import java.util.Set;
 
 import javax.annotation.Nonnull;
 
@@ -31,16 +30,16 @@ public interface ValidationModel {
     /**
      * Returns the properties validated by this model.
      *
-     * @return the properties set (never {@code null}, but might be empty set)
+     * @return the properties list (never {@code null}, but might be empty list)
      */
-	@Nonnull Set<ResourceProperty> getResourceProperties();
+    @Nonnull List<ResourceProperty> getResourceProperties();
 
     /**
      * Returns the type of resource this model validates.
      *
      * @return the validated resource type, never {@code null}
      */
-	@Nonnull String getValidatedResourceType();
+    @Nonnull String getValidatedResourceType();
 
     /**
      * Returns the paths under which resources will be validated by this model. 
@@ -49,13 +48,13 @@ public interface ValidationModel {
      *
      * @return a path array. Is never {@code null} nor an empty array
      */
-	@Nonnull String[] getApplicablePaths();
+    @Nonnull String[] getApplicablePaths();
 
     /**
      * Returns the expected children for a resource validated by this model.
      *
      * @return the children list (can be empty if there are no children), never {@code null}
      */
-	@Nonnull List<ChildResource> getChildren();
+    @Nonnull List<ChildResource> getChildren();
 
 }

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,20 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.impl.util.examplevalidators;
+package org.apache.sling.validation.spi;
 
-import javax.annotation.Nonnull;
-
-import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.validation.Validator;
-import org.apache.sling.validation.exceptions.SlingValidationException;
-
-public class StringValidator implements Validator<String> {
-
-    @Override
-    public String validate(@Nonnull String data, @Nonnull ValueMap valueMap, @Nonnull ValueMap arguments)
-            throws SlingValidationException {
-        return null;
-    }
-
+/**
+ * Validation models are cached until explicitly invalidated through this OSGi service.
+ */
+public interface ValidationModelCache {
+    public void invalidate();
 }
