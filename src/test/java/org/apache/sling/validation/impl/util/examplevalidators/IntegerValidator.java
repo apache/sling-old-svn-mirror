@@ -21,8 +21,8 @@ package org.apache.sling.validation.impl.util.examplevalidators;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.validation.api.Validator;
-import org.apache.sling.validation.api.exceptions.SlingValidationException;
+import org.apache.sling.validation.Validator;
+import org.apache.sling.validation.exceptions.SlingValidationException;
 
 public class IntegerValidator implements Validator<Integer> {
 

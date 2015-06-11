@@ -26,8 +26,8 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.AbstractResourceVisitor;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.validation.api.ValidationModel;
-import org.apache.sling.validation.api.ValidationResult;
+import org.apache.sling.validation.ValidationResult;
+import org.apache.sling.validation.model.ValidationModel;
 
 public class ValidationResourceVisitor extends AbstractResourceVisitor {
 

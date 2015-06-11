@@ -23,6 +23,8 @@ import java.util.Map;
 /**
  * Trie data structure used for storing objects using {@link String} keys that allows object retrieval using a longest matching key
  * mechanism.
+ * 
+ * @see <a href="http://en.wikipedia.org/wiki/Trie">Trie</a>
  */
 public class Trie<T> {
 
@@ -112,5 +114,13 @@ public class Trie<T> {
             result = node;
         }
         return result;
+    }
+    
+    /**
+     * 
+     * @return {@code true} if the trie is still empty, otherwise {@code false}
+     */
+    public boolean isEmpty() {
+        return ROOT.getChildren().isEmpty();
     }
 }

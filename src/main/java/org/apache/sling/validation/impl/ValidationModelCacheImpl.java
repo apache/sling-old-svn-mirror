@@ -16,20 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.impl.util.examplevalidators;
+package org.apache.sling.validation.impl;
 
-import javax.annotation.Nonnull;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.validation.spi.ValidationModelCache;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventAdmin;
 
-import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.validation.Validator;
-import org.apache.sling.validation.exceptions.SlingValidationException;
+/**
+ * Invalidates the cache of the {@link ValidationModelRetrieverImpl} by sending an event through the {@link EventAdmin}
+ */
+@Service
+@Component
+public class ValidationModelCacheImpl implements ValidationModelCache {
 
-public class StringValidator implements Validator<String> {
-
+    @Reference
+    protected EventAdmin eventAdmin;
+    
     @Override
-    public String validate(@Nonnull String data, @Nonnull ValueMap valueMap, @Nonnull ValueMap arguments)
-            throws SlingValidationException {
-        return null;
+    public void invalidate() {
+        eventAdmin.sendEvent(new Event(ValidationModelRetrieverImpl.CACHE_INVALIDATION_EVENT_TOPIC, null));
     }
 
 }
