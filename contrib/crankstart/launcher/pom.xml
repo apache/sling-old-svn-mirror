@@ -11,15 +11,17 @@
     </parent>
 
     <groupId>org.apache.sling</groupId>
-    <artifactId>org.apache.sling.crankstart3.launcher</artifactId>
+    <artifactId>org.apache.sling.crankstart.launcher</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.9.9-SNAPSHOT</version>
 
     <name>Apache Sling Crankstart Launcher</name>
     <inceptionYear>2014</inceptionYear>
     
     <description>
-        A different way of starting Sling
+        Sling launcher that gets artifacts defined in a Sling Provisioning
+        Model at runtime, instead of embedding them in the launcher jar like
+        the Sling Launchpad does.
     </description>
 
     <scm>

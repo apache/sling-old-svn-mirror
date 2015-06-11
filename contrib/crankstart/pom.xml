@@ -8,10 +8,10 @@
     </parent>
     
     <groupId>org.apache.sling</groupId>
-    <artifactId>org.apache.sling.crankstart3.reactor</artifactId>
-    <version>0.1.1-SNAPSHOT</version>
+    <artifactId>org.apache.sling.crankstart.reactor</artifactId>
+    <version>1.9.9-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>Apache Sling Crankstart 3 prototype - Reactor</name>
+    <name>Apache Sling Crankstart Reactor</name>
 
     <modules>
         <module>test-services</module>

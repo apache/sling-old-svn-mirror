@@ -16,18 +16,11 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-# This is a feature description
-#
-# A feature consists of variables and run mode dependent artifacts.
-#
 
-# Test our Sling extension commands, that add a bundle via the Sling installer
-# (which requires commons.json and jcr-wrapper)
 [feature name=sling.extensions]
 
 [artifacts]
   org.apache.sling/org.apache.sling.installer.core/3.5.0
   org.apache.sling/org.apache.sling.commons.json/2.0.6
   org.apache.sling/org.apache.sling.jcr.jcr-wrapper/2.0.0
-  # TODO org.apache.sling/org.apache.sling.crankstart.sling.extensions/1.0.1-SNAPSHOT
   commons-io/commons-io/2.4
