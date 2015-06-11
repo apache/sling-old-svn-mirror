@@ -59,15 +59,15 @@ public final class MockSlingSettingService implements SlingSettingsService {
         this.runModes = runModes;
     }
 
+    @Override
+    public String getSlingId() {
+        return slingId;
+    }
+
     // --- unsupported operations ---
     @Override
     public String getAbsolutePathWithinSlingHome(String relativePath) {
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getSlingId() {
-        return slingId;
     }
 
     @Override
