@@ -15,6 +15,6 @@
  * limitations under the License.
  */
 @Version("1.0.0")
-package org.apache.sling.validation.api.exceptions;
+package org.apache.sling.validation;
 
 import aQute.bnd.annotation.Version;
