@@ -26,8 +26,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.validation.api.Validator;
-import org.apache.sling.validation.api.exceptions.SlingValidationException;
+import org.apache.sling.validation.Validator;
+import org.apache.sling.validation.exceptions.SlingValidationException;
 
 /**
  * Performs regular expressions validation on the supplied data with the help of the {@link Pattern} class. This {@code Validator} expects a

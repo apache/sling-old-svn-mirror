@@ -23,8 +23,8 @@ import java.util.Date;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.validation.api.Validator;
-import org.apache.sling.validation.api.exceptions.SlingValidationException;
+import org.apache.sling.validation.Validator;
+import org.apache.sling.validation.exceptions.SlingValidationException;
 
 public class DateValidator implements Validator<Date> {
 

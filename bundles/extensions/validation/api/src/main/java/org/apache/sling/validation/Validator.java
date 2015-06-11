@@ -16,13 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.api;
+package org.apache.sling.validation;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.validation.api.exceptions.SlingValidationException;
+import org.apache.sling.validation.exceptions.SlingValidationException;
 
 import aQute.bnd.annotation.ConsumerType;
 
@@ -70,7 +70,7 @@ public interface Validator <T> {
      * @param valueMap all properties (only used for validations considering multiple properties), never {@code null}.
      * @param arguments the parameterization of the validator. Never {@code null} but might be the empty map.
      * @return validation error message if validation was not successful, {@code null} otherwise. In case an empty string is returned a generic validation error message is used.
-     * @throws org.apache.sling.validation.api.exceptions.SlingValidationException if some expected arguments are missing from the arguments map
+     * @throws org.apache.sling.validation.exceptions.SlingValidationException if some expected arguments are missing from the arguments map
      */
     @CheckForNull String validate(@Nonnull T data, @Nonnull ValueMap valueMap, @Nonnull ValueMap arguments) throws SlingValidationException;
 }

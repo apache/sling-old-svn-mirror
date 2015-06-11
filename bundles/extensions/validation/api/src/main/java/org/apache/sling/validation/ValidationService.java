@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.api;
+package org.apache.sling.validation;
 
 import java.util.Set;
 
@@ -26,7 +26,8 @@ import javax.annotation.Nonnull;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.validation.api.exceptions.SlingValidationException;
+import org.apache.sling.validation.exceptions.SlingValidationException;
+import org.apache.sling.validation.model.ValidationModel;
 
 /**
  * The {@code ValidationService} provides methods for finding {@link ValidationModel} services.
@@ -63,7 +64,7 @@ public interface ValidationService {
      * @param resource the resource to validate
      * @param model    the model with which to perform the validation
      * @return a {@link ValidationResult} that provides the necessary information
-     * @throws org.apache.sling.validation.api.exceptions.SlingValidationException if one validator was called with invalid arguments
+     * @throws org.apache.sling.validation.exceptions.SlingValidationException if one validator was called with invalid arguments
      */
     @Nonnull ValidationResult validate(@Nonnull Resource resource, @Nonnull ValidationModel model) throws SlingValidationException;
 
@@ -74,7 +75,7 @@ public interface ValidationService {
      *
      * @param valueMap the map to validate
      * @return a {@link ValidationResult} that provides the necessary information
-     * @throws org.apache.sling.validation.api.exceptions.SlingValidationException if one validator was called with invalid arguments
+     * @throws org.apache.sling.validation.exceptions.SlingValidationException if one validator was called with invalid arguments
      */
     @Nonnull ValidationResult validate(@Nonnull ValueMap valueMap, @Nonnull ValidationModel model) throws SlingValidationException;
 
@@ -89,7 +90,7 @@ public interface ValidationService {
      * @return the aggregated {@link ValidationResult} over all child resource validations
      * @throws IllegalStateException in case an invalid validation model was found
      * @throws IllegalArgumentException in case resourceType is absolute but outside of the search paths or if no validation model could be found (and enforceValidation is {@code true}).
-     * @throws org.apache.sling.validation.api.exceptions.SlingValidationException if one validator was called with invalid arguments
+     * @throws org.apache.sling.validation.exceptions.SlingValidationException if one validator was called with invalid arguments
      */
     @Nonnull ValidationResult validateAllResourceTypesInResource(@Nonnull Resource resource, boolean enforceValidation, Set<String> ignoredResourceTypes) throws IllegalStateException, IllegalArgumentException, SlingValidationException;
 
