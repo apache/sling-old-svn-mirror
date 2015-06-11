@@ -68,7 +68,7 @@ public class FrameworkSetup extends HashMap<String, Object> implements Callable<
         bi.installBundles(bc, Launcher.NOT_CRANKSTART_FILTER);
         cfg.maybeConfigure();
         
-        // TODO shall we gradually increase start levels like the launchpad does?? Reuse that code?
+        // TODO shall we gradually increase start levels like the launchpad does?? Reuse that DefaultStartupHandler code?
         final Bundle [] bundles = bc.getBundles();
         log.info("Starting all bundles ({} bundles installed)", bundles.length);
         int started = 0;
