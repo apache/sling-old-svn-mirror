@@ -25,10 +25,10 @@ import org.apache.sling.models.factory.InvalidModelException;
 import org.apache.sling.models.factory.ValidationException;
 import org.apache.sling.models.spi.ModelValidation;
 import org.apache.sling.models.validation.InvalidResourceException;
-import org.apache.sling.validation.api.ValidationModel;
-import org.apache.sling.validation.api.ValidationResult;
-import org.apache.sling.validation.api.ValidationService;
-import org.apache.sling.validation.api.exceptions.SlingValidationException;
+import org.apache.sling.validation.ValidationResult;
+import org.apache.sling.validation.ValidationService;
+import org.apache.sling.validation.exceptions.SlingValidationException;
+import org.apache.sling.validation.model.ValidationModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

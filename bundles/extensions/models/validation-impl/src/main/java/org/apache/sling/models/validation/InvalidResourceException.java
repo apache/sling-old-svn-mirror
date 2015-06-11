@@ -21,7 +21,7 @@ import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.models.factory.InvalidModelException;
-import org.apache.sling.validation.api.ValidationResult;
+import org.apache.sling.validation.ValidationResult;
 
 /**
  * Exception embedding a ValidationResult from Sling Validation.
