@@ -55,6 +55,7 @@ class MockSession implements Session {
     private final Workspace workspace;
     private final Map<String, ItemData> items;
     private final String userId;
+    private boolean isLive;
 
     public MockSession(MockRepository repository, Map<String,ItemData> items,
             String userId, String workspaceName) {
@@ -62,15 +63,24 @@ class MockSession implements Session {
         this.workspace = new MockWorkspace(repository, this, workspaceName);
         this.items = items;
         this.userId = userId;
+        isLive = true;
+    }
+    
+    private void checkLive() throws RepositoryException {
+        if (!isLive) {
+            throw new RepositoryException("Session is logged out / not live.");
+        }
     }
 
     @Override
     public ValueFactory getValueFactory() throws RepositoryException {
+        checkLive();
         return ValueFactoryImpl.getInstance();
     }
 
     @Override
     public Item getItem(final String absPath) throws RepositoryException {
+        checkLive();
         final ItemData itemData = getItemData(absPath);
         if (itemData != null) {
             if (itemData.isNode()) {
@@ -86,6 +96,7 @@ class MockSession implements Session {
 
     @Override
     public Node getNode(final String absPath) throws RepositoryException {
+        checkLive();
         Item item = getItem(absPath);
         if (item instanceof Node) {
             return (Node) item;
@@ -96,6 +107,7 @@ class MockSession implements Session {
 
     @Override
     public Node getNodeByIdentifier(final String id) throws RepositoryException {
+        checkLive();
         for (ItemData item : this.items.values()) {
             if (item.isNode() && StringUtils.equals(item.getUuid(), id)) {
                 return new MockNode(item, this);
@@ -106,6 +118,7 @@ class MockSession implements Session {
 
     @Override
     public Property getProperty(final String absPath) throws RepositoryException {
+        checkLive();
         Item item = getItem(absPath);
         if (item instanceof Property) {
             return (Property) item;
@@ -116,26 +129,31 @@ class MockSession implements Session {
 
     @Override
     public boolean nodeExists(final String absPath) throws RepositoryException {
+        checkLive();
         return itemExists(absPath) && getItemData(absPath).isNode();
     }
 
     @Override
     public boolean propertyExists(final String absPath) throws RepositoryException {
+        checkLive();
         return itemExists(absPath) && getItemData(absPath).isProperty();
     }
 
     @Override
     public void removeItem(final String absPath) throws RepositoryException {
+        checkLive();
         removeItemWithChildren(absPath);
     }
 
     @Override
     public Node getRootNode() throws RepositoryException {
+        checkLive();
         return getNode("/");
     }
 
     @Override
     public Node getNodeByUUID(final String uuid) throws RepositoryException {
+        checkLive();
         return getNodeByIdentifier(uuid);
     }
 
@@ -194,11 +212,13 @@ class MockSession implements Session {
 
     @Override
     public boolean hasPendingChanges() throws RepositoryException {
+        checkLive();
         return false;
     }
 
     @Override
     public boolean itemExists(final String absPath) throws RepositoryException {
+        checkLive();
         return getItemData(absPath) != null;
     }
 
@@ -214,21 +234,25 @@ class MockSession implements Session {
 
     @Override
     public String getNamespacePrefix(final String uri) throws RepositoryException {
+        checkLive();
         return getWorkspace().getNamespaceRegistry().getPrefix(uri);
     }
 
     @Override
     public String[] getNamespacePrefixes() throws RepositoryException {
+        checkLive();
         return getWorkspace().getNamespaceRegistry().getPrefixes();
     }
 
     @Override
     public String getNamespaceURI(final String prefix) throws RepositoryException {
+        checkLive();
         return getWorkspace().getNamespaceRegistry().getURI(prefix);
     }
 
     @Override
     public void setNamespacePrefix(final String prefix, final String uri) throws RepositoryException {
+        checkLive();
         getWorkspace().getNamespaceRegistry().registerNamespace(prefix, uri);
     }
 
@@ -239,6 +263,7 @@ class MockSession implements Session {
 
     @Override
     public void save() throws RepositoryException {
+        checkLive();
         // reset new flags
         for (ItemData itemData : this.items.values()) {
             itemData.setIsNew(false);
@@ -248,13 +273,25 @@ class MockSession implements Session {
     @Override
     public void refresh(final boolean keepChanges) throws RepositoryException {
         // do nothing
+        checkLive();
     }
 
     @Override
     public void checkPermission(final String absPath, final String actions) throws RepositoryException {
         // always grant permission
+        checkLive();
     }
 
+    @Override
+    public boolean isLive() {
+        return isLive;
+    }
+
+    @Override
+    public void logout() {
+        isLive = false;
+    }
+    
     // --- unsupported operations ---
     @Override
     public void addLockToken(final String lt) {
@@ -312,16 +349,6 @@ class MockSession implements Session {
 
     @Override
     public void importXML(final String parentAbsPath, final InputStream in, final int uuidBehavior) throws RepositoryException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean isLive() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void logout() {
         throw new UnsupportedOperationException();
     }
 
