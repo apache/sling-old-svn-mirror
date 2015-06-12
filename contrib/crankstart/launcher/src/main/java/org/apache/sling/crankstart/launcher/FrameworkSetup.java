@@ -52,7 +52,7 @@ public class FrameworkSetup extends HashMap<String, Object> implements Callable<
         final Model model = require(Launcher.MODEL_KEY, Model.class);
         
         log.info("Setting OSGi framework properties");
-        final Map<String, String> fprops = new FrameworkProperties(model).getProperties(Launcher.ONLY_CRANKSTART_FILTER);
+        final Map<String, String> fprops = new FrameworkProperties(model).getProperties(null);
                 
         log.info("Starting the OSGi framework");
         final FrameworkFactory factory = (FrameworkFactory)getClass().getClassLoader().loadClass("org.apache.felix.framework.FrameworkFactory").newInstance();
