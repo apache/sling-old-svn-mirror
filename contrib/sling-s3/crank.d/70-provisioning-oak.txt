@@ -1,4 +1,4 @@
-defaults oak.version 1.2.0
+defaults oak.version 1.2.2
 
 defaults crankstart.bundle.start.level 10
 bundle mvn:org.apache.felix/org.apache.felix.jaas/0.0.2

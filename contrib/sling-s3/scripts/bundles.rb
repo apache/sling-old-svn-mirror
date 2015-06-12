@@ -8,7 +8,7 @@ def parse_bundle_list name
   section = nil
   open(url).each_line do |line|
     next if line.strip.empty?
-    next if line =~ /^#/
+    next if line =~ /^\s*#/
     if line =~ /^\[([^ ]+) ?(.*)\]$/
       name = $1
       attributes = {}
