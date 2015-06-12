@@ -9,18 +9,26 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.ServerSocket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Setup a Crankstart-launched instance for our tests */ 
 public class CrankstartSetup {
     
-    private static final int port = getAvailablePort();
-    private static Thread crankstartThread;
-    private static final String baseUrl = "http://localhost:" + port;
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final int port = getAvailablePort();
+    private final String storagePath = getOsgiStoragePath(); 
+    private Thread crankstartThread;
+    private final String baseUrl = "http://localhost:" + port;
+    
+    private static List<CrankstartSetup> toCleanup = new ArrayList<CrankstartSetup>();
     
     public static final String [] MODEL_PATHS = {
         "/crankstart-model.txt",
@@ -29,6 +37,11 @@ public class CrankstartSetup {
         "/provisioning-model/start-level-99.txt",
         "/provisioning-model/crankstart-tests.txt"
     };
+    
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + ", port " + port + ", OSGi storage " + storagePath;
+    }
             
     private static int getAvailablePort() {
         int result = -1;
@@ -68,9 +81,21 @@ public class CrankstartSetup {
             return;
         }
         
+        synchronized (toCleanup) {
+            if(!toCleanup.isEmpty()) {
+                log.info("Stopping other Crankstart instances before starting this one...");
+            }
+            for(CrankstartSetup s : toCleanup) {
+                s.stopCrankstartInstance();
+            }
+            toCleanup.clear();
+        }
+        
+        log.info("Starting {}", this);
+        
         final HttpUriRequest get = new HttpGet(baseUrl);
         System.setProperty("crankstart.model.http.port", String.valueOf(port));
-        System.setProperty("crankstart.model.osgi.storage.path", getOsgiStoragePath());
+        System.setProperty("crankstart.model.osgi.storage.path", storagePath);
         
         try {
             new DefaultHttpClient().execute(get);
@@ -87,6 +112,8 @@ public class CrankstartSetup {
             public void run() {
                 try {
                     launcher.launch();
+                } catch(InterruptedException e) {
+                    log.info("Launcher thread was interrupted, exiting");
                 } catch(Exception e) {
                     e.printStackTrace();
                     fail("Launcher exception:" + e);
@@ -99,13 +126,22 @@ public class CrankstartSetup {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                crankstartThread.interrupt();
-                try {
-                    crankstartThread.join();
-                } catch(InterruptedException ignore) {
-                }
+                stopCrankstartInstance();
             }
         });
+    }
+    
+    private void stopCrankstartInstance() {
+        log.info("Stopping {}", this);
+        if(crankstartThread == null) {
+            return;
+        }
+        crankstartThread.interrupt();
+        try {
+            crankstartThread.join();
+        } catch(InterruptedException ignore) {
+        }
+        crankstartThread = null;
     }
     
     private static String getOsgiStoragePath() {

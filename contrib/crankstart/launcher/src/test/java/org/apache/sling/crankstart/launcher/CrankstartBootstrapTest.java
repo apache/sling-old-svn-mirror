@@ -1,13 +1,11 @@
 package org.apache.sling.crankstart.launcher;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -18,6 +16,7 @@ import org.apache.sling.commons.testing.junit.Retry;
 import org.apache.sling.commons.testing.junit.RetryRule;
 import org.apache.sling.testing.tools.osgi.WebconsoleClient;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -26,25 +25,27 @@ import org.junit.Test;
  */
 public class CrankstartBootstrapTest {
     
-    private static final CrankstartSetup C = new CrankstartSetup();
-    public static final int LONG_TIMEOUT_SECONDS = 10;
-    public static final int LONG_TIMEOUT_MSEC = LONG_TIMEOUT_SECONDS * 1000;
-    public static final int STD_INTERVAL = 250;
+    private static CrankstartSetup C;
     private DefaultHttpClient client;
-    private WebconsoleClient osgiConsole;
+    private static WebconsoleClient osgiConsole;
     
     @Rule
     public final RetryRule retryRule = new RetryRule();
     
-    @Before
-    public void setupHttpClient() throws IOException {
+    @BeforeClass
+    public static void setupClass() throws IOException {
+        C = new CrankstartSetup();
         C.setup();
+        osgiConsole = new WebconsoleClient(C.getBaseUrl(), U.ADMIN, U.ADMIN);
+    }
+    
+    @Before
+    public void setup() throws IOException {
         client = new DefaultHttpClient();
-        osgiConsole = new WebconsoleClient(C.getBaseUrl(), "admin", "admin");
     }
     
     @Test
-    @Retry(timeoutMsec=CrankstartBootstrapTest.LONG_TIMEOUT_MSEC, intervalMsec=CrankstartBootstrapTest.STD_INTERVAL)
+    @Retry(timeoutMsec=U.LONG_TIMEOUT_MSEC, intervalMsec=U.STD_INTERVAL)
     public void testHttpRoot() throws Exception {
         final HttpUriRequest get = new HttpGet(C.getBaseUrl());
         HttpResponse response = null;
@@ -57,7 +58,7 @@ public class CrankstartBootstrapTest {
     }
     
     @Test
-    @Retry(timeoutMsec=CrankstartBootstrapTest.LONG_TIMEOUT_MSEC, intervalMsec=CrankstartBootstrapTest.STD_INTERVAL)
+    @Retry(timeoutMsec=U.LONG_TIMEOUT_MSEC, intervalMsec=U.STD_INTERVAL)
     public void testSingleConfigServlet() throws Exception {
         final HttpUriRequest get = new HttpGet(C.getBaseUrl() + "/single");
         HttpResponse response = null;
@@ -70,7 +71,7 @@ public class CrankstartBootstrapTest {
     }
     
     @Test
-    @Retry(timeoutMsec=CrankstartBootstrapTest.LONG_TIMEOUT_MSEC, intervalMsec=CrankstartBootstrapTest.STD_INTERVAL)
+    @Retry(timeoutMsec=U.LONG_TIMEOUT_MSEC, intervalMsec=U.STD_INTERVAL)
     public void testConfigFactoryServlet() throws Exception {
         final String [] paths = { "/foo", "/bar/test" };
         for(String path : paths) {
@@ -86,7 +87,7 @@ public class CrankstartBootstrapTest {
     }
     
     @Test
-    @Retry(timeoutMsec=CrankstartBootstrapTest.LONG_TIMEOUT_MSEC, intervalMsec=CrankstartBootstrapTest.STD_INTERVAL)
+    @Retry(timeoutMsec=U.LONG_TIMEOUT_MSEC, intervalMsec=U.STD_INTERVAL)
     public void testJUnitServlet() throws Exception {
         final String path = "/system/sling/junit";
         final HttpUriRequest get = new HttpGet(C.getBaseUrl() + path);
@@ -108,7 +109,7 @@ public class CrankstartBootstrapTest {
         
         for(String name : addBundles) {
             try {
-                osgiConsole.checkBundleInstalled(name, CrankstartBootstrapTest.LONG_TIMEOUT_SECONDS);
+                osgiConsole.checkBundleInstalled(name, U.LONG_TIMEOUT_SECONDS);
             } catch(AssertionError ae) {
                 fail("Expected bundle to be present:" + name);
             }
@@ -116,7 +117,7 @@ public class CrankstartBootstrapTest {
     }
     
     @Test
-    @Retry(timeoutMsec=CrankstartBootstrapTest.LONG_TIMEOUT_MSEC, intervalMsec=CrankstartBootstrapTest.STD_INTERVAL)
+    @Retry(timeoutMsec=U.LONG_TIMEOUT_MSEC, intervalMsec=U.STD_INTERVAL)
     public void testSpecificStartLevel() throws Exception {
         // This bundle should only be installed, as it's set to start level 99
         final String symbolicName = "org.apache.commons.collections";
@@ -142,39 +143,20 @@ public class CrankstartBootstrapTest {
     }
     
     @Test
-    @Retry(timeoutMsec=CrankstartBootstrapTest.LONG_TIMEOUT_MSEC, intervalMsec=CrankstartBootstrapTest.STD_INTERVAL)
+    @Retry(timeoutMsec=U.LONG_TIMEOUT_MSEC, intervalMsec=U.STD_INTERVAL)
     public void testEmptyConfig() throws Exception {
         U.setAdminCredentials(client);
-        assertHttpGet(
+        U.assertHttpGet(C, client,
             "/test/config/empty.config.should.work", 
             "empty.config.should.work#service.pid=(String)empty.config.should.work##EOC#");
     }
         
     @Test
-    @Retry(timeoutMsec=CrankstartBootstrapTest.LONG_TIMEOUT_MSEC, intervalMsec=CrankstartBootstrapTest.STD_INTERVAL)
+    @Retry(timeoutMsec=U.LONG_TIMEOUT_MSEC, intervalMsec=U.STD_INTERVAL)
     public void testFelixFormatConfig() throws Exception {
         U.setAdminCredentials(client);
-        assertHttpGet(
+        U.assertHttpGet(C, client,
                 "/test/config/felix.format.test", 
                 "felix.format.test#array=(String[])[foo, bar.from.launcher.test]#mongouri=(String)mongodb://localhost:27017#service.pid=(String)felix.format.test#service.ranking.launcher.test=(Integer)54321##EOC#");
     }
-    
-    private void assertHttpGet(String path, String expectedContent) throws Exception {
-        final HttpUriRequest get = new HttpGet(C.getBaseUrl() + path);
-        HttpResponse response = null;
-        try {
-            response = client.execute(get);
-            assertEquals("Expecting 200 response at " + path, 200, response.getStatusLine().getStatusCode());
-            assertNotNull("Expecting response entity", response.getEntity());
-            String encoding = "UTF-8";
-            if(response.getEntity().getContentEncoding() != null) {
-                encoding = response.getEntity().getContentEncoding().getValue();
-            }
-            final String content = IOUtils.toString(response.getEntity().getContent(), encoding);
-            assertEquals(expectedContent, content);
-        } finally {
-            U.closeConnection(response);
-        }
-    }
-    
 }

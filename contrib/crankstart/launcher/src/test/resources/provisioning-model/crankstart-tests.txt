@@ -25,6 +25,20 @@
   org.apache.sling/org.apache.sling.commons.mime/2.1.8
   org.apache.sling/org.apache.sling.settings/1.3.6
 
+[artifacts runModes=A]
+  org.apache.sling/org.apache.sling.api/2.9.0
+
+[configurations runModes=A]
+  runmode.test
+    mode="This is A"
+
+[artifacts runModes=B]
+  org.apache.sling/org.apache.sling.api/2.0.6
+
+[configurations runModes=B]
+  runmode.test
+    mode="That's B"
+
 [configurations]
   org.apache.sling.crankstart.testservices.SingleConfigServlet
   # TODO should use a variable to verify that they work in configs
