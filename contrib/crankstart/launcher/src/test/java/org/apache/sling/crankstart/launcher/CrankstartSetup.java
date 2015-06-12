@@ -11,13 +11,9 @@ import java.io.Reader;
 import java.net.ServerSocket;
 import java.util.Random;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
 
 /** Setup a Crankstart-launched instance for our tests */ 
 public class CrankstartSetup {
@@ -50,13 +46,6 @@ public class CrankstartSetup {
             throw new RuntimeException("getAvailablePort failed", e);
         }
         return result;
-    }
-    
-    void setAdminCredentials(DefaultHttpClient c) {
-        c.getCredentialsProvider().setCredentials(
-                AuthScope.ANY, 
-                new UsernamePasswordCredentials("admin", "admin"));
-        c.addRequestInterceptor(new PreemptiveAuthInterceptor(), 0);
     }
     
     private static void mergeModelResource(Launcher launcher, String path) throws IOException {
@@ -117,12 +106,6 @@ public class CrankstartSetup {
                 }
             }
         });
-    }
-    
-    void closeConnection(HttpResponse r) throws IOException {
-        if(r != null && r.getEntity() != null) {
-            EntityUtils.consume(r.getEntity());
-        }
     }
     
     private static String getOsgiStoragePath() {
