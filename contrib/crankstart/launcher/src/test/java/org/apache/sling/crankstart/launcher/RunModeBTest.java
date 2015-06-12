@@ -15,12 +15,12 @@ import org.junit.Rule;
 import org.junit.Test;
 
 /** Test our run modes support */ 
-public class RunModeATest {
+public class RunModeBTest {
     
     private static CrankstartSetup C = new CrankstartSetup();
     private static WebconsoleClient osgiConsole;
     private DefaultHttpClient client;
-    private static final String RUN_MODES = "foo,bar,A";
+    private static final String RUN_MODES = "bala,B,laika,another";
     
     @Rule
     public final RetryRule retryRule = new RetryRule();
@@ -45,7 +45,7 @@ public class RunModeATest {
     @Test
     @Retry(timeoutMsec=U.LONG_TIMEOUT_MSEC, intervalMsec=U.STD_INTERVAL)
     public void testSlingApiVersionA() throws Exception {
-        assertEquals("2.9.0", osgiConsole.getBundleVersion(U.SLING_API_BUNDLE));
+        assertEquals("2.0.6", osgiConsole.getBundleVersion(U.SLING_API_BUNDLE));
     }
     
     @Test
@@ -54,7 +54,7 @@ public class RunModeATest {
         U.setAdminCredentials(client);
         U.assertHttpGet(C, client,
                 "/test/config/runmode.test", 
-                "runmode.test#mode=(String)This is A#service.pid=(String)runmode.test##EOC#");
+                "runmode.test#mode=(String)That's B + another#service.pid=(String)runmode.test##EOC#");
     }
     
 }

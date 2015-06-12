@@ -23,11 +23,10 @@ import org.apache.sling.testing.tools.http.RequestExecutor;
 public class U {
     
     public static final String ADMIN = "admin";
-    public static final int LONG_TIMEOUT_SECONDS = 10;
+    public static final int LONG_TIMEOUT_SECONDS = 2; // TODO 10
     public static final int LONG_TIMEOUT_MSEC = LONG_TIMEOUT_SECONDS * 1000;
     public static final int STD_INTERVAL = 250;
     public static final String SLING_API_BUNDLE = "org.apache.sling.api";
-    public static final String SLING_RUN_MODES = "sling.run.modes";
     
     static void setAdminCredentials(DefaultHttpClient c) {
         c.getCredentialsProvider().setCredentials(

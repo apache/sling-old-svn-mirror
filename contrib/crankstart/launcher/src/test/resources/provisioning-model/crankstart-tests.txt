@@ -35,9 +35,9 @@
 [artifacts runModes=B]
   org.apache.sling/org.apache.sling.api/2.0.6
 
-[configurations runModes=B]
+[configurations runModes=B,another]
   runmode.test
-    mode="That's B"
+    mode="That's B + another"
 
 [configurations]
   org.apache.sling.crankstart.testservices.SingleConfigServlet

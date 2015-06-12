@@ -58,12 +58,15 @@ public class FrameworkSetup extends HashMap<String, Object> implements Callable<
         final FrameworkFactory factory = (FrameworkFactory)getClass().getClassLoader().loadClass("org.apache.felix.framework.FrameworkFactory").newInstance();
         final Framework framework = factory.newFramework(fprops);
         framework.start();
-        final Configurations cfg = new Configurations(framework.getBundleContext(), model);
+        
+        final RunModeFilter rmFilter = new RunModeFilter();
+        
+        final Configurations cfg = new Configurations(framework.getBundleContext(), model, rmFilter);
         setShutdownHook(framework, new Closeable[] { cfg });
         log.info("OSGi framework started");
         
         log.info("Installing bundles from provisioning model");
-        final BundlesInstaller bi = new BundlesInstaller(model);
+        final BundlesInstaller bi = new BundlesInstaller(model, rmFilter);
         final BundleContext bc = framework.getBundleContext();
         bi.installBundles(bc, Launcher.NOT_CRANKSTART_FILTER);
         cfg.maybeConfigure();

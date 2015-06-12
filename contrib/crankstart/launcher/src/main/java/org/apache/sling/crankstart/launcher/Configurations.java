@@ -18,6 +18,7 @@ package org.apache.sling.crankstart.launcher;
 
 import java.io.Closeable;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.Dictionary;
 
 import org.apache.sling.provisioning.model.Configuration;
@@ -34,6 +35,7 @@ public class Configurations implements Closeable {
     private final Logger log = LoggerFactory.getLogger(getClass());
     public static final String CONFIG_ADMIN_CLASS = "org.osgi.service.cm.ConfigurationAdmin";
     private final Model model;
+    private final RunModeFilter rmFilter;
     private final ServiceTracker tracker;
     private ConfigAdminProxy proxy; 
     
@@ -78,8 +80,9 @@ public class Configurations implements Closeable {
         }
     }
     
-    public Configurations(BundleContext ctx, Model m) {
+    public Configurations(BundleContext ctx, Model m, RunModeFilter rmFilter) {
         model = m;
+        this.rmFilter = rmFilter;
         tracker = new ServiceTracker(ctx, CONFIG_ADMIN_CLASS, null);
         tracker.open();
     }
@@ -107,6 +110,10 @@ public class Configurations implements Closeable {
         log.info("Activating configurations from provisioning model");
         for(Feature f : model.getFeatures()) {
             for(RunMode r : f.getRunModes()) {
+                if(!rmFilter.runModeActive(r)) {
+                    log.info("RunMode is not active, ignored: {}", Arrays.asList(r.getNames()));
+                    continue;
+                }
                 for(Configuration c : r.getConfigurations()) {
                     try {
                         setConfig(c);

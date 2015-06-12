@@ -19,6 +19,7 @@ package org.apache.sling.crankstart.launcher;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Arrays;
 
 import org.apache.sling.provisioning.model.Artifact;
 import org.apache.sling.provisioning.model.ArtifactGroup;
@@ -36,9 +37,11 @@ import org.slf4j.LoggerFactory;
 public class BundlesInstaller {
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final Model model;
+    private final RunModeFilter rmFilter;
     
-    public BundlesInstaller(Model m) {
+    public BundlesInstaller(Model m, RunModeFilter rmFilter) {
         model = m;
+        this.rmFilter = rmFilter;
     }
     
     public void installBundles(BundleContext ctx, FeatureFilter filter) throws IOException, BundleException {
@@ -50,6 +53,10 @@ public class BundlesInstaller {
             
             log.info("Processing feature: {}", f.getName());
             for(RunMode rm : f.getRunModes()) {
+                if(!rmFilter.runModeActive(rm)) {
+                    log.info("RunMode is not active, ignored: {}", Arrays.asList(rm.getNames()));
+                    continue;
+                }
                 for(ArtifactGroup g : rm.getArtifactGroups()) {
                     final int startLevel = g.getStartLevel();
                     for(Artifact a : g) {
