@@ -24,6 +24,16 @@
 # not fully working, some integration tests fail. Probably due,
 # at least in part, to run modes not being implemented yet, which
 # means we possibly get conflicting bundles.
+#
+# Using this, currently 11 Sling tests from launchpad/integration-tests
+# fail, out of 528, when starting Sling with the following commands:
+# rm -rf CRANKSTART derby.log jackrabbit
+# java -Dcrankstart.model.http.port=8080 \
+# -Dsling.run.modes=:standalone,jackrabbit -jar \
+# target/org.apache.sling.crankstart.launcher-1.9.9-SNAPSHOT.jar \ 
+# src/test/resources/crankstart-model.txt \
+# src/test/resources/launchpad-addons.txt \
+# ../../..//launchpad/builder/src/main/provisioning   
 
 [feature name=crankstart.launchpad.addons]
 
@@ -32,6 +42,9 @@
   org.apache.sling/org.apache.sling.launchpad.karaf/0.1.1-SNAPSHOT
   org.apache.sling/org.apache.sling.launchpad.test-services/2.0.9-SNAPSHOT
   org.apache.sling/org.apache.sling.junit.core/1.0.10
+  org.apache.sling/org.apache.sling.junit.scriptable/1.0.10
+  org.apache.sling/org.apache.sling.launchpad.test-fragment/2.0.9-SNAPSHOT
+  org.apache.sling/org.apache.sling.servlets.compat/1.0.2
 
 [configurations]
   integrationTestsConfig
