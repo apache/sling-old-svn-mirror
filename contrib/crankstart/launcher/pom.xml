@@ -85,6 +85,8 @@
                             <includes>
                                 <include>CRANKSTART</include>
                                 <include>felix-cache</include>
+                                <include>jackrabbit</include>
+                                <include>derby.log</include>
                             </includes>
                         </fileset>
                     </filesets>
@@ -92,13 +94,15 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <systemProperties>
-                        <!-- pax url needs the local Maven repository to find snapshots we just built  -->
-                        <org.ops4j.pax.url.mvn.localRepository>${settings.localRepository}/</org.ops4j.pax.url.mvn.localRepository>
-                    </systemProperties>
-                </configuration>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
           </plugins>
     </build>   

@@ -20,10 +20,11 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
-/** Verify that we can start the Felix HTTP service
- *  with a {@link CrankstartBootstrap}. 
+/** Basic tests of the launcher, verify that we 
+ *  can start the Felix HTTP service and a few
+ *  other things. 
  */
-public class CrankstartBootstrapTest {
+public class BasicLauncherIT {
     
     private static CrankstartSetup C;
     private DefaultHttpClient client;
