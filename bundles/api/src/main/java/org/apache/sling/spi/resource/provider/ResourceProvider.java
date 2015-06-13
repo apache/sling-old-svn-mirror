@@ -421,7 +421,21 @@ public abstract class ResourceProvider<T> {
     }
 
     /**
-     * TODO
+     * This method copies the subgraph rooted at, and including, the resource at
+     * <code>srcAbsPath</code> to the new location at <code>destAbsPath</code> and
+     * adds it as a child node of the resource at <code>destAbsPath</code>.
+     *
+     * Both resources are resources from this provider and the full tree is
+     * provided by this provider as well.
+     *
+     * The resource at <code>destAbsPath</code> needs to exist, if not a {@code PersistenceException}
+     * is thrown. If a child resource with the same name already exists at <code>destAbsPath</code>
+     * a {@code PersistenceException} is thrown.
+     *
+     * @param srcAbsPath  the path of the resource to be copied.
+     * @param destAbsPath the location to which the resource at
+     *                    <code>srcAbsPath</code> is to be copied.
+     * @throws PersistenceException If an error occurs.
      * @return {@code true} if the provider can perform the copy
      */
     public boolean copy(final String srcAbsPath,
@@ -431,7 +445,21 @@ public abstract class ResourceProvider<T> {
     }
 
     /**
-     * TODO
+     * This method moves the subgraph rooted at, and including, the resource at
+     * <code>srcAbsPath</code> to the new location at <code>destAbsPath</code> and
+     * adds it as a child node of the resource at <code>destAbsPath</code>.
+     *
+     * Both resources are resources from this provider and the full tree is
+     * provided by this provider as well.
+     *
+     * The resource at <code>destAbsPath</code> needs to exist, if not a {@code PersistenceException}
+     * is thrown. If a child resource with the same name already exists at <code>destAbsPath</code>
+     * a {@code PersistenceException} is thrown.
+     *
+     * @param srcAbsPath  the path of the resource to be copied.
+     * @param destAbsPath the location to which the resource at
+     *                    <code>srcAbsPath</code> is to be moved.
+     * @throws PersistenceException If an error occurs.
      * @return {@code true} if the provider can perform the move
      */
 
