@@ -18,6 +18,7 @@
  */
 package org.apache.sling.api.resource;
 
+import java.io.Closeable;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -105,7 +106,7 @@ import aQute.bnd.annotation.ProviderType;
  * not exposed.
  */
 @ProviderType
-public interface ResourceResolver extends Adaptable {
+public interface ResourceResolver extends Adaptable, Closeable {
 
     /**
      * A request attribute containing the workspace to use for
@@ -524,6 +525,7 @@ public interface ResourceResolver extends Adaptable {
      *
      * @since 2.1 (Sling API Bundle 2.1.0)
      */
+    @Override
     void close();
 
     /**
