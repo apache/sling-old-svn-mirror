@@ -710,19 +710,21 @@ public interface ResourceResolver extends Adaptable, Closeable {
 
     /**
      * This method copies the subgraph rooted at, and including, the resource at
-     * <code>srcAbsPath</code> to the new location at <code>destAbsPath</code>.
-     * <p>
-     * TODO - clarify whether destAbsPath is the parent of the new tree or the root
+     * <code>srcAbsPath</code> to the new location at <code>destAbsPath</code> and
+     * adds it as a child node of the resource at <code>destAbsPath</code>.
      *
      * If the copy operation is within a single resource provider, the resource provider
      * can use an optimized copy operation. Otherwise the resource resolver copies resources
      * from one provider to another.
      *
+     * The resource at <code>destAbsPath</code> needs to exist, if not a {@code PersistenceException}
+     * is thrown. If a child resource with the same name already exists at <code>destAbsPath</code>
+     * a {@code PersistenceException} is thrown.
+     *
      * @param srcAbsPath  the path of the resource to be copied.
      * @param destAbsPath the location to which the resource at
      *                    <code>srcAbsPath</code> is to be copied.
-     * @throws PersistenceException
-     * @throws org.apache.sling.api.SlingException
+     * @throws PersistenceException If an error occurs.
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      * @since 2.9 (Sling API Bundle 2.10.0)
@@ -733,19 +735,21 @@ public interface ResourceResolver extends Adaptable, Closeable {
 
     /**
      * This method moves the subgraph rooted at, and including, the resource at
-     * <code>srcAbsPath</code> to the new location at <code>destAbsPath</code>.
-     * <p>
-     * TODO - clarify whether destAbsPath is the parent of the new tree or the root
+     * <code>srcAbsPath</code> to the new location at <code>destAbsPath</code> and
+     * adds it as a child node of the resource at <code>destAbsPath</code>.
      *
      * If the move operation is within a single resource provider, the resource provider
      * can use an optimized move operation. Otherwise the resource resolver moves resources
      * from one provider to another.
      *
+     * The resource at <code>destAbsPath</code> needs to exist, if not a {@code PersistenceException}
+     * is thrown. If a child resource with the same name already exists at <code>destAbsPath</code>
+     * a {@code PersistenceException} is thrown.
+     *
      * @param srcAbsPath  the path of the resource to be copied.
      * @param destAbsPath the location to which the resource at
-     *                    <code>srcAbsPath</code> is to be copied.
-     * @throws PersistenceException
-     * @throws org.apache.sling.api.SlingException
+     *                    <code>srcAbsPath</code> is to be moved.
+     * @throws PersistenceException If an error occurs.
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      * @since 2.9 (Sling API Bundle 2.10.0)
