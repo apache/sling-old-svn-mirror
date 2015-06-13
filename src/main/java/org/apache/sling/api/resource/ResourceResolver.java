@@ -466,6 +466,8 @@ public interface ResourceResolver extends Adaptable, Closeable {
      * @param resource
      *            the resource to check for direct children
      * @return <code>true</code> if the resource has any child resources
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      * @since 2.4.4 (Sling API Bundle 2.5.0)
      */
     boolean hasChildren(@Nonnull Resource resource);
@@ -577,6 +579,8 @@ public interface ResourceResolver extends Adaptable, Closeable {
      * @throws UnsupportedOperationException If the resource provider does not allow to
      *                                       delete this resource.
      * @throws PersistenceException If the operation fails.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      * @since 2.2 (Sling API Bundle 2.2.0)
      */
     void delete(@Nonnull Resource resource)
@@ -594,6 +598,8 @@ public interface ResourceResolver extends Adaptable, Closeable {
      * @throws UnsupportedOperationException If the resource provider does not allow to
      *                                       create a resource at that location.
      * @throws PersistenceException If the operation fails.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      * @since 2.2 (Sling API Bundle 2.2.0)
      */
     @Nonnull Resource create(@Nonnull Resource parent, @Nonnull String name, Map<String, Object> properties)
@@ -601,6 +607,8 @@ public interface ResourceResolver extends Adaptable, Closeable {
 
     /**
      * Revert all pending changes.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      * @since 2.2 (Sling API Bundle 2.2.0)
      */
     void revert();
@@ -609,12 +617,16 @@ public interface ResourceResolver extends Adaptable, Closeable {
      * Persist all pending changes.
      *
      * @throws PersistenceException
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      * @since 2.2 (Sling API Bundle 2.2.0)
      */
     void commit() throws PersistenceException;
 
     /**
      * Are there any pending changes?
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      * @since 2.2 (Sling API Bundle 2.2.0)
      */
     boolean hasChanges();
@@ -630,6 +642,8 @@ public interface ResourceResolver extends Adaptable, Closeable {
      * @return The resource super type or <code>null</code>. This
      *         method also returns <code>null</code> if the
      *         provided resource is <code>null</code>
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      * @since 2.3 (Sling API Bundle 2.4.0)
      */
     @CheckForNull String getParentResourceType(final Resource resource);
@@ -645,6 +659,8 @@ public interface ResourceResolver extends Adaptable, Closeable {
      *         <code>null</code> if the resource type does not exist or returns
      *         <code>null</code> for its super type. It also returns
      *         <code>null</code> if <code>resourceType> is null.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      * @since 2.3 (Sling API Bundle 2.4.0)
      */
     public @CheckForNull String getParentResourceType(final String resourceType);
@@ -659,6 +675,8 @@ public interface ResourceResolver extends Adaptable, Closeable {
      *         super type(s) equals the given resource type. <code>false</code>
      *         is also returned if <code>resource</code> or<code>resourceType</code>
      *         are <code>null</code>.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      * @since 2.3 (Sling API Bundle 2.4.0)
      */
     boolean isResourceType(final Resource resource, final String resourceType);
@@ -666,6 +684,8 @@ public interface ResourceResolver extends Adaptable, Closeable {
     /**
      * The resolver is updated to reflect the latest state.
      * Resources which have changes pending are not discarded.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      * @since 2.3 (Sling API Bundle 2.4.0)
      */
     void refresh();

@@ -207,6 +207,10 @@ public class ResourceUtil {
      * Utility method returns the parent resource of the resource.
      *
      * @throws NullPointerException If <code>rsrc</code> is <code>null</code>.
+     * @throws org.apache.sling.api.SlingException If an error occurs trying to
+     *             get the resource object from the path.
+     * @throws IllegalStateException if the resource resolver has already been
+     *             closed}.
      * @return The parent resource or null if the rsrc is the root.
      * @deprecated since 2.1.0, use {@link Resource#getParent()} instead
      */
@@ -339,6 +343,8 @@ public class ResourceUtil {
      * @param parent The {@link Resource Resource} whose children are requested.
      * @return An <code>Iterator</code> of {@link Resource} objects.
      * @throws NullPointerException If <code>parent</code> is <code>null</code>.
+     * @throws IllegalStateException if the resource resolver has already been
+     *             closed}.
      * @throws org.apache.sling.api.SlingException If any error occurs acquiring
      *             the child resource iterator.
      * @see ResourceResolver#listChildren(Resource)
@@ -404,6 +410,8 @@ public class ResourceUtil {
      * @return the super type of the <code>resourceType</code> or
      *         <code>null</code> if the resource type does not exists or returns
      *         <code>null</code> for its super type.
+     * @throws IllegalStateException if the resource resolver has already been
+     *             closed}.
      * @since 2.0.6 (Sling API Bundle 2.0.6)
      * @deprecated Use {@link ResourceResolver#getParentResourceType(String)}
      */
@@ -423,6 +431,8 @@ public class ResourceUtil {
      * @param resource The resource to return the resource super type for.
      * @return the super type of the <code>resource</code> or <code>null</code>
      *         if no super type could be computed.
+     * @throws IllegalStateException if the resource resolver has already been
+     *             closed}.
      * @since 2.0.6 (Sling API Bundle 2.0.6)
      * @deprecated Use {@link ResourceResolver#getParentResourceType(Resource)}
      */
@@ -445,6 +455,8 @@ public class ResourceUtil {
      *         Otherwise returns the result of calling
      *         {@link Resource#isResourceType(String)} with the given
      *         <code>resourceType</code>.
+     * @throws IllegalStateException if the resource resolver has already been
+     *             closed}.
      * @since 2.0.6 (Sling API Bundle 2.0.6)
      * @deprecated Use {@link ResourceResolver#isResourceType(Resource, String)}
      */
@@ -474,10 +486,12 @@ public class ResourceUtil {
 
             private T nextObject = seek();
 
+            @Override
             public boolean hasNext() {
                 return nextObject != null;
             }
 
+            @Override
             public T next() {
                 if (!hasNext()) {
                     throw new NoSuchElementException();
@@ -487,6 +501,7 @@ public class ResourceUtil {
                 return object;
             }
 
+            @Override
             public void remove() {
                 throw new UnsupportedOperationException();
             }
@@ -510,6 +525,11 @@ public class ResourceUtil {
      * @param resourceType The optional resource type of the final resource to create
      * @param intermediateResourceType THe optional resource type of all intermediate resources
      * @param autoCommit If set to true, a commit is performed after each resource creation.
+     * @return The resource for the path.
+     * @throws org.apache.sling.api.SlingException If an error occurs trying to
+     *             get/create the resource object from the path.
+     * @throws IllegalStateException if the resource resolver has already been
+     *             closed}.
      * @since 2.3.0  (Sling API Bundle 2.4.0)
      */
     public static @Nonnull Resource getOrCreateResource(
@@ -539,6 +559,11 @@ public class ResourceUtil {
      * @param resourceProperties The optional resource properties of the final resource to create
      * @param intermediateResourceType THe optional resource type of all intermediate resources
      * @param autoCommit If set to true, a commit is performed after each resource creation.
+     * @return The resource for the path.
+     * @throws org.apache.sling.api.SlingException If an error occurs trying to
+     *             get/create the resource object from the path.
+     * @throws IllegalStateException if the resource resolver has already been
+     *             closed}.
      * @since 2.3.0  (Sling API Bundle 2.4.0)
      */
     public static @Nonnull Resource getOrCreateResource(
@@ -578,6 +603,11 @@ public class ResourceUtil {
      * @param resourceProperties The optional resource properties of the final resource to create
      * @param intermediateResourceType THe optional resource type of all intermediate resources
      * @param autoCommit If set to true, a commit is performed after each resource creation.
+     * @return The resource for the path.
+     * @throws org.apache.sling.api.SlingException If an error occurs trying to
+     *             get/create the resource object from the path.
+     * @throws IllegalStateException if the resource resolver has already been
+     *             closed}.
      */
     private static Resource getOrCreateResourceInternal(
             final ResourceResolver resolver,
@@ -661,6 +691,8 @@ public class ResourceUtil {
      *
      * @throws PersistenceException if it can not find unique name for child resource.
      * @throws NullPointerException if <code>parent</code> is null
+     * @throws IllegalStateException if the resource resolver has already been
+     *             closed}.
      * @since 2.5 (Sling API Bundle 2.7.0)
      */
     public static String createUniqueChildName(final Resource parent, final String name)
