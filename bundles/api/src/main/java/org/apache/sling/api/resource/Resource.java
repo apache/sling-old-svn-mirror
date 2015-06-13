@@ -79,6 +79,10 @@ public interface Resource extends Adaptable {
      * Returns the parent resource or <code>null</code> if this resource
      * represents the root of the resource tree.
      *
+     * @throws org.apache.sling.api.SlingException If an error occurs trying to
+     *             get the resource object from the path.
+     * @throws IllegalStateException if the resource resolver has already been
+     *             closed}.
      * @since 2.1 (Sling API Bundle 2.1.0)
      */
     @CheckForNull Resource getParent();
@@ -89,6 +93,10 @@ public interface Resource extends Adaptable {
      * This method is a convenience and returns exactly the same resources as
      * calling <code>getResourceResolver().listChildren(resource)</code>.
      *
+     * @throws org.apache.sling.api.SlingException If an error occurs trying to
+     *             get the resource iterator.
+     * @throws IllegalStateException if the resource resolver has already been
+     *             closed}.
      * @since 2.1 (Sling API Bundle 2.1.0)
      * @see ResourceResolver#listChildren(Resource)
      */
@@ -100,6 +108,10 @@ public interface Resource extends Adaptable {
      * This method is a convenience and returns exactly the same resources as
      * calling <code>getResourceResolver().getChildren(resource)</code>.
      *
+     * @throws org.apache.sling.api.SlingException If an error occurs trying to
+     *             get the resource iterator.
+     * @throws IllegalStateException if the resource resolver has already been
+     *             closed}.
      * @since 2.2 (Sling API Bundle 2.2.0)
      * @see ResourceResolver#getChildren(Resource)
      */
@@ -112,6 +124,10 @@ public interface Resource extends Adaptable {
      * This method is a convenience and returns exactly the same resources as
      * calling <code>getResourceResolver().getResource(resource, relPath)</code>.
      *
+     * @throws org.apache.sling.api.SlingException If an error occurs trying to
+     *             get the resource object from the path.
+     * @throws IllegalStateException if the resource resolver has already been
+     *             closed}.
      * @since 2.1 (Sling API Bundle 2.1.0)
      * @see ResourceResolver#getResource(Resource, String)
      */
@@ -137,6 +153,9 @@ public interface Resource extends Adaptable {
      * resource type hierarchy.
      * If a client is interested in the effective resource super type
      * of a resource, it should call {@link ResourceResolver#getParentResourceType(Resource)}.
+     * @return The super type of the resource or {@code null}.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      */
     @CheckForNull String getResourceSuperType();
 
@@ -144,6 +163,8 @@ public interface Resource extends Adaptable {
      * Checks if the resource has any child resources.
      *
      * @return <code>true</code> if the resource has any child resources
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      * @since 2.4.4 (Sling API Bundle 2.5.0)
      */
     boolean hasChildren();
@@ -157,6 +178,8 @@ public interface Resource extends Adaptable {
      *         super type(s) equals the given resource type. <code>false</code>
      *         is also returned if <code>resourceType</code> is
      *         <code>null</code>.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      * @since 2.1.0 (Sling API Bundle 2.1.0)
      */
     boolean isResourceType(String resourceType);
