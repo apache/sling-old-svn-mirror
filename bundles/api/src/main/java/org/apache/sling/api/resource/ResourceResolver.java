@@ -383,6 +383,24 @@ public interface ResourceResolver extends Adaptable, Closeable {
     @Nonnull Iterator<Resource> listChildren(@Nonnull Resource parent);
 
     /**
+     * Returns the parent resource of this resource.
+     * <p>
+     * This method is implemented by getting the parent resource path first
+     * calling the {@link ResourceUtil#getParent(String)} method and then to
+     * retrieve that resource.
+     *
+     * @param child The {@link Resource Resource} whose parent is requested.
+     * @return The parent resource or {@code null}.
+     * @throws NullPointerException If <code>child</code> is <code>null</code>.
+     * @throws org.apache.sling.api.SlingException If any error occurs acquiring
+     *             the parent resource.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
+     * @since 2.9 (Sling API Bundle 2.10.0)
+     */
+    @CheckForNull Resource getParent(@Nonnull Resource child);
+
+    /**
      * Returns an <code>Iterable</code> of {@link Resource} objects loaded from
      * the children of the given <code>Resource</code>.
      * <p>
@@ -690,4 +708,49 @@ public interface ResourceResolver extends Adaptable, Closeable {
      */
     void refresh();
 
+    /**
+     * This method copies the subgraph rooted at, and including, the resource at
+     * <code>srcAbsPath</code> to the new location at <code>destAbsPath</code>.
+     * <p>
+     * TODO - clarify whether destAbsPath is the parent of the new tree or the root
+     *
+     * If the copy operation is within a single resource provider, the resource provider
+     * can use an optimized copy operation. Otherwise the resource resolver copies resources
+     * from one provider to another.
+     *
+     * @param srcAbsPath  the path of the resource to be copied.
+     * @param destAbsPath the location to which the resource at
+     *                    <code>srcAbsPath</code> is to be copied.
+     * @throws PersistenceException
+     * @throws org.apache.sling.api.SlingException
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
+     * @since 2.9 (Sling API Bundle 2.10.0)
+     */
+    void copy(final String srcAbsPath,
+              final String destAbsPath,
+              final boolean persistImmediately) throws PersistenceException;
+
+    /**
+     * This method moves the subgraph rooted at, and including, the resource at
+     * <code>srcAbsPath</code> to the new location at <code>destAbsPath</code>.
+     * <p>
+     * TODO - clarify whether destAbsPath is the parent of the new tree or the root
+     *
+     * If the move operation is within a single resource provider, the resource provider
+     * can use an optimized move operation. Otherwise the resource resolver moves resources
+     * from one provider to another.
+     *
+     * @param srcAbsPath  the path of the resource to be copied.
+     * @param destAbsPath the location to which the resource at
+     *                    <code>srcAbsPath</code> is to be copied.
+     * @throws PersistenceException
+     * @throws org.apache.sling.api.SlingException
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
+     * @since 2.9 (Sling API Bundle 2.10.0)
+     */
+    void move(final String srcAbsPath,
+              final String destAbsPath,
+              final boolean persistImmediately) throws PersistenceException;
 }

@@ -61,11 +61,7 @@ public abstract class AbstractResource
      * retrieve that resource from the resource resolver.
      */
     public Resource getParent() {
-        final String parentPath = ResourceUtil.getParent(getPath());
-        if (parentPath == null) {
-            return null;
-        }
-        return getResourceResolver().getResource(parentPath);
+        return getResourceResolver().getParent(this);
     }
 
     /**

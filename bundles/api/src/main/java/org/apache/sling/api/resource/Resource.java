@@ -84,6 +84,7 @@ public interface Resource extends Adaptable {
      * @throws IllegalStateException if the resource resolver has already been
      *             closed}.
      * @since 2.1 (Sling API Bundle 2.1.0)
+     * @see ResourceResolver#getParent(Resource)
      */
     @CheckForNull Resource getParent();
 
