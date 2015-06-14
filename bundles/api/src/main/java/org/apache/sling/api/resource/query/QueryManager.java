@@ -38,10 +38,19 @@ public interface QueryManager {
     /**
      * Execute the given query in the context of the resource resolver.
      *
+     * In general a search is performed across all resource providers supporting
+     * search. However, sorting and pagination across providers can't be done in
+     * a general but fast way, therefore as soon as a query instructions object
+     * is provided, the search is only performed against a single provider. If
+     * the query is restricted by path, the provider handling that path is used.
+     * If potentially more than one provider is targeted and a query instructions
+     * is provided, an {@code IllegalArgumentException} is thrown.
+     *
      * @param resolver The resource resolver
      * @param q The query
      * @param qi The optional query instructions
      * @return An iterator of resources - the result might be empty.
+     * @throws IllegalArgumentException If the query is invalid.
      */
     @Nonnull Iterator<Resource> find(@Nonnull ResourceResolver resolver,
                                      @Nonnull Query q,
