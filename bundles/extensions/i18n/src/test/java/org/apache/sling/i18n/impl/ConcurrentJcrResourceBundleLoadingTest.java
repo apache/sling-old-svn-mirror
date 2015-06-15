@@ -18,6 +18,22 @@
  */
 package org.apache.sling.i18n.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
+import static org.powermock.api.mockito.PowerMockito.doReturn;
+import static org.powermock.api.mockito.PowerMockito.spy;
+import static org.powermock.api.mockito.PowerMockito.verifyPrivate;
+
+import java.util.Hashtable;
+import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.sling.commons.threads.impl.DefaultThreadPoolManager;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -27,20 +43,6 @@ import org.osgi.service.component.ComponentContext;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-
-import java.util.Hashtable;
-import java.util.Locale;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.times;
-import static org.powermock.api.mockito.PowerMockito.doReturn;
-import static org.powermock.api.mockito.PowerMockito.spy;
-import static org.powermock.api.mockito.PowerMockito.verifyPrivate;
 
 /**
  * Test case to verify that each bundle is only loaded once, even
@@ -52,15 +54,22 @@ public class ConcurrentJcrResourceBundleLoadingTest {
 
     @Mock JcrResourceBundle english;
     @Mock JcrResourceBundle german;
+    
+    private JcrResourceBundleProvider provider;
+    
+    @Before
+    public void setup() throws Exception {
+        provider = spy(new JcrResourceBundleProvider());
+        provider.tpm = new DefaultThreadPoolManager(null, null);
+        provider.activate(createComponentContext(new Hashtable<String, Object>()));
+        doReturn(english).when(provider, "createResourceBundle", eq(null), eq(Locale.ENGLISH));
+        doReturn(german).when(provider, "createResourceBundle", eq(null), eq(Locale.GERMAN));
+        Mockito.when(german.getLocale()).thenReturn(Locale.GERMAN);
+        Mockito.when(english.getLocale()).thenReturn(Locale.ENGLISH);
+    }
 
     @Test
     public void loadBundlesOnlyOncePerLocale() throws Exception {
-        JcrResourceBundleProvider provider = spy(new JcrResourceBundleProvider());
-        provider.activate(createComponentContext(new Hashtable<String, Object>()));
-
-        doReturn(english).when(provider, "createResourceBundle", eq(null), eq(Locale.ENGLISH));
-        doReturn(german).when(provider, "createResourceBundle", eq(null), eq(Locale.GERMAN));
-
         assertEquals(english, provider.getResourceBundle(Locale.ENGLISH));
         assertEquals(english, provider.getResourceBundle(Locale.ENGLISH));
         assertEquals(german, provider.getResourceBundle(Locale.GERMAN));
@@ -71,12 +80,6 @@ public class ConcurrentJcrResourceBundleLoadingTest {
 
     @Test
     public void loadBundlesOnlyOnceWithConcurrentRequests() throws Exception {
-        final JcrResourceBundleProvider provider = spy(new JcrResourceBundleProvider());
-        provider.activate(createComponentContext(new Hashtable<String, Object>()));
-
-        doReturn(english).when(provider, "createResourceBundle", eq(null), eq(Locale.ENGLISH));
-        doReturn(german).when(provider, "createResourceBundle", eq(null), eq(Locale.GERMAN));
-
         final int numberOfThreads = 40;
         final ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads / 2);
         for (int i = 0; i < numberOfThreads; i++) {
@@ -93,6 +96,31 @@ public class ConcurrentJcrResourceBundleLoadingTest {
 
         verifyPrivate(provider, times(1)).invoke("createResourceBundle", eq(null), eq(Locale.ENGLISH));
         verifyPrivate(provider, times(1)).invoke("createResourceBundle", eq(null), eq(Locale.GERMAN));
+    }
+    
+    @Test
+    public void newBundleUsedAfterReload() throws Exception {
+        provider.getResourceBundle(Locale.ENGLISH);
+        provider.getResourceBundle(Locale.GERMAN);
+        // only reload the bundle for basename=null, locale=GERMAN
+        provider.reloadBundle(german);
+        final int numberOfThreads = 40;
+        final ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads / 2);
+        for (int i = 0; i < numberOfThreads; i++) {
+            final Locale language = i < numberOfThreads / 2 ? Locale.ENGLISH : Locale.GERMAN;
+            executor.submit(new Runnable() {
+                @Override
+                public void run() {
+                    provider.getResourceBundle(language);
+                }
+            });
+        }
+        
+        executor.shutdown();
+        executor.awaitTermination(5, TimeUnit.SECONDS);
+
+        verifyPrivate(provider, times(1)).invoke("createResourceBundle", eq(null), eq(Locale.ENGLISH));
+        verifyPrivate(provider, times(2)).invoke("createResourceBundle", eq(null), eq(Locale.GERMAN));
     }
 
     private ComponentContext createComponentContext(Hashtable<String, Object> config) {

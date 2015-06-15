@@ -64,11 +64,14 @@ public class JcrResourceBundle extends ResourceBundle {
 
     private final Locale locale;
 
+    private final String baseName;
+
     private final Set<String> languageRoots = new HashSet<String>();
 
     JcrResourceBundle(Locale locale, String baseName,
             ResourceResolver resourceResolver) {
         this.locale = locale;
+        this.baseName = baseName;
 
         log.info("Finding all dictionaries for '{}' (basename: {}) ...", locale, baseName == null ? "<none>" : baseName);
 
@@ -102,6 +105,10 @@ public class JcrResourceBundle extends ResourceBundle {
     @Override
     public Locale getLocale() {
         return locale;
+    }
+
+    public String getBaseName() {
+        return baseName;
     }
 
     /**
