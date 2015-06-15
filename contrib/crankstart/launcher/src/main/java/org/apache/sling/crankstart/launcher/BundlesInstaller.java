@@ -44,36 +44,44 @@ public class BundlesInstaller {
         this.rmFilter = rmFilter;
     }
     
-    public void installBundles(BundleContext ctx, FeatureFilter filter) throws IOException, BundleException {
-        for(Feature f : model.getFeatures()) {
-            if(filter.ignoreFeature(f)) {
-                log.info("Ignoring feature: {}", f.getName());
-                continue;
+    public void installBundles(final BundleContext ctx, final FeatureFilter filter) throws Exception {
+        final String JAR_TYPE = "jar";
+        
+        final ArtifactsVisitor v = new ArtifactsVisitor(model) {
+
+            @Override
+            protected void visitArtifact(Feature f, RunMode rm, ArtifactGroup g, Artifact a) throws Exception {
+                if(JAR_TYPE.equals(a.getType())) {
+                    installBundle(ctx, a, g.getStartLevel());
+                } else {
+                    log.info("Ignoring Artifact, not a bundle: {}", a);
+                }
             }
-            
-            log.info("Processing feature: {}", f.getName());
-            for(RunMode rm : f.getRunModes()) {
-                if(!rmFilter.runModeActive(rm)) {
+
+            @Override
+            protected boolean acceptFeature(Feature f) {
+                final boolean accept = !filter.ignoreFeature(f);
+                if(!accept) {
+                    log.info("Ignoring feature: {}", f.getName());
+                }
+                return accept;
+            }
+
+            @Override
+            protected boolean acceptRunMode(RunMode rm) {
+                final boolean accept = rmFilter.runModeActive(rm);
+                if(!accept) {
                     log.info("RunMode is not active, ignored: {}", Arrays.asList(rm.getNames()));
-                    continue;
                 }
-                for(ArtifactGroup g : rm.getArtifactGroups()) {
-                    final int startLevel = g.getStartLevel();
-                    for(Artifact a : g) {
-                        // TODO for now, naively assume a is a bundle, and mvn: protocol
-                        final String url = "mvn:" + a.getGroupId() + "/" + a.getArtifactId() + "/" + a.getVersion();
-                        installBundle(ctx, url, startLevel);
-                    }
-                }
+                return accept;
             }
-        }
+        };
+        
+        v.visit();
     }
     
-    protected boolean ignoreFeature(Feature f) {
-        return false;
-    }
-    
-    public void installBundle(BundleContext ctx, String bundleUrl, int startLevel) throws IOException, BundleException {
+    public void installBundle(BundleContext ctx, Artifact a, int startLevel) throws IOException, BundleException {
+        final String bundleUrl = "mvn:" + a.getGroupId() + "/" + a.getArtifactId() + "/" + a.getVersion();
         final URL url = new URL(bundleUrl);
         final InputStream bundleStream = url.openStream();
         try {
