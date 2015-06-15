@@ -33,5 +33,14 @@ import aQute.bnd.annotation.ProviderType;
 @ProviderType
 public interface ObservationReporter {
 
-    void reportChanges(@Nonnull List<ResourceChange> changes);
+    /**
+     * A resource provider can inform about a list of changes.
+     * If the resource provider is not able to report external events on other instances,
+     * it should set the distribute flag. In this case the resource resolver implementation
+     * will distribute the events to all other instances.
+     *
+     * @param changes The list of changes.
+     * @param distribute Whether the changes should be distributed to other instances.
+     */
+    void reportChanges(@Nonnull List<ResourceChange> changes, boolean distribute);
 }

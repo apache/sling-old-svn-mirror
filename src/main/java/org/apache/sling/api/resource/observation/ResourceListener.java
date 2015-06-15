@@ -39,6 +39,12 @@ import aQute.bnd.annotation.ConsumerType;
  * {@code ResourceListener} objects must be registered with a service property
  * {@link ResourceListener#PATHS} whose value is the list of resource paths for which
  * the listener is interested in getting change events.
+ *
+ * <p>
+ * By default a resource listener gets only local events which means events
+ * caused by changes persisted on the same instance as this listener is registered.
+ * If the resource listener is interested in external events, the implementation
+ * should implement the {@link ExternalResourceListener} interface.
  */
 @ConsumerType
 public interface ResourceListener {

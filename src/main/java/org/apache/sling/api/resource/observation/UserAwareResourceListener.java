@@ -30,6 +30,11 @@ import aQute.bnd.annotation.ConsumerType;
  * A resource listener which allows to act on the changes in the context of the user
  * who initiated the changes. If that information is not known, a resolver using the
  * access rights of a configured service user is used.
+ * <p>
+ * By default a resource listener gets only local events which means events
+ * caused by changes persisted on the same instance as this listener is registered.
+ * If the resource listener is interested in external events, the implementation
+ * should implement the {@link ExternalResourceListener} interface.
  */
 @ConsumerType
 public interface UserAwareResourceListener {
