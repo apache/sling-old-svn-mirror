@@ -17,8 +17,11 @@
 package org.apache.sling.xss.impl;
 
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -35,6 +38,8 @@ import org.apache.sling.xss.XSSFilter;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
+import org.owasp.validator.html.model.Attribute;
+import org.owasp.validator.html.model.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,9 +54,21 @@ public class XSSFilterImpl implements XSSFilter, EventHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(XSSFilterImpl.class);
 
+    // Default href configuration copied from the config.xml supplied with AntiSamy
+    static final Attribute DEFAULT_HREF_ATTRIBUTE = new Attribute(
+            "href",
+            Arrays.asList(
+                    Pattern.compile("([\\p{L}\\p{N}\\\\\\.\\#@\\$%\\+&;\\-_~,\\?=/!\\*\\(\\)]*|\\#(\\w)+)"),
+                    Pattern.compile("(\\s)*((ht|f)tp(s?)://|mailto:)[\\p{L}\\p{N}]+[\\p{L}\\p{N}\\p{Zs}\\.\\#@\\$%\\+&;:\\-_~,\\?=/!\\*\\(\\)]*(\\s)*")
+            ),
+            Collections.<String>emptyList(),
+            "removeAttribute", ""
+    );
+
     private static final String DEFAULT_POLICY_PATH = "sling/xss/config.xml";
     private static final int DEFAULT_POLICY_CACHE_SIZE = 128;
     private PolicyHandler defaultHandler;
+    private Attribute hrefAttribute;
 
     // available contexts
     private final XSSFilterRule htmlHtmlContext = new HtmlToHtmlContentContext();
@@ -104,7 +121,7 @@ public class XSSFilterImpl implements XSSFilter, EventHandler {
                 if (policyStream != null) {
                     try {
                         if (defaultHandler == null) {
-                            defaultHandler = new PolicyHandler(policyStream);
+                            setDefaultHandler(new PolicyHandler(policyStream));
                             policyStream.close();
                         }
                     } catch (Exception e) {
@@ -119,7 +136,7 @@ public class XSSFilterImpl implements XSSFilter, EventHandler {
                 if (policyStream != null) {
                     try {
                         if (defaultHandler == null) {
-                            defaultHandler = new PolicyHandler(policyStream);
+                            setDefaultHandler(new PolicyHandler(policyStream));
                             policyStream.close();
                         }
                     } catch (Exception e) {
@@ -185,7 +202,19 @@ public class XSSFilterImpl implements XSSFilter, EventHandler {
 
     @SuppressWarnings("unused")
     public void setDefaultPolicy(InputStream policyStream) throws Exception {
-        defaultHandler = new PolicyHandler(policyStream);
+        setDefaultHandler(new PolicyHandler(policyStream));
+    }
+
+    private void setDefaultHandler(PolicyHandler defaultHandler) {
+        Tag linkTag = defaultHandler.getPolicy().getTagByLowercaseName("a");
+        Attribute hrefAttribute = (linkTag != null) ? linkTag.getAttributeByName("href") : null;
+        if (hrefAttribute == null) {
+            // Fallback to default configuration
+            hrefAttribute = DEFAULT_HREF_ATTRIBUTE;
+        }
+
+        this.defaultHandler = defaultHandler;
+        this.hrefAttribute = hrefAttribute;
     }
 
     @SuppressWarnings("unused")
@@ -210,4 +239,15 @@ public class XSSFilterImpl implements XSSFilter, EventHandler {
     public boolean hasPolicy(String policyName) {
         return policies.containsKey(policyName);
     }
+
+    @Override
+    public boolean isValidHref(String url) {
+        // Same logic as in org.owasp.validator.html.scan.MagicSAXFilter.startElement()
+        boolean isValid = hrefAttribute.containsAllowedValue(url.toLowerCase());
+        if (!isValid) {
+            isValid = hrefAttribute.matchesAllowedExpression(url);
+        }
+        return isValid;
+    }
+
 }

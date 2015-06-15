@@ -59,4 +59,15 @@ public interface XSSFilter {
      * @throws NullPointerException if context is <code>null</code>
      */
     String filter(ProtectionContext context, String src);
+
+    /**
+     * Checks if the given URL is valid to be used for the <code>href</code> attribute in a <code>a</code> tag.
+     * <p/>
+     * The default protection context is used for checking.
+     *
+     * @param url the URL that should be validated
+     * @return true if the URL is violation-free
+     */
+    boolean isValidHref(String url);
+
 }

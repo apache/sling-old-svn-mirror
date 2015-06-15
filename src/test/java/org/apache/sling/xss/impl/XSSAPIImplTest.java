@@ -23,12 +23,14 @@ import java.lang.reflect.Field;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.xss.XSSAPI;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.owasp.validator.html.AntiSamy;
 import org.owasp.validator.html.Policy;
+import org.owasp.validator.html.model.Attribute;
 import org.powermock.reflect.Whitebox;
 
 import junit.framework.TestCase;
@@ -49,16 +51,8 @@ public class XSSAPIImplTest {
     @Before
     public void setup() {
         try {
-            InputStream policyStream = new FileInputStream("./src/main/resources/SLING-INF/content/config.xml");
-            Policy policy = Policy.getInstance(policyStream);
-            AntiSamy antiSamy = new AntiSamy(policy);
-
-            PolicyHandler mockPolicyHandler = mock(PolicyHandler.class);
-            when(mockPolicyHandler.getPolicy()).thenReturn(policy);
-            when(mockPolicyHandler.getAntiSamy()).thenReturn(antiSamy);
-
             XSSFilterImpl xssFilter = new XSSFilterImpl();
-            Whitebox.setInternalState(xssFilter, "defaultHandler", mockPolicyHandler);
+            setDefaultHandler(xssFilter, "./src/main/resources/SLING-INF/content/config.xml");
 
             xssAPI = new XSSAPIImpl();
             Whitebox.invokeMethod(xssAPI, "activate");
@@ -82,6 +76,18 @@ public class XSSAPIImplTest {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private static void setDefaultHandler(XSSFilterImpl xssFilter, String filename) throws Exception {
+        InputStream policyStream = new FileInputStream(filename);
+        Policy policy = Policy.getInstance(policyStream);
+        AntiSamy antiSamy = new AntiSamy(policy);
+
+        PolicyHandler mockPolicyHandler = mock(PolicyHandler.class);
+        when(mockPolicyHandler.getPolicy()).thenReturn(policy);
+        when(mockPolicyHandler.getAntiSamy()).thenReturn(antiSamy);
+
+        Whitebox.invokeMethod(xssFilter, "setDefaultHandler", mockPolicyHandler);
     }
 
     @Test
@@ -273,6 +279,19 @@ public class XSSAPIImplTest {
 
             TestCase.assertEquals("Requested '" + href + "'", expected, xssAPI.getValidHref(href));
         }
+    }
+
+    @Test
+    public void testGetValidHrefWithoutHrefConfig() throws Exception {
+        // Load AntiSamy configuration without href filter
+        XSSFilterImpl xssFilter = Whitebox.getInternalState(xssAPI, "xssFilter");
+        setDefaultHandler(xssFilter, "./src/test/resources/configWithoutHref.xml");
+
+        Attribute hrefAttribute = Whitebox.getInternalState(xssFilter, "hrefAttribute");
+        Assert.assertEquals(hrefAttribute, XSSFilterImpl.DEFAULT_HREF_ATTRIBUTE);
+
+        // Run same tests again to check default configuration
+        testGetValidHref();
     }
 
     @Test
