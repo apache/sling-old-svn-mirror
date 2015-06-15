@@ -207,14 +207,10 @@ public class XSSAPIImpl implements XSSAPI {
             if (qMarkIx > 0) {
                 encodedUrl = encodedUrl.substring(0, qMarkIx) + encodedUrl.substring(qMarkIx).replaceAll(":", "%3A");
             }
-            String testHtml = LINK_PREFIX + mangleNamespaces(encodedUrl) + LINK_SUFFIX;
-            // replace all & with &amp; because filterHTML will also apply this encoding
-            testHtml = testHtml.replaceAll("&(?!amp)", "&amp;");
-            final String safeHtml = xssFilter.filter(ProtectionContext.HTML_HTML_CONTENT, testHtml);
-            // if the xssFilter didn't like the input string we just return ""
-            // otherwise we return the mangled url without encoding
-            if (safeHtml.equals(testHtml)) {
-                return mangleNamespaces(encodedUrl);
+
+            encodedUrl = mangleNamespaces(encodedUrl);
+            if (xssFilter.isValidHref(encodedUrl)) {
+                return encodedUrl;
             }
         }
 
