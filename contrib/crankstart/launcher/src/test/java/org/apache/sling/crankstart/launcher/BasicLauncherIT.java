@@ -17,6 +17,7 @@ import org.apache.sling.commons.testing.junit.RetryRule;
 import org.apache.sling.testing.tools.osgi.WebconsoleClient;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -106,6 +107,23 @@ public class BasicLauncherIT {
         final String [] addBundles = {
                 "org.apache.sling.commons.mime",
                 "org.apache.sling.settings"
+        };
+        
+        for(String name : addBundles) {
+            try {
+                osgiConsole.checkBundleInstalled(name, U.LONG_TIMEOUT_SECONDS);
+            } catch(AssertionError ae) {
+                fail("Expected bundle to be present:" + name);
+            }
+        }
+    }
+    
+    @Test
+    @Ignore("until test-model is deployed with classifier=slingfeature")
+    public void testBundlesFromNestedModel() throws Exception {
+        final String [] addBundles = {
+                "org.apache.sling.commons.threads",
+                "org.apache.sling.commons.testing"
         };
         
         for(String name : addBundles) {

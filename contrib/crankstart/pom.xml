@@ -15,6 +15,7 @@
 
     <modules>
         <module>test-services</module>
+        <module>test-model</module>
         <module>launcher</module>
     </modules>
 </project>

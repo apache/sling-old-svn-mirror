@@ -25,8 +25,8 @@
   org.apache.sling/org.apache.sling.commons.mime/2.1.8
   org.apache.sling/org.apache.sling.settings/1.3.6
   
-  # TODO: Test a nested model file
-  # org.apache.sling/org.apache.sling.launchpad/8-SNAPSHOT/slingstart
+  # Test a nested model file
+  org.apache.sling/org.apache.sling.crankstart.test.model/1.9.9-SNAPSHOT/txt
 
 [artifacts runModes=A]
   org.apache.sling/org.apache.sling.api/2.9.0
