@@ -44,7 +44,9 @@ public interface ResolveContext<T> {
     @Nonnull ResourceResolver getResourceResolver();
 
     /**
-     * Return optional parameters for resolving the resource
+     * Return optional parameters for resolving the resource.
+     * For example if the resource is resolved through an http request, this
+     * map could contain the path parameters of the url.
      * @return A non empty map with parameters or {@code null}.
      */
     @CheckForNull Map<String, String> getResolveParameters();
