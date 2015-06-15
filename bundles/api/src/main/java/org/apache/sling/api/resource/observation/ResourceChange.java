@@ -40,15 +40,19 @@ public abstract class ResourceChange {
 
     private final String path;
     private final ChangeType changeType;
+    private final boolean isExternal;
 
     /**
      * Create a new change object
      * @param changeType The change type
      * @param path The resource path
      */
-    public ResourceChange(final @Nonnull ChangeType changeType, final @Nonnull String path) {
+    public ResourceChange(final @Nonnull ChangeType changeType,
+            final @Nonnull String path,
+            final boolean isExternal) {
         this.path = path;
         this.changeType = changeType;
+        this.isExternal = isExternal;
     }
 
     /**
@@ -67,6 +71,13 @@ public abstract class ResourceChange {
         return null;
     }
 
+    /**
+     * Is this an external event?
+     * @return {@code true} if the event is external.
+     */
+    public boolean isExternal() {
+        return this.isExternal;
+    }
     /**
      * Get the resource type.
      * TODO Clarify when this might be available - and as this is lazy
