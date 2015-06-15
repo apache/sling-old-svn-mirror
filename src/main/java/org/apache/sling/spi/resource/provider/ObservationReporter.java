@@ -35,6 +35,13 @@ import aQute.bnd.annotation.ProviderType;
 public interface ObservationReporter {
 
     /**
+     * Get the list of observer configurations affecting the provider this
+     * reporter is bound to.
+     * @return A list of observer configurations, the list might be empty.
+     */
+    @Nonnull List<ObserverConfiguration> getObserverConfigurations();
+
+    /**
      * A resource provider can inform about a list of changes.
      * If the resource provider is not able to report external events on other instances,
      * it should set the distribute flag. In this case the resource resolver implementation
