@@ -50,6 +50,13 @@ import aQute.bnd.annotation.ConsumerType;
  * is not intended to be used by client applications directly. A resource
  * provider implements this service by extending this class.
  * <p>
+ * If a provider is used in the resource tree, it gets activated through
+ * a call of the {@link #activate(ProviderContext)} method. If the
+ * provider is not used anymore within the resource tree, the
+ * {@link #deactivate(ProviderContext)} method is called. Whenever
+ * information concerning the provider is changed while the provider
+ * is used, the {@link #update(ProviderContext)} method is called.
+ *
  * TODO - authentication / logout (Closeable)
  * TODO - context support
  * TODO - query
@@ -129,6 +136,48 @@ public abstract class ResourceProvider<T> {
      * <code>org.osgi.framework.Bundle</code>.
      */
     public static final String AUTH_SERVICE_BUNDLE = "sling.service.bundle";
+
+    /** The context for this provider. */
+    private volatile ProviderContext ctx;
+
+    /**
+     * With a call to this method, the provider implementation is notified that
+     * it is used in the resource tree.
+     * @param ctx The context for this provider.
+     */
+    public void activate(@Nonnull ProviderContext ctx) {
+        this.ctx = ctx;
+    }
+
+    /**
+     * With a call to this method, the provider implementation is notified
+     * that it is not used anymore in the resource tree.
+     * @param ctx The context for this provider.
+     */
+    public void deactivate(@Nonnull ProviderContext ctx) {
+        this.ctx = null;
+    }
+
+    /**
+     * With a call to this method, the provider implementation is notified
+     * that any information regarding the registration of the provider
+     * has changed. For example, observation listeners might have changed.
+     * This method is only called while the provider is used in the resource
+     * tree.
+     * @param ctx The context for this provider.
+     */
+    public void update(@Nonnull ProviderContext ctx) {
+        this.ctx = ctx;
+    }
+
+    /**
+     * Get the current provider context.
+     * @return The provider context or {@code null} if the provider is currently
+     *         not used in the resource tree.
+     */
+    protected ProviderContext getProviderContext() {
+        return this.ctx;
+    }
 
     /**
      * Authenticate against the resource provider.
