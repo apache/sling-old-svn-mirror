@@ -344,4 +344,10 @@ public class JcrResourceBundle extends ResourceBundle {
     private static String toRFC4646String(Locale locale) {
         return locale.toString().replace('_', '-');
     }
+
+    @Override
+    public String toString() {
+        return "JcrResourceBundle [locale=" + locale + ", baseName=" + baseName + ", languageRoots=" + languageRoots
+                + "]";
+    }
 }

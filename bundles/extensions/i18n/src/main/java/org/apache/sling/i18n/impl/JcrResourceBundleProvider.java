@@ -188,14 +188,13 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         // do in a separate thread to prevent being blacklisted by Apache Felix (http://felix.apache.org/documentation/subprojects/apache-felix-event-admin.html)
         final String path = (String)event.getProperty(SlingConstants.PROPERTY_PATH);
         if ( path != null ) {
-            
-            log.debug("Asynchronously invalidating bundles cache due to {}", event);
+            log.debug("handleEvent: Detecting event {} for path '{}'", event, path);
             Runnable task = new Runnable() {
                 @Override
                 public void run() {
                     // if this change was on languageRootPath level this might change basename and locale as well, therefore invalidate everything
                     if ( languageRootPaths.contains(path) ) {
-                        log.debug("handleEvent: Detected change of cached language root {}, removing all cached ResourceBundles", path);
+                        log.debug("handleEvent: Detected change of cached language root '{}', removing all cached ResourceBundles", path);
                         clearCache();
                         preloadBundles();
                     } else {
@@ -206,12 +205,12 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
                                 for (JcrResourceBundle bundle : resourceBundleCache.values()) {
                                     if (bundle.getLanguageRootPaths().contains(root)) {
                                         // reload it
-                                        log.debug("handleEvent: Resource changes below {}, reloading ResourceBundle '{}'", root, bundle);
+                                        log.debug("handleEvent: Resource changes below '{}', reloading ResourceBundle '{}'", root, bundle);
                                         reloadBundle(bundle);
                                         return;
                                     }
                                 }
-                                log.warn("No cached resource bundle found with root {}", root);
+                                log.warn("handleEvent: No cached resource bundle found with root '{}'", root);
                                 break;
                             }
                         }
@@ -232,9 +231,11 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         
         // unregister bundle
         synchronized(this) {
-            ServiceRegistration serviceRegistration = bundleServiceRegistrations.get(key);
+            ServiceRegistration serviceRegistration = bundleServiceRegistrations.remove(key);
             if (serviceRegistration != null) {
                 serviceRegistration.unregister();
+            } else {
+                log.warn("Could not find resource bundle service for key {}", key);
             }
         }
         
