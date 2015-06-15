@@ -21,7 +21,7 @@ Recommended way to find resources in the Sling repository is using tree-traversa
 
 SlingQuery is a tool that helps creating such queries in a more concise way. Above code could be written as:
 
-    import static com.cognifide.sling.query.api.SlingQuery.$;
+    import static org.apache.sling.query.SlingQuery.$;
     // ...
     $(resource).closest("cq:Page[jcr:content/cq:template=my/template]")
 
