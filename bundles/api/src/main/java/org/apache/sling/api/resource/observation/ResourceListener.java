@@ -45,6 +45,8 @@ import aQute.bnd.annotation.ConsumerType;
  * caused by changes persisted on the same instance as this listener is registered.
  * If the resource listener is interested in external events, the implementation
  * should implement the {@link ExternalResourceListener} interface.
+ *
+ * TODO - how to register for current search paths?
  */
 @ConsumerType
 public interface ResourceListener {
