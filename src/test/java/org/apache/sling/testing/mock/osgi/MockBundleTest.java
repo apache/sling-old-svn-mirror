@@ -57,6 +57,7 @@ public class MockBundleTest {
     @Test
     public void testGetEntry() {
         assertNotNull(bundle.getEntry("/META-INF/test.txt"));
+        assertNotNull(bundle.getEntry("META-INF/test.txt"));
         assertNull(bundle.getEntry("/invalid"));
     }
 
