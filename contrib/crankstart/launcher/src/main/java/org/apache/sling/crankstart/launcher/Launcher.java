@@ -38,16 +38,16 @@ import org.apache.sling.provisioning.model.ArtifactGroup;
 import org.apache.sling.provisioning.model.Feature;
 import org.apache.sling.provisioning.model.Model;
 import org.apache.sling.provisioning.model.ModelUtility;
-import org.apache.sling.provisioning.model.RunMode;
 import org.apache.sling.provisioning.model.ModelUtility.VariableResolver;
+import org.apache.sling.provisioning.model.RunMode;
 import org.apache.sling.provisioning.model.io.ModelReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Launch an OSGi app instance using the Sling provisioning model */
 public class Launcher {
-    private final Model model = new Model();
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private Model model = new Model();
+    private static final Logger log = LoggerFactory.getLogger(Launcher.class);
     
     public static final String CRANKSTART_FEATURE = ":crankstart";
     public static final String MODEL_KEY = "model";
@@ -85,7 +85,9 @@ public class Launcher {
         }
     };
     
-    public Launcher(String ... args) throws IOException {
+    public Launcher(String ... args) throws Exception {
+        MavenResolver.setup();
+
         // Find all files to read and sort the list, to be deterministic
         final SortedSet<File> toRead = new TreeSet<File>();
         
@@ -100,19 +102,32 @@ public class Launcher {
                 toRead.add(f);
             }
         }
-        
+
+        // Merge all model files 
         for(File f : toRead) {
             mergeModel(f);
         }
+        
+        // And merge nested models (supporting one level of nesting only so far)
+        new NestedModelsMerger(model).visit();
+        computeEffectiveModel();
+    }
+    
+    public void computeEffectiveModel() {
+        model = ModelUtility.getEffectiveModel(model, overridingVariableResolver);
+    }
+    
+    public Model getModel() {
+        return model;
     }
     
     /** Can be called before launch() to read and merge additional models.
      *  @param r provisioning model to read, closed by this method after reading */ 
-    public void mergeModel(Reader r, String sourceInfo) throws IOException {
+    public static void mergeModel(Model mergeInto, Reader r, String sourceInfo) throws IOException {
+        log.info("Merging provisioning model {}", sourceInfo);
         try {
-            log.info("Merging provisioning model {}", sourceInfo);
             final Model m = ModelReader.read(r, sourceInfo);
-            ModelUtility.merge(model, ModelUtility.getEffectiveModel(m, overridingVariableResolver));
+            ModelUtility.merge(mergeInto, m);
         } finally {
             r.close();
         }
@@ -120,13 +135,10 @@ public class Launcher {
     
     /** Can be called before launch() to read and merge additional models */
     public void mergeModel(File f) throws IOException {
-        mergeModel(new BufferedReader(new FileReader(f)), f.getAbsolutePath());
+        mergeModel(model, new BufferedReader(new FileReader(f)), f.getAbsolutePath());
     }
     
     public void launch() throws Exception {
-        // Enable pax URL for mvn: protocol
-        System.setProperty( "java.protocol.handler.pkgs", "org.ops4j.pax.url" );
-
         // Setup initial classpath to launch the OSGi framework
         for(URL u : getClasspathURLs(model, CRANKSTART_FEATURE)) {
             addToClasspath(u);
@@ -165,7 +177,7 @@ public class Launcher {
             for(RunMode rm : f.getRunModes()) {
                 for(ArtifactGroup g : rm.getArtifactGroups()) {
                     for(Artifact a : g) {
-                        final String url = mvnUrl(a);
+                        final String url = MavenResolver.mvnUrl(a);
                         try {
                             result.add(new URL(url));
                         } catch(MalformedURLException e) {
@@ -178,10 +190,6 @@ public class Launcher {
             }
         }
         return result;
-    }
-    
-    public static String mvnUrl(Artifact a) {
-        return "mvn:" + a.getGroupId() + "/" + a.getArtifactId() + "/" + a.getVersion();
     }
     
      public static void main(String [] args) throws Exception {

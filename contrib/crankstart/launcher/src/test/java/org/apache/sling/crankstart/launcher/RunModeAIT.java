@@ -26,7 +26,7 @@ public class RunModeAIT {
     public final RetryRule retryRule = new RetryRule();
     
     @BeforeClass
-    public static void setupClass() throws IOException {
+    public static void setupClass() throws Exception {
         System.setProperty(RunModeFilter.SLING_RUN_MODES, RUN_MODES);
         C.setup();
         osgiConsole = new WebconsoleClient(C.getBaseUrl(), U.ADMIN, U.ADMIN);

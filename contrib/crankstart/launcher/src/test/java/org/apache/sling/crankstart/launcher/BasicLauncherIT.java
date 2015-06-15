@@ -34,7 +34,7 @@ public class BasicLauncherIT {
     public final RetryRule retryRule = new RetryRule();
     
     @BeforeClass
-    public static void setupClass() throws IOException {
+    public static void setupClass() throws Exception {
         C = new CrankstartSetup();
         C.setup();
         osgiConsole = new WebconsoleClient(C.getBaseUrl(), U.ADMIN, U.ADMIN);

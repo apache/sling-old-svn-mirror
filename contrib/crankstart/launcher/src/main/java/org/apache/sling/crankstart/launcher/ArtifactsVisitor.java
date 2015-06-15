@@ -24,7 +24,7 @@ import org.apache.sling.provisioning.model.RunMode;
 
 /** Visit the Artifacts of a Model */
 public abstract class ArtifactsVisitor {
-    private final Model model;
+    protected final Model model;
     
     public ArtifactsVisitor(Model m) {
         model = m;

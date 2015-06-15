@@ -61,12 +61,13 @@ public class CrankstartSetup {
         return result;
     }
     
-    private static void mergeModelResource(Launcher launcher, String path) throws IOException {
+    private static void mergeModelResource(Launcher launcher, String path) throws Exception {
         final InputStream is = CrankstartSetup.class.getResourceAsStream(path);
         assertNotNull("Expecting test resource to be found:" + path, is);
         final Reader input = new InputStreamReader(is);
         try {
-            launcher.mergeModel(input, path);
+            Launcher.mergeModel(launcher.getModel(), input, path);
+            launcher.computeEffectiveModel();
         } finally {
             input.close();
         }
@@ -76,7 +77,7 @@ public class CrankstartSetup {
         return baseUrl;
     }
      
-    synchronized void setup() throws IOException {
+    synchronized void setup() throws Exception {
         if(crankstartThread != null) {
             return;
         }
