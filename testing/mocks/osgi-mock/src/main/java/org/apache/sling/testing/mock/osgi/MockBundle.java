@@ -70,20 +70,9 @@ public final class MockBundle implements Bundle {
     @Override
     public URL getEntry(final String name) {
         
-        // the original implementation of this method performed getClass().getResource()
-        // however, this means that the it does not work out-of-the-box with paths
-        // returned from getEntryPaths(), which are by definition relative
-        
-        // as a fallback we make sure the resource is absolute if the relative one does
-        // not get a result, but perhaps we should enforce a relative lookup at all times
-        
-        // try to load resource from classpath
-        URL resource = getClass().getResource(name);
-        
-        if ( resource == null || ! name.startsWith("/")) {
-            resource = getClass().getResource("/" + name);
-        }
-        return resource;
+        String nameToQuery = name.startsWith("/") ? name : "/" + name;
+
+        return getClass().getResource(nameToQuery);
     }
 
     @Override
