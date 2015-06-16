@@ -20,9 +20,10 @@
 # Start the Sling Launchpad including whatever is required to
 # run the Sling integration tests.
 #
-# Currently those tests pass with 32 failures and 1 error, out
-# of 529 tests, if starting with
-#  java -Dsling.run.modes=:standalone,jackrabbit -Dsling.home=CRANKSTART \
+# Currently those tests pass with 2 failures (WarSelectorServletTest)
+# out of 529 tests, if started with
+#  java  -Xmx1G  -XX:MaxPermSize=256m \
+#   -Dsling.run.modes=:standalone,jackrabbit -Dsling.home=CRANKSTART \
 #   -jar target/org.apache.sling.crankstart.launcher-1.9.9-SNAPSHOT.jar \
 #   src/test/resources/crankstart-model.txt \
 #   src/test/resources/sling-launchpad.txt
@@ -46,7 +47,18 @@
   org.apache.sling/org.apache.sling.launchpad/8-SNAPSHOT/txt/slingfeature
   
   # Sling integration tests support
-  org.apache.sling/org.apache.sling.launchpad.test-bundles/0.0.1-SNAPSHOT/txt
+  # TODO problem with the test-service bundles with 2 run modes
+  # org.apache.sling/org.apache.sling.launchpad.test-bundles/0.0.1-SNAPSHOT/txt
+  
+# TODO remove those once nested test-bundles model works
+[artifacts startLevel=2]
+  org.apache.sling/org.apache.sling.servlets.compat/1.0.3-SNAPSHOT
+  org.apache.sling/org.apache.sling.junit.core/1.0.11-SNAPSHOT
+  org.apache.sling/org.apache.sling.junit.remote/1.0.11-SNAPSHOT
+  org.apache.sling/org.apache.sling.junit.scriptable/1.0.11-SNAPSHOT
+  org.apache.sling/org.apache.sling.launchpad.test-fragment/2.0.9-SNAPSHOT
+  org.apache.sling/org.apache.sling.launchpad.test-services-war/2.0.8/war
+  org.apache.sling/org.apache.sling.launchpad.test-services/2.0.9-SNAPSHOT
     
 [configurations]
   integrationTestsConfig
