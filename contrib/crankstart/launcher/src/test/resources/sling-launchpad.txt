@@ -19,9 +19,18 @@
 
 # Start the Sling Launchpad including whatever is required to
 # run the Sling integration tests.
-# This model is meant to be used in addition to the base 
-# crankstart-model
+#
+# Currently those tests pass with 32 failures and 1 error, out
+# of 529 tests, if starting with
+#  java -Dsling.run.modes=:standalone,jackrabbit -Dsling.home=CRANKSTART \
+#   -jar target/org.apache.sling.crankstart.launcher-1.9.9-SNAPSHOT.jar \
+#   src/test/resources/crankstart-model.txt \
+#   src/test/resources/sling-launchpad.txt
+ 
 [feature name=sling.launchpad]
+
+[variables]
+  nested.models=org.apache.sling.launchpad,org.apache.sling.launchpad.test-bundles
 
 [settings]
   org.apache.sling.commons.log.julenabled=true
@@ -30,11 +39,14 @@
   # karaf bunde provides Sling Launchpad startup services
   org.apache.sling/org.apache.sling.launchpad.karaf/0.1.1-SNAPSHOT
   
+  # artifacts that are usually provided by the Sling launchpad
+   org.apache.sling/org.apache.sling.launchpad.api/1.1.0
+  
   # The launchpad itself
   org.apache.sling/org.apache.sling.launchpad/8-SNAPSHOT/txt/slingfeature
   
   # Sling integration tests support
-  org.apache.sling/org.apache.sling.launchpad.test-bundles/0.0.1-SNAPSHOT/txt/slingstart
+  org.apache.sling/org.apache.sling.launchpad.test-bundles/0.0.1-SNAPSHOT/txt
     
 [configurations]
   integrationTestsConfig
