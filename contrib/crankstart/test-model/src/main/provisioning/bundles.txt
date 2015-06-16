@@ -21,5 +21,5 @@
 [feature name=crankstart.test.model]
 
 [artifacts]
-  org.apache.sling/org.apache.sling.commons.testing/2.0.18
+  org.apache.sling/org.apache.sling.discovery.api/1.0.2
   org.apache.sling/org.apache.sling.commons.threads/3.2.0

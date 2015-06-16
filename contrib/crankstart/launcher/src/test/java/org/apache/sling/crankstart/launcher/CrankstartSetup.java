@@ -108,6 +108,7 @@ public class CrankstartSetup {
         for(String path : MODEL_PATHS) {
             mergeModelResource(launcher, path);
         }
+        launcher.computeEffectiveModel();
         
         crankstartThread = new Thread() {
             public void run() {

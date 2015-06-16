@@ -108,12 +108,11 @@ public class Launcher {
             mergeModel(f);
         }
         
-        // And merge nested models (supporting one level of nesting only so far)
-        new NestedModelsMerger(model).visit();
         computeEffectiveModel();
     }
     
-    public void computeEffectiveModel() {
+    public void computeEffectiveModel() throws Exception {
+        new NestedModelsMerger(model).visit();
         model = ModelUtility.getEffectiveModel(model, overridingVariableResolver);
     }
     

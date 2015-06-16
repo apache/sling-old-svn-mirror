@@ -17,7 +17,6 @@ import org.apache.sling.commons.testing.junit.RetryRule;
 import org.apache.sling.testing.tools.osgi.WebconsoleClient;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -119,11 +118,10 @@ public class BasicLauncherIT {
     }
     
     @Test
-    @Ignore("until test-model is deployed with classifier=slingfeature")
     public void testBundlesFromNestedModel() throws Exception {
         final String [] addBundles = {
                 "org.apache.sling.commons.threads",
-                "org.apache.sling.commons.testing"
+                "org.apache.sling/org.apache.sling.discovery.api"
         };
         
         for(String name : addBundles) {

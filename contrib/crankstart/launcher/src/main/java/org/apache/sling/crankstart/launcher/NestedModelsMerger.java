@@ -37,6 +37,10 @@ public class NestedModelsMerger extends ArtifactsVisitor {
     private final Logger log = LoggerFactory.getLogger(getClass());
     private List<Artifact> toMerge;
     
+    public static final String SLINGSTART = "slingstart";
+    public static final String SLINGFEATURE = "slingfeature";
+    public static final String NESTED_MODELS = "nested.models";
+    
     public NestedModelsMerger(Model m) {
         super(m);
     }
@@ -70,9 +74,18 @@ public class NestedModelsMerger extends ArtifactsVisitor {
     
     @Override
     protected void visitArtifact(Feature f, RunMode rm, ArtifactGroup g, Artifact a) throws Exception {
-        final String classifier = a.getClassifier();
-        if("slingstart".equals(classifier ) || "slingfeature".equals(classifier)) {
-            toMerge.add(a);
+        // TODO how to identify a nested model when it's the main artifact of a module,
+        // so doesn't have a slingfeature/slingstart type or classifier in its artifact URL?
+        final String str = f.getVariables().get(NESTED_MODELS);
+        if(str == null || str.length() == 0) {
+            return;
+        }
+        final String [] nm = str.split(",");
+        for(String nested : nm) {
+            if(nested.equals(a.getArtifactId())) {
+                log.info("{} feature variable identifies artifact as a nested model , will be merged: {}", f.getName() + "/" + NESTED_MODELS, a);
+                toMerge.add(a);
+            }
         }
     }
 }
