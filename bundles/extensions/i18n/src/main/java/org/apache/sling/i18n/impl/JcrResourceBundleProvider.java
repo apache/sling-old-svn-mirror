@@ -48,8 +48,6 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.commons.threads.ThreadPool;
-import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.i18n.ResourceBundleProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -84,10 +82,6 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
     @Property(boolValue = DEFAULT_PRELOAD_BUNDLES)
     private static final String PROP_PRELOAD_BUNDLES = "preload.bundles";
 
-    @Reference
-    ThreadPoolManager tpm = null;
-
-    private ThreadPool threadPool;
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -185,39 +179,39 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
 
     @Override
     public void handleEvent(final org.osgi.service.event.Event event) {
-        // do in a separate thread to prevent being blacklisted by Apache Felix (http://felix.apache.org/documentation/subprojects/apache-felix-event-admin.html)
-        final String path = (String)event.getProperty(SlingConstants.PROPERTY_PATH);
-        if ( path != null ) {
+        // do in a separate thread to prevent being blacklisted by Apache Felix
+        // (http://felix.apache.org/documentation/subprojects/apache-felix-event-admin.html)
+        final String path = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
+        if (path != null) {
             log.debug("handleEvent: Detecting event {} for path '{}'", event, path);
-            Runnable task = new Runnable() {
-                @Override
-                public void run() {
-                    // if this change was on languageRootPath level this might change basename and locale as well, therefore invalidate everything
-                    if ( languageRootPaths.contains(path) ) {
-                        log.debug("handleEvent: Detected change of cached language root '{}', removing all cached ResourceBundles", path);
-                        clearCache();
-                        preloadBundles();
-                    } else {
-                        // if it is only a change below a root path, only messages of one resource bundle can be affected!
-                        for(final String root : languageRootPaths) {
-                            if ( path.startsWith(root) ) {
-                                // figure out which JcrResourceBundle from the cached ones is affected
-                                for (JcrResourceBundle bundle : resourceBundleCache.values()) {
-                                    if (bundle.getLanguageRootPaths().contains(root)) {
-                                        // reload it
-                                        log.debug("handleEvent: Resource changes below '{}', reloading ResourceBundle '{}'", root, bundle);
-                                        reloadBundle(bundle);
-                                        return;
-                                    }
-                                }
-                                log.warn("handleEvent: No cached resource bundle found with root '{}'", root);
-                                break;
+
+            // if this change was on languageRootPath level this might change basename and locale as well, therefore
+            // invalidate everything
+            if (languageRootPaths.contains(path)) {
+                log.debug(
+                        "handleEvent: Detected change of cached language root '{}', removing all cached ResourceBundles",
+                        path);
+                clearCache();
+                preloadBundles();
+            } else {
+                // if it is only a change below a root path, only messages of one resource bundle can be affected!
+                for (final String root : languageRootPaths) {
+                    if (path.startsWith(root)) {
+                        // figure out which JcrResourceBundle from the cached ones is affected
+                        for (JcrResourceBundle bundle : resourceBundleCache.values()) {
+                            if (bundle.getLanguageRootPaths().contains(root)) {
+                                // reload it
+                                log.debug("handleEvent: Resource changes below '{}', reloading ResourceBundle '{}'",
+                                        root, bundle);
+                                reloadBundle(bundle);
+                                return;
                             }
                         }
+                        log.warn("handleEvent: No cached resource bundle found with root '{}'", root);
+                        break;
                     }
                 }
-            };
-            threadPool.execute(task);
+            }
         }
     }
 
@@ -254,7 +248,6 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
      */
     protected void activate(ComponentContext context) {
         Dictionary<?, ?> props = context.getProperties();
-        threadPool = tpm.get("JcrResourceBundleProvider Service Thread Pool");
 
         String user = PropertiesUtil.toString(props.get(PROP_USER), null);
         if (user == null || user.length() == 0) {
@@ -275,20 +268,17 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         this.bundleContext = context.getBundleContext();
         this.bundleServiceRegistrations = new HashMap<Key, ServiceRegistration>();
         if (this.resourceResolverFactory != null) {
-            final Runnable runnable = new Runnable() {
+            final Thread t = new Thread() {
                 @Override
                 public void run() {
                     preloadBundles();
                 }
             };
-            threadPool.execute(runnable);
+            t.start();
         }
     }
 
     protected void deactivate() {
-        if (threadPool != null) {
-            tpm.release(threadPool);
-        }
         clearCache();
     }
 
