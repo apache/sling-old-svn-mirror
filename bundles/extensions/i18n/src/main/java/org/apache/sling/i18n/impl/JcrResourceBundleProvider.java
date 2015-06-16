@@ -22,6 +22,7 @@ import static org.apache.sling.i18n.impl.JcrResourceBundle.PROP_BASENAME;
 import static org.apache.sling.i18n.impl.JcrResourceBundle.PROP_LANGUAGE;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -179,8 +180,6 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
 
     @Override
     public void handleEvent(final org.osgi.service.event.Event event) {
-        // do in a separate thread to prevent being blacklisted by Apache Felix
-        // (http://felix.apache.org/documentation/subprojects/apache-felix-event-admin.html)
         final String path = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
         if (path != null) {
             log.debug("handleEvent: Detecting event {} for path '{}'", event, path);
@@ -215,29 +214,43 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         }
     }
 
-    void reloadBundle(JcrResourceBundle oldBundle) {
+    synchronized void reloadBundle(JcrResourceBundle oldBundle) {
         String baseName = oldBundle.getBaseName();
         Locale locale = oldBundle.getLocale();
         Key key = new Key(baseName, locale);
-        
+
         // remove bundle from cache
         resourceBundleCache.remove(key);
-        
+
         // unregister bundle
-        synchronized(this) {
-            ServiceRegistration serviceRegistration = bundleServiceRegistrations.remove(key);
-            if (serviceRegistration != null) {
-                serviceRegistration.unregister();
-            } else {
-                log.warn("Could not find resource bundle service for key {}", key);
+        ServiceRegistration serviceRegistration = bundleServiceRegistrations.remove(key);
+        if (serviceRegistration != null) {
+            serviceRegistration.unregister();
+        } else {
+            log.warn("Could not find resource bundle service for key {}", key);
+        }
+
+        Collection<JcrResourceBundle> dependentBundles = new ArrayList<JcrResourceBundle>();
+        // this bundle might be a parent of a cached bundle -> invalidate those dependent bundles as well
+        for (JcrResourceBundle bundle : resourceBundleCache.values()) {
+            if (bundle.getParent() instanceof JcrResourceBundle) {
+                JcrResourceBundle parentBundle = (JcrResourceBundle) bundle.getParent();
+                Key parentKey = new Key(parentBundle.getBaseName(), parentBundle.getLocale());
+                if (parentKey.equals(key)) {
+                    log.debug("Also invalidate dependent bundle {} which has bundle {} as parent", bundle, parentBundle);
+                    dependentBundles.add(bundle);
+                }
             }
         }
-        
+        for (JcrResourceBundle dependentBundle : dependentBundles) {
+            reloadBundle(dependentBundle);
+        }
+
         if (preloadBundles) {
             // reload the bundle from the repository (will also fill cache and register as a service)
             getResourceBundle(oldBundle.getBaseName(), oldBundle.getLocale());
         }
-        
+
     }
 
     // ---------- SCR Integration ----------------------------------------------

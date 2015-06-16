@@ -101,6 +101,10 @@ public class JcrResourceBundle extends ResourceBundle {
     protected void setParent(ResourceBundle parent) {
         super.setParent(parent);
     }
+    
+    public ResourceBundle getParent() {
+        return parent;
+    }
 
     @Override
     public Locale getLocale() {
@@ -348,6 +352,6 @@ public class JcrResourceBundle extends ResourceBundle {
     @Override
     public String toString() {
         return "JcrResourceBundle [locale=" + locale + ", baseName=" + baseName + ", languageRoots=" + languageRoots
-                + "]";
+                + ", parent=" + parent + "]";
     }
 }

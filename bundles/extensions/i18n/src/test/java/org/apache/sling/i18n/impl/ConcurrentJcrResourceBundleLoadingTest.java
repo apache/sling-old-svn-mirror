@@ -28,6 +28,7 @@ import static org.powermock.api.mockito.PowerMockito.verifyPrivate;
 
 import java.util.Hashtable;
 import java.util.Locale;
+import java.util.ResourceBundle;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -59,11 +60,14 @@ public class ConcurrentJcrResourceBundleLoadingTest {
     @Before
     public void setup() throws Exception {
         provider = spy(new JcrResourceBundleProvider());
-        provider.activate(createComponentContext(new Hashtable<String, Object>()));
+        Hashtable<String, Object> properties = new Hashtable<String, Object>();
+        properties.put("locale.default", "en");
+        provider.activate(createComponentContext(properties));
         doReturn(english).when(provider, "createResourceBundle", eq(null), eq(Locale.ENGLISH));
         doReturn(german).when(provider, "createResourceBundle", eq(null), eq(Locale.GERMAN));
         Mockito.when(german.getLocale()).thenReturn(Locale.GERMAN);
         Mockito.when(english.getLocale()).thenReturn(Locale.ENGLISH);
+        Mockito.when(german.getParent()).thenReturn(english);
     }
 
     @Test
@@ -100,24 +104,35 @@ public class ConcurrentJcrResourceBundleLoadingTest {
     public void newBundleUsedAfterReload() throws Exception {
         provider.getResourceBundle(Locale.ENGLISH);
         provider.getResourceBundle(Locale.GERMAN);
-        // only reload the bundle for basename=null, locale=GERMAN
-        provider.reloadBundle(german);
-        final int numberOfThreads = 40;
-        final ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads / 2);
-        for (int i = 0; i < numberOfThreads; i++) {
-            final Locale language = i < numberOfThreads / 2 ? Locale.ENGLISH : Locale.GERMAN;
-            executor.submit(new Runnable() {
-                @Override
-                public void run() {
-                    provider.getResourceBundle(language);
-                }
-            });
-        }
         
-        executor.shutdown();
-        executor.awaitTermination(5, TimeUnit.SECONDS);
+        // reloading german should not reload any other bundle
+        provider.reloadBundle(german);
+        provider.getResourceBundle(Locale.ENGLISH);
+        provider.getResourceBundle(Locale.GERMAN);
+        provider.getResourceBundle(Locale.ENGLISH);
+        provider.getResourceBundle(Locale.GERMAN);
+        provider.getResourceBundle(Locale.ENGLISH);
+        provider.getResourceBundle(Locale.GERMAN);
 
         verifyPrivate(provider, times(1)).invoke("createResourceBundle", eq(null), eq(Locale.ENGLISH));
+        verifyPrivate(provider, times(2)).invoke("createResourceBundle", eq(null), eq(Locale.GERMAN));
+    }
+    
+    @Test
+    public void newBundleUsedAsParentAfterReload() throws Exception {
+        provider.getResourceBundle(Locale.ENGLISH);
+        provider.getResourceBundle(Locale.GERMAN);
+        
+        // reloading english should also reload german (because it has english as a parent)
+        provider.reloadBundle(english);
+        provider.getResourceBundle(Locale.ENGLISH);
+        provider.getResourceBundle(Locale.GERMAN);
+        provider.getResourceBundle(Locale.ENGLISH);
+        provider.getResourceBundle(Locale.GERMAN);
+        provider.getResourceBundle(Locale.ENGLISH);
+        provider.getResourceBundle(Locale.GERMAN);
+
+        verifyPrivate(provider, times(2)).invoke("createResourceBundle", eq(null), eq(Locale.ENGLISH));
         verifyPrivate(provider, times(2)).invoke("createResourceBundle", eq(null), eq(Locale.GERMAN));
     }
 
