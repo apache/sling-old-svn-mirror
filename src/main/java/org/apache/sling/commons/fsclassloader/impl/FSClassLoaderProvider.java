@@ -27,6 +27,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -152,19 +154,34 @@ public class FSClassLoaderProvider
     }
 
     private void checkClassLoader(final String filePath) {
-        synchronized ( this ) {
-            final FSDynamicClassLoader currentLoader = this.loader;
-            if ( currentLoader != null && filePath.endsWith(".class") ) {
-                // remove store directory and .class
-                final String path = filePath.substring(this.root.getAbsolutePath().length() + 1, filePath.length() - 6);
-                // convert to a class name
-                final String className = path.replace(File.separatorChar, '.');
-                currentLoader.check(className);
+        if ( filePath.endsWith(".class") ) {
+            // remove store directory and .class
+            final String path = filePath.substring(this.root.getAbsolutePath().length() + 1, filePath.length() - 6);
+            // convert to a class name
+            final String className = path.replace(File.separatorChar, '.');
+
+            synchronized ( this ) {
+                final FSDynamicClassLoader currentLoader = this.loader;
+                if ( currentLoader != null ) {
+                    currentLoader.check(className);
+                }
             }
         }
     }
 
     //---------- SCR Integration ----------------------------------------------
+
+    private boolean deleteRecursive(final File f, final List<String> names) {
+        if ( f.isDirectory() ) {
+            for(final File c : f.listFiles()) {
+                if ( !deleteRecursive(c, names) ) {
+                    return false;
+                }
+            }
+        }
+        names.add(f.getAbsolutePath());
+        return f.delete();
+    }
 
     /**
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#delete(java.lang.String)
@@ -173,10 +190,13 @@ public class FSClassLoaderProvider
         final String path = cleanPath(name);
         final File file = new File(path);
         if ( file.exists() ) {
-            final boolean result = file.delete();
-            logger.debug("Deleted {} : {}", name,result);
+            final List<String> names = new ArrayList<String>();
+            final boolean result = deleteRecursive(file, names);
+            logger.debug("Deleted {} : {}", name, result);
             if ( result ) {
-                this.checkClassLoader(file.getAbsolutePath());
+                for(final String n : names ) {
+                    this.checkClassLoader(n);
+                }
             }
 
             return result;
