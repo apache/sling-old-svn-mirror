@@ -204,7 +204,8 @@ final class OsgiMetadataUtil {
      * @return XPath query fragment to find matching XML node in SCR metadata
      */
     private static String getComponentXPathQuery(Class clazz) {
-        return "//*[implementation/@class='" + clazz.getName() + "' or @name='" + clazz.getName() + "']";
+        String className = StringUtils.substringBefore(clazz.getName(), "$$Enhancer");
+        return "//*[implementation/@class='" + className + "' or @name='" + className + "']";
     }
 
     private static boolean matchesService(Class clazz, Document metadata) {
