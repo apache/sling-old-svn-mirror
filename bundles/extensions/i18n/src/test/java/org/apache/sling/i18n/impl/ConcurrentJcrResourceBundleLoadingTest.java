@@ -32,7 +32,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.sling.commons.threads.impl.DefaultThreadPoolManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -60,7 +59,6 @@ public class ConcurrentJcrResourceBundleLoadingTest {
     @Before
     public void setup() throws Exception {
         provider = spy(new JcrResourceBundleProvider());
-        provider.tpm = new DefaultThreadPoolManager(null, null);
         provider.activate(createComponentContext(new Hashtable<String, Object>()));
         doReturn(english).when(provider, "createResourceBundle", eq(null), eq(Locale.ENGLISH));
         doReturn(german).when(provider, "createResourceBundle", eq(null), eq(Locale.GERMAN));
