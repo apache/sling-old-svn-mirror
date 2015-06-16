@@ -77,21 +77,34 @@ public class FrameworkSetup extends HashMap<String, Object> implements Callable<
         int started = 0;
         int failed = 0;
         for(Bundle b : bundles) {
-            try {
-                b.start();
+            if(isFragment(b)) {
                 started++;
-            } catch(BundleException be) {
-                failed++;
-                log.warn("Error starting bundle " + b.getSymbolicName(), be);
+            } else {
+                try { 
+                    b.start();
+                    started++;
+                } catch(BundleException be) {
+                    failed++;
+                    log.warn("Error starting bundle " + b.getSymbolicName(), be);
+                }
             }
             cfg.maybeConfigure();
         }
-        log.info("{} bundles started, {} failed to start, total {}", started, failed, bundles.length);
+        
+        if(failed == 0) {
+            log.info("All {} bundles started.", started);
+        } else {
+            log.info("{} bundles started, {} failed to start, total {}", started, failed, bundles.length);
+        }
         
         log.info("OSGi setup done, waiting for framework to stop");
         framework.waitForStop(0);
         
         return null;
+    }
+    
+    private boolean isFragment(Bundle b) {
+        return b.getHeaders().get("Fragment-Host") != null;
     }
     
     private void setShutdownHook(final Framework osgiFramework, final Closeable ... toClose) {
