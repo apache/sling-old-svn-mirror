@@ -118,24 +118,23 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
 
         String name = PropertiesUtil.toString(config.get(NAME), null);
         String type = PropertiesUtil.toString(config.get(TYPE), null);
-        String importModeString = PropertiesUtil.toString(config.get(IMPORT_MODE), null);
-        String aclHandlingString = PropertiesUtil.toString(config.get(ACL_HANDLING), null);
-        String[] packageRoots = PropertiesUtil.toStringArray(config.get(PACKAGE_ROOTS), null);
-        String tempFsFolder = PropertiesUtil.toString(config.get(TEMP_FS_FOLDER), null);
-        String tempJcrFolder = PropertiesUtil.toString(config.get(TEMP_JCR_FOLDER), null);
+        String importModeString = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(IMPORT_MODE), null));
+        String aclHandlingString = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(ACL_HANDLING), null));
 
-
-        packageRoots = SettingsUtils.removeEmptyEntries(packageRoots);
+        String[] packageRoots = SettingsUtils.removeEmptyEntries(PropertiesUtil.toStringArray(config.get(PACKAGE_ROOTS), null));
+        String tempFsFolder =  SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(TEMP_FS_FOLDER), null));
+        String tempJcrFolder = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(TEMP_JCR_FOLDER), null));
 
         ImportMode importMode = null;
-        if (importModeString != null && importModeString.trim().length() > 0) {
+        if (importModeString != null) {
             importMode = ImportMode.valueOf(importModeString.trim());
         }
 
         AccessControlHandling aclHandling = null;
-        if (aclHandlingString != null && aclHandlingString.trim().length() > 0) {
+        if (aclHandlingString != null) {
             aclHandling= AccessControlHandling.valueOf(aclHandlingString.trim());
         }
+
         if ("filevlt".equals(type)) {
             packageBuilder = new ResourceSharedDistributionPackageBuilder(new FileVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, tempFsFolder));
         } else  {

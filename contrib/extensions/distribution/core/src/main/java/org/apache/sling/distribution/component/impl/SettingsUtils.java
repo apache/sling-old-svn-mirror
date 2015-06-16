@@ -187,12 +187,34 @@ public class SettingsUtils {
         }
 
         List<String> result = new ArrayList<String>();
-        for (String string : array) {
-            if (string != null && string.trim().length() > 0) {
-                result.add(string);
+        for (String entry : array) {
+            entry = removeEmptyEntry(entry);
+
+            if (entry != null) {
+                result.add(entry);
             }
         }
 
+        if (result.size() == 0) {
+            return null;
+        }
+
         return result.toArray(new String[0]);
+    }
+
+
+    public static String removeEmptyEntry(String entry) {
+        if (entry == null) {
+            return null;
+        }
+
+        entry = entry.trim();
+
+
+        if (entry.length() == 0) {
+            return null;
+        }
+
+        return entry;
     }
 }
