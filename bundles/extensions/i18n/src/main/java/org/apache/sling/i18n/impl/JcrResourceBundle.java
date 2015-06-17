@@ -64,11 +64,14 @@ public class JcrResourceBundle extends ResourceBundle {
 
     private final Locale locale;
 
+    private final String baseName;
+
     private final Set<String> languageRoots = new HashSet<String>();
 
     JcrResourceBundle(Locale locale, String baseName,
             ResourceResolver resourceResolver) {
         this.locale = locale;
+        this.baseName = baseName;
 
         log.info("Finding all dictionaries for '{}' (basename: {}) ...", locale, baseName == null ? "<none>" : baseName);
 
@@ -98,10 +101,18 @@ public class JcrResourceBundle extends ResourceBundle {
     protected void setParent(ResourceBundle parent) {
         super.setParent(parent);
     }
+    
+    public ResourceBundle getParent() {
+        return parent;
+    }
 
     @Override
     public Locale getLocale() {
         return locale;
+    }
+
+    public String getBaseName() {
+        return baseName;
     }
 
     /**
@@ -336,5 +347,11 @@ public class JcrResourceBundle extends ResourceBundle {
     // Would be nice if Locale.toString() output RFC 4646, but it doesn't
     private static String toRFC4646String(Locale locale) {
         return locale.toString().replace('_', '-');
+    }
+
+    @Override
+    public String toString() {
+        return "JcrResourceBundle [locale=" + locale + ", baseName=" + baseName + ", languageRoots=" + languageRoots
+                + ", parent=" + parent + "]";
     }
 }
