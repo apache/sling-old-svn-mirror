@@ -177,12 +177,12 @@ public abstract class ModelUtility {
                     copyConfigurationProperties(baseConfig, mergeConfig);
                 } else {
                     final Configuration newConfig = new Configuration(baseConfig.getPid(), baseConfig.getFactoryPid());
-                    getProcessedConfiguration(newConfig, baseConfig);
+                    getProcessedConfiguration(null, newConfig, baseConfig, null);
                     clearConfiguration(baseConfig);
                     copyConfigurationProperties(baseConfig, newConfig);
 
                     clearConfiguration(newConfig);
-                    getProcessedConfiguration(newConfig, mergeConfig);
+                    getProcessedConfiguration(null, newConfig, mergeConfig, null);
 
                     if ( baseConfig.isSpecial() ) {
                         final String baseValue = baseConfig.getProperties().get(baseConfig.getPid()).toString();
@@ -207,7 +207,7 @@ public abstract class ModelUtility {
                     copyConfigurationProperties(baseConfig, mergeConfig);
                 } else {
                     final Configuration newMergeConfig = new Configuration(mergeConfig.getPid(), mergeConfig.getFactoryPid());
-                    getProcessedConfiguration(newMergeConfig, mergeConfig);
+                    getProcessedConfiguration(null, newMergeConfig, mergeConfig, null);
 
                     if ( baseConfig.isSpecial() ) {
                         final String baseValue = baseConfig.getProperties().get(baseConfig.getPid()).toString();
@@ -296,11 +296,11 @@ public abstract class ModelUtility {
                     newGroup.setLocation(group.getLocation());
 
                     for(final Artifact artifact : group) {
-                        final Artifact newArtifact = new Artifact(replace(feature, artifact.getGroupId(), resolver),
-                                replace(feature, artifact.getArtifactId(), resolver),
-                                replace(feature, artifact.getVersion(), resolver),
-                                replace(feature, artifact.getClassifier(), resolver),
-                                replace(feature, artifact.getType(), resolver));
+                        final Artifact newArtifact = new Artifact(replace(newFeature, artifact.getGroupId(), resolver),
+                                replace(newFeature, artifact.getArtifactId(), resolver),
+                                replace(newFeature, artifact.getVersion(), resolver),
+                                replace(newFeature, artifact.getClassifier(), resolver),
+                                replace(newFeature, artifact.getType(), resolver));
                         newArtifact.setComment(artifact.getComment());
                         newArtifact.setLocation(artifact.getLocation());
 
@@ -313,13 +313,13 @@ public abstract class ModelUtility {
                 for(final Configuration config : runMode.getConfigurations()) {
                     final Configuration newConfig = newRunMode.getOrCreateConfiguration(config.getPid(), config.getFactoryPid());
 
-                    getProcessedConfiguration(newConfig, config);
+                    getProcessedConfiguration(newFeature, newConfig, config, resolver);
                 }
 
                 newRunMode.getSettings().setComment(runMode.getSettings().getComment());
                 newRunMode.getSettings().setLocation(runMode.getSettings().getLocation());
                 for(final Map.Entry<String, String> entry : runMode.getSettings() ) {
-                    newRunMode.getSettings().put(entry.getKey(), replace(feature, entry.getValue(),
+                    newRunMode.getSettings().put(entry.getKey(), replace(newFeature, entry.getValue(),
                             new VariableResolver() {
 
                                 @Override
@@ -328,9 +328,9 @@ public abstract class ModelUtility {
                                         return "${sling.home}";
                                     }
                                     if ( resolver != null ) {
-                                        return resolver.resolve(feature, name);
+                                        return resolver.resolve(newFeature, name);
                                     }
-                                    return feature.getVariables().get(name);
+                                    return newFeature.getVariables().get(name);
                                 }
                             }));
                 }
@@ -458,13 +458,20 @@ public abstract class ModelUtility {
         return errors;
     }
 
-    private static void getProcessedConfiguration(final Configuration newConfig, final Configuration config) {
+    private static void getProcessedConfiguration(
+            final Feature feature,
+            final Configuration newConfig,
+            final Configuration config,
+            final VariableResolver resolver) {
         newConfig.setComment(config.getComment());
         newConfig.setLocation(config.getLocation());
 
         // check for raw configuration
-        final String rawConfig = (String)config.getProperties().get(ModelConstants.CFG_UNPROCESSED);
+        String rawConfig = (String)config.getProperties().get(ModelConstants.CFG_UNPROCESSED);
         if ( rawConfig != null ) {
+            if ( resolver != null ) {
+                rawConfig = replace(feature, rawConfig, resolver);
+            }
             if ( config.isSpecial() ) {
                 newConfig.getProperties().put(config.getPid(), rawConfig);
             } else {
