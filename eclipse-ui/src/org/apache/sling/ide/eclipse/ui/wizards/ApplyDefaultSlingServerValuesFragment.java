@@ -16,6 +16,7 @@
  */
 package org.apache.sling.ide.eclipse.ui.wizards;
 
+import org.apache.sling.ide.eclipse.core.SlingLaunchpadConfigurationDefaults;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.wst.server.core.IServer;
@@ -24,11 +25,17 @@ import org.eclipse.wst.server.core.TaskModel;
 import org.eclipse.wst.server.ui.wizard.WizardFragment;
 
 /**
- * The <tt>OverridePublishIntervalFragment</tt> ensures that the publish interval is set to 0 when creating a Sling
- * Runtime
+ * The <tt>PostProcessDefaultSlingServerValuesFragment</tt> ensures that default values are reasonable when creating a local server
+ * 
+ * Included checks are:
+ * 
+ * <ol>
+ * <li><tt>auto-publish-time</tt> is set to 0</li>
+ * <li>Local deployment is only enabled for hosts named <tt>localhost</tt></li>
+ * </ol>
  *
  */
-public class OverridePublishIntervalFragment extends WizardFragment {
+public class ApplyDefaultSlingServerValuesFragment extends WizardFragment {
 
     @Override
     public boolean hasComposite() {
@@ -41,7 +48,9 @@ public class OverridePublishIntervalFragment extends WizardFragment {
         IServer server = (IServer) getTaskModel().getObject(TaskModel.TASK_SERVER);
         if (server instanceof IServerWorkingCopy) {
             IServerWorkingCopy wc = (IServerWorkingCopy) server;
-            wc.setAttribute("auto-publish-time", 0);
+
+            SlingLaunchpadConfigurationDefaults.applyDefaultValues(wc);
+            
             wc.save(true, monitor);
         }
 

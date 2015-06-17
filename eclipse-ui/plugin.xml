@@ -76,8 +76,8 @@
     <extension
           point="org.eclipse.wst.server.ui.wizardFragments">
        <fragment
-             class="org.apache.sling.ide.eclipse.ui.wizards.OverridePublishIntervalFragment"
-             id="org.apache.sling.ide.eclipse.ui.wizards.SomeWizardFragment"
+             class="org.apache.sling.ide.eclipse.ui.wizards.ApplyDefaultSlingServerValuesFragment"
+             id="org.apache.sling.ide.eclipse.ui.wizards.ApplyDefaultSlingServerValuesFragment"
              typeIds="org.apache.sling.ide.launchpadServer">
        </fragment>
     </extension>   
