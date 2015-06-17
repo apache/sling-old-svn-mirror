@@ -36,6 +36,7 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.IServer;
+import org.eclipse.wst.server.core.IServerWorkingCopy;
 import org.eclipse.wst.server.core.ServerCore;
 
 public abstract class ServerUtil {
@@ -218,5 +219,10 @@ public abstract class ServerUtil {
                 }
             }
         }
+    }
+    
+    public static boolean runsOnLocalhost(IServerWorkingCopy server) {
+        
+        return "localhost".equals(server.getHost());
     }
 }
