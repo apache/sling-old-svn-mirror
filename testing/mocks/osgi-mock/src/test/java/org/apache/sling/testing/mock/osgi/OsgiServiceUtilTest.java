@@ -41,6 +41,7 @@ import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -88,7 +89,7 @@ public class OsgiServiceUtilTest {
         List<Map<String, Object>> reference3Configs = service3.getReference3Configs();
         assertEquals(1, reference3Configs.size());
         assertEquals(200, reference3Configs.get(0).get(Constants.SERVICE_RANKING));
-        
+
         assertTrue(MockOsgi.deactivate(service3));
         assertNull(service3.getComponentContext());
     }
@@ -96,13 +97,13 @@ public class OsgiServiceUtilTest {
     @Test
     public void testService3_Config() {
         BundleContext bundleContext = MockOsgi.newBundleContext();
-        
+
         Map<String,Object> initialProperites = ImmutableMap.<String, Object>of("prop1", "value1");
 
         Service3 service3 = new Service3();
         MockOsgi.activate(service3, bundleContext, initialProperites);
         assertEquals(initialProperites.get("prop1"), service3.getConfig().get("prop1"));
-        
+
         Map<String,Object> newProperties = ImmutableMap.<String, Object>of("prop2", "value2");
         MockOsgi.modified(service3, bundleContext, newProperties);
         assertEquals(newProperties.get("prop2"), service3.getConfig().get("prop2"));
@@ -112,7 +113,7 @@ public class OsgiServiceUtilTest {
         MockOsgi.modified(service3, bundleContext, newPropertiesDictonary);
         assertEquals(newProperties.get("prop3"), service3.getConfig().get("prop3"));
     }
-    
+
     @Test
     public void testService4() {
         Service4 service4 = new Service4();
@@ -127,22 +128,22 @@ public class OsgiServiceUtilTest {
     public void testInjectServicesNoMetadata() {
         MockOsgi.injectServices(new Object(), MockOsgi.newBundleContext());
     }
-    
+
     @Test(expected=NoScrMetadataException.class)
     public void testActivateNoMetadata() {
         MockOsgi.activate(new Object());
     }
-    
+
     @Test(expected=NoScrMetadataException.class)
     public void testDeactivateNoMetadata() {
         MockOsgi.deactivate(new Object());
     }
-    
+
     @Test(expected=NoScrMetadataException.class)
     public void testModifiedNoMetadata() {
         MockOsgi.modified(new Object(), MockOsgi.newBundleContext(), ImmutableMap.<String,Object>of());
     }
-    
+
     public interface ServiceInterface1 {
         // no methods
     }
@@ -206,7 +207,7 @@ public class OsgiServiceUtilTest {
         private void deactivate(ComponentContext ctx) {
             this.componentContext = null;
         }
-        
+
         @Modified
         private void modified(Map<String,Object> newConfig) {
             this.config = newConfig;
@@ -239,7 +240,7 @@ public class OsgiServiceUtilTest {
         public ComponentContext getComponentContext() {
             return this.componentContext;
         }
-        
+
         public Map<String, Object> getConfig() {
             return config;
         }
@@ -298,6 +299,36 @@ public class OsgiServiceUtilTest {
             reference1 = null;
         }
 
+    }
+
+    @Component
+    @Service({ ServiceInterface5.class })
+    public static class Service5 implements ServiceInterface5 {
+
+        @Override
+        public boolean doRemoteThing() {
+            return false;
+        }
+    }
+
+    public interface ServiceInterface5 {
+
+        boolean doRemoteThing();
+
+    }
+
+    @Test
+    public void testMockedService() {
+        Service5 service5 = Mockito.spy(new Service5());
+        Mockito.doReturn(true).when(service5).doRemoteThing();
+
+        MockOsgi.injectServices(service5, bundleContext);
+        MockOsgi.activate(service5, bundleContext, (Dictionary<String, Object>) null);
+        bundleContext.registerService(ServiceInterface5.class.getName(), service5, null);
+
+        assertSame(service5, bundleContext.getService(
+                bundleContext.getServiceReference(ServiceInterface5.class.getName())));
+        assertEquals(true, service5.doRemoteThing());
     }
 
 }
