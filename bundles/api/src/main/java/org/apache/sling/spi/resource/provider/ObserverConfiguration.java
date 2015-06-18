@@ -18,6 +18,8 @@
  */
 package org.apache.sling.spi.resource.provider;
 
+import java.util.Set;
+
 import org.apache.sling.api.resource.observation.ResourceChange;
 
 import aQute.bnd.annotation.ProviderType;
@@ -30,9 +32,9 @@ public interface ObserverConfiguration {
 
     boolean isExternal();
 
-    String[] getPaths();
+    Set<String> getPaths();
 
-    String[] getExcludedPaths();
+    Set<String> getExcludedPaths();
 
-    ResourceChange.ChangeType[] getChangeTypes();
+    Set<ResourceChange.ChangeType> getChangeTypes();
 }
