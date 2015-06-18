@@ -46,7 +46,12 @@ public class JcrResourceBundle extends ResourceBundle {
 
     private static final Logger log = LoggerFactory.getLogger(JcrResourceBundle.class);
 
+    /** default primary type (=resource type) for message entry dictionaries */
+    static final String RT_MESSAGE_ENTRY = "sling:MessageEntry";
+    
     static final String MIXIN_MESSAGE = "sling:Message";
+
+    static final String MIXIN_LANGUAGE = "mix:language";
 
     static final String PROP_KEY = "sling:key";
 
