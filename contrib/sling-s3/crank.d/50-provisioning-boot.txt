@@ -10,9 +10,9 @@ bundle mvn:org.apache.sling/org.apache.sling.fragment.transaction/1.0.0
 bundle mvn:org.apache.sling/org.apache.sling.javax.activation/0.1.0
 bundle mvn:org.apache.sling/org.apache.sling.fragment.ws/1.0.2
 bundle mvn:org.apache.sling/org.apache.sling.launchpad.installer/1.2.2
-bundle mvn:org.apache.sling/org.apache.sling.installer.core/3.6.4
+bundle mvn:org.apache.sling/org.apache.sling.installer.core/3.6.6
 bundle mvn:org.apache.sling/org.apache.sling.installer.provider.file/1.1.0
-bundle mvn:org.apache.felix/org.apache.felix.configadmin/1.8.4
+bundle mvn:org.apache.felix/org.apache.felix.configadmin/1.8.6
 bundle mvn:org.apache.felix/org.apache.felix.eventadmin/1.4.2
 bundle mvn:org.apache.geronimo.specs/geronimo-atinject_1.0_spec/1.0
 
