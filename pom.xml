@@ -37,12 +37,11 @@
     <properties>
         <exam.version>3.5.0</exam.version>
         <url.version>1.5.2</url.version>
-        <org.ops4j.pax.logging.DefaultServiceLog.level>INFO</org.ops4j.pax.logging.DefaultServiceLog.level>
         <bundle.file.name>${basedir}/target/${project.build.finalName}.jar</bundle.file.name>
         <sling.java.version>6</sling.java.version>
         <sling.launchpad.version>7</sling.launchpad.version>
         <powermock.version>1.6.2</powermock.version>
-        <pax.vm.options>-Xmx256M</pax.vm.options>
+        <pax.vm.options>-Xmx256M -XX:MaxPermSize=256m</pax.vm.options>
     </properties>
 
     <dependencies>
@@ -168,13 +167,11 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <argLine>${pax.vm.options}</argLine>
                     <systemPropertyVariables>
-                        <org.ops4j.pax.logging.DefaultServiceLog.level>${org.ops4j.pax.logging.DefaultServiceLog.level}</org.ops4j.pax.logging.DefaultServiceLog.level>
-                        <pax.exam.log.level>${pax.exam.log.level}</pax.exam.log.level>
                         <java.protocol.handler.pkgs>org.ops4j.pax.url</java.protocol.handler.pkgs>
                         <bundle.file.name>${bundle.file.name}</bundle.file.name>
                         <sling.launchpad.version>${sling.launchpad.version}</sling.launchpad.version>
-                        <pax.vm.options>${pax.vm.options}</pax.vm.options>
                     </systemPropertyVariables>
                     <classpathDependencyExcludes>
                         <!-- The osgi.org dependencies cause trouble with pax exam -->

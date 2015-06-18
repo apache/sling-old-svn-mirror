@@ -20,6 +20,7 @@ package org.apache.sling.commons.contentdetection.internal.it;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -29,7 +30,6 @@ import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.commons.contentdetection.ContentAwareMimeTypeService;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -40,6 +40,50 @@ public class ContentAwareMimeTypeServiceImplIT {
 
     @Inject
     private ContentAwareMimeTypeService contentAwaremimeTypeService;
+    
+    class NonMarkableStream extends BufferedInputStream {
+        NonMarkableStream(InputStream is) {
+            super(is);
+        }
+
+        @Override
+        public synchronized void mark(int readlimit) {
+        }
+
+        @Override
+        public synchronized void reset() throws IOException {
+        }
+
+        @Override
+        public boolean markSupported() {
+            return false;
+        }
+    };
+    
+    abstract class AssertDetect {
+        void assertDetection(String expectedType, boolean expectSameContent) throws IOException {
+            final String filename = "this-is-actually-a-wav-file.mp3";
+            final String path = "/" + filename;
+            final InputStream s = wrapStream(getClass().getResourceAsStream(path));
+            assertNotNull("Expecting stream to be found:" + filename, s);
+            InputStream originalStream = null;
+            try {
+                assertEquals(expectedType, contentAwaremimeTypeService.getMimeType(filename, s));
+                originalStream = getClass().getResourceAsStream(path);
+                assertNotNull("Expecting stream to be found:" + filename, originalStream);
+                if(expectSameContent) {
+                    assertTrue("Expecting content to be unchanged", IOUtils.contentEquals(s, originalStream));
+                } else {
+                    assertFalse("Expecting content to have changed", IOUtils.contentEquals(s, originalStream));
+                }
+            } finally {
+                IOUtils.closeQuietly(s);
+                IOUtils.closeQuietly(originalStream);
+            }
+        }
+        
+        abstract InputStream wrapStream(InputStream toWrap);
+    }
 
     @Test
     public void detectFromExtension(){
@@ -50,36 +94,26 @@ public class ContentAwareMimeTypeServiceImplIT {
 
     @Test
     public void detectFromContent() throws IOException{
-        final String filename = "this-is-actually-a-wav-file.mp3";
-        final InputStream s = getClass().getResourceAsStream("/" + filename);
-        assertNotNull("Expecting stream to be found:" + filename, s);
-        try {
-            assertEquals("audio/x-wav", contentAwaremimeTypeService.getMimeType(filename, s));
-        } finally {
-            if(s != null) {
-                s.close();
+        new AssertDetect() {
+            @Override
+            InputStream wrapStream(InputStream toWrap) {
+                return new BufferedInputStream(toWrap);
             }
-        }
+        }.assertDetection("audio/x-wav", true);
     }
-
+    
     @Test
-    @Ignore("OutOfMemoryError: PermGen space??")
-    public void testNoContentTampering() throws IOException{
-        final String filename = "this-is-actually-a-wav-file.mp3";
-        final InputStream s = new BufferedInputStream(getClass().getResourceAsStream("/" + filename));
-        assertNotNull("Expecting stream to be found:" + filename, s);
-        try {
-            contentAwaremimeTypeService.getMimeType(filename, s);
-            assertTrue(IOUtils.contentEquals(s,
-                    new BufferedInputStream(getClass().getResourceAsStream(
-                            "/" + filename))));
-        } finally {
-            if(s != null) {
-                s.close();
+    public void detectFromContentWithNonMarkableStream() throws IOException{
+        // Interestingly, with a non-markable stream  the detector falls back to
+        // filename detection but still touches the content stream
+        new AssertDetect() {
+            @Override
+            InputStream wrapStream(InputStream toWrap) {
+                return new NonMarkableStream(toWrap);
             }
-        }
+        }.assertDetection("audio/mpeg", false);
     }
-
+    
     @org.ops4j.pax.exam.Configuration
     public Option[] config() {
         return U.paxConfig();
