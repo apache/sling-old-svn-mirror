@@ -31,6 +31,8 @@
 [feature name=sling.launchpad]
 
 [variables]
+  # TODO shouldn't be needed, remove once the mapping of slingfeature/slingstart
+  # artifact types to txt extension is implemented.
   nested.models=org.apache.sling.launchpad,org.apache.sling.launchpad.test-bundles
 
 [settings]
