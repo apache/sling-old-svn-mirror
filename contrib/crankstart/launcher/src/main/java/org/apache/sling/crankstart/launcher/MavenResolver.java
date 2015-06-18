@@ -20,11 +20,29 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.sling.provisioning.model.Artifact;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Resolve artifacts using Maven URLs - assumes Pax URL is installed */ 
 public class MavenResolver {
+    public static final String SLINGFEATURE_ARTIFACT_TYPE = "slingfeature";
+    public static final String SLINGSTART_ARTIFACT_TYPE = "slingstart";
+    public static final String TXT_ARTIFACT_TYPE = "txt";
+    
+    private static final Logger log = LoggerFactory.getLogger(MavenResolver.class);
+    
+    @SuppressWarnings("serial")
+    private static final Map <String, String> ARTIFACT_TYPES_MAP = new HashMap<String,String>() {
+        {
+            put(SLINGFEATURE_ARTIFACT_TYPE, TXT_ARTIFACT_TYPE);
+            put(SLINGSTART_ARTIFACT_TYPE, TXT_ARTIFACT_TYPE);
+        }
+    };
+    
     public static void setup() {
         // Enable pax URL for mvn: protocol
         System.setProperty( "java.protocol.handler.pkgs", "org.ops4j.pax.url" );
@@ -41,7 +59,7 @@ public class MavenResolver {
         .append(a.getVersion());
         
         if(a.getType() != null) {
-            sb.append("/").append(a.getType());
+            sb.append("/").append(mapArtifactType(a.getType()));
         }
         
         if(a.getClassifier() != null) {
@@ -49,6 +67,19 @@ public class MavenResolver {
         }
         
         return sb.toString();
+    }
+    
+    /** Maven plugins can map artifact types to well-known
+     *  extensions during deployment - this implements the
+     *  same mapping.
+     */   
+    public static String mapArtifactType(String artifactType) {
+        final String mapped = ARTIFACT_TYPES_MAP.get(artifactType);
+        if(mapped != null) {
+            log.info("artifact type '{}' mapped to '{}' for resolution", artifactType, mapped);
+            return mapped;
+        }
+        return artifactType;
     }
     
     public static InputStream resolve(Artifact a) throws MalformedURLException, IOException {
