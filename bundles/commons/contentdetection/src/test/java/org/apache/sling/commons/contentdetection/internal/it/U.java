@@ -18,7 +18,6 @@
 package org.apache.sling.commons.contentdetection.internal.it;
 
 import java.io.File;
-import java.util.Arrays;
 
 import org.apache.sling.paxexam.util.SlingPaxOptions;
 import org.ops4j.pax.exam.CoreOptions;
@@ -33,12 +32,10 @@ public class U {
     public static Option[] paxConfig() {
         final File thisProjectsBundle = new File(System.getProperty( "bundle.file.name", "BUNDLE_FILE_NOT_SET" ));
         final String launchpadVersion = System.getProperty("sling.launchpad.version", "LAUNCHPAD_VERSION_NOT_SET");
-        final String [] paxVmOptions = System.getProperty("pax.vm.options", "PAX_VM_OPTIONS_NOT_SET").split(",");
-        log.info("Sling launchpad version: {}, VM options: {}", launchpadVersion, Arrays.asList(paxVmOptions));
+        log.info("Sling launchpad version: {}", launchpadVersion);
         return new DefaultCompositeOption(
                 SlingPaxOptions.defaultLaunchpadOptions(launchpadVersion),
-                CoreOptions.provision(CoreOptions.bundle(thisProjectsBundle.toURI().toString())),
-                CoreOptions.vmOptions(paxVmOptions)
+                CoreOptions.provision(CoreOptions.bundle(thisProjectsBundle.toURI().toString()))
                 
         ).getOptions();
     }
