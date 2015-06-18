@@ -46,7 +46,7 @@ public class ContentAwareMimeTypeServiceImpl implements  ContentAwareMimeTypeSer
     @Reference
     MimeTypeService mimeTypeService;
 
-    public String getMimeType(String filename, InputStream content) throws IOException {
+    public String getMimeType(String filename, InputStream content) throws IOException, IllegalArgumentException {
         if(content == null) {
             return mimeTypeService.getMimeType(filename);
         }
