@@ -132,6 +132,8 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
 
         if (lastRequest == null || lastRequest.getRequestType() == null || !lastRequest.getRequestType().equals(request.getRequestType())) {
             requestList.add(request);
+        } else if (hasDeepPaths(request) || hasDeepPaths(lastRequest)) {
+            requestList.add(request);
         } else {
             Set<String> allPaths = new TreeSet<String>();
             allPaths.addAll(Arrays.asList(lastRequest.getPaths()));
@@ -209,6 +211,20 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
         }
 
         return eventPath;
+    }
+
+
+    boolean hasDeepPaths(DistributionRequest distributionRequest) {
+        if (!DistributionRequestType.ADD.equals(distributionRequest.getRequestType())) {
+            return false;
+        }
+
+        for (String path: distributionRequest.getPaths()) {
+            if (distributionRequest.isDeep(path)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 

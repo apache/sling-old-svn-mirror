@@ -54,8 +54,13 @@ public class JcrEventDistributionTrigger extends AbstractJcrEventTrigger impleme
                 replicatingPath = replicatingPath.substring(0, idx) + "/rep:policy";
 
                 distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, replicatingPath);
-            }
-            else {
+            } else if (replicatingPath.contains("/rep:membersList/")) {
+                // group member list structure is an implementation detail and it is safer to distribute the entire group.
+                int idx = replicatingPath.indexOf("/rep:membersList/");
+                replicatingPath = replicatingPath.substring(0, idx);
+
+                distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, true, replicatingPath);
+            } else {
                 distributionRequest = new SimpleDistributionRequest(Event.NODE_REMOVED == event.getType() ?
                         DistributionRequestType.DELETE : DistributionRequestType.ADD, replicatingPath);
             }
