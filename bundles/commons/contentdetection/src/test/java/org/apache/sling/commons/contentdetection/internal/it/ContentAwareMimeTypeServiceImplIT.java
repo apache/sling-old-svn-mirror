@@ -20,9 +20,9 @@ package org.apache.sling.commons.contentdetection.internal.it;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -60,58 +60,42 @@ public class ContentAwareMimeTypeServiceImplIT {
         }
     };
     
-    abstract class AssertDetect {
-        void assertDetection(String expectedType, boolean expectSameContent) throws IOException {
-            final String filename = "this-is-actually-a-wav-file.mp3";
-            final String path = "/" + filename;
-            final InputStream s = wrapStream(getClass().getResourceAsStream(path));
-            assertNotNull("Expecting stream to be found:" + filename, s);
-            InputStream originalStream = null;
-            try {
-                assertEquals(expectedType, contentAwaremimeTypeService.getMimeType(filename, s));
-                originalStream = getClass().getResourceAsStream(path);
-                assertNotNull("Expecting stream to be found:" + filename, originalStream);
-                if(expectSameContent) {
-                    assertTrue("Expecting content to be unchanged", IOUtils.contentEquals(s, originalStream));
-                } else {
-                    assertFalse("Expecting content to have changed", IOUtils.contentEquals(s, originalStream));
-                }
-            } finally {
-                IOUtils.closeQuietly(s);
-                IOUtils.closeQuietly(originalStream);
-            }
-        }
-        
-        abstract InputStream wrapStream(InputStream toWrap);
-    }
-
     @Test
-    public void detectFromExtension(){
+    public void detectFromExtension() throws IOException {
         String mimeTypeName = "test.mp3";
         String mimeType = "audio/mpeg";
-        assertEquals(mimeType, contentAwaremimeTypeService.getMimeType(mimeTypeName));
+        assertEquals("Expecting mp3 type without InputStream parameter",
+                mimeType, contentAwaremimeTypeService.getMimeType(mimeTypeName));
+        assertEquals("Expecting mp3 type with null InputStream parameter",
+                mimeType, contentAwaremimeTypeService.getMimeType(mimeTypeName, null));
     }
 
     @Test
     public void detectFromContent() throws IOException{
-        new AssertDetect() {
-            @Override
-            InputStream wrapStream(InputStream toWrap) {
-                return new BufferedInputStream(toWrap);
-            }
-        }.assertDetection("audio/x-wav", true);
+        final String filename = "this-is-actually-a-wav-file.mp3";
+        final String path = "/" + filename;
+        final InputStream s = new BufferedInputStream(getClass().getResourceAsStream(path));
+        assertNotNull("Expecting stream to be found:" + filename, s);
+        InputStream originalStream = null;
+        try {
+            assertEquals("audio/x-wav", contentAwaremimeTypeService.getMimeType(filename, s));
+            originalStream = getClass().getResourceAsStream(path);
+            assertNotNull("Expecting stream to be found:" + filename, originalStream);
+            assertTrue("Expecting content to be unchanged", IOUtils.contentEquals(s, originalStream));
+        } finally {
+            IOUtils.closeQuietly(s);
+            IOUtils.closeQuietly(originalStream);
+        }
     }
     
-    @Test
-    public void detectFromContentWithNonMarkableStream() throws IOException{
-        // Interestingly, with a non-markable stream  the detector falls back to
-        // filename detection but still touches the content stream
-        new AssertDetect() {
-            @Override
-            InputStream wrapStream(InputStream toWrap) {
-                return new NonMarkableStream(toWrap);
-            }
-        }.assertDetection("audio/mpeg", false);
+    @Test(expected=IllegalArgumentException.class)
+    public void nonMarkableStreamDetectionShouldFail() throws IOException{
+        final InputStream nms = new NonMarkableStream(new ByteArrayInputStream("1234567890".getBytes()));
+        try {
+            contentAwaremimeTypeService.getMimeType("foo.txt", nms);
+        } finally {
+            IOUtils.closeQuietly(nms);
+        }
     }
     
     @org.ops4j.pax.exam.Configuration
