@@ -730,8 +730,7 @@ public interface ResourceResolver extends Adaptable, Closeable {
      * @since 2.9 (Sling API Bundle 2.10.0)
      */
     void copy(final String srcAbsPath,
-              final String destAbsPath,
-              final boolean persistImmediately) throws PersistenceException;
+              final String destAbsPath) throws PersistenceException;
 
     /**
      * This method moves the subgraph rooted at, and including, the resource at
@@ -755,6 +754,5 @@ public interface ResourceResolver extends Adaptable, Closeable {
      * @since 2.9 (Sling API Bundle 2.10.0)
      */
     void move(final String srcAbsPath,
-              final String destAbsPath,
-              final boolean persistImmediately) throws PersistenceException;
+              final String destAbsPath) throws PersistenceException;
 }
