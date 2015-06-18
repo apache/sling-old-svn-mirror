@@ -50,6 +50,9 @@ public class ContentAwareMimeTypeServiceImpl implements  ContentAwareMimeTypeSer
         if(content == null) {
             return mimeTypeService.getMimeType(filename);
         }
+        if(content != null && !content.markSupported()) {
+            throw new IllegalArgumentException("Supplied InputStream does not support mark/reset");
+        }
         TikaInputStream stream = TikaInputStream.get(content);
         Metadata metadata = new Metadata();
         metadata.set(Metadata.RESOURCE_NAME_KEY, filename);
