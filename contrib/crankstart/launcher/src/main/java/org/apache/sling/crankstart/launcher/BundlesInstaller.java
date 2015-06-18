@@ -44,14 +44,18 @@ public class BundlesInstaller {
         this.rmFilter = rmFilter;
     }
     
+    private boolean isBundle(Artifact a) {
+        final String aType = a.getType();
+        return "jar".equals(aType) || "war".equals(aType);
+    }
+    
     public void installBundles(final BundleContext ctx, final FeatureFilter filter) throws Exception {
-        final String JAR_TYPE = "jar";
         
         final ArtifactsVisitor v = new ArtifactsVisitor(model) {
 
             @Override
             protected void visitArtifact(Feature f, RunMode rm, ArtifactGroup g, Artifact a) throws Exception {
-                if(JAR_TYPE.equals(a.getType())) {
+                if(isBundle(a)) {
                     installBundle(ctx, a, g.getStartLevel());
                 } else {
                     log.info("Ignoring Artifact, not a bundle: {}", a);
@@ -81,7 +85,7 @@ public class BundlesInstaller {
     }
     
     public void installBundle(BundleContext ctx, Artifact a, int startLevel) throws IOException, BundleException {
-        final String bundleUrl = "mvn:" + a.getGroupId() + "/" + a.getArtifactId() + "/" + a.getVersion();
+        final String bundleUrl = "mvn:" + a.getGroupId() + "/" + a.getArtifactId() + "/" + a.getVersion() + "/" + a.getType();
         final URL url = new URL(bundleUrl);
         final InputStream bundleStream = url.openStream();
         try {

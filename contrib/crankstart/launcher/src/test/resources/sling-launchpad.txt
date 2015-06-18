@@ -20,8 +20,7 @@
 # Start the Sling Launchpad including whatever is required to
 # run the Sling integration tests.
 #
-# Currently those tests pass with 2 failures (WarSelectorServletTest)
-# out of 529 tests, if started with
+# Currently all those 529 tests pass if started with
 #  java  -Xmx1G  -XX:MaxPermSize=256m \
 #   -Dsling.run.modes=:standalone,jackrabbit -Dsling.home=CRANKSTART \
 #   -jar target/org.apache.sling.crankstart.launcher-1.9.9-SNAPSHOT.jar \
