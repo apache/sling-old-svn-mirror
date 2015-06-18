@@ -50,18 +50,35 @@ import aQute.bnd.annotation.ConsumerType;
  * is not intended to be used by client applications directly. A resource
  * provider implements this service by extending this class.
  * <p>
+ * A resource provider must set the {@link #PROPERTY_ROOT} property with an
+ * absolute path. This is the mount point of the resource provider. If there
+ * is more than one provider registering for the same root, only the one
+ * with the highest service ranking is used.
+ * <p>
  * If a provider is used in the resource tree, it gets activated through
  * a call of the {@link #activate(ProviderContext)} method. If the
  * provider is not used anymore within the resource tree, the
  * {@link #deactivate(ProviderContext)} method is called. Whenever
  * information concerning the provider is changed while the provider
  * is used, the {@link #update(ProviderContext)} method is called.
- *
- * TODO - authentication / logout (Closeable)
- * TODO - context support
+ * <p>
+ * Some resource providers might require (user) authentication. For example
+ * the JCR resource provider uses authenticated sessions. If a provider
+ * requires authentication it must indicate this by setting the service
+ * registration property {@link #PROPERTY_AUTHENTICATE} to either
+ * {@link #AUTHENTICATE_LAZY} or {@link #AUTHENTICATE_REQUIRED}. In these
+ * cases, the resource resolver calls {@link #authenticate(Map)} and on
+ * successful authentication the provider returns a state object for
+ * the current user. This object is passed into the provider with
+ * every method through {@link ResolveContext#getProviderState()}.
+ * If a provider requires authentication, the {@link #logout(Object)} method
+ * is called, when the resource resolver is closed.
+ * <p>
+ * Each method gets the {@link ResolveContext} which gives access to
+ * further functionality.
+ * <p>
  * TODO - query
  * TODO - observation
- * TODO - service ranking
  */
 @ConsumerType
 public abstract class ResourceProvider<T> {
@@ -85,22 +102,38 @@ public abstract class ResourceProvider<T> {
     public static final String PROPERTY_USE_RESOURCE_ACCESS_SECURITY = "provider.useResourceAccessSecurity";
 
     /**
-     * A required resource provider is accessed directly when a new
-     * resource resolver is created. The resource resolver implementation
-     * will call the {@link #authenticate(Map)}. Only if authentication against
-     * all required resource provider factories is successful, a resource resolver
-     * is created by the resource resolver factory. Boolean service property, default value
-     * is <code>false</true>.
-     * (value is "provider.required")
+     * Default value for {@link #PROPERTY_AUTHENTICATE}
+     * @see #PROPERTY_AUTHENTICATE
      */
-    public static final String PROPERTY_REQUIRED = "provider.required";
+    public static final String AUTHENTICATE_NO = "no";
 
     /**
-     * If a resource provider needs the user to be authenticated this flag must be set
-     * to {@code true}. In this case {@link #authenticate(Map)} is called first and only
-     * if authentication is successful, this provider instance is used for the current
-     * resource resolver.
-     * Boolean service property, default value is <code>false</true>.
+     * Value for {@link #PROPERTY_AUTHENTICATE} indicating authentication is required.
+     * @see #PROPERTY_AUTHENTICATE
+     */
+    public static final String AUTHENTICATE_REQUIRED = "required";
+
+    /**
+     * Value for {@link #PROPERTY_AUTHENTICATE} indicating authentication is needed
+     * and will be done on demand.
+     * @see #PROPERTY_AUTHENTICATE
+     */
+    public static final String AUTHENTICATE_LAZY = "lazy";
+
+    /**
+     * If a resource provider needs the user to be authenticated this property must be set
+     * to either {@link #AUTHENTICATE_LAZY} or {@link #AUTHENTICATE_REQUIRED}.
+     * If it is set to {@link #AUTHENTICATE_REQUIRED}, the {@link #authenticate(Map)} method
+     * is called when the resource resolver is created and only if authentication against
+     * all resource providers marked as required is successful, a resource resolver is
+     * created. Otherwise the creation fails.
+     * If a provider sets this property to {@link #AUTHENTICATE_LAZY}, the authenticate method
+     * is only invoked if a resource from this provider is requested. This might also happen
+     * for traversal or queries. If the authentication fails, resources from this provider
+     * are not accessible.
+     * If this property is not set or set to {@link #AUTHENTICATE_NO}, no authentication
+     * is required for this provider and the {@link #authenticate(Map)} is never invoked.
+     * String service property, default value is <code>{@link #AUTHENTICATE_NO}</true>.
      * (value is "provider.authenticate")
      */
     public static final String PROPERTY_AUTHENTICATE = "provider.authenticate";
@@ -114,7 +147,8 @@ public abstract class ResourceProvider<T> {
      * provider into account for modifications and modification operations to this provider
      * always result in an exception.
      * If this is set to {@code true}, the property {@link ResourceProvider#PROPERTY_AUTHENTICATE}
-     * is automatically set to {@code true} as well.
+     * must require authentication, otherwise this provider registration is considered
+     * invalid and the provider is not used.
      * Boolean service property, default value is <code>false</true>.
      * (value is "provider.modifiable")
      */
@@ -136,6 +170,13 @@ public abstract class ResourceProvider<T> {
      * <code>org.osgi.framework.Bundle</code>.
      */
     public static final String AUTH_SERVICE_BUNDLE = "sling.service.bundle";
+
+    /**
+     * The authentication information property indicating to use an
+     * administrative login. This property must be set of the resource
+     * resolver is created through {@link ResourceResolverFactory#getAdministrativeResourceResolver(Map)}.
+     */
+    public static final String AUTH_ADMIN = "provider.auth.admin";
 
     /** The context for this provider. */
     private volatile ProviderContext ctx;
@@ -207,9 +248,8 @@ public abstract class ResourceProvider<T> {
      * authenticated user has permission to impersonate as the requested user.
      * If such permission is missing, a {@code LoginException} is thrown.
      * <p>
-     * If the returned context data object implements {@link java.io.Closeable},
-     * the resource resolver implementation will call the close method once
-     * the resource resolver is closed.
+     * The resource resolver implementation will call the {@link #logout(Object)}
+     * method once the resource resolver is closed.
      *
      * @param authenticationInfo A map of further credential information which
      *            may be used by the implementation to parameterize how the
@@ -226,6 +266,15 @@ public abstract class ResourceProvider<T> {
     @Nonnull T authenticate(final @Nonnull Map<String, Object> authenticationInfo)
     throws LoginException {
         return null;
+    }
+
+    /**
+     * If the provider requires authentication, this method is called with the state of the user
+     * once the resource resolver is closed.
+     * @param state The user state.
+     */
+    public void logout(final @Nonnull T state) {
+        // do nothing
     }
 
     /**
@@ -272,7 +321,7 @@ public abstract class ResourceProvider<T> {
      * @throws org.apache.sling.api.SlingException
      *             may be thrown in case of any problem creating the <code>Resource</code> instance.
      */
-    public @CheckForNull Resource getParent(final @Nonnull ResolveContext<T> ctx,final  @Nonnull Resource child) {
+    public @CheckForNull Resource getParent(final @Nonnull ResolveContext<T> ctx, final  @Nonnull Resource child) {
         final String parentPath = ResourceUtil.getParent(child.getPath());
         if (parentPath == null) {
             return null;
@@ -465,7 +514,8 @@ public abstract class ResourceProvider<T> {
      * @return The adapter target or {@code null} if the provider cannot
      *         be adapt to the requested type.
      */
-    public @CheckForNull <AdapterType> AdapterType adaptTo(final  @Nonnull ResolveContext<T> ctx, final @Nonnull Class<AdapterType> type) {
+    public @CheckForNull <AdapterType> AdapterType adaptTo(final  @Nonnull ResolveContext<T> ctx,
+            final @Nonnull Class<AdapterType> type) {
         return null;
     }
 
@@ -487,9 +537,9 @@ public abstract class ResourceProvider<T> {
      * @throws PersistenceException If an error occurs.
      * @return {@code true} if the provider can perform the copy
      */
-    public boolean copy(final String srcAbsPath,
-              final String destAbsPath,
-              final boolean persistImmediately) throws PersistenceException {
+    public boolean copy(final  @Nonnull ResolveContext<T> ctx,
+              final String srcAbsPath,
+              final String destAbsPath) throws PersistenceException {
         return false;
     }
 
@@ -512,9 +562,9 @@ public abstract class ResourceProvider<T> {
      * @return {@code true} if the provider can perform the move
      */
 
-    public boolean move(final String srcAbsPath,
-              final String destAbsPath,
-              final boolean persistImmediately) throws PersistenceException {
+    public boolean move(final  @Nonnull ResolveContext<T> ctx,
+              final String srcAbsPath,
+              final String destAbsPath) throws PersistenceException {
         return false;
     }
 }
