@@ -23,6 +23,7 @@ import static org.apache.sling.api.SlingConstants.SLING_CURRENT_SERVLET_NAME;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 
 import javax.servlet.Servlet;
@@ -230,7 +231,20 @@ public class RequestData {
         // resolve the resource
         requestProgressTracker.startTimer("ResourceResolution");
         final SlingHttpServletRequest request = getSlingRequest();
-        Resource resource = resourceResolver.resolve(request, request.getPathInfo());
+
+        final String requestURI = servletRequest.getRequestURI();
+        String path = request.getPathInfo();
+        if (requestURI.contains(";") && !path.contains(";")) {
+            final String decodedURI;
+            try {
+                decodedURI = URLDecoder.decode(requestURI, "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                throw new AssertionError("UTF-8 encoding is not supported");
+            }
+            path = path.concat(decodedURI.substring(decodedURI.indexOf(';')));
+        }
+
+        Resource resource = resourceResolver.resolve(request, path);
         if (request.getAttribute(REQUEST_RESOURCE_PATH_ATTR) == null) {
             request.setAttribute(REQUEST_RESOURCE_PATH_ATTR, resource.getPath());
         }
