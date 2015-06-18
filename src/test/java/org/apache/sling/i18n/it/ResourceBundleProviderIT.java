@@ -54,7 +54,7 @@ public class ResourceBundleProviderIT {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public static final int RETRY_TIMEOUT_MSEC = 5000;
+    public static final int RETRY_TIMEOUT_MSEC = 10000;
     public static final String MSG_KEY = "foo";
 
     @Inject
