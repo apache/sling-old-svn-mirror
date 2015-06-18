@@ -33,6 +33,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.sling.i18n.impl.JcrResourceBundleProvider.Key;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -106,7 +107,7 @@ public class ConcurrentJcrResourceBundleLoadingTest {
         provider.getResourceBundle(Locale.GERMAN);
         
         // reloading german should not reload any other bundle
-        provider.reloadBundle(german);
+        provider.reloadBundle(new Key(null, Locale.GERMAN));
         provider.getResourceBundle(Locale.ENGLISH);
         provider.getResourceBundle(Locale.GERMAN);
         provider.getResourceBundle(Locale.ENGLISH);
@@ -124,7 +125,7 @@ public class ConcurrentJcrResourceBundleLoadingTest {
         provider.getResourceBundle(Locale.GERMAN);
         
         // reloading english should also reload german (because it has english as a parent)
-        provider.reloadBundle(english);
+        provider.reloadBundle(new Key(null, Locale.ENGLISH));
         provider.getResourceBundle(Locale.ENGLISH);
         provider.getResourceBundle(Locale.GERMAN);
         provider.getResourceBundle(Locale.ENGLISH);
