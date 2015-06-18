@@ -19,12 +19,15 @@ package org.apache.sling.commons.contentdetection.internal.it;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 import javax.inject.Inject;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.sling.commons.contentdetection.ContentAwareMimeTypeService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,6 +54,23 @@ public class ContentAwareMimeTypeServiceImplIT {
         assertNotNull("Expecting stream to be found:" + filename, s);
         try {
             assertEquals("audio/x-wav", contentAwaremimeTypeService.getMimeType(filename, s));
+        } finally {
+            if(s != null) {
+                s.close();
+            }
+        }
+    }
+
+    @Test
+    public void testNoContentTampering() throws IOException{
+        final String filename = "this-is-actually-a-wav-file.mp3";
+        final InputStream s = new BufferedInputStream(getClass().getResourceAsStream("/" + filename));
+        assertNotNull("Expecting stream to be found:" + filename, s);
+        try {
+            contentAwaremimeTypeService.getMimeType(filename, s);
+            assertTrue(IOUtils.contentEquals(s,
+                    new BufferedInputStream(getClass().getResourceAsStream(
+                            "/" + filename))));
         } finally {
             if(s != null) {
                 s.close();
