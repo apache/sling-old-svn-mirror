@@ -20,7 +20,9 @@ package org.apache.sling.launchpad.base.impl;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Dictionary;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -36,6 +38,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
+import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceReference;
@@ -382,6 +385,10 @@ public class DefaultStartupHandler
         this.bundleContext.removeFrameworkListener(this);
 
         // register startup service
+        final Dictionary<String, Object> serviceProps = new Hashtable<String, Object>();
+        serviceProps.put(StartupMode.class.getName(), this.startupMode.name());
+        serviceProps.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Startup Service");
+        serviceProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         this.startupServiceReg = this.bundleContext.registerService(StartupService.class, new StartupService() {
 
             @Override
@@ -389,7 +396,7 @@ public class DefaultStartupHandler
                 return startupMode;
             }
 
-            }, null);
+            }, serviceProps);
     }
 
     /**
