@@ -31,6 +31,7 @@ import org.apache.felix.framework.Logger;
 import org.apache.sling.launchpad.api.StartupHandler;
 import org.apache.sling.launchpad.api.StartupListener;
 import org.apache.sling.launchpad.api.StartupMode;
+import org.apache.sling.launchpad.api.StartupService;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -38,6 +39,7 @@ import org.osgi.framework.BundleListener;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.startlevel.StartLevel;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
@@ -101,6 +103,9 @@ public class DefaultStartupHandler
     private final long startedAt;
 
     private volatile Object[] logService;
+
+    /** Registration of the startup service. */
+    private volatile ServiceRegistration<StartupService> startupServiceReg;
 
     /**
      * Constructor.
@@ -375,6 +380,16 @@ public class DefaultStartupHandler
             this.bundleContext.removeBundleListener(this);
         }
         this.bundleContext.removeFrameworkListener(this);
+
+        // register startup service
+        this.startupServiceReg = this.bundleContext.registerService(StartupService.class, new StartupService() {
+
+            @Override
+            public StartupMode getStartupMode() {
+                return startupMode;
+            }
+
+            }, null);
     }
 
     /**
