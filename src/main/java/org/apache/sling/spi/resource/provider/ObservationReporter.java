@@ -50,5 +50,5 @@ public interface ObservationReporter {
      * @param changes The list of changes.
      * @param distribute Whether the changes should be distributed to other instances.
      */
-    void reportChanges(@Nonnull List<ResourceChange> changes, boolean distribute);
+    void reportChanges(@Nonnull Iterable<ResourceChange> changes, boolean distribute);
 }

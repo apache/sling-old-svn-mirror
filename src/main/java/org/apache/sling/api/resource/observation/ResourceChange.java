@@ -24,8 +24,7 @@ import javax.annotation.Nonnull;
 import aQute.bnd.annotation.ConsumerType;
 
 /**
- * A resource change event might be implemented in a lazy manner, however
- * it is immutable.
+ * A resource change event is immutable.
  */
 @ConsumerType
 public abstract class ResourceChange {
@@ -77,15 +76,6 @@ public abstract class ResourceChange {
      */
     public boolean isExternal() {
         return this.isExternal;
-    }
-    /**
-     * Get the resource type.
-     * TODO Clarify when this might be available - and as this is lazy
-     *      it might not be available even for added/changed resources.
-     * @return The resource type or {@code null}
-     */
-    public @CheckForNull String getResourceType() {
-        return null;
     }
 
    /**

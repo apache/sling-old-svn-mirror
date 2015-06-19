@@ -25,12 +25,12 @@ import org.apache.sling.api.resource.observation.ResourceChange;
 import aQute.bnd.annotation.ProviderType;
 
 /**
- * A observer configuration descibes active configurations from registered listeners.
+ * A observer configuration describes active configurations from registered listeners.
  */
 @ProviderType
 public interface ObserverConfiguration {
 
-    boolean isExternal();
+    boolean includeExternal();
 
     Set<String> getPaths();
 
