@@ -51,7 +51,7 @@
     org.apache.sling/org.apache.sling.servlets.get/2.1.11-SNAPSHOT
     org.apache.sling/org.apache.sling.servlets.post/2.3.7-SNAPSHOT
     org.apache.sling/org.apache.sling.jcr.contentloader/2.1.11-SNAPSHOT
-    org.apache.sling/org.apache.sling.jcr.resource/2.5.0
+    org.apache.sling/org.apache.sling.jcr.resource/2.5.1-SNAPSHOT
     org.apache.sling/org.apache.sling.bundleresource.impl/2.2.0
     org.apache.sling/org.apache.sling.fsresource/1.1.4
     org.apache.sling/org.apache.sling.launchpad.content/2.0.8
