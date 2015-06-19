@@ -48,4 +48,11 @@
     <property name="service.pid" value="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$Service4"/>
     <reference name="customName" interface="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$ServiceInterface1" cardinality="1..1" policy="static" bind="customBind" unbind="customUnbind"/>
   </scr:component>
+  <scr:component name="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$Service5">
+    <implementation class="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$Service5"/>
+    <service servicefactory="false">
+      <provide interface="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$ServiceInterface5"/>
+    </service>
+    <property name="service.pid" value="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$Service5"/>
+  </scr:component>
 </components>
