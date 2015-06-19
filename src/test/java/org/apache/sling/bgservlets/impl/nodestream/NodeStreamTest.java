@@ -21,6 +21,7 @@ package org.apache.sling.bgservlets.impl.nodestream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.util.Random;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -144,14 +145,22 @@ public class NodeStreamTest extends RepositoryTestBase {
         testNode.getSession().save();
         
         final NodeOutputStream nos = new NodeOutputStream(testNode);
-        nos.write(BIG_DATA);
+        try {
+            nos.write(BIG_DATA);
+        } finally {
+            nos.close();
+        }
      
         final ByteArrayOutputStream actual = new ByteArrayOutputStream(BIG_DATA.length);
         final byte [] buffer = new byte[7432];
         final NodeInputStream nis = new NodeInputStream(testNode);
-        int count = 0;
-        while((count = nis.read(buffer, 0, buffer.length)) > 0) {
-            actual.write(buffer, 0, count);
+        try {
+            int count = 0;
+            while((count = nis.read(buffer, 0, buffer.length)) > 0) {
+                actual.write(buffer, 0, count);
+            }
+        } finally {
+            nis.close();
         }
         
         assertStream(new ByteArrayInputStream(BIG_DATA), new ByteArrayInputStream(actual.toByteArray()));
@@ -169,8 +178,9 @@ public class NodeStreamTest extends RepositoryTestBase {
     
     private static byte [] getBinaryData() {
         final ByteArrayOutputStream os = new ByteArrayOutputStream();
+        final Random random = new Random();
         for(int i=0;i  < 66000; i++) {
-            os.write(i);
+            os.write(random.nextInt());
         }
         return os.toByteArray();
     }
