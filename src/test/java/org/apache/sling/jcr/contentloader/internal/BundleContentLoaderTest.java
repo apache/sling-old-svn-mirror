@@ -128,7 +128,7 @@ public class BundleContentLoaderTest {
             format.append("  ");
         }
         format.append("%s [%s]%n");
-        String name = resource.getName().isEmpty() ? "/" : resource.getName();
+        String name = resource.getName().length() == 0  ? "/" : resource.getName();
         System.out.format(format.toString(), name, resource.getResourceType());
         currentDepth++;
         if ( currentDepth > maxDepth) {
