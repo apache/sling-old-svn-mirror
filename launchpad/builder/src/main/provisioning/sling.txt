@@ -34,7 +34,7 @@
     org.apache.sling/org.apache.sling.commons.compiler/2.2.0
     org.apache.sling/org.apache.sling.commons.scheduler/2.4.8
     org.apache.sling/org.apache.sling.commons.threads/3.2.0
-    org.apache.sling/org.apache.sling.commons.fsclassloader/1.0.1-SNAPSHOT
+    org.apache.sling/org.apache.sling.commons.fsclassloader/1.0.2
     org.apache.sling/org.apache.sling.discovery.api/1.0.2
     org.apache.sling/org.apache.sling.discovery.support/1.0.0
     org.apache.sling/org.apache.sling.discovery.impl/1.1.0
