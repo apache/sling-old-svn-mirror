@@ -28,7 +28,6 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class WebConsolePrinterTest {
@@ -53,13 +52,12 @@ public class WebConsolePrinterTest {
         quartzScheduler.addJob(2L, 2L, "testName2", new Thread(), new HashMap<String, Serializable>(), "0 * * * * ?", true);
         quartzScheduler.addJob(3L, 3L, "testName3", new Thread(), new HashMap<String, Serializable>(), "0 * * * * ?", true);
 
-        File f = new File("target/test.txt");
-        f.createNewFile();
-        PrintWriter w = new PrintWriter(f);
+        StringWriter stringWriter = new StringWriter();
+        PrintWriter w = new PrintWriter(stringWriter);
         consolePrinter.printConfiguration(w);
         w.close();
 
-        final BufferedReader reader = new BufferedReader(new FileReader(f));
+        final BufferedReader reader = new BufferedReader(new StringReader(stringWriter.toString()));
 
         try {
             assertRegexp(reader.readLine(), ".*Apache Sling Scheduler.*");
@@ -78,7 +76,6 @@ public class WebConsolePrinterTest {
             assertRegexp(reader.readLine(), "^Trigger.*Trigger.*DEFAULT.testName1.*");
         } finally {
             reader.close();
-            f.delete();
         }
     }
     
