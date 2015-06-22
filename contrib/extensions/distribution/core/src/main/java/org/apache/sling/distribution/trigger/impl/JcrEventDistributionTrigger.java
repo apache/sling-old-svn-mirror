@@ -24,6 +24,7 @@ import javax.jcr.observation.Event;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
+import org.apache.sling.distribution.serialization.impl.vlt.VltUtils;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.slf4j.Logger;
@@ -46,18 +47,22 @@ public class JcrEventDistributionTrigger extends AbstractJcrEventTrigger impleme
     protected DistributionRequest processEvent(Event event) throws RepositoryException {
         log.info("triggering distribution from jcr event {}", event);
         DistributionRequest distributionRequest = null;
+        String eventPath = event.getPath();
         String replicatingPath = getNodePathFromEvent(event);
         if (!isIgnoredPath(replicatingPath)) {
 
-            if (replicatingPath.contains("/rep:policy/")) {
-                int idx = replicatingPath.indexOf("/rep:policy/");
-                replicatingPath = replicatingPath.substring(0, idx) + "/rep:policy";
+            if (VltUtils.findParent(replicatingPath, "rep:policy") != null) {
+                // distribute all policies
+                replicatingPath = VltUtils.findParent(replicatingPath, "rep:policy") + "/rep:policy";
 
-                distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, replicatingPath);
-            } else if (replicatingPath.contains("/rep:membersList/")) {
+                distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, true, replicatingPath);
+            } else if (VltUtils.findParent(replicatingPath, "rep:membersList") != null || eventPath.endsWith("/rep:members")) {
                 // group member list structure is an implementation detail and it is safer to distribute the entire group.
-                int idx = replicatingPath.indexOf("/rep:membersList/");
-                replicatingPath = replicatingPath.substring(0, idx);
+
+                String groupPath = VltUtils.findParent(replicatingPath, "rep:membersList");
+                if (groupPath != null) {
+                    replicatingPath = groupPath;
+                }
 
                 distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, true, replicatingPath);
             } else {

@@ -244,4 +244,19 @@ public class VltUtils {
 
         return directory;
     }
+
+
+    public static String findParent(String path, String nodeName) {
+        path = path.endsWith("/") ? path : path + "/";
+
+        nodeName = "/" + nodeName + "/";
+
+        int idx = path.indexOf(nodeName);
+
+        if (idx < 0) {
+            return null;
+        }
+
+        return path.substring(0, idx);
+    }
 }
