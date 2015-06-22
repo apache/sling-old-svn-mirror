@@ -66,14 +66,14 @@ public class WebConsolePrinterTest {
             assertRegexp(reader.readLine(), ".*Name.*ApacheSling.*");
             assertRegexp(reader.readLine(), ".*Id.*");
             reader.readLine();
-            assertRegexp(reader.readLine(), "^Job.*testName3.*");
-            assertRegexp(reader.readLine(), "^Trigger.*Trigger.*DEFAULT.testName3.*");
+            assertRegexp(reader.readLine(), "^Job.*testName[123].*");
+            assertRegexp(reader.readLine(), "^Trigger.*Trigger.*DEFAULT.testName[123].*");
             reader.readLine();
-            assertRegexp(reader.readLine(), "^Job.*testName2.*");
-            assertRegexp(reader.readLine(), "^Trigger.*Trigger.*DEFAULT.testName2.*");
+            assertRegexp(reader.readLine(), "^Job.*testName[123].*");
+            assertRegexp(reader.readLine(), "^Trigger.*Trigger.*DEFAULT.testName[123].*");
             reader.readLine();
-            assertRegexp(reader.readLine(), "^Job.*testName1.*");
-            assertRegexp(reader.readLine(), "^Trigger.*Trigger.*DEFAULT.testName1.*");
+            assertRegexp(reader.readLine(), "^Job.*testName[123].*");
+            assertRegexp(reader.readLine(), "^Trigger.*Trigger.*DEFAULT.testName[123].*");
         } finally {
             reader.close();
         }
