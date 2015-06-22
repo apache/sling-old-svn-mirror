@@ -135,6 +135,34 @@
             </executions>
           </plugin>
     
+          <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-shade-plugin</artifactId>
+              <version>2.4</version>
+              <configuration>
+                <!--
+                    embed all jackrabbit artifacts to prevent classpath clashes
+                    also include selected Sling bundles which are required
+                    at runtime. Note that we don't relocate the packages
+                    since org.apache.sling.jcr.resource already embeds some
+                    jackrabbit classes which lead to a non-working jar
+                -->
+                <artifactSet>
+                    <includes>
+                        <include>org.apache.jackrabbit:*</include>
+                        <include>org.apache.sling:org.apache.sling.jcr.resource</include>
+                    </includes>
+                </artifactSet>
+              </configuration>
+              <executions>
+                <execution>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>shade</goal>
+                    </goals>
+                </execution>
+              </executions>
+          </plugin>
         </plugins>
     </build>
   
