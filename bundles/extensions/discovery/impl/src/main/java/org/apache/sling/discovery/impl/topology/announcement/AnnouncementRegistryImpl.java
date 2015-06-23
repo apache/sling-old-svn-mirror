@@ -40,6 +40,7 @@ import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.common.resource.ResourceHelper;
 import org.apache.sling.settings.SlingSettingsService;
+import org.eclipse.jetty.util.log.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -137,6 +138,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
     }
 
     public synchronized Collection<Announcement> listAnnouncementsInSameCluster(final ClusterView localClusterView) {
+        logger.debug("listAnnouncementsInSameCluster: start. localClusterView: {}", localClusterView);
         if (localClusterView==null) {
             throw new IllegalArgumentException("clusterView must not be null");
         }
@@ -157,14 +159,17 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
             while (it0.hasNext()) {
                 Resource aClusterInstanceResource = it0.next();
                 final String instanceId = aClusterInstanceResource.getName();
+                logger.debug("listAnnouncementsInSameCluster: handling clusterInstance: {}", instanceId);
                 if (localInstance!=null && localInstance.getSlingId().equals(instanceId)) {
                     // this is the local instance then - which we serve from the cache only
+                    logger.debug("listAnnouncementsInSameCluster: matched localInstance, filling with cache: {}", instanceId);
                     fillWithCachedAnnouncements(incomingAnnouncements);
                     continue;
                 }
                 
                 //TODO: add ClusterView.contains(instanceSlingId) for convenience to next api change
                 if (!contains(localClusterView, instanceId)) {
+                    logger.debug("listAnnouncementsInSameCluster: instance is not in my view, ignoring: {}", instanceId);
                     // then the instance is not in my view, hence ignore its announcements
                     // (corresponds to earlier expiry-handling)
                     continue;
@@ -172,8 +177,10 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                 final Resource announcementsResource = aClusterInstanceResource
                         .getChild("announcements");
                 if (announcementsResource == null) {
+                    logger.debug("listAnnouncementsInSameCluster: instance has no announcements: {}", instanceId);
                     continue;
                 }
+                logger.debug("listAnnouncementsInSameCluster: instance has announcements: {}", instanceId);
                 Iterator<Resource> it = announcementsResource.getChildren()
                         .iterator();
                 Announcement topologyAnnouncement;
@@ -184,6 +191,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                                     .adaptTo(ValueMap.class).get(
                                             "topologyAnnouncement",
                                             String.class));
+                    logger.debug("listAnnouncementsInSameCluster: found announcement: {}", topologyAnnouncement);
                     incomingAnnouncements.add(topologyAnnouncement);
                     // SLING-3389: no longer check for expired announcements - 
                     // instead make use of the fact that this instance
@@ -537,17 +545,21 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
     }
 
     public synchronized Collection<InstanceDescription> listInstances(final ClusterView localClusterView) {
+        logger.debug("listInstances: start. localClusterView: {}", localClusterView);
         final Collection<InstanceDescription> instances = new LinkedList<InstanceDescription>();
 
         final Collection<Announcement> announcements = listAnnouncementsInSameCluster(localClusterView);
         if (announcements == null) {
+            logger.debug("listInstances: no announcement found. end. instances: {}", instances);
             return instances;
         }
 
         for (Iterator<Announcement> it = announcements.iterator(); it.hasNext();) {
             final Announcement announcement = it.next();
+            logger.debug("listInstances: adding announcement: {}", announcement);
             instances.addAll(announcement.listInstances());
         }
+        logger.debug("listInstances: announcements added. end. instances: {}", instances);
         return instances;
     }
 
