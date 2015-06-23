@@ -300,6 +300,7 @@ public class Instance {
                         properties.put("path", event.getPath());
                         org.osgi.service.event.Event osgiEvent = new org.osgi.service.event.Event(
                                 topic, properties);
+                        logger.info("onEvent: delivering event to listener: "+slingId+", stopped: "+stopped+", event: "+osgiEvent);
                         votingHandler.handleEvent(osgiEvent);
                     } catch (RepositoryException e) {
                         logger.warn("RepositoryException: " + e, e);
