@@ -304,6 +304,9 @@ public class ClusterTest {
         final int MIN_EVENT_DELAY = 1;
 
         tearDown(); // reset any setup that was done - we start with a different setup than the default one
+        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        logLevel = discoveryLogger.getLevel();
+        discoveryLogger.setLevel(Level.DEBUG);
         
         instance1 = Instance.newStandaloneInstance("/var/discovery/clusterA/", "instance1", true, 5 /* sec*/, 999, MIN_EVENT_DELAY);
         instance2 = Instance.newClusterInstance("/var/discovery/clusterA/", "instance2", instance1,
