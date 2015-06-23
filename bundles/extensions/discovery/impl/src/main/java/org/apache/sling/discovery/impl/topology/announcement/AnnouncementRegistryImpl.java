@@ -40,7 +40,6 @@ import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.common.resource.ResourceHelper;
 import org.apache.sling.settings.SlingSettingsService;
-import org.eclipse.jetty.util.log.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
