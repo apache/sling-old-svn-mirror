@@ -241,7 +241,11 @@ public class Instance {
 						return;
 					}
 				}
-				runHeartbeatOnce();
+				try{
+				    runHeartbeatOnce();
+				} catch(Exception e) {
+				    logger.error("run: heartbeat for slingId="+slingId+" threw exception: "+e, e);
+				}
 				try {
 					Thread.sleep(intervalInSeconds*1000);
 				} catch (InterruptedException e) {
