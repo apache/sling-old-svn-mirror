@@ -42,20 +42,20 @@ public class OSGiMock {
         services.add(service);
     }
 
-    public void activateAll(boolean resetRepo) throws Exception {
-        if (resetRepo) {
-            Session l = RepositoryProvider.instance().getRepository()
-                    .loginAdministrative(null);
-            try {
-                l.removeItem("/var");
-                l.save();
-                l.logout();
-            } catch (Exception e) {
-                l.refresh(false);
-                l.logout();
-            }
+    public void resetRepo() throws Exception {
+        Session l = RepositoryProvider.instance().getRepository()
+                .loginAdministrative(null);
+        try {
+            l.removeItem("/var");
+            l.save();
+            l.logout();
+        } catch (Exception e) {
+            l.refresh(false);
+            l.logout();
         }
-
+    }
+    
+    public void activateAll() throws Exception {
         for (@SuppressWarnings("rawtypes")
         Iterator it = services.iterator(); it.hasNext();) {
             Object aService = it.next();

@@ -374,6 +374,14 @@ public class Instance {
         observationManager = session.getWorkspace()
                 .getObservationManager();
 
+        if (resetRepo) {
+            //SLING-4587 : do resetRepo before creating the observationListener
+            // otherwise it will get tons of events from the deletion of /var
+            // which the previous test could have left over.
+            // Doing it before addEventListener should prevent that.
+            osgiMock.resetRepo();
+        }
+        
         observationListener = new MyEventListener(slingId);
         observationManager.addEventListener(
                 observationListener
@@ -383,7 +391,7 @@ public class Instance {
                 null,
                 null, false);
 
-        osgiMock.activateAll(resetRepo);
+        osgiMock.activateAll();
     }
     
     @Override
