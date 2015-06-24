@@ -20,9 +20,6 @@ package org.apache.sling.models.factory;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.models.spi.ModelValidation;
-
-
 /**
  * The ModelFactory instantiates Sling Model classes similar to adaptTo but is allowed to throw an exception in case
  * instantiation fails for some reason.
@@ -62,4 +59,5 @@ public interface ModelFactory {
      * @see org.apache.sling.models.annotations.Model
      */
     public boolean isModelClass(@Nonnull Object adaptable, @Nonnull Class<?> type);
+
 }

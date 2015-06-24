@@ -16,8 +16,6 @@
  */
 package org.apache.sling.models.factory;
 
-import org.apache.sling.models.spi.ModelValidation;
-
 /**
  * Thrown in case the given model type could not be validated through the {@link ModelValidation}.
  * The actual validation error message is encapsulated
