@@ -16,11 +16,10 @@
  */
 package org.apache.sling.models.factory;
 
-
 /**
  * Thrown in case an validation could not be performed for the given model.
- * (although it would be required through {@link org.apache.sling.models.annotations.ValidationStrategy.REQUIRED}).
- * Depends on the actual implementation under which exact cirumstances this is thrown.
+ * (although it would be required through {@link org.apache.sling.models.annotations.ValidationStrategy#REQUIRED}).
+ * Depends on the actual implementation under which exact circumstances this is thrown.
  * @see ModelFactory
  */
 public class ValidationException extends RuntimeException {

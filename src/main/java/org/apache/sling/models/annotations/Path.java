@@ -24,8 +24,8 @@ import java.lang.annotation.Target;
 import javax.inject.Qualifier;
 
 /**
- * Provide path(s) on an @Inject. Not necessarily tied to the Resource Path injector (thus no
- * @Source annotation), may be reused for other injector types.
+ * Provide path(s) on an &#64;Inject. Not necessarily tied to the Resource Path injector (thus no
+ * &#64;Source annotation), may be reused for other injector types.
  */
 @Target({ ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)

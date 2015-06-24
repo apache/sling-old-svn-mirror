@@ -30,10 +30,9 @@ import org.apache.sling.models.spi.injectorspecific.InjectAnnotation;
 /**
  * Injects common Sling objects that can be derived from either a SlingHttpServletRequest, a ResourceResolver or a
  * Resource.
- * The injection is class-based.
- * <p>
- * Supports the following objects:
+ * <p>The injection is class-based.</p>
  * <table>
+ * <caption>Supports the following objects:</caption>
  * <tr>
  * <th style="text-align:left">Class</th>
  * <th style="text-align:left">Description</th>
@@ -42,35 +41,35 @@ import org.apache.sling.models.spi.injectorspecific.InjectAnnotation;
  * <th style="text-align:center">Resource</th>
  * </tr>
  * <tr style="background-color:#eee">
- * <td>{@link ResourceResolver}</td>
+ * <td>ResourceResolver</td>
  * <td>Resource resolver</td>
  * <td style="text-align:center">X</td>
  * <td style="text-align:center">X</td>
  * <td style="text-align:center">X</td>
  * </tr>
  * <tr>
- * <td>{@link Resource}</td>
+ * <td>Resource</td>
  * <td>Resource</td>
  * <td style="text-align:center">X</td>
  * <td></td>
  * <td style="text-align:center">X</td>
  * </tr>
  * <tr style="background-color:#eee">
- * <td>{@link SlingHttpServletRequest}</td>
+ * <td>SlingHttpServletRequest</td>
  * <td>Sling request</td>
  * <td style="text-align:center">X</td>
  * <td></td>
  * <td></td>
  * </tr>
  * <tr>
- * <td>{@link SlingHttpServletResponse}</td>
+ * <td>SlingHttpServletResponse</td>
  * <td>Sling response</td>
  * <td style="text-align:center">X</td>
  * <td></td>
  * <td></td>
  * </tr>
  * <tr style="background-color:#eee">
- * <td>{@link SlingScriptHelper}</td>
+ * <td>SlingScriptHelper</td>
  * <td>Sling script helper</td>
  * <td style="text-align:center">X</td>
  * <td></td>

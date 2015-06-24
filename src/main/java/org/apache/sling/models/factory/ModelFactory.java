@@ -26,6 +26,7 @@ import javax.annotation.Nonnull;
  *
  */
 public interface ModelFactory {
+
     /**
      * Instantiates the given Sling Model class from the given adaptable.
      * @param adaptable the adaptable to use to instantiate the Sling Model Class
@@ -36,7 +37,7 @@ public interface ModelFactory {
      * @throws ModelClassException in case the model could not be instantiated because model annotation was missing, reflection failed, no valid constructor was found or post-construct could not be called
      * @throws PostConstructException in case the post-construct method has thrown an exception itself
      * @throws ValidationException in case validation could not be performed for some reason (e.g. no validation information available)
-     * @throws InvalidModelException in case the given model type could not be validated through the {@link ModelValidation}
+     * @throws InvalidModelException in case the given model type could not be validated through the model validation
      */
     public @Nonnull <ModelType> ModelType createModel(@Nonnull Object adaptable, @Nonnull Class<ModelType> type) throws MissingElementsException,
             InvalidAdaptableException, ModelClassException, PostConstructException, ValidationException, InvalidModelException;
