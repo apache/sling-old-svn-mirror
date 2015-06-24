@@ -97,13 +97,18 @@ public class SlingSetupTest {
     }
     
     private Bundle getBundle(String symbolicName) {
-        for(Bundle b : bundleContext.getBundles()) {
+        return getBundle(bundleContext, symbolicName);
+    }
+    
+    static Bundle getBundle(BundleContext bc, String symbolicName) {
+        for(Bundle b : bc.getBundles()) {
             if(symbolicName.equals(b.getSymbolicName())) {
                 return b;
             }
         }
         return null;
     }
+    
     /** @return bundle state, UNINSTALLED if absent */
     private int getBundleState(String symbolicName) {
         return getBundleState(getBundle(symbolicName));
@@ -177,10 +182,10 @@ public class SlingSetupTest {
                 "org.apache.sling.bundleresource.impl",
                 "org.apache.sling.commons.classloader",
                 "org.apache.sling.commons.compiler",
-                "org.apache.sling.commons.json",
+                IgnoredBundlesTest.JSON_BUNDLE_SN,
                 "org.apache.sling.commons.log",
                 "org.apache.sling.commons.logservice",
-                "org.apache.sling.commons.mime",
+                IgnoredBundlesTest.MIME_BUNDLE_SN,
                 "org.apache.sling.commons.osgi",
                 "org.apache.sling.commons.scheduler",
                 "org.apache.sling.commons.threads",

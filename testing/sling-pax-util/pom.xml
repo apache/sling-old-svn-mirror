@@ -37,6 +37,7 @@
         <exam.version>3.0.3</exam.version>
         <url.version>1.5.2</url.version>
         <pax.exam.log.level>INFO</pax.exam.log.level>
+        <pax.vm.options>-Xmx256M -XX:MaxPermSize=256m</pax.vm.options>        
     </properties>
 
     <scm>
@@ -76,6 +77,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
+                    <argLine>${pax.vm.options}</argLine>
                     <systemProperties>
                         <property>
                             <name>pax.exam.log.level</name>
