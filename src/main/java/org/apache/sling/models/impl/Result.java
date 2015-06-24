@@ -44,7 +44,7 @@ public class Result<SuccessObjectType> {
     /**
      * instantate with a model (i.e. success)
      * 
-     * @param model
+     * @param object
      */
     public Result(SuccessObjectType object) {
         this.object = object;
