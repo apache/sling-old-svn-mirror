@@ -39,7 +39,7 @@ public @interface OSGiService {
     /**
      * specifies the RFC 1960-based filter string, which is evaluated when retrieving the service. If empty string or left out, then no filtering is being performed.
      * 
-     * @see "Core Specification, section 5.5, for a description of the filter string
+     * @see "Core Specification, section 5.5, for a description of the filter string"
      * @see <a href="http://www.ietf.org/rfc/rfc1960.txt">RFC 1960</a>
      */
     public String filter() default "";
