@@ -35,6 +35,16 @@
   <name>Apache Sling Initial Content Loader</name>
   <description>This bundle provides initial content installation through bundles.</description>
 
+  <properties>
+    <exam.version>3.5.0</exam.version>
+    <url.version>1.5.2</url.version>
+    <bundle.file.name>${basedir}/target/${project.build.finalName}.jar</bundle.file.name>
+    <sling.java.version>6</sling.java.version>
+    <sling.launchpad.version>7</sling.launchpad.version>
+    <pax.vm.options>-Xmx256M -XX:MaxPermSize=256m</pax.vm.options>
+    <dump.test.bundles>false</dump.test.bundles>
+  </properties>
+
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/contentloader</connection>
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/contentloader</developerConnection>
@@ -69,15 +79,54 @@
           </instructions>
         </configuration>
       </plugin>
-            <plugin>
-                <groupId>org.apache.rat</groupId>
-                <artifactId>apache-rat-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>src/test/resources/reader/testfile.txt</exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>src/test/resources/reader/testfile.txt</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <argLine>${pax.vm.options}</argLine>
+          <systemPropertyVariables>
+            <java.protocol.handler.pkgs>org.ops4j.pax.url</java.protocol.handler.pkgs>
+            <bundle.file.name>${bundle.file.name}</bundle.file.name>
+            <sling.launchpad.version>${sling.launchpad.version}</sling.launchpad.version>
+            <dump.test.bundles>${dump.test.bundles}</dump.test.bundles>
+          </systemPropertyVariables>
+          <classpathDependencyExcludes>
+            <!-- The osgi.org dependencies cause trouble with pax exam -->
+            <classpathDependencyExcludes>org.osgi:org.osgi.core</classpathDependencyExcludes>
+            <classpathDependencyExcludes>org.osgi:org.osgi.compendium</classpathDependencyExcludes>
+          </classpathDependencyExcludes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.servicemix.tooling</groupId>
+        <artifactId>depends-maven-plugin</artifactId>
+        <version>1.2</version>
+        <executions>
+          <execution>
+            <id>generate-depends-file</id>
+            <goals>
+              <goal>generate-depends-file</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
@@ -109,8 +158,9 @@
       <artifactId>org.apache.felix.scr.annotations</artifactId>
     </dependency>
     <dependency>
-      <groupId>biz.aQute</groupId>
+      <groupId>biz.aQute.bnd</groupId>
       <artifactId>bndlib</artifactId>
+      <version>2.1.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -236,15 +286,45 @@
         <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.commons.testing</artifactId>
-      <version>2.0.18</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>junit-addons</groupId>
       <artifactId>junit-addons</artifactId>
       <version>1.4</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.paxexam.util</artifactId>
+      <version>1.0.3-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-container-native</artifactId>
+      <version>${exam.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-link-mvn</artifactId>
+      <version>${exam.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.url</groupId>
+      <artifactId>pax-url-wrap</artifactId>
+      <version>2.1.0</version>
+      <scope>test</scope>
+    </dependency>
+     <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.framework</artifactId>
+      <version>4.2.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.tinybundles</groupId>
+      <artifactId>tinybundles</artifactId>
+      <version>2.0.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
