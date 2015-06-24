@@ -270,13 +270,13 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.models.api</artifactId>
-            <version>1.1.1-SNAPSHOT</version>
+            <version>1.2.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.models.impl</artifactId>
-            <version>1.1.1-SNAPSHOT</version>
+            <version>1.2.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <!-- not part of launchpad 7 (see SLING-4710) -->
