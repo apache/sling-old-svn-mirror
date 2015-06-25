@@ -51,7 +51,6 @@
 
     <properties>
         <site.jira.version.id>12314252</site.jira.version.id>
-        <sling.java.version>6</sling.java.version>
     </properties>
 
     <dependencies>
