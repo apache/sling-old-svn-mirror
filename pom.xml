@@ -83,6 +83,7 @@
         <artifactId>apache-rat-plugin</artifactId>
         <configuration>
           <excludes>
+            <exclude>**/*.json</exclude>
             <exclude>src/test/resources/reader/testfile.txt</exclude>
           </excludes>
         </configuration>
