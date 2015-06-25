@@ -39,7 +39,6 @@
   </description>
 
   <properties>
-    <sling.java.version>6</sling.java.version>
     <pax.exam.version>3.4.0</pax.exam.version>
     <pax.url.version>1.6.0</pax.url.version>
     <bundle.build.name>
