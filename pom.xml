@@ -41,10 +41,6 @@
     Refer to http://sling.apache.org/documentation/bundles/log-tracers.html
   </description>
 
-  <properties>
-    <sling.java.version>6</sling.java.version>
-  </properties>
-
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/tracer</connection>
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/tracer</developerConnection>
