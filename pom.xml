@@ -133,6 +133,8 @@
                 <configuration>
                     <excludes>
                         <exclude>src/test/resources/META-INF/test.txt</exclude>
+                        <exclude>src/test/resources/bundleData/nested/first.txt</exclude>
+                        <exclude>src/test/resources/bundleData/nested/second.txt</exclude>
                     </excludes>
                 </configuration>
             </plugin>
