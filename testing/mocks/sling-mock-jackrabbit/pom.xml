@@ -33,10 +33,6 @@
   
     <name>Apache Sling Testing Sling Mock Jackrabbit-based Resource Resolver</name>
     <description>Implements a resource resolver type for Jackrabbit that can be used in unit tests based on Sling Mocks.</description>
-  
-    <properties>
-        <sling.java.version>6</sling.java.version>
-    </properties>
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/mocks/sling-mock-jackrabbit</connection>
