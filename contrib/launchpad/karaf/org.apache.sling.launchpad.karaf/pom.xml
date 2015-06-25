@@ -35,10 +35,6 @@
   <name>Apache Sling Launchpad Karaf</name>
   <description>Apache Sling Launchpad Karaf</description>
 
-  <properties>
-    <sling.java.version>6</sling.java.version>
-  </properties>
-
   <dependencies>
     <!-- Sling -->
     <dependency>

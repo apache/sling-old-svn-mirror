@@ -33,10 +33,6 @@
     <name>Apache Sling Query</name>
     <description>jQuery-inspired repository traversal tool for Sling</description>
 
-    <properties>
-        <sling.java.version>6</sling.java.version>
-    </properties>
-
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/sling-query</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/sling-query</developerConnection>

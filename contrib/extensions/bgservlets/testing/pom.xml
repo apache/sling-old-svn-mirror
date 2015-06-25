@@ -32,8 +32,6 @@
   <name>Apache Sling Background Servlets Integration Tests</name>
 
   <properties>
-      <sling.java.version>6</sling.java.version>
-
       <!-- Timeout when checking for Sling readyness before starting tests -->
       <HttpTestBase.readyTimeoutSeconds>62</HttpTestBase.readyTimeoutSeconds>
 
