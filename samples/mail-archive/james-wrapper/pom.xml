@@ -22,7 +22,8 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>18</version>
+        <version>23</version>
+        <relativePath />
     </parent>
 
     <groupId>org.apache.sling</groupId>
@@ -31,10 +32,6 @@
     <packaging>bundle</packaging>
     <name>Apache Sling Mail Archive Server - Apache James Wrapper</name>
     <description>Wraps the Apache James libraries  until newer James bundles are released</description>
-
-    <properties>
-        <sling.java.version>6</sling.java.version>
-    </properties>
 
     <build>
         <plugins>

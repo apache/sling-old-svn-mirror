@@ -24,7 +24,8 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>18</version>
+        <version>23</version>
+        <relativePath />
     </parent>
 
     <groupId>org.apache.sling</groupId>
@@ -38,10 +39,6 @@
     <description>
         Stats module for the mail archive server
     </description>
-
-    <properties>
-        <sling.java.version>6</sling.java.version>
-    </properties>
 
     <build>
         <plugins>

@@ -22,7 +22,8 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>18</version>
+        <version>23</version>
+        <relativePath />
     </parent>
 
     <groupId>org.apache.sling</groupId>
@@ -31,11 +32,6 @@
     <packaging>bundle</packaging>
     <name>Apache Sling Mail Archive Server</name>
     <description>Server is designed to archive messages of mailing lists and allows convenient search and navigation through them.</description>
-
-    <properties>
-        <sling.java.version>6</sling.java.version>
-    </properties>
-
 
     <build>
         <plugins>
@@ -65,7 +61,6 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.6.2.201302030002</version>
                 <executions>
                     <execution>
                         <id>prepare-agent</id>
