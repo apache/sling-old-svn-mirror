@@ -35,10 +35,6 @@
     <name>Apache Sling Validation Framework API</name>
     <description>The Apache Sling Validation Framework API</description>
 
- 	<properties>
-        <sling.java.version>6</sling.java.version>
-    </properties>
-    
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/validation/api</connection>
         <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/validation/api</developerConnection>
