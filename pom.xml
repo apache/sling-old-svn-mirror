@@ -34,10 +34,6 @@
 
     <name>Apache Sling Validation Framework Testing Services</name>
 
-    <properties>
-        <sling.java.version>6</sling.java.version>
-    </properties>
-    
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/validation/test-services</connection>
         <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/validation/test-services</developerConnection>
