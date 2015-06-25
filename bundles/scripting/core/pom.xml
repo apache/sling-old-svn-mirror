@@ -40,7 +40,6 @@
         <exam.version>3.5.0</exam.version>
         <url.version>2.1.0</url.version>
         <bundle.file.name>${basedir}/target/${project.build.finalName}.jar</bundle.file.name>
-        <sling.java.version>6</sling.java.version>
     </properties>
     
     <scm>

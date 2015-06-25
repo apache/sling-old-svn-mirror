@@ -41,10 +41,6 @@
         allow them to be used as part of integration tests.
     </description>
 
-    <properties>
-        <sling.java.version>6</sling.java.version>
-    </properties>
-
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/healthcheck/junit-bridge</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/healthcheck/junit-bridge</developerConnection>

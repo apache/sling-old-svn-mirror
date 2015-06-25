@@ -51,7 +51,6 @@
 
     <properties>
         <antlr.version>4.1</antlr.version>
-        <sling.java.version>6</sling.java.version>
     </properties>
 
     <!-- ======================================================================= -->

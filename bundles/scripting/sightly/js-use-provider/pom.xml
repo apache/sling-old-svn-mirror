@@ -48,10 +48,6 @@
         <url>http://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/js-use-provider</url>
     </scm>
 
-    <properties>
-        <sling.java.version>6</sling.java.version>
-    </properties>
-
     <!-- ======================================================================= -->
     <!-- B U I L D                                                               -->
     <!-- ======================================================================= -->

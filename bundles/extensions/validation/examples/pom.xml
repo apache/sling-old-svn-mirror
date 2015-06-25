@@ -35,10 +35,6 @@
     <name>Apache Sling Validation Framework Examples</name>
     <description>Demo Examples for the Apache Sling Validation Framework</description>
 
-    <properties>
-        <sling.java.version>6</sling.java.version>
-    </properties>
-    
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/validation/examples</connection>
         <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/validation/examples</developerConnection>

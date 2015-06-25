@@ -41,7 +41,6 @@
         <url.version>1.5.2</url.version>
         <org.ops4j.pax.logging.DefaultServiceLog.level>INFO</org.ops4j.pax.logging.DefaultServiceLog.level>
         <felix.shell>false</felix.shell>
-        <sling.java.version>6</sling.java.version>
         <sling.hc.samples.version>1.0.7-SNAPSHOT</sling.hc.samples.version>
         <sling.hc.core.version>1.2.3-SNAPSHOT</sling.hc.core.version>
     </properties>

@@ -50,10 +50,6 @@
         <url>http://svn.apache.org/viewvc/sling/trunk/bundles/scripting/sightly/testing-content</url>
     </scm>
 
-    <properties>
-        <sling.java.version>6</sling.java.version>
-    </properties>
-
 
     <!-- ======================================================================= -->
     <!-- B U I L D                                                               -->

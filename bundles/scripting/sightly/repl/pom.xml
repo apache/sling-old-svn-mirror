@@ -39,10 +39,6 @@
         <url>http://svn.apache.org/viewvc/sling/trunk/bundles/scripting/sightly/repl</url>
     </scm>
 
-    <properties>
-        <sling.java.version>6</sling.java.version>
-    </properties>
-
     <build>
         <pluginManagement>
             <plugins>
