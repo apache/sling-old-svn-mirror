@@ -44,7 +44,6 @@
 
     <properties>
         <site.jira.version.id>12315369</site.jira.version.id>
-        <sling.java.version>6</sling.java.version>
         <exam.version>4.4.0</exam.version>
         <url.version>2.3.0</url.version>
         <bundle.build.dir>${basedir}/target</bundle.build.dir>
