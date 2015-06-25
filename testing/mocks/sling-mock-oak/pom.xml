@@ -184,6 +184,16 @@
                 </execution>
               </executions>
           </plugin>
+
+          <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>dependency-reduced-pom.xml</exclude>
+                    </excludes>
+                </configuration>
+          </plugin>
         </plugins>
     </build>
   
