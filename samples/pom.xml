@@ -75,5 +75,6 @@
           <module>framework-fragment</module>
           <module>usermanager-ui</module>
           <module>accessmanager-ui</module>
+          <module>mail-archive</module>
   </modules>
 </project>
