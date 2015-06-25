@@ -39,7 +39,6 @@
         <exam.version>3.5.0</exam.version>
         <url.version>1.5.2</url.version>
         <bundle.file.name>${basedir}/target/${project.build.finalName}.jar</bundle.file.name>
-        <sling.java.version>6</sling.java.version>
         <sling.launchpad.version>7</sling.launchpad.version>
         <powermock.version>1.6.2</powermock.version>
         <pax.vm.options>-Xmx256M -XX:MaxPermSize=256m</pax.vm.options>
