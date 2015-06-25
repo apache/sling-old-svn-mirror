@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
@@ -47,8 +48,8 @@ public class PersistedJcrEventDistributionTrigger extends AbstractJcrEventTrigge
 
     private final String nuggetsPath;
 
-    public PersistedJcrEventDistributionTrigger(SlingRepository repository, String path, String servicename, String nuggetsPath) {
-        super(repository, path, servicename);
+    public PersistedJcrEventDistributionTrigger(SlingRepository repository, Scheduler scheduler, String path, String servicename, String nuggetsPath) {
+        super(repository, scheduler, path, servicename);
         this.nuggetsPath = nuggetsPath == null || nuggetsPath.length() == 0 ? DEFAULT_NUGGETS_PATH : nuggetsPath;
     }
 

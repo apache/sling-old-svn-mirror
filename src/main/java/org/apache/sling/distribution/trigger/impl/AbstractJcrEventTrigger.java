@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
@@ -60,13 +61,16 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
 
     private Session cachedSession;
 
-    AbstractJcrEventTrigger(SlingRepository repository, String path, String serviceUser) {
+    private final Scheduler scheduler;
+
+    AbstractJcrEventTrigger(SlingRepository repository, Scheduler scheduler, String path, String serviceUser) {
         if (path == null || serviceUser == null) {
             throw new IllegalArgumentException("path and service are required");
         }
         this.repository = repository;
         this.path = path;
         this.serviceUser = serviceUser;
+        this.scheduler = scheduler;
     }
 
     public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
@@ -103,27 +107,34 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
         }
 
         public void onEvent(EventIterator eventIterator) {
-            log.info("handling event {}");
+            log.info("jcr trigger onevent");
+
             List<DistributionRequest> requestList = new ArrayList<DistributionRequest>();
 
             while (eventIterator.hasNext()) {
                 Event event = eventIterator.nextEvent();
+                log.info("handling event {}", event);
                 try {
                     if (DistributionJcrUtils.isSafe(event)) {
                         DistributionRequest request = processEvent(event);
                         if (request != null) {
                             addToList(request, requestList);
                         }
-
+                    } else {
+                        log.info("skip unsafe event {}", event);
                     }
                 } catch (RepositoryException e) {
                     log.error("Error while handling event {}", event, e);
                 }
             }
 
-            for (DistributionRequest request: requestList) {
-                requestHandler.handle(request);
+
+            if (requestList.size() > 0) {
+                boolean scheduled = scheduler.schedule(new DistributionExecutor(requestList, requestHandler), scheduler.NOW());
+
+                log.info("scheduled {} distributions {}", scheduled, requestList.size());
             }
+
         }
     }
 
@@ -225,6 +236,25 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
             }
         }
         return false;
+    }
+
+
+    class DistributionExecutor implements Runnable {
+
+        private final List<DistributionRequest> requestList;
+        private final DistributionRequestHandler requestHandler;
+
+        public DistributionExecutor(List<DistributionRequest> requestList, DistributionRequestHandler requestHandler) {
+
+            this.requestList = requestList;
+            this.requestHandler = requestHandler;
+        }
+
+        public void run() {
+            for (DistributionRequest request: requestList) {
+                requestHandler.handle(request);
+            }
+        }
     }
 
 
