@@ -34,10 +34,6 @@
     <name>Apache Sling Testing Sling Mock</name>
     <description>Mock implementation of selected Sling APIs.</description>
 
-    <properties>
-        <sling.java.version>6</sling.java.version>
-    </properties>
-
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/mocks/sling-mock</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/mocks/sling-mock</developerConnection>
