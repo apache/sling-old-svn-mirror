@@ -31,10 +31,6 @@
     <packaging>bundle</packaging>
     <name>Apache Sling Feature Flags</name>
     
-    <properties>
-        <sling.java.version>6</sling.java.version>
-    </properties>
-
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/feature-flags</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/feature-flags</developerConnection>
