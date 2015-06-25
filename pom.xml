@@ -41,7 +41,6 @@
         <url.version>1.5.2</url.version>
         <org.ops4j.pax.logging.DefaultServiceLog.level>INFO</org.ops4j.pax.logging.DefaultServiceLog.level>
         <bundle.file.name>${basedir}/target/${project.build.finalName}.jar</bundle.file.name>
-        <sling.java.version>6</sling.java.version>
         <sling.launchpad.version>7</sling.launchpad.version>
     </properties>
 
