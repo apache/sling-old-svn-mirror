@@ -85,6 +85,8 @@
           <excludes>
             <exclude>**/*.json</exclude>
             <exclude>src/test/resources/reader/testfile.txt</exclude>
+            <exclude>jackrabbit/**</exclude>
+            <exclude>derby.log</exclude>
           </excludes>
         </configuration>
       </plugin>
