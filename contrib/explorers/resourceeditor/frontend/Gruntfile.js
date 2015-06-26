@@ -71,33 +71,49 @@ module.exports = function(grunt) {
 		                  'jquery/dist/jquery.min.js',
 		                  'jquery/dist/jquery.min.map',
 		                  'bootbox/bootbox.min.js',
-		                  'jstree/dist/jstree.min.js'
+		                  'jstree/dist/jstree.min.js',
+		                  'bootstrap-notify/dist/bootstrap-notify.min.js'
 		                 ], // Actual pattern(s) to match.
 		            dest: staticContentFolder+'/generated/3rd_party/js',   // Destination path prefix.
 		            flatten: true
 		          },
 		        ],
 		      },
-    	css_dependencies: {
-	        files: [
-	          {
-	            expand: true,     // Enable dynamic expansion.
-	            cwd: 'node_modules/',      // Src matches are relative to this path.
-	            src: [
-	                  'select2/select2.css',
-	                  'select2/select2.png',
-	                  'select2/select2-spinner.gif',
-	                  'animate.css/animate.min.css',
-	                  'jstree/dist/themes/default/style.min.css',
-	                  'jstree/dist/themes/default/32px.png',
-	                  'jstree/dist/themes/default/40px.png',
-	                  'jstree/dist/themes/default/throbber.gif',
-	                 ], // Actual pattern(s) to match.
-	            dest: staticContentFolder+'/generated/3rd_party/css',   // Destination path prefix.
-	            flatten: true
-	          },
-	        ],
-	      }
+	    	css_dependencies: {
+		        files: [
+		          {
+		            expand: true,     // Enable dynamic expansion.
+		            cwd: 'node_modules/',      // Src matches are relative to this path.
+		            src: [
+		                  'select2/select2.css',
+		                  'select2/select2.png',
+		                  'select2/select2-spinner.gif',
+		                  'animate.css/animate.min.css',
+		                  'jstree/dist/themes/default/style.min.css',
+		                  'jstree/dist/themes/default/32px.png',
+		                  'jstree/dist/themes/default/40px.png',
+		                  'jstree/dist/themes/default/throbber.gif',
+		                 ], // Actual pattern(s) to match.
+		            dest: staticContentFolder+'/generated/3rd_party/css',   // Destination path prefix.
+		            flatten: true
+		          },
+		        ],
+		      },
+		    font_dependencies: {
+		        files: [
+		          {
+		            expand: true,     // Enable dynamic expansion.
+		            cwd: 'node_modules/',      // Src matches are relative to this path.
+		            src: [
+		                  'bootstrap/fonts/glyphicons-halflings-regular.ttf',
+		                  'bootstrap/fonts/glyphicons-halflings-regular.woff2',
+		                  'bootstrap/fonts/glyphicons-halflings-regular.woff'
+		                 ], // Actual pattern(s) to match.
+		            dest: staticContentFolder+'/generated/3rd_party/fonts',   // Destination path prefix.
+		            flatten: true
+		          },
+		        ],
+		      }
 	    },
 	    karma: {
 	    	options: {

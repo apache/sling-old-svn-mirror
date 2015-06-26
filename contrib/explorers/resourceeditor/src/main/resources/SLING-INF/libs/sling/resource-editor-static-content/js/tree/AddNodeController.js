@@ -244,8 +244,6 @@ org.apache.sling.reseditor.AddNodeController = (function() {
 		    }
 		});
 		
-		$('#addNodeDialog').modal('show');
-		
 		var contextPath = this.mainController.getContextPath() == "/" && resourcePath.length>0 && resourcePath.charAt(0)=="/" ? "" : this.mainController.getContextPath(); 
 		this.lastAddNodeURL = contextPath+resourcePath;
 
@@ -270,8 +268,10 @@ org.apache.sling.reseditor.AddNodeController = (function() {
 					return {id:searchTerm, text:searchTerm};
 				}
 			}).data("select2");
+			
+			$('#addNodeDialog').modal('show');
+			
 			$('#addNodeDialog').addClass('add-node-finished');
-//			$('#addNodeDialog').append('<div id="add-node-finished"></div>');
 		});
 	}
 	

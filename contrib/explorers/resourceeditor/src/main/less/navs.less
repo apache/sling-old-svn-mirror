@@ -79,3 +79,25 @@
   padding: 5px 10px 5px 10px;
   
 }
+
+.nav {
+	> li > a {
+	      &:hover,
+	      &:focus {
+	        background-color: @selectedBackground;
+	        border: 1px solid black;
+	      }
+	    border: 1px solid transparent;
+		color: @textColor;
+	}
+  // Open dropdowns
+  .open {
+	text-shadow: none;
+  }
+  .dropdown-menu > li > a {
+	      &:hover,
+	      &:focus {
+	        background-color: @textColor;
+	      }
+   }
+}

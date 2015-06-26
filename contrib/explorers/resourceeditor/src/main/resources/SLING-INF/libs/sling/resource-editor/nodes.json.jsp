@@ -26,7 +26,7 @@
 
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
-<%@ taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0"%>
+<%@ taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling"%>
 <sling:defineObjects />
 <% response.setContentType("application/json"); %>
 

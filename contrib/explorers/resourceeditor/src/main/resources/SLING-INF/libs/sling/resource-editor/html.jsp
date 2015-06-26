@@ -22,7 +22,8 @@
 <%@ page import="javax.jcr.*,org.apache.sling.api.resource.Resource, org.apache.sling.api.resource.ValueMap"%>
 <%@ page import="java.security.Principal"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<%@ taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@ taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling"%>
 
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 
@@ -36,6 +37,10 @@
 <link href='<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/css/font.css' rel='stylesheet' type='text/css'>
  <!--[if lt IE 9]>
 <link href='<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/css/font_ie.css' rel='stylesheet' type='text/css'>
+  <![endif]--> 
+ 
+ <!--[if IE]>
+<link href='<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/css/ie.css' rel='stylesheet' type='text/css'>
   <![endif]-->
   
 <!-- 
@@ -50,10 +55,12 @@ original
 <script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/generated/3rd_party/js/bootbox.min.js"></script>
 <script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/generated/3rd_party/js/jstree.min.js"></script>
 <script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/generated/3rd_party/js/select2.min.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/generated/3rd_party/js/bootstrap-notify.min.js"></script>
 
 <script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/tree/JSTreeAdapter.js"></script>
 <script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/tree/TreeController.js"></script>
 <script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/tree/AddNodeController.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/properties/PropertyController.js"></script>
 <script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/LoginController.js"></script>
 <script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/MainController.js"></script>
 
@@ -109,6 +116,8 @@ var jsTreeAdapterSettings = {
 };
 new org.apache.sling.reseditor.JSTreeAdapter(jsTreeAdapterSettings, treeController, mainController);
 
+new org.apache.sling.reseditor.PropertyController({}, mainController);
+
 </script>	
 
 </head>
@@ -157,6 +166,7 @@ new org.apache.sling.reseditor.JSTreeAdapter(jsTreeAdapterSettings, treeControll
 						</div>
 				    </div>
 				  </div>
+				  
 				  <ul class="nav nav-tabs">
 				    <li class="active">
 				    	<a id="login_tab" href="#login_tab_content" data-toggle="tab">Login</a>
@@ -203,78 +213,8 @@ new org.apache.sling.reseditor.JSTreeAdapter(jsTreeAdapterSettings, treeControll
 					</div>
 				</div>
 			</div>
-			<div class="col-sm-8">
-				<div id="outer_content" class="plate">
-					<div class="ie9filter-plate-div">
-						<div id="inner_content_margin">
-							<form action="not_configured_yet.change.properties" method="post">
-								<c:set var="resourceIsNode" scope="request" value="<%=resource.adaptTo(Node.class) !=null %>"/>
-								<c:choose>
-								     <c:when test="${resourceIsNode}" >
-										<%--
-										For some reason I get the following exception when using the JSTL expression '${currentNode.properties}'
-										instead of the scriptlet code 'currentNode.getProperties()':
-										org.apache.sling.scripting.jsp.jasper.JasperException: Unable to compile class for JSP: 
-										org.apache.sling.scripting.jsp.jasper.el.JspValueExpression cannot be resolved to a type
-										see https://issues.apache.org/jira/browse/SLING-2455
-										 --%>
-										<c:forEach var="property" items="<%=currentNode.getProperties()%>">
-									<%  Property property = (Property) pageContext.getAttribute("property");%>
-											<fieldset>
-												<label class="proplabel" for='${property.name}'>${property.name} [<%=PropertyType.nameFromValue(property.getType())%>${property.multiple ? ' multiple' : ''}]</label>
-												<c:choose>
-												     <c:when test="${property.multiple}" >
-												     	<fieldset class="propmultival_fieldset">
-												     		<div>&nbsp;</div>
-												     	<c:forEach var="value" items="<%=property.getValues()%>">
-												     		<c:choose>
-												     		<c:when test="${property.type == PropertyType.BINARY}" >
-														     	<p>I'm a binary property</p>
-														     </c:when>
-														     <c:otherwise>
-													     		<input class="propinputmultival form-control" value="${value.string}"/>
-														     </c:otherwise>
-														     </c:choose>
-												     	</c:forEach>
-						     							</fieldset>
-												     </c:when>
-												     <c:when test="${false}" >
-												     </c:when>
-												     <c:otherwise>
-													     <c:choose>
-													     <c:when test="<%=property.getType() == PropertyType.BINARY%>" >
-													     	<c:choose>
-														     	<c:when test='<%=currentNode.getParent().isNodeType("nt:file") %>'>
-														     		<a class="propinput" href="<%= request.getContextPath() %>${resource.parent.path}">Download</a>
-														     	</c:when>
-														     	<c:otherwise>
-														     		<a class="propinput" href="<%= request.getContextPath() %>${resource.path}.property.download?property=${property.name}">View (choose "Save as..." to download)</a>
-														     	</c:otherwise>
-													     	</c:choose>
-													     </c:when>
-													     <c:otherwise>
-															<input class="propinput form-control" id="${property.name}" name="${property.name}" value="${property.string}"/>							
-													     </c:otherwise>
-													     </c:choose>
-												     </c:otherwise>
-												 </c:choose>
-											</fieldset>
-										</c:forEach>
-								     </c:when>
-								     <c:otherwise>
-										<c:forEach var="property" items="<%=resource.adaptTo(ValueMap.class)%>">	
-											<fieldset>										
-												<label class="proplabel" for='${property.key}'>${property.key}</label>
-												<input class="propinput form-control" id="${property.key}" name="${property.key}" value="${property.value}"/>
-											</fieldset>							
-										</c:forEach>
-								     </c:otherwise>
-								 </c:choose>
-							</form>
-						</div>
-					</div>
-			    </div>
-			</div>
+			
+			<%@ include file="properties.jsp" %>
 	    </div>
 		<div class="row" style="visibility:hidden; display:none;">
 			<div class="col-sm-12">

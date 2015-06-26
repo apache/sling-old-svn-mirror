@@ -31,6 +31,7 @@
 @import "forms.less";
 @import "buttons.less";
 @import "modals.less";
+@import "glyphicons.less";
  
 
 /* ################################################################# */
@@ -120,7 +121,7 @@ body
 	font-family: 'Michroma', sans-serif;
 	font-weight: bold;
 	font-size: 24px;
-	color: #2D373D;
+	color: @brand-primary;
 	text-shadow: 0 2px 2px #dddddd;
 	display: inline;
 	margin: 10px;
@@ -134,15 +135,17 @@ body
 	margin-left: 4px;
 }
 
-.logout a {
+#login .logout a {
 	.rounded;
-	border: 1px solid #2D373D;
-	color: #2D373D;
+	border: 1px solid @brand-primary;
+	color: @brand-primary;
 	text-shadow: 0 1px 1px #EEE;
 	font-size: 15px;
 	margin: 10px 10px 0 0;
-	padding: 0 10px;
 	box-shadow: inset 0px 0px 1px black, 1px 1px 0px white;
+}
+#login .logout a:hover {
+	background-color: @textColor;
 }
 
 #login_error {
@@ -171,27 +174,11 @@ body
     padding: 5px;
 }
 
-
-fieldset
-{
-	border: none;
-	margin-top: 5px;
-	padding: 0;
-}
 .proplabel
 {
-	width: 25%;
-	float: left;
-	display: inline;
 	line-height: 24px;
-	color: #C0C0C0;
+	color: @textColor;
 	font-weight: normal;
-}
-.propinput
-{
-	float: left;
-	display: inline;
-	width: 65%;
 }
 .propinputmultival
 {
@@ -202,7 +189,6 @@ fieldset
 .propmultival_fieldset
 {
 	float: left;
-	width: 65%;
 	margin: 0 5px 0 0
 }
 
@@ -247,6 +233,23 @@ fieldset
 	background-image: url(../../img/remove.png);
 }
 
+.property-icon {
+  	margin-top: 5px;
+}
+
+.icon {
+	cursor: pointer;
+	border: 1px solid transparent; 
+	padding: 3px;
+	-moz-border-radius: 3px;
+    border-radius: 3px;
+}
+
+.property-icon:hover {
+	border: 1px solid black;
+	background-color: @selectedBackground;
+}
+
 .jstree-default .jstree-icon.add-icon{
 	background-image: url(../../img/add.png);
     margin-right: 3px;
@@ -282,7 +285,7 @@ fieldset
 
 #tree .jstree-clicked 
 {
-	background:#303030; 
+	background: @selectedBackground; 
 	border:1px solid black; 
 	padding:0px 1px;
     -moz-border-radius: 5px;
@@ -349,4 +352,17 @@ input.jstree-rename-input{
 }
 #addNodeDialog .form-group label a{
 	font-weight: normal;
+}
+
+.propertyTypeMenu {
+	text-shadow: none;
+}
+
+#properties .ie9filter-plate-div {
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+#properties-info-icon {
+	margin-top: -4px;
 }
