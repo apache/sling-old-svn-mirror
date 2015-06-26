@@ -42,6 +42,9 @@
         <sling.launchpad.version>7</sling.launchpad.version>
         <powermock.version>1.6.2</powermock.version>
         <pax.vm.options>-Xmx256M -XX:MaxPermSize=256m</pax.vm.options>
+        
+        <!-- argLine needs to be here so that jacoco plugin adds its own stuff to it -->
+        <argLine>${pax.vm.options}</argLine>
     </properties>
 
     <dependencies>
@@ -167,7 +170,6 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <argLine>${pax.vm.options}</argLine>
                     <systemPropertyVariables>
                         <java.protocol.handler.pkgs>org.ops4j.pax.url</java.protocol.handler.pkgs>
                         <bundle.file.name>${bundle.file.name}</bundle.file.name>
