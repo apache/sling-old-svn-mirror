@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -51,8 +52,8 @@ public class JackrabbitRepositoryIT extends CommonTests {
         return opt.toArray(new Option[]{});
     }
 
-    @Override
-    protected void doCheckRepositoryDescriptors() {
+    @Test
+    public void doCheckRepositoryDescriptors() {
         assertEquals("Jackrabbit", repository.getDescriptor("jcr.repository.name"));
     }
 

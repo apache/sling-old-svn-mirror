@@ -28,6 +28,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -73,8 +74,8 @@ public class OakRepositoryIT extends CommonTests {
         return opt.toArray(new Option[]{});
     }
 
-    @Override
-    protected void doCheckRepositoryDescriptors() {
+    @Test
+    public void doCheckRepositoryDescriptors() {
         final String propName = "jcr.repository.name";
         final String name = repository.getDescriptor(propName);
         final String expected = "Oak";

@@ -82,7 +82,8 @@ public abstract class CommonTests {
     
     /** Check some repository descriptors to make sure we're
      *  testing the expected implementation. */
-    protected abstract void doCheckRepositoryDescriptors();
+    // TODO: see SLING-4841 why the template method pattern was removed
+    // protected abstract void doCheckRepositoryDescriptors();
 
     private final List<String> toDelete = new LinkedList<String>();
     private final AtomicInteger uniqueNameCounter = new AtomicInteger();
@@ -401,10 +402,11 @@ public abstract class CommonTests {
         }
     }
 
-    @Test
-    public final void checkRepositoryDescriptors() {
-        doCheckRepositoryDescriptors();
-    }
+    // TODO: see SLING-4841 why the template method pattern was removed
+    //@Test
+    //public final void checkRepositoryDescriptors() {
+    //    doCheckRepositoryDescriptors();
+    //}
 
     @Test
     public void testSingleValueInputStream() throws RepositoryException {
