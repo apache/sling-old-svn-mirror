@@ -20,15 +20,14 @@ package org.apache.sling.validation.impl;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
+import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -198,12 +197,9 @@ public class ValidationServiceImpl implements ValidationService{
     }    
 
     @Override
-    public @Nonnull ValidationResult validateAllResourceTypesInResource(@Nonnull Resource resource, boolean enforceValidation, Set<String> ignoredResourceTypes)
+    public @Nonnull ValidationResult validateResourceRecursively(@Nonnull Resource resource, boolean enforceValidation, Predicate filter) 
             throws IllegalStateException, IllegalArgumentException, SlingValidationException {
-        if (ignoredResourceTypes == null) {
-            ignoredResourceTypes = Collections.emptySet();
-        }
-        ValidationResourceVisitor visitor = new ValidationResourceVisitor(this, resource.getPath(), enforceValidation, ignoredResourceTypes);
+        ValidationResourceVisitor visitor = new ValidationResourceVisitor(this, resource.getPath(), enforceValidation, filter);
         visitor.accept(resource);
         return visitor.getResult();
     }

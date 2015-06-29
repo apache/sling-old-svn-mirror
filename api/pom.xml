@@ -40,17 +40,17 @@
         <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/validation/api</developerConnection>
         <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/validation/api</url>
     </scm>
-    
+
     <build>
-    	<plugins>
-	    	<plugin>
-		        <groupId>org.apache.felix</groupId>
-		        <artifactId>maven-bundle-plugin</artifactId>
-		        <extensions>true</extensions>
-	         </plugin>
-    	</plugins>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+            </plugin>
+        </plugins>
     </build>
-    
+
     <dependencies>
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -58,11 +58,18 @@
             <version>2.4.2</version>
             <scope>provided</scope>
         </dependency>
-        
+
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
             <version>3.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>3.2.1</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
