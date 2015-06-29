@@ -23,12 +23,12 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.framework.FilterImpl;
@@ -53,6 +53,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableList;
 
 import static java.util.Collections.synchronizedList;
+import static java.util.Collections.synchronizedMap;
 import static java.util.Collections.synchronizedSortedSet;
 
 /**
@@ -64,7 +65,7 @@ class MockBundleContext implements BundleContext {
 
     private final MockBundle bundle;
     private final SortedSet<MockServiceRegistration> registeredServices = synchronizedSortedSet(new TreeSet<MockServiceRegistration>());
-    private final Map<ServiceListener, Filter> serviceListeners = new ConcurrentHashMap<ServiceListener, Filter>();
+    private final Map<ServiceListener, Filter> serviceListeners = synchronizedMap(new HashMap<ServiceListener, Filter>());
     private final List<BundleListener> bundleListeners = synchronizedList(new ArrayList<BundleListener>());
 
     public MockBundleContext() {
