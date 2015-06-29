@@ -18,11 +18,10 @@
  */
 package org.apache.sling.validation;
 
-import java.util.Set;
-
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
+import org.apache.commons.collections.Predicate;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
@@ -64,7 +63,7 @@ public interface ValidationService {
      * @param resource the resource to validate
      * @param model    the model with which to perform the validation
      * @return a {@link ValidationResult} that provides the necessary information
-     * @throws org.apache.sling.validation.exceptions.SlingValidationException if one validator was called with invalid arguments
+     * @throws SlingValidationException if one validator was called with invalid arguments
      */
     @Nonnull ValidationResult validate(@Nonnull Resource resource, @Nonnull ValidationModel model) throws SlingValidationException;
 
@@ -75,23 +74,22 @@ public interface ValidationService {
      *
      * @param valueMap the map to validate
      * @return a {@link ValidationResult} that provides the necessary information
-     * @throws org.apache.sling.validation.exceptions.SlingValidationException if one validator was called with invalid arguments
+     * @throws SlingValidationException if one validator was called with invalid arguments
      */
     @Nonnull ValidationResult validate(@Nonnull ValueMap valueMap, @Nonnull ValidationModel model) throws SlingValidationException;
 
     /**
-     * Validates a {@link Resource} and all child resources recursively by traversing starting from the given resource.
-     * For all resources having a resourceType which is not contained in one of {@code ignoredResourceTypes} the according {@link ValidationModel} is retrieved and validation called on those.
-     * @param resource the root resource which is validated (including all its children resources having a valid resource type)
-     * @param enforceValidation if {@code true} will throw an IllegalArgumentException in case a validation model could not be found for a (not-ignored) resource type
-     * set on one of the resource's children. 
-     * @param ignoredResourceTypes a set of resource types which should not be validated (e.g. nt:unstructured, the default primary node type in case of underlying an JCR for nodes not having a sling:resourceType property being set).
-     * May be {@code null} to not ignore any resource types.
+     * Validates a {@link Resource} and all child resources recursively by traversing through the resource tree starting from the given resource.
+     * For all resources which are included in the given {@code filter} the according {@link ValidationModel} is retrieved and validation is called on those resources.
+     * @param resource the root resource which is validated
+     * @param enforceValidation if {@code true} will throw an {@link IllegalArgumentException} in case a validation model could not be found for a (not-ignored) resource 
+     * @param filter a {@link Predicate} on a resource which is evaluated to determine whether a given resource should be validated. May be {@code null} in which case all resources are validated. 
+     * Children of ignored resources are still validated (if this predicate applies to them).
      * @return the aggregated {@link ValidationResult} over all child resource validations
      * @throws IllegalStateException in case an invalid validation model was found
      * @throws IllegalArgumentException in case resourceType is absolute but outside of the search paths or if no validation model could be found (and enforceValidation is {@code true}).
-     * @throws org.apache.sling.validation.exceptions.SlingValidationException if one validator was called with invalid arguments
+     * @throws SlingValidationException if one validator was called with invalid arguments
      */
-    @Nonnull ValidationResult validateAllResourceTypesInResource(@Nonnull Resource resource, boolean enforceValidation, Set<String> ignoredResourceTypes) throws IllegalStateException, IllegalArgumentException, SlingValidationException;
+    @Nonnull ValidationResult validateResourceRecursively(@Nonnull Resource resource, boolean enforceValidation, Predicate filter) throws IllegalStateException, IllegalArgumentException, SlingValidationException;
 
 }
