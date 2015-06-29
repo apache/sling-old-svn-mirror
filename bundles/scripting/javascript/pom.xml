@@ -59,8 +59,8 @@
                         </Import-Package>
                         <Export-Package>
                             org.apache.sling.scripting.javascript,
-                            org.mozilla.javascript;
-                            org.mozilla.classfile;
+                            org.mozilla.javascript;version=1.0.0,
+                            org.mozilla.classfile;version=0.0.1,
                             org.mozilla.javascript.debug;version=0.0.1
                         </Export-Package>
                         <Private-Package>
@@ -165,7 +165,7 @@
         <dependency>
             <groupId>org.mozilla</groupId>
             <artifactId>rhino</artifactId>
-            <version>1.7R4</version>
+            <version>1.7.7</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
