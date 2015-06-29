@@ -74,6 +74,10 @@
                         <excludes combine.children="append">
                             <exclude>src/main/resources/SLING-INF/**/*.json</exclude>
                             <exclude>src/main/resources/SLING-INF/**/*.ecma</exclude>
+                            <!-- Ignore files generated bei IDE plugins e.g. maven-eclipse-plugin -->
+                            <exclude>maven-eclipse.xml</exclude>
+                            <exclude>.*</exclude>
+                            <exclude>.*/**</exclude>
                         </excludes>
                     </configuration>
                 </plugin>
