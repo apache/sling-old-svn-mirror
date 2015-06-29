@@ -752,10 +752,11 @@ public class ClusterTest {
 
 	private void assertTopology(Instance instance, SimpleClusterView... assertedClusterViews) {
     	final TopologyView topology = instance.getDiscoveryService().getTopology();
+    	logger.info("assertTopology: instance "+instance.slingId+" sees topology: "+topology+", expected: "+assertedClusterViews);
     	assertNotNull(topology);
     	if (assertedClusterViews.length!=topology.getClusterViews().size()) {
             dumpFailureDetails(topology, assertedClusterViews);
-    	    fail("expected "+assertedClusterViews.length+", got: "+topology.getClusterViews().size());
+    	    fail("instance "+instance.slingId+ " expected "+assertedClusterViews.length+", got: "+topology.getClusterViews().size());
     	}
     	final Set<ClusterView> actualClusters = new HashSet<ClusterView>(topology.getClusterViews());
     	for(int i=0; i<assertedClusterViews.length; i++) {
@@ -772,7 +773,7 @@ public class ClusterTest {
 			}
     		if (!foundMatch) {
     		    dumpFailureDetails(topology, assertedClusterViews);
-    			fail("could not find a match in the topology with instance="+instance.slingId+" and clusterViews="+assertedClusterViews.length);
+    			fail("instance "+instance.slingId+ " could not find a match in the topology with instance="+instance.slingId+" and clusterViews="+assertedClusterViews.length);
     		}
     	}
     	assertEquals("not all asserted clusterviews are in the actual view with instance="+instance+" and clusterViews="+assertedClusterViews, actualClusters.size(), 0);
