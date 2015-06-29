@@ -20,12 +20,13 @@ package org.apache.sling.validation.impl;
 
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import javax.annotation.Nonnull;
 
+import org.apache.commons.collections.Predicate;
 import org.apache.sling.api.resource.AbstractResourceVisitor;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.validation.ValidationResult;
 import org.apache.sling.validation.model.ValidationModel;
 
@@ -34,15 +35,15 @@ public class ValidationResourceVisitor extends AbstractResourceVisitor {
     private final ValidationServiceImpl validationService;
     private final boolean enforceValidation;
     private final @Nonnull ValidationResultImpl result;
-    private final Set<String> ignoredResourceTypes;
+    private final Predicate filter;
     private final String rootResourcePath;
 
-    public ValidationResourceVisitor(ValidationServiceImpl validationService, String rootResourcePath, boolean enforceValidation, Set<String> ignoredResourceTypes) {
+    public ValidationResourceVisitor(ValidationServiceImpl validationService, String rootResourcePath, boolean enforceValidation, Predicate filter) {
         super();
         this.validationService = validationService;
         this.rootResourcePath = rootResourcePath + "/";
         this.enforceValidation = enforceValidation;
-        this.ignoredResourceTypes = ignoredResourceTypes;
+        this.filter = filter;
         this.result = new ValidationResultImpl();
     }
 
@@ -80,11 +81,11 @@ public class ValidationResourceVisitor extends AbstractResourceVisitor {
      * @return {@code true} in case the given resource should have its own Sling Validation model
      */
     private boolean isValidSubResource(Resource resource) {
-        if (resource.getResourceType() == Resource.RESOURCE_TYPE_NON_EXISTING) {
+        if (ResourceUtil.isNonExistingResource(resource)) {
             return false;
         }
-        if (ignoredResourceTypes.contains(resource.getResourceType())) {
-            return false;
+        if (filter != null) {
+            return filter.evaluate(resource);
         }
         return true;
     }
