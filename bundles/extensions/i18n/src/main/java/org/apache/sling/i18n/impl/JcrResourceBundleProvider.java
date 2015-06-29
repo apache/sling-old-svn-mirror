@@ -70,10 +70,12 @@ import org.slf4j.LoggerFactory;
  */
 @Component(immediate = true, metatype = true, label = "%provider.name", description = "%provider.description")
 @Service({ResourceBundleProvider.class, EventHandler.class})
-@Property(name=EventConstants.EVENT_TOPIC, value="org/apache/sling/api/resource/Resource/*")
+@Property(name=EventConstants.EVENT_TOPIC, value="org/apache/sling/api/resource/Resource/*", propertyPrivate=true)
 public class JcrResourceBundleProvider implements ResourceBundleProvider, EventHandler {
 
     private static final boolean DEFAULT_PRELOAD_BUNDLES = false;
+
+    private static final int DEFAULT_INVALIDATION_DELAY = 5000;
 
     @Property(value = "")
     private static final String PROP_USER = "user";
@@ -86,6 +88,9 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
 
     @Property(boolValue = DEFAULT_PRELOAD_BUNDLES)
     private static final String PROP_PRELOAD_BUNDLES = "preload.bundles";
+
+    @Property(longValue = DEFAULT_INVALIDATION_DELAY)
+    private static final String PROP_INVALIDATION_DELAY = "invalidation.delay";
 
     @Reference
     private Scheduler scheduler;
@@ -148,6 +153,8 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
 
     private boolean preloadBundles;
 
+    private long invalidationDelay;
+
     // ---------- ResourceBundleProvider ---------------------------------------
 
     /**
@@ -199,7 +206,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
                 log.debug(
                         "handleEvent: Detected change of cached language root '{}', removing all cached ResourceBundles",
                         path);
-                scheduleReloadBundles();
+                scheduleReloadBundles(true);
             } else {
                 // if it is only a change below a root path, only messages of one resource bundle can be affected!
                 for (final String root : languageRootPaths) {
@@ -220,7 +227,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
                 }
                 // may be a completely new dictionary
                 if (isDictionaryResource(path, event)) {
-                    scheduleReloadBundles();
+                    scheduleReloadBundles(true);
                 }
             }
         }
@@ -278,7 +285,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         return false;
     }
 
-    private void scheduleReloadBundles() {
+    private void scheduleReloadBundles(boolean withDelay) {
         // cancel all reload individual bundle jobs!
         synchronized(scheduledJobNames) {
             for (String scheduledJobName : scheduledJobNames) {
@@ -286,8 +293,13 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
             }
         }
         scheduledJobNames.clear();
-        // defer this job for 3 seconds
-        ScheduleOptions options = scheduler.AT(new Date(System.currentTimeMillis() + 5000L));
+        // defer this job
+        final ScheduleOptions options;
+        if (withDelay) {
+            options = scheduler.AT(new Date(System.currentTimeMillis() + invalidationDelay));
+        } else {
+            options = scheduler.NOW();
+        }
         options.name("JcrResourceBundleProvider: reload all resource bundles");
         scheduler.schedule(new Runnable() {
             @Override
@@ -304,8 +316,8 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         Locale locale = bundle.getLocale();
         final Key key = new Key(baseName, locale);
         
-        // defer this job for 3 seconds
-        ScheduleOptions options = scheduler.AT(new Date(System.currentTimeMillis() + 5000L));
+        // defer this job
+        ScheduleOptions options = scheduler.AT(new Date(System.currentTimeMillis() + invalidationDelay));
         final String jobName = "JcrResourceBundleProvider: reload bundle with key " + key.toString();
         scheduledJobNames.add(jobName);
         options.name(jobName);
@@ -382,8 +394,10 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         this.bundleContext = context.getBundleContext();
         this.bundleServiceRegistrations = new HashMap<Key, ServiceRegistration>();
         if (this.resourceResolverFactory != null) {
-            scheduleReloadBundles();
+            scheduleReloadBundles(false);
         }
+
+        invalidationDelay = PropertiesUtil.toLong(props.get(PROP_INVALIDATION_DELAY), DEFAULT_INVALIDATION_DELAY);
     }
 
     protected void deactivate() {
