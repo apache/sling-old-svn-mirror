@@ -309,6 +309,8 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                         <exclude>.*/**</exclude>
                         <!-- Exclude all JSON files -->
                         <exclude>**/*.json</exclude>
+                        <!-- Generated for release source archives -->
+                        <exclude>DEPENDENCIES</exclude>
                     </excludes>
                 </configuration>
                 <executions>
