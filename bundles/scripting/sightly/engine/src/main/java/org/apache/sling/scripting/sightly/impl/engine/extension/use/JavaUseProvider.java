@@ -18,12 +18,6 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.impl.engine.extension.use;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Pattern;
-import javax.script.Bindings;
-import javax.servlet.ServletRequest;
-
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -36,7 +30,6 @@ import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.scripting.sightly.ResourceResolution;
-import org.apache.sling.scripting.sightly.impl.compiler.CompilerException;
 import org.apache.sling.scripting.sightly.impl.compiler.SightlyJavaCompilerService;
 import org.apache.sling.scripting.sightly.pojo.Use;
 import org.apache.sling.scripting.sightly.render.RenderContext;
@@ -45,6 +38,12 @@ import org.apache.sling.scripting.sightly.use.UseProvider;
 import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.script.Bindings;
+import javax.servlet.ServletRequest;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 @Component(
         metatype = true,
@@ -90,10 +89,13 @@ public class JavaUseProvider implements UseProvider {
         Object result;
         try {
             Class<?> cls = dynamicClassLoaderManager.getDynamicClassLoader().loadClass(identifier);
-            result = resource.adaptTo(cls);
+
+            result = request.adaptTo(cls);
+
             if (result == null) {
-                result = request.adaptTo(cls);
+                result = resource.adaptTo(cls);
             }
+
             if (result != null) {
                 return ProviderOutcome.success(result);
             } else {
