@@ -297,17 +297,20 @@ public class MapEntries implements EventHandler {
         }
         try {
             Resource resource = resolver.getResource(path);
-            final ValueMap props = resource.adaptTo(ValueMap.class);
-            if (props.containsKey(PROP_VANITY_PATH)) {
-                doAddVanity(path);
-            }
-            if (props.containsKey(ResourceResolverImpl.PROP_ALIAS)) {
-                doAddAlias(path);
-            }
-            if (path.startsWith(this.mapRoot)) {
-                doUpdateConfiguration();
+            if (resource != null) {
+                final ValueMap props = resource.adaptTo(ValueMap.class);
+                if (props.containsKey(PROP_VANITY_PATH)) {
+                    doAddVanity(path);
+                }
+                if (props.containsKey(ResourceResolverImpl.PROP_ALIAS)) {
+                    doAddAlias(path);
+                }
+                if (path.startsWith(this.mapRoot)) {
+                    doUpdateConfiguration();
+                }
             }
             sendChangeEvent();
+            
         } finally {
             this.initializing.unlock();
         }
