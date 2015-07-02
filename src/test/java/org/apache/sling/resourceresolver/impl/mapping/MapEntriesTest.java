@@ -1359,4 +1359,13 @@ public class MapEntriesTest {
         when(resource.adaptTo(ValueMap.class)).thenReturn(mock(ValueMap.class));
         assertTrue((Boolean)method.invoke(mapEntries, resource));
     }
+    
+    @Test
+    //SLING-4847
+    public void test_doNodeAdded1() throws Exception { 
+        Method method = MapEntries.class.getDeclaredMethod("doNodeAdded", String.class, boolean.class);
+        method.setAccessible(true);
+        Boolean resfreshed = (Boolean ) method.invoke(mapEntries, "/node", true);
+        assertTrue(resfreshed.booleanValue());
+    }
 }
