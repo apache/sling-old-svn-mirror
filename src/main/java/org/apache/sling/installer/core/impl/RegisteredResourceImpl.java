@@ -425,8 +425,15 @@ public class RegisteredResourceImpl
      * the symbolic name of a bundle, the pid for a configuration etc.
      */
     public static int compare(final TaskResource a, final TaskResource b) {
+        int result = 0;
+        
         // check entity id first
-        int result = a.getEntityId().compareTo(b.getEntityId());
+        final String aId = a.getEntityId();
+        final String bId = b.getEntityId();
+        if(aId != null && bId != null) {
+            result = aId.compareTo(bId);
+        }
+        
         boolean hasVersion = false;
         if ( result == 0 ) {
             // compare versions

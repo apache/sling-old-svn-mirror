@@ -34,7 +34,6 @@ import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TransformationResult;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class RegisteredResourceComparatorTest {
@@ -220,13 +219,12 @@ public class RegisteredResourceComparatorTest {
     }
     
     @Test
-    @Ignore("SLING-4854")
     public void testNullEntityId() throws IOException {
         final SortedSet<RegisteredResource> set = new TreeSet<RegisteredResource>();
         final RegisteredResource a = untransformedResource("a", 1);
-        final RegisteredResource b = untransformedResource("b", 2);
+        final RegisteredResource b = untransformedResource("b", 1);
         set.add(a);
         set.add(b);
-        assertEquals("Expecting a to be first", set.first(), a);
+        assertEquals("Expecting a to be first", a, set.first());
     }
 }
