@@ -63,6 +63,15 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <!-- Apache Sling -->
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.launchpad.karaf-features</artifactId>
+      <version>0.1.1-SNAPSHOT</version>
+      <type>xml</type>
+      <classifier>features</classifier>
+      <scope>test</scope>
+    </dependency>
     <!-- bnd -->
     <dependency>
       <groupId>biz.aQute.bnd</groupId>
