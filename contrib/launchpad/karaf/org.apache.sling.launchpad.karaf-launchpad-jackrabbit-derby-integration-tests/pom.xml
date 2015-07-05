@@ -208,6 +208,9 @@
               <systemPropertyVariables>
                 <jar.executor.server.port>8888</jar.executor.server.port>
                 <server.ready.path.1>/:script src="/system/sling.js"</server.ready.path.1>
+                <server.ready.path.2>/.explorer.html:href="/libs/sling/explorer/css/explorer.css"</server.ready.path.2>
+                <server.ready.path.3>/sling-test/sling/sling-test.html:Sling client library tests</server.ready.path.3>
+                <server.ready.timeout.seconds>120</server.ready.timeout.seconds>
               </systemPropertyVariables>
               <dependenciesToScan>
                 <dependency>org.apache.sling:org.apache.sling.launchpad.integration-tests</dependency>
