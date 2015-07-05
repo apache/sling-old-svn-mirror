@@ -40,7 +40,7 @@ public class TikaSlingIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("tika-sling")
+            addSlingFeatures("tika-sling")
         );
     }
 

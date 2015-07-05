@@ -39,7 +39,7 @@ public class SlingFragmentsIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling-fragments")
+            addSlingFeatures("sling-fragments")
         );
     }
 

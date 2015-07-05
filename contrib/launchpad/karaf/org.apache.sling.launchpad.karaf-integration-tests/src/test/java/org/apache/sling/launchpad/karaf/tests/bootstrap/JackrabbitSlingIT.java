@@ -39,7 +39,7 @@ public class JackrabbitSlingIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("jackrabbit-sling")
+            addSlingFeatures("jackrabbit-sling")
         );
     }
 

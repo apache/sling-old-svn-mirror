@@ -30,12 +30,7 @@ public abstract class SlingLaunchpadConfiguration extends KarafTestSupport {
         final int httpPort = 8888; // TODO findFreePort();
         return OptionUtils.combine(baseConfiguration(),
             editConfigurationFilePut("etc/org.ops4j.pax.web.cfg", "org.osgi.service.http.port", Integer.toString(httpPort)),
-            addBootFeature("sling-launchpad-content"),
-            addBootFeature("sling-auth-form"),
-            addBootFeature("sling-auth-openid"),
-            addBootFeature("sling-auth-selector"),
-            addBootFeature("sling-scripting-groovy"),
-            addBootFeature("sling-installer-provider-jcr"),
+            addSlingFeatures("sling-launchpad-content", "sling-auth-form", "sling-auth-openid", "sling-auth-selector", "sling-scripting-groovy", "sling-installer-provider-jcr"),
             // misc (legacy, snapshots, ...) stuff
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.servlets.compat").version("1.0.3-SNAPSHOT"),
             // test support

@@ -39,7 +39,7 @@ public class SlingExtensionResourcemergerIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling-extension-resourcemerger")
+            addSlingFeatures("sling-extension-resourcemerger")
         );
     }
 

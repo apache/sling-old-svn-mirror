@@ -39,7 +39,7 @@ public class SlingJcrOakIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling-jcr-oak")
+            addSlingFeatures("sling-jcr-oak")
         );
     }
 

@@ -39,7 +39,7 @@ public class OakSlingIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("oak-sling")
+            addSlingFeatures("oak-sling")
         );
     }
 

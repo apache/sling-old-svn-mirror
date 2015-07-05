@@ -39,7 +39,7 @@ public class SlingExtensionDiscoveryImplIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling-extension-discovery-impl")
+            addSlingFeatures("sling-extension-discovery-impl")
         );
     }
 

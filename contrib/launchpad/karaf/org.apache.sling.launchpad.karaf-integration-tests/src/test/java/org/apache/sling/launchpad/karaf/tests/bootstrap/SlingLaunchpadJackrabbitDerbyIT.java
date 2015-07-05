@@ -48,7 +48,7 @@ public class SlingLaunchpadJackrabbitDerbyIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling-launchpad-jackrabbit-derby")
+            addSlingFeatures("sling-launchpad-jackrabbit-derby")
         );
     }
 

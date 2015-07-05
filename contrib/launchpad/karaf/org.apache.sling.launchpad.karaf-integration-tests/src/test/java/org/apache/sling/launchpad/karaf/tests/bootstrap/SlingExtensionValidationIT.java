@@ -39,7 +39,7 @@ public class SlingExtensionValidationIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling-extension-validation")
+            addSlingFeatures("sling-extension-validation")
         );
     }
 

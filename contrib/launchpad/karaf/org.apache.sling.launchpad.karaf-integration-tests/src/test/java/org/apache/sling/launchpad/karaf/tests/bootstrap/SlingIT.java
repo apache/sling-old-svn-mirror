@@ -47,7 +47,7 @@ public class SlingIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling")
+            addSlingFeatures("sling")
         );
     }
 

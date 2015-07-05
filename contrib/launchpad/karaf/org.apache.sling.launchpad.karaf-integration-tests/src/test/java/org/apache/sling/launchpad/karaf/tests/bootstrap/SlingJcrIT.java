@@ -39,7 +39,7 @@ public class SlingJcrIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling-jcr")
+            addSlingFeatures("sling-jcr")
         );
     }
 

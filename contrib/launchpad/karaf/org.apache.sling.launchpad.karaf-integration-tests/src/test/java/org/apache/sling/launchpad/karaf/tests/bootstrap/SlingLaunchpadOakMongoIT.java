@@ -91,7 +91,7 @@ public class SlingLaunchpadOakMongoIT extends KarafTestSupport {
             wrappedBundle(mavenBundle().groupId("net.java.dev.jna").artifactId("jna-platform").version("4.1.0")),
             mavenBundle().groupId("org.apache.commons").artifactId("commons-compress").version("1.9"),
             mavenBundle().groupId("org.apache.commons").artifactId("commons-lang3").version("3.4"),
-            addBootFeature("sling-launchpad-oak-mongo")
+            addSlingFeatures("sling-launchpad-oak-mongo")
         );
     }
 

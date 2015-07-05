@@ -39,7 +39,7 @@ public class SlingLaunchpadContentIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling-launchpad-content")
+            addSlingFeatures("sling-launchpad-content")
         );
     }
 

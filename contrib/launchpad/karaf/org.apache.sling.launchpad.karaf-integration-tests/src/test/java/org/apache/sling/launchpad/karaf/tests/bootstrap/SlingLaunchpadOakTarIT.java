@@ -46,7 +46,7 @@ public class SlingLaunchpadOakTarIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling-launchpad-oak-tar")
+            addSlingFeatures("sling-launchpad-oak-tar")
         );
     }
 

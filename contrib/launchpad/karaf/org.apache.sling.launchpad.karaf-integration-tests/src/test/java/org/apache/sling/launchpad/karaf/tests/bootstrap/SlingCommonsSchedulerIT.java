@@ -39,7 +39,7 @@ public class SlingCommonsSchedulerIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling-commons-scheduler")
+            addSlingFeatures("sling-commons-scheduler")
         );
     }
 

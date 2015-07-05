@@ -39,7 +39,7 @@ public class SlingCommonsThreadsIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling-commons-threads")
+            addSlingFeatures("sling-commons-threads")
         );
     }
 

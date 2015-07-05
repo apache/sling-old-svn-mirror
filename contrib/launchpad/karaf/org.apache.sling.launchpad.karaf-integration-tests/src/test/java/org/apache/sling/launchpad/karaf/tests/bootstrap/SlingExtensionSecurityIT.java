@@ -39,7 +39,7 @@ public class SlingExtensionSecurityIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling-extension-security")
+            addSlingFeatures("sling-extension-security")
         );
     }
 
