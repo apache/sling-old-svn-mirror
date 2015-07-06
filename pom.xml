@@ -29,7 +29,7 @@
     </parent>
 
     <artifactId>org.apache.sling.commons.contentdetection</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.2</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Content Detection Support</name>
@@ -48,9 +48,9 @@
     </properties>
     
     <scm>
-        <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/contentdetection</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/contentdetection</developerConnection>
-        <url>http://sling.apache.org/documentation/bundles/mime-type-support-commons-mime.html</url>
+        <connection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.commons.contentdetection-1.0.2</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.commons.contentdetection-1.0.2</developerConnection>
+        <url>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.commons.contentdetection-1.0.2</url>
     </scm>
 
     <dependencies>
