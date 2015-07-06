@@ -46,6 +46,12 @@
         <!-- argLine needs to be here so that jacoco plugin adds its own stuff to it -->
         <argLine>${pax.vm.options}</argLine>
     </properties>
+    
+    <scm>
+        <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/contentdetection</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/contentdetection</developerConnection>
+        <url>http://sling.apache.org/documentation/bundles/mime-type-support-commons-mime.html</url>
+    </scm>
 
     <dependencies>
 
