@@ -29,7 +29,7 @@
     </parent>
 
     <artifactId>org.apache.sling.commons.contentdetection</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Content Detection Support</name>
