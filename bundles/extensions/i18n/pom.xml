@@ -67,7 +67,7 @@
                             SLING-INF/nodetypes/message.cnd
                         </Sling-Nodetypes>
                         <Embed-Dependency>
-                            jackrabbit-jcr-commons;inline="org/apache/jackrabbit/util/ISO9075.*|org/apache/jackrabbit/util/XMLChar.*||org/apache/jackrabbit/util/Text.*",
+                            jackrabbit-jcr-commons;inline="org/apache/jackrabbit/util/ISO9075.*|org/apache/jackrabbit/util/XMLChar.*|org/apache/jackrabbit/util/Text.*|org/apache/jackrabbit/commons/json/Json*",
                             org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/ServiceUtil*|org/apache/sling/commons/osgi/PropertiesUtil*"
                         </Embed-Dependency>
 
