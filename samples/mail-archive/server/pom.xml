@@ -59,6 +59,18 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                    	<!-- test mail messages can't have licenses embedded -->
+                        <exclude>src/test/resources/test-files/**</exclude>
+                        <!-- exclude JSON files - remove when SLING-4857 is fixed -->
+                        <exclude>**/*.json</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <executions>
