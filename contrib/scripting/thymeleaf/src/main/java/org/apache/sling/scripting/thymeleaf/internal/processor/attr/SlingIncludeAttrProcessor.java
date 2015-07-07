@@ -117,7 +117,14 @@ public class SlingIncludeAttrProcessor extends AbstractAttrProcessor {
     }
 
     /**
-     * @see org.apache.sling.scripting.jsp.taglib.IncludeTagHandler
+     * @see "org.apache.sling.scripting.jsp.taglib.IncludeTagHandler"
+     *
+     * @param resource the resource to include
+     * @param path the path to include
+     * @param slingHttpServletRequest the current request
+     * @param slingHttpServletResponse the current response
+     * @param requestDispatcherOptions the options for the request dispatcher
+     * @return the character response from the include call to request dispatcher
      */
     protected String dispatch(Resource resource, String path, final SlingHttpServletRequest slingHttpServletRequest, final SlingHttpServletResponse slingHttpServletResponse, final RequestDispatcherOptions requestDispatcherOptions) {
 
