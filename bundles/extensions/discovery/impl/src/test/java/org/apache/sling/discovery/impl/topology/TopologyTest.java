@@ -52,9 +52,9 @@ public class TopologyTest {
     public void testTwoNodes() throws Throwable {
         Instance instance1 = TopologyTestHelper.createInstance(instances, "instance1");
         Instance instance2 = TopologyTestHelper.createInstance(instances, "instance2");
-        instance1.getConfig().setHeartbeatTimeout(4);
+        instance1.getConfig().setHeartbeatTimeout(8);
         instance1.getConfig().setHeartbeatInterval(1);
-        instance2.getConfig().setHeartbeatTimeout(1);
+        instance2.getConfig().setHeartbeatTimeout(2);
         instance2.getConfig().setHeartbeatInterval(1);
         
         Set<InstanceDescription> instances1 = instance1.getDiscoveryService().getTopology().getInstances();
@@ -94,7 +94,7 @@ public class TopologyTest {
                 instance2.getAnnouncementRegistry().listLocalAnnouncements();
         assertEquals(1, instance2LocalAnnouncements.size());
 
-        Thread.sleep(1100); // sleep of 1.1sec ensures instance2's heartbeat timeout (which is 1sec) hits
+        Thread.sleep(2200); // sleep of 2.2sec ensures instance2's heartbeat timeout (which is 2sec) hits
         
         instance1LocalAnnouncements = 
                 instance1.getAnnouncementRegistry().listLocalAnnouncements();
@@ -110,7 +110,7 @@ public class TopologyTest {
         TopologyTestHelper.assertTopologyConsistsOf(instance1.getDiscoveryService().getTopology(), instance1.getSlingId(), instance2.getSlingId());
         TopologyTestHelper.assertTopologyConsistsOf(instance2.getDiscoveryService().getTopology(), instance2.getSlingId());
         
-        Thread.sleep(3000); // another sleep 3s (1.1+3 = 4.1sec) ensures instance1's heartbeat timeout (which is 4sec) hits as well
+        Thread.sleep(6000); // another sleep 6s (2.2+6 = 8.2sec) ensures instance1's heartbeat timeout (which is 8sec) hits as well
         instance1LocalAnnouncements = 
                 instance1.getAnnouncementRegistry().listLocalAnnouncements();
         assertEquals(0, instance1LocalAnnouncements.size());
