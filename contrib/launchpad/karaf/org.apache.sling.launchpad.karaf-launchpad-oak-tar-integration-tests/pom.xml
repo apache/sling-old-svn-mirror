@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>23</version>
+    <version>24</version>
     <relativePath/>
   </parent>
 
@@ -54,7 +54,7 @@
       <groupId>org.apache.karaf</groupId>
       <artifactId>apache-karaf</artifactId>
       <type>tar.gz</type>
-      <version>3.0.3</version>
+      <version>4.0.1-SNAPSHOT</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
