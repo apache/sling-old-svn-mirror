@@ -223,8 +223,6 @@
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/resolution/WarSelectorServletTest.*</exclude>
                 <!-- TODO include once org.apache.sling.servlets.get 2.1.12 is released -->
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/VersionInfoServletTest.*</exclude>
-                <!-- TODO include once org.apache.sling.servlets.post 2.3.6 is released -->
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/post/PostServletVersionableTest.*</exclude>
               </excludes>
               <excludedGroups>org.apache.sling.commons.testing.junit.categories.OakOnly</excludedGroups>
             </configuration>
