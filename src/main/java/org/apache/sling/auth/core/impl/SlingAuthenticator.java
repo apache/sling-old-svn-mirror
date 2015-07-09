@@ -888,9 +888,9 @@ public class SlingAuthenticator implements Authenticator,
 
     private boolean isAnonAllowed(HttpServletRequest request) {
 
-        final String path = getPath(request);
+        String path = getPath(request);
         if (path.length() == 0) {
-            return false;
+            path = "/";
         }
 
         final Collection<AuthenticationRequirementHolder>[] holderSetArray = authRequiredCache
