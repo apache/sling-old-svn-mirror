@@ -23,9 +23,9 @@ import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.Resource;
@@ -38,6 +38,26 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
 
     private HelperData getHelperData() throws Exception {
         return new HelperData(null, new PathMapperImpl());
+    }
+
+    public void testLinkedFile() throws Exception {
+        String fileName = "file";
+        String linkedFileName = "linkedFile";
+
+        Session session = getSession();
+        Node file = rootNode.addNode(fileName, JcrConstants.NT_FILE);
+        Node res = file.addNode(JcrConstants.JCR_CONTENT, JcrConstants.NT_RESOURCE);
+        setupResource(res);
+        file.addMixin(JcrConstants.MIX_REFERENCEABLE);
+        session.save();
+
+        Node linkedFile = rootNode.addNode(linkedFileName, JcrConstants.NT_LINKEDFILE);
+        linkedFile.setProperty(JcrConstants.JCR_CONTENT, file);
+        session.save();
+
+        JcrNodeResource linkedFileResource = new JcrNodeResource(null, linkedFile.getPath(), null, linkedFile, getHelperData());
+        assertEquals(TEST_DATA, linkedFileResource.adaptTo(InputStream.class));
+
     }
 
     public void testNtFileNtResource() throws Exception {
