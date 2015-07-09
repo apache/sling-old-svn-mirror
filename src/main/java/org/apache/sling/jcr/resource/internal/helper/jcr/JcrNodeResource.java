@@ -19,6 +19,7 @@ package org.apache.sling.jcr.resource.internal.helper.jcr;
 import static org.apache.jackrabbit.JcrConstants.JCR_CONTENT;
 import static org.apache.jackrabbit.JcrConstants.JCR_DATA;
 import static org.apache.jackrabbit.JcrConstants.NT_FILE;
+import static org.apache.jackrabbit.JcrConstants.NT_LINKEDFILE;
 
 import java.io.InputStream;
 import java.security.AccessControlException;
@@ -196,7 +197,7 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
                 // otherwise it is the node of this resource
                 Node content = node.isNodeType(NT_FILE)
                         ? node.getNode(JCR_CONTENT)
-                        : node;
+                        : node.isNodeType(NT_LINKEDFILE) ? node.getProperty(JCR_CONTENT).getNode() : node;
 
                 Property data;
 
