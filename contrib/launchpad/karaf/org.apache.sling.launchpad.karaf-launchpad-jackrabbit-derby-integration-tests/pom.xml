@@ -54,7 +54,7 @@
       <groupId>org.apache.karaf</groupId>
       <artifactId>apache-karaf</artifactId>
       <type>tar.gz</type>
-      <version>3.0.3</version>
+      <version>4.0.0</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>

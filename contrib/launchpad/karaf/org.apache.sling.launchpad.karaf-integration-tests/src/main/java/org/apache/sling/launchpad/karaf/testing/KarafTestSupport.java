@@ -108,10 +108,6 @@ public abstract class KarafTestSupport {
         return KARAF_NAME;
     }
 
-    protected Option addBootFeature(final String feature) {
-        return editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresBoot", "," + feature);
-    }
-
     protected Option addSlingFeatures(final String... features) {
         return features(maven().groupId("org.apache.sling").artifactId("org.apache.sling.launchpad.karaf-features").type("xml").classifier("features").versionAsInProject(), features);
     }
@@ -141,6 +137,7 @@ public abstract class KarafTestSupport {
                 .unpackDirectory(new File("target/paxexam/" + getClass().getSimpleName())),
             keepRuntimeFolder(),
             logLevel(LogLevelOption.LogLevel.INFO),
+            editConfigurationFilePut("etc/org.apache.karaf.features.cfg", "featuresBoot", "(aries-blueprint, bundle, config, deployer, diagnostic, feature, instance, jaas, kar, log, management, package, service, shell, shell-compat, ssh, system, wrap, eventadmin, webconsole, http, http-whiteboard)"),
             editConfigurationFilePut("etc/org.apache.karaf.management.cfg", "rmiRegistryPort", Integer.toString(rmiRegistryPort)),
             editConfigurationFilePut("etc/org.apache.karaf.management.cfg", "rmiServerPort", Integer.toString(rmiServerPort)),
             editConfigurationFilePut("etc/org.apache.karaf.shell.cfg", "sshPort", Integer.toString(sshPort)),
