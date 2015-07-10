@@ -150,7 +150,7 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
     @Property(
             value = DEFAULT_ADMIN_USER,
-            label = "Administator",
+            label = "Administrator",
             description = "The user name of the administrative user. This user"
                 + "name is used to implement the SlingRepository.loginAdministrative(String)"
                 + "method. It is intended for this user to provide full read/write access to repository.")
