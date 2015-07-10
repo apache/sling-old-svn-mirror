@@ -40,6 +40,7 @@ public class JobStatusNotifierImpl implements JobStatusNotifier {
         synchronized ( this ) {
             this.isCalled = true;
             this.processor = processor;
+            this.notify();
             return !isMarked;
         }
     }
