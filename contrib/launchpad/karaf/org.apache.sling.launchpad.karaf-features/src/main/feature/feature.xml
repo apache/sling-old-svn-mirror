@@ -151,13 +151,6 @@
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
   </feature>
-  <!-- Apache Sling Fragments -->
-  <feature name="sling-fragments" version="${project.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.fragment.activation/1.0.2</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.fragment.transaction/1.0.0</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.fragment.ws/1.0.2</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.fragment.xml/1.0.2</bundle>
-  </feature>
   <!-- Apache Sling Installer -->
   <feature name="sling-installer" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.installer.console/1.0.0</bundle>
@@ -191,7 +184,6 @@
     <feature version="${project.version}">sling-servlets</feature>
     <feature version="${project.version}">sling-jcr-jackrabbit</feature>
     <!-- ... -->
-    <feature version="${project.version}">sling-fragments</feature>
     <feature version="${project.version}">sling-installer</feature>
     <feature version="${project.version}">sling-scripting-javascript</feature>
     <feature version="${project.version}">sling-scripting-jsp</feature>
@@ -242,7 +234,6 @@
     <feature version="${project.version}">sling-servlets</feature>
     <feature version="${project.version}">sling-jcr-oak</feature>
     <!-- ... -->
-    <feature version="${project.version}">sling-fragments</feature>
     <feature version="${project.version}">sling-installer</feature>
     <feature version="${project.version}">sling-extension-adapter</feature>
     <feature version="${project.version}">sling-extension-bundleresource</feature>
