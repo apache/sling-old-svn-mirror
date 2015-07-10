@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>20</version>
+    <version>24</version>
     <relativePath/>
   </parent>
 
@@ -45,8 +45,15 @@
   <dependencies>
     <!-- javax -->
     <dependency>
+      <groupId>javax.inject</groupId>
+      <artifactId>javax.inject</artifactId>
+      <version>1</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>javax.jcr</groupId>
       <artifactId>jcr</artifactId>
+      <version>2.0</version>
       <scope>provided</scope>
     </dependency>
     <!-- OSGi -->
@@ -134,7 +141,7 @@
 
   <profiles>
     <profile>
-      <id>localhost</id>
+      <id>karaf@localhost</id>
       <build>
         <plugins>
           <plugin>
@@ -149,8 +156,8 @@
                 </goals>
                 <configuration>
                   <slingUrl>http://localhost:8181/system/console/install</slingUrl>
-                  <user>admin</user>
-                  <password>admin</password>
+                  <user>karaf</user>
+                  <password>karaf</password>
                 </configuration>
               </execution>
             </executions>
