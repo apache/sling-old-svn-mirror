@@ -194,6 +194,9 @@
               Include-Resource
             </_removeheaders>
           </instructions>
+          <filters>
+            <filter>!org.thymeleaf</filter>
+          </filters>
         </configuration>
       </plugin>
       <plugin>
