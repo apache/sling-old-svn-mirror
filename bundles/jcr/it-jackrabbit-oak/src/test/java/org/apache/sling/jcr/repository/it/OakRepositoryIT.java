@@ -65,8 +65,6 @@ public class OakRepositoryIT extends CommonTests {
         // embedded for now opt.add(mavenBundle("org.apache.jackrabbit", "oak-jcr", oakVersion));
         opt.add(mavenBundle("org.apache.jackrabbit", "oak-commons", oakVersion));
 
-        opt.add(mavenBundle("org.apache.jackrabbit", "oak-mk-api", oakVersion));
-
         opt.add(mavenBundle("org.apache.jackrabbit", "oak-lucene", oakVersion));
         opt.add(mavenBundle("org.apache.jackrabbit", "oak-blob", oakVersion));
         opt.add(mavenBundle("org.apache.felix", "org.apache.felix.jaas", "0.0.2"));
