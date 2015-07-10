@@ -244,6 +244,8 @@ public abstract class Utility {
             } catch (final InstantiationException ie) {
                 // something happened with the resource in the meantime
                 logger.debug("Unable to instantiate resource.", ie);
+            } catch (final RuntimeException re) {
+                logger.debug("Unable to read resource.", re);
             }
 
         }
