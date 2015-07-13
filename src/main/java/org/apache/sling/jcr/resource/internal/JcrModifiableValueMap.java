@@ -213,6 +213,7 @@ public final class JcrModifiableValueMap
     /**
      * Return the path of the current node.
      *
+     * @return the path
      * @throws IllegalStateException If a repository exception occurs
      */
     public String getPath() {
@@ -349,8 +350,9 @@ public final class JcrModifiableValueMap
      * Handles key name escaping by taking into consideration if it contains a
      * registered prefix
      *
-     * @param key
+     * @param key the key to escape
      * @return escaped key name
+     * @throws RepositoryException if the repository's namespace prefixes cannot be retrieved
      */
     protected String escapeKeyName(final String key) throws RepositoryException {
         final int indexOfPrefix = key.indexOf(':');
