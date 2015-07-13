@@ -45,7 +45,7 @@ public class AttachSlingStartModel extends AbstractSlingStartMojo {
     public void execute() throws MojoExecutionException, MojoFailureException {
         final Model model;
         if (attachEffectiveModel) {
-            model = ProjectHelper.getEffectiveModel(this.project, getVariableResolver());
+            model = ProjectHelper.getEffectiveModel(this.project, getResolverOptions());
         }
         else {
             model = ProjectHelper.getRawModel(this.project);
