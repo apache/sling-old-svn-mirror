@@ -99,8 +99,8 @@
 [artifacts startLevel=10]
     org.apache.felix/org.apache.felix.scr/1.8.2
     org.apache.felix/org.apache.felix.metatype/1.0.12
-    org.apache.tika/tika-core/1.2
-    org.apache.tika/tika-bundle/1.2
+    org.apache.tika/tika-core/1.9
+    org.apache.tika/tika-bundle/1.9
 
 [artifacts startLevel=15]
     commons-io/commons-io/2.4
