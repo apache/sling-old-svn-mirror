@@ -47,17 +47,21 @@ public class PomArtifactVersionResolver implements ArtifactVersionResolver {
         if (version != null) {
             return version;
         }
-        version = findVersion(project.getDependencyManagement().getDependencies(), artifact);
-        if (version != null) {
-            return version;
+        if (project.getDependencyManagement() != null) {
+            version = findVersion(project.getDependencyManagement().getDependencies(), artifact);
+            if (version != null) {
+                return version;
+            }
         }
         return null;
     }
     
     private String findVersion(List<Dependency> dependencies, Artifact artifact) {
-        for (Dependency dependency : project.getDependencyManagement().getDependencies()) {
-            if (artifactEquals(dependency, artifact)) {
-                return dependency.getVersion();
+        if (dependencies != null) {
+            for (Dependency dependency : dependencies) {
+                if (artifactEquals(dependency, artifact)) {
+                    return dependency.getVersion();
+                }
             }
         }
         return null;
