@@ -92,6 +92,13 @@ public abstract class ResourceProvider<T> {
     public static final String PROPERTY_ROOT = "provider.root";
 
     /**
+     * Optional service registration property setting a name for the provider.
+     * The name must not be unique. The name in combination with the root
+     * can be used to identify a resource provider.
+     */
+    public static final String PROPERTY_NAME = "provider.name";
+
+    /**
      * The name of the service registration property containing a boolean
      * flag indicating if the ResourceAccessSecurity service should be used for
      * this provider or not. ResourceAccessSecurity should only be used if the
