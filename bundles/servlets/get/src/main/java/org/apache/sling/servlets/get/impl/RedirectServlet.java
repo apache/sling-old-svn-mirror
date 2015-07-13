@@ -52,6 +52,7 @@ import org.slf4j.LoggerFactory;
  * property <code>sling:target</code>.</li>
  * <li>The second attempt is to access the resource <code>sling:target</code>
  * below the requested resource and attapt this to a string.</li>
+ * </ul>
  * <p>
  * If there is no value found for <code>sling:target</code> a 404 (NOT FOUND)
  * status is sent by this servlet. Otherwise a 302 (FOUND, temporary redirect)

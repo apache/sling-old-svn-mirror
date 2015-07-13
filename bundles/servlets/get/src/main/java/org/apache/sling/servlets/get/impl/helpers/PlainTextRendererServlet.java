@@ -80,6 +80,12 @@ public class PlainTextRendererServlet extends SlingSafeMethodsServlet {
      * resp.getOutputStream().write(data.toString().getBytes()); }
      */
 
+    /**
+     * Dumps the information about the provided resource to a {@link PrintWriter}.
+     * @param pw the PrintWriter
+     * @param r the resource
+     * @param map the resource's properties
+     */
     @SuppressWarnings("unchecked")
     protected void dump(PrintWriter pw, Resource r, Map map) {
         pw.println("** Resource dumped by " + getClass().getSimpleName() + "**");
