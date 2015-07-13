@@ -113,8 +113,8 @@ public class ModelUtilityTest {
         final Model baseRaw = U.readCompleteTestModel(new String[] {"merge/config-base.txt"});
         final Model mergeRaw = U.readCompleteTestModel(new String[] {"merge/config-merge.txt"});
 
-        final Model baseEffective = ModelUtility.getEffectiveModel(baseRaw, null);
-        final Model mergeEffective = ModelUtility.getEffectiveModel(mergeRaw, null);
+        final Model baseEffective = ModelUtility.getEffectiveModel(baseRaw);
+        final Model mergeEffective = ModelUtility.getEffectiveModel(mergeRaw);
 
         ModelUtility.merge(baseEffective, mergeEffective);
 
@@ -147,7 +147,7 @@ public class ModelUtilityTest {
     @Test public void mergeBaseRawTest() throws Exception {
         final Model baseRaw = U.readCompleteTestModel(new String[] {"merge/config-base.txt"});
         final Model mergeRaw = U.readCompleteTestModel(new String[] {"merge/config-merge.txt"});
-        final Model mergeEffective = ModelUtility.getEffectiveModel(mergeRaw, null);
+        final Model mergeEffective = ModelUtility.getEffectiveModel(mergeRaw);
 
         ModelUtility.merge(baseRaw, mergeEffective);
 
@@ -180,7 +180,7 @@ public class ModelUtilityTest {
     @Test public void mergeBaseEffectiveTest() throws Exception {
         final Model baseRaw = U.readCompleteTestModel(new String[] {"merge/config-base.txt"});
         final Model mergeRaw = U.readCompleteTestModel(new String[] {"merge/config-merge.txt"});
-        final Model baseEffective = ModelUtility.getEffectiveModel(baseRaw, null);
+        final Model baseEffective = ModelUtility.getEffectiveModel(baseRaw);
 
         ModelUtility.merge(baseEffective, mergeRaw);
 
