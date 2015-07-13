@@ -46,6 +46,7 @@ import org.apache.sling.provisioning.model.ModelConstants;
 import org.apache.sling.provisioning.model.ModelUtility;
 import org.apache.sling.provisioning.model.RunMode;
 import org.apache.sling.provisioning.model.Traceable;
+import org.apache.sling.provisioning.model.ModelUtility.VariableResolver;
 import org.apache.sling.provisioning.model.io.ModelReader;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
@@ -144,9 +145,15 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
         } catch ( final IOException ioe) {
             throw new MavenExecutionException(ioe.getMessage(), ioe);
         }
+        
+        // prepare variable resolver
+        VariableResolver variableResolver = null;
+        if (nodeBooleanValue(info.plugin, "usePomVariables", false)) {
+            variableResolver = new PomVariableResolver(info.project);
+        }
 
         // we have to create an effective model to add the dependencies
-        final Model effectiveModel = ModelUtility.getEffectiveModel(info.localModel, null);
+        final Model effectiveModel = ModelUtility.getEffectiveModel(info.localModel, variableResolver);
 
         final List<Model> dependencies = searchSlingstartDependencies(env, info, effectiveModel);
         info.model = new Model();
@@ -154,7 +161,7 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
             ModelUtility.merge(info.model, d);
         }
         ModelUtility.merge(info.model, effectiveModel);
-        info.model = ModelUtility.getEffectiveModel(info.model, null);
+        info.model = ModelUtility.getEffectiveModel(info.model, variableResolver);
 
         final Map<Traceable, String> errors = ModelUtility.validate(info.model);
         if ( errors != null ) {
@@ -315,6 +322,13 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
         return dependencies;
     }
 
+    /**
+     * Gets plugins configuration from POM (string parameter).
+     * @param plugin Plugin
+     * @param name Configuration parameter.
+     * @param defaultValue Default value that is returned if parameter is not set
+     * @return Parameter value or default value.
+     */
     private static String nodeValue(final Plugin plugin, final String name, final String defaultValue) {
         final Xpp3Dom config = plugin == null ? null : (Xpp3Dom)plugin.getConfiguration();
         final Xpp3Dom node = (config == null ? null : config.getChild(name));
@@ -323,6 +337,18 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
         } else {
             return defaultValue;
         }
+    }
+
+    /**
+     * Gets plugins configuration from POM (boolean parameter).
+     * @param plugin Plugin
+     * @param name Configuration parameter.
+     * @param defaultValue Default value that is returned if parameter is not set
+     * @return Parameter value or default value.
+     */
+    private static boolean nodeBooleanValue(final Plugin plugin, final String name, final boolean defaultValue) {
+        String booleanValue = nodeValue(plugin, name, Boolean.toString(defaultValue));
+        return "true".equals(booleanValue.toLowerCase());
     }
 
     private static File resolveSlingstartArtifact(final Environment env,

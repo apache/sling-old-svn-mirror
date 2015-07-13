@@ -24,6 +24,7 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
+import org.apache.sling.provisioning.model.ModelUtility.VariableResolver;
 
 /**
  * Base class for all slingstart mojos.
@@ -45,7 +46,32 @@ public abstract class AbstractSlingStartMojo extends AbstractMojo {
     @Parameter(defaultValue="false")
     protected boolean createWebapp;
 
+    /**
+     * If set to true, properties from the Maven POM can be used as variables in the provisioning files.
+     */
+    @Parameter(defaultValue="false")
+    protected boolean usePomVariables;
+        
+    /**
+     * If set to true, the effective provisioning models with all variables replaced is attached instead of the raw model.
+     */
+    @Parameter(defaultValue="false")
+    protected boolean attachEffectiveModel;
+        
     protected File getTmpDir() {
         return new File(this.project.getBuild().getDirectory(), "slingstart-tmp");
     }
+    
+    /**
+     * @return Variable to be used when building an effective provisioning model.
+     */
+    protected VariableResolver getVariableResolver() {
+        if (usePomVariables) {
+            return new PomVariableResolver(project);
+        }
+        else {
+            return null;
+        }
+    }
+    
 }

@@ -24,6 +24,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.sling.provisioning.model.Model;
 import org.apache.sling.provisioning.model.ModelUtility;
+import org.apache.sling.provisioning.model.ModelUtility.VariableResolver;
 import org.apache.sling.provisioning.model.io.ModelReader;
 import org.apache.sling.provisioning.model.io.ModelWriter;
 
@@ -59,14 +60,14 @@ public abstract class ProjectHelper {
      * @return The effective model
      * @throws MojoExecutionException If reading fails
      */
-    public static Model getEffectiveModel(final MavenProject project)
+    public static Model getEffectiveModel(final MavenProject project, VariableResolver variableResolver)
     throws MojoExecutionException {
         Model result = (Model) project.getContextValue(EFFECTIVE_MODEL_CACHE);
         if ( result == null ) {
             try {
                 final StringReader r = new StringReader((String)project.getContextValue(EFFECTIVE_MODEL_TXT));
                 result = ModelReader.read(r, project.getId());
-                result = ModelUtility.getEffectiveModel(result, null);
+                result = ModelUtility.getEffectiveModel(result, variableResolver);
                 project.setContextValue(EFFECTIVE_MODEL_CACHE, result);
             } catch ( final IOException ioe) {
                 throw new MojoExecutionException(ioe.getMessage(), ioe);
