@@ -267,13 +267,85 @@ public abstract class ModelUtility {
     }
 
     /**
+     * Optional artifact dependency version resolver
+     */
+    public interface ArtifactVersionResolver {
+
+        /**
+         * Setting a version for an artifact dependency in a Sling Provisioning file is optional.
+         * By default an artifact without a defined version gets "LATEST" as version.
+         * By defining an DependencyVersionResolver it is possible to plugin in an external dependency resolver
+         * which decides which version to use if no version is given in the provisioning file.
+         * If an exact version is given in the provisioning file this is always used.
+         * @param artifact Artifact without version (version is set to LATEST)
+         * @return New version, or null if the version should not be changed
+         */
+        String resolve(final Artifact artifact);
+    }
+    
+    /**
+     * Parameter builder class for {@link ModelUtility#getEffectiveModel(Model, ResolverOptions)} method.
+     */
+    public static final class ResolverOptions {
+        
+        private VariableResolver variableResolver;
+        private ArtifactVersionResolver artifactVersionResolver;
+        
+        public VariableResolver getVariableResolver() {
+            return variableResolver;
+        }
+        
+        public ResolverOptions variableResolver(VariableResolver variableResolver) {
+            this.variableResolver = variableResolver;
+            return this;
+        }
+        
+        public ArtifactVersionResolver getArtifactVersionResolver() {
+            return artifactVersionResolver;
+        }
+        
+        public ResolverOptions artifactVersionResolver(ArtifactVersionResolver dependencyVersionResolver) {
+            this.artifactVersionResolver = dependencyVersionResolver;
+            return this;
+        }
+        
+    }
+
+    /**
+     * Replace all variables in the model and return a new model with the replaced values.
+     * @param model The base model.
+     * @return The model with replaced variables.
+     * @throws IllegalArgumentException If a variable can't be replaced or configuration properties can't be parsed
+     */
+    public static Model getEffectiveModel(final Model model) {
+        return getEffectiveModel(model, new ResolverOptions());
+    }
+    
+    /**
      * Replace all variables in the model and return a new model with the replaced values.
      * @param model The base model.
      * @param resolver Optional variable resolver.
      * @return The model with replaced variables.
      * @throws IllegalArgumentException If a variable can't be replaced or configuration properties can't be parsed
+     * @deprecated Use {@link #getEffectiveModel(Model, ResolverOptions)} instead
      */
+    @Deprecated
     public static Model getEffectiveModel(final Model model, final VariableResolver resolver) {
+        return getEffectiveModel(model, new ResolverOptions().variableResolver(resolver));
+    }
+    
+    /**
+     * Replace all variables in the model and return a new model with the replaced values.
+     * @param model The base model.
+     * @param options Resolver options.
+     * @return The model with replaced variables.
+     * @throws IllegalArgumentException If a variable can't be replaced or configuration properties can't be parsed
+     */
+    public static Model getEffectiveModel(final Model model, final ResolverOptions options) {
+        if (options == null) {
+            throw new IllegalArgumentException("Resolver options is null");
+        }
+        
         final Model result = new Model();
         result.setLocation(model.getLocation());
 
@@ -296,11 +368,14 @@ public abstract class ModelUtility {
                     newGroup.setLocation(group.getLocation());
 
                     for(final Artifact artifact : group) {
-                        final Artifact newArtifact = new Artifact(replace(newFeature, artifact.getGroupId(), resolver),
-                                replace(newFeature, artifact.getArtifactId(), resolver),
-                                replace(newFeature, artifact.getVersion(), resolver),
-                                replace(newFeature, artifact.getClassifier(), resolver),
-                                replace(newFeature, artifact.getType(), resolver));
+                        final String groupId = replace(newFeature, artifact.getGroupId(), options.getVariableResolver());
+                        final String artifactId = replace(newFeature, artifact.getArtifactId(), options.getVariableResolver());
+                        final String version = replace(newFeature, artifact.getVersion(), options.getVariableResolver());
+                        final String classifier = replace(newFeature, artifact.getClassifier(), options.getVariableResolver());
+                        final String type = replace(newFeature, artifact.getType(), options.getVariableResolver());
+                        final String resolvedVersion = resolveArtifactVersion(groupId, artifactId, version, classifier, type,
+                                options.getArtifactVersionResolver());
+                        final Artifact newArtifact = new Artifact(groupId, artifactId, resolvedVersion, classifier, type);
                         newArtifact.setComment(artifact.getComment());
                         newArtifact.setLocation(artifact.getLocation());
 
@@ -313,7 +388,7 @@ public abstract class ModelUtility {
                 for(final Configuration config : runMode.getConfigurations()) {
                     final Configuration newConfig = newRunMode.getOrCreateConfiguration(config.getPid(), config.getFactoryPid());
 
-                    getProcessedConfiguration(newFeature, newConfig, config, resolver);
+                    getProcessedConfiguration(newFeature, newConfig, config, options.getVariableResolver());
                 }
 
                 newRunMode.getSettings().setComment(runMode.getSettings().getComment());
@@ -327,8 +402,8 @@ public abstract class ModelUtility {
                                     if ( "sling.home".equals(name) ) {
                                         return "${sling.home}";
                                     }
-                                    if ( resolver != null ) {
-                                        return resolver.resolve(newFeature, name);
+                                    if ( options.getVariableResolver() != null ) {
+                                        return options.getVariableResolver().resolve(newFeature, name);
                                     }
                                     return newFeature.getVariables().get(name);
                                 }
@@ -382,7 +457,28 @@ public abstract class ModelUtility {
         }
         return msg;
     }
-
+    
+    /**
+     * Tries to resolves artifact version via {@link ArtifactVersionResolver} if no version was defined in provisioning file.
+     * @param groupId Group ID
+     * @param artifactId Artifact ID
+     * @param version Version
+     * @param classifier Classifier
+     * @param type Type
+     * @param artifactVersionResolver Artifact Version Resolver (may be null)
+     * @return Version to use for this artifact
+     */
+    static String resolveArtifactVersion(final String groupId, final String artifactId, final String version,
+            final String classifier, final String type, ArtifactVersionResolver artifactVersionResolver) {
+        if (artifactVersionResolver != null && "LATEST".equals(version)) {
+            String newVersion = artifactVersionResolver.resolve(new Artifact(groupId, artifactId, version, classifier, type));
+            if (newVersion != null) {
+                return newVersion;
+            }
+        }
+        return version;       
+    }
+    
     /**
      * Validates the model.
      * @param model The model to validate

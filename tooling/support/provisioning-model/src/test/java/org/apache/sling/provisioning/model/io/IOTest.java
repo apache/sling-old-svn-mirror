@@ -64,7 +64,7 @@ public class IOTest {
         U.verifyTestModel(readModel, false);
 
         // Resolve variables and verify the result
-        final Model effective = ModelUtility.getEffectiveModel(readModel, null);
+        final Model effective = ModelUtility.getEffectiveModel(readModel);
         U.verifyTestModel(effective, true);
 
         // write effective model
@@ -84,7 +84,7 @@ public class IOTest {
     }
 
     @Test public void testMultilineConfiguration() throws Exception {
-        final Model m = ModelUtility.getEffectiveModel(U.readCompleteTestModel(new String[] {"configadmin.txt"}), null);
+        final Model m = ModelUtility.getEffectiveModel(U.readCompleteTestModel(new String[] {"configadmin.txt"}));
 
         final List<Configuration> configs = new ArrayList<Configuration>();
         for(final Configuration c :  m.getFeature("configadmin").getRunMode().getConfigurations()) {

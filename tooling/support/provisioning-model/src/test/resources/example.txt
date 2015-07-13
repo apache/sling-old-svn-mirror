@@ -43,7 +43,8 @@
     commons-lang/commons-lang/2.6/jar
     org.apache.commons/commons-math/2.2/jar
     org.example/jar-is-default/1.2
-    
+    org.example/jar-without-version
+
 # Artifacts can have additional information like a SHA1 etc.
 #
     org.apache.commons/commons-math/2.2/jar [sha1=2353750701ABE]
@@ -81,5 +82,4 @@ org.apache.sling.another.config [format=properties]
 [artifacts startLevel=15 runModes=jackrabbit]
     org.apache.derby/derby/10.5.3.0_1/jar
     org.apache.sling/org.apache.sling.jcr.jackrabbit.server/${jackrabbit.version}/jar
-
 

@@ -91,7 +91,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        final Model model = ProjectHelper.getEffectiveModel(this.project, getVariableResolver());
+        final Model model = ProjectHelper.getEffectiveModel(this.project, getResolverOptions());
 
         this.prepareGlobal(model);
         this.prepareStandaloneApp(model);

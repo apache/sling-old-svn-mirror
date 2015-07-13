@@ -24,7 +24,7 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
-import org.apache.sling.provisioning.model.ModelUtility.VariableResolver;
+import org.apache.sling.provisioning.model.ModelUtility.ResolverOptions;
 
 /**
  * Base class for all slingstart mojos.
@@ -53,6 +53,13 @@ public abstract class AbstractSlingStartMojo extends AbstractMojo {
     protected boolean usePomVariables;
         
     /**
+     * If set to true, Artifact dependencies from provisioning file without explict version are tried 
+     * to be resolved against the dependency versions from the Maven POM.
+     */
+    @Parameter(defaultValue="false")
+    protected boolean usePomDependencies;
+        
+    /**
      * If set to true, the effective provisioning models with all variables replaced is attached instead of the raw model.
      */
     @Parameter(defaultValue="false")
@@ -65,13 +72,15 @@ public abstract class AbstractSlingStartMojo extends AbstractMojo {
     /**
      * @return Variable to be used when building an effective provisioning model.
      */
-    protected VariableResolver getVariableResolver() {
+    protected ResolverOptions getResolverOptions() {
+        ResolverOptions options = new ResolverOptions();
         if (usePomVariables) {
-            return new PomVariableResolver(project);
+            options.variableResolver(new PomVariableResolver(project));
         }
-        else {
-            return null;
+        if (usePomDependencies) {
+            options.artifactVersionResolver(new PomArtifactVersionResolver(project));
         }
+        return options;
     }
     
 }
