@@ -63,7 +63,11 @@ public class JcrResourceResolverFactoryImpl implements
     @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
     private volatile DynamicClassLoaderManager dynamicClassLoaderManager;
 
-    /** Get the dynamic class loader if available */
+    /**
+     * Get the dynamic class loader if available.
+     *
+     * @return the classloader
+     */
     public ClassLoader getDynamicClassLoader() {
         final DynamicClassLoaderManager dclm = this.dynamicClassLoaderManager;
         if (dclm != null) {

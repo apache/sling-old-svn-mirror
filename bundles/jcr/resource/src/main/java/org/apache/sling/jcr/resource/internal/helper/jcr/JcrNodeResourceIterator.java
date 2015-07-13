@@ -60,6 +60,10 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
     /**
      * Creates an instance using the given resource manager and the nodes
      * provided as a node iterator.
+     *
+     * @param resourceResolver the resolver
+     * @param nodes the node iterator
+     * @param helper the helper
      */
     public JcrNodeResourceIterator(final ResourceResolver resourceResolver,
                                    final NodeIterator nodes,
@@ -71,6 +75,12 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
      * Creates an instance using the given resource manager and the nodes
      * provided as a node iterator. Paths of the iterated resources will be
      * concatenated from the parent path, node name and the version number.
+     *
+     * @param resourceResolver the resolver
+     * @param parentPath the parent path
+     * @param parentVersion the parent version
+     * @param nodes the node iterator
+     * @param helper the helper
      */
     public JcrNodeResourceIterator(final ResourceResolver resourceResolver,
                                    final String parentPath,

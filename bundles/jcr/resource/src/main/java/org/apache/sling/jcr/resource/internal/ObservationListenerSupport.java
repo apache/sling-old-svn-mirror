@@ -95,6 +95,8 @@ public class ObservationListenerSupport  {
     /**
      * Get a resource resolver.
      * We don't need any syncing as this is called from the process OSGi thread.
+     *
+     * @return the resolver
      */
     public ResourceResolver getResourceResolver() {
         if ( this.resourceResolver == null ) {

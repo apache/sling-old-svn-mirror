@@ -35,6 +35,10 @@ public abstract class NodeUtil {
 
     /**
      * Update the mixin node types
+     *
+     * @param node the node
+     * @param mixinTypes the mixins
+     * @throws RepositoryException if the repository's namespaced prefixes cannot be retrieved
      */
     public static void handleMixinTypes(final Node node, final String[] mixinTypes)
     throws RepositoryException {
