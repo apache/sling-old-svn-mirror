@@ -118,8 +118,8 @@ public abstract class AbstractJobHandlingTest {
                 mavenBundle("org.apache.servicemix.bundles", "org.apache.servicemix.bundles.concurrent", "1.3.4_1"),
 
                 mavenBundle("org.apache.geronimo.bundles", "commons-httpclient", "3.1_1"),
-                mavenBundle("org.apache.tika", "tika-core", "1.2"),
-                mavenBundle("org.apache.tika", "tika-bundle", "1.2"),
+                mavenBundle("org.apache.tika", "tika-core", "1.9"),
+                mavenBundle("org.apache.tika", "tika-bundle", "1.9"),
 
                 mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", "1.0.0"),
                 mavenBundle("org.apache.felix", "org.apache.felix.http.api", "2.3.0"),
