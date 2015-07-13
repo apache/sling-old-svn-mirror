@@ -137,9 +137,12 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
         }
     }
     
-    /** Get recursion level from selectors. as per SLING-167: 
-     *  the last selector, if present, gives the recursion
-     *  level.
+    /**
+     * Get recursion level from selectors. as per SLING-167: the last selector, if present, gives the recursion level.
+     *
+     * @param req the request
+     * @return the recursion level
+     * @throws IllegalArgumentException if the detected selector is not a number
      */
     protected int getMaxRecursionLevel(SlingHttpServletRequest req) throws IllegalArgumentException {
         int maxRecursionLevels = 0;
@@ -165,8 +168,13 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
         }
         return maxRecursionLevels;
     }
-    
-    /** True if our request has the given selector */
+
+    /**
+     * Checks if the provided request contains a certain selector.
+     * @param req the request
+     * @param selectorToCheck the selector
+     * @return {@code true} if the selector is present, {@code false} otherwise
+     */
     protected boolean hasSelector(SlingHttpServletRequest req, String selectorToCheck) {
         for(String selector : req.getRequestPathInfo().getSelectors()) {
             if(selectorToCheck.equals(selector)) {
@@ -176,7 +184,11 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
         return false;
     }
 
-    /** True if our request wants the "tidy" pretty-printed format */
+    /**
+     * True if our request wants the "tidy" pretty-printed format
+     * @param req the request
+     * @return {@code true} if the request contains the {@link #TIDY} selector, {@code false} otherwise
+     */
     protected boolean isTidy(SlingHttpServletRequest req) {
         return hasSelector(req, TIDY);
     }

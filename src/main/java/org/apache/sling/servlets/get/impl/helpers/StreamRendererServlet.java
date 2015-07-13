@@ -718,6 +718,8 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
 
         /**
          * Validate range.
+         *
+         * @return {@code true} if the range is valid, {@code false} otherwise
          */
         public boolean validate() {
             if (end >= length) end = length - 1;
