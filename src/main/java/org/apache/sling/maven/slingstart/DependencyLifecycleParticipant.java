@@ -148,10 +148,10 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
         
         // prepare resolver options
         ResolverOptions resolverOptions = new ResolverOptions();
-        if (nodeBooleanValue(info.plugin, "usePomVariables", false)) {
+        if (nodeBooleanValue(info.plugin, "usePomVariables", false) && info.project != null) {
             resolverOptions.variableResolver(new PomVariableResolver(info.project));
         }
-        if (nodeBooleanValue(info.plugin, "usePomDependencies", false)) {
+        if (nodeBooleanValue(info.plugin, "usePomDependencies", false) && info.project != null) {
             resolverOptions.artifactVersionResolver(new PomArtifactVersionResolver(info.project));
         }
 
