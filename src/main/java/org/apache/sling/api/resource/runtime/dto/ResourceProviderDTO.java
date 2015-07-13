@@ -52,5 +52,5 @@ public class ResourceProviderDTO {
     /**
      * The service id from the service registry.
      */
-    public int serviceId;
+    public long serviceId;
 }
