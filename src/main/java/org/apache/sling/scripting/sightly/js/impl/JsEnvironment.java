@@ -122,9 +122,11 @@ public class JsEnvironment {
 
     /**
      * Run a script at a given path
-     * @param caller the resource of the script that invokes the Js code
-     * @param path the path to the JS script
+     *
+     * @param caller         the resource of the script that invokes the Js code
+     * @param path           the path to the JS script
      * @param globalBindings bindings for the JS script
+     * @param arguments      the arguments for the JS script
      * @return an asynchronous container for the result
      * @throws UnsupportedOperationException if this method is run when the event loop is not empty
      */
