@@ -55,9 +55,9 @@
     org.apache.sling/org.apache.sling.bundleresource.impl/2.2.0
     org.apache.sling/org.apache.sling.fsresource/1.1.4
     org.apache.sling/org.apache.sling.launchpad.content/2.0.8
-    org.apache.sling/org.apache.sling.scripting.api/2.1.6
-    org.apache.sling/org.apache.sling.scripting.core/2.0.28
-    org.apache.sling/org.apache.sling.scripting.javascript/2.0.14
+    org.apache.sling/org.apache.sling.scripting.api/2.1.7-SNAPSHOT
+    org.apache.sling/org.apache.sling.scripting.core/2.0.29-SNAPSHOT
+    org.apache.sling/org.apache.sling.scripting.javascript/2.0.19-SNAPSHOT
     org.apache.sling/org.apache.sling.scripting.jsp/2.1.6
     org.apache.sling/org.apache.sling.scripting.jsp.taglib/2.2.4
     org.apache.sling/org.apache.sling.i18n/2.4.3-SNAPSHOT
