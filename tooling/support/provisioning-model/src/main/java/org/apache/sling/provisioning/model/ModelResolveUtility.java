@@ -30,6 +30,9 @@ import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.sling.provisioning.model.ModelUtility.ArtifactVersionResolver;
 import org.apache.sling.provisioning.model.ModelUtility.VariableResolver;
 
+/**
+ * Helper methods for resolving variables and artifact versions in models.
+ */
 class ModelResolveUtility {
 
     /**
@@ -114,9 +117,7 @@ class ModelResolveUtility {
         // check for raw configuration
         String rawConfig = (String)config.getProperties().get(ModelConstants.CFG_UNPROCESSED);
         if ( rawConfig != null ) {
-            if ( resolver != null ) {
-                rawConfig = replace(feature, rawConfig, resolver);
-            }
+            rawConfig = replace(feature, rawConfig, resolver);
             if ( config.isSpecial() ) {
                 newConfig.getProperties().put(config.getPid(), rawConfig);
             } else {
