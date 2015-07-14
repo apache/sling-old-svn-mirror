@@ -20,9 +20,12 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
+
 import junitx.util.PrivateAccessor;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.security.impl.ContentDispositionFilter.RewriterResponse;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JUnit4Mockery;
@@ -221,6 +224,9 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                will(returnValue(null));
+                allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
                 allowing(request).getPathInfo();
                 will(returnValue("/libs"));
                 allowing(response).setContentType("text/html");
@@ -254,6 +260,9 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                will(returnValue(null));
+                allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
                 allowing(request).getPathInfo();
                 will(returnValue("/content/usergenerated/author"));
                 allowing(response).setContentType("text/html");
@@ -282,10 +291,15 @@ public class ContentDispositionFilterTest {
             }
         });    
         PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{ComponentContext.class},new Object[]{ctx});
-        ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response);
+        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response);
         
         context.checking(new Expectations() {
             {
+                allowing(response).containsHeader("Content-Disposition");
+                will(returnValue(false));
+                allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                will(returnValue(null));
+                allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
                 allowing(request).getPathInfo();
                 will(returnValue("/content/usergenerated"));
                 allowing(response).setContentType("text/html");
@@ -318,6 +332,9 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                will(returnValue(null));
+                allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
                 allowing(request).getPathInfo();
                 will(returnValue("/libs"));
                 allowing(response).setContentType("text/html");
@@ -347,10 +364,15 @@ public class ContentDispositionFilterTest {
             }
         });    
         PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{ComponentContext.class},new Object[]{ctx});
-        ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response);
+        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response);
         
         context.checking(new Expectations() {
             {
+                allowing(response).containsHeader("Content-Disposition");
+                will(returnValue(false));
+                allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                will(returnValue(null));
+                allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
                 allowing(request).getPathInfo();
                 will(returnValue("/content/usergenerated/author"));
                 allowing(response).setContentType("text/html");
@@ -383,6 +405,9 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                will(returnValue(null));
+                allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
                 allowing(request).getPathInfo();
                 will(returnValue("/content/usergenerated"));
                 allowing(response).setContentType("text/html");
@@ -415,6 +440,9 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                will(returnValue(null));
+                allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
                 allowing(request).getPathInfo();
                 will(returnValue("/libs"));
                 allowing(response).setContentType("text/html");
@@ -448,6 +476,9 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                will(returnValue(null));
+                allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
                 allowing(request).getPathInfo();
                 will(returnValue("/content/usergenerated/author"));
                 allowing(response).setContentType("text/html");
@@ -480,6 +511,9 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                will(returnValue(null));
+                allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
                 allowing(request).getPathInfo();
                 will(returnValue("/content/usergenerated"));
                 allowing(response).setContentType("text/html");
@@ -508,10 +542,15 @@ public class ContentDispositionFilterTest {
             }
         });    
         PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{ComponentContext.class},new Object[]{ctx});
-        ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response);
+        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response);
         
         context.checking(new Expectations() {
             {
+                allowing(response).containsHeader("Content-Disposition");
+                will(returnValue(false));
+                allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                will(returnValue(null));
+                allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "image/jpeg");
                 allowing(request).getPathInfo();
                 will(returnValue("/content/usergenerated"));
                 allowing(response).setContentType("image/jpeg");
@@ -544,6 +583,9 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                will(returnValue(null));
+                allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
                 allowing(request).getPathInfo();
                 will(returnValue("/libs"));
                 allowing(response).setContentType("text/html");
@@ -577,6 +619,9 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                will(returnValue(null));
+                allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
                 allowing(request).getPathInfo();
                 will(returnValue("/content/usergenerated/author"));
                 allowing(response).setContentType("text/html");
@@ -609,6 +654,9 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                will(returnValue(null));
+                allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
                 allowing(request).getPathInfo();
                 will(returnValue("/content/usergenerated/author"));
                 allowing(response).setContentType("text/html");
@@ -641,6 +689,11 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(response).containsHeader("Content-Disposition");
+                will(returnValue(false));
+                allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                will(returnValue(null));
+                allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "image/jpeg");
                 allowing(request).getPathInfo();
                 will(returnValue("/content/usergenerated/author"));
                 allowing(response).setContentType("image/jpeg");
@@ -649,5 +702,96 @@ public class ContentDispositionFilterTest {
             }
         });       
         rewriterResponse.setContentType("image/jpeg");
+    }
+    
+    /**
+     * Test repeated setContentType calls don't add multiple headers, case 1 resetting the same mimetype
+     * @throws Throwable
+     */
+    @Test
+    public void test_doFilter15() throws Throwable{       
+        final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
+        final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
+        contentDispositionFilter = new ContentDispositionFilter();
+        
+        final ComponentContext ctx = context.mock(ComponentContext.class);
+        final Dictionary props = new Hashtable<String, String[]>();
+        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated"});
+        
+        context.checking(new Expectations() {
+            {
+                allowing(ctx).getProperties();
+                will(returnValue(props));
+                
+}
+        });    
+        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{ComponentContext.class},new Object[]{ctx});
+        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response);
+        
+        context.checking(new Expectations() {
+            {
+                allowing(response).containsHeader("Content-Disposition");
+                will(returnValue(false));
+                exactly(1).of(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                will(returnValue(null));
+                exactly(1).of(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                will(returnValue("text/html"));
+                allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
+                allowing(request).getPathInfo();
+                will(returnValue("/content/usergenerated"));
+                allowing(response).setContentType("text/html");
+                //CONTENT DISPOSITION IS SET
+                exactly(1).of(response).addHeader("Content-Disposition", "attachment");
+            }
+        });       
+        rewriterResponse.setContentType("text/html");
+        rewriterResponse.setContentType("text/html");
+    } 
+    /**
+     * Test repeated setContentType calls don't add multiple headers, case 2 changing mime type
+     * @throws Throwable
+     */
+    @Test
+    public void test_doFilter16() throws Throwable{       
+        final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
+        final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
+        contentDispositionFilter = new ContentDispositionFilter();
+        
+        final ComponentContext ctx = context.mock(ComponentContext.class);
+        final Dictionary props = new Hashtable<String, String[]>();
+        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated"});
+        
+        context.checking(new Expectations() {
+            {
+                allowing(ctx).getProperties();
+                will(returnValue(props));
+                
+            }
+        });    
+        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{ComponentContext.class},new Object[]{ctx});
+        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response);
+        
+        context.checking(new Expectations() {
+            {
+                exactly(1).of(response).containsHeader("Content-Disposition");
+                will(returnValue(false));
+                exactly(1).of(response).containsHeader("Content-Disposition");
+                will(returnValue(true));
+                exactly(1).of(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                will(returnValue(null));
+                exactly(1).of(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                will(returnValue("text/html"));
+                allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/xml");
+                allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
+                allowing(request).getPathInfo();
+                will(returnValue("/content/usergenerated"));
+                allowing(response).setContentType("text/html");
+                allowing(response).setContentType("text/xml");
+                //CONTENT DISPOSITION IS SET
+                exactly(1).of(response).addHeader("Content-Disposition", "attachment");
+            }
+        });       
+        rewriterResponse.setContentType("text/html");
+        rewriterResponse.setContentType("text/xml");
     }
 }
