@@ -56,7 +56,7 @@ class EffectiveModelProcessor extends ModelProcessor {
     @Override
     protected Configuration processConfiguration(Configuration config, Feature newFeature, RunMode newRunMode) {
         Configuration newConfig = new Configuration(config.getPid(), config.getFactoryPid());
-        getProcessedConfiguration(newFeature, newConfig, config, options.getVariableResolver());
+        getProcessedConfiguration(newFeature, newConfig, config, true, options.getVariableResolver());
         return newConfig;
     }
 

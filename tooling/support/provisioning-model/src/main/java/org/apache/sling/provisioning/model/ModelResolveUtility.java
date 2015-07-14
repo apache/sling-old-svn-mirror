@@ -104,12 +104,14 @@ class ModelResolveUtility {
      * @param feature Feature
      * @param newConfig New configuration with replaced variables
      * @param config Source configuration which may contain variable placeholders
-     * @param resolver Variable resolver
+     * @param replaceVariables If set to true variables are resolved in the config before processing it.
+     * @param resolver Variable resolver Optional variable resolver which is used. If not given only the feature's variables are used.
      */
     static void getProcessedConfiguration(
             final Feature feature,
             final Configuration newConfig,
             final Configuration config,
+            final boolean replaceVariables,
             final VariableResolver resolver) {
         newConfig.setComment(config.getComment());
         newConfig.setLocation(config.getLocation());
@@ -117,7 +119,9 @@ class ModelResolveUtility {
         // check for raw configuration
         String rawConfig = (String)config.getProperties().get(ModelConstants.CFG_UNPROCESSED);
         if ( rawConfig != null ) {
-            rawConfig = replace(feature, rawConfig, resolver);
+            if ( replaceVariables ) {
+                rawConfig = replace(feature, rawConfig, resolver);
+            }
             if ( config.isSpecial() ) {
                 newConfig.getProperties().put(config.getPid(), rawConfig);
             } else {

@@ -171,12 +171,12 @@ public abstract class ModelUtility {
                     copyConfigurationProperties(baseConfig, mergeConfig);
                 } else {
                     final Configuration newConfig = new Configuration(baseConfig.getPid(), baseConfig.getFactoryPid());
-                    getProcessedConfiguration(null, newConfig, baseConfig, null);
+                    getProcessedConfiguration(null, newConfig, baseConfig, false, null);
                     clearConfiguration(baseConfig);
                     copyConfigurationProperties(baseConfig, newConfig);
 
                     clearConfiguration(newConfig);
-                    getProcessedConfiguration(null, newConfig, mergeConfig, null);
+                    getProcessedConfiguration(null, newConfig, mergeConfig, false, null);
 
                     if ( baseConfig.isSpecial() ) {
                         final String baseValue = baseConfig.getProperties().get(baseConfig.getPid()).toString();
@@ -201,7 +201,7 @@ public abstract class ModelUtility {
                     copyConfigurationProperties(baseConfig, mergeConfig);
                 } else {
                     final Configuration newMergeConfig = new Configuration(mergeConfig.getPid(), mergeConfig.getFactoryPid());
-                    getProcessedConfiguration(null, newMergeConfig, mergeConfig, null);
+                    getProcessedConfiguration(null, newMergeConfig, mergeConfig, false, null);
 
                     if ( baseConfig.isSpecial() ) {
                         final String baseValue = baseConfig.getProperties().get(baseConfig.getPid()).toString();
