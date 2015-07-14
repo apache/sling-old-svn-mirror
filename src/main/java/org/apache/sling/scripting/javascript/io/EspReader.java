@@ -38,18 +38,18 @@ import org.slf4j.LoggerFactory;
  * <li>ECMA code is written to the output as is.
  * <li>ECMA slash star (/*) comments are also written as is.
  * <li>ECMA slash slash (//) comments are written as is.
- * <li>JSP style template comments (<%-- -->) are also removed from the
+ * <li>JSP style template comments (&lt;%-- --&gt;) are also removed from the
  * stream. Lineendings (LFs and CRLFs) are written, though.
- * <li>HTML comments (<!-- -->) are not treated specially. Rather they are
+ * <li>HTML comments (&lt;!-- --&gt;) are not treated specially. Rather they are
  * handled as plain template text written to the output wrapped in
- * out.write(). The consequence of this behavious is, that as in JSP ECMA
+ * out.write(). The consequence of this behaviour is, that as in JSP ECMA
  * expressions may be included within the comments.
  * </ul>
  * <p>
  * The nice thing about this reader is, that the line numbers of the resulting
  * stream match the line numbers of the matching contents of the input stream.
  * Due to the insertion of write() calls, column numbers will not necessarily
- * match, though. This is especially true if you mix ECMA code tags (<% %>)
+ * match, though. This is especially true if you mix ECMA code tags (&lt;% %&gt;)
  * with template text on the same line.
  * <p>
  * For maximum performance it is advisable to not create the EspReader with a
@@ -197,6 +197,8 @@ public class EspReader extends FilterReader {
      * constructor wraps the input reader with a <code>PushbackReader</code>,
      * so that input stream modifications may be handled transparently by our
      * {@link #doRead()} method.
+     *
+     * @param baseReader the wrapped reader
      */
     public EspReader(Reader baseReader) {
         super(baseReader);
@@ -211,7 +213,11 @@ public class EspReader extends FilterReader {
         pushState(PARSE_STATE_ESP);
     }
     
-    /** Set the code fragment used to initialize the "out" variable */
+    /**
+     * Set the code fragment used to initialize the "out" variable
+     *
+     * @param statement the statement used for initialization
+     */
     public void setOutInitStatement(String statement) {
         outInitStatement = statement;
     }

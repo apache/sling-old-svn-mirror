@@ -32,9 +32,9 @@ public interface RhinoHostObjectProvider {
      * <code>Scriptable</code> interface. These classes will be registered
      * with the global scope as host objects and may then be used in any
      * server-side ECMAScript scripts.
-     * <p>
-     * Implementations may return <code>null</code> instead of an empty array
-     * if they do not provide any host objects.
+     *
+     * @return the host object classes; may return <code>null</code> instead of an empty array for implementations that do not provide
+     * any host objects
      */
     Class<? extends Scriptable>[] getHostObjectClasses();
 
@@ -50,9 +50,9 @@ public interface RhinoHostObjectProvider {
      * <code>org.slf4j.Log</code> as an imported class, it may simply be
      * referred to as <code>Log</code> (provided there is no other object of
      * that name, of course).
-     * <p>
-     * Implementations may return <code>null</code> instead of an empty array
-     * if they do not provide any imported classes.
+     *
+     * @return the imported classes; may return <code>null</code> instead of an empty array for implementations that do not import any
+     * classes
      */
     Class<?>[] getImportedClasses();
 
@@ -75,6 +75,8 @@ public interface RhinoHostObjectProvider {
      * <p>
      * Implementations may return <code>null</code> instead of an empty array
      * if they do not provide any package names.
+     *
+     * @return the imported packages; may return <code>null</code> instead of an empty array for implementations that do import any packages
      */
     String[] getImportedPackages();
 }

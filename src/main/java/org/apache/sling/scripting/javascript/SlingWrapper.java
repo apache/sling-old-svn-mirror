@@ -24,12 +24,16 @@ import org.mozilla.javascript.Wrapper;
 public interface SlingWrapper extends Wrapper {
 
     /**
-     * The name of the JavaScript host object "class"
+     * The name of the JavaScript host object "class".
+     *
+     * @return the class name
      */
     String getClassName();
     
     /**
-     * The list of Java classes wrapped by this wrapper
+     * The list of Java classes wrapped by this wrapper.
+     *
+     * @return the wrapped classes
      */
     Class<?> [] getWrappedClasses();
     
