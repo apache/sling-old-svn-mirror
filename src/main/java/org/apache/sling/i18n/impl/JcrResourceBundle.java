@@ -143,6 +143,9 @@ public class JcrResourceBundle extends ResourceBundle {
 
     @Override
     protected Object handleGetObject(String key) {
+        if (log.isDebugEnabled()) {
+            log.debug("Requesting key '{}' from resource bundle (baseName '{}', locale '{}')", new Object[] {key, baseName, locale});
+        }
         return resources.get(key);
     }
 
