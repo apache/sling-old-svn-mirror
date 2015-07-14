@@ -23,10 +23,12 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -42,6 +44,7 @@ import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
+import org.apache.sling.distribution.servlet.ServletJsonUtils;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.transport.core.DistributionTransport;
 import org.apache.sling.distribution.transport.core.DistributionTransportException;
@@ -145,29 +148,30 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
             // TODO : add queue parameter
 
             // continuously requests package streams as long as type header is received with the response (meaning there's a package of a certain type)
-            HttpResponse httpResponse;
+            InputStream inputStream;
+            final Map<String, String> headers = new HashMap<String, String>();
 
             int pulls = 0;
             int maxNumberOfPackages = DistributionRequestType.PULL.equals(distributionRequest.getRequestType()) ? maxPullItems : 1;
-            while (pulls < maxNumberOfPackages
-                    && (httpResponse = executor.execute(req).returnResponse()).getStatusLine().getStatusCode() == 200) {
-                HttpEntity entity = httpResponse.getEntity();
-                if (entity != null) {
-                    final DistributionPackage responsePackage = packageBuilder.readPackage(resourceResolver, entity.getContent());
-                    if (responsePackage != null) {
-                        responsePackage.getInfo().setOrigin(distributionURI);
-                        log.debug("pulled package no {} with info {}", pulls, responsePackage.getInfo());
 
-                        result.add(responsePackage);
-                    } else {
-                        log.warn("responsePackage is null");
-                    }
+            while (pulls < maxNumberOfPackages && (inputStream = HttpTransportUtils.fetchNextPackage(executor, distributionURI, headers)) != null) {
 
-                    pulls++;
+                final DistributionPackage responsePackage = packageBuilder.readPackage(resourceResolver, inputStream);
+                if (responsePackage != null) {
+                    responsePackage.getInfo().setOrigin(distributionURI);
+                    log.debug("pulled package no {} with info {}", pulls, responsePackage.getInfo());
+
+                    result.add(responsePackage);
+
+                    String originalId = headers.get(HttpTransportUtils.HEADER_DISTRIBUTION_ORIGINAL_ID);
+
+                    HttpTransportUtils.deletePackage(executor, distributionURI, originalId);
+
                 } else {
-                    log.info("no entity available");
-                    break;
+                    log.warn("responsePackage is null");
                 }
+
+                pulls++;
             }
 
         } catch (HttpHostConnectException e) {
