@@ -29,7 +29,7 @@ import org.mozilla.javascript.ScriptableObject;
 
 
 /**
- * Instances of this class can be used in both Sightly & JS scripts
+ * Instances of this class can be used in both Sightly &amp; JavaScript scripts.
  */
 public class HybridObject implements Scriptable, Record<Object> {
 

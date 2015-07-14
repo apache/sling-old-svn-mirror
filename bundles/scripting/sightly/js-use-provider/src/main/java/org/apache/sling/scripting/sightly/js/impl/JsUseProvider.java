@@ -55,7 +55,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Use provider for JS scripts. Ensures proper integration between Sightly & JS code-behind.
+ * Use provider for JavaScript Use-API objects.
  */
 @Component(
         metatype = true,
