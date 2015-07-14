@@ -86,7 +86,7 @@ class ModelProcessor {
         return result;
     }
     
-    protected KeyValueMap<String> processVariables(KeyValueMap<String> variables, Feature feature) {
+    protected KeyValueMap<String> processVariables(KeyValueMap<String> variables, Feature newFeature) {
         return variables;
     }
     

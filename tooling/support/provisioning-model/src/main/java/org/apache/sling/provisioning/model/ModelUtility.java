@@ -415,5 +415,58 @@ public abstract class ModelUtility {
         }
         return errors;
     }
+    
+    /**
+     * Applies a set of variables to the given model.
+     * All variables that are referenced anywhere within the model are detected and passed to the given variable resolver.
+     * The variable resolver may look up variables on it's own, or fallback to the variables already defined for the feature.
+     * All resolved variable values are collected and put to the "variables" section of the resulting model.
+     * @param model Original model
+     * @param variableResolver Variable resolver
+     * @return Model with updated "variables" section.
+     * @throws IllegalArgumentException If a variable can't be replaced or configuration properties can't be parsed
+     * @since 1.3
+     */
+    public static Model applyVariables(final Model model, final VariableResolver variableResolver) {
+        
+        // define delegating resolver that collects all variable names and value per feature
+        final Map<String,Map<String,String>> collectedVars = new HashMap<String, Map<String,String>>();
+        VariableResolver variableCollector = new VariableResolver() {
+            @Override
+            public String resolve(Feature feature, String name) {
+                String value = variableResolver.resolve(feature, name);
+                if (value != null) {
+                    Map<String,String> featureVars = collectedVars.get(feature.getName());
+                    if (featureVars == null) {
+                        featureVars = new HashMap<String, String>();
+                        collectedVars.put(feature.getName(), featureVars);
+                    }
+                    featureVars.put(name, value);
+                }
+                return value;
+            }
+        };
+        
+        // use effective model processor to collect variables, but drop the resulting model
+        new EffectiveModelProcessor(new ResolverOptions().variableResolver(variableCollector)).process(model);
+        
+        // define a processor that updates the "variables" sections in the features
+        ModelProcessor variablesUpdater = new ModelProcessor() {
+            @Override
+            protected KeyValueMap<String> processVariables(KeyValueMap<String> variables, Feature newFeature) {
+                KeyValueMap<String> newVariables = new KeyValueMap<String>();
+                Map<String,String> featureVars = collectedVars.get(newFeature.getName());
+                if (featureVars != null) {
+                    for (Map.Entry<String, String> entry : featureVars.entrySet()) {
+                        newVariables.put(entry.getKey(), entry.getValue());
+                    }
+                }
+                return newVariables;
+            }
+        };
+        
+        // return model with replaced "variables" sections
+        return variablesUpdater.process(model);
+    }
 
 }
