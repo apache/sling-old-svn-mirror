@@ -74,8 +74,8 @@ public class ModelWriter {
     /**
      * Writes the model to the writer.
      * The writer is not closed.
-     * @param writer
-     * @param subystem
+     * @param writer Writer
+     * @param model Model
      * @throws IOException
      */
     public static void write(final Writer writer, final Model model)

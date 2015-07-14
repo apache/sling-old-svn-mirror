@@ -27,7 +27,9 @@ import java.util.Map.Entry;
 import org.apache.sling.provisioning.model.ModelUtility.ResolverOptions;
 import org.apache.sling.provisioning.model.ModelUtility.VariableResolver;
 
-
+/**
+ * Resolves all variables and artifact dependencies for the {@link ModelUtility#getEffectiveModel(Model)} method.
+ */
 class EffectiveModelProcessor extends ModelProcessor {
     
     private final ResolverOptions options;
