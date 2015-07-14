@@ -31,6 +31,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.mime.MimeTypeProvider;
 import org.apache.sling.scripting.api.BindingsValuesProvider;
 import org.apache.sling.scripting.api.BindingsValuesProvidersByContext;
+import org.apache.sling.scripting.api.ScriptCache;
 import org.apache.sling.scripting.core.impl.helper.SlingScriptEngineManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
@@ -73,6 +74,9 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
     @Reference
     private BindingsValuesProvidersByContext bindingsValuesProviderTracker;
 
+    @Reference
+    private ScriptCache scriptCache;
+
     // ---------- AdapterFactory -----------------------------------------------
 
     @SuppressWarnings("unchecked")
@@ -88,7 +92,7 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
                     bindingsValuesProviderTracker.getBindingsValuesProviders(engine.getFactory(), BINDINGS_CONTEXT);
             // unchecked cast
             return (AdapterType) new DefaultSlingScript(this.bundleContext,
-                    resource, engine, bindingsValuesProviders, this.serviceCache);
+                    resource, engine, bindingsValuesProviders, this.serviceCache, scriptCache);
         }
 
         return null;

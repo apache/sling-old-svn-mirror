@@ -28,6 +28,7 @@ import static org.apache.sling.api.scripting.SlingBindings.RESPONSE;
 import static org.apache.sling.api.scripting.SlingBindings.SLING;
 
 import java.io.BufferedReader;
+import java.io.FilterReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -46,6 +47,8 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.script.Bindings;
+import javax.script.Compilable;
+import javax.script.CompiledScript;
 import javax.script.Invocable;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
@@ -72,6 +75,11 @@ import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.api.BindingsValuesProvider;
+import org.apache.sling.scripting.api.CachedScript;
+import org.apache.sling.scripting.api.ScriptCache;
+import org.apache.sling.scripting.api.ScriptNameAware;
+import org.apache.sling.scripting.core.ScriptNameAwareReader;
+import org.apache.sling.scripting.core.impl.helper.CachedScriptImpl;
 import org.apache.sling.scripting.core.impl.helper.ProtectedBindings;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
@@ -90,6 +98,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         new HashSet<String>(Arrays.asList(REQUEST, RESPONSE, READER, SLING, RESOURCE, OUT, LOG));
 
     /** The resource pointing to the script. */
+
     private final Resource scriptResource;
 
     /** The name of the script (the resource path) */
@@ -116,6 +125,9 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
     /** The cache for services. */
     private final ServiceCache cache;
 
+    /* The cache for compiled scripts. */
+    private final ScriptCache scriptCache;
+
     /**
      * Constructor
      * @param bundleContext The bundle context
@@ -128,12 +140,14 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             final Resource scriptResource,
             final ScriptEngine scriptEngine,
             final Collection<BindingsValuesProvider> bindingsValuesProviders,
-            final ServiceCache cache) {
+            final ServiceCache cache,
+            final ScriptCache scriptCache) {
         this.scriptResource = scriptResource;
         this.scriptEngine = scriptEngine;
         this.bundleContext = bundleContext;
         this.bindingsValuesProviders = bindingsValuesProviders;
         this.cache = cache;
+        this.scriptCache = scriptCache;
         this.scriptName = this.scriptResource.getPath();
         // Now know how to get the input stream, we still have to decide
         // on the encoding of the stream's data. Primarily we assume it is
@@ -358,7 +372,22 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             }
 
             // evaluate the script
-            final Object result = scriptEngine.eval(reader, ctx);
+            final Object result;
+            if (method == null && this.scriptEngine instanceof Compilable) {
+                CachedScript cachedScript = scriptCache.getScript(scriptName);
+                if (cachedScript == null) {
+                    ScriptNameAwareReader snReader = new ScriptNameAwareReader(reader, scriptName);
+                    CompiledScript compiledScript = ((Compilable) scriptEngine).compile(snReader);
+                    cachedScript = new CachedScriptImpl(scriptName, compiledScript);
+                    scriptCache.putScript(cachedScript);
+                    LOGGER.debug("Adding {} to the script cache.", scriptName);
+                } else {
+                    LOGGER.debug("Script {} was already cached.", scriptName);
+                }
+                result = cachedScript.getCompiledScript().eval(ctx);
+            } else {
+                result = scriptEngine.eval(reader, ctx);
+            }
 
             // call method - if supplied and script engine supports direct invocation
             if ( method != null && (this.scriptEngine instanceof Invocable)) {

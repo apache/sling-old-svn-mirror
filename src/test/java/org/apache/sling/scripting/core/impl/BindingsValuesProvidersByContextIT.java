@@ -57,15 +57,15 @@ import org.osgi.framework.ServiceRegistration;
 
 @RunWith(PaxExam.class)
 public class BindingsValuesProvidersByContextIT {
-    
+
     @Inject
     private BindingsValuesProvidersByContext bvpProvider;
-    
+
     @Inject
     private BundleContext bundleContext;
-    
+
     private final List<ServiceRegistration> regs = new ArrayList<ServiceRegistration>();
-    
+
     @org.ops4j.pax.exam.Configuration
     public Option[] config() {
         final String localRepo = System.getProperty("maven.repo.local", "");
@@ -75,7 +75,7 @@ public class BindingsValuesProvidersByContextIT {
         if(!bundleFile.canRead()) {
             throw new IllegalArgumentException( "Cannot read from bundle file " + bundleFile.getAbsolutePath());
         }
-        
+
         return options(
                 when( localRepo.length() > 0 ).useOptions(
                         systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo)
@@ -84,30 +84,34 @@ public class BindingsValuesProvidersByContextIT {
                         bundle(bundleFile.toURI().toString()),
                         mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.6.2"),
                         mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.3.2"),
-                        
-                        mavenBundle("org.apache.sling", "org.apache.sling.scripting.api", "2.1.6"),
+                        mavenBundle("org.apache.felix", "org.apache.felix.webconsole", "3.1.8"),
+
+                        mavenBundle("org.apache.sling", "org.apache.sling.scripting.api", "2.1.7-SNAPSHOT"),
+                        mavenBundle("org.apache.sling", "org.apache.sling.commons.threads", "3.1.0"),
                         mavenBundle("org.apache.sling", "org.apache.sling.api", "2.4.2"),
                         mavenBundle("org.apache.sling", "org.apache.sling.commons.mime", "2.1.4"),
                         mavenBundle("org.apache.sling", "org.apache.sling.commons.osgi", "2.2.0"),
-                        
-                        mavenBundle("org.mortbay.jetty", "servlet-api-2.5", "6.1.14")
+
+                        mavenBundle("org.mortbay.jetty", "servlet-api-2.5", "6.1.14"),
+                        mavenBundle("commons-io", "commons-io", "2.4"),
+                        mavenBundle("commons-lang", "commons-lang", "2.4")
                 ),
                 junitBundles()
                 );
     }
-    
+
     @Before
     public void setup() {
         regs.clear();
     }
-    
+
     @After
     public void cleanup() {
         for(ServiceRegistration reg : regs) {
             reg.unregister();
         }
     }
-    
+
 
     private Dictionary<String, Object> getProperties(String context, String engineName) {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
@@ -126,21 +130,21 @@ public class BindingsValuesProvidersByContextIT {
             public String toString() {
                 return id;
             }
-            
+
             public void addBindings(Bindings b) {
             }
         };
-        
+
         regs.add(bundleContext.registerService(BindingsValuesProvider.class.getName(), bvp, getProperties(context, engineName)));
     }
-    
+
     private void addBVPWithServiceRanking(final String id, String context, String engineName, int serviceRanking) {
         final BindingsValuesProvider bvp = new BindingsValuesProvider() {
             @Override
             public String toString() {
                 return id;
             }
-            
+
             public void addBindings(Bindings b) {
             }
         };
@@ -148,7 +152,7 @@ public class BindingsValuesProvidersByContextIT {
         properties.put(Constants.SERVICE_RANKING, serviceRanking);
         regs.add(bundleContext.registerService(BindingsValuesProvider.class.getName(), bvp, properties));
     }
-    
+
     private void addMap(final String id, String context, String engineName) {
         final Map<String, Object> result = new HashMap<String, Object>() {
             private static final long serialVersionUID = 1L;
@@ -158,65 +162,65 @@ public class BindingsValuesProvidersByContextIT {
                 return "M_" + id;
             }
         };
-        
+
         regs.add(bundleContext.registerService(Map.class.getName(), result, getProperties(context, engineName)));
     }
-    
+
     private ScriptEngineFactory factory(final String engineName) {
         return new ScriptEngineFactory() {
-            
+
             public ScriptEngine getScriptEngine() {
                 return null;
             }
-            
+
             public String getProgram(String... arg0) {
                 return null;
             }
-            
+
             public Object getParameter(String arg0) {
                 return null;
             }
-            
+
             public String getOutputStatement(String arg0) {
                 return null;
             }
-            
+
             public List<String> getNames() {
                 final List<String> names = new ArrayList<String>();
                 names.add(engineName);
                 return names;
             }
-            
+
             public List<String> getMimeTypes() {
                 return null;
             }
-            
+
             public String getMethodCallSyntax(String arg0, String arg1, String... arg2) {
                 return null;
             }
-            
+
             public String getLanguageVersion() {
                 return null;
             }
-            
+
             public String getLanguageName() {
                 return null;
             }
-            
+
             public List<String> getExtensions() {
                 return null;
             }
-            
+
             public String getEngineVersion() {
                 return null;
             }
-            
+
             public String getEngineName() {
                 return engineName;
             }
         };
     }
-    
+
     private String asString(Collection<?> data, boolean sortList) {
         final List<String> maybeSorted = new ArrayList<String>();
         for(Object o : data) {
@@ -225,7 +229,7 @@ public class BindingsValuesProvidersByContextIT {
         if(sortList) {
             Collections.sort(maybeSorted);
         }
-        
+
         final StringBuilder sb = new StringBuilder();
         for(String str : maybeSorted) {
             if(sb.length() > 0) {
@@ -235,11 +239,11 @@ public class BindingsValuesProvidersByContextIT {
         }
         return sb.toString();
     }
-    
+
     private String asString(Collection<?> data) {
         return asString(data, true);
     }
-    
+
     @Test
     public void testAny() {
         addBVP("one", null, "js");
@@ -247,15 +251,15 @@ public class BindingsValuesProvidersByContextIT {
         addBVP("three", null, "*");
         addBVP("four", null, "ANY");
         addBVP("five", null, "basic");
-        
+
         assertEquals("four,one,three,two", asString(bvpProvider.getBindingsValuesProviders(factory("js"), null)));
         assertEquals("five,four,three,two", asString(bvpProvider.getBindingsValuesProviders(factory("basic"), null)));
         assertEquals("four,three,two", asString(bvpProvider.getBindingsValuesProviders(factory("other"), null)));
-        
+
         final String unsorted = asString(bvpProvider.getBindingsValuesProviders(factory("js"), null), false);
         assertTrue("Expecting js language-specific BVP at the end", unsorted.endsWith("one"));
     }
-    
+
     @Test
     public void testContextsAndLanguages() {
         addBVP("foo", null, "js");
@@ -272,11 +276,11 @@ public class BindingsValuesProvidersByContextIT {
         assertEquals("o1,o2,o3", asString(bvpProvider.getBindingsValuesProviders(factory("js"), "other")));
         assertEquals("o4,python", asString(bvpProvider.getBindingsValuesProviders(factory("python"), "python")));
         assertEquals("", asString(bvpProvider.getBindingsValuesProviders(factory("js"), "unusedContext")));
-        
+
         final String unsorted = asString(bvpProvider.getBindingsValuesProviders(factory("python"), "python"), false);
         assertTrue("Expecting python language-specific BVP at the end", unsorted.endsWith("python"));
     }
-    
+
     @Test
     public void testMapsAndBvps() {
         addBVP("foo", null, "js");
@@ -293,11 +297,11 @@ public class BindingsValuesProvidersByContextIT {
         assertEquals("M_o1,M_o3,o2", asString(bvpProvider.getBindingsValuesProviders(factory("js"), "other")));
         assertEquals("", asString(bvpProvider.getBindingsValuesProviders(factory("js"), "unusedContext")));
         assertEquals("M_python,o4", asString(bvpProvider.getBindingsValuesProviders(factory("python"), "python")));
-        
+
         final String unsorted = asString(bvpProvider.getBindingsValuesProviders(factory("python"), "python"), false);
         assertTrue("Expecting python language-specific BVP at the end", unsorted.endsWith("M_python"));
     }
-    
+
     @Test
     public void testBVPsWithServiceRankingA() {
         addBVPWithServiceRanking("last", null, "js", Integer.MAX_VALUE);
@@ -305,7 +309,7 @@ public class BindingsValuesProvidersByContextIT {
         addBVPWithServiceRanking("first", null, "js", Integer.MIN_VALUE);
         assertEquals("first,second,last", asString(bvpProvider.getBindingsValuesProviders(factory("js"), null), false));
     }
-    
+
     @Test
     public void testBVPsWithServiceRankingB() {
         addBVPWithServiceRanking("first", null, "js", Integer.MIN_VALUE);
@@ -313,7 +317,7 @@ public class BindingsValuesProvidersByContextIT {
         addBVPWithServiceRanking("last", null, "js", Integer.MAX_VALUE);
         assertEquals("first,second,last", asString(bvpProvider.getBindingsValuesProviders(factory("js"), null), false));
     }
-    
+
     @Test
     public void testBVPsWithServiceRankingC() {
         addBVPWithServiceRanking("second", "request", "js", 0);
