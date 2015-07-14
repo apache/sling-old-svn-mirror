@@ -89,6 +89,7 @@ public class UnitLoader {
      * @param bindings       the bindings
      * @param renderContext  the rendering context
      * @return the render unit
+     * @throws Exception if the unit creation fails
      */
     public RenderUnit createUnit(Resource scriptResource, Bindings bindings, RenderContextImpl renderContext) throws Exception {
         ResourceMetadata resourceMetadata = scriptResource.getResourceMetadata();

@@ -35,7 +35,7 @@ import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 
 /**
- * Implementation for the format filter & runtime support.
+ * Implementation for the format filter &amp; runtime support.
  */
 @Component
 @Service({Filter.class, RuntimeExtension.class})

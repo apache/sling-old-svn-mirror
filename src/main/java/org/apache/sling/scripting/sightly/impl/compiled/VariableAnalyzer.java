@@ -45,7 +45,8 @@ public class VariableAnalyzer {
 
     /**
      * Mark the declaration of a variable in the Java code
-     * @param originalName - the original name of the variable
+     * @param originalName the original name of the variable
+     * @param type the variable's type
      * @return - a variable descriptor uniquely assigned to this variable
      */
     public VariableDescriptor declareVariable(String originalName, Type type) {
@@ -59,7 +60,7 @@ public class VariableAnalyzer {
 
     /**
      * Declare a global variable. Redundant declarations are ignored
-     * @param originalName - the original name of the variable
+     * @param originalName the original name of the variable
      * @return a variable descriptor
      */
     public VariableDescriptor declareGlobal(String originalName) {
@@ -76,7 +77,7 @@ public class VariableAnalyzer {
 
     /**
      * Mark this variable as a template
-     * @param originalName - the original name of the variable
+     * @param originalName the original name of the variable
      * @return a variable descriptor
      */
     public VariableDescriptor declareTemplate(String originalName) {

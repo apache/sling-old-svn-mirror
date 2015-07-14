@@ -82,6 +82,7 @@ public class SightlyCompilerService {
      * Compile the given markup source and feed it to the given backend
      * @param source the HTML source code
      * @param backend the backend that will process the command stream from the source
+     * @param renderContext the render context
      */
     public void compile(String source, CompilerBackend backend, RenderContextImpl renderContext) {
         initIfNeeded(renderContext);
