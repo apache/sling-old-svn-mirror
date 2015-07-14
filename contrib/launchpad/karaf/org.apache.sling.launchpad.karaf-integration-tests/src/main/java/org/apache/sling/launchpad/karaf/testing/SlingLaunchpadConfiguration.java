@@ -29,6 +29,7 @@ public abstract class SlingLaunchpadConfiguration extends KarafTestSupport {
     public Option[] launchpadConfiguration() {
         final int httpPort = 8888; // TODO findFreePort();
         return OptionUtils.combine(baseConfiguration(),
+            editConfigurationFilePut("etc/users.properties", "admin", "admin,_g_:admingroup"), // Sling’s default admin credentials used in tests
             editConfigurationFilePut("etc/org.ops4j.pax.web.cfg", "org.osgi.service.http.port", Integer.toString(httpPort)),
             addSlingFeatures(
                 "sling-launchpad-content",
