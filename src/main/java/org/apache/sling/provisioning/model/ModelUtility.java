@@ -16,21 +16,14 @@
  */
 package org.apache.sling.provisioning.model;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.LineNumberReader;
-import java.io.StringReader;
+import static org.apache.sling.provisioning.model.ModelResolveUtility.getProcessedConfiguration;
+
 import java.util.Arrays;
-import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
-
-import org.apache.felix.cm.file.ConfigurationHandler;
-
 
 /**
  * Merge two models
@@ -349,70 +342,6 @@ public abstract class ModelUtility {
     }
 
     /**
-     * Replace properties in the string.
-     *
-     * @param feature The feature
-     * @param v The variable name
-     * @param resolver Optional resolver
-     * @result The value of the variable
-     * @throws IllegalArgumentException If variable can't be found.
-     */
-    static String replace(final Feature feature, final String v, final VariableResolver resolver) {
-        if ( v == null ) {
-            return null;
-        }
-        String msg = v;
-        // check for variables
-        int pos = -1;
-        int start = 0;
-        while ( ( pos = msg.indexOf('$', start) ) != -1 ) {
-            boolean escapedVariable = (pos > 0 && msg.charAt(pos - 1) == '\\');
-            if ( msg.length() > pos && msg.charAt(pos + 1) == '{' && (pos == 0 || msg.charAt(pos - 1) != '$') ) {
-                final int endPos = msg.indexOf('}', pos);
-                if ( endPos != -1 ) {
-                    final String name = msg.substring(pos + 2, endPos);
-                    final String value;
-                    if (escapedVariable) {
-                        value = "\\${" + name + "}";
-                    } else if ( resolver != null ) {
-                        value = resolver.resolve(feature, name);
-                    } else {
-                        value = feature.getVariables().get(name);
-                    }
-                    if ( value == null ) {
-                        throw new IllegalArgumentException("Unknown variable: " + name);
-                    }
-                    int startPos = escapedVariable ? pos - 1 : pos;
-                    msg = msg.substring(0, startPos) + value + msg.substring(endPos + 1);
-                }
-            }
-            start = pos + 1;
-        }
-        return msg;
-    }
-    
-    /**
-     * Tries to resolves artifact version via {@link ArtifactVersionResolver} if no version was defined in provisioning file.
-     * @param groupId Group ID
-     * @param artifactId Artifact ID
-     * @param version Version
-     * @param classifier Classifier
-     * @param type Type
-     * @param artifactVersionResolver Artifact Version Resolver (may be null)
-     * @return Version to use for this artifact
-     */
-    static String resolveArtifactVersion(final String groupId, final String artifactId, final String version,
-            final String classifier, final String type, ArtifactVersionResolver artifactVersionResolver) {
-        if (artifactVersionResolver != null && "LATEST".equals(version)) {
-            String newVersion = artifactVersionResolver.resolve(new Artifact(groupId, artifactId, version, classifier, type));
-            if (newVersion != null) {
-                return newVersion;
-            }
-        }
-        return version;       
-    }
-    
-    /**
      * Validates the model.
      * @param model The model to validate
      * @return A map with errors or {@code null}.
@@ -487,88 +416,4 @@ public abstract class ModelUtility {
         return errors;
     }
 
-    static void getProcessedConfiguration(
-            final Feature feature,
-            final Configuration newConfig,
-            final Configuration config,
-            final VariableResolver resolver) {
-        newConfig.setComment(config.getComment());
-        newConfig.setLocation(config.getLocation());
-
-        // check for raw configuration
-        String rawConfig = (String)config.getProperties().get(ModelConstants.CFG_UNPROCESSED);
-        if ( rawConfig != null ) {
-            if ( resolver != null ) {
-                rawConfig = replace(feature, rawConfig, resolver);
-            }
-            if ( config.isSpecial() ) {
-                newConfig.getProperties().put(config.getPid(), rawConfig);
-            } else {
-                final String format = (String)config.getProperties().get(ModelConstants.CFG_UNPROCESSED_FORMAT);
-
-                if ( ModelConstants.CFG_FORMAT_PROPERTIES.equals(format) ) {
-                    // properties
-                    final Properties props = new Properties();
-                    try {
-                        props.load(new StringReader(rawConfig));
-                    } catch ( final IOException ioe) {
-                        throw new IllegalArgumentException("Unable to read configuration properties.", ioe);
-                    }
-                    final Enumeration<Object> i = props.keys();
-                    while ( i.hasMoreElements() ) {
-                        final String key = (String)i.nextElement();
-                        newConfig.getProperties().put(key, props.get(key));
-                    }
-                } else {
-                    // Apache Felix CA format
-                    // the raw format might have comments, we have to remove them first
-                    final StringBuilder sb = new StringBuilder();
-                    try {
-                        final LineNumberReader lnr = new LineNumberReader(new StringReader(rawConfig));
-                        String line = null;
-                        while ((line = lnr.readLine()) != null ) {
-                            line = line.trim();
-                            if ( line.isEmpty() || line.startsWith("#")) {
-                                continue;
-                            }
-                            sb.append(line);
-                            sb.append('\n');
-                        }
-                    } catch ( final IOException ioe) {
-                        throw new IllegalArgumentException("Unable to read configuration properties: " + config, ioe);
-                    }
-
-                    ByteArrayInputStream bais = null;
-                    try {
-                        bais = new ByteArrayInputStream(sb.toString().getBytes("UTF-8"));
-                        @SuppressWarnings("unchecked")
-                        final Dictionary<String, Object> props = ConfigurationHandler.read(bais);
-                        final Enumeration<String> i = props.keys();
-                        while ( i.hasMoreElements() ) {
-                            final String key = i.nextElement();
-                            newConfig.getProperties().put(key, props.get(key));
-                        }
-                    } catch ( final IOException ioe) {
-                        throw new IllegalArgumentException("Unable to read configuration properties: " + config, ioe);
-                    } finally {
-                        if ( bais != null ) {
-                            try {
-                                bais.close();
-                            } catch ( final IOException ignore ) {
-                                // ignore
-                            }
-                        }
-                    }
-                }
-            }
-        } else {
-            // simply copy
-            final Enumeration<String> i = config.getProperties().keys();
-            while ( i.hasMoreElements() ) {
-                final String key = i.nextElement();
-                newConfig.getProperties().put(key, config.getProperties().get(key));
-            }
-        }
-    }
-    
 }
