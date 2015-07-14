@@ -28,6 +28,7 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.sling.provisioning.model.Model;
+import org.apache.sling.provisioning.model.ModelUtility;
 import org.apache.sling.provisioning.model.io.ModelWriter;
 
 /**
@@ -43,12 +44,12 @@ public class AttachSlingStartModel extends AbstractSlingStartMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        final Model model;
-        if (attachEffectiveModel) {
-            model = ProjectHelper.getEffectiveModel(this.project, getResolverOptions());
+        Model model = ProjectHelper.getRawModel(this.project);
+        if (usePomVariables) {
+            model = ModelUtility.applyVariables(model, new PomVariableResolver(project));
         }
-        else {
-            model = ProjectHelper.getRawModel(this.project);
+        if (usePomDependencies) {
+            // TODO: implement applyDependencies
         }
 
         // write the model

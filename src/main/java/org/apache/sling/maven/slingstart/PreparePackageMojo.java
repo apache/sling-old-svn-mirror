@@ -43,6 +43,7 @@ import org.apache.sling.provisioning.model.Configuration;
 import org.apache.sling.provisioning.model.Feature;
 import org.apache.sling.provisioning.model.Model;
 import org.apache.sling.provisioning.model.ModelConstants;
+import org.apache.sling.provisioning.model.ModelUtility.ResolverOptions;
 import org.apache.sling.provisioning.model.RunMode;
 import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.UnArchiver;
@@ -98,6 +99,20 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
         this.prepareWebapp(model);
     }
 
+    /**
+     * @return Resolving options to be used when building an effective provisioning model.
+     */
+    protected ResolverOptions getResolverOptions() {
+        ResolverOptions options = new ResolverOptions();
+        if (usePomVariables) {
+            options.variableResolver(new PomVariableResolver(project));
+        }
+        if (usePomDependencies) {
+            options.artifactVersionResolver(new PomArtifactVersionResolver(project));
+        }
+        return options;
+    }
+    
     protected File getStandaloneOutputDirectory() {
         return new File(this.project.getBuild().getOutputDirectory());
     }
