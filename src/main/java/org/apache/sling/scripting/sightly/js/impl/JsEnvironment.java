@@ -21,8 +21,8 @@ package org.apache.sling.scripting.sightly.js.impl;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-
 import javax.script.Bindings;
+import javax.script.Compilable;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
@@ -36,6 +36,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
+import org.apache.sling.scripting.core.ScriptNameAwareReader;
 import org.apache.sling.scripting.sightly.ResourceResolution;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.js.impl.async.AsyncContainer;
@@ -109,6 +110,7 @@ public class JsEnvironment {
         CommonJsModule module = new CommonJsModule();
         Bindings scriptBindings = buildBindings(scriptResource, globalBindings, arguments, module);
         scriptContext.setBindings(scriptBindings, ScriptContext.ENGINE_SCOPE);
+        scriptContext.setAttribute(ScriptEngine.FILENAME, scriptResource.getPath(), ScriptContext.ENGINE_SCOPE);
         runScript(scriptResource, scriptContext, callback, module);
     }
 
@@ -156,8 +158,15 @@ public class JsEnvironment {
             public void run() {
                 Reader reader = null;
                 try {
-                    reader = new InputStreamReader(scriptResource.adaptTo(InputStream.class));
-                    Object result = jsEngine.eval(reader, scriptContext);
+                    Object result;
+                    if (jsEngine instanceof Compilable) {
+                        reader = new ScriptNameAwareReader(new InputStreamReader(scriptResource.adaptTo(InputStream.class)),
+                                scriptResource.getPath());
+                        result = ((Compilable) jsEngine).compile(reader).eval(scriptContext);
+                    } else {
+                        reader = new InputStreamReader(scriptResource.adaptTo(InputStream.class));
+                        result = jsEngine.eval(reader, scriptContext);
+                    }
                     if (commonJsModule.isModified()) {
                         result = commonJsModule.getExports();
                     }
