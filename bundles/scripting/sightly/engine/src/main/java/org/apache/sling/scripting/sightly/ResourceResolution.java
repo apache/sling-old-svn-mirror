@@ -26,8 +26,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 
 /**
- * Utility class which used by the Sightly engine & extensions
- * to resolve resources
+ * Utility class which used by the Sightly engine &amp; extensions to resolve resources.
  */
 public final class ResourceResolution {
 

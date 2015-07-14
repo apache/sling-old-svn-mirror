@@ -28,6 +28,11 @@ public interface DocumentHandler {
 
     /**
      * Receive notification of unparsed character data.
+     *
+     * @param ch the character buffer
+     * @param off the offset
+     * @param len the length of the unparsed character data
+     * @throws IOException if the characters cannot be processed
      */
     void onCharacters(char[] ch, int off, int len) throws IOException;
 
@@ -39,6 +44,7 @@ public interface DocumentHandler {
      * @param attList  attribute list
      * @param endSlash flag indicating whether the element is closed with
      *                 an ending slash (xhtml-compliant)
+     * @throws IOException if the element cannot be processed
      */
     void onStartElement(String name, AttributeList attList, boolean endSlash)
     throws IOException;
@@ -46,17 +52,22 @@ public interface DocumentHandler {
     /**
      * Receive notification of the end of an element.
      * @param name tag name
+     * @throws IOException if the element cannot be processed
      */
     void onEndElement(String name)
     throws IOException;
 
     /**
      * Receive notification of parsing start.
+     *
+     * @throws IOException if the parsing operation cannot start
      */
     void onStart() throws IOException;
 
     /**
      * Receive notification of parsing end.
+     *
+     * @throws IOException if the parsing operation cannot end
      */
     void onEnd() throws IOException;
 }

@@ -39,8 +39,9 @@ public interface AttributeList {
 
     /**
      * Return a flag indicating whether a specified attribute exists
-     * @return <code>true</code> if the specified attribute exists,
-     * <code>false</code> otherwise
+     *
+     * @param name the attribute's name
+     * @return <code>true</code> if the specified attribute exists, <code>false</code> otherwise
      */
     boolean containsAttribute(String name);
 

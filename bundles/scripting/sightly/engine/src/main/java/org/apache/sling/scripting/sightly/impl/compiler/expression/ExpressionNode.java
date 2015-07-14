@@ -26,6 +26,8 @@ public interface ExpressionNode {
     /**
      * Accept a visitor to process this node.
      * @param visitor The visitor
+     * @param <T> the type of the visitor
+     * @return the node evaluated by the visitor
      */
     <T> T accept(NodeVisitor<T> visitor);
 
