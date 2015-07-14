@@ -49,7 +49,7 @@ public class AttachSlingStartModel extends AbstractSlingStartMojo {
             model = ModelUtility.applyVariables(model, new PomVariableResolver(project));
         }
         if (usePomDependencies) {
-            // TODO: implement applyDependencies
+            model = ModelUtility.applyArtifactVersions(model, new PomArtifactVersionResolver(project, allowUnresolvedPomDependencies));
         }
 
         // write the model

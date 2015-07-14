@@ -108,7 +108,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
             options.variableResolver(new PomVariableResolver(project));
         }
         if (usePomDependencies) {
-            options.artifactVersionResolver(new PomArtifactVersionResolver(project));
+            options.artifactVersionResolver(new PomArtifactVersionResolver(project, allowUnresolvedPomDependencies));
         }
         return options;
     }
