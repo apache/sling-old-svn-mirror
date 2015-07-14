@@ -30,7 +30,7 @@ import org.apache.sling.api.scripting.SlingScriptHelper;
  * Utilities for script evaluation
  */
 public class Utils {
-    private static final String EXTENSION = "js";
+    public static final String JS_EXTENSION = "js";
 
     public static final Bindings EMPTY_BINDINGS = new SimpleBindings(Collections.<String, Object>emptyMap());
 
@@ -40,7 +40,7 @@ public class Utils {
 
     public static boolean isJsScript(String identifier) {
         String extension = StringUtils.substringAfterLast(identifier, ".");
-        return EXTENSION.equalsIgnoreCase(extension);
+        return JS_EXTENSION.equalsIgnoreCase(extension);
     }
 
 }
