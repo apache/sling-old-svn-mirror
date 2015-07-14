@@ -18,15 +18,11 @@
  */
 package org.apache.sling.scripting.javascript.internal;
 
-import java.io.File;
-import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
@@ -36,24 +32,19 @@ import javax.script.SimpleScriptContext;
 
 import org.apache.sling.commons.testing.osgi.MockBundle;
 import org.apache.sling.commons.testing.osgi.MockComponentContext;
+import org.apache.sling.scripting.api.ScriptCache;
+import org.mockito.Mockito;
+import org.mockito.internal.util.reflection.Whitebox;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.Wrapper;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleException;
-import org.osgi.framework.BundleListener;
-import org.osgi.framework.Filter;
-import org.osgi.framework.FrameworkListener;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceListener;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
 
 
 /** Helpers to run javascript code fragments in tests */
 public class ScriptEngineHelper {
     private static ScriptEngine engine;
+    private static ScriptCache scriptCache = Mockito.mock(ScriptCache.class);
 
     public static class Data extends HashMap<String, Object> {
     }
@@ -62,6 +53,7 @@ public class ScriptEngineHelper {
         if (engine == null) {
             synchronized (ScriptEngineHelper.class) {
                 RhinoJavaScriptEngineFactory f = new RhinoJavaScriptEngineFactory();
+                Whitebox.setInternalState(f, "scriptCache", scriptCache);
                 f.activate(new RhinoMockComponentContext());
                 engine = f.getScriptEngine();
             }
@@ -121,139 +113,15 @@ public class ScriptEngineHelper {
 
     private static class RhinoMockComponentContext extends MockComponentContext {
 
+        private BundleContext bundleContext = Mockito.mock(BundleContext.class);
+
         private RhinoMockComponentContext() {
             super(new MockBundle(0));
         }
 
         @Override
         public BundleContext getBundleContext() {
-            return new BundleContext() {
-
-                public void addBundleListener(BundleListener arg0) {
-                    // TODO Auto-generated method stub
-
-                }
-
-                public void addFrameworkListener(
-                        FrameworkListener arg0) {
-                    // TODO Auto-generated method stub
-
-                }
-
-                public void addServiceListener(ServiceListener arg0) {
-                    // TODO Auto-generated method stub
-
-                }
-
-                public void addServiceListener(
-                        ServiceListener arg0, String arg1)
-                        throws InvalidSyntaxException {
-                    // TODO Auto-generated method stub
-
-                }
-
-                public Filter createFilter(String arg0)
-                        throws InvalidSyntaxException {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                public ServiceReference[] getAllServiceReferences(
-                        String arg0, String arg1)
-                        throws InvalidSyntaxException {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                public Bundle getBundle() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                public Bundle getBundle(long arg0) {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                public Bundle[] getBundles() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                public File getDataFile(String arg0) {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                public String getProperty(String arg0) {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                public Object getService(ServiceReference arg0) {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                public ServiceReference getServiceReference(
-                        String arg0) {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                public ServiceReference[] getServiceReferences(
-                        String arg0, String arg1)
-                        throws InvalidSyntaxException {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                public Bundle installBundle(String arg0)
-                        throws BundleException {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                public Bundle installBundle(String arg0,
-                        InputStream arg1) throws BundleException {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                public ServiceRegistration registerService(
-                        String[] arg0, Object arg1, Dictionary arg2) {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                public ServiceRegistration registerService(
-                        String arg0, Object arg1, Dictionary arg2) {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                public void removeBundleListener(BundleListener arg0) {
-                    // TODO Auto-generated method stub
-
-                }
-
-                public void removeFrameworkListener(
-                        FrameworkListener arg0) {
-                    // TODO Auto-generated method stub
-
-                }
-
-                public void removeServiceListener(
-                        ServiceListener arg0) {
-                    // TODO Auto-generated method stub
-
-                }
-
-                public boolean ungetService(ServiceReference arg0) {
-                    // TODO Auto-generated method stub
-                    return false;
-                }
-            };
+            return bundleContext;
         }
     }
 }
