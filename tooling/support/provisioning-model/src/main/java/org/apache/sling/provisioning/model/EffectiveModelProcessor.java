@@ -18,10 +18,15 @@
  */
 package org.apache.sling.provisioning.model;
 
+import static org.apache.sling.provisioning.model.ModelResolveUtility.getProcessedConfiguration;
+import static org.apache.sling.provisioning.model.ModelResolveUtility.replace;
+import static org.apache.sling.provisioning.model.ModelResolveUtility.resolveArtifactVersion;
+
 import java.util.Map.Entry;
 
 import org.apache.sling.provisioning.model.ModelUtility.ResolverOptions;
 import org.apache.sling.provisioning.model.ModelUtility.VariableResolver;
+
 
 class EffectiveModelProcessor extends ModelProcessor {
     
@@ -36,12 +41,12 @@ class EffectiveModelProcessor extends ModelProcessor {
 
     @Override
     protected Artifact processArtifact(Artifact artifact, Feature newFeature, RunMode newRunMode) {
-        final String groupId = ModelUtility.replace(newFeature, artifact.getGroupId(), options.getVariableResolver());
-        final String artifactId = ModelUtility.replace(newFeature, artifact.getArtifactId(), options.getVariableResolver());
-        final String version = ModelUtility.replace(newFeature, artifact.getVersion(), options.getVariableResolver());
-        final String classifier = ModelUtility.replace(newFeature, artifact.getClassifier(), options.getVariableResolver());
-        final String type = ModelUtility.replace(newFeature, artifact.getType(), options.getVariableResolver());
-        final String resolvedVersion = ModelUtility.resolveArtifactVersion(groupId, artifactId, version, classifier, type,
+        final String groupId = replace(newFeature, artifact.getGroupId(), options.getVariableResolver());
+        final String artifactId = replace(newFeature, artifact.getArtifactId(), options.getVariableResolver());
+        final String version = replace(newFeature, artifact.getVersion(), options.getVariableResolver());
+        final String classifier = replace(newFeature, artifact.getClassifier(), options.getVariableResolver());
+        final String type = replace(newFeature, artifact.getType(), options.getVariableResolver());
+        final String resolvedVersion = resolveArtifactVersion(groupId, artifactId, version, classifier, type,
                 options.getArtifactVersionResolver());
         return new Artifact(groupId, artifactId, resolvedVersion, classifier, type);
     }
@@ -49,7 +54,7 @@ class EffectiveModelProcessor extends ModelProcessor {
     @Override
     protected Configuration processConfiguration(Configuration config, Feature newFeature, RunMode newRunMode) {
         Configuration newConfig = new Configuration(config.getPid(), config.getFactoryPid());
-        ModelUtility.getProcessedConfiguration(newFeature, newConfig, config, options.getVariableResolver());
+        getProcessedConfiguration(newFeature, newConfig, config, options.getVariableResolver());
         return newConfig;
     }
 
@@ -57,7 +62,7 @@ class EffectiveModelProcessor extends ModelProcessor {
     protected KeyValueMap<String> processSettings(KeyValueMap<String> settings, final Feature newFeature, final RunMode newRunMode) {
         KeyValueMap<String> newSettings = new KeyValueMap<String>();
         for (final Entry<String, String> entry : settings) {
-            newSettings.put(entry.getKey(), ModelUtility.replace(newFeature, entry.getValue(),
+            newSettings.put(entry.getKey(), replace(newFeature, entry.getValue(),
                     new VariableResolver() {
                         @Override
                         public String resolve(final Feature feature, final String name) {
