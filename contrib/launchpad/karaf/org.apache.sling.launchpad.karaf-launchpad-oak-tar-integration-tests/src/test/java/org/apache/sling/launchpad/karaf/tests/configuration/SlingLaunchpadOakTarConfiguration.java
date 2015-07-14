@@ -23,6 +23,7 @@ import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.OptionUtils;
 
+import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 
 public class SlingLaunchpadOakTarConfiguration extends SlingLaunchpadConfiguration {
@@ -31,7 +32,11 @@ public class SlingLaunchpadOakTarConfiguration extends SlingLaunchpadConfigurati
     public Option[] configuration() {
         return OptionUtils.combine(launchpadConfiguration(),
             editConfigurationFilePut("etc/custom.properties", "sling.run.modes", "oak,oak_tar"),
-            addSlingFeatures("sling-launchpad-oak-tar"),
+            addSlingFeatures(
+                "sling-launchpad-oak-tar"
+            ),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.jackrabbit.accessmanager").version("2.1.2"),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.jackrabbit.usermanager").version("2.2.2"),
             // configurations for tests
             editConfigurationFilePut("etc/integrationTestsConfig.cfg", "message", "This test config should be loaded at startup"),
             editConfigurationFilePut("etc/org.apache.sling.servlets.resolver.SlingServletResolver.cfg", "servletresolver.cacheSize", "0")
