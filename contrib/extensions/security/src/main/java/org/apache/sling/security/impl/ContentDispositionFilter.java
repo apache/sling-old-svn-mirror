@@ -173,6 +173,9 @@ public class ContentDispositionFilter implements Filter {
 
         private static final String CONTENT_DISPOSTION_ATTACHMENT = "attachment";
         
+        static final String ATTRIBUTE_NAME =
+                "org.apache.sling.security.impl.ContentDispositionFilter.RewriterResponse.contentType";
+        
         /** The current request. */
         private final SlingHttpServletRequest request;
 
@@ -185,8 +188,14 @@ public class ContentDispositionFilter implements Filter {
          * @see javax.servlet.ServletResponseWrapper#setContentType(java.lang.String)
          */
         public void setContentType(String type) { 
-            String pathInfo = request.getPathInfo();
+            String previousContentType = (String) request.getAttribute(ATTRIBUTE_NAME);
+            
+            if (previousContentType != null && previousContentType.equals(type)) {
+                return;
+            }
+            request.setAttribute(ATTRIBUTE_NAME, type);
 
+            String pathInfo = request.getPathInfo();
             if (contentDispositionPaths.contains(pathInfo)) {
 
                 if (contentTypesMapping.containsKey(pathInfo)) {
@@ -218,7 +227,9 @@ public class ContentDispositionFilter implements Filter {
         }    
         
         private void setContentDisposition() {
+            if (!this.containsHeader(CONTENT_DISPOSTION)) {
             this.addHeader(CONTENT_DISPOSTION, CONTENT_DISPOSTION_ATTACHMENT);
         }
     }
+}
 }
