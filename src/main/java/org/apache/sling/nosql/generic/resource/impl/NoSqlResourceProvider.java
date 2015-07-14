@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
@@ -56,7 +57,7 @@ public class NoSqlResourceProvider implements ResourceProvider, ModifyingResourc
     
     private final NoSqlAdapter adapter;
     private final EventAdmin eventAdmin;
-    private final Map<String, NoSqlData> changedResources = new HashMap<String, NoSqlData>();
+    private final Map<String, NoSqlData> changedResources = new LinkedHashMap<String, NoSqlData>();
     private final Set<String> deletedResources = new HashSet<String>();
     
     public NoSqlResourceProvider(NoSqlAdapter adapter, EventAdmin eventAdmin) {
