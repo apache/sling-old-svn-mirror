@@ -73,6 +73,8 @@ public class ScriptEngineManager {
     /**
      * @deprecated use {@link #getBindings()} instaed. This method is introduced
      *             by the Livetribe JSR-223 implementation and is wrong.
+     *
+     * @return the bindings
      */
     @Deprecated
     public Bindings getGlobalScope() {
