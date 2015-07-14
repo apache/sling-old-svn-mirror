@@ -49,7 +49,6 @@ import org.slf4j.LoggerFactory;
  * The <code>SlingGlobal</code> class provides two interesting new global
  * functions which are not part of the ECMAScript standard but which are
  * available in the Rhino Shell and which may be of use by JavaScripts:
- * <p>
  * <dl>
  * <dt><code>print(args, ...)</code></dt>
  * <dd>Prints the arguments <code>args</code> in a single message to the scripts

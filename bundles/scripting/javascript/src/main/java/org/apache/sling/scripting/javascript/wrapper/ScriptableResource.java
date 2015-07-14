@@ -51,6 +51,7 @@ import org.slf4j.LoggerFactory;
  * <li>[Resource[]] getChildren()</li>
  * <li>[Resource[]] listChildren()</li>
  * <li>[Boolean] isResourceType(String)</li>
+ * </ul>
  */
 public class ScriptableResource extends ScriptableObject implements
         SlingWrapper {
@@ -74,28 +75,28 @@ public class ScriptableResource extends ScriptableObject implements
         this.resource = (Resource) res;
     }
 
-    /**
+    /*
      * Maps getName() method as name property.
      */
     public String jsGet_name() {
         return this.jsFunction_getName();
     }
 
-    /**
+    /*
      * Maps getName() method as getName() method.
      */
     public String jsFunction_getName() {
         return resource.getName();
     }
 
-    /**
+    /*
      * Maps getPath() method as path property.
      */
     public String jsGet_path() {
         return this.jsFunction_getPath();
     }
 
-    /**
+    /*
      * Maps getPath() method as getPath() method.
      */
     public String jsFunction_getPath() {
@@ -108,20 +109,21 @@ public class ScriptableResource extends ScriptableObject implements
      * property.
      *
      * @deprecated since 2.1.0 because it maps the method name incorrectly.
+     * @return the resource type
      */
     @Deprecated
     public String jsGet_type() {
         return this.jsFunction_getResourceType();
     }
 
-    /**
+    /*
      * Maps getResourceType() to resourceType property.
      */
     public String jsGet_resourceType() {
         return this.jsFunction_getResourceType();
     }
 
-    /**
+    /*
      * Maps getResourceType() to the getResourceType() method.
      */
     public String jsFunction_getResourceType() {
@@ -136,28 +138,28 @@ public class ScriptableResource extends ScriptableObject implements
         return new NativeArray(IteratorUtils.toArray(resource.listChildren()));
     }
 
-    /**
+    /*
      * Maps getParent() method as parent property.
      */
     public Object jsGet_parent() {
         return this.jsFunction_getParent();
     }
 
-    /**
+    /*
      * Maps getParent() method as getParent() method.
      */
     public Object jsFunction_getParent() {
         return resource.getParent();
     }
 
-    /**
+    /*
      * Maps getResourceSuperType() to resourceSuperType property.
      */
     public String jsGet_resourceSuperType() {
         return this.jsFunction_getResourceSuperType();
     }
 
-    /**
+    /*
      * Maps getResourceSuperType() to the getResourceSuperType() method.
      */
     public String jsFunction_getResourceSuperType() {
@@ -174,13 +176,14 @@ public class ScriptableResource extends ScriptableObject implements
      * property.
      *
      * @deprecated since 2.1.0 because it maps the method name incorrectly.
+     * @return the resource metadata
      */
     @Deprecated
     public Object jsGet_meta() {
         return jsFunction_getResourceMetadata();
     }
 
-    /**
+    /*
      * Maps getResourceMetadata() to resourceMetadata property.
      */
     public Object jsGet_resourceMetadata() {
@@ -193,27 +196,28 @@ public class ScriptableResource extends ScriptableObject implements
      * getResourceMetadata() method.
      *
      * @deprecated since 2.1.0 because the method is named incorrectly.
+     * @return the resource metadata
      */
     @Deprecated
     public Object jsFunction_getMetadata() {
         return jsFunction_getResourceMetadata();
     }
 
-    /**
+    /*
      * Maps getResourceMetadata() to getResourceMetadata method.
      */
     public Object jsFunction_getResourceMetadata() {
         return toJS(resource.getResourceMetadata());
     }
 
-    /**
+    /*
      * Maps getResourceResolver() to resourceResolver property.
      */
     public Object jsFunction_getResourceResolver() {
         return toJS(resource.getResourceResolver());
     }
 
-    /**
+    /*
      * Maps getResourceResolver() to getResourceResolver method.
      */
     public Object jsGet_resourceResolver() {
@@ -230,11 +234,11 @@ public class ScriptableResource extends ScriptableObject implements
         return resource.getChild(childPath);
     }
 
-    /**
+    /*
      * Helper method to easily retrieve the default adapted object of the
      * resource. In case of Object Content Mapping support, this method will
      * return the correctly mapped content object for this resource.
-     * <p>
+     *
      * Calling this method is equivalent to calling the adaptTo method with the
      * argument "java.lang.Object".
      */
