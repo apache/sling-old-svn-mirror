@@ -60,6 +60,13 @@ public abstract class AbstractSlingStartMojo extends AbstractMojo {
     @Parameter(defaultValue="false")
     protected boolean usePomDependencies;
         
+    /**
+     * If set to true, an exception is throws when "usePomDependencies" is set to true and some
+     * dependency version could not be resolved in the Maven POM.
+     */
+    @Parameter(defaultValue="false")
+    protected boolean allowUnresolvedPomDependencies;
+        
     protected File getTmpDir() {
         return new File(this.project.getBuild().getDirectory(), "slingstart-tmp");
     }

@@ -33,12 +33,15 @@ import org.apache.sling.provisioning.model.ModelUtility.ArtifactVersionResolver;
 public class PomArtifactVersionResolver implements ArtifactVersionResolver {
 
     private final MavenProject project;
+    private final boolean allowUnresolvedPomDependencies;
     
     /**
      * @param project Maven project
+     * @param allowUnresolvedPomDependencies If true, no exception is thrown when resolving is not possible
      */
-    public PomArtifactVersionResolver(MavenProject project) {
+    public PomArtifactVersionResolver(MavenProject project, boolean allowUnresolvedPomDependencies) {
         this.project = project;
+        this.allowUnresolvedPomDependencies = allowUnresolvedPomDependencies;
     }
     
     @Override
@@ -53,7 +56,12 @@ public class PomArtifactVersionResolver implements ArtifactVersionResolver {
                 return version;
             }
         }
-        return null;
+        if (allowUnresolvedPomDependencies) {
+            return null;
+        }
+        else {
+            throw new IllegalArgumentException("Unable to resolve dependency: " + artifact.toMvnUrl());
+        }
     }
     
     private String findVersion(List<Dependency> dependencies, Artifact artifact) {

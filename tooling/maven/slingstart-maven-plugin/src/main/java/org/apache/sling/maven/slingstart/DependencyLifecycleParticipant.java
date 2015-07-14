@@ -152,7 +152,8 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
             resolverOptions.variableResolver(new PomVariableResolver(info.project));
         }
         if (nodeBooleanValue(info.plugin, "usePomDependencies", false)) {
-            resolverOptions.artifactVersionResolver(new PomArtifactVersionResolver(info.project));
+            resolverOptions.artifactVersionResolver(new PomArtifactVersionResolver(info.project,
+                    nodeBooleanValue(info.plugin, "allowUnresolvedPomDependencies", false)));
         }
 
         // we have to create an effective model to add the dependencies

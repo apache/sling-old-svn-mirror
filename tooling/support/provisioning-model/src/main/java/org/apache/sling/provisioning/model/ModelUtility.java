@@ -17,6 +17,7 @@
 package org.apache.sling.provisioning.model;
 
 import static org.apache.sling.provisioning.model.ModelResolveUtility.getProcessedConfiguration;
+import static org.apache.sling.provisioning.model.ModelResolveUtility.resolveArtifactVersion;
 
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -422,19 +423,19 @@ public abstract class ModelUtility {
      * The variable resolver may look up variables on it's own, or fallback to the variables already defined for the feature.
      * All resolved variable values are collected and put to the "variables" section of the resulting model.
      * @param model Original model
-     * @param variableResolver Variable resolver
+     * @param resolver Variable resolver
      * @return Model with updated "variables" section.
      * @throws IllegalArgumentException If a variable can't be replaced or configuration properties can't be parsed
      * @since 1.3
      */
-    public static Model applyVariables(final Model model, final VariableResolver variableResolver) {
+    public static Model applyVariables(final Model model, final VariableResolver resolver) {
         
         // define delegating resolver that collects all variable names and value per feature
         final Map<String,Map<String,String>> collectedVars = new HashMap<String, Map<String,String>>();
         VariableResolver variableCollector = new VariableResolver() {
             @Override
             public String resolve(Feature feature, String name) {
-                String value = variableResolver.resolve(feature, name);
+                String value = resolver.resolve(feature, name);
                 if (value != null) {
                     Map<String,String> featureVars = collectedVars.get(feature.getName());
                     if (featureVars == null) {
@@ -467,6 +468,41 @@ public abstract class ModelUtility {
         
         // return model with replaced "variables" sections
         return variablesUpdater.process(model);
+    }
+
+    /**
+     * Resolves artifact versions that are no set explicitly in the provisioning file via the given resolver (version = "LATEST").
+     * If the resolver does not resolve to a version "LATEST" is left in the model.
+     * The resolver may decide to raise an IllegalArgumentException in this case if unresolved dependencies are no allowed.
+     * @param model Original model
+     * @param resolver Artifact version resolver
+     * @return Model with updated artifact versions
+     * @throws IllegalArgumentException If the provider does not allow unresolved version and a version could not be resolved
+     * @since 1.3
+     */
+    public static Model applyArtifactVersions(final Model model, final ArtifactVersionResolver resolver) {
+        
+        // define a processor that updates the versions of artifacts
+        ModelProcessor versionUpdater = new ModelProcessor() {
+            @Override
+            protected Artifact processArtifact(Artifact artifact, Feature newFeature, RunMode newRunMode) {
+                String newVersion = resolveArtifactVersion(
+                        artifact.getGroupId(),
+                        artifact.getArtifactId(),
+                        artifact.getVersion(),
+                        artifact.getClassifier(),
+                        artifact.getType(),
+                        resolver);
+                return new Artifact(artifact.getGroupId(),
+                        artifact.getArtifactId(),
+                        newVersion,
+                        artifact.getClassifier(),
+                        artifact.getType());
+            }
+        };
+        
+        // return model with updated version artifacts
+        return versionUpdater.process(model);
     }
 
 }

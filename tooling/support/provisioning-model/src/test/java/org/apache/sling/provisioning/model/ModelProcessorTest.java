@@ -19,11 +19,9 @@
 package org.apache.sling.provisioning.model;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.Map.Entry;
 
 import org.junit.Before;
@@ -114,20 +112,9 @@ public class ModelProcessorTest {
         assertEquals("LocRMG11", group12.getLocation());
         assertEquals("ComRMG11", group12.getComment());
         
-        Iterator<Artifact> artifacts = group12.iterator();
-        Artifact artifact1 = artifacts.next();
-        assertEquals("#g1", artifact1.getGroupId());
-        assertEquals("#a1", artifact1.getArtifactId());
-        assertEquals("#v1", artifact1.getVersion());
-        assertEquals("#c1", artifact1.getClassifier());
-        assertEquals("#t1", artifact1.getType());
-
-        Artifact artifact2 = artifacts.next();
-        assertEquals("#g2", artifact2.getGroupId());
-        assertEquals("#a2", artifact2.getArtifactId());
-        assertEquals("#v2", artifact2.getVersion());
-        
-        assertFalse(artifacts.hasNext());
+        U.assertArtifactsInGroup(group12, 2);
+        U.assertArtifact(group12, "mvn:#g1/#a1/#v1/#t1/#c1");
+        U.assertArtifact(group12, "mvn:#g2/#a2/#v2/#jar");
 
         assertEquals("LocConf12", runMode12.getConfigurations().getLocation());
         assertEquals("ComConf12", runMode12.getConfigurations().getComment());
@@ -157,11 +144,8 @@ public class ModelProcessorTest {
         ArtifactGroup group21 = runMode21.getArtifactGroup(20);
         assertNotNull(group21);
         
-        artifacts = group21.iterator();
-        Artifact artifact3 = artifacts.next();
-        assertEquals("#g3", artifact3.getGroupId());
-        assertEquals("#a3", artifact3.getArtifactId());
-        assertFalse(artifacts.hasNext());
+        U.assertArtifactsInGroup(group21, 1);
+        U.assertArtifact(group21, "mvn:#g3/#a3/#LATEST/#jar");
     }
     
     
@@ -179,11 +163,11 @@ public class ModelProcessorTest {
         @Override
         protected Artifact processArtifact(Artifact artifact, Feature feature, RunMode runMode) {
             Artifact newArtifact = new Artifact(
-                    "#" + artifact.getGroupId(),
-                    "#" + artifact.getArtifactId(),
-                    "#" + artifact.getVersion(),
-                    "#" + artifact.getClassifier(),
-                    "#" + artifact.getType());
+                    artifact.getGroupId()!=null ? "#" + artifact.getGroupId() : null,
+                    artifact.getArtifactId()!=null ? "#" + artifact.getArtifactId() : null,
+                    artifact.getVersion()!=null ? "#" + artifact.getVersion() : "#LATEST",
+                    artifact.getClassifier()!=null ? "#" + artifact.getClassifier() : null,
+                    artifact.getType()!=null ? "#" + artifact.getType() : null);
             return newArtifact;
         }
 

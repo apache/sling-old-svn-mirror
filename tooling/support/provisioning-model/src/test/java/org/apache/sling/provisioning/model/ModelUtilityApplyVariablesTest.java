@@ -79,8 +79,9 @@ public class ModelUtilityApplyVariablesTest {
         RunMode runMode = effectiveFeature.getRunMode("rm1");
         ArtifactGroup group = runMode.getArtifactGroup(10);
         
-        group.add(new Artifact("g1", "a1", "${param1}", "c1", "t1"));
-        group.add(new Artifact("g2", "a2", "${extparam2}", null, null));
+        U.assertArtifactsInGroup(group, 2);
+        U.assertArtifact(group, "mvn:g1/a1/v1/t1/c1");
+        U.assertArtifact(group, "mvn:g2/a2/extvalue2/jar");
         
         Configuration conf = runMode.getConfiguration("pid1", null);
         assertEquals("extvalue1", conf.getProperties().get("conf1"));
