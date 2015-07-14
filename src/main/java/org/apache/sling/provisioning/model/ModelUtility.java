@@ -314,20 +314,10 @@ public abstract class ModelUtility {
     /**
      * Replace all variables in the model and return a new model with the replaced values.
      * @param model The base model.
-     * @return The model with replaced variables.
-     * @throws IllegalArgumentException If a variable can't be replaced or configuration properties can't be parsed
-     */
-    public static Model getEffectiveModel(final Model model) {
-        return getEffectiveModel(model, new ResolverOptions());
-    }
-    
-    /**
-     * Replace all variables in the model and return a new model with the replaced values.
-     * @param model The base model.
      * @param resolver Optional variable resolver.
      * @return The model with replaced variables.
      * @throws IllegalArgumentException If a variable can't be replaced or configuration properties can't be parsed
-     * @deprecated Use {@link #getEffectiveModel(Model, ResolverOptions)} instead
+     * @deprecated Use {@link #getEffectiveModel(Model)} or {@link #getEffectiveModel(Model, ResolverOptions)} instead
      */
     @Deprecated
     public static Model getEffectiveModel(final Model model, final VariableResolver resolver) {
@@ -337,82 +327,25 @@ public abstract class ModelUtility {
     /**
      * Replace all variables in the model and return a new model with the replaced values.
      * @param model The base model.
+     * @return The model with replaced variables.
+     * @throws IllegalArgumentException If a variable can't be replaced or configuration properties can't be parsed
+     * @since 1.3
+     */
+    public static Model getEffectiveModel(final Model model) {
+        return getEffectiveModel(model, new ResolverOptions());
+    }
+    
+    /**
+     * Replace all variables in the model and return a new model with the replaced values.
+     * @param model The base model.
      * @param options Resolver options.
      * @return The model with replaced variables.
      * @throws IllegalArgumentException If a variable can't be replaced or configuration properties can't be parsed
+     * @since 1.3
      */
     public static Model getEffectiveModel(final Model model, final ResolverOptions options) {
-        if (options == null) {
-            throw new IllegalArgumentException("Resolver options is null");
-        }
-        
-        final Model result = new Model();
-        result.setLocation(model.getLocation());
-
-        for(final Feature feature : model.getFeatures()) {
-            final Feature newFeature = result.getOrCreateFeature(feature.getName());
-            newFeature.setComment(feature.getComment());
-            newFeature.setLocation(feature.getLocation());
-
-            newFeature.getVariables().setComment(feature.getVariables().getComment());
-            newFeature.getVariables().setLocation(feature.getVariables().getLocation());
-            newFeature.getVariables().putAll(feature.getVariables());
-
-            for(final RunMode runMode : feature.getRunModes()) {
-                final RunMode newRunMode = newFeature.getOrCreateRunMode(runMode.getNames());
-                newRunMode.setLocation(runMode.getLocation());
-
-                for(final ArtifactGroup group : runMode.getArtifactGroups()) {
-                    final ArtifactGroup newGroup = newRunMode.getOrCreateArtifactGroup(group.getStartLevel());
-                    newGroup.setComment(group.getComment());
-                    newGroup.setLocation(group.getLocation());
-
-                    for(final Artifact artifact : group) {
-                        final String groupId = replace(newFeature, artifact.getGroupId(), options.getVariableResolver());
-                        final String artifactId = replace(newFeature, artifact.getArtifactId(), options.getVariableResolver());
-                        final String version = replace(newFeature, artifact.getVersion(), options.getVariableResolver());
-                        final String classifier = replace(newFeature, artifact.getClassifier(), options.getVariableResolver());
-                        final String type = replace(newFeature, artifact.getType(), options.getVariableResolver());
-                        final String resolvedVersion = resolveArtifactVersion(groupId, artifactId, version, classifier, type,
-                                options.getArtifactVersionResolver());
-                        final Artifact newArtifact = new Artifact(groupId, artifactId, resolvedVersion, classifier, type);
-                        newArtifact.setComment(artifact.getComment());
-                        newArtifact.setLocation(artifact.getLocation());
-
-                        newGroup.add(newArtifact);
-                    }
-                }
-
-                newRunMode.getConfigurations().setComment(runMode.getConfigurations().getComment());
-                newRunMode.getConfigurations().setLocation(runMode.getConfigurations().getLocation());
-                for(final Configuration config : runMode.getConfigurations()) {
-                    final Configuration newConfig = newRunMode.getOrCreateConfiguration(config.getPid(), config.getFactoryPid());
-
-                    getProcessedConfiguration(newFeature, newConfig, config, options.getVariableResolver());
-                }
-
-                newRunMode.getSettings().setComment(runMode.getSettings().getComment());
-                newRunMode.getSettings().setLocation(runMode.getSettings().getLocation());
-                for(final Map.Entry<String, String> entry : runMode.getSettings() ) {
-                    newRunMode.getSettings().put(entry.getKey(), replace(newFeature, entry.getValue(),
-                            new VariableResolver() {
-
-                                @Override
-                                public String resolve(final Feature feature, final String name) {
-                                    if ( "sling.home".equals(name) ) {
-                                        return "${sling.home}";
-                                    }
-                                    if ( options.getVariableResolver() != null ) {
-                                        return options.getVariableResolver().resolve(newFeature, name);
-                                    }
-                                    return newFeature.getVariables().get(name);
-                                }
-                            }));
-                }
-            }
-
-        }
-        return result;
+        ModelProcessor processor = new EffectiveModelProcessor(options);
+        return processor.process(model);
     }
 
     /**
@@ -554,7 +487,7 @@ public abstract class ModelUtility {
         return errors;
     }
 
-    private static void getProcessedConfiguration(
+    static void getProcessedConfiguration(
             final Feature feature,
             final Configuration newConfig,
             final Configuration config,
@@ -637,4 +570,5 @@ public abstract class ModelUtility {
             }
         }
     }
+    
 }
