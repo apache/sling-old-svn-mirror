@@ -90,7 +90,7 @@ class ModelResolveUtility {
      */
     static String resolveArtifactVersion(final String groupId, final String artifactId, final String version,
             final String classifier, final String type, ArtifactVersionResolver artifactVersionResolver) {
-        if (artifactVersionResolver != null && "LATEST".equals(version)) {
+        if (artifactVersionResolver != null && (version == null || "LATEST".equals(version))) {
             String newVersion = artifactVersionResolver.resolve(new Artifact(groupId, artifactId, version, classifier, type));
             if (newVersion != null) {
                 return newVersion;
