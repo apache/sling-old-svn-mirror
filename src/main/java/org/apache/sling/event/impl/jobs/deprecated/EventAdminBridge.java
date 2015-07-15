@@ -117,12 +117,7 @@ public class EventAdminBridge
      */
     private void addJobs() {
         logger.debug("Apache Sling Job Event Bridge started on instance {}", Environment.APPLICATION_ID);
-        try {
-            this.processWriteQueue();
-         } catch (final Throwable t) { //NOSONAR
-             logger.error("Bridge thread stopped with exception: " + t.getMessage(), t);
-             running = false;
-         }
+        this.processWriteQueue();
     }
 
     private static String[] IGNORED_CONFIG_PROPERTIES = new String[] {
@@ -139,45 +134,49 @@ public class EventAdminBridge
      */
     private void processWriteQueue() {
         while ( this.running ) {
-            // so let's wait/get the next job from the queue
-            Event event = null;
             try {
-                event = this.writeQueue.take();
-            } catch (final InterruptedException e) {
-                Thread.currentThread().interrupt();
-                this.running = false;
-            }
-            if ( event != null && this.running ) {
-                final JobManager jm = this.jobManager;
-                if ( jm == null ) {
-                    try {
-                        this.writeQueue.put(event);
-                        Thread.sleep(500);
-                    } catch (final InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                        this.running = false;
-                    }
-                } else {
-                    final String jobTopic = (String)event.getProperty(ResourceHelper.PROPERTY_JOB_TOPIC);
-                    final String jobName = (String)event.getProperty(JobUtil.PROPERTY_JOB_NAME);
+                // so let's wait/get the next job from the queue
+                Event event = null;
+                try {
+                    event = this.writeQueue.take();
+                } catch (final InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    this.running = false;
+                }
+                if ( event != null && this.running ) {
+                    final JobManager jm = this.jobManager;
+                    if ( jm == null ) {
+                        try {
+                            this.writeQueue.put(event);
+                            Thread.sleep(500);
+                        } catch (final InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                            this.running = false;
+                        }
+                    } else {
+                        final String jobTopic = (String)event.getProperty(ResourceHelper.PROPERTY_JOB_TOPIC);
+                        final String jobName = (String)event.getProperty(JobUtil.PROPERTY_JOB_NAME);
 
-                    final Map<String, Object> props =  new EventPropertiesMap(event);
-                    props.put(JobImpl.PROPERTY_BRIDGED_EVENT, Boolean.TRUE);
+                        final Map<String, Object> props =  new EventPropertiesMap(event);
+                        props.put(JobImpl.PROPERTY_BRIDGED_EVENT, Boolean.TRUE);
 
-                    // check for deprecated/unsupported properties
-                    for(final String ignoredProp : IGNORED_CONFIG_PROPERTIES) {
-                        if ( props.containsKey(ignoredProp)) {
-                            Utility.logDeprecated(logger, "Job " + EventUtil.toString(event) + " is using deprecated and ignored property " + ignoredProp);
-                            props.remove(ignoredProp);
+                        // check for deprecated/unsupported properties
+                        for(final String ignoredProp : IGNORED_CONFIG_PROPERTIES) {
+                            if ( props.containsKey(ignoredProp)) {
+                                Utility.logDeprecated(logger, "Job " + EventUtil.toString(event) + " is using deprecated and ignored property " + ignoredProp);
+                                props.remove(ignoredProp);
+                            }
+                        }
+                        if ( jobName != null ) {
+                            this.jobManager.addJob(jobTopic, jobName, props);
+                        } else {
+                            this.jobManager.addJob(jobTopic, props);
                         }
                     }
-                    if ( jobName != null ) {
-                        this.jobManager.addJob(jobTopic, jobName, props);
-                    } else {
-                        this.jobManager.addJob(jobTopic, props);
-                    }
                 }
-            }
+            } catch (final Throwable t) { //NOSONAR
+                logger.error("Bridge thread got uncaught exception: " + t.getMessage(), t);
+           }
         }
     }
 
