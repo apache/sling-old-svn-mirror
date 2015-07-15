@@ -62,6 +62,9 @@ public class OverridingResourceProviderTest {
      *
      * /apps/a/2 has the super type of /apps/a/1
      * /apps/a/3 has the super type of /apps/a/2
+     *
+     * /apps/a/4 has the super type of /apps/a/4/b/4
+     * /apps/x has the super type of x/y
      */
     @Before
     public void setup() throws Exception {
@@ -85,6 +88,13 @@ public class OverridingResourceProviderTest {
                     .resource("/apps/a/2").p(SUPER_TYPE, "a/1").p("b", "2").p(MergedResourceConstants.PN_HIDE_CHILDREN, new String[] {"b"})
                     .resource("c").p("1", "c")
                     .resource("/apps/a/3").p(SUPER_TYPE, "a/2")
+                    .resource("/apps/a/4").p(SUPER_TYPE, "/apps/a/4/b/4")
+                    .resource("b")
+                    .resource("4")
+                    .resource("d")
+                    .resource("/apps/x").p(SUPER_TYPE, "x/y")
+                    .resource("y")
+                    .resource("z")
                     .commit();
 
         this.provider = new MergingResourceProvider("/override", new OverridingResourcePicker(), false, true);
@@ -168,4 +178,14 @@ public class OverridingResourceProviderTest {
         assertNotNull(d1a);
     }
 
+    @Test
+    public void testLoopInInheritance() {
+        final Resource rsrcA4 = this.provider.getResource(this.resolver, "/override/apps/a/4");
+
+        Resource d = getChildResource(rsrcA4, "d");
+        assertNotNull(d);
+
+        final Resource z = this.provider.getResource(this.resolver, "/override/apps/x/z");
+        assertNotNull(z);
+    }
 }
