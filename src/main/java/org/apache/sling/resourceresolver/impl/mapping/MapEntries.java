@@ -860,12 +860,23 @@ public class MapEntries implements EventHandler {
         // sling:vanityPath (lowercase) is the property name        
         final String queryString = "SELECT sling:vanityPath, sling:redirect, sling:redirectStatus FROM sling:VanityPath WHERE sling:vanityPath ="
                 + "'"+escapeIllegalXpathSearchChars(vanityPath).replaceAll("'", "''")+"' OR sling:vanityPath ="+ "'"+escapeIllegalXpathSearchChars(vanityPath.substring(1)).replaceAll("'", "''")+"' ORDER BY sling:vanityOrder DESC";
-        final Iterator<Resource> i = resolver.findResources(queryString, "sql");
+        
+        ResourceResolver queryResolver = null;
 
-        while (i.hasNext()) {
-            final Resource resource = i.next();
-            loadVanityPath(resource, entryMap, targetPaths, true, false);
-        }        
+        try {
+            queryResolver = factory.getAdministrativeResourceResolver(null);
+            final Iterator<Resource> i = queryResolver.findResources(queryString, "sql");
+            while (i.hasNext()) {
+                final Resource resource = i.next();
+                loadVanityPath(resource, entryMap, targetPaths, true, false);
+            }
+        } catch (LoginException e) {
+            log.error("Exception while obtaining queryResolver", e);
+        } finally {
+            if (queryResolver != null) {
+                queryResolver.close();
+            }
+        }
         return entryMap;        
     }
     
