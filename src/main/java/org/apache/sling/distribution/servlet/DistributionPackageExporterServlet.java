@@ -55,14 +55,12 @@ public class DistributionPackageExporterServlet extends SlingAllMethodsServlet {
 
         String operation = request.getParameter("operation");
 
-
-
         try {
             if ("delete".equals(operation)) {
 
                 deletePackage(request, response);
 
-            } if ("fetch".equals(operation)) {
+            } else if ("fetch".equals(operation)) {
 
                 exportOnePackage(request, response, false);
 
@@ -117,6 +115,7 @@ public class DistributionPackageExporterServlet extends SlingAllMethodsServlet {
                             IOUtils.closeQuietly(inputStream);
                         }
 
+                        String packageId = distributionPackage.getId();
                         if (delete) {
                             // delete the package permanently
                             distributionPackage.delete();
@@ -125,7 +124,7 @@ public class DistributionPackageExporterServlet extends SlingAllMethodsServlet {
 
                         // everything ok
                         response.setStatus(200);
-                        log.info("{} bytes written into the response", bytesCopied);
+                        log.info("exported package {} was sent (and deleted={}), bytes written {}", new Object[] { packageId, delete, bytesCopied });
                     } else {
                         log.warn("fetched a null package");
                     }
@@ -160,6 +159,7 @@ public class DistributionPackageExporterServlet extends SlingAllMethodsServlet {
 
         if (distributionPackage != null) {
             distributionPackage.delete();
+            log.info("exported package {} was deleted", distributionPackage.getId());
 
             response.setStatus(200);
         } else {
