@@ -20,7 +20,9 @@ package org.apache.sling.resourcemerger.impl.picker;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -52,6 +54,7 @@ public class OverridingResourcePicker implements MergedResourcePicker {
     public List<Resource> pickResources(ResourceResolver resolver, String relativePath) {
         String absPath = "/" + relativePath;
         final List<Resource> resources = new ArrayList<Resource>();
+        final Set<String> roots = new HashSet<String>();
 
         Resource currentTarget = resolver.getResource(absPath);
 
@@ -70,7 +73,9 @@ public class OverridingResourcePicker implements MergedResourcePicker {
                 final Resource inheritanceRootResource = info.resource;
                 final String pathRelativeToInheritanceRoot = info.getPathRelativeToInheritanceRoot();
                 final String superType = inheritanceRootResource.getResourceSuperType();
-                if (superType == null) {
+
+                if (superType == null
+                       || roots.contains(inheritanceRootResource.getPath())) { // avoid inheritance loops
                     currentTarget = null;
                 } else {
                     final String superTypeChildPath = superType + pathRelativeToInheritanceRoot;
@@ -81,6 +86,7 @@ public class OverridingResourcePicker implements MergedResourcePicker {
                         currentTarget = new StubResource(resolver, superTypeChildPath);
                     }
                     resources.add(currentTarget);
+                    roots.add(inheritanceRootResource.getPath());
                 }
             }
         }
