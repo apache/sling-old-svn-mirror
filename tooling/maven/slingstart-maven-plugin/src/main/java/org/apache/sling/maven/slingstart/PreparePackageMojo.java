@@ -43,7 +43,6 @@ import org.apache.sling.provisioning.model.Configuration;
 import org.apache.sling.provisioning.model.Feature;
 import org.apache.sling.provisioning.model.Model;
 import org.apache.sling.provisioning.model.ModelConstants;
-import org.apache.sling.provisioning.model.ModelUtility.ResolverOptions;
 import org.apache.sling.provisioning.model.RunMode;
 import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.UnArchiver;
@@ -99,20 +98,6 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
         this.prepareWebapp(model);
     }
 
-    /**
-     * @return Resolving options to be used when building an effective provisioning model.
-     */
-    protected ResolverOptions getResolverOptions() {
-        ResolverOptions options = new ResolverOptions();
-        if (usePomVariables) {
-            options.variableResolver(new PomVariableResolver(project));
-        }
-        if (usePomDependencies) {
-            options.artifactVersionResolver(new PomArtifactVersionResolver(project, allowUnresolvedPomDependencies));
-        }
-        return options;
-    }
-    
     protected File getStandaloneOutputDirectory() {
         return new File(this.project.getBuild().getOutputDirectory());
     }
@@ -215,7 +200,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
     throws MojoExecutionException{
         for(final ArtifactGroup group : runMode.getArtifactGroups()) {
             for(final org.apache.sling.provisioning.model.Artifact a : group) {
-                final Artifact artifact = ModelUtils.getArtifact(this.project, this.mavenSession, this.artifactHandlerManager, this.resolver, 
+                final Artifact artifact = ModelUtils.getArtifact(this.project, this.mavenSession, this.artifactHandlerManager, this.resolver,
                         a.getGroupId(), a.getArtifactId(), a.getVersion(), a.getType(), a.getClassifier());
                 final File artifactFile = artifact.getFile();
                 contentsMap.put(getPathForArtifact(group.getStartLevel(), artifactFile.getName(), runMode, isBoot), artifactFile);
@@ -467,7 +452,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
                 mainName,
                 alias);
     }
-    
+
     /**
      * Replace \${var} with ${var}
      * @param text String with escaped variables
@@ -479,5 +464,5 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
         }
         return text.replaceAll("\\\\\\$", "\\$");
     }
-    
+
 }
