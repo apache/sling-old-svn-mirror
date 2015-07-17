@@ -86,7 +86,7 @@ public class BindingsValuesProvidersByContextIT {
                         mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.3.2"),
                         mavenBundle("org.apache.felix", "org.apache.felix.webconsole", "3.1.8"),
 
-                        mavenBundle("org.apache.sling", "org.apache.sling.scripting.api", "2.1.9-SNAPSHOT"),
+                        mavenBundle("org.apache.sling", "org.apache.sling.scripting.api", "2.1.7-SNAPSHOT"),
                         mavenBundle("org.apache.sling", "org.apache.sling.commons.threads", "3.1.0"),
                         mavenBundle("org.apache.sling", "org.apache.sling.api", "2.4.2"),
                         mavenBundle("org.apache.sling", "org.apache.sling.commons.mime", "2.1.4"),
