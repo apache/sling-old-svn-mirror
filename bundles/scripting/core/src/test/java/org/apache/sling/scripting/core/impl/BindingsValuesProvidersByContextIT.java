@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.bundle;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
+import static org.ops4j.pax.exam.CoreOptions.maven;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
@@ -58,6 +59,9 @@ import org.osgi.framework.ServiceRegistration;
 @RunWith(PaxExam.class)
 public class BindingsValuesProvidersByContextIT {
 
+    private static final String FELIX_GID = "org.apache.felix";
+    private static final String SLING_GID = "org.apache.sling";
+
     @Inject
     private BindingsValuesProvidersByContext bvpProvider;
 
@@ -70,34 +74,35 @@ public class BindingsValuesProvidersByContextIT {
     public Option[] config() {
         final String localRepo = System.getProperty("maven.repo.local", "");
 
-        final String bundleFileName = System.getProperty( "bundle.file.name", "BUNDLE_FILE_NOT_SET" );
-        final File bundleFile = new File( bundleFileName );
-        if(!bundleFile.canRead()) {
-            throw new IllegalArgumentException( "Cannot read from bundle file " + bundleFile.getAbsolutePath());
+        final String bundleFileName = System.getProperty("bundle.file.name", "BUNDLE_FILE_NOT_SET");
+        final File bundleFile = new File(bundleFileName);
+        if (!bundleFile.canRead()) {
+            throw new IllegalArgumentException("Cannot read from bundle file " + bundleFile.getAbsolutePath());
         }
 
         return options(
-                when( localRepo.length() > 0 ).useOptions(
+                when(localRepo.length() > 0).useOptions(
                         systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo)
                 ),
                 provision(
                         bundle(bundleFile.toURI().toString()),
                         mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.6.2"),
                         mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.3.2"),
-                        mavenBundle("org.apache.felix", "org.apache.felix.webconsole", "3.1.8"),
+                        mavenBundle(maven().groupId(FELIX_GID).artifactId("org.apache.felix.webconsole").versionAsInProject()),
 
-                        mavenBundle("org.apache.sling", "org.apache.sling.scripting.api", "2.1.7-SNAPSHOT"),
-                        mavenBundle("org.apache.sling", "org.apache.sling.commons.threads", "3.1.0"),
-                        mavenBundle("org.apache.sling", "org.apache.sling.api", "2.4.2"),
-                        mavenBundle("org.apache.sling", "org.apache.sling.commons.mime", "2.1.4"),
-                        mavenBundle("org.apache.sling", "org.apache.sling.commons.osgi", "2.2.0"),
+                        mavenBundle(maven().groupId(SLING_GID).artifactId("org.apache.sling.scripting.api").versionAsInProject()),
+
+                        mavenBundle(maven().groupId(SLING_GID).artifactId("org.apache.sling.commons.threads").versionAsInProject()),
+                        mavenBundle(maven().groupId(SLING_GID).artifactId("org.apache.sling.api").versionAsInProject()),
+                        mavenBundle(maven().groupId(SLING_GID).artifactId("org.apache.sling.commons.mime").versionAsInProject()),
+                        mavenBundle(maven().groupId(SLING_GID).artifactId("org.apache.sling.commons.osgi").versionAsInProject()),
 
                         mavenBundle("org.mortbay.jetty", "servlet-api-2.5", "6.1.14"),
-                        mavenBundle("commons-io", "commons-io", "2.4"),
-                        mavenBundle("commons-lang", "commons-lang", "2.4")
+                        mavenBundle(maven().groupId("commons-io").artifactId("commons-io").versionAsInProject()),
+                        mavenBundle(maven().groupId("commons-lang").artifactId("commons-lang").versionAsInProject())
                 ),
                 junitBundles()
-                );
+        );
     }
 
     @Before
