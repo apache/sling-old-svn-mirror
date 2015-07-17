@@ -87,12 +87,13 @@ public class BundlesInstaller {
                 }
             }
             webconsoleClient.installBundle(f, startBundles);
+            log.info("Installed: {}", bundleSymbolicName);
         }
         
         // ensure that bundles are re-wired esp. if an existing bundle was updated
         webconsoleClient.refreshPackages();
-        
-        log.info("{} additional bundles installed from {}", toInstall.size(), toInstall.get(0).getAbsolutePath());
+
+        log.info("{} additional bundles installed", toInstall.size());
     }
     
     /** Wait for all bundles specified in symbolicNames list to be installed in the
