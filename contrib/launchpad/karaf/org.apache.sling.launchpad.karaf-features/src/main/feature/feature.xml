@@ -119,6 +119,11 @@
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
   </feature>
+  <feature name="sling-extension-featureflags" version="${project.version}">
+    <bundle>mvn:org.apache.sling/org.apache.sling.featureflags/1.0.2</bundle>
+    <!-- dependencies -->
+    <feature version="${project.version}">sling</feature>
+  </feature>
   <feature name="sling-extension-fsresource" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.fsresource/1.1.4</bundle>
     <!-- dependencies -->
