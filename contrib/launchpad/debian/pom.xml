@@ -46,82 +46,12 @@ under the License.
             jdeb plugin version for debian package
         -->
         <jdeb.version>1.4</jdeb.version>
+        <launchpad.version>8-SNAPSHOT</launchpad.version>
         <slingInstallDir>/opt/sling</slingInstallDir>
         <slingConfigDir>/etc/sling</slingConfigDir>
-        <slingS3Dir>${basedir/../../sling-s3}</slingS3Dir>
     </properties>
     <build>
         <plugins>
-            <plugin>
-                <!-- Copy sling-s3 info local workdir -->
-                <artifactId>maven-resources-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-sling-s3</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.directory}/${slingConfigDir}</outputDirectory>
-                            <overwrite>true</overwrite>
-                            <resources>
-                                <resource>
-                                    <directory>${slingS3Dir}</directory>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <!-- Use exec plugin to call make sling-s3 targets -->
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>1.2.1</version>
-                <executions>
-                    <execution>
-                        <!-- make all in the Maven compile phase -->
-                        <id>fix-exec-permissions</id>
-                        <phase>process-sources</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <workingDirectory>${project.build.directory}/${slingConfigDir}</workingDirectory>
-                            <executable>chmod</executable>
-                            <arguments>
-                                <argument>-R</argument>
-                                <argument>775</argument>
-                                <argument>scripts</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <!-- make all in the Maven compile phase -->
-                        <id>build-config</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                        	<environmentVariables>
-                            <OUTPUT>
-                              ${project.build.directory}/contrib
-                            </OUTPUT>
-                          </environmentVariables>
-                          <workingDirectory>${project.build.directory}/${slingConfigDir}</workingDirectory>
-                          <executable>make</executable>
-                          <arguments>
-                              <argument>update-bundles</argument>
-                              <argument>install-deps</argument>
-                              <argument>all</argument>
-                          </arguments>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
             <plugin>
                 <artifactId>jdeb</artifactId>
                 <groupId>org.vafer</groupId>
@@ -148,6 +78,16 @@ under the License.
                                         <prefix>/etc</prefix>
                                     </mapper>
                                 </data>
+                                <!-- opt/sling - jar files -->
+                                <data>
+                                    <src>${project.build.directory}/opt/sling</src>
+                                    <type>directory</type>
+                                    <conffile>false</conffile>
+                                    <mapper>
+                                        <type>perm</type>
+                                        <prefix>/opt/sling</prefix>
+                                    </mapper>
+                                </data>
                                 <!-- all other root_fs -->
                                 <data>
                                     <src>${project.basedir}/src/root_fs/</src>
@@ -157,48 +97,6 @@ under the License.
                                         <filemode>775</filemode>
                                         <type>perm</type>
                                         <prefix>/</prefix>
-                                    </mapper>
-                                </data>
-                                <!-- etc/sling/crank-*.d/ conf files -->
-                                <data>
-                                    <src>${project.build.directory}/${slingConfigDir}</src>
-                                    <type>directory</type>
-                                    <conffile>true</conffile>
-                                    <excludes>**/.svn/,**/contrib/,**/scripts/,**/target/</excludes>
-                                    <mapper>
-                                        <type>perm</type>
-                                        <prefix>${slingConfigDir}</prefix>
-                                    </mapper>
-                                </data>
-                                <!-- crank target files, etc - non-conf files, as they are generated -->
-                                <data>
-                                    <src>${project.build.directory}/${slingConfigDir}</src>
-                                    <type>directory</type>
-                                    <includes>**/target/*</includes>
-                                    <mapper>
-                                        <filemode>775</filemode>
-                                        <type>perm</type>
-                                        <prefix>${slingConfigDir}</prefix>
-                                    </mapper>
-                                </data>
-                                <!-- sling-s3 scripts & other binaries -->
-                                <data>
-                                    <src>${project.build.directory}/${slingConfigDir}</src>
-                                    <type>directory</type>
-                                    <includes>**/contrib/*,**/scripts/*</includes>
-                                    <mapper>
-                                        <filemode>775</filemode>
-                                        <type>perm</type>
-                                        <prefix>${slingInstallDir}</prefix>
-                                    </mapper>
-                                </data>
-                                <!-- dependencies -->
-                                <data>
-                                    <src>${project.build.directory}/contrib</src>
-                                    <type>directory</type>
-                                    <mapper>
-                                        <type>perm</type>
-                                        <prefix>${slingInstallDir}/contrib</prefix>
                                     </mapper>
                                 </data>
                             </dataSet>
@@ -211,13 +109,21 @@ under the License.
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>copy-dependencies</id>
+                        <id>copy</id>
                         <goals>
-                            <goal>copy-dependencies</goal>
+                            <goal>copy</goal>
                         </goals>
                         <phase>process-resources</phase>
                         <configuration>
-                            <outputDirectory>${project.build.directory}</outputDirectory>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>org.apache.sling.launchpad</artifactId>
+                                    <version>${launchpad.version}</version>
+                                    <destFileName>org.apache.sling.launchpad.jar</destFileName>
+                                </artifactItem>
+                            </artifactItems>
+                            <outputDirectory>${project.build.directory}/opt/sling</outputDirectory>
                             <excludeTransitive>true</excludeTransitive>
                             <overWriteReleases>false</overWriteReleases>
                             <overWriteSnapshots>false</overWriteSnapshots>

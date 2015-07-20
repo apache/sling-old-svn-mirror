@@ -40,16 +40,11 @@ fi
 
 PID=/var/run/sling.pid
 DAEMON=$(which java)
+NAME="sling"
 
 function usage () {
 	log_warning_msg "Purpose: Stop/Start sling"
 	log_warning_msg "Usage  : $0 { stop | start | restart }"
-}
-
-function rebuild_config () {
-	log_progress_msg "Rebuild configuration"
-	cd ${SLING_CFG}
-	make -e target/${RUNMODE}.txt
 }
 
 function stop () {
@@ -65,28 +60,7 @@ function start () {
 
 	check_sling_permissions
 
-	# Get MVN_OPTS from crankstart env file.
-	if [ -r $CRANKSTART_ENV ] ; then
-		# Other packages can use ${SLING_EXEC}.${artifactId}
-		# for dependencies to avoid name collisions.
-		# All will be aggregated here to provide a fully
-		# populated local repo.
-		M2REPO=${SLING_EXEC}/repo
-		rm -rf ${M2REPO}
-		install -d --owner=sling --group=sling  ${M2REPO}
-		for f in ${SLING_EXEC}/contrib* ; do
-			sudo -u sling -s cp -sRf $f/* ${M2REPO}
-		done
-		. $CRANKSTART_ENV
-	else
-		log_failure_msg "Missing $CRANKSTART_ENV file, cannot read crankstart env settings."
-		exit -1
-	fi
-	CRANKSTART_JAR=${SLING_EXEC}/contrib/crankstart.jar
-
-	# Update crankstart file if needed
-	log_daemon_msg "Starting sling serices"
-	rebuild_config
+	SLING_JAR=${SLING_EXEC}/org.apache.sling.launchpad.jar
 
 	log_progress_msg "Start sling daemon"
 	if start-stop-daemon --start \
@@ -98,12 +72,13 @@ function start () {
 		--verbose \
 		--no-close \
 		--exec $(which java) \
+		--name "$NAME" \
 		--start \
 		-- \
 		${JAVA_ARGS} \
 		${MVN_OPTS} \
-		-jar ${CRANKSTART_JAR} \
-		${SLING_CFG}/target/${RUNMODE}.txt \
+		-jar ${SLING_JAR} \
+		${SLING_ARGS} \
 		>$START_LOG_FILE 2>&1
 	then
 		sleep 3

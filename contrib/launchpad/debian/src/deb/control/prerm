@@ -33,7 +33,6 @@ if [ remove = "$1" ]; then
     echo Purging sling generated files
     [ "$DEBUG" ] && set -x
     [ "${SLING_EXEC}" ] 		&& [ -d ${SLING_EXEC} ] 	&& rm -rf ${SLING_EXEC}
-    [ -d ${SLING_CFG}/target ] 								&& rm -rf ${SLING_CFG}/target
     [ "${SLING_LOG_DIR}" ] 		&& [ -d ${SLING_LOG_DIR} ]	&& rm -rf ${SLING_LOG_DIR}
     # Purge deletes data as well
     rm -f $0

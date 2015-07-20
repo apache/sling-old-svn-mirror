@@ -23,7 +23,7 @@ SLING_GROUP=sling
 
 # sling defaults
 # Note, init script uses :
-# $JAVA_ARGS $JAVA_DEBUG_ARGS -jar $SLING_JAR $SLING_DEFAULT_ARGS
+# $JAVA_ARGS $JAVA_DEBUG_ARGS -jar $SLING_JAR $SLING_ARGS
 
 #
 # All configuration items are setup in /etc/sling/*
@@ -40,44 +40,47 @@ SLING_GROUP=sling
 # of storage configurations before running for the first time
 #
 # Runtime startup mode options:
-# 	crank 			- tar files for nodes and data
-# 	crank-s3 		- tar files for nodes, s3 for data
-#	crank-mongo 	- mongo for nodes and data
-#	crank-s3-mongo 	- mongo for nodes, s3 for data
 #
-#	key:
-#	node store - for node properties and tree structure
-#	data store - for binaries
+# - jackrabbit:    configures and starts up an Apache Jackrabbit 2.x
+#                  JCR repository implementation
+# - oak:           configures and starts up an Apache Jackrabbit Oak
+#                  repository implementation with a SegmentNodeStore
+#                  (TarMK) implementation
+# - oak,oak_mongo: configures and starts up an Apache Jackrabbit Oak
+#                  repository implementation with a DocumentNodeStore
+#                  implementation connected to a MongoDB database. The
+#                  default configuration points to a MongoDB instance
+#                  at mongodb://localhost:27017 and a database named
+#                  sling.
 #
-RUNMODE=""
+RUNMODE="oak"
 #
 ##########################################################################
 
 #
-# Base locations - override default settings in crankfiles.
+# Base locations
 #
 SLING_EXEC=/opt/sling
-SLING_CFG=/etc/sling
 SLING_DEFAULTS=/etc/default/sling
 SLING_DATA=/var/lib/sling
 SLING_LOG_DIR=/var/log/sling
 
 START_LOG_FILE=$SLING_LOG_DIR/startup.log
 SLING_SCRIPTS=${SLING_EXEC}/scripts
-CRANKSTART_ENV=${SLING_SCRIPTS}/crankstart.sh
 
 # Bump RAM allowance
 JAVA_ARGS="-Xmx384M "
 
 # Uncomment for debugging:
-JAVA_ARGS+=" -agentlib:jdwp=transport=dt_socket,address=30303,server=y,suspend=n"
+# JAVA_ARGS+=" -agentlib:jdwp=transport=dt_socket,address=30303,server=y,suspend=n"
 
-#
-# crank file overrides
-#
-JAVA_ARGS+=" -Dport=8090"
-JAVA_ARGS+=" -Dsling.home=${SLING_DATA}"
-JAVA_ARGS+=" -Dlog.file=/var/log/sling/sling.log"
+# Sling arguments, description on https://sling.apache.org/documentation/the-sling-engine/the-sling-launchpad.html
+
+SLING_ARGS=" -p 8090"
+SLING_ARGS+=" -c ${SLING_DATA}"
+SLING_ARGS+=" -f /var/log/sling/sling.log"
+SLING_ARGS+=" -Dsling.run.modes=$RUNMODE"
+SLING_ARGS+=" -Dsling.fileinstall.dir=$SLING_DATA/install"
 
 # Allow gogo shell to run in noninteractive env:
 # From: http://apache-felix.18485.x6.nabble.com/Gogo-shell-on-standard-input-output-streams-td4845969.html#a4845970

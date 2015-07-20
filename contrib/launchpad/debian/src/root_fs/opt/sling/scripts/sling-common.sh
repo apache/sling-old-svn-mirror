@@ -36,13 +36,13 @@ else
 	exit -1
 fi
 
-# Make sure premissions & directoreis are OK.
+# Make sure premissions & directories are OK.
 # $1 = force sets all permissions
 function check_sling_permissions() {
 
 	chmod +x /etc/init.d/sling
 
-	for d in SLING_DATA SLING_EXEC SLING_CFG SLING_LOG_DIR ; do
+	for d in SLING_DATA SLING_EXEC SLING_LOG_DIR ; do
 		eval n=\$$d
 		if [ ! "${n}" ] ; then
 			log_failure_msg "Missing $d"
