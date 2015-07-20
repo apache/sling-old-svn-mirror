@@ -129,24 +129,13 @@ public class ParameterSupport {
      * parameter access backed by an instance of the {@code ParameterSupport}
      * class.
      * <p>
-     * If used in a Servlet API 3 context, this method supports the additional
-     * {@code Part} API introduced with Servlet API 3.
      *
      * @param request The {@code HttpServletRequest} to wrap
      * @return The wrapped {@code request}
      */
     public static HttpServletRequestWrapper getParameterSupportRequestWrapper(final HttpServletRequest request) {
 
-        try {
-            if (request.getClass().getMethod("getServletContext") != null) {
-                return new ParameterSupportHttpServletRequestWrapper3(request);
-            }
-        } catch (Exception e) {
-            // If the getServletContext method does not exist or
-            // is not visible, fall back to a Servlet API 2.x wrapper
-        }
-
-        return new ParameterSupportHttpServletRequestWrapper2x(request);
+        return new ParameterSupportHttpServletRequestWrapper(request);
     }
 
     static void configure(final long maxRequestSize, final String location, final long maxFileSize,
@@ -185,10 +174,12 @@ public class ParameterSupport {
         return new Enumeration<String>() {
             private final Iterator<String> base = ParameterSupport.this.getRequestParameterMapInternal().keySet().iterator();
 
+            @Override
             public boolean hasMoreElements() {
                 return this.base.hasNext();
             }
 
+            @Override
             public String nextElement() {
                 return this.base.next();
             }

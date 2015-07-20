@@ -55,7 +55,6 @@ import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.engine.impl.filter.ServletFilterManager;
 import org.apache.sling.engine.impl.helper.RequestListenerManager;
 import org.apache.sling.engine.impl.helper.SlingServletContext;
-import org.apache.sling.engine.impl.helper.SlingServletContext3;
 import org.apache.sling.engine.impl.request.RequestData;
 import org.apache.sling.engine.impl.request.RequestHistoryConsolePlugin;
 import org.apache.sling.engine.jmx.RequestProcessorMBean;
@@ -110,7 +109,7 @@ public class SlingMainServlet extends GenericServlet {
 
     @Property
     private static final String PROP_SERVER_INFO = "sling.serverinfo";
-    
+
 
     @Property(value = {"X-Content-Type-Options=nosniff"},
             label = "Additional response headers",
@@ -181,7 +180,7 @@ public class SlingMainServlet extends GenericServlet {
     private ServiceRegistration requestProcessorMBeanRegistration;
 
     private String configuredServerInfo;
-    
+
     // ---------- Servlet API -------------------------------------------------
 
     @Override
@@ -342,9 +341,9 @@ public class SlingMainServlet extends GenericServlet {
     @Activate
     protected void activate(final BundleContext bundleContext,
             final Map<String, Object> componentConfig) {
-        
+
         final String[] props = PropertiesUtil.toStringArray(componentConfig.get(PROP_ADDITIONAL_RESPONSE_HEADERS));
-        
+
         final ArrayList<StaticResponseHeader> mappings = new ArrayList<StaticResponseHeader>(props.length);
         for (final String prop : props) {
             if (prop != null && prop.trim().length() > 0 ) {
@@ -357,7 +356,7 @@ public class SlingMainServlet extends GenericServlet {
             }
         }
         RequestData.setAdditionalResponseHeaders(mappings);
-        
+
         configuredServerInfo = PropertiesUtil.toString(componentConfig.get(PROP_SERVER_INFO), null);
 
         // setup server info
@@ -410,11 +409,7 @@ public class SlingMainServlet extends GenericServlet {
 
         // now that the sling main servlet is registered with the HttpService
         // and initialized we can register the servlet context
-        if (getServletContext() == null || getServletContext().getMajorVersion() < 3) {
-            slingServletContext = new SlingServletContext(bundleContext, this);
-        } else {
-            slingServletContext = new SlingServletContext3(bundleContext, this);
-        }
+        slingServletContext = new SlingServletContext(bundleContext, this);
 
         // register render filters already registered after registration with
         // the HttpService as filter initialization may cause the servlet

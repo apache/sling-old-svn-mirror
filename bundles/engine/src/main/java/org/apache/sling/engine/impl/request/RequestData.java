@@ -49,7 +49,6 @@ import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
 import org.apache.sling.engine.impl.SlingHttpServletRequestImpl;
-import org.apache.sling.engine.impl.SlingHttpServletRequestImpl3;
 import org.apache.sling.engine.impl.SlingHttpServletResponseImpl;
 import org.apache.sling.engine.impl.SlingMainServlet;
 import org.apache.sling.engine.impl.SlingRequestProcessorImpl;
@@ -695,22 +694,12 @@ public class RequestData {
     private static SlingHttpServletRequestFactory getSlingHttpServletRequestFactory() {
         SlingHttpServletRequestFactory factory = RequestData.REQUEST_FACTORY;
         if (factory == null) {
-            SlingMainServlet servlet = RequestData.SLING_MAIN_SERVLET;
-            if (servlet == null || servlet.getServletContext() == null
-                || servlet.getServletContext().getMajorVersion() < 3) {
-
-                factory = new SlingHttpServletRequestFactory() {
-                    public SlingHttpServletRequest createRequest(RequestData requestData, HttpServletRequest request) {
-                        return new SlingHttpServletRequestImpl(requestData, request);
-                    }
-                };
-            } else {
-                factory = new SlingHttpServletRequestFactory() {
-                    public SlingHttpServletRequest createRequest(RequestData requestData, HttpServletRequest request) {
-                        return new SlingHttpServletRequestImpl3(requestData, request);
-                    }
-                };
-            }
+            factory = new SlingHttpServletRequestFactory() {
+                @Override
+                public SlingHttpServletRequest createRequest(RequestData requestData, HttpServletRequest request) {
+                    return new SlingHttpServletRequestImpl(requestData, request);
+                }
+            };
             RequestData.REQUEST_FACTORY = factory;
         }
         return factory;
