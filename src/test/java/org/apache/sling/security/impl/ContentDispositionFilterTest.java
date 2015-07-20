@@ -424,18 +424,20 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(response).containsHeader("Content-Disposition");
+                will(returnValue(false));
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
                 will(returnValue(null));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
                 allowing(request).getPathInfo();
-                will(returnValue("/content/usergenerated"));
+                will(returnValue("/content/usergenerated/"));
                 allowing(response).setContentType("text/html");
                 //CONTENT DISPOSITION IS SET
                 exactly(1).of(response).addHeader("Content-Disposition", "attachment");
             }
         });       
         rewriterResponse.setContentType("text/html");
-        //Assert.assertEquals(1, counter.intValue());
+        Assert.assertEquals(1, counter.intValue());
     }
     
     @Test
@@ -562,7 +564,12 @@ public class ContentDispositionFilterTest {
             }
         });    
         PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{ComponentContext.class},new Object[]{ctx});
-        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response);
+        final AtomicInteger counter =  new AtomicInteger();        
+        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response) {          
+            public void addHeader(String name, String value) {
+                counter.incrementAndGet();
+            }
+        };
         
         context.checking(new Expectations() {
             {
@@ -579,6 +586,7 @@ public class ContentDispositionFilterTest {
             }
         });       
         rewriterResponse.setContentType("image/jpeg");
+        Assert.assertEquals(1, counter.intValue());
     }
     
     @Test
@@ -705,7 +713,13 @@ public class ContentDispositionFilterTest {
             }
         });    
         PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{ComponentContext.class},new Object[]{ctx});
-        ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response);
+        final AtomicInteger counter =  new AtomicInteger();        
+        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response) {          
+            public void addHeader(String name, String value) {
+                counter.incrementAndGet();
+            }
+        };
+
         
         context.checking(new Expectations() {
             {
@@ -722,6 +736,7 @@ public class ContentDispositionFilterTest {
             }
         });       
         rewriterResponse.setContentType("image/jpeg");
+        Assert.assertEquals(1, counter.intValue());
     }
     
     /**
@@ -746,7 +761,12 @@ public class ContentDispositionFilterTest {
 }
         });    
         PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{ComponentContext.class},new Object[]{ctx});
-        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response);
+        final AtomicInteger counter =  new AtomicInteger();        
+        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response) {          
+            public void addHeader(String name, String value) {
+                counter.incrementAndGet();
+            }
+        };
         
         context.checking(new Expectations() {
             {
@@ -766,6 +786,7 @@ public class ContentDispositionFilterTest {
         });       
         rewriterResponse.setContentType("text/html");
         rewriterResponse.setContentType("text/html");
+        Assert.assertEquals(1, counter.intValue());
     } 
     /**
      * Test repeated setContentType calls don't add multiple headers, case 2 changing mime type
@@ -789,7 +810,13 @@ public class ContentDispositionFilterTest {
             }
         });    
         PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{ComponentContext.class},new Object[]{ctx});
-        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response);
+        final AtomicInteger counter =  new AtomicInteger();        
+        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response) {          
+            public void addHeader(String name, String value) {
+                counter.incrementAndGet();
+            }
+        };
+
         
         context.checking(new Expectations() {
             {
@@ -813,5 +840,6 @@ public class ContentDispositionFilterTest {
         });       
         rewriterResponse.setContentType("text/html");
         rewriterResponse.setContentType("text/xml");
+        Assert.assertEquals(1, counter.intValue());
     }
 }
