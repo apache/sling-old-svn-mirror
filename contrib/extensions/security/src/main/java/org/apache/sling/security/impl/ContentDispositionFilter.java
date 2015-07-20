@@ -228,8 +228,8 @@ public class ContentDispositionFilter implements Filter {
         
         private void setContentDisposition() {
             if (!this.containsHeader(CONTENT_DISPOSTION)) {
-            this.addHeader(CONTENT_DISPOSTION, CONTENT_DISPOSTION_ATTACHMENT);
+                this.addHeader(CONTENT_DISPOSTION, CONTENT_DISPOSTION_ATTACHMENT);
+            }
         }
     }
-}
 }
