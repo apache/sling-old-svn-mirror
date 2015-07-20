@@ -20,6 +20,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import junitx.util.PrivateAccessor;
 
@@ -291,7 +292,13 @@ public class ContentDispositionFilterTest {
             }
         });    
         PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{ComponentContext.class},new Object[]{ctx});
-        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response);
+        
+        final AtomicInteger counter =  new AtomicInteger();        
+        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response) {          
+            public void addHeader(String name, String value) {
+                counter.incrementAndGet();
+            }
+        };
         
         context.checking(new Expectations() {
             {
@@ -307,7 +314,8 @@ public class ContentDispositionFilterTest {
                 exactly(1).of(response).addHeader("Content-Disposition", "attachment");
             }
         });       
-        rewriterResponse.setContentType("text/html");
+        rewriterResponse.setContentType("text/html");        
+        Assert.assertEquals(1, counter.intValue());
     }
     
     @Test
@@ -364,7 +372,12 @@ public class ContentDispositionFilterTest {
             }
         });    
         PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{ComponentContext.class},new Object[]{ctx});
-        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response);
+        final AtomicInteger counter =  new AtomicInteger();        
+        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response) {          
+            public void addHeader(String name, String value) {
+                counter.incrementAndGet();
+            }
+        };
         
         context.checking(new Expectations() {
             {
@@ -381,6 +394,7 @@ public class ContentDispositionFilterTest {
             }
         });       
         rewriterResponse.setContentType("text/html");
+        Assert.assertEquals(1, counter.intValue());
     }
     
     @Test
@@ -401,7 +415,12 @@ public class ContentDispositionFilterTest {
             }
         });    
         PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{ComponentContext.class},new Object[]{ctx});
-        ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response);
+        final AtomicInteger counter =  new AtomicInteger();        
+        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response) {          
+            public void addHeader(String name, String value) {
+                counter.incrementAndGet();
+            }
+        };
         
         context.checking(new Expectations() {
             {
@@ -416,6 +435,7 @@ public class ContentDispositionFilterTest {
             }
         });       
         rewriterResponse.setContentType("text/html");
+        //Assert.assertEquals(1, counter.intValue());
     }
     
     @Test
