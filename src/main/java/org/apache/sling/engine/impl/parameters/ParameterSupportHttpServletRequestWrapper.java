@@ -18,14 +18,16 @@
  */
 package org.apache.sling.engine.impl.parameters;
 
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
+import javax.servlet.http.Part;
 
-public class ParameterSupportHttpServletRequestWrapper2x extends HttpServletRequestWrapper {
-    public ParameterSupportHttpServletRequestWrapper2x(HttpServletRequest request) {
+public class ParameterSupportHttpServletRequestWrapper extends HttpServletRequestWrapper {
+    public ParameterSupportHttpServletRequestWrapper(HttpServletRequest request) {
         super(request);
     }
 
@@ -51,5 +53,16 @@ public class ParameterSupportHttpServletRequestWrapper2x extends HttpServletRequ
     @Override
     public String[] getParameterValues(String name) {
         return getParameterSupport().getParameterValues(name);
+    }
+
+    @Override
+    public Part getPart(String name) {
+        return (Part) getParameterSupport().getPart(name);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Collection<Part> getParts() {
+        return (Collection<Part>) getParameterSupport().getParts();
     }
 }

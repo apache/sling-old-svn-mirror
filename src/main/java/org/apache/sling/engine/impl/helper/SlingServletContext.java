@@ -24,12 +24,22 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.EventListener;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.Filter;
+import javax.servlet.FilterRegistration;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletRegistration;
+import javax.servlet.ServletRegistration.Dynamic;
+import javax.servlet.SessionCookieConfig;
+import javax.servlet.SessionTrackingMode;
+import javax.servlet.descriptor.JspConfigDescriptor;
+
 import org.apache.sling.engine.impl.SlingMainServlet;
 import org.apache.sling.engine.impl.request.SlingRequestDispatcher;
 import org.osgi.framework.BundleContext;
@@ -126,6 +136,7 @@ public class SlingServletContext implements ServletContext {
      * This method calls on the <code>ServletContext</code> in which the
      * {@link SlingMainServlet} is running.
      */
+    @Override
     public String getServletContextName() {
         ServletContext delegatee = getServletContext();
         if (delegatee != null) {
@@ -136,6 +147,7 @@ public class SlingServletContext implements ServletContext {
     }
 
     /** Returns the context path of the web application. (Servlet API 2.5) */
+    @Override
     public String getContextPath() {
         ServletContext delegatee = getServletContext();
         if (delegatee != null) {
@@ -155,6 +167,7 @@ public class SlingServletContext implements ServletContext {
      * configured. This method calls on the <code>ServletContext</code> in
      * which the {@link SlingMainServlet} is running.
      */
+    @Override
     public String getInitParameter(String name) {
         ServletContext delegatee = getServletContext();
         if (delegatee != null) {
@@ -169,6 +182,7 @@ public class SlingServletContext implements ServletContext {
      * Sling is configured. This method calls on the <code>ServletContext</code>
      * in which the {@link SlingMainServlet} is running.
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Enumeration<String> getInitParameterNames() {
         ServletContext delegatee = getServletContext();
@@ -186,6 +200,7 @@ public class SlingServletContext implements ServletContext {
      * <code>ServletContext</code> in which the {@link SlingMainServlet} is
      * running.
      */
+    @Override
     public Object getAttribute(String name) {
         ServletContext delegatee = getServletContext();
         if (delegatee != null) {
@@ -200,6 +215,7 @@ public class SlingServletContext implements ServletContext {
      * the <code>ServletContext</code> in which the {@link SlingMainServlet}
      * is running.
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Enumeration<String> getAttributeNames() {
         ServletContext delegatee = getServletContext();
@@ -215,6 +231,7 @@ public class SlingServletContext implements ServletContext {
      * <code>ServletContext</code> in which the {@link SlingMainServlet} is
      * running.
      */
+    @Override
     public void removeAttribute(String name) {
         ServletContext delegatee = getServletContext();
         if (delegatee != null) {
@@ -227,6 +244,7 @@ public class SlingServletContext implements ServletContext {
      * method calls on the <code>ServletContext</code> in which the
      * {@link SlingMainServlet} is running.
      */
+    @Override
     public void setAttribute(String name, Object object) {
         ServletContext delegatee = getServletContext();
         if (delegatee != null) {
@@ -240,6 +258,7 @@ public class SlingServletContext implements ServletContext {
      * Returns the Sling server info string. This is not the same server info
      * string as returned by the servlet context in which Sling is configured.
      */
+    @Override
     public String getServerInfo() {
         return slingMainServlet.getServerInfo();
     }
@@ -250,6 +269,7 @@ public class SlingServletContext implements ServletContext {
      * <code>ServletContext</code> in which the {@link SlingMainServlet} is
      * running.
      */
+    @Override
     public int getMajorVersion() {
         ServletContext delegatee = getServletContext();
         if (delegatee != null) {
@@ -265,6 +285,7 @@ public class SlingServletContext implements ServletContext {
      * <code>ServletContext</code> in which the {@link SlingMainServlet} is
      * running.
      */
+    @Override
     public int getMinorVersion() {
         ServletContext delegatee = getServletContext();
         if (delegatee != null) {
@@ -281,6 +302,7 @@ public class SlingServletContext implements ServletContext {
      * calls on the <code>ServletContext</code> in which the
      * {@link SlingMainServlet} is running.
      */
+    @Override
     public String getMimeType(String file) {
         ServletContext delegatee = getServletContext();
         if (delegatee != null) {
@@ -296,6 +318,7 @@ public class SlingServletContext implements ServletContext {
      * Returns a {@link SlingRequestDispatcher} for the given path if not
      * <code>null</code>. Otherwise <code>null</code> is returned.
      */
+    @Override
     public RequestDispatcher getRequestDispatcher(String path) {
         // return no dispatcher if content is null
         if (path == null) {
@@ -311,6 +334,7 @@ public class SlingServletContext implements ServletContext {
      * This method calls on the <code>ServletContext</code> in which the
      * {@link SlingMainServlet} is running.
      */
+    @Override
     public RequestDispatcher getNamedDispatcher(String name) {
         ServletContext delegatee = getServletContext();
         if (delegatee != null) {
@@ -327,6 +351,7 @@ public class SlingServletContext implements ServletContext {
      * <code>ServletContext</code> in which the {@link SlingMainServlet} is
      * running.
      */
+    @Override
     public URL getResource(String path) throws MalformedURLException {
         ServletContext delegatee = getServletContext();
         if (delegatee != null) {
@@ -341,6 +366,7 @@ public class SlingServletContext implements ServletContext {
      * <code>ServletContext</code> in which the {@link SlingMainServlet} is
      * running.
      */
+    @Override
     public InputStream getResourceAsStream(String path) {
         ServletContext delegatee = getServletContext();
         if (delegatee != null) {
@@ -355,6 +381,7 @@ public class SlingServletContext implements ServletContext {
      * path. This method calls on the <code>ServletContext</code> in which the
      * {@link SlingMainServlet} is running.
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Set<String> getResourcePaths(String parentPath) {
         ServletContext delegatee = getServletContext();
@@ -371,6 +398,7 @@ public class SlingServletContext implements ServletContext {
      * the <code>ServletContext</code> in which the {@link SlingMainServlet}
      * is running.
      */
+    @Override
     public String getRealPath(String path) {
         ServletContext delegatee = getServletContext();
         if (delegatee != null) {
@@ -383,16 +411,19 @@ public class SlingServletContext implements ServletContext {
     // ---------- logging ------------------------------------------------------
 
     /** Logs the message and optional throwable at error level to the logger */
+    @Override
     public void log(String message, Throwable throwable) {
         log.error(message, throwable);
     }
 
     /** Logs the message at info level to the logger */
+    @Override
     public void log(String message) {
         log.info(message);
     }
 
     /** Logs the message and optional exception at error level to the logger */
+    @Override
     @Deprecated
     public void log(Exception exception, String message) {
         log(message, exception);
@@ -405,6 +436,7 @@ public class SlingServletContext implements ServletContext {
      * running. This method calls on the <code>ServletContext</code> in which
      * the {@link SlingMainServlet} is running.
      */
+    @Override
     public ServletContext getContext(String uripath) {
         ServletContext delegatee = getServletContext();
         if (delegatee != null) {
@@ -418,21 +450,171 @@ public class SlingServletContext implements ServletContext {
     }
 
     /** Returns <code>null</code> as defined in Servlet API 2.4 */
+    @Override
     @Deprecated
     public Servlet getServlet(String name) {
         return null;
     }
 
     /** Returns an empty enumeration as defined in Servlet API 2.4 */
+    @Override
     @Deprecated
     public Enumeration<String> getServletNames() {
         return Collections.enumeration(Collections.<String>emptyList());
     }
 
     /** Returns an empty enumeration as defined in Servlet API 2.4 */
+    @Override
     @Deprecated
     public Enumeration<Servlet> getServlets() {
         return Collections.enumeration(Collections.<Servlet>emptyList());
+    }
+
+    public int getEffectiveMajorVersion() {
+        return getServletContext().getEffectiveMajorVersion();
+    }
+
+    public int getEffectiveMinorVersion() {
+        return getServletContext().getEffectiveMinorVersion();
+    }
+
+    public boolean setInitParameter(String name, String value) {
+        // only supported in ServletContextListener.contextInitialized or
+        // ServletContainerInitializer.onStartuo
+        throw new IllegalStateException();
+    }
+
+    public SessionCookieConfig getSessionCookieConfig() {
+        return getServletContext().getSessionCookieConfig();
+    }
+
+    public void setSessionTrackingModes(Set<SessionTrackingMode> sessionTrackingModes) {
+        // only supported in ServletContextListener.contextInitialized or
+        // ServletContainerInitializer.onStartuo
+        throw new IllegalStateException();
+    }
+
+    public Set<SessionTrackingMode> getDefaultSessionTrackingModes() {
+        return getServletContext().getDefaultSessionTrackingModes();
+    }
+
+    public Set<SessionTrackingMode> getEffectiveSessionTrackingModes() {
+        return getServletContext().getEffectiveSessionTrackingModes();
+    }
+
+    public JspConfigDescriptor getJspConfigDescriptor() {
+        return getServletContext().getJspConfigDescriptor();
+    }
+
+    public ClassLoader getClassLoader() {
+        // we don't allow access to any class loader here since we are
+        // running in the OSGi Framework and we don't want code to fiddle
+        // with class laoders obtained from the ServletContext
+        throw new SecurityException();
+    }
+
+    public void declareRoles(String... roleNames) {
+        // only supported in ServletContextListener.contextInitialized or
+        // ServletContainerInitializer.onStartuo
+        throw new IllegalStateException();
+    }
+
+    // Servlet API 3.0, Section 4.4 Configuration methods
+
+    public Dynamic addServlet(String servletName, String className) {
+        // only supported in ServletContextListener.contextInitialized or
+        // ServletContainerInitializer.onStartuo
+        throw new IllegalStateException();
+    }
+
+    public Dynamic addServlet(String servletName, Servlet servlet) {
+        // only supported in ServletContextListener.contextInitialized or
+        // ServletContainerInitializer.onStartuo
+        throw new IllegalStateException();
+    }
+
+    public Dynamic addServlet(String servletName, Class<? extends Servlet> servletClass) {
+        // only supported in ServletContextListener.contextInitialized or
+        // ServletContainerInitializer.onStartuo
+        throw new IllegalStateException();
+    }
+
+    public <T extends Servlet> T createServlet(Class<T> clazz) {
+        // only supported in ServletContextListener.contextInitialized or
+        // ServletContainerInitializer.onStartuo
+        throw new IllegalStateException();
+    }
+
+    public ServletRegistration getServletRegistration(String servletName) {
+        // only supported in ServletContextListener.contextInitialized or
+        // ServletContainerInitializer.onStartuo
+        throw new IllegalStateException();
+    }
+
+    public Map<String, ? extends ServletRegistration> getServletRegistrations() {
+        // only supported in ServletContextListener.contextInitialized or
+        // ServletContainerInitializer.onStartuo
+        throw new IllegalStateException();
+    }
+
+    public javax.servlet.FilterRegistration.Dynamic addFilter(String filterName, String className) {
+        // only supported in ServletContextListener.contextInitialized or
+        // ServletContainerInitializer.onStartuo
+        throw new IllegalStateException();
+    }
+
+    public javax.servlet.FilterRegistration.Dynamic addFilter(String filterName, Filter filter) {
+        // only supported in ServletContextListener.contextInitialized or
+        // ServletContainerInitializer.onStartuo
+        throw new IllegalStateException();
+    }
+
+    public javax.servlet.FilterRegistration.Dynamic addFilter(String filterName, Class<? extends Filter> filterClass) {
+        // only supported in ServletContextListener.contextInitialized or
+        // ServletContainerInitializer.onStartuo
+        throw new IllegalStateException();
+    }
+
+    public <T extends Filter> T createFilter(Class<T> clazz) {
+        // only supported in ServletContextListener.contextInitialized or
+        // ServletContainerInitializer.onStartuo
+        throw new IllegalStateException();
+    }
+
+    public FilterRegistration getFilterRegistration(String filterName) {
+        // only supported in ServletContextListener.contextInitialized or
+        // ServletContainerInitializer.onStartuo
+        throw new IllegalStateException();
+    }
+
+    public Map<String, ? extends FilterRegistration> getFilterRegistrations() {
+        // only supported in ServletContextListener.contextInitialized or
+        // ServletContainerInitializer.onStartuo
+        throw new IllegalStateException();
+    }
+
+    public void addListener(String className) {
+        // only supported in ServletContextListener.contextInitialized or
+        // ServletContainerInitializer.onStartuo
+        throw new IllegalStateException();
+    }
+
+    public <T extends EventListener> void addListener(T t) {
+        // only supported in ServletContextListener.contextInitialized or
+        // ServletContainerInitializer.onStartuo
+        throw new IllegalStateException();
+    }
+
+    public void addListener(Class<? extends EventListener> listenerClass) {
+        // only supported in ServletContextListener.contextInitialized or
+        // ServletContainerInitializer.onStartuo
+        throw new IllegalStateException();
+    }
+
+    public <T extends EventListener> T createListener(Class<T> clazz) {
+        // only supported in ServletContextListener.contextInitialized or
+        // ServletContainerInitializer.onStartuo
+        throw new IllegalStateException();
     }
 
     // ---------- internal -----------------------------------------------------
