@@ -1379,7 +1379,7 @@ public class MapEntriesTest {
         
         Field field1 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntries");
         field1.setAccessible(true);  
-        field1.set(mapEntries, 10);
+        field1.set(mapEntries, 0);
         
         Method method = MapEntries.class.getDeclaredMethod("getVanityPaths", String.class);
         method.setAccessible(true);
@@ -1395,21 +1395,18 @@ public class MapEntriesTest {
     //SLING-4891
     public void test_getVanityPaths_2() throws Exception { 
         
-        Resource parent = mock(Resource.class);
-        when(parent.getPath()).thenReturn("/parent");
-        final Resource result = mock(Resource.class);
- 
-        when(result.getParent()).thenReturn(parent);
-        when(result.getPath()).thenReturn("/parent/child");
-        when(result.getName()).thenReturn("child");
-        when(result.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "vanity"));
+        final Resource justVanityPath = mock(Resource.class, "justVanityPath");
+        when(resourceResolver.getResource("/justVanityPath")).thenReturn(justVanityPath);
+        when(justVanityPath.getPath()).thenReturn("/justVanityPath");                 
+        when(justVanityPath.getName()).thenReturn("justVanityPath");
+        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
         
         
         when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
 
             public Iterator<Resource> answer(InvocationOnMock invocation) throws Throwable {
                 if (invocation.getArguments()[0].toString().contains("sling:vanityPath")) {
-                    return Collections.singleton(result).iterator();
+                    return Collections.singleton(justVanityPath).iterator();
                 } else {
                     return Collections.<Resource> emptySet().iterator();
                 }
@@ -1418,11 +1415,11 @@ public class MapEntriesTest {
         
         Field field1 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntries");
         field1.setAccessible(true);  
-        field1.set(mapEntries, 10);
+        field1.set(mapEntries, 0);
         
         Method method = MapEntries.class.getDeclaredMethod("getVanityPaths", String.class);
         method.setAccessible(true);
-        method.invoke(mapEntries, "/existing");   
+        method.invoke(mapEntries, "/justVanityPath");   
         
         Field vanityCounter = MapEntries.class.getDeclaredField("vanityCounter");
         vanityCounter.setAccessible(true);  
@@ -1434,21 +1431,18 @@ public class MapEntriesTest {
     //SLING-4891
     public void test_getVanityPaths_3() throws Exception { 
         
-        Resource parent = mock(Resource.class);
-        when(parent.getPath()).thenReturn("/parent");
-        final Resource result = mock(Resource.class);
- 
-        when(result.getParent()).thenReturn(parent);
-        when(result.getPath()).thenReturn("/parent/child");
-        when(result.getName()).thenReturn("child");
-        when(result.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "vanity"));
+        final Resource justVanityPath = mock(Resource.class, "justVanityPath");
+        when(resourceResolver.getResource("/justVanityPath")).thenReturn(justVanityPath);
+        when(justVanityPath.getPath()).thenReturn("/justVanityPath");                 
+        when(justVanityPath.getName()).thenReturn("justVanityPath");
+        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
         
         
         when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
 
             public Iterator<Resource> answer(InvocationOnMock invocation) throws Throwable {
                 if (invocation.getArguments()[0].toString().contains("sling:vanityPath")) {
-                    return Collections.singleton(result).iterator();
+                    return Collections.singleton(justVanityPath).iterator();
                 } else {
                     return Collections.<Resource> emptySet().iterator();
                 }
@@ -1457,7 +1451,7 @@ public class MapEntriesTest {
         
         Field field1 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntries");
         field1.setAccessible(true);  
-        field1.set(mapEntries, 10);
+        field1.set(mapEntries, 0);
         
         Field field2 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntriesStartup");
         field2.setAccessible(true);  
@@ -1471,5 +1465,5 @@ public class MapEntriesTest {
         vanityCounter.setAccessible(true);  
         AtomicLong counter = (AtomicLong) vanityCounter.get(mapEntries);
         assertEquals(0, counter.longValue());        
-    }
+    }  
 }
