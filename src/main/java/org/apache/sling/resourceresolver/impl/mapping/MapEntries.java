@@ -452,7 +452,7 @@ public class MapEntries implements EventHandler {
 
     private void doAddVanity(String path) {
         Resource resource = resolver.getResource(path);
-        if (maxCachedVanityPathEntries == -1 || vanityCounter.longValue() < maxCachedVanityPathEntries) {
+        if (isAllVanityPathEntriesCached() || vanityCounter.longValue() < maxCachedVanityPathEntries) {
             // fill up the cache and the bloom filter
             loadVanityPath(resource, resolveMapsMap, vanityTargets, true, true);
         } else {
@@ -1122,9 +1122,9 @@ public class MapEntries implements EventHandler {
         final String queryString = "SELECT sling:vanityPath, sling:redirect, sling:redirectStatus FROM sling:VanityPath WHERE sling:vanityPath IS NOT NULL";
         final Iterator<Resource> i = resolver.findResources(queryString, "sql");
 
-        while (i.hasNext() && (createVanityBloomFilter ||maxCachedVanityPathEntries == -1 || vanityCounter.longValue() < maxCachedVanityPathEntries)) {
+        while (i.hasNext() && (createVanityBloomFilter || isAllVanityPathEntriesCached() || vanityCounter.longValue() < maxCachedVanityPathEntries)) {
             final Resource resource = i.next();
-            if (maxCachedVanityPathEntries == -1 || vanityCounter.longValue() < maxCachedVanityPathEntries) {
+            if (isAllVanityPathEntriesCached() || vanityCounter.longValue() < maxCachedVanityPathEntries) {
                 // fill up the cache and the bloom filter
                 loadVanityPath(resource, resolveMapsMap, targetPaths, true,
                         createVanityBloomFilter);
