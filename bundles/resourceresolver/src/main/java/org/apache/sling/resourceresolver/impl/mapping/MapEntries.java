@@ -453,10 +453,9 @@ public class MapEntries implements EventHandler {
 
     private void doAddVanity(String path) {
         Resource resource = resolver.getResource(path);
-        if (maxCachedVanityPathEntries < vanityCounter.longValue()) {
+        if (maxCachedVanityPathEntries == -1 || vanityCounter.longValue() < maxCachedVanityPathEntries) {
             // fill up the cache and the bloom filter
             loadVanityPath(resource, resolveMapsMap, vanityTargets, true, true);
-            vanityCounter.incrementAndGet();
         } else {
             // fill up the bloom filter
             loadVanityPath(resource, resolveMapsMap, vanityTargets, false, true);
@@ -491,7 +490,7 @@ public class MapEntries implements EventHandler {
         }
         vanityTargets.remove(actualContentPath);
         if (vanityCounter.longValue() > 0) {
-            vanityCounter.decrementAndGet();
+            vanityCounter.addAndGet(-2);
         }     
     }
 
@@ -871,9 +870,8 @@ public class MapEntries implements EventHandler {
             final Iterator<Resource> i = queryResolver.findResources(queryString, "sql");
             while (i.hasNext()) {
                 final Resource resource = i.next();
-                if (maxCachedVanityPathEntriesStartup) {                    
+                if (maxCachedVanityPathEntriesStartup || vanityCounter.longValue() < maxCachedVanityPathEntries) {                    
                     loadVanityPath(resource, resolveMapsMap, vanityTargets, true, false);
-                    vanityCounter.incrementAndGet();
                     entryMap = resolveMapsMap;
                 } else {                    
                     final Map <String, List<String>> targetPaths = new HashMap <String, List<String>>();
@@ -1127,11 +1125,10 @@ public class MapEntries implements EventHandler {
 
         while (i.hasNext() && (createVanityBloomFilter || maxCachedVanityPathEntries < vanityCounter.longValue())) {
             final Resource resource = i.next();
-            if (maxCachedVanityPathEntries < vanityCounter.longValue()) {
+            if (maxCachedVanityPathEntries == -1 || vanityCounter.longValue() < maxCachedVanityPathEntries) {
                 // fill up the cache and the bloom filter
                 loadVanityPath(resource, entryMap, targetPaths, true,
                         createVanityBloomFilter);
-                vanityCounter.incrementAndGet();
             } else {
                 // fill up the bloom filter
                 loadVanityPath(resource, entryMap, targetPaths, false,
@@ -1208,7 +1205,12 @@ public class MapEntries implements EventHandler {
                     }
                     if (addedEntry) {
                         // 3. keep the path to return
-                        this.updateTargetPaths(targetPaths, redirect, checkPath);  
+                        this.updateTargetPaths(targetPaths, redirect, checkPath); 
+                        //increment only if the instance variable
+                        if (entryMap == resolveMapsMap) {
+                            vanityCounter.addAndGet(2);
+                        }
+
                         if (newVanity) {
                             // update bloom filter
                             BloomFilterUtils.add(vanityBloomFilter, checkPath);
