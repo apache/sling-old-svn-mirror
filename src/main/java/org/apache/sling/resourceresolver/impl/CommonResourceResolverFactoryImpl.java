@@ -357,6 +357,11 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     public long getMaxCachedVanityPathEntries() {
         return this.activator.getMaxCachedVanityPathEntries();
     }
+    
+    @Override
+    public boolean isMaxCachedVanityPathEntriesStartup() {
+        return this.activator.isMaxCachedVanityPathEntriesStartup();
+    }
 
     @Override
     public int getVanityBloomFilterMaxBytes() {

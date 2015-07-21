@@ -42,6 +42,8 @@ public interface MapConfigurationProvider extends ResourceResolverFactory {
     
     long getMaxCachedVanityPathEntries();
     
+    boolean isMaxCachedVanityPathEntriesStartup();
+    
     int getVanityBloomFilterMaxBytes();
 
     boolean isOptimizeAliasResolutionEnabled();
