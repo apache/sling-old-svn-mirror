@@ -300,14 +300,14 @@
   </feature>
   <!-- Apache Sling Scripting -->
   <feature name="sling-scripting" version="${project.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.api/2.1.6</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.core/2.0.28</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.api/2.1.8</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.core/2.0.30</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
     <bundle>mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
   </feature>
   <feature name="sling-scripting-javascript" version="${project.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.javascript/2.0.18</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.javascript/2.0.20</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling-scripting</feature>
     <feature version="${project.version}">sling-jcr</feature>
@@ -476,7 +476,7 @@
   </feature>
   <feature name="sling-scripting-sightly" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly/1.0.2</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.4</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.6</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-jcr</feature>
