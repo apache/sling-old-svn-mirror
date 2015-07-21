@@ -195,7 +195,7 @@ public class ResourceResolverFactoryActivator implements Runnable {
     private static final boolean DEFAULT_MAX_CACHED_VANITY_PATHS_STARTUP = true;
     @Property(boolValue = DEFAULT_MAX_CACHED_VANITY_PATHS_STARTUP,
               label = "Limit the maximum number of cached vanity path entries only at startup",
-              description = "Limit the maximum number of cached vanity path entries only at startup" +
+              description = "Limit the maximum number of cached vanity path entries only at startup. " +
                             "Default is true")
     private static final String PROP_MAX_CACHED_VANITY_PATHS_STARTUP = "resource.resolver.vanitypath.maxEntries.startup";
 
