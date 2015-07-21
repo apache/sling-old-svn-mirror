@@ -124,6 +124,8 @@ public class MapEntries implements EventHandler {
     
     private final long maxCachedVanityPathEntries;
     
+    private final boolean maxCachedVanityPathEntriesStartup;
+    
     private final int vanityBloomFilterMaxBytes;
 
     private final boolean enableOptimizeAliasResolution;
@@ -156,6 +158,7 @@ public class MapEntries implements EventHandler {
         this.eventAdmin = null;
         this.enabledVanityPaths = true;
         this.maxCachedVanityPathEntries = -1;
+        this.maxCachedVanityPathEntriesStartup = true;
         this.vanityBloomFilterMaxBytes = 0;
         this.enableOptimizeAliasResolution = true;
         this.vanityPathConfig = null;
@@ -172,6 +175,7 @@ public class MapEntries implements EventHandler {
         this.mapRoot = factory.getMapRoot();
         this.enabledVanityPaths = factory.isVanityPathEnabled();
         this.maxCachedVanityPathEntries = factory.getMaxCachedVanityPathEntries();
+        this.maxCachedVanityPathEntriesStartup = factory.isMaxCachedVanityPathEntriesStartup();
         this.vanityBloomFilterMaxBytes = factory.getVanityBloomFilterMaxBytes();
         this.vanityPathConfig = factory.getVanityPathConfig();
         this.enableOptimizeAliasResolution = factory.isOptimizeAliasResolutionEnabled();
@@ -853,8 +857,7 @@ public class MapEntries implements EventHandler {
      */
     private Map<String, List<MapEntry>> getVanityPaths(String vanityPath) {
 
-        final Map<String, List<MapEntry>> entryMap = new HashMap<String, List<MapEntry>>();  
-        final Map <String, List<String>> targetPaths = new HashMap <String, List<String>>();
+        Map<String, List<MapEntry>> entryMap = new HashMap<String, List<MapEntry>>();    
         
         // sling:VanityPath (uppercase V) is the mixin name
         // sling:vanityPath (lowercase) is the property name        
@@ -868,7 +871,14 @@ public class MapEntries implements EventHandler {
             final Iterator<Resource> i = queryResolver.findResources(queryString, "sql");
             while (i.hasNext()) {
                 final Resource resource = i.next();
-                loadVanityPath(resource, entryMap, targetPaths, true, false);
+                if (maxCachedVanityPathEntriesStartup) {                    
+                    loadVanityPath(resource, resolveMapsMap, vanityTargets, true, false);
+                    vanityCounter.incrementAndGet();
+                    entryMap = resolveMapsMap;
+                } else {                    
+                    final Map <String, List<String>> targetPaths = new HashMap <String, List<String>>();
+                    loadVanityPath(resource, entryMap, targetPaths, true, false);
+                }               
             }
         } catch (LoginException e) {
             log.error("Exception while obtaining queryResolver", e);
