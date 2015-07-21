@@ -233,6 +233,7 @@ public class ScriptCacheImpl implements EventHandler, ScriptCache {
         try {
             if (eventHandlerServiceRegistration != null) {
                 eventHandlerServiceRegistration.unregister();
+                eventHandlerServiceRegistration = null;
             }
             internalMap.clear();
             extensions.addAll(Arrays.asList(additionalExtensions));
