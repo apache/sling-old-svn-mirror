@@ -282,8 +282,7 @@ public class MapEntries implements EventHandler {
                 timer.schedule(new BloomFilterTask(), 60 * 1000);
 
                 final Map<String, List<String>> vanityTargets = this
-                        .loadVanityPaths(resolver, resolveMapsMap,
-                                createVanityBloomFilter);
+                        .loadVanityPaths(createVanityBloomFilter);
                 this.vanityTargets = vanityTargets;
             }
         } finally {
@@ -1116,22 +1115,22 @@ public class MapEntries implements EventHandler {
      * Load vanity paths Search for all nodes inheriting the sling:VanityPath
      * mixin
      */
-    private Map <String, List<String>> loadVanityPaths(final ResourceResolver resolver, final Map<String, List<MapEntry>> entryMap, boolean createVanityBloomFilter) {
+    private Map <String, List<String>> loadVanityPaths(boolean createVanityBloomFilter) {
         // sling:VanityPath (uppercase V) is the mixin name
         // sling:vanityPath (lowercase) is the property name
         final Map <String, List<String>> targetPaths = new ConcurrentHashMap <String, List<String>>();
         final String queryString = "SELECT sling:vanityPath, sling:redirect, sling:redirectStatus FROM sling:VanityPath WHERE sling:vanityPath IS NOT NULL";
         final Iterator<Resource> i = resolver.findResources(queryString, "sql");
 
-        while (i.hasNext() && (createVanityBloomFilter || maxCachedVanityPathEntries < vanityCounter.longValue())) {
+        while (i.hasNext() && (createVanityBloomFilter ||maxCachedVanityPathEntries == -1 || vanityCounter.longValue() < maxCachedVanityPathEntries)) {
             final Resource resource = i.next();
             if (maxCachedVanityPathEntries == -1 || vanityCounter.longValue() < maxCachedVanityPathEntries) {
                 // fill up the cache and the bloom filter
-                loadVanityPath(resource, entryMap, targetPaths, true,
+                loadVanityPath(resource, resolveMapsMap, targetPaths, true,
                         createVanityBloomFilter);
             } else {
                 // fill up the bloom filter
-                loadVanityPath(resource, entryMap, targetPaths, false,
+                loadVanityPath(resource, resolveMapsMap, targetPaths, false,
                         createVanityBloomFilter);
             }
 
