@@ -27,11 +27,15 @@ import java.util.regex.Pattern;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.PatternLayout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LogConfig {
     private static final String[] LEGACY_MARKERS = {
         "{0}", "{1}", "{2}", "{3}", "{4}", "{5}"
     };
+
+    private static final Logger log = LoggerFactory.getLogger(LogConfig.class);
 
     private final String configPid;
 
@@ -128,8 +132,13 @@ public class LogConfig {
             // Default {0,date,dd.MM.yyyy HH:mm:ss.SSS} *{4}* [{2}] {3} {5}
             // Convert patterns to %d{dd.MM.yyyy HH:mm:ss.SSS} *%level*
             // [%thread] %logger %msg%n
-            logBackPattern = MessageFormat.format(logBackPattern, "zero", "%marker", "%thread", "%logger", "%level",
-                "%message") + "%n";
+            try {
+                logBackPattern = MessageFormat.format(logBackPattern, "zero", "%marker", "%thread", "%logger", "%level",
+                        "%message") + "%n";
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid message format provided [{}]. Would use the default pattern",logBackPattern, e);
+                logBackPattern = LogConfigManager.LOG_PATTERN_DEFAULT;
+            }
         }
 
         PatternLayout pl = new PatternLayout();
