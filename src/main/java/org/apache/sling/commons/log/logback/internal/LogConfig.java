@@ -49,8 +49,10 @@ public class LogConfig {
 
     private final boolean isAdditiv;
 
+    private final boolean resetToDefault;
+
     LogConfig(LogWriterProvider logWriterProvider, final String pattern, Set<String> categories, Level logLevel,
-            String logWriterName, final boolean isAdditiv, String configPid, LoggerContext loggerContext) {
+              String logWriterName, final boolean isAdditiv, String configPid, LoggerContext loggerContext, boolean resetToDefault) {
         this.logWriterProvider = logWriterProvider;
         this.configPid = configPid;
         this.pattern = pattern;
@@ -59,6 +61,7 @@ public class LogConfig {
         this.logWriterName = logWriterName;
         this.loggerContext = loggerContext;
         this.isAdditiv = isAdditiv;
+        this.resetToDefault = resetToDefault;
     }
 
     public String getConfigPid() {
@@ -87,6 +90,10 @@ public class LogConfig {
 
     public LogWriter getLogWriter() {
         return logWriterProvider.getLogWriter(getLogWriterName());
+    }
+
+    public boolean isResetToDefault() {
+        return resetToDefault;
     }
 
     public PatternLayout createLayout() {
@@ -139,7 +146,7 @@ public class LogConfig {
             + logLevel + ", logWriterName='" + logWriterName + '\'' + '}';
     }
 
-    public static interface LogWriterProvider {
+    public interface LogWriterProvider {
         LogWriter getLogWriter(String writerName);
     }
 

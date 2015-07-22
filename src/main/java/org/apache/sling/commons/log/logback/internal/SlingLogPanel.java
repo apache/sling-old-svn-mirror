@@ -87,7 +87,8 @@ public class SlingLogPanel extends HttpServlet {
             Level.INFO.levelStr,
             Level.DEBUG.levelStr,
             Level.TRACE.levelStr,
-            Level.OFF.levelStr
+            Level.OFF.levelStr,
+            LogConfigManager.LOG_LEVEL_RESET_TO_DEFAULT
     };
 
     private static final String PACKAGE_SEPARATOR = ".";
@@ -228,9 +229,9 @@ public class SlingLogPanel extends HttpServlet {
             pw.print( XmlUtil.escapeXml(logConfig.getConfigPid()) );
             pw.println("\">");
             pw.print("<td><span class=\"logLevels\" data-currentloglevel=\"");
-            pw.print(logConfig.getLogLevel().levelStr);
+            pw.print(getLevelStr(logConfig));
             pw.print("\">");
-            pw.print(logConfig.getLogLevel().levelStr);
+            pw.print(getLevelStr(logConfig));
             pw.println("</span></td>");
             pw.print("<td><span class=\"logFile\">");
             pw.print( XmlUtil.escapeXml(getPath(logConfig.getLogWriterName(), rootPath, shortenPaths)));
@@ -680,6 +681,13 @@ public class SlingLogPanel extends HttpServlet {
 
     private void internalFailure(String msg, Exception e) {
         logbackManager.getLogConfigManager().internalFailure(msg, e);
+    }
+
+    private String getLevelStr(LogConfig logConfig) {
+        if (logConfig.isResetToDefault()){
+            return LogConfigManager.LOG_LEVEL_RESET_TO_DEFAULT;
+        }
+        return logConfig.getLogLevel().levelStr;
     }
 
     private static String getName(TurboFilter tf) {
