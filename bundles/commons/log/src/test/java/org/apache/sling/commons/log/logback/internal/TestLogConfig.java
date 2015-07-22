@@ -49,7 +49,7 @@ public class TestLogConfig {
 
     private LogConfig createConfig(String pattern) {
         return new LogConfig(new DummyLogWriterProvider(), pattern, Collections.<String> emptySet(), Level.DEBUG,
-            "test", false, null, (LoggerContext) LoggerFactory.getILoggerFactory());
+            "test", false, null, (LoggerContext) LoggerFactory.getILoggerFactory(), false);
     }
 
     private static class DummyLogWriterProvider implements LogConfig.LogWriterProvider {
