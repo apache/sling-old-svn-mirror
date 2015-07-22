@@ -610,6 +610,10 @@ public class MapEntriesTest {
         
         method.invoke(mapEntries, "/justVanityPath");
         
+        Field vanityCounter = MapEntries.class.getDeclaredField("vanityCounter");
+        vanityCounter.setAccessible(true);  
+        AtomicLong counter = (AtomicLong) vanityCounter.get(mapEntries);
+        assertEquals(2, counter.longValue());  
         assertEquals(2, resolveMapsMap.size());
         assertEquals(1, vanityTargets.size());
         assertNotNull(resolveMapsMap.get("/target/justVanityPath"));
@@ -618,6 +622,9 @@ public class MapEntriesTest {
         
         //remove vanity path
         method1.invoke(mapEntries, "/justVanityPath");
+        
+        counter = (AtomicLong) vanityCounter.get(mapEntries);
+        assertEquals(0, counter.longValue());  
         
         assertEquals(1, resolveMapsMap.size());
         assertEquals(0, vanityTargets.size());      
