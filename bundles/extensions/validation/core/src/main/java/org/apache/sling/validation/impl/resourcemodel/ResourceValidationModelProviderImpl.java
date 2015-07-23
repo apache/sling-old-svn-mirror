@@ -312,14 +312,12 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
                 if (childrenProperties == null) {
                     throw new IllegalStateException("Could not adapt resource " + child.getPath() + " to ValueMap");
                 }
-                final String name;
+                final String name = child.getName();
                 final String nameRegex;
                 if (childrenProperties.containsKey(Constants.NAME_REGEX)) {
-                    name = null;
                     nameRegex = childrenProperties.get(Constants.NAME_REGEX, String.class);
                 } else {
                     // otherwise fall back to the name
-                    name = child.getName();
                     nameRegex = null;
                 }
                 boolean isRequired = !PropertiesUtil.toBoolean(childrenProperties.get(Constants.OPTIONAL), false);

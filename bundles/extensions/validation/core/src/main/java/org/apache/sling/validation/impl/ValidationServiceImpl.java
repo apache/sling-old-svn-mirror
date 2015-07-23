@@ -83,14 +83,14 @@ public class ValidationServiceImpl implements ValidationService{
     // ValidationService ###################################################################################################################
     
     @SuppressWarnings("unused")
-    public @CheckForNull ValidationModel getValidationModel(@Nonnull String validatedResourceType, String resourcePath) {
+    public @CheckForNull ValidationModel getValidationModel(@Nonnull String validatedResourceType, String resourcePath, boolean considerResourceSuperTypeModels) {
         // https://bugs.eclipse.org/bugs/show_bug.cgi?id=459256
         if (validatedResourceType == null) {
             throw new IllegalArgumentException("ValidationService.getValidationModel - cannot accept null as resource type. Resource path was: " + resourcePath);
         }
         // convert to relative resource types, see https://issues.apache.org/jira/browse/SLING-4262
         validatedResourceType = getRelativeResourceType(validatedResourceType);
-        return modelRetriever.getModel(validatedResourceType, resourcePath);
+        return modelRetriever.getModel(validatedResourceType, resourcePath,  considerResourceSuperTypeModels);
     }
     
     
@@ -121,8 +121,8 @@ public class ValidationServiceImpl implements ValidationService{
 
     @SuppressWarnings("null")
     @Override
-    public @CheckForNull ValidationModel getValidationModel(@Nonnull Resource resource) {
-        return getValidationModel(resource.getResourceType(), resource.getPath());
+    public @CheckForNull ValidationModel getValidationModel(@Nonnull Resource resource, boolean considerResourceSuperTypeModels) {
+        return getValidationModel(resource.getResourceType(), resource.getPath(), considerResourceSuperTypeModels);
     }
 
     @Override
@@ -153,7 +153,7 @@ public class ValidationServiceImpl implements ValidationService{
      * @param result
      * @param childResources
      */
-    private void validateChildren(Resource resource, String relativePath, List<ChildResource> childResources, ValidationResultImpl result) {
+    private void validateChildren(Resource resource, String relativePath, Collection<ChildResource> childResources, ValidationResultImpl result) {
         // validate children resources, if any
         for (ChildResource childResource : childResources) {
             // if a pattern is set we validate all children matching that pattern
@@ -197,14 +197,14 @@ public class ValidationServiceImpl implements ValidationService{
     }    
 
     @Override
-    public @Nonnull ValidationResult validateResourceRecursively(@Nonnull Resource resource, boolean enforceValidation, Predicate filter) 
+    public @Nonnull ValidationResult validateResourceRecursively(@Nonnull Resource resource, boolean enforceValidation, Predicate filter,  boolean considerResourceSuperTypeModels) 
             throws IllegalStateException, IllegalArgumentException, SlingValidationException {
-        ValidationResourceVisitor visitor = new ValidationResourceVisitor(this, resource.getPath(), enforceValidation, filter);
+        ValidationResourceVisitor visitor = new ValidationResourceVisitor(this, resource.getPath(), enforceValidation, filter, considerResourceSuperTypeModels);
         visitor.accept(resource);
         return visitor.getResult();
     }
 
-    private void validateValueMap(ValueMap valueMap, String relativePath, List<ResourceProperty> resourceProperties,
+    private void validateValueMap(ValueMap valueMap, String relativePath, Collection<ResourceProperty> resourceProperties,
             ValidationResultImpl result) {
         if (valueMap == null) {
             throw new IllegalArgumentException("ValueMap may not be null");

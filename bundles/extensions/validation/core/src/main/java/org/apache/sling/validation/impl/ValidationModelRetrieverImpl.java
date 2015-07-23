@@ -18,20 +18,28 @@
  */
 package org.apache.sling.validation.impl;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.RankedServices;
 import org.apache.sling.validation.Validator;
+import org.apache.sling.validation.impl.model.MergedValidationModel;
 import org.apache.sling.validation.impl.util.Trie;
 import org.apache.sling.validation.model.ValidationModel;
 import org.apache.sling.validation.spi.ValidationModelProvider;
@@ -42,7 +50,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Retrieves the most appropriate (the one with the longest matching applicablePath) model from any of the {@link ValidationModelProvider}s.
+ * Retrieves the most appropriate model (the one with the longest matching applicablePath) from any of the {@link ValidationModelProvider}s.
  * Also implements a cache of all previously retrieved models.
  *
  */
@@ -68,15 +76,52 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever, E
      */
     @Reference(name = "validator", referenceInterface = Validator.class, policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE)
     Map<String, Validator<?>> validators = new ConcurrentHashMap<String, Validator<?>>();
+    
+    @Reference
+    private ResourceResolverFactory resourceResolverFactory;
+    
+    ResourceResolver resourceResolver;
 
     private static final Logger LOG = LoggerFactory.getLogger(ValidationModelRetrieverImpl.class);
+
+    @Activate
+    public void activate() throws LoginException {
+        // TODO: move resource resolver opening and closing into this method!
+        resourceResolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
+    }
+
+    @Deactivate
+    public void deactivate() {
+        resourceResolver.close();
+    }
 
     /*
      * (non-Javadoc)
      * @see org.apache.sling.validation.impl.ValidationModelRetriever#getModel(java.lang.String, java.lang.String)
      */
     @Override
-    public @CheckForNull ValidationModel getModel(@Nonnull String resourceType, String resourcePath) {
+    public @CheckForNull ValidationModel getModel(@Nonnull String resourceType, String resourcePath, boolean considerResourceSuperTypeModels) {
+        // first get model for exactly the requested resource type
+        ValidationModel baseModel = getModel(resourceType, resourcePath);
+        if (considerResourceSuperTypeModels) {
+            Collection<ValidationModel> modelsToMerge = new ArrayList<ValidationModel>();
+            while ((resourceType = resourceResolver.getParentResourceType(resourceType)) != null) {
+                // TODO: check if it works with relative resource types
+                ValidationModel modelToMerge = getModel(resourceType, resourcePath);
+                if (baseModel == null) {
+                    baseModel = modelToMerge;
+                } else {
+                    modelsToMerge.add(modelToMerge);
+                }
+            }
+            if (!modelsToMerge.isEmpty()) {
+                return new MergedValidationModel(baseModel, modelsToMerge.toArray(new ValidationModel[modelsToMerge.size()]));
+            }
+        }
+        return baseModel;
+    }
+    
+    private @CheckForNull ValidationModel getModel(@Nonnull String resourceType, String resourcePath) {
         ValidationModel model = null;
         Trie<ValidationModel> modelsForResourceType = validationModelsCache.get(resourceType);
         if (modelsForResourceType == null) {

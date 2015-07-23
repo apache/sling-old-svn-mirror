@@ -80,7 +80,7 @@ public class UserModel {
 
     @PostConstruct
     protected void validate() {
-        ValidationModel model = validationService.getValidationModel(resource);
+        ValidationModel model = validationService.getValidationModel(resource, false);
         if (model != null) {
             ValidationResult result = validationService.validate(resource, model);
             if (!result.isValid()) {

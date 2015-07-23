@@ -58,7 +58,7 @@ public class ModifyUserServlet extends SlingAllMethodsServlet {
         }
         if (resourceType != null && !"".equals(resourceType)) {
             String resourcePath = request.getRequestPathInfo().getResourcePath();
-            ValidationModel vm = validationService.getValidationModel(resourceType, resourcePath);
+            ValidationModel vm = validationService.getValidationModel(resourceType, resourcePath, false);
             if (vm != null) {
                 ValidationResult vr = validationService.validate(requestParameters, vm);
                 if (vr.isValid()) {

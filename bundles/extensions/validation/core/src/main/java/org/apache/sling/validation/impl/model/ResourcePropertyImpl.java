@@ -35,22 +35,18 @@ public class ResourcePropertyImpl implements ResourceProperty {
     private final @Nonnull List<ParameterizedValidator> validators;
     private final Pattern namePattern;
 
-    public ResourcePropertyImpl(String name, String nameRegex, boolean isMultiple, boolean isRequired,
+    public ResourcePropertyImpl(@Nonnull String name, String nameRegex, boolean isMultiple, boolean isRequired,
             @Nonnull List<ParameterizedValidator> validators) throws IllegalArgumentException {
         if (nameRegex != null) {
-            this.name = null;
             try {
                 this.namePattern = Pattern.compile(nameRegex);
             } catch (PatternSyntaxException e) {
                 throw new IllegalArgumentException("Invalid regex given", e);
             }
         } else {
-            if (name == null) {
-                throw new IllegalArgumentException("Either name or nameRegex must be not null!");
-            }
-            this.name = name;
             this.namePattern = null;
         }
+        this.name = name;
         this.isMultiple = isMultiple;
         this.isRequired = isRequired;
         this.validators = validators;

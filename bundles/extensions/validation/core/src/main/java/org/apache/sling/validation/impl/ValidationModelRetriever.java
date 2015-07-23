@@ -30,5 +30,5 @@ public interface ValidationModelRetriever {
      * @param resourcePath may be {@code null} or empty
      * @return a model which should be used for validation or null, if no validation model could be found
      */
-    public @CheckForNull ValidationModel getModel(@Nonnull String resourceType, String resourcePath);
+    public @CheckForNull ValidationModel getModel(@Nonnull String resourceType, String resourcePath, boolean considerResourceSuperTypeModels);
 }

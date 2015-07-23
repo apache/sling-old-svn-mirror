@@ -307,7 +307,7 @@ public class ResourceValidationModelProviderImplTest {
         return modelResource;
     }
 
-    private void createValidationModelProperties(Resource model, @Nonnull List<ResourceProperty> properties)
+    private void createValidationModelProperties(Resource model, @Nonnull Collection<ResourceProperty> properties)
             throws PersistenceException {
         ResourceResolver rr = model.getResourceResolver();
         if (properties.isEmpty()) {
