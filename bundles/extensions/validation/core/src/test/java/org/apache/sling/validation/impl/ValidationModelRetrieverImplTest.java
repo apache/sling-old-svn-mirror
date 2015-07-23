@@ -72,7 +72,7 @@ public class ValidationModelRetrieverImplTest {
 
         @Override
         public @Nonnull Collection<ValidationModel> getModel(@Nonnull String relativeResourceType,
-                @Nonnull Map<String, Validator<?>> validatorsMap) {
+                @Nonnull Map<String, Validator<?>> validatorsMap, @Nonnull ResourceResolver resourceResolver) {
             // make sure the date validator is passed along
             Assert.assertThat(validatorsMap,
                     Matchers.<String, Validator<?>> hasEntry(DateValidator.class.getName(), dateValidator));
@@ -122,7 +122,6 @@ public class ValidationModelRetrieverImplTest {
         dateValidator = new DateValidator();
         applicablePathPerResourceType = new MultiHashMap();
         validationModelRetriever = new ValidationModelRetrieverImpl();
-        validationModelRetriever.resourceResolver = resourceResolver;
         modelProvider = new TestModelProvider();
         // service id must be set (even if service ranking is not set)
         Map<String, Object> properties = new HashMap<String, Object>();
@@ -138,7 +137,7 @@ public class ValidationModelRetrieverImplTest {
         applicablePathPerResourceType.put("test/type", "/content/site1/subnode");
 
         ValidationModel model = validationModelRetriever.getModel("test/type", "/content/site1/subnode/test/somepage",
-                false);
+                false, resourceResolver);
         Assert.assertNotNull(model);
         Assert.assertThat(Arrays.asList(model.getApplicablePaths()), Matchers.contains("/content/site1/subnode/test"));
     }
@@ -149,7 +148,7 @@ public class ValidationModelRetrieverImplTest {
         applicablePathPerResourceType.put("test/type", null);
         applicablePathPerResourceType.put("test/type", "/content/site1/subnode");
 
-        ValidationModel model = validationModelRetriever.getModel("test/type", null, false);
+        ValidationModel model = validationModelRetriever.getModel("test/type", null, false, resourceResolver);
         Assert.assertNotNull(model);
         Assert.assertThat(Arrays.asList(model.getApplicablePaths()), Matchers.contains(""));
     }
@@ -158,17 +157,17 @@ public class ValidationModelRetrieverImplTest {
     public void testGetCachedModel() {
         applicablePathPerResourceType.put("test/type", "/content/site1");
         // call two times, the second time the counter must be the same (because provider is not called)
-        ValidationModel model = validationModelRetriever.getModel("test/type", "/content/site1", false);
+        ValidationModel model = validationModelRetriever.getModel("test/type", "/content/site1", false, resourceResolver);
         Assert.assertNotNull(model);
         Assert.assertEquals(1, modelProvider.counter);
-        model = validationModelRetriever.getModel("test/type", "/content/site1", false);
+        model = validationModelRetriever.getModel("test/type", "/content/site1", false, resourceResolver);
         Assert.assertNotNull(model);
         Assert.assertEquals(1, modelProvider.counter);
 
-        model = validationModelRetriever.getModel("invalid/type", "/content/site1", false);
+        model = validationModelRetriever.getModel("invalid/type", "/content/site1", false, resourceResolver);
         Assert.assertNull(model);
         Assert.assertEquals(2, modelProvider.counter);
-        model = validationModelRetriever.getModel("invalid/type", "/content/site1", false);
+        model = validationModelRetriever.getModel("invalid/type", "/content/site1", false, resourceResolver);
         Assert.assertNull(model);
         Assert.assertEquals(2, modelProvider.counter);
     }
@@ -176,12 +175,12 @@ public class ValidationModelRetrieverImplTest {
     @Test
     public void testGetCachedInvalidation() {
         applicablePathPerResourceType.put("test/type", "/content/site1");
-        validationModelRetriever.getModel("test/type", "/content/site1", false);
+        validationModelRetriever.getModel("test/type", "/content/site1", false, resourceResolver);
         Assert.assertEquals(1, modelProvider.counter);
         validationModelRetriever.handleEvent(new Event(ValidationModelRetrieverImpl.CACHE_INVALIDATION_EVENT_TOPIC,
                 null));
         // after cache invalidation the provider is called again
-        validationModelRetriever.getModel("test/type", "/content/site1", false);
+        validationModelRetriever.getModel("test/type", "/content/site1", false, resourceResolver);
         Assert.assertEquals(2, modelProvider.counter);
     }
 
@@ -189,13 +188,13 @@ public class ValidationModelRetrieverImplTest {
     public void testGetModelWithResourceInheritance() {
         // in case no super type is known, just return model
         applicablePathPerResourceType.put("test/type", "/content/site1");
-        ValidationModel model = validationModelRetriever.getModel("test/type", "/content/site1", true);
+        ValidationModel model = validationModelRetriever.getModel("test/type", "/content/site1", true, resourceResolver);
         Assert.assertNotNull(model);
         Assert.assertThat(model.getResourceProperties(), Matchers.contains(new ResourcePropertyNameMatcher("test/type")));
         // in case there is one super type make sure the merged model is returned!
         Mockito.when(resourceResolver.getParentResourceType("test/type")).thenReturn("test/supertype");
         applicablePathPerResourceType.put("test/supertype", "/content/site1");
-        model = validationModelRetriever.getModel("test/type", "/content/site1", true);
+        model = validationModelRetriever.getModel("test/type", "/content/site1", true, resourceResolver);
         Assert.assertNotNull(model);
         Assert.assertThat(model.getResourceProperties(), Matchers.containsInAnyOrder(new ResourcePropertyNameMatcher("test/type"), new ResourcePropertyNameMatcher("test/supertype")));
     }

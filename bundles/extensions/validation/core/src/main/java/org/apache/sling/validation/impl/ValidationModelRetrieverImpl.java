@@ -50,17 +50,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Retrieves the most appropriate model (the one with the longest matching applicablePath) from any of the {@link ValidationModelProvider}s.
- * Also implements a cache of all previously retrieved models.
+ * Retrieves the most appropriate model (the one with the longest matching applicablePath) from any of the
+ * {@link ValidationModelProvider}s. Also implements a cache of all previously retrieved models.
  *
  */
 @Service
 @Component
 public class ValidationModelRetrieverImpl implements ValidationModelRetriever, EventHandler {
 
-    @Property(name=EventConstants.EVENT_TOPIC)
+    @Property(name = EventConstants.EVENT_TOPIC)
     public static final String CACHE_INVALIDATION_EVENT_TOPIC = "org/apache/sling/validation/cache/INVALIDATE";
-    
+
     /**
      * Map of known validation models (key=validated resourceType, value=trie of ValidationModels sorted by their
      * allowed paths)
@@ -76,66 +76,74 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever, E
      */
     @Reference(name = "validator", referenceInterface = Validator.class, policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE)
     Map<String, Validator<?>> validators = new ConcurrentHashMap<String, Validator<?>>();
-    
+
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
-    
-    ResourceResolver resourceResolver;
 
     private static final Logger LOG = LoggerFactory.getLogger(ValidationModelRetrieverImpl.class);
 
-    @Activate
-    public void activate() throws LoginException {
-        // TODO: move resource resolver opening and closing into this method!
-        resourceResolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
-    }
-
-    @Deactivate
-    public void deactivate() {
-        resourceResolver.close();
-    }
-
     /*
      * (non-Javadoc)
+     * 
      * @see org.apache.sling.validation.impl.ValidationModelRetriever#getModel(java.lang.String, java.lang.String)
      */
     @Override
-    public @CheckForNull ValidationModel getModel(@Nonnull String resourceType, String resourcePath, boolean considerResourceSuperTypeModels) {
-        // first get model for exactly the requested resource type
-        ValidationModel baseModel = getModel(resourceType, resourcePath);
-        if (considerResourceSuperTypeModels) {
-            Collection<ValidationModel> modelsToMerge = new ArrayList<ValidationModel>();
-            while ((resourceType = resourceResolver.getParentResourceType(resourceType)) != null) {
-                // TODO: check if it works with relative resource types
-                ValidationModel modelToMerge = getModel(resourceType, resourcePath);
-                if (baseModel == null) {
-                    baseModel = modelToMerge;
-                } else {
-                    modelsToMerge.add(modelToMerge);
+    public @CheckForNull ValidationModel getModel(@Nonnull String resourceType, String resourcePath,
+            boolean considerResourceSuperTypeModels) {
+        try {
+            ResourceResolver resourceResolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
+            return getModel(resourceType, resourcePath, considerResourceSuperTypeModels, resourceResolver);
+        } catch (LoginException e) {
+            throw new IllegalStateException(
+                    "Could not retrieve models, because the administrative resource resolver could not be acquired", e);
+        }
+    }
+
+    @CheckForNull
+    ValidationModel getModel(@Nonnull String resourceType, String resourcePath,
+            boolean considerResourceSuperTypeModels, @Nonnull ResourceResolver resourceResolver) {
+        try {
+            // first get model for exactly the requested resource type
+            ValidationModel baseModel = getModel(resourceType, resourcePath, resourceResolver);
+            String currentResourceType = resourceType;
+            if (considerResourceSuperTypeModels) {
+                Collection<ValidationModel> modelsToMerge = new ArrayList<ValidationModel>();
+                while ((currentResourceType = resourceResolver.getParentResourceType(currentResourceType)) != null) {
+                    ValidationModel modelToMerge = getModel(currentResourceType, resourcePath, resourceResolver);
+                    if (baseModel == null) {
+                        baseModel = modelToMerge;
+                    } else {
+                        modelsToMerge.add(modelToMerge);
+                    }
+                }
+                if (!modelsToMerge.isEmpty()) {
+                    return new MergedValidationModel(baseModel, modelsToMerge.toArray(new ValidationModel[modelsToMerge
+                            .size()]));
                 }
             }
-            if (!modelsToMerge.isEmpty()) {
-                return new MergedValidationModel(baseModel, modelsToMerge.toArray(new ValidationModel[modelsToMerge.size()]));
-            }
+            return baseModel;
+        } finally {
+            resourceResolver.close();
         }
-        return baseModel;
     }
-    
-    private @CheckForNull ValidationModel getModel(@Nonnull String resourceType, String resourcePath) {
+
+    private @CheckForNull ValidationModel getModel(@Nonnull String resourceType, String resourcePath,
+            @Nonnull ResourceResolver resourceResolver) {
         ValidationModel model = null;
         Trie<ValidationModel> modelsForResourceType = validationModelsCache.get(resourceType);
         if (modelsForResourceType == null) {
-            modelsForResourceType = fillTrieForResourceType(resourceType);
+            modelsForResourceType = fillTrieForResourceType(resourceType, resourceResolver);
         }
         model = modelsForResourceType.getElementForLongestMatchingKey(resourcePath).getValue();
         if (model == null && !modelsForResourceType.isEmpty()) {
-            LOG.warn("Although model for resource type {} is available, it is not allowed for path {}",
-                    resourceType, resourcePath);
+            LOG.warn("Although model for resource type {} is available, it is not allowed for path {}", resourceType,
+                    resourcePath);
         }
         return model;
     }
-    
-    private synchronized @Nonnull Trie<ValidationModel> fillTrieForResourceType(@Nonnull String resourceType) {
+
+    private synchronized @Nonnull Trie<ValidationModel> fillTrieForResourceType(@Nonnull String resourceType,
+            @Nonnull ResourceResolver resourceResolver) {
         Trie<ValidationModel> modelsForResourceType = validationModelsCache.get(resourceType);
         // use double-checked locking (http://en.wikipedia.org/wiki/Double-checked_locking)
         if (modelsForResourceType == null) {
@@ -143,9 +151,10 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever, E
             modelsForResourceType = new Trie<ValidationModel>();
             validationModelsCache.put(resourceType, modelsForResourceType);
 
-            // fill trie with data from model providers (all models for the given resource type, independent of resource path)
+            // fill trie with data from model providers (all models for the given resource type, independent of resource
+            // path)
             for (ValidationModelProvider modelProvider : modelProviders) {
-                for (ValidationModel model : modelProvider.getModel(resourceType, validators)) {
+                for (ValidationModel model : modelProvider.getModel(resourceType, validators, resourceResolver)) {
                     for (String applicablePath : model.getApplicablePaths()) {
                         modelsForResourceType.insert(applicablePath, model);
                     }

@@ -179,25 +179,10 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
      * @return {@inheritDoc}
      * @throws {@inheritDoc}
      */
-    @Override
-    public @Nonnull Collection<ValidationModel> getModel(@Nonnull String relativeResourceType,
-            @Nonnull Map<String, Validator<?>> validatorsMap) {
-        ResourceResolver rr = null;
-        try {
-            rr = rrf.getAdministrativeResourceResolver(null);
-            return getModel(rr, relativeResourceType, validatorsMap);
-        } catch (LoginException e) {
-            throw new IllegalStateException("Unable to obtain a resource resolver.", e);
-        } finally {
-            if (rr != null) {
-                rr.close();
-            }
-        }
-    }
 
+    @Override
     @Nonnull
-    Collection<ValidationModel> getModel(@Nonnull ResourceResolver resourceResolver,
-            @Nonnull String relativeResourceType, @Nonnull Map<String, Validator<?>> validatorsMap) {
+    public Collection<ValidationModel> getModel(@Nonnull String relativeResourceType, @Nonnull Map<String, Validator<?>> validatorsMap, @Nonnull ResourceResolver resourceResolver) {
         ValidationModelImpl vm;
         Collection<ValidationModel> validationModels = new ArrayList<ValidationModel>();
         String[] searchPaths = resourceResolver.getSearchPath();
