@@ -20,8 +20,10 @@ package org.apache.sling.testing.resourceresolver;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -119,6 +121,9 @@ public class SlingCrudResourceResolverTest {
         assertEquals(DOUBLE_VALUE, props.get("node1/doubleProp", Double.class), 0.0001);
         assertEquals(BOOLEAN_VALUE, props.get("node1/booleanProp", Boolean.class));
         assertEquals(STRING_VALUE, props.get("node1/node11/stringProp11", String.class));
+
+        assertTrue(STRING_VALUE, props.containsKey("node1/stringProp"));
+        assertFalse(STRING_VALUE, props.containsKey("node1/unknownProp"));
     }
 
     @Test

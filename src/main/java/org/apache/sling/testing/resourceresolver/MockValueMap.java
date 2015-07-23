@@ -30,7 +30,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 
 /**
@@ -41,33 +40,19 @@ import org.apache.sling.api.wrappers.ValueMapDecorator;
  * <li>Converts InputStream to byte array and vice versa.</li>
  * </ul>
  */
-public class MockValueMap extends ValueMapDecorator implements ModifiableValueMap {
-    
-    private final Resource resource;
+public class MockValueMap extends DeepReadModifiableValueMapDecorator implements ModifiableValueMap {
     
     public MockValueMap(Resource resource) {
         this(resource, new HashMap<String, Object>());
     }
 
     public MockValueMap(Resource resource, Map<String,Object> map) {
-        super(convertForWriteAll(map));
-        this.resource = resource;
+        super(resource, new ValueMapDecorator(convertForWriteAll(map)));
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public <T> T get(String name, Class<T> type) {
-        
-        // check for deep path access
-        int slashPos = name.lastIndexOf('/');
-        if (slashPos >= 0) {
-            String resourcePath = "./" + name.substring(0, slashPos);
-            String propertyName = name.substring(slashPos + 1);
-            Resource childResource = resource.getChild(resourcePath);
-            if (childResource!=null) {
-                return ResourceUtil.getValueMap(childResource).get(propertyName, type);
-            }
-        }
         
         if (type == Calendar.class) {
             // Support conversion of String to Calendar if value conforms to ISO8601 date format
