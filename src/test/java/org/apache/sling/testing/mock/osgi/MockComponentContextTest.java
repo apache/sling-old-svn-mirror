@@ -20,13 +20,16 @@ package org.apache.sling.testing.mock.osgi;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.mockito.Mockito.mock;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 
@@ -79,6 +82,17 @@ public class MockComponentContextTest {
     public void testIgnoredMethods() {
         underTest.enableComponent("myComponent");
         underTest.disableComponent("myComponent");
+    }
+
+    @Test
+    public void testGetUsingBundle() {
+        // test context without using bundle
+        assertNull(underTest.getUsingBundle());
+        
+        // test context with using bundle
+        Bundle usingBundle = mock(Bundle.class);
+        ComponentContext contextWithUsingBundle = MockOsgi.componentContext().usingBundle(usingBundle).build();
+        assertSame(usingBundle, contextWithUsingBundle.getUsingBundle());
     }
 
 }

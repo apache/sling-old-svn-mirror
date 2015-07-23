@@ -60,7 +60,7 @@ public final class MockOsgi {
      * @return Mocked {@link ComponentContext} instance
      */
     public static ComponentContext newComponentContext() {
-        return new MockComponentContext((MockBundleContext) newBundleContext());
+        return componentContext().build();
     }
 
     /**
@@ -68,7 +68,7 @@ public final class MockOsgi {
      * @return Mocked {@link ComponentContext} instance
      */
     public static ComponentContext newComponentContext(Dictionary<String, Object> properties) {
-        return newComponentContext(newBundleContext(), properties);
+        return componentContext().properties(properties).build();
     }
 
     /**
@@ -76,7 +76,7 @@ public final class MockOsgi {
      * @return Mocked {@link ComponentContext} instance
      */
     public static ComponentContext newComponentContext(Map<String, Object> properties) {
-        return newComponentContext(toDictionary(properties));
+        return componentContext().properties(properties).build();
     }
 
     /**
@@ -86,7 +86,7 @@ public final class MockOsgi {
      */
     public static ComponentContext newComponentContext(BundleContext bundleContext,
             Dictionary<String, Object> properties) {
-        return new MockComponentContext((MockBundleContext) bundleContext, properties);
+        return componentContext().bundleContext(bundleContext).properties(properties).build();
     }
 
     /**
@@ -95,9 +95,16 @@ public final class MockOsgi {
      * @return Mocked {@link ComponentContext} instance
      */
     public static ComponentContext newComponentContext(BundleContext bundleContext, Map<String, Object> properties) {
-        return newComponentContext(bundleContext, toDictionary(properties));
+        return componentContext().bundleContext(bundleContext).properties(properties).build();
     }
 
+    /**
+     * @return {@link ComponentContextBuilder} to build a mocked {@link ComponentContext}
+     */
+    public static ComponentContextBuilder componentContext() {
+        return new ComponentContextBuilder();
+    }
+    
     /**
      * @param loggerContext Context class for logging
      * @return Mocked {@link LogService} instance
