@@ -48,6 +48,7 @@ public class MockResource extends AbstractResource {
     public MockResource(final String path,
             final Map<String, Object> props,
             final ResourceResolver resolver) {
+        this.resolver = resolver;
         this.path = path;
         if (props instanceof MockValueMap) {
             this.props = (MockValueMap)props;
@@ -58,7 +59,6 @@ public class MockResource extends AbstractResource {
         else {
             this.props = new MockValueMap(this, props);
         }
-        this.resolver = resolver;
     }
 
     @Override
