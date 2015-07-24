@@ -195,6 +195,9 @@ public interface ResourceResolverFactory {
      * the thread of its creation time. From within this thread, this method returns
      * the last non-closed resource resolver. When a resource resolver is closed, the
      * association is removed.
+     * <p>
+     * This will never return a resource resolver being created via {@link #getAdministrativeResourceResolver(Map)}
+     * nor via {@link #getServiceResourceResolver(Map)}.
      *
      * @return A {@link ResourceResolver} created from the current thread or <code>null</code>.
      *
