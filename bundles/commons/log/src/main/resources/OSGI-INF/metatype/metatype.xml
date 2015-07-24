@@ -61,6 +61,11 @@
              default="7"
              name="%log.config.maxCallerDataDepth.name"
              description="%log.config.maxCallerDataDepth.description" />
+        <metatype:AD id="org.apache.sling.commons.log.maxOldFileCountInDump"
+             type="Integer"
+             default="3"
+             name="%log.config.maxOldFileCountInDump.name"
+             description="%log.config.maxOldFileCountInDump.description" />
     </metatype:OCD>
     <metatype:Designate pid="org.apache.sling.commons.log.LogManager">
         <metatype:Object

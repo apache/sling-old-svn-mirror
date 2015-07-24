@@ -62,7 +62,6 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.turbo.TurboFilter;
 import ch.qos.logback.core.Appender;
-import ch.qos.logback.core.CoreConstants;
 import ch.qos.logback.core.FileAppender;
 import ch.qos.logback.core.helpers.Transform;
 import ch.qos.logback.core.status.Status;
@@ -433,7 +432,7 @@ public class SlingLogPanel extends HttpServlet {
             pw.print(statusLevelAsString(s));
             pw.println("</td>");
             pw.print("<td>");
-            pw.print(XmlUtil.escapeXml(abbreviatedOrigin(s)));
+            pw.print(XmlUtil.escapeXml(SlingConfigurationPrinter.abbreviatedOrigin(s)));
             pw.println("</td>");
             pw.print("<td>");
             pw.print(XmlUtil.escapeXml(s.getMessage()));
@@ -789,20 +788,6 @@ public class SlingLogPanel extends HttpServlet {
                 return "<span class=\"error\">ERROR</span>";
         }
         return null;
-    }
-
-    static String abbreviatedOrigin(Status s) {
-        Object o = s.getOrigin();
-        if (o == null) {
-            return null;
-        }
-        String fqClassName = o.getClass().getName();
-        int lastIndex = fqClassName.lastIndexOf(CoreConstants.DOT);
-        if (lastIndex != -1) {
-            return fqClassName.substring(lastIndex + 1, fqClassName.length());
-        } else {
-            return fqClassName;
-        }
     }
 
     private static void printThrowable(PrintWriter pw, Throwable t) {

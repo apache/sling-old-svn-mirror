@@ -74,6 +74,10 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
 
     public static final String LOG_MAX_CLALLER_DEPTH = "org.apache.sling.commons.log.maxCallerDataDepth";
 
+    public static final String PRINTER_MAX_INCLUDED_FILES = "org.apache.sling.commons.log.maxOldFileCountInDump";
+
+    public static final int PRINTER_MAX_INCLUDED_FILES_DEFAULT = 3;
+
     public static final String LOG_LEVEL_DEFAULT = "INFO";
 
     public static final String LOG_LEVEL_RESET_TO_DEFAULT = "DEFAULT";
@@ -129,6 +133,8 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
     private boolean packagingDataEnabled;
 
     private int maxCallerDataDepth;
+
+    private int maxOldFileCount;
 
     /**
      * Logs a message an optional stack trace to error output. This method is
@@ -591,6 +597,10 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
         return maxCallerDataDepth;
     }
 
+    public int getMaxOldFileCount() {
+        return maxOldFileCount;
+    }
+
     // ---------- ManagedService interface -------------------------------------
 
     private Dictionary<String, String> getBundleConfiguration(BundleContext bundleContext) {
@@ -644,6 +654,8 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
 
         maxCallerDataDepth = Util.toInteger(configuration.get(LOG_MAX_CLALLER_DEPTH),
                 ClassicConstants.DEFAULT_MAX_CALLEDER_DATA_DEPTH);
+        maxOldFileCount = Util.toInteger(configuration.get(PRINTER_MAX_INCLUDED_FILES),
+                PRINTER_MAX_INCLUDED_FILES_DEFAULT);
     }
 
     // ---------- Internal helpers ---------------------------------------------
