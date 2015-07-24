@@ -668,15 +668,16 @@ public interface ResourceResolver extends Adaptable, Closeable {
 
     /**
      * Returns the super type of the given resource type. This method converts
-     * the resource type to a resource path and checks the corresponding resource.
+     * the resource type to a resource path and checks the corresponding resource
+     * (considering the search path).
      * If the resource exists, the {@link Resource#getResourceSuperType()} method
      * is called.
      *
      * @param resourceType The resource type whose super type is to be returned.
-     * @return the super type of the <code>resourceType</code> or
-     *         <code>null</code> if the resource type does not exist or returns
-     *         <code>null</code> for its super type. It also returns
-     *         <code>null</code> if <code>resourceType> is null.
+     * @return the super type of the {@code resourceType} or
+     *         {@code null} if the resource given by the resource type does not exist or 
+     *         if it returns {@code null} for its super type. It also returns
+     *         {@code null} if {@code resourceType} is null.
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      * @since 2.3 (Sling API Bundle 2.4.0)
