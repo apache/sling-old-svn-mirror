@@ -35,7 +35,7 @@ To install the required bundles/features on _Apache Karaf_ run the commands belo
     karaf@root()> feature:install sling-extension-models
     karaf@root()> feature:install sling-extension-query
     karaf@root()> feature:install sling-scripting-thymeleaf
-    karaf@root()> feature:install sling-auth-form ²
+    karaf@root()> feature:install sling-auth-form﻿²
 
 For a more detailed user profile add some properties to an user³:
 
