@@ -66,6 +66,11 @@
              default="3"
              name="%log.config.maxOldFileCountInDump.name"
              description="%log.config.maxOldFileCountInDump.description" />
+        <metatype:AD id="org.apache.sling.commons.log.numOfLines"
+             type="Integer"
+             default="1000"
+             name="%log.config.numOfLines.name"
+             description="%log.config.numOfLines.description" />
     </metatype:OCD>
     <metatype:Designate pid="org.apache.sling.commons.log.LogManager">
         <metatype:Object

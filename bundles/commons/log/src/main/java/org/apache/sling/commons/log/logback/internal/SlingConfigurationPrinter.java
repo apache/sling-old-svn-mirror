@@ -61,6 +61,9 @@ public class SlingConfigurationPrinter {
     public void printConfiguration(PrintWriter printWriter, String mode) {
         LogbackManager.LoggerStateContext ctx = logbackManager.determineLoggerState();
 
+        int numOfLines = getNumOfLines();
+        Tailer tailer = new Tailer(new PrinterListener(printWriter), numOfLines);
+
         dumpLogFileSummary(printWriter, ctx.getAllAppenders());
 
         if (!MODE_ZIP.equals(mode)) {
@@ -71,22 +74,14 @@ public class SlingConfigurationPrinter {
                         printWriter.print("Log file ");
                         printWriter.println(file.getAbsolutePath());
                         printWriter.println("--------------------------------------------------");
-                        FileReader fr = null;
-                        try {
-                            fr = new FileReader(file);
-                            final char[] buffer = new char[512];
-                            int len;
-                            while ((len = fr.read(buffer)) != -1) {
-                                printWriter.write(buffer, 0, len);
-                            }
-                        } catch (IOException ignore) {
-                            // we just ignore this
-                        } finally {
-                            if (fr != null) {
-                                try {
-                                    fr.close();
-                                } catch (IOException ignored) {
-                                }
+                        if (numOfLines < 0) {
+                            includeWholeFile(printWriter, file);
+                        } else {
+                            try {
+                                tailer.tail(file);
+                            } catch (IOException e) {
+                                logbackManager.getLogConfigManager().internalFailure("Error occurred " +
+                                        "while processing log file " + file, e);
                             }
                         }
                         printWriter.println();
@@ -96,6 +91,27 @@ public class SlingConfigurationPrinter {
         }
 
         dumpLogbackStatus(logbackManager, printWriter);
+    }
+
+    private static void includeWholeFile(PrintWriter printWriter, File file) {
+        FileReader fr = null;
+        try {
+            fr = new FileReader(file);
+            final char[] buffer = new char[512];
+            int len;
+            while ((len = fr.read(buffer)) != -1) {
+                printWriter.write(buffer, 0, len);
+            }
+        } catch (IOException ignore) {
+            // we just ignore this
+        } finally {
+            if (fr != null) {
+                try {
+                    fr.close();
+                } catch (IOException ignored) {
+                }
+            }
+        }
     }
 
     private void dumpLogFileSummary(PrintWriter pw, Collection<Appender<ILoggingEvent>> appenders) {
@@ -204,6 +220,10 @@ public class SlingConfigurationPrinter {
         return new File[]{file};
     }
 
+    private int getNumOfLines(){
+        return logbackManager.getLogConfigManager().getNumOfLines();
+    }
+
     private int getMaxOldFileCount(){
         return logbackManager.getLogConfigManager().getMaxOldFileCount();
     }
@@ -276,6 +296,19 @@ public class SlingConfigurationPrinter {
             return "UNKNOWN";
         }
         return SDF.format(modified);
+    }
+
+    private static class PrinterListener implements Tailer.TailerListener {
+        private final PrintWriter pw;
+
+        public PrinterListener(PrintWriter pw) {
+            this.pw = pw;
+        }
+
+        @Override
+        public void handle(String line) {
+            pw.println(line);
+        }
     }
 
 }
