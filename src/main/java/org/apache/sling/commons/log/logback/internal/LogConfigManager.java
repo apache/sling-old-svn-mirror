@@ -78,6 +78,10 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
 
     public static final int PRINTER_MAX_INCLUDED_FILES_DEFAULT = 3;
 
+    public static final String PRINTER_NUM_OF_LINES = "org.apache.sling.commons.log.numOfLines";
+
+    public static final int PRINTER_NUM_OF_LINES_DEFAULT = 1000;
+
     public static final String LOG_LEVEL_DEFAULT = "INFO";
 
     public static final String LOG_LEVEL_RESET_TO_DEFAULT = "DEFAULT";
@@ -135,6 +139,8 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
     private int maxCallerDataDepth;
 
     private int maxOldFileCount;
+
+    private int numOfLines;
 
     /**
      * Logs a message an optional stack trace to error output. This method is
@@ -601,6 +607,13 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
         return maxOldFileCount;
     }
 
+    /**
+     * Maximum number of lines from a log files to be included in txt mode dump
+     */
+    public int getNumOfLines() {
+        return numOfLines;
+    }
+
     // ---------- ManagedService interface -------------------------------------
 
     private Dictionary<String, String> getBundleConfiguration(BundleContext bundleContext) {
@@ -656,6 +669,9 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
                 ClassicConstants.DEFAULT_MAX_CALLEDER_DATA_DEPTH);
         maxOldFileCount = Util.toInteger(configuration.get(PRINTER_MAX_INCLUDED_FILES),
                 PRINTER_MAX_INCLUDED_FILES_DEFAULT);
+        numOfLines = Util.toInteger(configuration.get(PRINTER_NUM_OF_LINES),
+                PRINTER_NUM_OF_LINES_DEFAULT);
+
     }
 
     // ---------- Internal helpers ---------------------------------------------
