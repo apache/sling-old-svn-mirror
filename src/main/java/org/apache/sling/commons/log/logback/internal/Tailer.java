@@ -21,6 +21,7 @@ package org.apache.sling.commons.log.logback.internal;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 
 class Tailer{
@@ -28,6 +29,10 @@ class Tailer{
     private final int numOfLines;
     private final TailerListener listener;
     private final byte[] buffer = new byte[BUFFER_SIZE];
+
+    public Tailer(PrintWriter printWriter, int numOfLines) {
+        this(new PrinterListener(printWriter), numOfLines);
+    }
 
     public Tailer(TailerListener listener, int numOfLines) {
         this.listener = listener;
@@ -145,6 +150,19 @@ class Tailer{
         //Drain the left over part
         if (sb.length() != 0) {
             listener.handle(sb.toString());
+        }
+    }
+
+    private static class PrinterListener implements Tailer.TailerListener {
+        private final PrintWriter pw;
+
+        public PrinterListener(PrintWriter pw) {
+            this.pw = pw;
+        }
+
+        @Override
+        public void handle(String line) {
+            pw.println(line);
         }
     }
 
