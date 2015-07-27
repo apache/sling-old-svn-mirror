@@ -118,7 +118,8 @@
               org.osgi.framework;version=1.3,
               org.slf4j;version="[1.6,1.8)",
               org.slf4j.spi;version="[1.6,1.8)",
-              groovy.lang;
+              !groovy.lang,
+              !org.codehaus.*,
               javax.jms;
               javax.mail;
               javax.mail.internet;
@@ -126,7 +127,6 @@
               javax.naming;
               javax.sql;
               javax.xml.parsers;
-              org.codehaus.*;
               org.xml.sax.*;
               sun.reflect;resolution:=optional,
               *
