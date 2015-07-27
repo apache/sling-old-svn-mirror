@@ -1020,17 +1020,25 @@ public class MapEntries implements EventHandler {
      * Add an entry to the resolve map.
      */
     private boolean addEntry(final Map<String, List<MapEntry>> entryMap, final String key, final MapEntry entry) {
+        
         if (entry==null){
             return false;
         }
+        
         List<MapEntry> entries = entryMap.get(key);
         if (entries == null) {
             entries = new ArrayList<MapEntry>();
+            entries.add(entry);
+            // and finally sort list
+            Collections.sort(entries);
             entryMap.put(key, entries);
+        } else {
+            List<MapEntry> entriesCopy =new ArrayList<MapEntry>(entries);
+            entriesCopy.add(entry);
+            // and finally sort list
+            Collections.sort( entriesCopy);
+            entryMap.put(key, entriesCopy);
         }
-        entries.add(entry);
-        // and finally sort list
-        Collections.sort(entries);
         return true;
     }
 

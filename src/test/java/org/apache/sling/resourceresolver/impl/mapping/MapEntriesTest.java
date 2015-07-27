@@ -40,7 +40,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -1801,4 +1806,66 @@ public class MapEntriesTest {
         assertEquals(2, counter.longValue());
     }
     
+    @Test
+    //SLING-4883
+    public void test_concutrrent_getResolveMapsIterator() throws Exception {
+        ExecutorService pool = Executors.newFixedThreadPool(10);
+        
+        final Resource justVanityPath = mock(Resource.class, "justVanityPath");
+        when(resourceResolver.getResource("/justVanityPath")).thenReturn(justVanityPath);
+        when(justVanityPath.getPath()).thenReturn("/justVanityPath");                 
+        when(justVanityPath.getName()).thenReturn("justVanityPath");
+        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
+        
+        
+        when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
+
+            public Iterator<Resource> answer(InvocationOnMock invocation) throws Throwable {
+                if (invocation.getArguments()[0].toString().contains("sling:vanityPath")) {
+                    return Collections.singleton(justVanityPath).iterator();
+                } else {
+                    return Collections.<Resource> emptySet().iterator();
+                }
+            }
+        });
+        
+        
+        Field field1 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntries");
+        field1.setAccessible(true);  
+        field1.set(mapEntries, 2);
+        
+        ArrayList<DataFuture> list = new ArrayList<DataFuture>();
+        for (int i =0;i<10;i++) {
+            list.add(createDataFuture(pool, mapEntries));
+ 
+        }
+ 
+       for (DataFuture df : list) {
+           df.future.get();           
+        }
+  
+    }
+    
+    // -------------------------- private methods ----------
+    private DataFuture createDataFuture(ExecutorService pool, final MapEntries mapEntries) {
+
+        Future<Iterator> future = pool.submit(new Callable<Iterator>() {
+            @Override
+            public Iterator call() throws Exception {
+                return mapEntries.getResolveMapsIterator("http/localhost.8080/target/justVanityPath");                     
+            }
+        });
+        return new DataFuture(future);
+    }    
+    
+    // -------------------------- inner classes ------------
+
+    private static class DataFuture {
+        public Future<Iterator> future;
+
+        public DataFuture(Future<Iterator> future) {
+            super();
+            this.future = future;
+        }
+    }    
 }
