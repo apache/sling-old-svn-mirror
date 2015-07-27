@@ -134,6 +134,10 @@
         <metatype:AD id="webconsole.configurationFactory.nameHint"
             type="String"
             default="{org.apache.sling.commons.log.file}: {org.apache.sling.commons.log.level}"/>
+        <metatype:AD id="org.apache.sling.commons.log.additiv"
+             name="%log.additiv.name"
+             description="%log.additiv.description"
+             type="Boolean" />
     </metatype:OCD>
     <metatype:Designate
         pid="org.apache.sling.commons.log.LogManager.factory.config"
