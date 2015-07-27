@@ -120,9 +120,9 @@
               org.slf4j.spi;version="[1.6,1.8)",
               !groovy.lang,
               !org.codehaus.*,
-              javax.jms;
-              javax.mail;
-              javax.mail.internet;
+              !javax.jms,
+              !javax.mail,
+              !javax.mail.internet,
               javax.management;
               javax.naming;
               javax.sql;
