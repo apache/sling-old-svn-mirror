@@ -62,7 +62,7 @@ public class SlingConfigurationPrinter {
         LogbackManager.LoggerStateContext ctx = logbackManager.determineLoggerState();
 
         int numOfLines = getNumOfLines();
-        Tailer tailer = new Tailer(new PrinterListener(printWriter), numOfLines);
+        Tailer tailer = new Tailer(printWriter, numOfLines);
 
         dumpLogFileSummary(printWriter, ctx.getAllAppenders());
 
@@ -93,7 +93,7 @@ public class SlingConfigurationPrinter {
         dumpLogbackStatus(logbackManager, printWriter);
     }
 
-    private static void includeWholeFile(PrintWriter printWriter, File file) {
+    static void includeWholeFile(PrintWriter printWriter, File file) {
         FileReader fr = null;
         try {
             fr = new FileReader(file);
@@ -297,18 +297,4 @@ public class SlingConfigurationPrinter {
         }
         return SDF.format(modified);
     }
-
-    private static class PrinterListener implements Tailer.TailerListener {
-        private final PrintWriter pw;
-
-        public PrinterListener(PrintWriter pw) {
-            this.pw = pw;
-        }
-
-        @Override
-        public void handle(String line) {
-            pw.println(line);
-        }
-    }
-
 }
