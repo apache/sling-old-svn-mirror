@@ -119,4 +119,32 @@
     org.apache.sling/org.apache.sling.jcr.jackrabbit.usermanager/2.2.3-SNAPSHOT
     org.apache.sling/org.apache.sling.jcr.jackrabbit.accessmanager/2.1.2
 
+[configurations]
+  org.apache.sling.engine.impl.log.RequestLogger
+    access.log.enabled=B"true"
+    request.log.outputtype=I"0"
+    access.log.output="log.access"
+    request.log.output="log.request"
+    request.log.enabled=B"true"
+    access.log.outputtype=I"0"
+
+  org.apache.sling.commons.log.LogManager
+    org.apache.sling.commons.log.pattern="%d{dd.MM.yyyy HH:mm:ss.SSS}\ *%level*\ [%thread]\ %logger\ %msg%n"
+    org.apache.sling.commons.log.file="logs/error.log"
+    org.apache.sling.commons.log.level="info"
+    org.apache.sling.commons.log.file.size="'.'yyyy-MM-dd"
+    org.apache.sling.commons.log.file.number=I"7"
+
+  org.apache.sling.commons.log.LogManager.factory.config-access.log
+    org.apache.sling.commons.log.pattern="%msg%n"
+    org.apache.sling.commons.log.names=["log.access"]
+    org.apache.sling.commons.log.file="logs/access.log"
+    org.apache.sling.commons.log.level="info"
+
+  org.apache.sling.commons.log.LogManager.factory.config-request.log
+    org.apache.sling.commons.log.pattern="%msg%n"
+    org.apache.sling.commons.log.names=["log.request"]
+    org.apache.sling.commons.log.file="logs/request.log"
+    org.apache.sling.commons.log.level="info"
+
 
