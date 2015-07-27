@@ -162,9 +162,10 @@ public class SlingLogPanel extends HttpServlet {
                 String logger = req.getParameter("logger");
                 String logLevel = req.getParameter("loglevel");
                 String logFile = req.getParameter("logfile");
+                String additive = req.getParameter("logAdditive");
                 String[] loggers = req.getParameterValues("logger");
                 if (null != logger) {
-                    configureLogger(pid, logLevel, loggers, logFile);
+                    configureLogger(pid, logLevel, loggers, logFile, additive);
                 }
             }
         } catch (ConfigurationException e) {
@@ -229,6 +230,7 @@ public class SlingLogPanel extends HttpServlet {
         pw.println("<thead class='ui-widget-header'>");
         pw.println("<tr>");
         pw.println("<th>Log Level</th>");
+        pw.println("<th>Additive</th>");
         pw.println("<th>Log File</th>");
         pw.println("<th>Logger</th>");
         pw.print("<th width=\"20%\">");
@@ -249,6 +251,11 @@ public class SlingLogPanel extends HttpServlet {
             pw.print(getLevelStr(logConfig));
             pw.print("\">");
             pw.print(getLevelStr(logConfig));
+            pw.println("</span></td>");
+            pw.print("<td><span class=\"logAdditive\" data-currentAdditivity=\"");
+            pw.print(Boolean.toString(logConfig.isAdditive()));
+            pw.print("\">");
+            pw.print(Boolean.toString(logConfig.isAdditive()));
             pw.println("</span></td>");
             pw.print("<td><span class=\"logFile\">");
             pw.print( XmlUtil.escapeXml(getPath(logConfig.getLogWriterName(), rootPath, shortenPaths)));
@@ -287,6 +294,7 @@ public class SlingLogPanel extends HttpServlet {
         }
 
         pw.println("\"></span></td>");
+        pw.print("<td><span class=\"logAdditive\" data-currentAdditivity=\"false\"></span></td>");
         pw.print("<td><span id=\"defaultLogfile\" data-defaultlogfile=\"");
         pw.print( XmlUtil.escapeXml(getPath(configManager.getDefaultWriter().getFileName(), rootPath, shortenPaths)));
         pw.println("\" class=\"logFile\"></span></td>");
@@ -645,10 +653,11 @@ public class SlingLogPanel extends HttpServlet {
      * @param logLevel the log level to set
      * @param loggers  list of logger categories to set
      * @param logFile  log file (relative path is ok)
+     * @param additive logger additivity
      * @throws IOException            when an existing configuration couldn't be updated or a configuration couldn't be created.
      * @throws ConfigurationException when mandatory parameters where not specified
      */
-    private void configureLogger(final String pid, final String logLevel, final String[] loggers, final String logFile)
+    private void configureLogger(final String pid, final String logLevel, final String[] loggers, final String logFile, String additive)
             throws IOException, ConfigurationException {
         // try to get the configadmin service reference
         ServiceReference sr = this.bundleContext
@@ -682,6 +691,12 @@ public class SlingLogPanel extends HttpServlet {
                         dict.put(LogConfigManager.LOG_LEVEL, logLevel.toLowerCase());
                         dict.put(LogConfigManager.LOG_LOGGERS, loggers);
                         dict.put(LogConfigManager.LOG_FILE, logFile);
+
+                        if (additive == null){
+                            dict.put(LogConfigManager.LOG_ADDITIV, "false");
+                        } else {
+                            dict.put(LogConfigManager.LOG_ADDITIV, "true");
+                        }
                         config.update(dict);
                     }
                 }

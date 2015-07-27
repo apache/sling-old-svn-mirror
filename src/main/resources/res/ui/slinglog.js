@@ -19,6 +19,7 @@
  */
 function removeEditor(row) {
     $(row).find(".loggers").toggle();
+	$(row).find(".logAdditive").toggle();
 	$(row).find(".logLevels").toggle();
 	$(row).find(".logFile").toggle();
 	$(row).find(".configureLink").toggle();
@@ -73,6 +74,22 @@ function addLogger(loggersElement, loggerName) {
 }
 
 /**
+ * Make checkbox for additive field
+ */
+function addAdditive(row) {
+	var additiveElement = $(row).find(".logAdditive");
+	var currentAdditivity = additiveElement.attr("data-currentAdditivity");
+	if(!currentAdditivity) {
+		// default additivity is false
+		currentAdditivity = "false";
+	}
+
+	var checked = currentAdditivity == "true" ? "checked" : "";
+	additiveElement.after('<input class="editElement ui-state-default" type="checkbox" name="logAdditive" value="true" '+ checked +' />')
+	additiveElement.toggle();
+}
+
+/**
  * Turns the logger elements into inputfields (with controls).
  */
 function addLoggers(row) {
@@ -119,6 +136,7 @@ function configureLogger(button) {
 	row.addClass("currentEditor");
 	// add the editables
     addLogLevelSelect(row);
+    addAdditive(row);
 	addLoggers(row);
     addLogFile(row);
     // add controls
