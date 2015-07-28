@@ -213,6 +213,8 @@ public class ContentDispositionFilterTest {
     public void test_doFilter1() throws Throwable{       
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
+        final Resource resource = context.mock(Resource.class, "resource" );        
+        
         contentDispositionFilter = new ContentDispositionFilter();
         
         final ComponentContext ctx = context.mock(ComponentContext.class);
@@ -234,7 +236,9 @@ public class ContentDispositionFilterTest {
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
                 will(returnValue(null));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
-                allowing(request).getPathInfo();
+                allowing(request).getResource();
+                will(returnValue(resource));
+                allowing(resource).getPath();
                 will(returnValue("/libs"));
                 allowing(response).setContentType("text/html");
                 //CONTENT DISPOSITION MUST NOT SET
@@ -249,6 +253,7 @@ public class ContentDispositionFilterTest {
     public void test_doFilter2() throws Throwable{       
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
+        final Resource resource = context.mock(Resource.class, "resource" );   
         contentDispositionFilter = new ContentDispositionFilter();
         
         final ComponentContext ctx = context.mock(ComponentContext.class);
@@ -270,7 +275,9 @@ public class ContentDispositionFilterTest {
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
                 will(returnValue(null));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
-                allowing(request).getPathInfo();
+                allowing(request).getResource();
+                will(returnValue(resource));
+                allowing(resource).getPath();
                 will(returnValue("/content/usergenerated/author"));
                 allowing(response).setContentType("text/html");
                 //CONTENT DISPOSITION MUST NOT SET
@@ -284,6 +291,8 @@ public class ContentDispositionFilterTest {
     public void test_doFilter3() throws Throwable{       
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
+        final Resource resource = context.mock(Resource.class, "resource" );   
+        final ValueMap properties = context.mock(ValueMap.class);
         contentDispositionFilter = new ContentDispositionFilter();
         
         final ComponentContext ctx = context.mock(ComponentContext.class);
@@ -303,7 +312,7 @@ public class ContentDispositionFilterTest {
         final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response) {          
             public void addHeader(String name, String value) {
                 counter.incrementAndGet();
-            }
+            }            
         };
         
         context.checking(new Expectations() {
@@ -313,8 +322,14 @@ public class ContentDispositionFilterTest {
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
                 will(returnValue(null));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
-                allowing(request).getPathInfo();
+                allowing(request).getResource();
+                will(returnValue(resource));
+                allowing(resource).getPath();
                 will(returnValue("/content/usergenerated"));
+                allowing(resource).adaptTo(ValueMap.class);
+                will(returnValue(properties));
+                allowing(properties).containsKey(PROP_JCR_DATA);
+                will(returnValue(true));
                 allowing(response).setContentType("text/html");
                 //CONTENT DISPOSITION IS SET
                 exactly(1).of(response).addHeader("Content-Disposition", "attachment");
@@ -328,6 +343,7 @@ public class ContentDispositionFilterTest {
     public void test_doFilter4() throws Throwable{       
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
+        final Resource resource = context.mock(Resource.class, "resource" );   
         contentDispositionFilter = new ContentDispositionFilter();
         
         final ComponentContext ctx = context.mock(ComponentContext.class);
@@ -349,7 +365,9 @@ public class ContentDispositionFilterTest {
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
                 will(returnValue(null));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
-                allowing(request).getPathInfo();
+                allowing(request).getResource();
+                will(returnValue(resource));
+                allowing(resource).getPath();
                 will(returnValue("/libs"));
                 allowing(response).setContentType("text/html");
                 //CONTENT DISPOSITION MUST NOT SET
@@ -364,6 +382,8 @@ public class ContentDispositionFilterTest {
     public void test_doFilter5() throws Throwable{       
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
+        final Resource resource = context.mock(Resource.class, "resource" );   
+        final ValueMap properties = context.mock(ValueMap.class);
         contentDispositionFilter = new ContentDispositionFilter();
         
         final ComponentContext ctx = context.mock(ComponentContext.class);
@@ -392,8 +412,14 @@ public class ContentDispositionFilterTest {
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
                 will(returnValue(null));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
-                allowing(request).getPathInfo();
+                allowing(request).getResource();
+                will(returnValue(resource));
+                allowing(resource).getPath();
                 will(returnValue("/content/usergenerated/author"));
+                allowing(resource).adaptTo(ValueMap.class);
+                will(returnValue(properties));
+                allowing(properties).containsKey(PROP_JCR_DATA);
+                will(returnValue(true));
                 allowing(response).setContentType("text/html");
                 //CONTENT DISPOSITION IS SET
                 exactly(1).of(response).addHeader("Content-Disposition", "attachment");
@@ -407,6 +433,8 @@ public class ContentDispositionFilterTest {
     public void test_doFilter6() throws Throwable{       
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
+        final Resource resource = context.mock(Resource.class, "resource" );   
+        final ValueMap properties = context.mock(ValueMap.class);
         contentDispositionFilter = new ContentDispositionFilter();
         
         final ComponentContext ctx = context.mock(ComponentContext.class);
@@ -435,8 +463,14 @@ public class ContentDispositionFilterTest {
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
                 will(returnValue(null));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
-                allowing(request).getPathInfo();
+                allowing(request).getResource();
+                will(returnValue(resource));
+                allowing(resource).getPath();
                 will(returnValue("/content/usergenerated/"));
+                allowing(resource).adaptTo(ValueMap.class);
+                will(returnValue(properties));
+                allowing(properties).containsKey(PROP_JCR_DATA);
+                will(returnValue(true));
                 allowing(response).setContentType("text/html");
                 //CONTENT DISPOSITION IS SET
                 exactly(1).of(response).addHeader("Content-Disposition", "attachment");
@@ -450,6 +484,7 @@ public class ContentDispositionFilterTest {
     public void test_doFilter7() throws Throwable{       
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
+        final Resource resource = context.mock(Resource.class, "resource" );   
         contentDispositionFilter = new ContentDispositionFilter();
         
         final ComponentContext ctx = context.mock(ComponentContext.class);
@@ -471,7 +506,9 @@ public class ContentDispositionFilterTest {
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
                 will(returnValue(null));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
-                allowing(request).getPathInfo();
+                allowing(request).getResource();
+                will(returnValue(resource));
+                allowing(resource).getPath();
                 will(returnValue("/libs"));
                 allowing(response).setContentType("text/html");
                 //CONTENT DISPOSITION MUST NOT SET
@@ -486,6 +523,7 @@ public class ContentDispositionFilterTest {
     public void test_doFilter8() throws Throwable{       
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
+        final Resource resource = context.mock(Resource.class, "resource" );   
         contentDispositionFilter = new ContentDispositionFilter();
         
         final ComponentContext ctx = context.mock(ComponentContext.class);
@@ -507,7 +545,9 @@ public class ContentDispositionFilterTest {
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
                 will(returnValue(null));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
-                allowing(request).getPathInfo();
+                allowing(request).getResource();
+                will(returnValue(resource));
+                allowing(resource).getPath();
                 will(returnValue("/content/usergenerated/author"));
                 allowing(response).setContentType("text/html");
                 //CONTENT DISPOSITION MUST NOT SET
@@ -521,6 +561,7 @@ public class ContentDispositionFilterTest {
     public void test_doFilter9() throws Throwable{       
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
+        final Resource resource = context.mock(Resource.class, "resource" );   
         contentDispositionFilter = new ContentDispositionFilter();
         
         final ComponentContext ctx = context.mock(ComponentContext.class);
@@ -542,7 +583,9 @@ public class ContentDispositionFilterTest {
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
                 will(returnValue(null));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
-                allowing(request).getPathInfo();
+                allowing(request).getResource();
+                will(returnValue(resource));
+                allowing(resource).getPath();
                 will(returnValue("/content/usergenerated"));
                 allowing(response).setContentType("text/html");
                 //CONTENT DISPOSITION MUST NOT SET
@@ -556,6 +599,8 @@ public class ContentDispositionFilterTest {
     public void test_doFilter10() throws Throwable{       
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
+        final Resource resource = context.mock(Resource.class, "resource" );   
+        final ValueMap properties = context.mock(ValueMap.class);
         contentDispositionFilter = new ContentDispositionFilter();
         
         final ComponentContext ctx = context.mock(ComponentContext.class);
@@ -584,8 +629,14 @@ public class ContentDispositionFilterTest {
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
                 will(returnValue(null));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "image/jpeg");
-                allowing(request).getPathInfo();
+                allowing(request).getResource();
+                will(returnValue(resource));
+                allowing(resource).getPath();
                 will(returnValue("/content/usergenerated"));
+                allowing(resource).adaptTo(ValueMap.class);
+                will(returnValue(properties));
+                allowing(properties).containsKey(PROP_JCR_DATA);
+                will(returnValue(true));
                 allowing(response).setContentType("image/jpeg");
                 //CONTENT DISPOSITION IS SET
                 exactly(1).of(response).addHeader("Content-Disposition", "attachment");
@@ -599,6 +650,7 @@ public class ContentDispositionFilterTest {
     public void test_doFilter11() throws Throwable{       
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
+        final Resource resource = context.mock(Resource.class, "resource" );   
         contentDispositionFilter = new ContentDispositionFilter();
         
         final ComponentContext ctx = context.mock(ComponentContext.class);
@@ -620,7 +672,9 @@ public class ContentDispositionFilterTest {
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
                 will(returnValue(null));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
-                allowing(request).getPathInfo();
+                allowing(request).getResource();
+                will(returnValue(resource));
+                allowing(resource).getPath();
                 will(returnValue("/libs"));
                 allowing(response).setContentType("text/html");
                 //CONTENT DISPOSITION MUST NOT SET
@@ -635,6 +689,7 @@ public class ContentDispositionFilterTest {
     public void test_doFilter12() throws Throwable{       
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
+        final Resource resource = context.mock(Resource.class, "resource" );  
         contentDispositionFilter = new ContentDispositionFilter();
         
         final ComponentContext ctx = context.mock(ComponentContext.class);
@@ -656,7 +711,9 @@ public class ContentDispositionFilterTest {
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
                 will(returnValue(null));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
-                allowing(request).getPathInfo();
+                allowing(request).getResource();
+                will(returnValue(resource));
+                allowing(resource).getPath();
                 will(returnValue("/content/usergenerated/author"));
                 allowing(response).setContentType("text/html");
                 //CONTENT DISPOSITION MUST NOT SET
@@ -670,6 +727,7 @@ public class ContentDispositionFilterTest {
     public void test_doFilter13() throws Throwable{       
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
+        final Resource resource = context.mock(Resource.class, "resource" );  
         contentDispositionFilter = new ContentDispositionFilter();
         
         final ComponentContext ctx = context.mock(ComponentContext.class);
@@ -691,7 +749,9 @@ public class ContentDispositionFilterTest {
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
                 will(returnValue(null));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
-                allowing(request).getPathInfo();
+                allowing(request).getResource();
+                will(returnValue(resource));
+                allowing(resource).getPath();
                 will(returnValue("/content/usergenerated/author"));
                 allowing(response).setContentType("text/html");
                 //CONTENT DISPOSITION MUST NOT SET
@@ -705,6 +765,8 @@ public class ContentDispositionFilterTest {
     public void test_doFilter14() throws Throwable{       
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
+        final Resource resource = context.mock(Resource.class, "resource" );   
+        final ValueMap properties = context.mock(ValueMap.class);
         contentDispositionFilter = new ContentDispositionFilter();
         
         final ComponentContext ctx = context.mock(ComponentContext.class);
@@ -734,8 +796,14 @@ public class ContentDispositionFilterTest {
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
                 will(returnValue(null));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "image/jpeg");
-                allowing(request).getPathInfo();
+                allowing(request).getResource();
+                will(returnValue(resource));
+                allowing(resource).getPath();
                 will(returnValue("/content/usergenerated/author"));
+                allowing(resource).adaptTo(ValueMap.class);
+                will(returnValue(properties));
+                allowing(properties).containsKey(PROP_JCR_DATA);
+                will(returnValue(true));
                 allowing(response).setContentType("image/jpeg");
                 //CONTENT DISPOSITION IS SET
                 exactly(1).of(response).addHeader("Content-Disposition", "attachment");
@@ -753,6 +821,8 @@ public class ContentDispositionFilterTest {
     public void test_doFilter15() throws Throwable{       
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
+        final Resource resource = context.mock(Resource.class, "resource" );   
+        final ValueMap properties = context.mock(ValueMap.class);
         contentDispositionFilter = new ContentDispositionFilter();
         
         final ComponentContext ctx = context.mock(ComponentContext.class);
@@ -783,8 +853,14 @@ public class ContentDispositionFilterTest {
                 exactly(1).of(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
                 will(returnValue("text/html"));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
-                allowing(request).getPathInfo();
+                allowing(request).getResource();
+                will(returnValue(resource));
+                allowing(resource).getPath();
                 will(returnValue("/content/usergenerated"));
+                allowing(resource).adaptTo(ValueMap.class);
+                will(returnValue(properties));
+                allowing(properties).containsKey(PROP_JCR_DATA);
+                will(returnValue(true));
                 allowing(response).setContentType("text/html");
                 //CONTENT DISPOSITION IS SET
                 exactly(1).of(response).addHeader("Content-Disposition", "attachment");
@@ -802,6 +878,8 @@ public class ContentDispositionFilterTest {
     public void test_doFilter16() throws Throwable{       
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
+        final Resource resource = context.mock(Resource.class, "resource" );   
+        final ValueMap properties = context.mock(ValueMap.class);
         contentDispositionFilter = new ContentDispositionFilter();
         
         final ComponentContext ctx = context.mock(ComponentContext.class);
@@ -836,8 +914,14 @@ public class ContentDispositionFilterTest {
                 will(returnValue("text/html"));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/xml");
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
-                allowing(request).getPathInfo();
+                allowing(request).getResource();
+                will(returnValue(resource));
+                allowing(resource).getPath();
                 will(returnValue("/content/usergenerated"));
+                allowing(resource).adaptTo(ValueMap.class);
+                will(returnValue(properties));
+                allowing(properties).containsKey(PROP_JCR_DATA);
+                will(returnValue(true));
                 allowing(response).setContentType("text/html");
                 allowing(response).setContentType("text/xml");
                 //CONTENT DISPOSITION IS SET
