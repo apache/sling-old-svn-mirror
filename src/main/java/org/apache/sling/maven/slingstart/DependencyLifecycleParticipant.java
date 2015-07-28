@@ -19,6 +19,8 @@ package org.apache.sling.maven.slingstart;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -140,12 +142,14 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
         final String directory = nodeValue(info.plugin,
                 "modelDirectory",
                 new File(info.project.getBasedir(), "src/main/provisioning").getAbsolutePath());
+        final String inlinedModel = nodeValue(info.plugin,
+                "model", null);
         try {
-            info.localModel = readLocalModel(info.project, new File(directory), env.logger);
+            info.localModel = readLocalModel(info.project, inlinedModel, new File(directory), env.logger);
         } catch ( final IOException ioe) {
             throw new MavenExecutionException(ioe.getMessage(), ioe);
         }
-        
+
         // prepare resolver options
         ResolverOptions resolverOptions = new ResolverOptions();
         if (nodeBooleanValue(info.plugin, "usePomVariables", false)) {
@@ -386,6 +390,7 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
      */
     private static Model readLocalModel(
             final MavenProject project,
+            final String inlinedModel,
             final File modelDirectory,
             final Logger logger)
     throws MavenExecutionException, IOException {
@@ -400,10 +405,28 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
             }
             Collections.sort(candidates);
         }
-        if ( candidates.size() == 0 ) {
-            throw new MavenExecutionException("No model files found in " + modelDirectory, (File)null);
+        if ( candidates.size() == 0 && (inlinedModel == null || inlinedModel.trim().length() == 0) ) {
+            throw new MavenExecutionException("No model files found in " + modelDirectory + ", and no model inlined in POM.", (File)null);
         }
         final Model result = new Model();
+        if ( inlinedModel != null ) {
+            logger.debug("Reading inlined model from project " + project.getId());
+            try {
+                final Reader reader = new StringReader(inlinedModel);
+                try {
+                    final Model current = ModelReader.read(reader, "pom");
+                    final Map<Traceable, String> errors = ModelUtility.validate(current);
+                    if (errors != null ) {
+                        throw new MavenExecutionException("Invalid inlined model : " + errors, (File)null);
+                    }
+                    ModelUtility.merge(result, current, false);
+                } finally {
+                    IOUtils.closeQuietly(reader);
+                }
+            } catch ( final IOException io) {
+                throw new MavenExecutionException("Unable to read inlined model", io);
+            }
+        }
         for(final String name : candidates) {
             logger.debug("Reading model " + name + " in project " + project.getId());
             try {

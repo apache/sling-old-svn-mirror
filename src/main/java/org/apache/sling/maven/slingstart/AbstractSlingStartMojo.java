@@ -31,8 +31,19 @@ import org.apache.sling.provisioning.model.ModelUtility.ResolverOptions;
  */
 public abstract class AbstractSlingStartMojo extends AbstractMojo {
 
+    /**
+     * The model directory
+     * This parameter is evaluated in the DependencyLifecycleParticipant
+     */
     @Parameter(defaultValue="${basedir}/src/main/provisioning")
     private File modelDirectory;
+
+    /**
+     * Inlined model, supported since version 1.3.
+     * This parameter is evaluated in the DependencyLifecycleParticipant
+     */
+    @Parameter
+    private String model;
 
     @Parameter(property = "project", readonly = true, required = true)
     protected MavenProject project;
