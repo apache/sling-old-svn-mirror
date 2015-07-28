@@ -24,9 +24,13 @@ import static org.junit.Assert.fail;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.Iterator;
+import java.util.regex.Pattern;
 
 import junit.framework.AssertionFailedError;
 
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTest;
 import org.junit.Before;
 import org.junit.Test;
@@ -59,7 +63,7 @@ public class BackgroundRequestIT {
     }
     
     @Test
-    public void testTmpRequestCreatesJob() throws IOException,InterruptedException {
+    public void testTmpRequestCreatesJob() throws IOException,InterruptedException, JSONException {
         final int initialJobs = countStoredJobs();
         T.getContent(HttpTest.HTTP_BASE_URL + "/tmp.json?sling:bg=true", "application/json");
         
@@ -73,6 +77,22 @@ public class BackgroundRequestIT {
                 fail("Timeout waiting for background job creation");
             }
             Thread.sleep(50L);
+        }
+        
+        // Verify that jobs are stored under a path that includes the Sling instance ID
+        final String path = "/var/bg/jobs.tidy.1.json";
+        final JSONObject json = new JSONObject(T.getContent(HttpTest.HTTP_BASE_URL + path, "application/json"));
+        int matches = 0;
+        final Pattern instanceIdPattern = Pattern.compile("([0-9a-fA-F\\\\-]){20,}");
+        final Iterator<String> it = json.keys();
+        while(it.hasNext()) {
+            final String key = it.next();
+            if(instanceIdPattern.matcher(key).matches()) {
+                matches++;
+            }
+        }
+        if(matches == 0) {
+            fail("No instance ID node found under " + path);
         }
         
         // Wait a bit - no more jobs should be created
