@@ -199,7 +199,7 @@ public class ContentDispositionFilter implements Filter {
             if (contentDispositionPaths.contains(pathInfo)) {
 
                 if (contentTypesMapping.containsKey(pathInfo)) {
-                    Set exceptions = contentTypesMapping.get(pathInfo);
+                    Set <String> exceptions = contentTypesMapping.get(pathInfo);
                     if (!exceptions.contains(type)) {
                         setContentDisposition();
                     }
@@ -211,7 +211,7 @@ public class ContentDispositionFilter implements Filter {
             for (String path : contentDispositionPathsPfx) {
                 if (request.getPathInfo().startsWith(path)) {
                     if (contentTypesMapping.containsKey(path)) {
-                        Set exceptions = contentTypesMapping.get(path);
+                        Set <String> exceptions = contentTypesMapping.get(path);
                         if (!exceptions.contains(type)) {
                             setContentDisposition();
                             break;
