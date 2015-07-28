@@ -19,8 +19,12 @@ package org.apache.sling.bgservlets.impl.storage;
 import static org.junit.Assert.fail;
 
 import java.util.Hashtable;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
+import junitx.util.PrivateAccessor;
+
+import org.apache.sling.settings.SlingSettingsService;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.junit.Before;
@@ -29,10 +33,11 @@ import org.osgi.service.component.ComponentContext;
 
 public class JobStorageImplTest {
     private JobStorageImpl storage;
-    private final Mockery mockery = new Mockery(); 
+    private final Mockery mockery = new Mockery();
+    private final String instanceId = UUID.randomUUID().toString();
 
     @Before
-    public void setup() {
+    public void setup() throws NoSuchFieldException {
         storage = new JobStorageImpl();
         
         final Hashtable<String, Object> props = new Hashtable<String, Object>();
@@ -44,6 +49,13 @@ public class JobStorageImplTest {
             will(returnValue(props));
         }});
         
+        final SlingSettingsService sss = mockery.mock(SlingSettingsService.class);
+        mockery.checking(new Expectations() {{
+            allowing(sss).getSlingId();
+            will(returnValue(instanceId));
+        }});
+        
+        PrivateAccessor.setField(storage, "slingSettings", sss);
         storage.activate(ctx);
     }
     
@@ -55,7 +67,8 @@ public class JobStorageImplTest {
     
     @Test
     public void testNextPath() {
-        assertPath("/var/test/2.*/1$", storage.getNextPath());
-        assertPath("/var/test/2.*/2$", storage.getNextPath());
+        for(int i=1 ; i<10; i++) {
+            assertPath("/var/test/" + instanceId + "/2.*/" + i + "$", storage.getNextPath());
+        }
     }
 }
