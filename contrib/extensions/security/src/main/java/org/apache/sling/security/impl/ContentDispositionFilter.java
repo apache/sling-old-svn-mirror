@@ -202,30 +202,31 @@ public class ContentDispositionFilter implements Filter {
                 return;
             }
             request.setAttribute(ATTRIBUTE_NAME, type);
+            Resource resource = request.getResource();
+            String resourcePath = resource.getPath();
+            
+            if (contentDispositionPaths.contains(resourcePath)) {
 
-            String pathInfo = request.getPathInfo();
-            if (contentDispositionPaths.contains(pathInfo)) {
-
-                if (contentTypesMapping.containsKey(pathInfo)) {
-                    Set <String> exceptions = contentTypesMapping.get(pathInfo);
+                if (contentTypesMapping.containsKey(resourcePath)) {
+                    Set <String> exceptions = contentTypesMapping.get(resourcePath);
                     if (!exceptions.contains(type)) {
-                        setContentDisposition();
+                        setContentDisposition(resource);
                     }
                 } else {
-                    setContentDisposition();
+                    setContentDisposition(resource);
                 }
             }
             
             for (String path : contentDispositionPathsPfx) {
-                if (request.getPathInfo().startsWith(path)) {
+                if (resourcePath.startsWith(path)) {
                     if (contentTypesMapping.containsKey(path)) {
                         Set <String> exceptions = contentTypesMapping.get(path);
                         if (!exceptions.contains(type)) {
-                            setContentDisposition();
+                            setContentDisposition(resource);
                             break;
                         }
                     } else {
-                        setContentDisposition();
+                        setContentDisposition(resource);
                         break;
                     }
 
@@ -236,8 +237,8 @@ public class ContentDispositionFilter implements Filter {
         
       //---------- PRIVATE METHODS ---------
         
-        private void setContentDisposition() {
-            if (!this.containsHeader(CONTENT_DISPOSTION)) {
+        private void setContentDisposition(Resource resource) {
+            if (!this.containsHeader(CONTENT_DISPOSTION) && this.isJcrData(resource)) {
                 this.addHeader(CONTENT_DISPOSTION, CONTENT_DISPOSTION_ATTACHMENT);
             }
         }
