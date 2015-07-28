@@ -18,11 +18,11 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>24</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.provisioning.model</artifactId>
-    <version>1.2.1-SNAPSHOT</version>
+    <version>1.3.0</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Provisioning Model</name>
@@ -31,9 +31,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/support/provisioning-model</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/support/provisioning-model</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/support/provisioning-model</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.provisioning.model-1.3.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.provisioning.model-1.3.0</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.provisioning.model-1.3.0</url>
     </scm>
 
     <build>
