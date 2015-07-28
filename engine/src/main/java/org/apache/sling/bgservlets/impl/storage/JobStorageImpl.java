@@ -22,6 +22,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -56,7 +57,7 @@ public class JobStorageImpl implements JobStorage {
     public static final String JOB_NODETYPE = "nt:unstructured";
     
     private String jobStoragePath;
-	private int counter;
+	private AtomicInteger counter = new AtomicInteger();
 	private static final DateFormat pathFormat = new SimpleDateFormat(PATH_FORMAT);
 	
     protected void activate(ComponentContext ctx) {
@@ -88,17 +89,22 @@ public class JobStorageImpl implements JobStorage {
             throw new JobStorageException("Unable to create JobDataImpl", e);
         }
 	}
+	
+	String getNextPath() {
+	    final StringBuilder sb = new StringBuilder();
+	    sb.append(jobStoragePath);
+	    sb.append(pathFormat.format(new Date()));
+	    sb.append("/");
+	    sb.append(counter.incrementAndGet());
+	    return sb.toString();
+	}
 
 	Node createNewJobNode(Session s) throws RepositoryException {
-	    String path = null;
-	    synchronized (this) {
-	        counter++;
-	        path = jobStoragePath + pathFormat.format(new Date()) + "/" + counter;
-        }
+	    final String path = getNextPath();
 	    final Node result = new DeepNodeCreator().deepCreateNode(path, s, JOB_NODETYPE);
 	    result.addMixin(JobData.JOB_DATA_MIXIN);
 	    result.setProperty(BackgroundServletConstants.CREATION_TIME_PROPERTY, Calendar.getInstance());
-	    result.save();
+	    result.getSession().save();
 	    log.debug("Job node {} created", result.getPath());
 	    return result;
 	}
