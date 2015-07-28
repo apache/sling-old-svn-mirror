@@ -18,6 +18,7 @@
  */
 package org.apache.sling.jcr.api;
 
+import javax.jcr.Credentials;
 import javax.jcr.LoginException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
@@ -105,4 +106,34 @@ public interface SlingRepository extends Repository {
      *      Authentication</a>
      */
     Session loginService(String subServiceName, String workspace) throws LoginException, RepositoryException;
+
+    /**
+     * Impersonates the service session provided by the calling bundle (and further
+     * specialized by {@code subServiceName}) to a new session in accordance with
+     * the specified (new) {@code Credentials}. The nature of the {@code Credentials}
+     * is an implementation detail which may allow relaxed credentials
+     * requirements (perhaps including a user ID but no password, for example).
+     * <p>
+     * The impersonation will fail with {@link javax.jcr.LoginException} if the
+     * service session is not allowed to impersonate the subject associated with
+     * the target session or if the specified {@code Credentials credentials}
+     * are not valid.
+     * </p>
+     * The new, impersonated {@code Session} is tied to a new {@code Workspace}
+     * instance with the specified {@code workspaceName} or to the
+     * {@link #getDefaultWorkspace() default workspace} if the {@code workspaceName}
+     * is {@code null}.
+     *
+     * @param subServiceName Optional sub-service name to specialize account
+     *                       selection for the service. This may be {@code null}.
+     * @param credentials    A valid non-null {@code Credentials} object
+     * @param workspaceName  The name of the workspace to which to get an
+     *                       administrative session. If <code>null</code> the
+     *                       {@link #getDefaultWorkspace()} default workspace is assumed.
+     * @return a new {@code Session} object
+     * @throws LoginException If the current session does not have sufficient access to perform the operation.
+     * @throws RepositoryException If another error occurs.
+     * @since 2.3
+     */
+    Session impersonateFromService(String subServiceName, Credentials credentials, String workspaceName) throws LoginException, RepositoryException;
 }
