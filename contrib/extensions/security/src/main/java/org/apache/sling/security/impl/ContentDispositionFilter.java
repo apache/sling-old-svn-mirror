@@ -25,12 +25,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
@@ -39,6 +41,8 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.service.component.ComponentContext;
@@ -173,6 +177,10 @@ public class ContentDispositionFilter implements Filter {
 
         private static final String CONTENT_DISPOSTION_ATTACHMENT = "attachment";
         
+        private static final String PROP_JCR_DATA = "jcr:data";
+        
+        private static final String JCR_CONTENT_LEAF = "jcr:content";
+        
         static final String ATTRIBUTE_NAME =
                 "org.apache.sling.security.impl.ContentDispositionFilter.RewriterResponse.contentType";
         
@@ -226,10 +234,31 @@ public class ContentDispositionFilter implements Filter {
             super.setContentType(type);
         }    
         
+      //---------- PRIVATE METHODS ---------
+        
         private void setContentDisposition() {
             if (!this.containsHeader(CONTENT_DISPOSTION)) {
                 this.addHeader(CONTENT_DISPOSTION, CONTENT_DISPOSTION_ATTACHMENT);
             }
+        }
+        
+        private boolean isJcrData(Resource resource){
+            boolean jcrData = false;
+            if (resource!= null) {
+                ValueMap props = resource.adaptTo(ValueMap.class);
+                if (props.containsKey(PROP_JCR_DATA) ) {
+                    jcrData = true;
+                } else {
+                    Resource jcrContent = resource.getChild(JCR_CONTENT_LEAF);
+                    if (jcrContent!= null) {
+                        props = jcrContent.adaptTo(ValueMap.class);
+                        if (props.containsKey(PROP_JCR_DATA) ) {
+                            jcrData = true;
+                        }
+                    }
+                }     
+            }
+            return jcrData;
         }
     }
 }

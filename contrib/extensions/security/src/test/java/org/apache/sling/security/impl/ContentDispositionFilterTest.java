@@ -26,6 +26,8 @@ import junitx.util.PrivateAccessor;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.security.impl.ContentDispositionFilter.RewriterResponse;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -38,6 +40,10 @@ public class ContentDispositionFilterTest {
     
     private ContentDispositionFilter contentDispositionFilter;
     private final Mockery context = new JUnit4Mockery();
+    
+    private static final String PROP_JCR_DATA = "jcr:data";
+    
+    private static final String JCR_CONTENT_LEAF = "jcr:content";
 
     @Test
     public void test_activator1() throws Throwable{
@@ -841,5 +847,136 @@ public class ContentDispositionFilterTest {
         rewriterResponse.setContentType("text/html");
         rewriterResponse.setContentType("text/xml");
         Assert.assertEquals(1, counter.intValue());
+    }
+    
+    @Test
+    public void test_isJcrData1() throws Throwable {
+        contentDispositionFilter = new ContentDispositionFilter();
+        final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
+        final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
+        final Resource resource = null;
+        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response);
+        
+        Boolean result = (Boolean) PrivateAccessor.invoke(rewriterResponse,"isJcrData",  new Class[]{Resource.class},new Object[]{resource});
+        
+        Assert.assertFalse(result);
+    }
+    
+    @Test
+    public void test_isJcrData2() throws Throwable {
+        contentDispositionFilter = new ContentDispositionFilter();
+        final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
+        final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);       
+        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response);
+        
+        
+        final Resource resource = context.mock(Resource.class);
+        final ValueMap properties = context.mock(ValueMap.class);
+        
+        context.checking(new Expectations() {
+            {
+                allowing(resource).adaptTo(ValueMap.class);
+                will(returnValue(properties));
+                allowing(properties).containsKey(PROP_JCR_DATA);
+                will(returnValue(true));
+            }
+        });     
+        
+        Boolean result = (Boolean) PrivateAccessor.invoke(rewriterResponse,"isJcrData",  new Class[]{Resource.class},new Object[]{resource});
+        
+        Assert.assertTrue(result);
+    }
+    
+    @Test
+    public void test_isJcrData3() throws Throwable {
+        contentDispositionFilter = new ContentDispositionFilter();
+        final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
+        final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);       
+        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response);
+        
+        
+        final Resource resource = context.mock(Resource.class);
+        final ValueMap properties = context.mock(ValueMap.class);
+        
+        context.checking(new Expectations() {
+            {
+                allowing(resource).adaptTo(ValueMap.class);
+                will(returnValue(properties));
+                allowing(properties).containsKey(PROP_JCR_DATA);
+                will(returnValue(false));
+                allowing(resource).getChild(JCR_CONTENT_LEAF);
+                will(returnValue(null));
+            }
+        });     
+        
+        Boolean result = (Boolean) PrivateAccessor.invoke(rewriterResponse,"isJcrData",  new Class[]{Resource.class},new Object[]{resource});
+        
+        Assert.assertFalse(result);
+    }
+    
+    @Test
+    public void test_isJcrData4() throws Throwable {
+        contentDispositionFilter = new ContentDispositionFilter();
+        final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
+        final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);       
+        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response);
+        
+        final Resource child = context.mock(Resource.class, "child");
+        final Resource resource = context.mock(Resource.class, "resource" );
+        final ValueMap properties = context.mock(ValueMap.class);
+        final ValueMap childPropoerties = context.mock(ValueMap.class, "childPropoerties");
+
+        
+        context.checking(new Expectations() {
+            {
+                allowing(resource).adaptTo(ValueMap.class);
+                will(returnValue(properties));
+                allowing(properties).containsKey(PROP_JCR_DATA);
+                will(returnValue(false));
+                allowing(resource).getChild(JCR_CONTENT_LEAF);
+                will(returnValue(child));
+                allowing(child).adaptTo(ValueMap.class);
+                will(returnValue(childPropoerties));
+                allowing(childPropoerties).containsKey(PROP_JCR_DATA);
+                will(returnValue(false));
+            }
+        });     
+        
+        Boolean result = (Boolean) PrivateAccessor.invoke(rewriterResponse,"isJcrData",  new Class[]{Resource.class},new Object[]{resource});
+        
+        Assert.assertFalse(result);
+    }
+    
+    @Test
+    public void test_isJcrData5() throws Throwable {
+        contentDispositionFilter = new ContentDispositionFilter();
+        final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
+        final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);       
+        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response);
+        
+        final Resource child = context.mock(Resource.class, "child");
+        final Resource resource = context.mock(Resource.class, "resource" );
+        final ValueMap properties = context.mock(ValueMap.class);
+        final ValueMap childPropoerties = context.mock(ValueMap.class, "childPropoerties");
+
+        
+        context.checking(new Expectations() {
+            {
+                allowing(resource).adaptTo(ValueMap.class);
+                will(returnValue(properties));
+                allowing(properties).containsKey(PROP_JCR_DATA);
+                will(returnValue(false));
+                allowing(resource).getChild(JCR_CONTENT_LEAF);
+                will(returnValue(child));
+                allowing(child).adaptTo(ValueMap.class);
+                will(returnValue(childPropoerties));
+                allowing(childPropoerties).containsKey(PROP_JCR_DATA);
+                will(returnValue(true));
+            }
+        });     
+        
+        Boolean result = (Boolean) PrivateAccessor.invoke(rewriterResponse,"isJcrData",  new Class[]{Resource.class},new Object[]{resource});
+        
+        Assert.assertTrue(result);
     }
 }
