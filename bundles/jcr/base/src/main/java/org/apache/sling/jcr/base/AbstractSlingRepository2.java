@@ -116,6 +116,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
      * This method may return {@code null} in which case the actual default
      * workspace used depends on the underlying JCR Repository implementation.
      */
+    @Override
     public final String getDefaultWorkspace() {
         return this.getSlingRepositoryManager().getDefaultWorkspace();
     }
@@ -207,6 +208,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
      * @see #login(Credentials, String)
      * @see #getNamespaceAwareSession(Session)
      */
+    @Override
     public Session login() throws LoginException, RepositoryException {
         return this.login(null, null);
     }
@@ -225,6 +227,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
      * @see #login(Credentials, String)
      * @see #getNamespaceAwareSession(Session)
      */
+    @Override
     public Session login(Credentials credentials) throws LoginException, RepositoryException {
         return this.login(credentials, null);
     }
@@ -244,6 +247,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
      * @see #login(Credentials, String)
      * @see #getNamespaceAwareSession(Session)
      */
+    @Override
     public Session login(String workspace) throws LoginException, NoSuchWorkspaceException, RepositoryException {
         return this.login(null, workspace);
     }
@@ -275,6 +279,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
      * @throws RepositoryException If another error occurrs during login
      * @see #getNamespaceAwareSession(Session)
      */
+    @Override
     public Session login(Credentials credentials, String workspace) throws LoginException, NoSuchWorkspaceException,
             RepositoryException {
 
@@ -327,6 +332,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
      * @throws RepositoryException If a general error occurs while creating the
      *             session
      */
+    @Override
     public final Session loginService(String subServiceName, String workspace) throws LoginException,
             RepositoryException {
         final ServiceUserMapper serviceUserMapper = this.getSlingRepositoryManager().getServiceUserMapper();
@@ -338,6 +344,47 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
         }
         return getNamespaceAwareSession(createServiceSession(userName, workspace));
     }
+
+    /**
+     * Default implementation of the {@link #impersonateFromService(Credentials, String, String)}
+     * method taking into account the bundle calling this method.
+     * <p/>
+     * This method uses the
+     * {@link AbstractSlingRepositoryManager#getServiceUserMapper()
+     * ServiceUserMapper} service to map the named service to a user and then
+     * calls the {@link #createServiceSession(String, String)} method actually
+     * create a session for that user. This service session is then impersonated
+     * to the subject identified by the specified {@code credentials}.
+     *
+     * @param subServiceName An optional subService identifier (may be {@code null})
+     * @param credentials    A valid non-null {@code Credentials} object
+     * @param workspaceName  The workspace to access or {@code null} to access the
+     *            {@link #getDefaultWorkspace() default workspace}
+     * @return a new {@code Session} object
+     * @throws LoginException If the current session does not have sufficient access to perform the operation.
+     * @throws RepositoryException If another error occurs.
+     * @since 2.4
+     */
+    @Override
+    public Session impersonateFromService(String subServiceName, Credentials credentials, String workspaceName)
+            throws LoginException, RepositoryException {
+        final ServiceUserMapper serviceUserMapper = this.getSlingRepositoryManager().getServiceUserMapper();
+        final String userName = (serviceUserMapper != null) ? serviceUserMapper.getServiceUserID(this.usingBundle,
+                subServiceName) : null;
+        if (userName == null) {
+            throw new LoginException("Cannot derive user name for bundle " + usingBundle + " and sub service " + subServiceName);
+        }
+        Session serviceSession = null;
+        try {
+            serviceSession = createServiceSession(userName, workspaceName);
+            return getNamespaceAwareSession(serviceSession.impersonate(credentials));
+        } finally {
+            if (serviceSession != null) {
+                serviceSession.logout();
+            }
+        }
+    }
+
 
     /**
      * Login as an administrative user. This method is deprecated and its use
@@ -352,6 +399,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
      * @return An administrative session
      * @throws RepositoryException If the login fails or has been disabled
      */
+    @Override
     public final Session loginAdministrative(String workspace) throws RepositoryException {
         if (this.getSlingRepositoryManager().isDisableLoginAdministrative()) {
             log.error("SlingRepository.loginAdministrative is disabled. Please use SlingRepository.loginService.");
@@ -365,6 +413,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
     // Remaining Repository service methods all backed by the actual
     // repository instance. They may be overwritten, but generally are not.
 
+    @Override
     public String getDescriptor(String name) {
         Repository repo = getRepository();
         if (repo != null) {
@@ -375,6 +424,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
         return null;
     }
 
+    @Override
     public String[] getDescriptorKeys() {
         Repository repo = getRepository();
         if (repo != null) {
@@ -385,6 +435,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
         return new String[0];
     }
 
+    @Override
     public Value getDescriptorValue(String key) {
         Repository repo = getRepository();
         if (repo != null) {
@@ -395,6 +446,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
         return null;
     }
 
+    @Override
     public Value[] getDescriptorValues(String key) {
         Repository repo = getRepository();
         if (repo != null) {
@@ -405,6 +457,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
         return null;
     }
 
+    @Override
     public boolean isSingleValueDescriptor(String key) {
         Repository repo = getRepository();
         if (repo != null) {
@@ -415,6 +468,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
         return false;
     }
 
+    @Override
     public boolean isStandardDescriptor(String key) {
         Repository repo = getRepository();
         if (repo != null) {
