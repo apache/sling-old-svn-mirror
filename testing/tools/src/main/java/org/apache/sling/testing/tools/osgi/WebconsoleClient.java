@@ -105,7 +105,7 @@ public class WebconsoleClient {
      *  installation hasn't happened yet. */
     public void checkBundleInstalled(String symbolicName, int timeoutSeconds) {
         final String path = getBundlePath(symbolicName, ".json");
-        new RetryingContentChecker(executor, builder).check(path, 200, timeoutSeconds, 500);
+        new RetryingContentChecker(executor, builder, username, password).check(path, 200, timeoutSeconds, 500);
     }
     
     private JSONObject getBundleData(String symbolicName) throws Exception {
