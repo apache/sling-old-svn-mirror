@@ -64,7 +64,7 @@ public class ValidationPostOperation extends AbstractPostOperation {
             }
             if (resourceType != null && !"".equals(resourceType)) {
                 String resourcePath = request.getRequestPathInfo().getResourcePath();
-                ValidationModel vm = validationService.getValidationModel(resourceType, resourcePath);
+                ValidationModel vm = validationService.getValidationModel(resourceType, resourcePath, false);
                 if (vm != null) {
                     ValidationResult vr = validationService.validate(requestParameters, vm);
                     vpr.setValidationResult(vr);
