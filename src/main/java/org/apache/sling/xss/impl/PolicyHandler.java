@@ -31,7 +31,9 @@ public class PolicyHandler {
     private AntiSamy antiSamy;
 
     /**
-     * Try to load a policy from the given relative path.
+     * Creates a {@code PolicyHandler} from an {@link InputStream}.
+     *
+     * @param policyStream the InputStream from which to read this handler's {@link Policy}
      */
     public PolicyHandler(InputStream policyStream) throws Exception {
         // fix for classloader issue with IBM JVM: see bug #31946

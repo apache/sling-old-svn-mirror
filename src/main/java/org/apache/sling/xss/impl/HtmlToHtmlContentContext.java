@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 /**
  * This class implements an escaping rule to be used for cleaning up existing HTML
  * content. The output will still be HTML.
- * <p/>
+ * <p>
  * The cleanup is performed using the AntiSamy library found at
  * <a href="http://www.owasp.org/index.php/AntiSamy">http://www.owasp.org/index.php/AntiSamy</a>
  */
