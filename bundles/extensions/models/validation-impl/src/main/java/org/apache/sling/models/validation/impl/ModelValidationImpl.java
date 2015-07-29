@@ -71,7 +71,7 @@ public class ModelValidationImpl implements ModelValidation {
     
     private RuntimeException validate(Resource resource, boolean required) {
         try {
-            ValidationModel validationModel = validation.getValidationModel(resource);
+            ValidationModel validationModel = validation.getValidationModel(resource, true);
             if (validationModel == null) {
                 String error = String.format("Could not find validation model for resource '%s' with type '%s'", resource.getPath(), resource.getResourceType());
                 if (required) {
