@@ -321,6 +321,7 @@
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.core/2.0.32</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
+    <feature>webconsole</feature>
     <bundle>mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
   </feature>
   <feature name="sling-scripting-javascript" version="${project.version}">
