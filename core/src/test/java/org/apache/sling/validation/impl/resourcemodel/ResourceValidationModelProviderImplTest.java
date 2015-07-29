@@ -215,7 +215,7 @@ public class ResourceValidationModelProviderImplTest {
         createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel2", model2);
 
         // check that both models are returned
-        Collection<ValidationModel> models = modelProvider.getModel(rr, "sling/validation/test", validatorMap);
+        Collection<ValidationModel> models = modelProvider.getModel("sling/validation/test", validatorMap, rr);
         Assert.assertThat(models, Matchers.containsInAnyOrder(model1, model2));
     }
 
@@ -234,7 +234,7 @@ public class ResourceValidationModelProviderImplTest {
         createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
 
         // compare both models
-        Collection<ValidationModel> models = modelProvider.getModel(rr, "sling/validation/test", validatorMap);
+        Collection<ValidationModel> models = modelProvider.getModel("sling/validation/test", validatorMap, rr);
         Assert.assertThat(models, Matchers.contains(model1));
     }
 
@@ -250,7 +250,7 @@ public class ResourceValidationModelProviderImplTest {
         createValidationModelResource(rr, appsValidatorsRoot.getPath(), "testValidationModel1", model2);
 
         // only the apps model should be returned
-        Collection<ValidationModel> models = modelProvider.getModel(rr, "sling/validation/test", validatorMap);
+        Collection<ValidationModel> models = modelProvider.getModel("sling/validation/test", validatorMap, rr);
         Assert.assertThat(models, Matchers.contains(model2));
     }
 
@@ -262,7 +262,7 @@ public class ResourceValidationModelProviderImplTest {
 
         // clear validator map to make the referenced validator unknown
         validatorMap.clear();
-        modelProvider.getModel(rr, "sling/validation/test", validatorMap);
+        modelProvider.getModel("sling/validation/test", validatorMap, rr);
     }
     
     @Test(expected = IllegalStateException.class)
@@ -274,7 +274,7 @@ public class ResourceValidationModelProviderImplTest {
         
         createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
 
-        modelProvider.getModel(rr, "sling/validation/test", validatorMap);
+        modelProvider.getModel("sling/validation/test", validatorMap, rr);
     }
 
     private Resource createValidationModelResource(ResourceResolver rr, String root, String name, ValidationModel model)
@@ -307,7 +307,7 @@ public class ResourceValidationModelProviderImplTest {
         return modelResource;
     }
 
-    private void createValidationModelProperties(Resource model, @Nonnull List<ResourceProperty> properties)
+    private void createValidationModelProperties(Resource model, @Nonnull Collection<ResourceProperty> properties)
             throws PersistenceException {
         ResourceResolver rr = model.getResourceResolver();
         if (properties.isEmpty()) {

@@ -18,6 +18,7 @@
  */
 package org.apache.sling.validation.impl.model;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -38,22 +39,17 @@ public class ChildResourceImpl implements ChildResource {
     private final @Nonnull List<ChildResource> children;
     private final boolean isRequired;
 
-    public ChildResourceImpl(String name, String nameRegex, boolean isRequired, @Nonnull List<ResourceProperty> properties, @Nonnull List<ChildResource> children) {
+    public ChildResourceImpl(@Nonnull String name, String nameRegex, boolean isRequired, @Nonnull List<ResourceProperty> properties, @Nonnull List<ChildResource> children) {
         if (nameRegex != null) {
             try {
                 this.namePattern = Pattern.compile(nameRegex);
             } catch (PatternSyntaxException e) {
                 throw new IllegalArgumentException("Invalid regex given", e);
             }
-            this.name = null;
         } else {
-            if (name == null) {
-                throw new IllegalArgumentException("Either name or nameRegex must be set!");
-            }
-            this.name = name;
             this.namePattern = null;
-           
-        } 
+        }
+        this.name = name;
         this.isRequired = isRequired;
         this.properties = properties;
         this.children = children;
@@ -65,7 +61,7 @@ public class ChildResourceImpl implements ChildResource {
     }
 
     @Override
-    public @Nonnull List<ResourceProperty> getProperties() {
+    public @Nonnull Collection<ResourceProperty> getProperties() {
         return properties;
     }
 
@@ -74,7 +70,7 @@ public class ChildResourceImpl implements ChildResource {
         return namePattern;
     }
     
-    public @Nonnull List<ChildResource> getChildren() {
+    public @Nonnull Collection<ChildResource> getChildren() {
         return children;
     }
 
