@@ -926,6 +926,8 @@ http://www.w3.org/TR/html401/struct/global.html
 
         <!-- Table tags (tbody, thead, tfoot)-->
 
+        <tag name="caption" action="validate"/>
+
         <tag name="thead" action="validate">
             <attribute name="align"/>
             <attribute name="char"/>
