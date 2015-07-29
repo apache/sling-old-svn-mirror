@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Properties;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
@@ -37,6 +38,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.vault.fs.api.ImportMode;
+import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.api.WorkspaceFilter;
 import org.apache.jackrabbit.vault.fs.io.AccessControlHandling;
 import org.apache.jackrabbit.vault.fs.io.ImportOptions;
@@ -77,8 +79,9 @@ public class JcrVaultDistributionPackageBuilder  extends AbstractDistributionPac
     private final String[] packageRoots;
     private final String tempPackagesNode;
     private final File tempDirectory;
+    private final TreeMap<String, PathFilterSet> filters;
 
-    public JcrVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots, String tempFilesFolder, String tempPackagesNode) {
+    public JcrVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots, String[] filterRules,  String tempFilesFolder, String tempPackagesNode) {
         super(type);
 
         this.packaging = packaging;
@@ -89,6 +92,7 @@ public class JcrVaultDistributionPackageBuilder  extends AbstractDistributionPac
         this.tempPackagesNode = tempPackagesNode;
 
         this.tempDirectory = VltUtils.getTempFolder(tempFilesFolder);
+        this.filters = VltUtils.parseFilters(filterRules);
     }
 
     @Override
@@ -103,7 +107,7 @@ public class JcrVaultDistributionPackageBuilder  extends AbstractDistributionPac
             String packageGroup = PACKAGE_GROUP;
             String packageName = getType() + "_" + System.currentTimeMillis() + "_" +  UUID.randomUUID();
 
-            WorkspaceFilter filter = VltUtils.createFilter(request);
+            WorkspaceFilter filter = VltUtils.createFilter(request, filters);
             ExportOptions opts = VltUtils.getExportOptions(filter, packageRoots, packageGroup, packageName, VERSION);
 
             log.debug("assembling package {}", packageGroup + '/' + packageName + "-" + VERSION);
