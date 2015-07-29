@@ -2,5 +2,5 @@
     "jcr:primaryType": "sling:OsgiConfig",
     "name": "vlt",
     "type": "jcrvlt",
-    "tempFsFolder": "/Users/mpetria/work/temp"
+    "package.filters": ["/content|-.*/excluded"]
 }
