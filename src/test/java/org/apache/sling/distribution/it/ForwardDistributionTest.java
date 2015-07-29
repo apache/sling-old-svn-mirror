@@ -85,6 +85,26 @@ public class ForwardDistributionTest extends DistributionIntegrationTestBase {
         assertExists(publishClient, childPath);
     }
 
+    @Test
+    public void testDeepAddTreeExcludedContent() throws Exception {
+        String nodePath = createRandomNode(authorClient, "/content/forward_add_" + System.nanoTime());
+        assertExists(authorClient, nodePath);
+
+        String childPath = nodePath + "/child";
+        authorClient.createNode(childPath);
+        assertExists(authorClient, childPath);
+
+        String excludedChildPath = nodePath + "/excluded";
+        authorClient.createNode(excludedChildPath);
+        assertExists(authorClient, excludedChildPath);
+
+        distributeDeep(author, "publish", DistributionRequestType.ADD, nodePath);
+        assertExists(publishClient, nodePath);
+        assertExists(publishClient, childPath);
+        assertNotExists(publishClient, excludedChildPath);
+
+    }
+
 
     @Test
     public void testShallowUpdateTreeContent() throws Exception {
