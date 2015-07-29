@@ -19,21 +19,86 @@
 package org.apache.sling.distribution.packaging;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.queue.DistributionQueueItem;
 
 /**
  * Additional information about a package.
  * Additional information is optional and components should expect every piece of it to be null.
  */
-public final class DistributionPackageInfo {
+public final class DistributionPackageInfo extends ValueMapDecorator implements ValueMap {
 
-    private URI origin;
-    private String queue;
-    private DistributionRequestType requestType;
-    private String[] paths;
+
+    /**
+     * distribution package type
+     */
+    public static String PROPERTY_PACKAGE_TYPE = "package.type";
+
+    /**
+     * distribution request paths
+     */
+    public static String PROPERTY_REQUEST_PATHS = "request.paths";
+
+    /**
+     * distribution request type
+     */
+    public static String PROPERTY_REQUEST_TYPE = "request.type";
+
+    /**
+     * distribution package origin uri
+     */
+    public static String PROPERTY_ORIGIN_URI = "package.origin.uri";
+
+    /**
+     * distribution package origin queue
+     */
+    public static String PROPERTY_ORIGIN_QUEUE = "origin.queue";
+
+
+    /**
+     * Creates a new wrapper around a given map.
+     *
+     * @param base wrapped object
+     */
+    public DistributionPackageInfo(Map<String, Object> base) {
+        super(init(null, base));
+    }
+
+    /**
+     * Creates a new wrapper around a given map.
+     *
+     */
+    public DistributionPackageInfo(String type) {
+        super(init(type, null));
+    }
+
+
+    private static Map<String, Object> init(String type, Map<String, Object> base) {
+        Map<String, Object> result = new HashMap<String, Object>();
+
+        if (base != null) {
+            type = (String) base.get(PROPERTY_PACKAGE_TYPE);
+
+            result = new HashMap<String, Object>(base);
+        }
+
+        result.put(PROPERTY_PACKAGE_TYPE, type);
+
+        return result;
+    }
+
+    @Nonnull
+    public String getType() {
+        return get(PROPERTY_PACKAGE_TYPE, String.class);
+    }
 
     /**
      * get the paths covered by the package holding this info
@@ -42,7 +107,7 @@ public final class DistributionPackageInfo {
      */
     @CheckForNull
     public String[] getPaths() {
-        return paths;
+        return get(PROPERTY_REQUEST_PATHS, String[].class);
     }
 
     /**
@@ -52,7 +117,7 @@ public final class DistributionPackageInfo {
      */
     @CheckForNull
     public DistributionRequestType getRequestType() {
-        return requestType;
+        return get(PROPERTY_REQUEST_TYPE, DistributionRequestType.class);
     }
 
     /**
@@ -62,63 +127,21 @@ public final class DistributionPackageInfo {
      */
     @CheckForNull
     public URI getOrigin() {
-        return origin;
+        return get(PROPERTY_ORIGIN_URI, URI.class);
     }
 
-    /**
-     * sets the origin of the package.
-     *
-     * @param origin the originating instance of this package
-     */
-    public void setOrigin(URI origin) {
-        this.origin = origin;
+    @CheckForNull
+    public String getQueue() {
+        return get(PROPERTY_ORIGIN_QUEUE, String.class);
     }
 
-    /**
-     * sets the request type for the package holding this info
-     *
-     * @param requestType the request type that originated this package
-     */
-    public void setRequestType(DistributionRequestType requestType) {
-        this.requestType = requestType;
-    }
-
-    /**
-     * sets the paths "covered" by the package holding this info
-     *
-     * @param paths the paths "covered" by this package
-     */
-    public void setPaths(String[] paths) {
-        this.paths = paths;
-    }
-
-    /**
-     * fills the current info object from the provided one.
-     *
-     * @param packageInfo package metadata
-     */
-    public void fillInfo(DistributionPackageInfo packageInfo) {
-        if (packageInfo != null) {
-            this.setOrigin(packageInfo.getOrigin());
-            this.setPaths(packageInfo.getPaths());
-            this.setRequestType(packageInfo.getRequestType());
-        }
-    }
 
     @Override
     public String toString() {
         return "DistributionPackageInfo{" +
-                "origin=" + origin +
-                ", requestType=" + requestType +
-                ", paths=" + Arrays.toString(paths) +
+                "origin=" + getOrigin() +
+                ", requestType=" + getRequestType() +
+                ", paths=" + Arrays.toString(getPaths()) +
                 '}';
-    }
-
-    public String getQueue() {
-        return queue;
-    }
-
-    public void setQueue(String queue) {
-        this.queue = queue;
     }
 }

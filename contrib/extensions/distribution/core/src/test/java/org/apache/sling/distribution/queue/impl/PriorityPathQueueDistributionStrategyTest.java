@@ -44,8 +44,8 @@ public class PriorityPathQueueDistributionStrategyTest {
         PriorityPathQueueDispatchingStrategy priorityPathDistributionStrategy = new PriorityPathQueueDispatchingStrategy(new String[]{"/content", "/apps"});
 
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
-        DistributionPackageInfo packageInfo = new DistributionPackageInfo();
-        packageInfo.setPaths(new String[]{"/etc"});
+        DistributionPackageInfo packageInfo = new DistributionPackageInfo("type");
+        packageInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, new String[]{"/etc"});
         when(distributionPackage.getInfo()).thenReturn(packageInfo);
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
         DistributionQueue queue = mock(DistributionQueue.class);
@@ -67,8 +67,8 @@ public class PriorityPathQueueDistributionStrategyTest {
         PriorityPathQueueDispatchingStrategy priorityPathDistributionStrategy = new PriorityPathQueueDispatchingStrategy(new String[]{"/content", "/apps"});
 
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
-        DistributionPackageInfo packageInfo = new DistributionPackageInfo();
-        packageInfo.setPaths(new String[]{"/content/sample1"});
+        DistributionPackageInfo packageInfo = new DistributionPackageInfo("type");
+        packageInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, new String[]{"/content/sample1"});
         when(distributionPackage.getInfo()).thenReturn(packageInfo);
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
         DistributionQueue queue = mock(DistributionQueue.class);
@@ -90,7 +90,7 @@ public class PriorityPathQueueDistributionStrategyTest {
         PriorityPathQueueDispatchingStrategy priorityPathDistributionStrategy = new PriorityPathQueueDispatchingStrategy(new String[]{"/content", "/apps"});
 
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
-        DistributionPackageInfo info = new DistributionPackageInfo();
+        DistributionPackageInfo info = new DistributionPackageInfo("type");
         when(distributionPackage.getInfo()).thenReturn(info);
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
         DistributionQueue queue = mock(DistributionQueue.class);
@@ -110,8 +110,8 @@ public class PriorityPathQueueDistributionStrategyTest {
         PriorityPathQueueDispatchingStrategy priorityPathDistributionStrategy = new PriorityPathQueueDispatchingStrategy(new String[]{"/content", "/apps"});
 
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
-        DistributionPackageInfo packageInfo = new DistributionPackageInfo();
-        packageInfo.setPaths(new String[]{"/content/sample2"});
+        DistributionPackageInfo packageInfo = new DistributionPackageInfo("type");
+        packageInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, new String[]{"/content/sample2"});
         when(distributionPackage.getInfo()).thenReturn(packageInfo);
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
         DistributionQueue queue = mock(DistributionQueue.class);
@@ -132,8 +132,8 @@ public class PriorityPathQueueDistributionStrategyTest {
         PriorityPathQueueDispatchingStrategy priorityPathDistributionStrategy = new PriorityPathQueueDispatchingStrategy(new String[]{"/content", "/apps"});
 
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
-        DistributionPackageInfo packageInfo = new DistributionPackageInfo();
-        packageInfo.setPaths(new String[]{"/etc"});
+        DistributionPackageInfo packageInfo = new DistributionPackageInfo("type");
+        packageInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, new String[]{"/etc"});
         when(distributionPackage.getInfo()).thenReturn(packageInfo);
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
         DistributionQueue queue = mock(DistributionQueue.class);
@@ -155,8 +155,8 @@ public class PriorityPathQueueDistributionStrategyTest {
         PriorityPathQueueDispatchingStrategy priorityPathDistributionStrategy = new PriorityPathQueueDispatchingStrategy(new String[]{"/content", "/apps"});
 
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
-        DistributionPackageInfo packageInfo = new DistributionPackageInfo();
-        packageInfo.setPaths(new String[]{"/apps"});
+        DistributionPackageInfo packageInfo = new DistributionPackageInfo("type");
+        packageInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, new String[]{"/apps"});
         when(distributionPackage.getInfo()).thenReturn(packageInfo);
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
         DistributionQueue queue = mock(DistributionQueue.class);

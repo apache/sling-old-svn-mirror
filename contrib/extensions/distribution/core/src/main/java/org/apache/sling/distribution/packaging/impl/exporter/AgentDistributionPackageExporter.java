@@ -29,6 +29,7 @@ import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExportException;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
@@ -77,13 +78,14 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
             log.debug("getting packages from queue {}", queueName);
 
             DistributionQueue queue = agent.getQueue(queueName);
-            DistributionQueueItem info = queue.getHead();
+            DistributionQueueItem queueItem = queue.getHead();
             DistributionPackage distributionPackage;
-            if (info != null) {
+            if (queueItem != null) {
+                DistributionPackageInfo info = DistributionPackageUtils.fromQueueItem(queueItem);
                 DistributionPackageBuilder packageBuilder = packageBuilderProvider.getPackageBuilder(info.getType());
 
                 if (packageBuilder != null) {
-                    distributionPackage = packageBuilder.getPackage(resourceResolver, info.getId());
+                    distributionPackage = packageBuilder.getPackage(resourceResolver, queueItem.getId());
                     log.info("item {} fetched from the queue", info);
                     if (distributionPackage != null) {
                         result.add(new AgentDistributionPackage(distributionPackage, queue));
@@ -109,13 +111,16 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
             log.debug("getting package from queue {}", queueName);
 
             DistributionQueue queue = agent.getQueue(queueName);
-            DistributionQueueItem info = queue.getItem(distributionPackageId);
+            DistributionQueueItem queueItem = queue.getHead();
             DistributionPackage distributionPackage;
-            if (info != null) {
+
+            if (queueItem != null) {
+                DistributionPackageInfo info = DistributionPackageUtils.fromQueueItem(queueItem);
+
                 DistributionPackageBuilder packageBuilder = packageBuilderProvider.getPackageBuilder(info.getType());
 
                 if (packageBuilder != null) {
-                    distributionPackage = packageBuilder.getPackage(resourceResolver, info.getId());
+                    distributionPackage = packageBuilder.getPackage(resourceResolver, queueItem.getId());
                     log.info("item {} fetched from the queue", info);
                     if (distributionPackage != null) {
                         return new AgentDistributionPackage(distributionPackage, queue);

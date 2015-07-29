@@ -23,6 +23,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
@@ -46,9 +48,10 @@ public class PriorityPathQueueDispatchingStrategy implements DistributionQueueDi
 
     }
 
-    private DistributionQueue getQueue(DistributionQueueItem distributionPackage, DistributionQueueProvider queueProvider)
+    private DistributionQueue getQueue(DistributionQueueItem queueItem, DistributionQueueProvider queueProvider)
             throws DistributionQueueException {
-        String[] paths = distributionPackage.getPackageInfo().getPaths();
+        DistributionPackageInfo packageInfo = DistributionPackageUtils.fromQueueItem(queueItem);
+        String[] paths = packageInfo.getPaths();
 
         String pp = null;
 
@@ -96,9 +99,7 @@ public class PriorityPathQueueDispatchingStrategy implements DistributionQueueDi
     }
 
     private DistributionQueueItem getItem(DistributionPackage distributionPackage) {
-        DistributionQueueItem distributionQueueItem = new DistributionQueueItem(distributionPackage.getId(),
-                distributionPackage.getType(),
-                distributionPackage.getInfo());
+        DistributionQueueItem distributionQueueItem = DistributionPackageUtils.toQueueItem(distributionPackage);
 
         return distributionQueueItem;
     }

@@ -29,6 +29,7 @@ import javax.jcr.Session;
 import org.apache.jackrabbit.vault.packaging.JcrPackage;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.serialization.impl.AbstractDistributionPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,13 +39,11 @@ import org.slf4j.LoggerFactory;
 public class JcrVaultDistributionPackage extends AbstractDistributionPackage implements DistributionPackage {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-
-    private final String type;
     private final JcrPackage jcrPackage;
     private final Session session;
 
     public JcrVaultDistributionPackage(String type, JcrPackage jcrPackage, Session session) {
-        this.type = type;
+        super(getIdFromPackage(jcrPackage), type);
         this.jcrPackage = jcrPackage;
         this.session = session;
         String[] paths = new String[0];
@@ -53,27 +52,20 @@ public class JcrVaultDistributionPackage extends AbstractDistributionPackage imp
         } catch (RepositoryException e) {
             log.error("cannot read paths", e);
         }
-        this.getInfo().setPaths(paths);
-        this.getInfo().setRequestType(DistributionRequestType.ADD);
+
+        this.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, paths);
+        this.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, DistributionRequestType.ADD);
 
     }
 
-    @Nonnull
-    public String getId() {
+    public static String getIdFromPackage(JcrPackage jcrPackage) {
         try {
             return jcrPackage.getPackage().getId().getName();
         } catch (RepositoryException e) {
-            log.error("Cannot obtain package id", e);
         } catch (IOException e) {
-            log.error("Cannot obtain package id", e);
         }
 
         return null;
-    }
-
-    @Nonnull
-    public String getType() {
-        return type;
     }
 
     @Nonnull

@@ -138,9 +138,9 @@ public class FileVaultDistributionPackageBuilderTest {
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         when(distributionPackage.getId()).thenReturn(tempFile.getAbsolutePath());
         when(distributionPackage.getType()).thenReturn("filevlt");
-        DistributionPackageInfo info = new DistributionPackageInfo();
-        info.setRequestType(DistributionRequestType.ADD);
-        info.setPaths(new String[]{"/something"});
+        DistributionPackageInfo info = new DistributionPackageInfo("filevlt");
+        info.put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, DistributionRequestType.ADD);
+        info.put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, new String[]{"/something"});
         when(distributionPackage.getInfo()).thenReturn(info);
 
         boolean success = fileVaultdistributionPackageBuilder.installPackage(resourceResolver, distributionPackage);
@@ -169,9 +169,9 @@ public class FileVaultDistributionPackageBuilderTest {
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         when(distributionPackage.getId()).thenReturn(tempFile.getAbsolutePath());
         when(distributionPackage.getType()).thenReturn("filevlt");
-        DistributionPackageInfo info = new DistributionPackageInfo();
-        info.setRequestType(DistributionRequestType.ADD);
-        info.setPaths(new String[]{"/something"});
+        DistributionPackageInfo info = new DistributionPackageInfo("filevlt");
+        info.put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, DistributionRequestType.ADD);
+        info.put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, new String[]{"/something"});
         when(distributionPackage.getInfo()).thenReturn(info);
 
         boolean success = fileVaultdistributionPackageBuilder.installPackage(resourceResolver, distributionPackage);

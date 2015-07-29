@@ -59,11 +59,11 @@ public class JobHandlingDistributionQueueTest {
         when(jobManager.findJobs(JobManager.QueryType.ALL, topic, -1)).thenReturn(Collections.<Job>emptySet());
         when(builder.properties(any(Map.class))).thenReturn(builder);
         DistributionQueue queue = new JobHandlingDistributionQueue("aname", topic, jobManager, true);
-        DistributionQueueItem distributionQueueItem = mock(DistributionQueueItem.class);
-        DistributionPackageInfo packageInfo = new DistributionPackageInfo();
-        packageInfo.setPaths(new String[]{"/foo"});
-        packageInfo.setRequestType(DistributionRequestType.ADD);
-        when(distributionQueueItem.getPackageInfo()).thenReturn(packageInfo);
+        DistributionPackageInfo packageInfo = new DistributionPackageInfo("type");
+        packageInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, new String[]{"/foo"});
+        packageInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, DistributionRequestType.ADD);
+
+        DistributionQueueItem distributionQueueItem = new DistributionQueueItem("an-id", packageInfo);
         assertTrue(queue.add(distributionQueueItem));
     }
 
@@ -81,11 +81,10 @@ public class JobHandlingDistributionQueueTest {
         when(jobManager.findJobs(JobManager.QueryType.ALL, topic, -1)).thenReturn(Collections.<Job>emptySet());
         when(builder.properties(any(Map.class))).thenReturn(builder);
         DistributionQueue queue = new JobHandlingDistributionQueue("aname", topic, jobManager, true);
-        DistributionQueueItem distributionQueueItem = mock(DistributionQueueItem.class);
-        DistributionPackageInfo packageInfo = new DistributionPackageInfo();
-        packageInfo.setPaths(new String[]{"/foo"});
-        packageInfo.setRequestType(DistributionRequestType.ADD);
-        when(distributionQueueItem.getPackageInfo()).thenReturn(packageInfo);
+        DistributionPackageInfo packageInfo = new DistributionPackageInfo("type");
+        packageInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, new String[]{"/foo"});
+        packageInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, DistributionRequestType.ADD);
+        DistributionQueueItem distributionQueueItem = new DistributionQueueItem("an-id", packageInfo);
         assertTrue(queue.add(distributionQueueItem));
         DistributionQueueItemStatus status = queue.getStatus(distributionQueueItem);
         assertNotNull(status);

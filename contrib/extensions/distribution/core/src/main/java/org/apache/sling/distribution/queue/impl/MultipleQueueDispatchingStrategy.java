@@ -95,9 +95,7 @@ public class MultipleQueueDispatchingStrategy implements DistributionQueueDispat
 
 
     private DistributionQueueItem getItem(DistributionPackage distributionPackage) {
-        DistributionQueueItem distributionQueueItem = new DistributionQueueItem(distributionPackage.getId(),
-                distributionPackage.getType(),
-                distributionPackage.getInfo());
+        DistributionQueueItem distributionQueueItem = DistributionPackageUtils.toQueueItem(distributionPackage);
 
         return distributionQueueItem;
     }

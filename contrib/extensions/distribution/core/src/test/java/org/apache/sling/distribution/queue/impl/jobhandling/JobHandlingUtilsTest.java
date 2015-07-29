@@ -36,24 +36,20 @@ import static org.mockito.Mockito.when;
 public class JobHandlingUtilsTest {
     @Test
     public void testFullPropertiesFromPackageCreation() throws Exception {
-        DistributionQueueItem distributionQueueItem = mock(DistributionQueueItem.class);
-        DistributionPackageInfo info = new DistributionPackageInfo();
-        info.setRequestType(DistributionRequestType.ADD);
-        info.setPaths(new String[]{"/content", "/apps"});
-        when(distributionQueueItem.getPackageInfo()).thenReturn(info);
-        when(distributionQueueItem.getId()).thenReturn("an-id");
-        when(distributionQueueItem.getType()).thenReturn("vlt");
-        DistributionPackageInfo packageInfo = new DistributionPackageInfo();
-        packageInfo.setPaths(new String[]{"/foo"});
-        packageInfo.setRequestType(DistributionRequestType.ADD);
-        when(distributionQueueItem.getPackageInfo()).thenReturn(packageInfo);
-        Map<String, Object> fullPropertiesFromPackage = JobHandlingUtils.createFullProperties(distributionQueueItem);
+        DistributionPackageInfo packageInfo = new DistributionPackageInfo("vlt");
+        packageInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, new String[]{"/foo"});
+        packageInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, DistributionRequestType.ADD);
+        packageInfo.put(DistributionPackageInfo.PROPERTY_PACKAGE_TYPE, "vlt");
+
+        DistributionQueueItem queueItem = new DistributionQueueItem("an-id", packageInfo);
+
+        Map<String, Object> fullPropertiesFromPackage = JobHandlingUtils.createFullProperties(queueItem);
         assertNotNull(fullPropertiesFromPackage);
         assertEquals(4, fullPropertiesFromPackage.size());
-        assertNotNull(fullPropertiesFromPackage.get("distribution.package.paths"));
-        assertNotNull(fullPropertiesFromPackage.get("distribution.package.id"));
+        assertNotNull(fullPropertiesFromPackage.get("distribution.request.paths"));
+        assertNotNull(fullPropertiesFromPackage.get("distribution.item.id"));
         assertNotNull(fullPropertiesFromPackage.get("distribution.package.type"));
-        assertNotNull(fullPropertiesFromPackage.get("distribution.package.request.type"));
+        assertNotNull(fullPropertiesFromPackage.get("distribution.request.type"));
     }
 
     @Test
@@ -63,6 +59,6 @@ public class JobHandlingUtilsTest {
         Map<String, Object> idPropertiesFromPackage = JobHandlingUtils.createIdProperties(distributionPackage.getId());
         assertNotNull(idPropertiesFromPackage);
         assertEquals(1, idPropertiesFromPackage.size());
-        assertNotNull(idPropertiesFromPackage.get("distribution.package.id"));
+        assertNotNull(idPropertiesFromPackage.get("distribution.item.id"));
     }
 }
