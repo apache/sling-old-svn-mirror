@@ -29,7 +29,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.jackrabbit.vault.util.Text;
+import org.apache.jackrabbit.util.Text;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
@@ -205,6 +205,7 @@ public class DistributionUtils {
         if (!slingClient.exists(parentPath)) {
             createNode(slingClient, parentPath);
         }
+
         slingClient.createNode(nodePath, "jcr:primaryType", "nt:unstructured", "propName", "propValue");
         return nodePath;
     }
@@ -221,7 +222,6 @@ public class DistributionUtils {
 
         slingClient.createNode(path, "jcr:primaryType", "nt:unstructured");
     }
-
 
     public static String agentRootUrl() {
         return DISTRIBUTION_ROOT_PATH + "/services/agents";
