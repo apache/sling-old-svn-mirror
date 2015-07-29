@@ -85,6 +85,13 @@ public class SlingLogPanel extends HttpServlet {
      * Request param name to control number of lines to include in the log
      */
     private static final String PARAM_NUM_OF_LINES = "tail";
+    private static final String PARAM_APPENDER_NAME = "name";
+
+    /**
+     * Let the path end with extension. In that case WebConsole logic would by pass this request's
+     * response completely
+     */
+    private static final String PATH_TAILER = "tailer.txt";
 
     private final CachingDateFormatter SDF = new CachingDateFormatter("yyyy-MM-dd HH:mm:ss");
 
@@ -122,13 +129,15 @@ public class SlingLogPanel extends HttpServlet {
         final PrintWriter pw = resp.getWriter();
 
         final String consoleAppRoot = (String) req.getAttribute("felix.webconsole.appRoot");
-        final String root = (String) req.getAttribute("felix.webconsole.pluginRoot");
 
         final LoggerStateContext ctx = logbackManager.determineLoggerState();
-        if (root != null) {
-            String pathInfo = req.getRequestURI().substring(root.length());
-            if (pathInfo.length() > 0){
-                String appenderName = URLDecoder.decode(pathInfo.substring(1), "utf-8");
+        if (req.getPathInfo() != null) {
+            if (req.getPathInfo().endsWith(PATH_TAILER)){
+                String appenderName = req.getParameter(PARAM_APPENDER_NAME);
+                if (appenderName == null){
+                    pw.printf("Provide appender name via [%s] request parameter%n", PARAM_APPENDER_NAME);
+                    return;
+                }
                 renderAppenderContent(ctx, pw, appenderName, getNumOfLines(req));
                 return;
             }
@@ -636,11 +645,13 @@ public class SlingLogPanel extends HttpServlet {
     private String getLinkedName(FileAppender<ILoggingEvent> appender) throws UnsupportedEncodingException {
         String fileName = appender.getFile();
         String name = appender.getName();
-        return String.format("File : [<a href=\"%s/%s?%s=%d\">%s</a>] %s",
+        return String.format("File : [<a href=\"%s/%s?%s=%d&%s=%s\">%s</a>] %s",
                 APP_ROOT,
-                URLEncoder.encode(name, "UTF-8"),
+                PATH_TAILER,
                 PARAM_NUM_OF_LINES,
                 logbackManager.getLogConfigManager().getNumOfLines(),
+                PARAM_APPENDER_NAME,
+                URLEncoder.encode(name, "UTF-8"),
                 XmlUtil.escapeXml(name),
                 XmlUtil.escapeXml(fileName));
 
