@@ -22,7 +22,7 @@ import org.apache.sling.commons.json.io.JSONWriter;
 
 /**
  * JSON utilities
- * <p/>
+ * <p>
  * Support for handling xss protected values with JSON objects and JSON writers.
  */
 public final class JSONUtil {

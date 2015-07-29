@@ -30,12 +30,12 @@ import aQute.bnd.annotation.ProviderType;
 /**
  * A service providing validators and encoders for XSS protection during the composition of HTML
  * pages.
- * <p/>
+ * <p>
  * Note: in general, validators are safer than encoders.  Encoding only ensures that content within
  * the encoded context cannot break out of said context.  It requires that there be a context (for
  * instance, a string context in Javascript), and that damage cannot be done from within the context
  * (for instance, a javascript: URL within a href attribute.
- * <p/>
+ * <p>
  * When in doubt, use a validator.
  */
 @ProviderType
@@ -122,8 +122,8 @@ public interface XSSAPI {
     String getValidCSSColor(@Nullable String color, @Nullable String defaultColor);
 
     /**
-     * Validate multi-line comment to be used inside a <script>...</script> or <style>...</style> block. Multi-line
-     * comment end block is disallowed
+     * Validate multi-line comment to be used inside a &lt;script&gt;...&lt;/script&gt; or &lt;style&gt;...&lt;/style&gt; block. Multi-line
+     * comment end block is disallowed.
      *
      * @param comment           the comment to be used
      * @param defaultComment    a default value to use if the comment is {@code null} or not valid.

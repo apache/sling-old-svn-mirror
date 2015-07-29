@@ -19,7 +19,7 @@ package org.apache.sling.xss;
 
 /**
  * This enumeration defines the context for executing XSS protection.
- * <p/>
+ * <p>
  * The specified rules refer to
  * http://www.owasp.org/index.php/XSS_%28Cross_Site_Scripting%29_Prevention_Cheat_Sheet
  */

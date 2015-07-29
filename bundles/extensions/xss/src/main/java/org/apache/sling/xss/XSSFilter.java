@@ -42,7 +42,7 @@ public interface XSSFilter {
 
     /**
      * Prevents the given source string from containing XSS stuff.
-     * <p/>
+     * <p>
      * The default protection context is used for checking.
      *
      * @param src source string
@@ -62,7 +62,7 @@ public interface XSSFilter {
 
     /**
      * Checks if the given URL is valid to be used for the <code>href</code> attribute in a <code>a</code> tag.
-     * <p/>
+     * <p>
      * The default protection context is used for checking.
      *
      * @param url the URL that should be validated
