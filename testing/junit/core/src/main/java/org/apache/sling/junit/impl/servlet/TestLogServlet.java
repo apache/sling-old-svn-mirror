@@ -99,6 +99,8 @@ public class TestLogServlet extends HttpServlet {
 
     private volatile Description currentTest;
 
+    private final Object appenderLock = new Object();
+
     @Activate
     protected void activate(BundleContext ctx, Map<String, ?> config) throws Exception {
         registerServlet(config);
@@ -154,26 +156,32 @@ public class TestLogServlet extends HttpServlet {
     }
 
     private void resetAppender() {
-        synchronized (appender) {
-            appender.reset();
+        synchronized (appenderLock) {
+            if (appender.isStarted()) {
+                appender.reset();
+            }
         }
     }
 
     private void registerAppender(Map<String, ?> config) {
-        int size = PropertiesUtil.toInteger(config.get(LOG_BUFFER_SIZE), DEFAULT_SIZE);
-        appender = new CyclicBufferAppender<ILoggingEvent>();
-        appender.setMaxSize(size);
-        appender.setContext(getContext());
-        appender.setName("TestLogCollector");
-        appender.start();
-        rootLogger().addAppender(appender);
+        synchronized (appenderLock) {
+            int size = PropertiesUtil.toInteger(config.get(LOG_BUFFER_SIZE), DEFAULT_SIZE);
+            appender = new CyclicBufferAppender<ILoggingEvent>();
+            appender.setMaxSize(size);
+            appender.setContext(getContext());
+            appender.setName("TestLogCollector");
+            appender.start();
+            rootLogger().addAppender(appender);
+        }
     }
 
     private void deregisterAppender() {
         if (appender != null) {
-            rootLogger().detachAppender(appender);
-            appender.stop();
-            appender = null;
+            synchronized (appenderLock) {
+                rootLogger().detachAppender(appender);
+                appender.stop();
+                appender = null;
+            }
         }
     }
 
