@@ -67,6 +67,13 @@ public class ContentDispositionFilter implements Filter {
                     "Invalid entries are logged and ignored."
                     , unbounded = PropertyUnbounded.ARRAY, value = { "" })
     private static final String PROP_CONTENT_DISPOSTION_PATHS = "sling.content.disposition.paths";
+    
+    private static final boolean DEFAULT_ENABLE_CONTENT_DISPOSTION_ALL_PATHS = false;
+    @Property(boolValue = DEFAULT_ENABLE_CONTENT_DISPOSTION_ALL_PATHS ,
+              label = "Enable Content Disposition for all paths",
+              description ="This flag controls whether to enable" +
+                      " Content Disposition for all paths.")
+    private static final String PROP_ENABLE_CONTENT_DISPOSTION_ALL_PATHS = "sling.content.disposition.all.paths";
    
     /**
      * Set of paths
@@ -79,6 +86,8 @@ public class ContentDispositionFilter implements Filter {
     private String[] contentDispositionPathsPfx;
 
     private Map<String, Set<String>> contentTypesMapping;
+    
+    private boolean enableContentDispositionAllPaths;
     
     @Activate
     private void activate(final ComponentContext ctx) {
@@ -131,8 +140,10 @@ public class ContentDispositionFilter implements Filter {
         contentDispositionPathsPfx = pfxs.toArray(new String[pfxs.size()]);
         contentTypesMapping = contentTypesMap.isEmpty()?Collections.<String, Set<String>>emptyMap(): contentTypesMap;
         
-        logger.info("Initialized. content disposition paths: {}, content disposition paths-pfx {}", new Object[]{
-                contentDispositionPaths, contentDispositionPathsPfx}
+        enableContentDispositionAllPaths =  PropertiesUtil.toBoolean(props.get(PROP_ENABLE_CONTENT_DISPOSTION_ALL_PATHS),DEFAULT_ENABLE_CONTENT_DISPOSTION_ALL_PATHS);
+        
+        logger.info("Initialized. content disposition paths: {}, content disposition paths-pfx {}. Enable Content Disposition for all paths is set to {}", new Object[]{
+                contentDispositionPaths, contentDispositionPathsPfx, enableContentDispositionAllPaths}
         );
     }
     
@@ -203,33 +214,40 @@ public class ContentDispositionFilter implements Filter {
             }
             request.setAttribute(ATTRIBUTE_NAME, type);
             Resource resource = request.getResource();
-            String resourcePath = resource.getPath();
             
-            if (contentDispositionPaths.contains(resourcePath)) {
+            if (enableContentDispositionAllPaths) {
+                setContentDisposition(resource);
+            } else {
+                String resourcePath = resource.getPath();
 
-                if (contentTypesMapping.containsKey(resourcePath)) {
-                    Set <String> exceptions = contentTypesMapping.get(resourcePath);
-                    if (!exceptions.contains(type)) {
-                        setContentDisposition(resource);
-                    }
-                } else {
-                    setContentDisposition(resource);
-                }
-            }
-            
-            for (String path : contentDispositionPathsPfx) {
-                if (resourcePath.startsWith(path)) {
-                    if (contentTypesMapping.containsKey(path)) {
-                        Set <String> exceptions = contentTypesMapping.get(path);
+                boolean contentDispositionAdded = false;
+                if (contentDispositionPaths.contains(resourcePath)) {
+
+                    if (contentTypesMapping.containsKey(resourcePath)) {
+                        Set <String> exceptions = contentTypesMapping.get(resourcePath);
                         if (!exceptions.contains(type)) {
-                            setContentDisposition(resource);
-                            break;
+                            contentDispositionAdded = setContentDisposition(resource);
                         }
                     } else {
-                        setContentDisposition(resource);
-                        break;
+                        contentDispositionAdded = setContentDisposition(resource);
                     }
+                }            
+                if (!contentDispositionAdded) {
+                    for (String path : contentDispositionPathsPfx) {
+                        if (resourcePath.startsWith(path)) {
+                            if (contentTypesMapping.containsKey(path)) {
+                                Set <String> exceptions = contentTypesMapping.get(path);
+                                if (!exceptions.contains(type)) {
+                                    setContentDisposition(resource);
+                                    break;
+                                }
+                            } else {
+                                setContentDisposition(resource);
+                                break;
+                            }
 
+                        }
+                    }
                 }
             }
             super.setContentType(type);
@@ -237,10 +255,13 @@ public class ContentDispositionFilter implements Filter {
         
       //---------- PRIVATE METHODS ---------
         
-        private void setContentDisposition(Resource resource) {
+        private boolean setContentDisposition(Resource resource) {
+            boolean contentDispositionAdded = false;
             if (!this.containsHeader(CONTENT_DISPOSTION) && this.isJcrData(resource)) {
                 this.addHeader(CONTENT_DISPOSTION, CONTENT_DISPOSTION_ATTACHMENT);
+                contentDispositionAdded = true;
             }
+            return contentDispositionAdded;
         }
         
         private boolean isJcrData(Resource resource){
