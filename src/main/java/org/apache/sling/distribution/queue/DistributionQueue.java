@@ -47,9 +47,9 @@ public interface DistributionQueue {
     /**
      * add a distribution item to this queue
      *
-     * @param item a distribution item representing a {@link org.apache.sling.distribution.packaging.DistributionPackage}
+     * @param item a distribution item, typically representing a {@link org.apache.sling.distribution.packaging.DistributionPackage}
      *             to distribute
-     * @return {@code true} if the distribution item was added correctly to the queue,
+     * @return {@code true} if the item was added correctly to the queue,
      * {@code false} otherwise
      */
     boolean add(@Nonnull DistributionQueueItem item);
@@ -87,22 +87,22 @@ public interface DistributionQueue {
     /**
      * gets an item from the queue by specifying its id
      *
-     * @param packageId the id of the package represented by the item
+     * @param itemId the id of the item
      * @return the item, or {@code null} if the item with the given id
      * doesn't exist
      */
     @CheckForNull
-    DistributionQueueItem getItem(@Nonnull String packageId);
+    DistributionQueueItem getItem(@Nonnull String itemId);
 
     /**
      * remove an item from the queue by specifying its id
      *
-     * @param packageId the id of the package represented by the item
+     * @param itemId the id the item
      * @return the removed item, or {@code null} if the item with the given id
      * doesn't exist
      */
     @CheckForNull
-    DistributionQueueItem remove(@Nonnull String packageId);
+    DistributionQueueItem remove(@Nonnull String itemId);
 
 
     /**

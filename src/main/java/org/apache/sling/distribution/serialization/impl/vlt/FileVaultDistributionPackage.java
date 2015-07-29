@@ -27,6 +27,7 @@ import java.io.InputStream;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.serialization.impl.AbstractDistributionPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,25 +39,15 @@ public class FileVaultDistributionPackage extends AbstractDistributionPackage im
 
     Logger log = LoggerFactory.getLogger(FileVaultDistributionPackage.class);
 
-    private static final long serialVersionUID = 1L;
-
-    private final String id;
-
-    private final String type;
     private final VaultPackage pkg;
 
     public FileVaultDistributionPackage(String type, VaultPackage pkg) {
-        this.type = type;
+        super(pkg.getFile().getAbsolutePath(), type);
         this.pkg = pkg;
         String[] paths = VltUtils.getPaths(pkg.getMetaInf());
-        this.getInfo().setPaths(paths);
-        this.getInfo().setRequestType(DistributionRequestType.ADD);
-        this.id = pkg.getFile().getAbsolutePath();
-    }
 
-    @Nonnull
-    public String getId() {
-        return id;
+        this.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, paths);
+        this.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, DistributionRequestType.ADD);
     }
 
     @Nonnull
@@ -64,10 +55,6 @@ public class FileVaultDistributionPackage extends AbstractDistributionPackage im
         return new FileInputStream(pkg.getFile());
     }
 
-    @Nonnull
-    public String getType() {
-        return type;
-    }
 
     public void close() {
         pkg.close();
@@ -84,7 +71,7 @@ public class FileVaultDistributionPackage extends AbstractDistributionPackage im
     @Override
     public String toString() {
         return "FileVaultDistributionPackage{" +
-                "id='" + id + '\'' +
+                "id='" + getId() + '\'' +
                 ", pkg=" + pkg +
                 '}';
     }

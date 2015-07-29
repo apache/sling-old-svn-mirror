@@ -26,6 +26,8 @@ import org.apache.sling.distribution.component.impl.DistributionComponent;
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.component.impl.DistributionComponentProvider;
 import org.apache.sling.distribution.log.DistributionLog;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
@@ -160,14 +162,15 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
                 String itemId = queueInfo.getChildResourceName();
 
                 DistributionQueueItem item = queue.getItem(itemId);
+                DistributionPackageInfo packageInfo = DistributionPackageUtils.fromQueueItem(item);
 
                 if (item != null) {
 
                     result.put(SLING_RESOURCE_TYPE, DistributionResourceTypes.AGENT_QUEUE_ITEM_RESOURCE_TYPE);
                     result.put("id", item.getId());
-                    result.put("paths", item.getPackageInfo().getPaths());
-                    result.put("action", item.getPackageInfo().getRequestType());
-                    result.put("type", item.getType());
+                    result.put("paths", packageInfo.getPaths());
+                    result.put("action", packageInfo.getRequestType());
+                    result.put("type", packageInfo.getType());
 
                     DistributionQueueItemStatus status = queue.getStatus(item);
                     result.put("attempts", status.getAttempts());

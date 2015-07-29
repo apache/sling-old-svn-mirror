@@ -27,11 +27,27 @@ import org.apache.sling.distribution.packaging.DistributionPackageInfo;
  * abstract implementation of a {@link org.apache.sling.distribution.packaging.DistributionPackage}
  */
 public abstract class AbstractDistributionPackage implements DistributionPackage {
-    private final DistributionPackageInfo info = new DistributionPackageInfo();
+    private final DistributionPackageInfo info;
+    private final String id;
+
+    protected AbstractDistributionPackage(String id, String type) {
+        this.id = id;
+        this.info = new DistributionPackageInfo(type);
+    }
 
     @Nonnull
     public DistributionPackageInfo getInfo() {
         return info;
+    }
+
+    @Nonnull
+    public String getId() {
+        return id;
+    }
+
+    @Nonnull
+    public String getType() {
+        return info.getType();
     }
 
 }

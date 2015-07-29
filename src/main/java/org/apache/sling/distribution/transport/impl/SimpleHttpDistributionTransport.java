@@ -43,6 +43,7 @@ import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.servlet.ServletJsonUtils;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
@@ -158,7 +159,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
 
                 final DistributionPackage responsePackage = packageBuilder.readPackage(resourceResolver, inputStream);
                 if (responsePackage != null) {
-                    responsePackage.getInfo().setOrigin(distributionURI);
+                    responsePackage.getInfo().put(DistributionPackageInfo.PROPERTY_ORIGIN_URI, distributionURI);
                     log.debug("pulled package no {} with info {}", pulls, responsePackage.getInfo());
 
                     result.add(responsePackage);

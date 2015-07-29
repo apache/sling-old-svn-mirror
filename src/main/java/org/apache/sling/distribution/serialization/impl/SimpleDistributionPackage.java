@@ -28,6 +28,7 @@ import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,24 +43,18 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
     private final static String DELIM = "|";
     private final static String PATH_DELIM = ",";
 
-
-    private final String type;
-
     private final String[] paths;
-
-    private final String id;
 
     private final DistributionRequestType requestType;
 
 
     public SimpleDistributionPackage(DistributionRequest request, String type) {
-        this.type = type;
+        super(toIdString(request, type), type);
         this.paths = request.getPaths();
         this.requestType = request.getRequestType();
-        this.id = toIdString(request, type);
 
-        this.getInfo().setPaths(paths);
-        this.getInfo().setRequestType(requestType);
+        this.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, paths);
+        this.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, requestType);
     }
 
     public static String toIdString(DistributionRequest request, String type) {
@@ -120,19 +115,11 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
 
 
     @Nonnull
-    public String getType() {
-        return type;
-    }
-
-    @Nonnull
     public InputStream createInputStream() throws IOException {
-        return IOUtils.toInputStream(id, "UTF-8");
+        return IOUtils.toInputStream(getId(), "UTF-8");
     }
 
-    @Nonnull
-    public String getId() {
-        return id;
-    }
+
 
 
     public void close() {
@@ -145,7 +132,7 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
 
     @Override
     public String toString() {
-        return id;
+        return getId();
     }
 
     public static SimpleDistributionPackage fromStream(InputStream stream, String type)  {

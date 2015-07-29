@@ -21,7 +21,9 @@ package org.apache.sling.distribution.packaging.impl;
 
 
 import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.packaging.SharedDistributionPackage;
+import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,5 +63,15 @@ public class DistributionPackageUtils {
             log.error("error deleting package", t);
         }
     }
+
+    public static DistributionQueueItem toQueueItem(DistributionPackage distributionPackage) {
+        return new DistributionQueueItem(distributionPackage.getId(), distributionPackage.getInfo());
+    }
+
+
+    public static DistributionPackageInfo fromQueueItem(DistributionQueueItem queueItem) {
+        return new DistributionPackageInfo(queueItem);
+    }
+
 
 }

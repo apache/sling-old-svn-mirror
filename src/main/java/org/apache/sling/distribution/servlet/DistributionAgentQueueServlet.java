@@ -28,6 +28,7 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
@@ -97,7 +98,8 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
     protected void deleteItem(ResourceResolver resourceResolver, DistributionQueue queue, DistributionQueueItem item) {
         String id = item.getId();
         queue.remove(id);
-        String type = item.getType();
+        DistributionPackageInfo info = DistributionPackageUtils.fromQueueItem(item);
+        String type = info.getType();
 
         DistributionPackageBuilder packageBuilder = packageBuilderProvider.getPackageBuilder(type);
 
