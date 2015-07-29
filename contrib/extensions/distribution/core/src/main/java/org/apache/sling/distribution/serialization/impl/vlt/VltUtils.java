@@ -39,6 +39,7 @@ import org.apache.jackrabbit.vault.packaging.PackageManager;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.component.impl.SettingsUtils;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -48,19 +49,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.NavigableMap;
 import java.util.Properties;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 /**
  * Utility class for creating vlt filters and import/export options
  */
 public class VltUtils {
 
-    public static WorkspaceFilter createFilter(DistributionRequest distributionRequest) {
+    public static WorkspaceFilter createFilter(DistributionRequest distributionRequest, NavigableMap<String, PathFilterSet> filters) {
         DefaultWorkspaceFilter filter = new DefaultWorkspaceFilter();
 
         for (String path : distributionRequest.getPaths()) {
             boolean deep = distributionRequest.isDeep(path);
-            PathFilterSet filterSet = createFilterSet(path, deep);
+            PathFilterSet filterSet = createFilterSet(path, deep, filters);
             filter.add(filterSet);
         }
 
@@ -85,11 +89,20 @@ public class VltUtils {
         return paths;
     }
 
-    private static PathFilterSet createFilterSet(String path, boolean deep) {
+    private static PathFilterSet createFilterSet(String path, boolean deep, NavigableMap<String, PathFilterSet> filters) {
         PathFilterSet filterSet = new PathFilterSet(path);
 
         if (!deep) {
             filterSet.addInclude(new DefaultPathFilter(path));
+        } else {
+
+            // add the most specific filter rules
+            for (String key : filters.descendingKeySet()) {
+                if (path.startsWith(key)) {
+                    filterSet.addAll(filters.get(key));
+                    break;
+                }
+            }
         }
         return filterSet;
     }
@@ -258,5 +271,45 @@ public class VltUtils {
         }
 
         return path.substring(0, idx);
+    }
+
+
+    public static TreeMap<String, PathFilterSet> parseFilters(String[] filters) {
+
+        TreeMap<String, PathFilterSet> result = new TreeMap<String, PathFilterSet>();
+
+        if (filters == null || filters.length == 0) {
+            return result;
+        }
+
+        for (String filter : filters) {
+            String[] filterParts = filter.split("\\|");
+            if (filterParts.length > 1) {
+                String path = SettingsUtils.removeEmptyEntry(filterParts[0]);
+                if (path == null) {
+                    continue;
+                }
+
+                PathFilterSet filterSet = new PathFilterSet();
+
+                for (int i=1; i < filterParts.length; i++) {
+                    String filterPart = SettingsUtils.removeEmptyEntry(filterParts[i]);
+                    if (filterPart == null) {
+                        continue;
+                    }
+
+                    if (filterPart.startsWith("+")) {
+                        filterSet.addInclude(new DefaultPathFilter(filterPart.substring(1)));
+                    } else if (filterPart.startsWith("-")) {
+                        filterSet.addExclude(new DefaultPathFilter(filterPart.substring(1)));
+                    }
+                }
+
+                result.put(path, filterSet);
+
+            }
+        }
+
+        return result;
     }
 }

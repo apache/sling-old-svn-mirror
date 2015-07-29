@@ -24,10 +24,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.vault.fs.api.ImportMode;
+import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.api.WorkspaceFilter;
 import org.apache.jackrabbit.vault.fs.io.AccessControlHandling;
 import org.apache.jackrabbit.vault.fs.io.ImportOptions;
@@ -66,17 +68,19 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
 
     private final String[] packageRoots;
     private final File tempDirectory;
+    private final TreeMap<String, PathFilterSet> filters;
 
-    public FileVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots, String tempFilesFolder) {
+
+    public FileVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots, String[] filterRules, String tempFilesFolder) {
         super(type);
         this.packaging = packaging;
         this.importMode = importMode;
         this.aclHandling = aclHandling;
         this.packageRoots = packageRoots;
 
+        this.tempDirectory = VltUtils.getTempFolder(tempFilesFolder);
+        this.filters = VltUtils.parseFilters(filterRules);
 
-
-        tempDirectory = VltUtils.getTempFolder(tempFilesFolder);
 
         log.info("using temp directory {}", tempDirectory == null ? tempDirectory : tempDirectory.getPath());
     }
@@ -92,7 +96,7 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
             String packageGroup = "sling/distribution";
             String packageName = getType() + "_" + System.currentTimeMillis() + "_" +  UUID.randomUUID();
 
-            WorkspaceFilter filter = VltUtils.createFilter(request);
+            WorkspaceFilter filter = VltUtils.createFilter(request, filters);
             ExportOptions opts = VltUtils.getExportOptions(filter, packageRoots, packageGroup, packageName, VERSION);
 
             log.debug("assembling package {}", packageGroup + '/' + packageName + "-" + VERSION);

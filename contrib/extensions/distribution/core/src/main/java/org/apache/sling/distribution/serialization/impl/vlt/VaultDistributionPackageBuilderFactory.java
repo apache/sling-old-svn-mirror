@@ -94,6 +94,12 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
     @Property(label = "Package Roots", description = "The package roots to be used for created packages. (this is useful for assembling packages with an user that cannot read above the package root)")
     public static final String PACKAGE_ROOTS = "package.roots";
 
+    /**
+     * Package filters
+     */
+    @Property(label = "Package Filters", description = "The package path filters. Filter format: path|+include|-exclude", cardinality = 100)
+    public static final String PACKAGE_FILTERS = "package.filters";
+
 
     /**
      * Temp file folder
@@ -122,6 +128,8 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
         String aclHandlingString = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(ACL_HANDLING), null));
 
         String[] packageRoots = SettingsUtils.removeEmptyEntries(PropertiesUtil.toStringArray(config.get(PACKAGE_ROOTS), null));
+        String[] packageFilters = SettingsUtils.removeEmptyEntries(PropertiesUtil.toStringArray(config.get(PACKAGE_FILTERS), null));
+
         String tempFsFolder =  SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(TEMP_FS_FOLDER), null));
         String tempJcrFolder = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(TEMP_JCR_FOLDER), null));
 
@@ -136,9 +144,9 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
         }
 
         if ("filevlt".equals(type)) {
-            packageBuilder = new ResourceSharedDistributionPackageBuilder(new FileVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, tempFsFolder));
+            packageBuilder = new ResourceSharedDistributionPackageBuilder(new FileVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, packageFilters, tempFsFolder));
         } else  {
-            packageBuilder = new ResourceSharedDistributionPackageBuilder(new JcrVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, tempFsFolder, tempJcrFolder));
+            packageBuilder = new ResourceSharedDistributionPackageBuilder(new JcrVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, packageFilters, tempFsFolder, tempJcrFolder));
         }
     }
 
