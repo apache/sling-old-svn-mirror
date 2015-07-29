@@ -18,7 +18,7 @@
  */
 package org.apache.sling.validation.model;
 
-import java.util.List;
+import java.util.Collection;
 
 import javax.annotation.Nonnull;
 
@@ -32,7 +32,7 @@ public interface ValidationModel {
      *
      * @return the properties list (never {@code null}, but might be empty list)
      */
-    @Nonnull List<ResourceProperty> getResourceProperties();
+    @Nonnull Collection<ResourceProperty> getResourceProperties();
 
     /**
      * Returns the type of resource this model validates.
@@ -55,6 +55,6 @@ public interface ValidationModel {
      *
      * @return the children list (can be empty if there are no children), never {@code null}
      */
-    @Nonnull List<ChildResource> getChildren();
+    @Nonnull Collection<ChildResource> getChildren();
 
 }

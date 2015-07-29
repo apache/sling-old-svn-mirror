@@ -39,11 +39,12 @@ public interface ValidationService {
      * @param validatedResourceType the type of {@code Resources} the model validates, should be either relative 
      *                              (i.e. not start with a "/") or starting with one of the resource resolver's search paths
      * @param resourcePath        the path of the validated resource, may be {@code null} or empty. Must match the applicablePath property of the model
+     * @param considerResourceSuperTypeModels if {@code true} will also consider the validation model of the resource super type (recursively), otherwise not.
      * @return a {@code ValidationModel} if one is found, {@code null} otherwise
      * @throws IllegalStateException in case an invalid validation model was found
-     * @throws IllegalArgumentException in case validatedResourceType was blank, {@code null} or absolute but outside of the search paths
+     * @throws IllegalArgumentException in case validatedResourceType was blank, {@code null} or absolute but outside of the search paths or some other error occurred while retrieving the models.
      */
-    @CheckForNull ValidationModel getValidationModel(@Nonnull String validatedResourceType, String resourcePath) throws IllegalStateException, IllegalArgumentException;
+    @CheckForNull ValidationModel getValidationModel(@Nonnull String validatedResourceType, String resourcePath, boolean considerResourceSuperTypeModels) throws IllegalStateException, IllegalArgumentException;
 
     /**
      * Tries to obtain a {@link ValidationModel} that is able to validate the given {@code resource}.
@@ -51,9 +52,9 @@ public interface ValidationService {
      * @param resource the resource for which to obtain a validation model
      * @return a {@code ValidationModel} if one is found, {@code null} otherwise
      * @throws IllegalStateException in case an invalid validation model was found
-     * @throws IllegalArgumentException in case resourceType being set on the given resource is blank, not set or absolute but outside of the search paths.
+     * @throws IllegalArgumentException in case resourceType being set on the given resource is blank, not set or absolute but outside of the search paths or some other error occurred while retrieving the models.
      */
-    @CheckForNull ValidationModel getValidationModel(@Nonnull Resource resource) throws IllegalStateException, IllegalArgumentException;
+    @CheckForNull ValidationModel getValidationModel(@Nonnull Resource resource, boolean considerResourceSuperTypeModels) throws IllegalStateException, IllegalArgumentException;
 
     /**
      * Validates a {@link Resource} using a specific {@link ValidationModel}. If the {@code model} describes a resource tree,
@@ -62,6 +63,7 @@ public interface ValidationService {
      *
      * @param resource the resource to validate
      * @param model    the model with which to perform the validation
+     * @param considerResourceSuperTypeModels if {@code true} will also consider the validation model of the resource super type (recursively), otherwise not.
      * @return a {@link ValidationResult} that provides the necessary information
      * @throws SlingValidationException if one validator was called with invalid arguments
      */
@@ -85,11 +87,12 @@ public interface ValidationService {
      * @param enforceValidation if {@code true} will throw an {@link IllegalArgumentException} in case a validation model could not be found for a (not-ignored) resource 
      * @param filter a {@link Predicate} on a resource which is evaluated to determine whether a given resource should be validated. May be {@code null} in which case all resources are validated. 
      * Children of ignored resources are still validated (if this predicate applies to them).
+     * @param considerResourceSuperTypeModels if {@code true} will also consider the validation model of the resource super type (recursively), otherwise not.
      * @return the aggregated {@link ValidationResult} over all child resource validations
      * @throws IllegalStateException in case an invalid validation model was found
      * @throws IllegalArgumentException in case resourceType is absolute but outside of the search paths or if no validation model could be found (and enforceValidation is {@code true}).
      * @throws SlingValidationException if one validator was called with invalid arguments
      */
-    @Nonnull ValidationResult validateResourceRecursively(@Nonnull Resource resource, boolean enforceValidation, Predicate filter) throws IllegalStateException, IllegalArgumentException, SlingValidationException;
+    @Nonnull ValidationResult validateResourceRecursively(@Nonnull Resource resource, boolean enforceValidation, Predicate filter, boolean considerResourceSuperTypeModels) throws IllegalStateException, IllegalArgumentException, SlingValidationException;
 
 }
