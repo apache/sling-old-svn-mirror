@@ -21,7 +21,6 @@ package org.apache.sling.validation.impl;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -373,7 +372,7 @@ public class ValidationServiceImplTest {
         validationService.modelRetriever = new ValidationModelRetriever() {
 
             @Override
-            public @CheckForNull ValidationModel getModel(@Nonnull String resourceType, String resourcePath) {
+            public @CheckForNull ValidationModel getModel(@Nonnull String resourceType, String resourcePath, boolean considerResourceSuperTypeModels) {
                 if (resourceType.equals("resourcetype1")) {
                     return vm1;
                 } else if (resourceType.equals("resourcetype2")) {
@@ -416,7 +415,7 @@ public class ValidationServiceImplTest {
             }
         };
         
-        ValidationResult vr = validationService.validateResourceRecursively(testResource, true, ignoreResourceType3Filter);
+        ValidationResult vr = validationService.validateResourceRecursively(testResource, true, ignoreResourceType3Filter, false);
         Assert.assertFalse("resource should have been considered invalid", vr.isValid());
         Assert.assertThat(vr.getFailureMessages(),
                 Matchers.hasEntry("field1", Arrays.asList("Missing required property.")));
@@ -430,7 +429,7 @@ public class ValidationServiceImplTest {
         // set model retriever which never retrieves anything
         validationService.modelRetriever = new ValidationModelRetriever() {
             @Override
-            public @CheckForNull ValidationModel getModel(@Nonnull String resourceType, String resourcePath) {
+            public @CheckForNull ValidationModel getModel(@Nonnull String resourceType, String resourcePath, boolean considerResourceSuperTypeModels) {
                 return null;
             }
         };
@@ -440,7 +439,7 @@ public class ValidationServiceImplTest {
         Resource testResource = ResourceUtil.getOrCreateResource(rr, "/content/validation/1/resource", "resourcetype1",
                 JcrConstants.NT_UNSTRUCTURED, true);
 
-        ValidationResult vr = validationService.validateResourceRecursively(testResource, true, null);
+        ValidationResult vr = validationService.validateResourceRecursively(testResource, true, null, false);
     }
 
     @Test()
@@ -448,7 +447,7 @@ public class ValidationServiceImplTest {
         // set model retriever which never retrieves anything
         validationService.modelRetriever = new ValidationModelRetriever() {
             @Override
-            public @CheckForNull ValidationModel getModel(@Nonnull String resourceType, String resourcePath) {
+            public @CheckForNull ValidationModel getModel(@Nonnull String resourceType, String resourcePath, boolean considerResourceSuperTypeModels) {
                 return null;
             }
         };
@@ -458,7 +457,7 @@ public class ValidationServiceImplTest {
         Resource testResource = ResourceUtil.getOrCreateResource(rr, "/content/validation/1/resource", "resourcetype1",
                 JcrConstants.NT_UNSTRUCTURED, true);
 
-        ValidationResult vr = validationService.validateResourceRecursively(testResource, false, null);
+        ValidationResult vr = validationService.validateResourceRecursively(testResource, false, null, false);
         Assert.assertTrue(vr.isValid());
     }
 

@@ -23,22 +23,32 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.validation.Validator;
 import org.apache.sling.validation.model.ValidationModel;
 
 /**
- * All providers of {@link ValidationModel}s must implement this interface.
- * In addition if the model might become invalid after some time it is also the obligatation of the provider implementation to invalidate the cache
- * via the {@link ValidationModelCache} OSGi service.
+ * All providers of {@link ValidationModel}s must implement this interface. In addition if the model might become
+ * invalid after some time it is also the obligatation of the provider implementation to invalidate the cache via the
+ * {@link ValidationModelCache} OSGi service.
  */
 public interface ValidationModelProvider {
 
     /**
      * Retrieves the model responsible for validating the given resourceType.
+     * 
      * @param relativeResourceType
-     * @param all known validators in a map (key=name of validator)
-     * @return a Collection of {@link ValidationModel}s. Never {@code null} but might be empty collection.
-     * @throws IllegalStateException in case a validation model was found but it is invalid
+     * @param validatorsMap
+     *            all known validators in a map (key=name of validator). Only one of those should be used in the
+     *            returned validation models.
+     * @param resourceResolver
+     *            the resource resolver which should be used by the provider (if one is necessary).
+     * @return a Collection of {@link ValidationModel}s. Never {@code null}, but might be empty collection in case no
+     *         model for the given resource type could be found.
+     * @throws IllegalStateException
+     *             in case a validation model was found but it is invalid
      */
-    public @Nonnull Collection<ValidationModel> getModel(@Nonnull String relativeResourceType,  @Nonnull Map<String, Validator<?>> validatorsMap) throws IllegalStateException;
+    public @Nonnull Collection<ValidationModel> getModel(@Nonnull String relativeResourceType,
+            @Nonnull Map<String, Validator<?>> validatorsMap, @Nonnull ResourceResolver resourceResolver)
+            throws IllegalStateException;
 }

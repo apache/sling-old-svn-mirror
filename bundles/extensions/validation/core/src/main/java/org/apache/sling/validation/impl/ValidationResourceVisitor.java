@@ -33,16 +33,18 @@ import org.apache.sling.validation.model.ValidationModel;
 public class ValidationResourceVisitor extends AbstractResourceVisitor {
 
     private final ValidationServiceImpl validationService;
+    private final String rootResourcePath;
     private final boolean enforceValidation;
+    private final boolean considerResourceSuperTypeModels;
     private final @Nonnull ValidationResultImpl result;
     private final Predicate filter;
-    private final String rootResourcePath;
 
-    public ValidationResourceVisitor(ValidationServiceImpl validationService, String rootResourcePath, boolean enforceValidation, Predicate filter) {
+    public ValidationResourceVisitor(ValidationServiceImpl validationService, String rootResourcePath, boolean enforceValidation, Predicate filter,  boolean considerResourceSuperTypeModels) {
         super();
         this.validationService = validationService;
         this.rootResourcePath = rootResourcePath + "/";
         this.enforceValidation = enforceValidation;
+        this.considerResourceSuperTypeModels = considerResourceSuperTypeModels;
         this.filter = filter;
         this.result = new ValidationResultImpl();
     }
@@ -50,9 +52,8 @@ public class ValidationResourceVisitor extends AbstractResourceVisitor {
     @Override
     protected void visit(Resource resource) {
         if (isValidSubResource(resource)) {
-            // JCR will return then primary type instead!!
             @SuppressWarnings("null")
-            ValidationModel model = validationService.getValidationModel(resource);
+            ValidationModel model = validationService.getValidationModel(resource, considerResourceSuperTypeModels);
             if (model == null) {
                 if (enforceValidation) {
                     throw new IllegalArgumentException("No model for resource type " + resource.getResourceType() + " found.");
