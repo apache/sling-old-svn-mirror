@@ -26,9 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
-import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
@@ -92,7 +90,11 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever, E
             boolean considerResourceSuperTypeModels) {
         try {
             ResourceResolver resourceResolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
-            return getModel(resourceType, resourcePath, considerResourceSuperTypeModels, resourceResolver);
+            try {
+                return getModel(resourceType, resourcePath, considerResourceSuperTypeModels, resourceResolver);
+            } finally {
+                resourceResolver.close();
+            }
         } catch (LoginException e) {
             throw new IllegalStateException(
                     "Could not retrieve models, because the administrative resource resolver could not be acquired", e);
@@ -102,29 +104,25 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever, E
     @CheckForNull
     ValidationModel getModel(@Nonnull String resourceType, String resourcePath,
             boolean considerResourceSuperTypeModels, @Nonnull ResourceResolver resourceResolver) {
-        try {
-            // first get model for exactly the requested resource type
-            ValidationModel baseModel = getModel(resourceType, resourcePath, resourceResolver);
-            String currentResourceType = resourceType;
-            if (considerResourceSuperTypeModels) {
-                Collection<ValidationModel> modelsToMerge = new ArrayList<ValidationModel>();
-                while ((currentResourceType = resourceResolver.getParentResourceType(currentResourceType)) != null) {
-                    ValidationModel modelToMerge = getModel(currentResourceType, resourcePath, resourceResolver);
-                    if (baseModel == null) {
-                        baseModel = modelToMerge;
-                    } else {
-                        modelsToMerge.add(modelToMerge);
-                    }
-                }
-                if (!modelsToMerge.isEmpty()) {
-                    return new MergedValidationModel(baseModel, modelsToMerge.toArray(new ValidationModel[modelsToMerge
-                            .size()]));
+        // first get model for exactly the requested resource type
+        ValidationModel baseModel = getModel(resourceType, resourcePath, resourceResolver);
+        String currentResourceType = resourceType;
+        if (considerResourceSuperTypeModels) {
+            Collection<ValidationModel> modelsToMerge = new ArrayList<ValidationModel>();
+            while ((currentResourceType = resourceResolver.getParentResourceType(currentResourceType)) != null) {
+                ValidationModel modelToMerge = getModel(currentResourceType, resourcePath, resourceResolver);
+                if (baseModel == null) {
+                    baseModel = modelToMerge;
+                } else {
+                    modelsToMerge.add(modelToMerge);
                 }
             }
-            return baseModel;
-        } finally {
-            resourceResolver.close();
+            if (!modelsToMerge.isEmpty()) {
+                return new MergedValidationModel(baseModel, modelsToMerge.toArray(new ValidationModel[modelsToMerge
+                        .size()]));
+            }
         }
+        return baseModel;
     }
 
     private @CheckForNull ValidationModel getModel(@Nonnull String resourceType, String resourcePath,

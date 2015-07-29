@@ -79,7 +79,6 @@ public class MergedValidationModel implements ValidationModel {
         }
     }
     
-    
     /**
      * 
      * @param path
