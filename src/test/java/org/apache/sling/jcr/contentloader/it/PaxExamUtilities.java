@@ -34,8 +34,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Utilities for Pax Exam testing */
-public class P {
-    private static final Logger log = LoggerFactory.getLogger(P.class);
+public final class PaxExamUtilities {
+    private static final Logger log = LoggerFactory.getLogger(PaxExamUtilities.class);
     
     public static Option[] paxConfig() {
         final File thisProjectsBundle = new File(System.getProperty( "bundle.file.name", "BUNDLE_FILE_NOT_SET" ));

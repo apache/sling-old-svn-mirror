@@ -78,7 +78,7 @@ public abstract class ContentBundleTestBase {
     
     @org.ops4j.pax.exam.Configuration
     public Option[] config() {
-        return P.paxConfig();
+        return PaxExamUtilities.paxConfig();
     }
     
     @BeforeClass

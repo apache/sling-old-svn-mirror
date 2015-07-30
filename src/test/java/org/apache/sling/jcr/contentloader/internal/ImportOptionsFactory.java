@@ -21,7 +21,7 @@ import org.apache.sling.jcr.contentloader.ImportOptions;
 
 import java.util.Map;
 
-class U {
+public final class ImportOptionsFactory {
     public static ImportOptions createImportOptions(final boolean isOverwrite, final boolean isPropertyOverwrite,
             final boolean isAutoCheckout, final boolean isCheckin, final boolean isIgnoredImportProvider){
         return new ImportOptions() {
