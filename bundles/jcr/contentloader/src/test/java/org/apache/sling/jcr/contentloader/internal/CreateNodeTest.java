@@ -51,7 +51,7 @@ public class CreateNodeTest {
         final SlingRepository repo = RepositoryProvider.instance().getRepository();
         session = repo.loginAdministrative(null);
         contentCreator = new DefaultContentCreator(null);
-        contentCreator.init(U.createImportOptions(true, true, true, false, false),
+        contentCreator.init(ImportOptionsFactory.createImportOptions(true, true, true, false, false),
                 new HashMap<String, ContentReader>(), null, null);
         testRoot = session.getRootNode().addNode(getClass().getSimpleName()).addNode(uniqueId());
     }

@@ -46,7 +46,7 @@ public class BasicInitialContentIT extends ContentBundleTestBase {
     @Test
     @Retry(intervalMsec=RETRY_INTERVAL, timeoutMsec=RETRY_TIMEOUT)
     public void bundleStarted() {
-        final Bundle b = P.findBundle(bundleContext, bundleSymbolicName);
+        final Bundle b = PaxExamUtilities.findBundle(bundleContext, bundleSymbolicName);
         assertNotNull("Expecting bundle to be found:" + bundleSymbolicName, b);
         assertEquals("Expecting bundle to be active:" + bundleSymbolicName, Bundle.ACTIVE, b.getState());
     }
