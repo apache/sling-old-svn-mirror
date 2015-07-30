@@ -43,6 +43,7 @@
     org.apache.sling/org.apache.sling.launchpad.installer/1.2.2
     org.apache.sling/org.apache.sling.installer.core/3.6.6
     org.apache.sling/org.apache.sling.installer.provider.file/1.1.0
+    org.apache.sling/org.apache.sling.installer.factory.configuration/1.1.2
     org.apache.felix/org.apache.felix.configadmin/1.8.6
     org.apache.felix/org.apache.felix.eventadmin/1.4.2
     # dependency with javax.inject - required for Sling Models (SLING-4710)
