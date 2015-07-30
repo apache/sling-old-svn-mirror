@@ -27,6 +27,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
@@ -64,7 +65,8 @@ import org.osgi.service.http.NamespaceException;
  */
 @Component(name = "org.apache.sling.jcr.webdav.impl.servlets.SimpleWebDavServlet",
            label = "%dav.name", description = "%dav.description",
-           metatype = true, immediate = true)
+           metatype = true,
+           policy = ConfigurationPolicy.REQUIRE)
 @Service(Servlet.class)
 @Properties({
     @Property(name = Constants.SERVICE_DESCRIPTION, value = "Sling WebDAV Servlet"),
