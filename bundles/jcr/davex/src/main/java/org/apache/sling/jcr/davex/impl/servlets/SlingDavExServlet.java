@@ -30,6 +30,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -54,7 +55,9 @@ import org.slf4j.LoggerFactory;
  *
  */
 @SuppressWarnings("serial")
-@Component(metatype = true, label = "%dav.name", description = "%dav.description")
+@Component(metatype = true, label = "%dav.name",
+           description = "%dav.description",
+           policy = ConfigurationPolicy.REQUIRE)
 @Properties({ @Property(name = Constants.SERVICE_DESCRIPTION, value = "Sling JcrRemoting Servlet"),
     @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation") })
 public class SlingDavExServlet extends JcrRemotingServlet {
