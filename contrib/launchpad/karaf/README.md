@@ -20,3 +20,9 @@ Getting Started
     karaf@root()> feature:install sling-extension-explorer
 
 4) Browse to http://localhost:8181/⁠.
+
+
+KAR - Karaf Archive
+-------------------
+
+    karaf@root()> kar:install mvn:org.apache.sling/org.apache.sling.launchpad.karaf-features/0.1.1-SNAPSHOT/kar
