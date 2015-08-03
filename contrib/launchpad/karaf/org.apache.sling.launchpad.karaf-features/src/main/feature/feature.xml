@@ -162,7 +162,7 @@
     <feature version="${project.version}">sling</feature>
   </feature>
   <feature name="sling-extension-xss" version="${project.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.xss/1.0.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.xss/1.0.4</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
     <bundle>mvn:org.apache.geronimo.bundles/commons-httpclient/3.1_2</bundle>
