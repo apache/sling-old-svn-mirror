@@ -310,7 +310,11 @@ public class ResourceMetadata extends HashMap<String, Object> {
      */
     public void setParameterMap(Map<String, String> parameterMap) {
         if (parameterMap != null) {
-            put(PARAMETER_MAP, new LinkedHashMap<String, String>(parameterMap));
+            if (parameterMap.isEmpty()) {
+                put(PARAMETER_MAP, Collections.emptyMap());
+            } else {
+                put(PARAMETER_MAP, new LinkedHashMap<String, String>(parameterMap));
+            }
         }
     }
 
