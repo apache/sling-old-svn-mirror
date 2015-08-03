@@ -77,5 +77,5 @@ for POM_FILE in $(ls -1 $DIST_CHECKOUT/*.pom); do
     fi
 
     echo "Adding $OBR_KEY to $OBR_FILE"
-    mvn -q org.apache.felix:maven-bundle-plugin:deploy-file -Dfile=$DIST_CHECKOUT/$JAR_FILE -DpomFile=$DIST_CHECKOUT/$POM_FILE -DbundleUrl=http://repo1.maven.org/maven2/org/apache/sling/$ARTIFACT_ID-$VERSION.jar -Durl=file://$SITE_CHECKOUT/trunk/content/obr -DprefixUrl=http://repo1.maven.org/maven2 -DremoteOBR=sling.xml
+    mvn -q org.apache.felix:maven-bundle-plugin:deploy-file -Dfile=$DIST_CHECKOUT/$JAR_FILE -DpomFile=$DIST_CHECKOUT/$POM_FILE -DbundleUrl=http://repo1.maven.org/maven2/org/apache/sling/$ARTIFACT_ID/$VERSION/$ARTIFACT_ID-$VERSION.jar -Durl=file://$SITE_CHECKOUT/trunk/content/obr -DprefixUrl=http://repo1.maven.org/maven2 -DremoteOBR=sling.xml
 done
