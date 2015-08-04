@@ -27,6 +27,7 @@
     org.apache.felix/org.apache.felix.jaas/0.0.2
 
 [artifacts startLevel=15 runModes=oak]
+    org.apache.sling/org.apache.sling.jcr.oak.server/0.0.2-SNAPSHOT
     com.google.guava/guava/15.0
     org.apache.jackrabbit/oak-core/${oak.version}
     org.apache.jackrabbit/oak-commons/${oak.version}
@@ -35,11 +36,6 @@
 
 [artifacts startLevel=15 runModes=oak_mongo]
     org.mongodb/mongo-java-driver/2.13.0
-
-# start the Oak server instance after all components have been configured
-# and started to avoid restarting that component ( see SLING-4556 )
-[artifacts startLevel=16 runModes=oak]
-    org.apache.sling/org.apache.sling.jcr.oak.server/0.0.2-SNAPSHOT
 
 [configurations runModes=oak]
   org.apache.felix.jaas.Configuration.factory-GuestLoginModule
