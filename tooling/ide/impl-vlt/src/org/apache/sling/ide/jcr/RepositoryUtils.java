@@ -53,7 +53,7 @@ public abstract class RepositoryUtils {
         for (String webDavUrlLocation : WEBDAV_URL_LOCATIONS) {
 
             Session session = null;
-            String url = repositoryInfo.getUrl() + webDavUrlLocation;
+            String url = repositoryInfo.appendPath(webDavUrlLocation);
             try {
                 RepositoryAddress address = new RepositoryAddress(url);
                 Repository repository;
