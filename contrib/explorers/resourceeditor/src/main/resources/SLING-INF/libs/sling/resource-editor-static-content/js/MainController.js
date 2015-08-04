@@ -44,6 +44,10 @@ org.apache.sling.reseditor.MainController = (function() {
 					$('#alertMsg #Message').remove();
 				});
 			})
+			var hasError = typeof thisMainController.settings.errorMessage != "undefined" && thisMainController.settings.errorMessage != "" && thisMainController.settings.errorMessage != null;
+			if (hasError){
+				thisMainController.displayAlertHtml("Status "+thisMainController.settings.errorStatus+". "+thisMainController.settings.errorMessage);
+			}
 		});
 	};
 
@@ -167,12 +171,17 @@ org.apache.sling.reseditor.MainController = (function() {
 		var encodedTitle = this.encodeToHTML(errorJson.title);
 		var encodedMsg = this.encodeToHTML(errorJson["status.message"]);
 		var errorMsg = encodedTitle+" ("+"Status "+errorJson["status.code"]+") "+encodedMsg;
-		$('#alertMsg').append($("<div id='Message'>").append((resourcePath) ? "'"+resourcePath+"': "+errorMsg : errorMsg));
+		this.displayAlertHtml((resourcePath) ? "'"+resourcePath+"': "+errorMsg : errorMsg);
+	}
+
+	MainController.prototype.displayAlertHtml = function(html){
+		var thisMainController = this;
+		$('#alertMsg').append($("<div id='Message'>").append(html));
 		$("#alert").slideDown(function() {
 			thisMainController.adjust_height();
 		});
+		
 	}
-
 
 	MainController.prototype.getNTFromLi = function(li){
 		var nt_name = $(li).children("a").find("span span.node-type").text();

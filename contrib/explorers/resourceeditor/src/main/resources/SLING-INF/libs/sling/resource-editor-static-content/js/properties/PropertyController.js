@@ -147,13 +147,13 @@ org.apache.sling.reseditor.PropertyController = (function() {
 	PropertyController.prototype.saveProperty = function(key, value){
 		var thisPropertyController = this;
 		var data = {};
-		data[key] = value;
+		data[key] = [value,value];
 		data["_charset_"] = "utf-8";
 		$.ajax({
 	  	  type: 'POST',
-		  url: location.href,
-		  dataType: "json",
-	  	  data: data
+		  url: location.href+"?"+key+"="+value,
+		  dataType: "json"
+//	  	  ,data: data
 	  	})
 		.done(function() {
 			$.notify({

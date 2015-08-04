@@ -62,52 +62,30 @@
 														<label class="proplabel" for='${property.name}'>${property.name} [<%=PropertyType.nameFromValue(property.getType())%>${property.multiple ? ' multiple' : ''}]</label>
 													</div>
 													<div class="col-sm-7 property-col">
+<!-- 													geschachteltes div mit Zeilen pro multi value property -->
+<!-- 													dann passen auch die Abstände (innerhalb des Properties und zwischen den Properties) -->
+<%-- ${property.values} --%>
 														<c:choose>
 														     <c:when test="${property.multiple}" >
-														     	<fieldset class="propmultival_fieldset">
-														     		<div>&nbsp;</div>
-														     	<c:forEach var="value" items="<%=property.getValues()%>">
-														     		<c:choose>
-															     		<c:when test="${property.type == PropertyType.BINARY}" >
-																	     	<p>I'm a binary property</p>
-																	     </c:when>
-															     		<c:when test="${property.type == PropertyType.STRING}" >
-																	     	<re:string-editor></re:string-editor>
-																	     </c:when>
-																	     <c:otherwise>
-																     		<input class="propinputmultival form-control" value="${value.string}"/>
-																	     </c:otherwise>
-																     </c:choose>
+<!-- 														     	<fieldset class="propmultival_fieldset"> -->
+														     	<c:forEach var="value" items="<%=property.getValues()%>" varStatus="multiPropertyLoopStatus">
+														     		<div id="property-${propertyLoopStatus.index}-${multiPropertyLoopStatus.index}" class="row" data-property-name="${fn:escapeXml(property.name)}-${multiPropertyLoopStatus.index}" >
+																		<fieldset>			
+																			<div class="col-sm-12">
+																				<%@ include file="property-editor.jsp" %>
+																			</div>
+																		</fieldset>
+																	</div>
 														     	</c:forEach>
-								     							</fieldset>
+<!-- 								     							</fieldset> -->
 														     </c:when>
 														     <c:otherwise>
-															     <c:choose>
-																     <c:when test="<%=property.getType() == PropertyType.BINARY%>" >
-																     	<c:choose>
-																	     	<c:when test='<%=currentNode.getParent().isNodeType("nt:file") %>'>
-																	     		<a class="propinput" href="<%= request.getContextPath() %>${resource.parent.path}">Download</a>
-																	     	</c:when>
-																	     	<c:otherwise>
-																	     		<a class="propinput" href="<%= request.getContextPath() %>${resource.path}.property.download?property=${property.name}">View (choose "Save as..." to download)</a>
-																	     	</c:otherwise>
-																     	</c:choose>
-																     </c:when>
-																     <c:when test="<%=property.getType() == PropertyType.STRING%>" >
-																     	<re:string-editor property_name="${fn:escapeXml(property.name)}-editor" value="${property.string}"></re:string-editor>
-																     </c:when>
-																     <c:when test="<%=property.getType() == PropertyType.PATH%>" >
-																     	<re:path-editor value="${property.string}" component_id="property-${propertyLoopStatus.index}-path-editor"></re:path-editor>
-																     	<re:path-viewer value="${property.string}" component_id="property-${propertyLoopStatus.index}-path-viewer" editor_component_id="property-${propertyLoopStatus.index}-path-editor"></re:path-viewer>
-																     </c:when>
-																     <c:otherwise>
-																		<input class="propinput form-control" id="${property.name}" name="${property.name}" value="${property.string}"/>							
-																     </c:otherwise>
-															     </c:choose>
+																<%@ include file="property-editor.jsp" %>
 														     </c:otherwise>
 														 </c:choose>
 													</div>
 												 	<div class="col-sm-2">
+												 		<span class="icon property-icon glyphicon glyphicon-plus" aria-hidden="true"></span>
 												 		<span class="icon property-icon glyphicon glyphicon-save" aria-hidden="true"></span>
 												 		<span class="icon property-icon glyphicon glyphicon-remove" aria-hidden="true"></span>
 												 	</div>

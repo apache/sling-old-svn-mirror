@@ -92,7 +92,9 @@ var ntManager = new de.sandroboehme.NodeTypeManager();
 
 var mainControllerSettings = {
 		contextPath: "<%= request.getContextPath() %>",
-		nodeTypes: ntManager.getNodeTypeNames() 
+		nodeTypes: ntManager.getNodeTypeNames(),
+		errorStatus: '${requestScope["javax.servlet.error.status_code"]}',
+		errorMessage: '<%=request.getAttribute("javax.servlet.error.message") == null ? "" : request.getAttribute("javax.servlet.error.message") %>'
 };
 var mainController = new org.apache.sling.reseditor.MainController(mainControllerSettings, ntManager);
 
@@ -241,6 +243,7 @@ new org.apache.sling.reseditor.PropertyController({}, mainController);
 								<button type="button" class="close"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
 							  	<h3>Cheat Sheet</h3>
 							  	<h4>Shortcuts</h4>
+						  		<p>Submitting the dialog is only allowed if no search dialog is open and the fields are set.</p>
 						  		<p>You can use the</p>
 						  		<ul>
 					  				<li><kbd>c</kbd> key on a node when the tree has the focus for opening the dialog to add a child node.</li>

@@ -14,6 +14,15 @@ module.exports = function(grunt) {
 		    	SLING_PORT: (typeof process.env.SLING_PORT === 'undefined' || process.env.SLING_PORT === null || '' === process.env.SLING_PORT) ? port : process.env.SLING_PORT
 		    }
 		},
+		'node-inspector': {
+		  custom: {
+		    options: {
+		      'web-port': 5050,
+		      'web-host': 'localhost',
+		      'debug-port': 5857
+		    }
+		  }
+		},
 	    less: {
 	      compileCore: {
 	        options: {

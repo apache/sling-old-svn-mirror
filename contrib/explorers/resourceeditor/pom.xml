@@ -93,7 +93,7 @@
 			<plugin>
 		        <groupId>com.github.eirslett</groupId>
 		        <artifactId>frontend-maven-plugin</artifactId>
-		        <version>0.0.23</version>
+		        <version>0.0.24</version>
 		        <configuration>
 			        <workingDirectory>frontend</workingDirectory>
 			    </configuration>
@@ -177,6 +177,12 @@
 			<artifactId>org.apache.felix.scr.annotations</artifactId>
 			<scope>provided</scope>
 		</dependency>
+	    <dependency>
+	      <groupId>commons-lang</groupId>
+	      <artifactId>commons-lang</artifactId>
+	      <version>2.5</version>
+	      <scope>provided</scope>
+	    </dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -184,10 +190,4 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-	<distributionManagement>
-		<repository>
-			<id>www.jcrbrowser.org</id>
-			<url>dav:http://www.jcrbrowser.org/sling/obr</url>
-		</repository>
-	</distributionManagement>
 </project>

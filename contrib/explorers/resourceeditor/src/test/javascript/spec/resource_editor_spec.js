@@ -241,7 +241,7 @@ describe('The Resource Editor', function() {
 			spyOn(mainController, "encodeURL").and.returnValue("/testnode");
 
 			spyOn($.fn, "select2").and.returnValue("nt:unstructured");
-			
+
 			spyOn($, 'ajax').and.callFake(function (req) {
 			    var d = $.Deferred();
 			    d.resolve({});
@@ -249,9 +249,11 @@ describe('The Resource Editor', function() {
 			});
 			
 			spyOn(mainController,"redirectTo").and.returnValue(null);
-			
-			addNodeController.addNode();
+			addNodeController.nodeNameSubmitable=true;
+			addNodeController.resourceTypeSubmitable=true;
 
+			addNodeController.addNode();
+			
 			expect($.ajax.calls.mostRecent().args[0]["url"]).toEqual("/testnode");
 			expect($.ajax.calls.mostRecent().args[0]["data"]["_charset_"]).toEqual("utf-8");
 			expect($.ajax.calls.mostRecent().args[0]["data"]["jcr:primaryType"]).toEqual("nt:unstructured");
