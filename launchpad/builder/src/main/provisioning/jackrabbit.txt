@@ -26,3 +26,10 @@
     org.apache.sling/org.apache.sling.jcr.jackrabbit.server/2.2.1-SNAPSHOT
 
 
+[configurations runModes=jackrabbit]
+    org.apache.sling.jcr.jackrabbit.server.SlingServerRepository-default
+        admin.password="not-used"
+        anonymous.password="not-used"
+        home="jackrabbit"
+        name="jackrabbit"
+        sling.context="default"
