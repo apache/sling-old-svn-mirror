@@ -71,7 +71,6 @@
     org.apache.sling/org.apache.sling.models.impl/1.2.0
     org.apache.felix/org.apache.felix.http.whiteboard/2.3.2
     org.apache.sling/org.apache.sling.installer.console/1.0.0
-    org.apache.sling/org.apache.sling.installer.factory.configuration/1.1.2
     org.apache.sling/org.apache.sling.installer.provider.jcr/3.1.16
 
 [artifacts startLevel=5]
