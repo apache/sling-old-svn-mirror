@@ -160,12 +160,25 @@ public class SlingServerRepositoryManager extends AbstractSlingRepositoryManager
             }
             home = homeFile.getAbsolutePath();
         }
+        
+        if (!homeFile.isDirectory()) {
+            log.info("Creating default config for Jackrabbit in " + homeFile);
+            if (!homeFile.mkdirs()) {
+                throw new RuntimeException("Unable to create Jackrabbit home at " + home);
+            }
+        }
 
         // somewhat dirty hack to have the derby.log file in a sensible
         // location, but don't overwrite anything already set
         if (System.getProperty("derby.stream.error.file") == null) {
             String derbyLog = home + "/derby.log";
             System.setProperty("derby.stream.error.file", derbyLog);
+        }
+        
+        try {
+            getOrInitConfigFileUrl(getComponentContext().getBundleContext(), home);
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to get config file url", e);
         }
 
         InputStream ins = null;
@@ -228,7 +241,7 @@ public class SlingServerRepositoryManager extends AbstractSlingRepositoryManager
         // got no repository ....
         return null;
     }
-
+    
     private Repository registerStatistics(Repository repository) {
         if (repository instanceof RepositoryImpl) {
             try {
@@ -379,7 +392,56 @@ public class SlingServerRepositoryManager extends AbstractSlingRepositoryManager
 
     // ---------- Helper -------------------------------------------------------
 
-    public static void copyFile(Bundle bundle, String entryPath, File destFile) throws FileNotFoundException,
+    /**
+     * Attempts to retrieve the URL of the repository configuration file, creating a default one is no URL is configured
+     * 
+     * @param bundleContext the bundle context
+     * @param home the repository home
+     * @return the url, or null if the default location is used
+     * @throws IOException error when getting or initialising the config file url
+     */
+    public static String getOrInitConfigFileUrl(BundleContext bundleContext, String home) throws IOException {
+        
+        String repoConfigFileUrl = bundleContext.getProperty("sling.repository.config.file.url");
+        if (repoConfigFileUrl != null) {
+            // the repository config file is set
+            URL configFileUrl = null;
+            try {
+                // verify it is a good url
+                configFileUrl = new URL(repoConfigFileUrl);
+                return repoConfigFileUrl;
+            } catch (MalformedURLException e) {
+                // this not an url, trying with "file:"
+                configFileUrl = new URL("file:///" + repoConfigFileUrl);
+                File configFile = new File(configFileUrl.getFile());
+                if (configFile.canRead()) {
+                    return configFileUrl.toString();
+                }
+            }
+        }
+
+        // ensure the configuration file (inside the home Dir !)
+        File configFile = new File(home, "repository.xml");
+        boolean copied = false;
+
+        try {
+            URL contextConfigURL = new URL("context:repository.xml");
+            InputStream contextConfigStream = contextConfigURL.openStream();
+            if (contextConfigStream != null) {
+                SlingServerRepositoryManager.copyStream(contextConfigStream, configFile);
+                copied = true;
+            }
+        } catch (Exception e) {}
+
+        if (!copied) {
+            SlingServerRepositoryManager.copyFile(bundleContext.getBundle(), "repository.xml", configFile);
+        }
+
+        // config file is repository.xml (default) in homeDir
+        return null;
+    }
+    
+    private static void copyFile(Bundle bundle, String entryPath, File destFile) throws FileNotFoundException,
             IOException {
         if (destFile.canRead()) {
             // nothing to do, file exists
@@ -397,7 +459,7 @@ public class SlingServerRepositoryManager extends AbstractSlingRepositoryManager
         copyStream(source, destFile);
     }
 
-    public static void copyStream(InputStream source, File destFile) throws FileNotFoundException, IOException {
+    private static void copyStream(InputStream source, File destFile) throws FileNotFoundException, IOException {
         OutputStream dest = null;
 
         try {
