@@ -35,6 +35,8 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
+import org.apache.sling.engine.impl.helper.ClientAbortException;
+
 class RequestLoggerResponse extends HttpServletResponseWrapper {
 
     // the content type header name
@@ -370,30 +372,50 @@ class RequestLoggerResponse extends HttpServletResponseWrapper {
 
         @Override
         public void write(int b) throws IOException {
-            this.delegatee.write(b);
-            this.count++;
+            try {
+                this.delegatee.write(b);
+                this.count++;
+            } catch(IOException ioe) {
+                throw new ClientAbortException(ioe);
+            }
         }
 
         @Override
         public void write(byte[] b) throws IOException {
-            this.delegatee.write(b);
-            this.count += b.length;
+            try {
+                this.delegatee.write(b);
+                this.count += b.length;
+            } catch(IOException ioe) {
+                throw new ClientAbortException(ioe);
+            }
         }
 
         @Override
         public void write(byte[] b, int off, int len) throws IOException {
-            this.delegatee.write(b, off, len);
-            this.count += len;
+            try {
+                this.delegatee.write(b, off, len);
+                this.count += len;
+            } catch(IOException ioe) {
+                throw new ClientAbortException(ioe);
+            }
         }
 
         @Override
         public void flush() throws IOException {
-            this.delegatee.flush();
+            try {
+                this.delegatee.flush();
+            } catch(IOException ioe) {
+                throw new ClientAbortException(ioe);
+            }
         }
 
         @Override
         public void close() throws IOException {
-            this.delegatee.close();
+            try {
+                this.delegatee.close();
+            } catch(IOException ioe) {
+                throw new ClientAbortException(ioe);
+            }
         }
     }
 

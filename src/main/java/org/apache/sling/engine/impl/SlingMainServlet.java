@@ -18,7 +18,6 @@
  */
 package org.apache.sling.engine.impl;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Enumeration;
@@ -53,6 +52,7 @@ import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.engine.impl.filter.ServletFilterManager;
+import org.apache.sling.engine.impl.helper.ClientAbortException;
 import org.apache.sling.engine.impl.helper.RequestListenerManager;
 import org.apache.sling.engine.impl.helper.SlingServletContext;
 import org.apache.sling.engine.impl.request.RequestData;
@@ -216,13 +216,8 @@ public class SlingMainServlet extends GenericServlet {
                 requestProcessor.doProcessRequest(request, (HttpServletResponse) res,
                     resolver);
 
-            } catch (IOException ioe) {
-
-                // SLING-3498: Jetty with NIO does not have a wrapped
-                // SocketException any longer but a plain IOException
-                // from the NIO Socket channel. Hence we don't care for
-                // unwrapping and just log at DEBUG level
-                log.debug("service: Probably client aborted request or any other network problem", ioe);
+            } catch (ClientAbortException cae) {
+                log.debug("service: ClientAbortException, probable cause is client aborted request or network problem", cae);
 
             } catch (Throwable t) {
 
