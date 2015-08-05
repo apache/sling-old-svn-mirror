@@ -331,11 +331,5 @@
       <version>2.0.0</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.launchpad.karaf</artifactId>
-      <version>0.1.1-SNAPSHOT</version>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
 </project>

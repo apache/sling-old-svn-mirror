@@ -49,9 +49,7 @@ public final class PaxExamUtilities {
                     provision(bundle(thisProjectsBundle.toURI().toString())),
                     wrappedBundle(mavenBundle("org.apache.sling", "org.apache.sling.commons.testing").versionAsInProject()),
                     wrappedBundle(mavenBundle("org.ops4j.pax.tinybundles", "tinybundles").versionAsInProject()),
-                    mavenBundle("biz.aQute.bnd", "bndlib").versionAsInProject(),
-                    // TODO the Sling Settings service is not available without this (missing launchpad startup event?)
-                    mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.launchpad.karaf").versionAsInProject()
+                    mavenBundle("biz.aQute.bnd", "bndlib").versionAsInProject()
             ).getOptions();
         } finally {
             SlingPaxOptions.setIgnoredBundles();
