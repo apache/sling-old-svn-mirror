@@ -35,6 +35,8 @@ import javax.jcr.Session;
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.commons.testing.junit.RetryRule;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.launchpad.api.StartupHandler;
+import org.apache.sling.launchpad.api.StartupMode;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -89,6 +91,8 @@ public abstract class ContentBundleTestBase {
     
     @Before
     public void setup() throws Exception {
+        registerStartupHandler();
+
         session = repository.loginAdministrative(null);
         
         // The RetryRule executes this method on every retry, make
@@ -160,4 +164,30 @@ public abstract class ContentBundleTestBase {
         session.logout();
         session = null;
     }
+
+    private void registerStartupHandler() {
+        // SLING-4917 (org.apache.sling.paxexam.util.SlingSetupTest)
+        // In Sling launchpad 7 the SlingSettings service
+        // requires a StartupHandler, and that's usually provided
+        // by the launchpad bootstrap code. Supply our own so that
+        // everything starts properly.
+        // TODO should be provided by a utility/bootstrap bundle
+        final StartupHandler h = new StartupHandler() {
+
+            public void waitWithStartup(boolean b) {
+            }
+
+            public boolean isFinished() {
+                return true;
+            }
+
+            public StartupMode getMode() {
+                return StartupMode.INSTALL;
+            }
+
+        };
+
+        bundleContext.registerService(StartupHandler.class.getName(), h, null);
+    }
+
 }
