@@ -18,9 +18,6 @@ package org.apache.sling.jcr.jackrabbit.server.impl;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Hashtable;
 
 import org.apache.sling.jcr.base.AbstractSlingRepository;
@@ -267,7 +264,7 @@ public class Activator implements BundleActivator, ServiceListener {
         	return;
         }
 
-        String configFileUrl = getConfigFileUrl(bundleContext, home);
+        String configFileUrl = SlingServerRepositoryManager.getOrInitConfigFileUrl(bundleContext, home);
 
         // make home relative if inside sling.home
         if (slingHomePath != null && home.startsWith(slingHomePath + "/")) {
@@ -312,45 +309,4 @@ public class Activator implements BundleActivator, ServiceListener {
 
         return homeDir.getPath();
     }
-
-    private String getConfigFileUrl(BundleContext bundleContext, String home) throws IOException {
-    	String repoConfigFileUrl = bundleContext.getProperty("sling.repository.config.file.url");
-    	if (repoConfigFileUrl != null) {
-    		// the repository config file is set
-    		URL configFileUrl = null;
-			try {
-			    // verify it is a good url
-				configFileUrl = new URL(repoConfigFileUrl);
-				return repoConfigFileUrl;
-			} catch (MalformedURLException e) {
-				// this not an url, trying with "file:"
-				configFileUrl = new URL("file:///" + repoConfigFileUrl);
-				File configFile = new File(configFileUrl.getFile());
-				if (configFile.canRead()) {
-				    return configFileUrl.toString();
-				}
-			}
-    	}
-
-        // ensure the configuration file (inside the home Dir !)
-        File configFile = new File(home, "repository.xml");
-        boolean copied = false;
-
-        try {
-            URL contextConfigURL = new URL("context:repository.xml");
-            InputStream contextConfigStream = contextConfigURL.openStream();
-            if (contextConfigStream != null) {
-                SlingServerRepositoryManager.copyStream(contextConfigStream, configFile);
-                copied = true;
-            }
-        } catch (Exception e) {}
-
-        if (!copied) {
-            SlingServerRepositoryManager.copyFile(bundleContext.getBundle(), "repository.xml", configFile);
-        }
-
-        // config file is repository.xml (default) in homeDir
-        return null;
-    }
-
 }
