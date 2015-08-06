@@ -19,6 +19,7 @@
 package org.apache.sling.serviceusermapping.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -109,6 +110,8 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
     private SortedMap<Mapping, ServiceRegistration> activeMappingRegistrations = new TreeMap<Mapping, ServiceRegistration>();
 
     private BundleContext bundleContext;
+    
+    private MappingInventoryPrinter mip;
 
     @Activate
     @Modified
@@ -134,10 +137,19 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
             this.bundleContext = bundleContext;
             this.updateMappings();
         }
+        
+        if(bundleContext != null && mip == null) {
+            mip = new MappingInventoryPrinter(bundleContext, this);
+        }
     }
 
     @Deactivate
     void deactivate() {
+        if(mip != null) {
+            mip.deactivate();
+            mip = null;
+        }
+        
         synchronized ( this.amendments) {
             updateServiceMappings(new ArrayList<Mapping>());
             bundleContext = null;
@@ -287,6 +299,10 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     static String getServiceName(final Bundle bundle) {
         return bundle.getSymbolicName();
+    }
+    
+    List<Mapping> getActiveMappings() {
+        return Collections.unmodifiableList(Arrays.asList(activeMappings));
     }
 }
 
