@@ -37,7 +37,6 @@ import javax.management.DynamicMBean;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -52,6 +51,7 @@ import org.apache.sling.jcr.api.NamespaceMapper;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.AbstractSlingRepository2;
 import org.apache.sling.jcr.base.AbstractSlingRepositoryManager;
+import org.apache.sling.jcr.base.util.RepositoryAccessor;
 import org.apache.sling.jcr.jackrabbit.server.impl.jmx.StatisticsMBeanImpl;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.framework.Bundle;
@@ -63,15 +63,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>SlingServerRepository</code> TODO
+ * The <code>SlingServerRepository</code> creates and configures <tt>Jackrabbit</tt> repository instances. 
  */
 @Component(
         label = "%repository.name",
         description = "%repository.description",
         metatype = true,
         name = "org.apache.sling.jcr.jackrabbit.server.SlingServerRepository",
-        configurationFactory = true,
-        policy = ConfigurationPolicy.REQUIRE)
+        configurationFactory = true)
 @Reference(
         name = "namespaceMapper",
         referenceInterface = NamespaceMapper.class,
@@ -142,31 +141,28 @@ public class SlingServerRepositoryManager extends AbstractSlingRepositoryManager
 
     @Override
     protected Repository acquireRepository() {
-
-        @SuppressWarnings("unchecked")
-        Dictionary<String, Object> environment = this.getComponentContext().getProperties();
-        String configURLObj = (String) environment.get(REPOSITORY_CONFIG_URL);
-        String home = (String) environment.get(REPOSITORY_HOME_DIR);
-
-        // ensure absolute home (path)
-        File homeFile = new File(home);
-        if (!homeFile.isAbsolute()) {
-            BundleContext context = getComponentContext().getBundleContext();
-            String slingHomePath = context.getProperty("sling.home");
-            if (slingHomePath != null) {
-                homeFile = new File(slingHomePath, home);
-            } else {
-                homeFile = homeFile.getAbsoluteFile();
-            }
-            home = homeFile.getAbsolutePath();
+        
+        BundleContext bundleContext = getComponentContext().getBundleContext();
+        
+        final String overrideUrl = bundleContext.getProperty(RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY);
+        
+        // Do not configure the repository if override URL (SLING-254) is set
+        if ( overrideUrl != null && !overrideUrl.isEmpty() ) {
+            return null;
         }
         
-        if (!homeFile.isDirectory()) {
-            log.info("Creating default config for Jackrabbit in " + homeFile);
-            if (!homeFile.mkdirs()) {
-                throw new RuntimeException("Unable to create Jackrabbit home at " + home);
-            }
+        String slingHomePath = bundleContext.getProperty("sling.home");
+        File homeFile;
+        String configURLObj;
+        try {
+            homeFile = getOrInitRepositoryHome(bundleContext, slingHomePath);
+            configURLObj = getOrInitConfigFileUrl(bundleContext, homeFile.getAbsolutePath());
+        } catch (IOException e) {
+            throw new RuntimeException(getClass().getName() + " initialisation failed", e);
         }
+
+        // ensure absolute home (path)
+        String home = homeFile.getAbsolutePath();
 
         // somewhat dirty hack to have the derby.log file in a sensible
         // location, but don't overwrite anything already set
@@ -175,12 +171,6 @@ public class SlingServerRepositoryManager extends AbstractSlingRepositoryManager
             System.setProperty("derby.stream.error.file", derbyLog);
         }
         
-        try {
-            getOrInitConfigFileUrl(getComponentContext().getBundleContext(), home);
-        } catch (IOException e) {
-            throw new RuntimeException("Unable to get config file url", e);
-        }
-
         InputStream ins = null;
         try {
 
@@ -206,7 +196,7 @@ public class SlingServerRepositoryManager extends AbstractSlingRepositoryManager
                         log.info("Configuration File " + configFile.getAbsolutePath()
                             + " has been lost, trying to recreate");
 
-                        final Bundle bundle = getComponentContext().getBundleContext().getBundle();
+                        final Bundle bundle = bundleContext.getBundle();
                         SlingServerRepositoryManager.copyFile(bundle, "repository.xml", configFile);
 
                         ins = new FileInputStream(configFile);
@@ -241,6 +231,43 @@ public class SlingServerRepositoryManager extends AbstractSlingRepositoryManager
         // got no repository ....
         return null;
     }
+    
+    private File getOrInitRepositoryHome(BundleContext bundleContext, String slingHomePath) throws IOException {
+        
+        String repoHomePath = (String) getComponentContext().getProperties().get(REPOSITORY_HOME_DIR);
+        if ( repoHomePath == null || repoHomePath.isEmpty() ) {
+            repoHomePath = bundleContext.getProperty("sling.repository.home");
+        }
+
+        File homeDir;
+        if (repoHomePath != null && !repoHomePath.isEmpty()) {
+            homeDir = new File(repoHomePath, getRepositoryName(bundleContext));
+        } else if (slingHomePath != null) {
+            homeDir = new File(slingHomePath, getRepositoryName(bundleContext));
+        } else {
+            homeDir = new File(getRepositoryName(bundleContext));
+        }
+
+        // make sure jackrabbit home exists
+        if (!homeDir.isDirectory()) {
+            log.info("Creating default config for Jackrabbit in " + homeDir);
+            if (!homeDir.mkdirs()) {
+                throw new IOException("verifyConfiguration: Cannot create Jackrabbit home "
+                        + homeDir + ", failed creating default configuration");
+            }
+        }
+
+        return homeDir;
+    }
+    
+    private String getRepositoryName(BundleContext bundleContext) {
+        String repoName = bundleContext.getProperty("sling.repository.name");
+        if (repoName != null) {
+            return repoName; // the repository name is set
+        }
+        return "jackrabbit";
+    }
+    
     
     private Repository registerStatistics(Repository repository) {
         if (repository instanceof RepositoryImpl) {
@@ -400,9 +427,12 @@ public class SlingServerRepositoryManager extends AbstractSlingRepositoryManager
      * @return the url, or null if the default location is used
      * @throws IOException error when getting or initialising the config file url
      */
-    public static String getOrInitConfigFileUrl(BundleContext bundleContext, String home) throws IOException {
+    private String getOrInitConfigFileUrl(BundleContext bundleContext, String home) throws IOException {
         
-        String repoConfigFileUrl = bundleContext.getProperty("sling.repository.config.file.url");
+        String repoConfigFileUrl = (String) getComponentContext().getProperties().get(REPOSITORY_CONFIG_URL);
+        if ( repoConfigFileUrl == null || repoConfigFileUrl.isEmpty() ) {
+            repoConfigFileUrl = bundleContext.getProperty("sling.repository.config.file.url");
+        }
         if (repoConfigFileUrl != null) {
             // the repository config file is set
             URL configFileUrl = null;
@@ -420,7 +450,7 @@ public class SlingServerRepositoryManager extends AbstractSlingRepositoryManager
             }
         }
 
-        // ensure the configuration file (inside the home Dir !)
+        // ensure the configuration file exists (inside the home Dir !)
         File configFile = new File(home, "repository.xml");
         boolean copied = false;
 
