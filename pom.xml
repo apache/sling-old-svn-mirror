@@ -58,6 +58,7 @@
                 <configuration>
                     <instructions>
                         <Import-Package>
+                            org.apache.sling.commons.json,
                             org.apache.felix.inventory;resolution:=optional,
                             *
                         </Import-Package>

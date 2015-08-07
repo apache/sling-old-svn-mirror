@@ -27,21 +27,27 @@ import java.util.TreeMap;
 
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
 
 /** InventoryPrinter for service user mappings */
+@Component
+@Service(value = InventoryPrinter.class)
+@Properties({
+    @Property(name = InventoryPrinter.FORMAT, value = { "JSON", "TEXT" }),
+    @Property(name = InventoryPrinter.NAME, value = "slingserviceusers"),
+    @Property(name = InventoryPrinter.TITLE, value = "Sling Service User Mappings"),
+    @Property(name = InventoryPrinter.WEBCONSOLE, boolValue = true)
+})
 public class MappingInventoryPrinter implements InventoryPrinter {
 
-    private volatile ServiceUserMapperImpl mapper;
-
-    MappingInventoryPrinter(final ServiceUserMapperImpl mapper) {
-        this.mapper = mapper;
-    }
-
-    void deactivate() {
-        this.mapper = null;
-    }
+    @Reference
+    private ServiceUserMapperImpl mapper;
 
     @Override
     public void print(PrintWriter out, Format format, boolean isZip) {
