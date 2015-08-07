@@ -47,7 +47,7 @@
                 <configuration>
                     <instructions>
                         <Sling-Bundle-Resources>
-                            /libs/tail/css, /libs/tail/js
+                            /libs/sling/logtail-plugin/css, /libs/sling/logtail-plugin/js
                         </Sling-Bundle-Resources>
                     </instructions>
                 </configuration>

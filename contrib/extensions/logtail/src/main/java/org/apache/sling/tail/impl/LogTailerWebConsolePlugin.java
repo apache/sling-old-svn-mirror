@@ -237,8 +237,8 @@ public class LogTailerWebConsolePlugin extends AbstractWebConsolePlugin {
         }
         else {
             PrintWriter printWriter = response.getWriter();
-            printWriter.println("<script type=\"text/javascript\" src=\"/libs/tail/js/tail.js\"></script>");
-            printWriter.println("<link href=\"/libs/tail/css/tail.css\" rel=\"stylesheet\" type=\"text/css\"></link>");
+            printWriter.println("<script type=\"text/javascript\" src=\"/libs/sling/logtail-plugin/js/tail.js\"></script>");
+            printWriter.println("<link href=\"/libs/sling/logtail-plugin/css/tail.css\" rel=\"stylesheet\" type=\"text/css\"></link>");
             printWriter.println("<div class=\"header-cont\">");
             printWriter.println("   <div class=\"header\" style=\"display:none;\">");
             printWriter.println("       <table>");
