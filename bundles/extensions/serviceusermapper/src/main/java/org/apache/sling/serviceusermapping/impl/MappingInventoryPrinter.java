@@ -112,13 +112,6 @@ public class MappingInventoryPrinter implements InventoryPrinter {
         w.key("mappingsCount").value(data.size());
         w.key("uniqueUsersCount").value(byUser.keySet().size());
         
-        w.key("rawMappings");
-        w.array();
-        for(Mapping m : data) {
-            asJSON(w, m);
-        }
-        w.endArray();
-        
         w.key("mappingsByUser");
         w.object();
         for(Map.Entry<String, List<Mapping>> e : byUser.entrySet()) {
@@ -150,16 +143,7 @@ public class MappingInventoryPrinter implements InventoryPrinter {
         final Map<String, List<Mapping>> byUser = getMappingsByUser(data);
         
         final String formatInfo = " (format: service name / sub service name / user)";
-        out.print("*** Raw Mappings (");
-        out.print(data.size());
-        out.print("):");
-        out.println(formatInfo);
         
-        for(Mapping m : data) {
-            asText(out, m, "  ");
-        }
-        
-        out.println();
         out.print("*** Mappings by user (");
         out.print(byUser.keySet().size());
         out.print(" users):");
