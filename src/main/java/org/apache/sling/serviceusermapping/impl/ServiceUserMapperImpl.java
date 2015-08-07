@@ -51,6 +51,7 @@ import org.apache.sling.serviceusermapping.ServiceUserValidator;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,8 +111,8 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
     private SortedMap<Mapping, ServiceRegistration> activeMappingRegistrations = new TreeMap<Mapping, ServiceRegistration>();
 
     private BundleContext bundleContext;
-    
-    private MappingInventoryPrinter mip;
+
+    private ServiceRegistration invPrinterReg;
 
     @Activate
     @Modified
@@ -137,19 +138,39 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
             this.bundleContext = bundleContext;
             this.updateMappings();
         }
-        
-        if(bundleContext != null && mip == null) {
-            mip = new MappingInventoryPrinter(bundleContext, this);
+
+        // check for reconfiguration (bundleContext is only null during tests!)
+        if ( invPrinterReg == null && bundleContext != null ) {
+            final Dictionary<String, Object> serviceProps = new Hashtable<String, Object>();
+            serviceProps.put("felix.inventory.printer.format", new String[] { "JSON", "TEXT" });
+            serviceProps.put("felix.inventory.printer.name", "serviceusers");
+            serviceProps.put("felix.inventory.printer.title", "Service User Mappings");
+            serviceProps.put("felix.inventory.printer.webconsole", true);
+            invPrinterReg = bundleContext.registerService("org.apache.felix.inventory.InventoryPrinter",
+                    new ServiceFactory() {
+
+                        @Override
+                        public Object getService(final Bundle bundle, final ServiceRegistration registration) {
+                            return new MappingInventoryPrinter(ServiceUserMapperImpl.this);
+                        }
+
+                        @Override
+                        public void ungetService(final Bundle bundle, final ServiceRegistration registration, final Object service) {
+                            if ( service instanceof MappingInventoryPrinter) {
+                                ((MappingInventoryPrinter)service).deactivate();
+                            }
+                        }
+                    }, serviceProps);
         }
     }
 
     @Deactivate
     void deactivate() {
-        if(mip != null) {
-            mip.deactivate();
-            mip = null;
+        if (invPrinterReg != null) {
+            invPrinterReg.unregister();
+            invPrinterReg = null;
         }
-        
+
         synchronized ( this.amendments) {
             updateServiceMappings(new ArrayList<Mapping>());
             bundleContext = null;
@@ -175,6 +196,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
     /**
      * @see org.apache.sling.serviceusermapping.ServiceUserMapper#getServiceUserID(org.osgi.framework.Bundle, java.lang.String)
      */
+    @Override
     public String getServiceUserID(final Bundle bundle, final String subServiceName) {
         final String serviceName = getServiceName(bundle);
         final String userId = internalGetUserId(serviceName, subServiceName);
@@ -300,7 +322,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
     static String getServiceName(final Bundle bundle) {
         return bundle.getSymbolicName();
     }
-    
+
     List<Mapping> getActiveMappings() {
         return Collections.unmodifiableList(Arrays.asList(activeMappings));
     }
