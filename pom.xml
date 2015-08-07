@@ -66,8 +66,15 @@
                 <configuration>
                     <instructions>
                         <Import-Package>
-                            javax.servlet;javax.servlet.http;resolution:=optional,*
+                            javax.servlet;javax.servlet.http;resolution:=optional,
+                            org.apache.felix.inventory;resolution:=optional,
+                            *
                         </Import-Package>
+                       <DynamicImport-Package>
+                            javax.servlet,
+                            javax.servlet.http,
+                            org.apache.felix.inventory
+                        </DynamicImport-Package>
                         <Sling-Nodetypes>
                             SLING-INF/nodetypes/event.cnd
                         </Sling-Nodetypes>
