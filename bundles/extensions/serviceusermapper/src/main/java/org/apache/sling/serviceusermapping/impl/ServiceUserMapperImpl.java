@@ -51,7 +51,6 @@ import org.apache.sling.serviceusermapping.ServiceUserValidator;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +59,7 @@ import org.slf4j.LoggerFactory;
         metatype = true,
         label = "Apache Sling Service User Mapper Service",
         description = "Configuration for the service mapping service names to names of users.")
-@Service(value=ServiceUserMapper.class)
+@Service(value={ServiceUserMapper.class, ServiceUserMapperImpl.class})
 @References( {
     @Reference(name="amendment",
             referenceInterface=MappingConfigAmendment.class,
@@ -112,8 +111,6 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     private BundleContext bundleContext;
 
-    private ServiceRegistration invPrinterReg;
-
     @Activate
     @Modified
     void configure(BundleContext bundleContext, final Map<String, Object> config) {
@@ -138,39 +135,10 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
             this.bundleContext = bundleContext;
             this.updateMappings();
         }
-
-        // check for reconfiguration (bundleContext is only null during tests!)
-        if ( invPrinterReg == null && bundleContext != null ) {
-            final Dictionary<String, Object> serviceProps = new Hashtable<String, Object>();
-            serviceProps.put("felix.inventory.printer.format", new String[] { "JSON", "TEXT" });
-            serviceProps.put("felix.inventory.printer.name", "serviceusers");
-            serviceProps.put("felix.inventory.printer.title", "Service User Mappings");
-            serviceProps.put("felix.inventory.printer.webconsole", true);
-            invPrinterReg = bundleContext.registerService("org.apache.felix.inventory.InventoryPrinter",
-                    new ServiceFactory() {
-
-                        @Override
-                        public Object getService(final Bundle bundle, final ServiceRegistration registration) {
-                            return new MappingInventoryPrinter(ServiceUserMapperImpl.this);
-                        }
-
-                        @Override
-                        public void ungetService(final Bundle bundle, final ServiceRegistration registration, final Object service) {
-                            if ( service instanceof MappingInventoryPrinter) {
-                                ((MappingInventoryPrinter)service).deactivate();
-                            }
-                        }
-                    }, serviceProps);
-        }
     }
 
     @Deactivate
     void deactivate() {
-        if (invPrinterReg != null) {
-            invPrinterReg.unregister();
-            invPrinterReg = null;
-        }
-
         synchronized ( this.amendments) {
             updateServiceMappings(new ArrayList<Mapping>());
             bundleContext = null;
