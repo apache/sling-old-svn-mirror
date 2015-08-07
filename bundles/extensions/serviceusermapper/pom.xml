@@ -61,7 +61,10 @@
                             org.apache.felix.inventory;resolution:=optional,
                             *
                         </Import-Package>
-                    </instructions>
+                       <DynamicImport-Package>
+                            org.apache.felix.inventory
+                        </DynamicImport-Package>
+                     </instructions>
                 </configuration>
             </plugin>
         </plugins>
