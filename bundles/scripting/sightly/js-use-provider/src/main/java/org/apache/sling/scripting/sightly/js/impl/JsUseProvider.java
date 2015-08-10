@@ -18,12 +18,6 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.js.impl;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Dictionary;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Set;
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -32,13 +26,10 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingScriptHelper;
-import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.scripting.api.ScriptCache;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.js.impl.async.AsyncContainer;
 import org.apache.sling.scripting.sightly.js.impl.async.AsyncExtractor;
@@ -48,11 +39,6 @@ import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.use.ProviderOutcome;
 import org.apache.sling.scripting.sightly.use.UseProvider;
 import org.osgi.framework.Constants;
-import org.osgi.service.cm.Configuration;
-import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.component.ComponentContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Use provider for JavaScript Use-API objects.
@@ -76,10 +62,6 @@ import org.slf4j.LoggerFactory;
 public class JsUseProvider implements UseProvider {
 
     private static final String JS_ENGINE_NAME = "javascript";
-    private static final String SCRIPT_CACHE_PID = "org.apache.sling.scripting.core.impl.ScriptCacheImpl";
-    private static final String SCRIPT_CACHE_ADDITIONAL_EXTENSIONS = "org.apache.sling.scripting.cache.additional_extensions";
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(JsUseProvider.class);
     private static final JsValueAdapter jsValueAdapter = new JsValueAdapter(new AsyncExtractor());
 
     @Reference
@@ -87,9 +69,6 @@ public class JsUseProvider implements UseProvider {
 
     @Reference
     private SlyBindingsValuesProvider slyBindingsValuesProvider = null;
-
-    @Reference
-    private ConfigurationAdmin configurationAdmin = null;
 
     @Override
     public ProviderOutcome provide(String identifier, RenderContext renderContext, Bindings arguments) {
@@ -116,29 +95,6 @@ public class JsUseProvider implements UseProvider {
             if (environment != null) {
                 environment.cleanup();
             }
-        }
-    }
-
-    @SuppressWarnings({"unused", "unchecked"})
-    protected void activate(ComponentContext componentContext) {
-        try {
-            Configuration configuration = configurationAdmin.getConfiguration(SCRIPT_CACHE_PID);
-            Dictionary properties = configuration.getProperties();
-            if (properties == null) {
-                properties = new Hashtable(1);
-            }
-            String[] additionalExtensions = PropertiesUtil.toStringArray(properties.get(SCRIPT_CACHE_ADDITIONAL_EXTENSIONS));
-            Set<String> extensionsSet = new HashSet<String>(1);
-            if (additionalExtensions != null) {
-                extensionsSet = new HashSet<String>(Arrays.asList(additionalExtensions));
-            }
-            extensionsSet.add(Utils.JS_EXTENSION);
-            properties.put(SCRIPT_CACHE_ADDITIONAL_EXTENSIONS, extensionsSet.toArray(new String[extensionsSet.size()]));
-            configuration.setBundleLocation(null);
-            configuration.update(properties);
-        } catch (IOException e) {
-            LOGGER.error("Unable to retrieve " + SCRIPT_CACHE_PID + " configuration. The Script Cache will not invalidate JavaScript file" +
-                    " changes (e.g. files with the .js extension).");
         }
     }
 }

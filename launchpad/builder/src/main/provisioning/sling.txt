@@ -146,4 +146,8 @@
     org.apache.sling.commons.log.file="logs/request.log"
     org.apache.sling.commons.log.level="info"
 
+  # configure the ScriptCache for scripts used by org.apache.sling.scripting.sightly.js.provider
+  org.apache.sling.scripting.core.impl.ScriptCacheImpl
+    org.apache.sling.scripting.cache.additional_extensions=["js"]
+
 
