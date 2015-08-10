@@ -82,7 +82,7 @@ import aQute.bnd.annotation.ProviderType;
  * {@link #getServiceRegistrationInterfaces()} and/or
  * {@link #getServiceRegistrationProperties()} methods.
  *
- * @deprecated as of API version 2.3 (bundle version 2.3). Use
+ * @deprecated as of API version 2.3 (bundle version 2.2.2). Use
  *             {@link AbstractSlingRepositoryManager} and
  *             {@link AbstractSlingRepository2} instead.
  */
@@ -189,6 +189,7 @@ public abstract class AbstractSlingRepository
      * to use the repository provided default workspace. Declared final to make
      * sure the SLING-256 rule is enforced.
      */
+    @Override
     public final String getDefaultWorkspace() {
         return defaultWorkspace;
     }
@@ -213,10 +214,12 @@ public abstract class AbstractSlingRepository
      * Logs in as an anonymous user. This implementation simply returns the
      * result of calling {@link #login(Credentials, String)}
      */
+    @Override
     public Session login() throws LoginException, RepositoryException {
         return this.login(null, null);
     }
 
+    @Override
     public final Session loginAdministrative(String workspace) throws RepositoryException {
         if (this.disableLoginAdministrative) {
             log(LogService.LOG_ERROR, "SlingRepository.loginAdministrative is disabled. Please use SlingRepository.loginService.");
@@ -238,6 +241,7 @@ public abstract class AbstractSlingRepository
      *
      * @since 2.2 (bundle version 2.2.0)
      */
+    @Override
     public final Session loginService(String subServiceName, String workspace) throws LoginException,
             RepositoryException {
         log(LogService.LOG_ERROR,
@@ -245,16 +249,19 @@ public abstract class AbstractSlingRepository
         throw new LoginException();
     }
 
+    @Override
     public Session login(Credentials credentials) throws LoginException,
             RepositoryException {
         return this.login(credentials, null);
     }
 
+    @Override
     public Session login(String workspace) throws LoginException,
             NoSuchWorkspaceException, RepositoryException {
         return this.login(null, workspace);
     }
 
+    @Override
     public Session login(Credentials credentials, String workspace)
             throws LoginException, NoSuchWorkspaceException,
             RepositoryException {
@@ -387,6 +394,7 @@ public abstract class AbstractSlingRepository
      *
      * @see javax.jcr.Repository#getDescriptor(java.lang.String)
      */
+    @Override
     public String getDescriptor(String name) {
         Repository repo = getRepository();
         if (repo != null) {
@@ -402,6 +410,7 @@ public abstract class AbstractSlingRepository
      *
      * @see javax.jcr.Repository#getDescriptorKeys()
      */
+    @Override
     public String[] getDescriptorKeys() {
         Repository repo = getRepository();
         if (repo != null) {
@@ -415,6 +424,7 @@ public abstract class AbstractSlingRepository
     /**
      * {@inheritDoc}
      */
+    @Override
     public Value getDescriptorValue(String key) {
         Repository repo = getRepository();
         if (repo != null) {
@@ -428,6 +438,7 @@ public abstract class AbstractSlingRepository
     /**
      * {@inheritDoc}
      */
+    @Override
     public Value[] getDescriptorValues(String key) {
         Repository repo = getRepository();
         if (repo != null) {
@@ -441,6 +452,7 @@ public abstract class AbstractSlingRepository
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isSingleValueDescriptor(String key) {
         Repository repo = getRepository();
         if (repo != null) {
@@ -454,6 +466,7 @@ public abstract class AbstractSlingRepository
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isStandardDescriptor(String key) {
         Repository repo = getRepository();
         if (repo != null) {
@@ -572,10 +585,12 @@ public abstract class AbstractSlingRepository
         final String[] interfaces = getServiceRegistrationInterfaces();
 
         return componentContext.getBundleContext().registerService(interfaces, new ServiceFactory() {
+            @Override
             public Object getService(Bundle bundle, ServiceRegistration registration) {
                 return SlingRepositoryProxyHandler.createProxy(interfaces, AbstractSlingRepository.this, bundle);
             }
 
+            @Override
             public void ungetService(Bundle bundle, ServiceRegistration registration, Object service) {
                 // nothing to do (GC does the work for us)
             }
@@ -1028,6 +1043,7 @@ public abstract class AbstractSlingRepository
         }
     }
 
+    @Override
     public void run() {
         // start polling with a small value to be faster at system startup
         // we'll increase the polling time after each try
@@ -1167,6 +1183,7 @@ public abstract class AbstractSlingRepository
             this.usingBundle = usingBundle;
         }
 
+        @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             if (SlingRepositoryProxyHandler.LOGIN_SERVICE_NAME.equals(method.getName()) && args != null && args.length == 2) {
                 return this.delegatee.loginService(this.usingBundle, (String) args[0], (String) args[1]);

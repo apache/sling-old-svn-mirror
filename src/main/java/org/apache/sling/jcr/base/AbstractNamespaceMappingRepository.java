@@ -30,7 +30,7 @@ import aQute.bnd.annotation.ProviderType;
  * implementation of the {@link SlingRepository} interface which provides
  * default support for namespace mapping.
  *
- * @deprecated as of API version 2.3 (bundle version 2.3). Use
+ * @deprecated as of API version 2.3 (bundle version 2.2.2). Use
  *             {@link NamespaceMappingSupport} or
  *             {@link AbstractSlingRepositoryManager} and
  *             {@link AbstractSlingRepository2} instead.
@@ -41,6 +41,7 @@ public abstract class AbstractNamespaceMappingRepository extends NamespaceMappin
 
     private ServiceTracker namespaceMapperTracker;
 
+    @Override
     protected final NamespaceMapper[] getNamespaceMapperServices() {
         if (namespaceMapperTracker != null) {
             // call namespace mappers
@@ -60,6 +61,7 @@ public abstract class AbstractNamespaceMappingRepository extends NamespaceMappin
         this.namespaceMapperTracker.open();
     }
 
+    @Override
     protected void tearDown() {
         if ( this.namespaceMapperTracker != null ) {
             this.namespaceMapperTracker.close();

@@ -70,7 +70,7 @@ import aQute.bnd.annotation.ProviderType;
  * class.
  *
  * @see AbstractSlingRepository2
- * @since API version 2.3 (bundle version 2.3)
+ * @since API version 2.3 (bundle version 2.2.2)
  */
 @ProviderType
 public abstract class AbstractSlingRepositoryManager extends NamespaceMappingSupport {
@@ -78,19 +78,19 @@ public abstract class AbstractSlingRepositoryManager extends NamespaceMappingSup
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private BundleContext bundleContext;
+    private volatile BundleContext bundleContext;
 
-    private Repository repository;
+    private volatile Repository repository;
 
     // the SlingRepository instance used to setup basic stuff
     // see setup and tearDown
-    private AbstractSlingRepository2 masterSlingRepository;
+    private volatile AbstractSlingRepository2 masterSlingRepository;
 
-    private ServiceRegistration repositoryService;
+    private volatile ServiceRegistration repositoryService;
 
-    private String defaultWorkspace;
+    private volatile String defaultWorkspace;
 
-    private boolean disableLoginAdministrative;
+    private volatile boolean disableLoginAdministrative;
 
     /**
      * Returns the default workspace, which may be <code>null</code> meaning to
@@ -172,10 +172,12 @@ public abstract class AbstractSlingRepositoryManager extends NamespaceMappingSup
         final String[] interfaces = getServiceRegistrationInterfaces();
 
         return bundleContext.registerService(interfaces, new ServiceFactory() {
+            @Override
             public Object getService(Bundle bundle, ServiceRegistration registration) {
                 return AbstractSlingRepositoryManager.this.create(bundle);
             }
 
+            @Override
             public void ungetService(Bundle bundle, ServiceRegistration registration, Object service) {
                 AbstractSlingRepositoryManager.this.destroy((AbstractSlingRepository2) service);
             }
