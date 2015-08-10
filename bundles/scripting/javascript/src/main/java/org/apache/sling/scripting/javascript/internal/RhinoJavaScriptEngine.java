@@ -117,7 +117,10 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine implements 
                         return slingCompiledScript;
                     }
                 };
-                scriptCache.putScript(cachedScript);
+                // SLING-4935 avoid caching scripts for which we cannot determine a name
+                if (!scriptName.equals(NO_SCRIPT_NAME)) {
+                    scriptCache.putScript(cachedScript);
+                }
                 LOGGER.debug("Added {} script to Script Cache.", scriptName);
                 return slingCompiledScript;
             } catch (IOException e) {
@@ -226,13 +229,6 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine implements 
         @Override
         public Object eval(ScriptContext scriptContext) throws ScriptException {
             Bindings bindings = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
-            String scriptName = "NO_SCRIPT_NAME";
-            {
-                SlingScriptHelper helper = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
-                if (helper != null) {
-                    scriptName = helper.getScript().getScriptResource().getPath();
-                }
-            }
 
             // container for replaced properties
             Map<String, Object> replacedProperties = null;
@@ -314,9 +310,8 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine implements 
 
                 // prevent variables to be pushed back in case of errors
                 isTopLevelCall = false;
-
-                final ScriptException se = new ScriptException(
-                        "Failure running script " + scriptName + ": " + t.getMessage());
+                String scriptName = getScriptName(scriptContext);
+                final ScriptException se = new ScriptException("Failure running script " + scriptName + ": " + t.getMessage());
                 se.initCause(t);
                 throw se;
 
@@ -359,6 +354,19 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine implements 
     private String getScriptName(Reader scriptReader) {
         if(scriptReader instanceof ScriptNameAware){
             return ((ScriptNameAware) scriptReader).getScriptName();
+        }
+        return NO_SCRIPT_NAME;
+    }
+
+    private String getScriptName(ScriptContext scriptContext) {
+        Bindings bindings = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
+        String scriptName = (String) bindings.get(ScriptEngine.FILENAME);
+        if (scriptName != null && !"".equals(scriptName)) {
+            return scriptName;
+        }
+        SlingScriptHelper sling = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
+        if (sling != null) {
+            return sling.getScript().getScriptResource().getPath();
         }
         return NO_SCRIPT_NAME;
     }
