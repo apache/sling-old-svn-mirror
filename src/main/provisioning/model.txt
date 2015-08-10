@@ -20,7 +20,7 @@
 # Dependencies
 [artifacts]
   org.apache.sling/org.apache.sling.launchpad/8-SNAPSHOT/slingstart
-  org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.7-SNAPSHOT
+  org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.9-SNAPSHOT
   org.apache.sling/org.apache.sling.scripting.sightly.repl/1.0.1-SNAPSHOT
   org.apache.sling/org.apache.sling.scripting.sightly.testing-content/1.0.5-SNAPSHOT
 
