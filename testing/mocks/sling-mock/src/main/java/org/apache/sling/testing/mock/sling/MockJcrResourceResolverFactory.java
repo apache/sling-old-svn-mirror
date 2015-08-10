@@ -32,6 +32,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory;
+import org.apache.sling.jcr.resource.internal.helper.jcr.PathMapper;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
@@ -58,6 +59,11 @@ class MockJcrResourceResolverFactory extends AbstractMockResourceResolverFactory
         // setup mocked JCR environment
         if (bundleContext.getServiceReference(SlingRepository.class.getName()) == null) {
             bundleContext.registerService(SlingRepository.class.getName(), this.slingRepository, null);
+        }
+        
+        // setup PathMapper which is a mandatory service for JcrProviderFactory
+        if (bundleContext.getServiceReference(PathMapper.class.getName()) == null) {
+            bundleContext.registerService(PathMapper.class.getName(), new PathMapper(), null);
         }
 
         // setup real sling JCR resource provider implementation for use in
