@@ -109,6 +109,7 @@ public class ScriptCacheImpl implements EventHandler, ScriptCache {
     private ServiceRegistration eventHandlerServiceRegistration = null;
     private Set<String> extensions = new HashSet<String>();
     private String[] additionalExtensions = new String[]{};
+    private String[] searchPaths = {};
 
     // use a static policy so that we can reconfigure the watched script files if the search paths are changed
     @Reference(policy = ReferencePolicy.STATIC)
@@ -141,10 +142,15 @@ public class ScriptCacheImpl implements EventHandler, ScriptCache {
 
     @Override
     public void putScript(CachedScript script) {
-        SoftReference<CachedScript> reference = new SoftReference<CachedScript>(script);
         writeLock.lock();
         try {
-            internalMap.put(script.getScriptPath(), reference);
+            for (String searchPath : searchPaths) {
+                if (script.getScriptPath().startsWith(searchPath)) {
+                    SoftReference<CachedScript> reference = new SoftReference<CachedScript>(script);
+                    internalMap.put(script.getScriptPath(), reference);
+                    break;
+                }
+            }
         } finally {
             writeLock.unlock();
         }
@@ -221,6 +227,17 @@ public class ScriptCacheImpl implements EventHandler, ScriptCache {
             CachingMap<CachedScript> newMap = new CachingMap<CachedScript>(newMaxCacheSize);
             newMap.putAll(internalMap);
             internalMap = newMap;
+        }
+        ResourceResolver resolver = null;
+        try {
+            resolver = rrf.getAdministrativeResourceResolver(null);
+            searchPaths = resolver.getSearchPath();
+        } catch (LoginException e) {
+            LOGGER.error("Unable to store search paths.", e);
+        } finally {
+            if (resolver != null) {
+                resolver.close();
+            }
         }
         configureCache();
         active = true;
