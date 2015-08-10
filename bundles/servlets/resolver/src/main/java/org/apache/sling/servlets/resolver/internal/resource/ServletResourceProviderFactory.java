@@ -127,8 +127,8 @@ public class ServletResourceProviderFactory {
         addByType(pathSet, ref);
 
         if (pathSet.isEmpty()) {
-            if (log.isInfoEnabled()) {
-                log.info(
+            if (log.isDebugEnabled()) {
+                log.debug(
                     "create({}): ServiceReference has no registration settings, ignoring",
                     getServiceIdentifier(ref));
             }
@@ -239,8 +239,8 @@ public class ServletResourceProviderFactory {
 
             // SLING-512 only, set default methods if no extensions are declared
             if (extensions == null || extensions.length == 0) {
-                if (log.isInfoEnabled()) {
-                    log.info(
+                if (log.isDebugEnabled()) {
+                    log.debug(
                         "addByType({}): No methods declared, assuming GET/HEAD",
                         getServiceIdentifier(ref));
                 }
@@ -248,8 +248,8 @@ public class ServletResourceProviderFactory {
             }
 
         } else if (methods.length == 1 && ALL_METHODS.equals(methods[0])) {
-            if (log.isInfoEnabled()) {
-                log.info("addByType({}): Assuming all methods for '*'",
+            if (log.isDebugEnabled()) {
+                log.debug("addByType({}): Assuming all methods for '*'",
                     getServiceIdentifier(ref));
             }
             methods = null;

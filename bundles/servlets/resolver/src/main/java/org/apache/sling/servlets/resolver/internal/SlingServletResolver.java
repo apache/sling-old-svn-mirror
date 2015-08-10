@@ -1000,7 +1000,7 @@ public class SlingServletResolver
             provider,
             createServiceProperties(reference, provider));
 
-        LOGGER.info("Registered {}", provider.toString());
+        LOGGER.debug("Registered {}", provider.toString());
         synchronized (this.servletsByReference) {
             servletsByReference.put(reference, new ServletReg(servlet, reg));
         }
