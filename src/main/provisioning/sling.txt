@@ -64,7 +64,7 @@
     javax.mail/mail/1.4.7
     org.apache.sling/org.apache.sling.xss/1.0.4
     org.apache.sling/org.apache.sling.scripting.sightly/1.0.3-SNAPSHOT
-    org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.7-SNAPSHOT
+    org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.9-SNAPSHOT
     org.apache.sling/org.apache.sling.scripting.sightly.repl/1.0.1-SNAPSHOT
     org.apache.geronimo.bundles/jstl/1.2_1
     org.apache.sling/org.apache.sling.models.api/1.2.0
