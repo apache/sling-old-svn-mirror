@@ -47,7 +47,7 @@ public class JackrabbitRepositoryIT extends CommonTests {
         opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-spi-commons", "2.10.1"));
         opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-jcr-rmi", "2.10.1"));
         opt.add(mavenBundle("org.apache.derby", "derby", "10.5.3.0_1"));
-        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.jackrabbit.server", "2.2.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.jackrabbit.server", "2.3.1-SNAPSHOT"));
 
         return opt.toArray(new Option[]{});
     }
