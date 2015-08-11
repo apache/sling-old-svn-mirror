@@ -64,9 +64,6 @@
                         <Private-Package>
                             org.apache.sling.launchpad.testservices.*
                         </Private-Package>
-                        <Sling-Namespaces>
-                            test1=http://sling.apache.org/test/one
-                        </Sling-Namespaces>
                         <Sling-Nodetypes>
                             SLING-INF/nodetypes/test.cnd
                         </Sling-Nodetypes>
