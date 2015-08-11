@@ -83,8 +83,8 @@
     org.apache.felix/org.apache.felix.webconsole.plugins.ds/1.0.0
     org.apache.felix/org.apache.felix.webconsole.plugins.obr/1.0.2
     org.apache.felix/org.apache.felix.webconsole.plugins.packageadmin/1.0.0
-    org.apache.felix/org.apache.felix.webconsole.plugins.event/1.0.2
-    org.apache.felix/org.apache.felix.webconsole.plugins.memoryusage/1.0.4
+    org.apache.felix/org.apache.felix.webconsole.plugins.event/1.1.2
+    org.apache.felix/org.apache.felix.webconsole.plugins.memoryusage/1.0.6
     org.apache.sling/org.apache.sling.commons.json/2.0.11-SNAPSHOT
     org.apache.felix/org.apache.felix.bundlerepository/1.6.4
     org.apache.sling/org.apache.sling.extensions.threaddump/0.2.2
