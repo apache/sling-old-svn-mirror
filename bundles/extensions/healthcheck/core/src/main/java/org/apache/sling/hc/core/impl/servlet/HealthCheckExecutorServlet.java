@@ -81,28 +81,30 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     }
     
     static final Param PARAM_TAGS = new Param("tags", "Comma-separated list of health checks tags to select");
-    static final Param PARAM_FORMAT = new Param("format", "Output format, html or json - an extension in the URL overrides this");
+    static final Param PARAM_FORMAT = new Param("format", "Output format, html|json|jsonp|txt - an extension in the URL overrides this");
     static final Param PARAM_HTTP_STATUS = new Param("httpStatus", "Specify HTTP result code, for example"
             + " CRITICAL:503 (status 503 if result >= CRITICAL)"
             + " or CRITICAL:503,HEALTH_CHECK_ERROR:500,OK:418 for more specific HTTP status");
 
     static final Param PARAM_COMBINE_TAGS_WITH_OR = new Param("combineTagsWithOr", "Combine tags with OR, active by default. Set to false to combine with AND");
     static final Param PARAM_FORCE_INSTANT_EXECUTION = new Param("forceInstantExecution", "Parameter for the HealthCheckExecutionOptions");
-    static final Param PARAM_OVERRIDE_GLOBAL_TIMEOUT = new Param("timeout", "Override th globale HealthCheckExecutionOptions timeout");
+    static final Param PARAM_OVERRIDE_GLOBAL_TIMEOUT = new Param("timeout", "Override the global HealthCheckExecutionOptions timeout");
 
     static final Param PARAM_INCLUDE_DEBUG = new Param("hcDebug", "Include the DEBUG output of the Health Checks");
     
+    static final String JSONP_CALLBACK_DEFAULT = "processHealthCheckResults";
+    static final Param PARAM_JSONP_CALLBACK = new Param("callback", "name of the JSONP callback function to use, defaults to " + JSONP_CALLBACK_DEFAULT);
+
     static final Param [] PARAM_LIST = { PARAM_TAGS, PARAM_FORMAT, PARAM_HTTP_STATUS, PARAM_COMBINE_TAGS_WITH_OR, 
-        PARAM_FORCE_INSTANT_EXECUTION, PARAM_OVERRIDE_GLOBAL_TIMEOUT, PARAM_INCLUDE_DEBUG};
+        PARAM_FORCE_INSTANT_EXECUTION, PARAM_OVERRIDE_GLOBAL_TIMEOUT, PARAM_INCLUDE_DEBUG, PARAM_JSONP_CALLBACK};
 
     static final String FORMAT_HTML = "html";
     static final String FORMAT_JSON = "json";
     static final String FORMAT_JSONP = "jsonp";
-
-    static final String PARAM_JSONP_CALLBACK = "callback";
-    static final String JSONP_CALLBACK_DEFAULT = "processHealthCheckResults";
+    static final String FORMAT_TXT = "txt";
 
     private static final String CONTENT_TYPE_HTML = "text/html";
+    private static final String CONTENT_TYPE_TXT = "text/plain";
     private static final String CONTENT_TYPE_JSON = "application/json";
     private static final String CONTENT_TYPE_JSONP = "application/javascript";
     private static final String STATUS_HEADER_NAME = "X-Health";
@@ -127,6 +129,9 @@ public class HealthCheckExecutorServlet extends HttpServlet {
 
     @Reference
     ResultJsonSerializer jsonSerializer;
+    
+    @Reference
+    ResultTxtSerializer txtSerializer;
 
     @Activate
     protected final void activate(final ComponentContext context) {
@@ -196,13 +201,21 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         } else if (FORMAT_JSON.equals(format)) {
             sendJsonResponse(overallResult, executionResults, null, response, includeDebug);
         } else if (FORMAT_JSONP.equals(format)) {
-            String jsonpCallback = StringUtils.defaultIfEmpty(request.getParameter(PARAM_JSONP_CALLBACK), JSONP_CALLBACK_DEFAULT);
+            String jsonpCallback = StringUtils.defaultIfEmpty(request.getParameter(PARAM_JSONP_CALLBACK.name), JSONP_CALLBACK_DEFAULT);
             sendJsonResponse(overallResult, executionResults, jsonpCallback, response, includeDebug);
+        } else if (FORMAT_TXT.equals(format)) {
+            sendTxtResponse(overallResult, response);
         } else {
             response.setContentType("text/plain");
-            response.getWriter().println("Invalid format " + format + " - supported formats: html|json|jsonp");
+            response.getWriter().println("Invalid format " + format + " - supported formats: html|json|jsonp|txt");
         }
 
+    }
+
+    private void sendTxtResponse(final Result overallResult, final HttpServletResponse response) throws IOException {
+        response.setContentType(CONTENT_TYPE_TXT);
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(txtSerializer.serialize(overallResult));
     }
 
     private void sendJsonResponse(final Result overallResult, final List<HealthCheckExecutionResult> executionResults, final String jsonpCallback,
@@ -213,6 +226,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         } else {
             response.setContentType(CONTENT_TYPE_JSON);
         }
+        response.setCharacterEncoding("UTF-8");
 
         String resultJson = this.jsonSerializer.serialize(overallResult, executionResults, jsonpCallback, includeDebug);
         PrintWriter writer = response.getWriter();
@@ -223,6 +237,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
             final HttpServletRequest request, final HttpServletResponse response, boolean includeDebug)
             throws IOException {
         response.setContentType(CONTENT_TYPE_HTML);
+        response.setCharacterEncoding("UTF-8");
         response.setHeader(STATUS_HEADER_NAME, overallResult.toString());
         response.getWriter().append(this.htmlSerializer.serialize(overallResult, executionResults, getHtmlHelpText(), includeDebug));
     }
