@@ -90,7 +90,7 @@ public class ResultHtmlSerializer {
                     + "title=\"Tags: " + StringEscapeUtils.escapeHtml(StringUtils.join(executionResult.getHealthCheckMetadata().getTags(), ",")) + "\">");
             writer.println("<td><span title=\"" + StringEscapeUtils.escapeHtml(executionResult.getHealthCheckMetadata().getName()) + "\">"
                     + StringEscapeUtils.escapeHtml(executionResult.getHealthCheckMetadata().getTitle()) + "</span></td>");
-            writer.println("<td style='font-weight:bold;'>" + result.getStatus() + "</td>");
+            writer.println("<td style='font-weight:bold;'>" + StringEscapeUtils.escapeHtml(result.getStatus().toString()) + "</td>");
             writer.println("<td>");
             boolean isFirst = true;
 
@@ -113,7 +113,7 @@ public class ResultHtmlSerializer {
                 if(entry.getStatus()==Result.Status.DEBUG) {
                 	message = "<span style='color:gray'/>"+message + "</span>";
                 }
-				writer.println((showStatus ? entry.getStatus() + " " : "") + message);
+				writer.println((showStatus ? StringEscapeUtils.escapeHtml(entry.getStatus().toString()) + " " : "") + message);
 
                 Exception exception = entry.getException();
                 if (exception != null) {
