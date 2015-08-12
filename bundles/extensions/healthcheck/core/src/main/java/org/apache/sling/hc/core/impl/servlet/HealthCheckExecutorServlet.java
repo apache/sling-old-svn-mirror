@@ -29,12 +29,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -71,15 +71,28 @@ public class HealthCheckExecutorServlet extends HttpServlet {
 
     private static final Logger LOG = LoggerFactory.getLogger(HealthCheckExecutorServlet.class);
 
-    static final String PARAM_TAGS = "tags";
-    static final String PARAM_FORMAT = "format";
-    static final String PARAM_HTTP_STATUS = "httpStatus";
+    static class Param {
+        final String name;
+        final String description;
+        Param(String n, String d) {
+            name = n;
+            description = d;
+        }
+    }
+    
+    static final Param PARAM_TAGS = new Param("tags", "Comma-separated list of health checks tags to select");
+    static final Param PARAM_FORMAT = new Param("format", "Output format, html or json - an extension in the URL overrides this");
+    static final Param PARAM_HTTP_STATUS = new Param("httpStatus", "Specify HTTP result code, for example CRITICAL:503,HEALTH_CHECK_ERROR:500 or CRITICAL+:503"
+            + " which means '503 for anything >= CRITICAL'");
 
-    static final String PARAM_COMBINE_TAGS_WITH_OR = "combineTagsWithOr";
-    static final String PARAM_FORCE_INSTANT_EXECUTION = "forceInstantExecution";
-    static final String PARAM_OVERRIDE_GLOBAL_TIMEOUT = "timeout";
+    static final Param PARAM_COMBINE_TAGS_WITH_OR = new Param("combineTagsWithOr", "Combine tags with OR, active by default. Set to false to combine with AND");
+    static final Param PARAM_FORCE_INSTANT_EXECUTION = new Param("forceInstantExecution", "Parameter for the HealthCheckExecutionOptions");
+    static final Param PARAM_OVERRIDE_GLOBAL_TIMEOUT = new Param("timeout", "Override th globale HealthCheckExecutionOptions timeout");
 
-    static final String PARAM_INCLUDE_DEBUG = "includeDebug";
+    static final Param PARAM_INCLUDE_DEBUG = new Param("hcDebug", "Include the DEBUG output of the Health Checks");
+    
+    static final Param [] PARAM_LIST = { PARAM_TAGS, PARAM_FORMAT, PARAM_HTTP_STATUS, PARAM_COMBINE_TAGS_WITH_OR, 
+        PARAM_FORCE_INSTANT_EXECUTION, PARAM_OVERRIDE_GLOBAL_TIMEOUT, PARAM_INCLUDE_DEBUG};
 
     static final String FORMAT_HTML = "html";
     static final String FORMAT_JSON = "json";
@@ -139,22 +152,22 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     @Override
     protected void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
 
-        final String[] tags = StringUtils.defaultIfEmpty(request.getParameter(PARAM_TAGS), "").split("[, ;]+");
+        final String[] tags = StringUtils.defaultIfEmpty(request.getParameter(PARAM_TAGS.name), "").split("[, ;]+");
 
         String format = StringUtils.substringAfterLast(request.getPathInfo(), ".");
         if (StringUtils.isBlank(format)) {
             // if not provided via extension use parameter or default
-            format = StringUtils.defaultIfEmpty(request.getParameter(PARAM_FORMAT), FORMAT_HTML);
+            format = StringUtils.defaultIfEmpty(request.getParameter(PARAM_FORMAT.name), FORMAT_HTML);
         }
 
-        final Boolean includeDebug = Boolean.valueOf(request.getParameter(PARAM_INCLUDE_DEBUG));
-        final Map<Result.Status, Integer> statusMapping = request.getParameter(PARAM_HTTP_STATUS) != null ? getStatusMapping(request
-                .getParameter(PARAM_HTTP_STATUS)) : null;
+        final Boolean includeDebug = Boolean.valueOf(request.getParameter(PARAM_INCLUDE_DEBUG.name));
+        final Map<Result.Status, Integer> statusMapping = request.getParameter(PARAM_HTTP_STATUS.name) != null ? getStatusMapping(request
+                .getParameter(PARAM_HTTP_STATUS.name)) : null;
 
         HealthCheckExecutionOptions options = new HealthCheckExecutionOptions();
-        options.setCombineTagsWithOr(Boolean.valueOf(StringUtils.defaultString(request.getParameter(PARAM_COMBINE_TAGS_WITH_OR), "true")));
-        options.setForceInstantExecution(Boolean.valueOf(request.getParameter(PARAM_FORCE_INSTANT_EXECUTION)));
-        String overrideGlobalTimeoutVal = request.getParameter(PARAM_OVERRIDE_GLOBAL_TIMEOUT);
+        options.setCombineTagsWithOr(Boolean.valueOf(StringUtils.defaultString(request.getParameter(PARAM_COMBINE_TAGS_WITH_OR.name), "true")));
+        options.setForceInstantExecution(Boolean.valueOf(request.getParameter(PARAM_FORCE_INSTANT_EXECUTION.name)));
+        String overrideGlobalTimeoutVal = request.getParameter(PARAM_OVERRIDE_GLOBAL_TIMEOUT.name);
         if (StringUtils.isNumeric(overrideGlobalTimeoutVal)) {
             options.setOverrideGlobalTimeout(Integer.valueOf(overrideGlobalTimeoutVal));
         }
@@ -208,19 +221,24 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     private void sendHtmlResponse(final Result overallResult, final List<HealthCheckExecutionResult> executionResults,
             final HttpServletRequest request, final HttpServletResponse response, boolean includeDebug)
             throws IOException {
-
-        String resultHtml = this.htmlSerializer.serialize(overallResult, executionResults, includeDebug);
-
         response.setContentType(CONTENT_TYPE_HTML);
         response.setHeader(STATUS_HEADER_NAME, overallResult.toString());
-
-        PrintWriter writer = response.getWriter();
-        writer.append(resultHtml);
-
+        response.getWriter().append(this.htmlSerializer.serialize(overallResult, executionResults, getHtmlHelpText(), includeDebug));
     }
 
     private void sendNoCacheHeaders(final HttpServletResponse response) {
         response.setHeader(CACHE_CONTROL_KEY, CACHE_CONTROL_VALUE);
+    }
+    
+    private String getHtmlHelpText() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("<h3>Supported URL parameters</h3>\n");
+        for(Param p : PARAM_LIST) {
+            sb.append("<b>").append(p.name).append("</b>:");
+            sb.append(StringEscapeUtils.escapeHtml(p.description));
+            sb.append("<br/>");
+        }
+        return sb.toString();
     }
 
     Map<Result.Status, Integer> getStatusMapping(String mappingStr) throws ServletException {
