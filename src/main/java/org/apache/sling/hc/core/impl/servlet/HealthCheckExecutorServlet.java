@@ -82,8 +82,9 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     
     static final Param PARAM_TAGS = new Param("tags", "Comma-separated list of health checks tags to select");
     static final Param PARAM_FORMAT = new Param("format", "Output format, html or json - an extension in the URL overrides this");
-    static final Param PARAM_HTTP_STATUS = new Param("httpStatus", "Specify HTTP result code, for example CRITICAL:503,HEALTH_CHECK_ERROR:500 or CRITICAL+:503"
-            + " which means '503 for anything >= CRITICAL'");
+    static final Param PARAM_HTTP_STATUS = new Param("httpStatus", "Specify HTTP result code, for example"
+            + " CRITICAL:503 (status 503 if result >= CRITICAL)"
+            + " or CRITICAL:503,HEALTH_CHECK_ERROR:500,OK:418 for more specific HTTP status");
 
     static final Param PARAM_COMBINE_TAGS_WITH_OR = new Param("combineTagsWithOr", "Combine tags with OR, active by default. Set to false to combine with AND");
     static final Param PARAM_FORCE_INSTANT_EXECUTION = new Param("forceInstantExecution", "Parameter for the HealthCheckExecutionOptions");
