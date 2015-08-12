@@ -55,7 +55,8 @@ public class ResultHtmlSerializer {
             + ".statusOK { background-color:#CCFFCC;}\n"
             + ".statusWARN { background-color:#FFE569;}\n"
             + ".statusCRITICAL { background-color:#F0975A;}\n"
-            + ".statusHEALTH_CHECK_ERROR { background-color:#F16D4E;}\n";
+            + ".statusHEALTH_CHECK_ERROR { background-color:#F16D4E;}\n"
+            + ".helpText { color:grey; font-size:80%; }\n";
     public static final String PROPERTY_CSS_STYLE = "styleString";
     @Property(name = PROPERTY_CSS_STYLE, label = "CSS Style",
             description = "CSS Style - can be configured to change the look and feel of the html result page.", value = CSS_STYLE_DEFAULT)
@@ -67,7 +68,7 @@ public class ResultHtmlSerializer {
         this.styleString = PropertiesUtil.toString(properties.get(PROPERTY_CSS_STYLE), CSS_STYLE_DEFAULT);
     }
 
-    public String serialize(final Result overallResult, final List<HealthCheckExecutionResult> executionResults, boolean includeDebug) {
+    public String serialize(final Result overallResult, final List<HealthCheckExecutionResult> executionResults, String escapedHelpText, boolean includeDebug) {
 
         StringWriter stringWriter = new StringWriter();
         PrintWriter writer = new PrintWriter(stringWriter);
@@ -131,6 +132,10 @@ public class ResultHtmlSerializer {
             writer.println("</tr>");
         }
         writer.println("</table>");
+        
+        writer.println("<div class='helpText'>");
+        writer.println(escapedHelpText);
+        writer.println("</div>");
         writer.println("</body></html>");
 
         return stringWriter.toString();

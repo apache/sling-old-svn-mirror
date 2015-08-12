@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.contains;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -94,8 +95,8 @@ public class HealthCheckExecutorServletTest {
     public void testDoGetHtml() throws ServletException, IOException {
 
         String testTag = "testTag";
-        doReturn(testTag).when(request).getParameter(HealthCheckExecutorServlet.PARAM_TAGS);
-        doReturn("false").when(request).getParameter(HealthCheckExecutorServlet.PARAM_COMBINE_TAGS_WITH_OR);
+        doReturn(testTag).when(request).getParameter(HealthCheckExecutorServlet.PARAM_TAGS.name);
+        doReturn("false").when(request).getParameter(HealthCheckExecutorServlet.PARAM_COMBINE_TAGS_WITH_OR.name);
         List<HealthCheckExecutionResult> executionResults = getExecutionResults(Result.Status.CRITICAL);
         doReturn(executionResults).when(healthCheckExecutor).execute(new HealthCheckExecutionOptions(), testTag);
         
@@ -103,17 +104,17 @@ public class HealthCheckExecutorServletTest {
 
         verifyZeroInteractions(jsonSerializer);
         verify(htmlSerializer)
-                .serialize(resultEquals(new Result(Result.Status.CRITICAL, "Overall Status CRITICAL")), eq(executionResults), eq(false));
+                .serialize(resultEquals(new Result(Result.Status.CRITICAL, "Overall Status CRITICAL")), eq(executionResults), contains("Supported URL parameters"), eq(false));
     }
 
     @Test
     public void testDoGetJson() throws ServletException, IOException {
 
         String testTag = "testTag";
-        doReturn(testTag).when(request).getParameter(HealthCheckExecutorServlet.PARAM_TAGS);
-        doReturn("true").when(request).getParameter(HealthCheckExecutorServlet.PARAM_COMBINE_TAGS_WITH_OR);
+        doReturn(testTag).when(request).getParameter(HealthCheckExecutorServlet.PARAM_TAGS.name);
+        doReturn("true").when(request).getParameter(HealthCheckExecutorServlet.PARAM_COMBINE_TAGS_WITH_OR.name);
         int timeout = 5000;
-        doReturn(timeout + "").when(request).getParameter(HealthCheckExecutorServlet.PARAM_OVERRIDE_GLOBAL_TIMEOUT);
+        doReturn(timeout + "").when(request).getParameter(HealthCheckExecutorServlet.PARAM_OVERRIDE_GLOBAL_TIMEOUT.name);
         doReturn("/result.json").when(request).getPathInfo();
         List<HealthCheckExecutionResult> executionResults = getExecutionResults(Result.Status.WARN);
         HealthCheckExecutionOptions options = new HealthCheckExecutionOptions();
