@@ -21,6 +21,7 @@ package org.apache.sling.discovery.impl.cluster;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import java.util.Iterator;
 import java.util.UUID;
 
 import org.apache.log4j.Level;
@@ -297,6 +298,11 @@ public class TopologyEventTest {
         l1Two.addExpected(Type.TOPOLOGY_CHANGED);
         l2.addExpected(Type.TOPOLOGY_CHANGED);
         Thread.sleep(4000);
+        final Iterator<TopologyEvent> it = l1.getEvents().iterator();
+        while(it.hasNext()) {
+        	final TopologyEvent e = it.next();
+        	logger.info("testNonDelayedInitEvent: got event: "+e);
+        }
         assertEquals(0, l1.getUnexpectedCount());
         assertEquals(3, l1.getEvents().size()); // one event
         assertEquals(0, l2.getUnexpectedCount());
