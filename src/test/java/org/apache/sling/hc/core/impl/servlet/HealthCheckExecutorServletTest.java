@@ -72,6 +72,9 @@ public class HealthCheckExecutorServletTest {
     private ResultJsonSerializer jsonSerializer;
 
     @Mock
+    private ResultTxtSerializer txtSerializer;
+
+    @Mock
     private ServiceReference hcServiceRef;
 
     @Mock
@@ -86,6 +89,7 @@ public class HealthCheckExecutorServletTest {
         healthCheckExecutorServlet.healthCheckExecutor = healthCheckExecutor;
         healthCheckExecutorServlet.htmlSerializer = htmlSerializer;
         healthCheckExecutorServlet.jsonSerializer = jsonSerializer;
+        healthCheckExecutorServlet.txtSerializer = txtSerializer;
 
         doReturn(500L).when(hcServiceRef).getProperty(Constants.SERVICE_ID);
         doReturn(writer).when(response).getWriter();
@@ -103,6 +107,7 @@ public class HealthCheckExecutorServletTest {
         healthCheckExecutorServlet.doGet(request, response);
 
         verifyZeroInteractions(jsonSerializer);
+        verifyZeroInteractions(txtSerializer);
         verify(htmlSerializer)
                 .serialize(resultEquals(new Result(Result.Status.CRITICAL, "Overall Status CRITICAL")), eq(executionResults), contains("Supported URL parameters"), eq(false));
     }
@@ -125,8 +130,32 @@ public class HealthCheckExecutorServletTest {
         healthCheckExecutorServlet.doGet(request, response);
 
         verifyZeroInteractions(htmlSerializer);
+        verifyZeroInteractions(txtSerializer);
         verify(jsonSerializer).serialize(resultEquals(new Result(Result.Status.WARN, "Overall Status WARN")), eq(executionResults), anyString(),
                 eq(false));
+
+    }
+
+    @Test
+    public void testDoGetTxt() throws ServletException, IOException {
+
+        String testTag = "testTag";
+        doReturn(testTag).when(request).getParameter(HealthCheckExecutorServlet.PARAM_TAGS.name);
+        doReturn("true").when(request).getParameter(HealthCheckExecutorServlet.PARAM_COMBINE_TAGS_WITH_OR.name);
+        int timeout = 5000;
+        doReturn(timeout + "").when(request).getParameter(HealthCheckExecutorServlet.PARAM_OVERRIDE_GLOBAL_TIMEOUT.name);
+        doReturn("/result.txt").when(request).getPathInfo();
+        List<HealthCheckExecutionResult> executionResults = getExecutionResults(Result.Status.WARN);
+        HealthCheckExecutionOptions options = new HealthCheckExecutionOptions();
+        options.setCombineTagsWithOr(true);
+        options.setOverrideGlobalTimeout(timeout);
+        doReturn(executionResults).when(healthCheckExecutor).execute(options, testTag);
+
+        healthCheckExecutorServlet.doGet(request, response);
+
+        verifyZeroInteractions(htmlSerializer);
+        verifyZeroInteractions(jsonSerializer);
+        verify(txtSerializer).serialize(resultEquals(new Result(Result.Status.WARN, "Overall Status WARN")));
 
     }
 
