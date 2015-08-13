@@ -87,8 +87,10 @@ public class HealthCheckExecutorServlet extends HttpServlet {
             + " or CRITICAL:503,HEALTH_CHECK_ERROR:500,OK:418 for more specific HTTP status");
 
     static final Param PARAM_COMBINE_TAGS_WITH_OR = new Param("combineTagsWithOr", "Combine tags with OR, active by default. Set to false to combine with AND");
-    static final Param PARAM_FORCE_INSTANT_EXECUTION = new Param("forceInstantExecution", "Parameter for the HealthCheckExecutionOptions");
-    static final Param PARAM_OVERRIDE_GLOBAL_TIMEOUT = new Param("timeout", "Override the global HealthCheckExecutionOptions timeout");
+    static final Param PARAM_FORCE_INSTANT_EXECUTION = new Param("forceInstantExecution", 
+            "If true, forces instant execution by executing async health checks directly, circumventing the cache (2sec by default) of the HealthCheckExecutor");
+    static final Param PARAM_OVERRIDE_GLOBAL_TIMEOUT = new Param("timeout", 
+            "(msec) a timeout status is returned for any health check still running after this period. Overrides the default HealthCheckExecutor timeout");
 
     static final Param PARAM_INCLUDE_DEBUG = new Param("hcDebug", "Include the DEBUG output of the Health Checks");
     
