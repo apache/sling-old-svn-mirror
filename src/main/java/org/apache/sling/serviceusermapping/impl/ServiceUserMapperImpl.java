@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
@@ -107,7 +106,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     private final List<ServiceUserValidator> validators = new CopyOnWriteArrayList<ServiceUserValidator>();
 
-    private SortedMap<Mapping, ServiceRegistration> activeMappingRegistrations = new TreeMap<Mapping, ServiceRegistration>();
+    private SortedMap<Mapping, Registration> activeRegistrations = new TreeMap<Mapping, Registration>();
 
     private BundleContext bundleContext;
 
@@ -131,18 +130,26 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
         this.globalServiceUserMappings = mappings.toArray(new Mapping[mappings.size()]);
         this.defaultUser = PropertiesUtil.toString(config.get(PROP_DEFAULT_USER), PROP_DEFAULT_USER_DEFAULT);
+
+        RegistrationSet registrationSet = null;
         synchronized ( this.amendments ) {
             this.bundleContext = bundleContext;
-            this.updateMappings();
+            registrationSet = this.updateMappings();
         }
+
+        this.executeServiceRegistrations(registrationSet);
     }
 
     @Deactivate
     void deactivate() {
-        synchronized ( this.amendments) {
-            updateServiceMappings(new ArrayList<Mapping>());
+        RegistrationSet registrationSet = null;
+
+        synchronized ( this.amendments ) {
+            updateServiceRegistrations(new Mapping[0]);
             bundleContext = null;
         }
+
+        this.executeServiceRegistrations(registrationSet);
     }
 
     /**
@@ -173,27 +180,32 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     protected void bindAmendment(final MappingConfigAmendment amendment, final Map<String, Object> props) {
         final Long key = (Long) props.get(Constants.SERVICE_ID);
+        RegistrationSet registrationSet = null;
         synchronized ( this.amendments ) {
             amendments.put(key, amendment);
-            this.updateMappings();
+            registrationSet = this.updateMappings();
         }
+
+        executeServiceRegistrations(registrationSet);
     }
 
     protected void unbindAmendment(final MappingConfigAmendment amendment, final Map<String, Object> props) {
         final Long key = (Long) props.get(Constants.SERVICE_ID);
+        RegistrationSet registrationSet = null;
         synchronized ( this.amendments ) {
             if ( amendments.remove(key) != null ) {
-                this.updateMappings();
+                registrationSet = this.updateMappings();
             }
         }
 
+        executeServiceRegistrations(registrationSet);
     }
 
     protected void updateAmendment(final MappingConfigAmendment amendment, final Map<String, Object> props) {
         this.bindAmendment(amendment, props);
     }
 
-    protected void updateMappings() {
+    protected RegistrationSet updateMappings() {
         final List<MappingConfigAmendment> sortedMappings = new ArrayList<MappingConfigAmendment>();
         for(final MappingConfigAmendment amendment : this.amendments.values() ) {
             sortedMappings.add(amendment);
@@ -212,43 +224,94 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
         activeMappings = mappings.toArray(new Mapping[mappings.size()]);
 
-        updateServiceMappings(mappings);
+        RegistrationSet registrationSet = updateServiceRegistrations(activeMappings);
+
+        return registrationSet;
+
     }
 
 
-    void updateServiceMappings(final List<Mapping> newMappings) {
+    RegistrationSet updateServiceRegistrations(final Mapping[] newMappings) {
 
+        RegistrationSet result = new RegistrationSet();
         // do not do anything if not activated
         if (bundleContext == null) {
+            return result;
+        }
+
+        final SortedSet<Mapping> orderedNewMappings = new TreeSet<Mapping>(Arrays.asList(newMappings));
+        final SortedMap<Mapping, Registration> newRegistrations = new TreeMap<Mapping, Registration>();
+
+        // keep those that are still mapped
+        for (Map.Entry<Mapping, Registration> registrationEntry: activeRegistrations.entrySet()) {
+            boolean keepEntry = true;
+
+            if (!orderedNewMappings.contains(registrationEntry.getKey())) {
+                Registration registration = registrationEntry.getValue();
+
+                // remove it only if it is a completed registration
+                if (registration.serviceRegistration != null) {
+                    result.removed.add(registration);
+                    keepEntry = false;
+                }
+            }
+
+            if (keepEntry) {
+                newRegistrations.put(registrationEntry.getKey(), registrationEntry.getValue());
+            }
+        }
+
+        // add those that are new
+        for (final Mapping mapping: orderedNewMappings) {
+            if (!newRegistrations.containsKey(mapping)) {
+                Registration registration = new Registration(mapping, null);
+                newRegistrations.put(mapping, registration);
+                result.added.add(registration);
+            }
+        }
+
+        activeRegistrations = newRegistrations;
+
+        return result;
+    }
+
+    private void executeServiceRegistrations(RegistrationSet registrationSet) {
+
+        if (registrationSet == null) {
             return;
         }
 
-        final SortedSet<Mapping> orderedActiveMappings = new TreeSet<Mapping>(newMappings);
-
-        final Iterator<Map.Entry<Mapping, ServiceRegistration>> it = activeMappingRegistrations.entrySet().iterator();
-        while (it.hasNext()) {
-            final Map.Entry<Mapping, ServiceRegistration> registrationEntry = it.next();
-
-            if (!orderedActiveMappings.contains(registrationEntry.getKey())) {
-                registrationEntry.getValue().unregister();
-                it.remove();
-            }
-        }
-
-
-        for (final Mapping mapping: orderedActiveMappings) {
-            if (!activeMappingRegistrations.containsKey(mapping)) {
-                final Dictionary<String, Object> properties = new Hashtable<String, Object>();
-                if (mapping.getSubServiceName() != null) {
-                    properties.put(ServiceUserMapped.SUBSERVICENAME, mapping.getSubServiceName());
+        for (Registration registration : registrationSet.removed) {
+            if (registration.serviceRegistration != null) {
+                try {
+                    registration.serviceRegistration.unregister();
+                } catch (IllegalStateException e) {
+                    log.error("cannot unregister ServiceUserMapped {}", registration.mapping,  e);
                 }
-
-                properties.put(Mapping.SERVICENAME, mapping.getServiceName());
-                final ServiceRegistration registration = bundleContext.registerService(ServiceUserMappedImpl.SERVICEUSERMAPPED,
-                        new ServiceUserMappedImpl(), properties);
-                activeMappingRegistrations.put(mapping, registration);
+                registration.serviceRegistration = null;
             }
         }
+
+        BundleContext savedBundleContext = bundleContext;
+
+        if (savedBundleContext == null) {
+            return;
+        }
+
+        for (Registration registration : registrationSet.added) {
+            Mapping mapping = registration.mapping;
+            final Dictionary<String, Object> properties = new Hashtable<String, Object>();
+            if (mapping.getSubServiceName() != null) {
+                properties.put(ServiceUserMapped.SUBSERVICENAME, mapping.getSubServiceName());
+            }
+
+            properties.put(Mapping.SERVICENAME, mapping.getServiceName());
+            final ServiceRegistration serviceRegistration = savedBundleContext.registerService(ServiceUserMappedImpl.SERVICEUSERMAPPED,
+                    new ServiceUserMappedImpl(), properties);
+
+            registration.serviceRegistration = serviceRegistration;
+        }
+
     }
 
     private String internalGetUserId(final String serviceName, final String subServiceName) {
@@ -293,6 +356,21 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     List<Mapping> getActiveMappings() {
         return Collections.unmodifiableList(Arrays.asList(activeMappings));
+    }
+
+    class Registration {
+        private Mapping mapping;
+        private ServiceRegistration serviceRegistration;
+
+        Registration(Mapping mapping, ServiceRegistration serviceRegistration) {
+            this.mapping = mapping;
+            this.serviceRegistration = serviceRegistration;
+        }
+    }
+
+    class RegistrationSet {
+        List<Registration> added = new ArrayList<Registration>();
+        List<Registration> removed = new ArrayList<Registration>();
     }
 }
 
