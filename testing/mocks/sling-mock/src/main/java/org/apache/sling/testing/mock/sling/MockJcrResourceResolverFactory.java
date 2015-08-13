@@ -32,7 +32,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory;
-import org.apache.sling.jcr.resource.internal.helper.jcr.PathMapper;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
@@ -61,10 +60,9 @@ class MockJcrResourceResolverFactory extends AbstractMockResourceResolverFactory
             bundleContext.registerService(SlingRepository.class.getName(), this.slingRepository, null);
         }
         
-        // setup PathMapper which is a mandatory service for JcrProviderFactory
-        if (bundleContext.getServiceReference(PathMapper.class.getName()) == null) {
-            bundleContext.registerService(PathMapper.class.getName(), new PathMapper(), null);
-        }
+        // setup PathMapper which is a mandatory service for JcrProviderFactory (since org.apache.sling.jcr.resource 2.5.4)
+        // use reflection to not depend on it if running with older version of org.apache.sling.jcr.resource
+        registerServiceIfFoundInClasspath("org.apache.sling.jcr.resource.internal.helper.jcr.PathMapper");
 
         // setup real sling JCR resource provider implementation for use in
         // mocked context
@@ -106,6 +104,27 @@ class MockJcrResourceResolverFactory extends AbstractMockResourceResolverFactory
         }
         catch (InvalidSyntaxException ex) {
             throw new RuntimeException(ex);
+        }
+    }
+    
+    private void registerServiceIfFoundInClasspath(String className) {
+        try {
+            Class pathMapperClass = Class.forName(className);
+            if (bundleContext.getServiceReference(className) == null) {
+                Object instance = pathMapperClass.newInstance();
+                MockOsgi.injectServices(instance, bundleContext);
+                MockOsgi.activate(instance);
+                bundleContext.registerService(className, instance, null);
+            }
+        }
+        catch (ClassNotFoundException ex) {
+            // skip service registration
+        }
+        catch (InstantiationException e) {
+            // skip service registration
+        }
+        catch (IllegalAccessException e) {
+            // skip service registration
         }
     }
     
