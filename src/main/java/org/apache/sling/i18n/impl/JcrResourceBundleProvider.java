@@ -389,12 +389,12 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         this.bundleServiceRegistrations = new HashMap<Key, ServiceRegistration>();
         invalidationDelay = PropertiesUtil.toLong(props.get(PROP_INVALIDATION_DELAY), DEFAULT_INVALIDATION_DELAY);
         if (this.resourceResolverFactory != null) { // this is only null during test execution!
-            scheduleReloadBundles(false);
             if (repoCredentials == null) {
                 resourceResolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
             } else {
                 resourceResolver = resourceResolverFactory.getResourceResolver(repoCredentials);
             }
+            scheduleReloadBundles(false);
         }
 
     }
