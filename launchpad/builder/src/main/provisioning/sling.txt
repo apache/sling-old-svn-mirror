@@ -80,7 +80,7 @@
     org.apache.felix/org.apache.felix.prefs/1.0.6
     org.apache.felix/org.apache.felix.webconsole/4.2.10
     org.apache.geronimo.bundles/json/20090211_1
-    org.apache.felix/org.apache.felix.webconsole.plugins.ds/1.0.0
+    org.apache.felix/org.apache.felix.webconsole.plugins.ds/2.0.0
     org.apache.felix/org.apache.felix.webconsole.plugins.obr/1.0.2
     org.apache.felix/org.apache.felix.webconsole.plugins.packageadmin/1.0.0
     org.apache.felix/org.apache.felix.webconsole.plugins.event/1.1.2
@@ -96,7 +96,7 @@
     org.apache.aries.jmx/org.apache.aries.jmx.whiteboard/1.0.0
 
 [artifacts startLevel=10]
-    org.apache.felix/org.apache.felix.scr/1.8.2
+    org.apache.felix/org.apache.felix.scr/2.0.0
     org.apache.felix/org.apache.felix.metatype/1.1.2
     org.apache.tika/tika-core/1.6
     org.apache.tika/tika-bundle/1.6
