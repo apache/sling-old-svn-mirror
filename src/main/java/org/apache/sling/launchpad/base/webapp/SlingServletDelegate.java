@@ -346,14 +346,9 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
         // The following property must start with a comma!
         final String servletVersion = getServletContext().getMajorVersion() + "." +
                                       getServletContext().getMinorVersion();
-        String packages = ",javax.servlet;javax.servlet.http;javax.servlet.resources";
-        if ( getServletContext().getMajorVersion() >= 3 ) {
-            // servlet 3.x adds new packages and we should export as 2.6 and 3.x
-            packages = packages + "; version=2.6" + packages + ";javax.servlet.annotation;javax.servlet.descriptor";
-        }
         props.put(
             Sling.PROP_SYSTEM_PACKAGES,
-            packages + "; version=" + servletVersion);
+            ",javax.servlet;javax.servlet.http;javax.servlet.resources; version=" + servletVersion);
 
         // prevent system properties from being considered
         props.put(Sling.SLING_IGNORE_SYSTEM_PROPERTIES, "true");
