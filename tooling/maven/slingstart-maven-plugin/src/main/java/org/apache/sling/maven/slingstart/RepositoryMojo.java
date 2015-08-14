@@ -17,9 +17,13 @@
 package org.apache.sling.maven.slingstart;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.maven.MavenExecutionException;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
@@ -32,7 +36,9 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.sling.provisioning.model.ArtifactGroup;
 import org.apache.sling.provisioning.model.Feature;
 import org.apache.sling.provisioning.model.Model;
+import org.apache.sling.provisioning.model.ModelUtility;
 import org.apache.sling.provisioning.model.RunMode;
+import org.apache.sling.provisioning.model.io.ModelWriter;
 
 /**
  * Create a mvn repository structure from the artifacts
@@ -61,6 +67,7 @@ public class RepositoryMojo extends AbstractSlingStartMojo {
         this.getLog().info("Creating repository...");
         final File artifactDir = new File(this.project.getBuild().getDirectory(), DIR_NAME);
 
+        // artifacts
         final Model model = ProjectHelper.getEffectiveModel(this.project, getResolverOptions());
 
         for(final Feature feature : model.getFeatures()) {
@@ -72,6 +79,7 @@ public class RepositoryMojo extends AbstractSlingStartMojo {
                 }
             }
         }
+        // base artifact
         try {
             final org.apache.sling.provisioning.model.Artifact baseArtifact = ModelUtils.findBaseArtifact(model);
             final org.apache.sling.provisioning.model.Artifact appArtifact =
@@ -84,17 +92,64 @@ public class RepositoryMojo extends AbstractSlingStartMojo {
         } catch ( final MavenExecutionException mee) {
             throw new MojoExecutionException(mee.getMessage(), mee.getCause());
         }
+        // models
+        Model rawModel = ProjectHelper.getRawModel(this.project);
+        if (usePomVariables) {
+            rawModel = ModelUtility.applyVariables(rawModel, new PomVariableResolver(project));
+        }
+        if (usePomDependencies) {
+            rawModel = ModelUtility.applyArtifactVersions(rawModel, new PomArtifactVersionResolver(project, allowUnresolvedPomDependencies));
+        }
 
+        final String classifier = (project.getPackaging().equals(BuildConstants.PACKAGING_PARTIAL_SYSTEM) ? null : BuildConstants.PACKAGING_PARTIAL_SYSTEM);
+        final org.apache.sling.provisioning.model.Artifact rawModelArtifact =
+                new org.apache.sling.provisioning.model.Artifact(
+                        this.project.getGroupId(),
+                        this.project.getArtifactId(),
+                        this.project.getVersion(),
+                        classifier,
+                        BuildConstants.TYPE_TXT);
+        final File rawModelFile = getRepositoryFile(artifactDir, rawModelArtifact);
+
+        Writer writer = null;
+        try {
+            writer = new FileWriter(rawModelFile);
+            ModelWriter.write(writer, rawModel);
+        } catch (IOException e) {
+            throw new MojoExecutionException("Unable to write model to " + rawModelFile, e);
+        } finally {
+            IOUtils.closeQuietly(writer);
+        }
+
+        for(final Map.Entry<String, String> entry : ProjectHelper.getDependencyModel(this.project).entrySet()) {
+            final org.apache.sling.provisioning.model.Artifact modelDepArtifact = org.apache.sling.provisioning.model.Artifact.fromMvnUrl(entry.getKey());
+            final String modelClassifier = (modelDepArtifact.getType().equals(BuildConstants.PACKAGING_SLINGSTART) ? BuildConstants.PACKAGING_PARTIAL_SYSTEM : modelDepArtifact.getClassifier());
+            final org.apache.sling.provisioning.model.Artifact modelArtifact = new org.apache.sling.provisioning.model.Artifact(
+                    modelDepArtifact.getGroupId(),
+                    modelDepArtifact.getArtifactId(),
+                    modelDepArtifact.getVersion(),
+                    modelClassifier,
+                    BuildConstants.TYPE_TXT);
+            final File modelFile = getRepositoryFile(artifactDir, modelArtifact);
+            Writer modelWriter = null;
+            try {
+                modelWriter = new FileWriter(modelFile);
+                modelWriter.write(entry.getValue());
+            } catch (IOException e) {
+                throw new MojoExecutionException("Unable to write model to " + modelFile, e);
+            } finally {
+                IOUtils.closeQuietly(modelWriter);
+            }
+        }
     }
 
     /**
-     * Copy a single artifact to the repository
-     * @throws MojoExecutionException
+     * Get the file in the repository directory
+     * @param artifactDir The base artifact directory
+     * @param artifact The artifact
+     * @return The file
      */
-    private void copyArtifactToRepository(final org.apache.sling.provisioning.model.Artifact artifact,
-            final File artifactDir)
-    throws MojoExecutionException {
-
+    private File getRepositoryFile(final File artifactDir, final org.apache.sling.provisioning.model.Artifact artifact) {
         final StringBuilder artifactNameBuilder = new StringBuilder();
         artifactNameBuilder.append(artifact.getArtifactId());
         artifactNameBuilder.append('-');
@@ -119,6 +174,18 @@ public class RepositoryMojo extends AbstractSlingStartMojo {
 
         final File artifactFile = new File(artifactDir, destPath);
         artifactFile.getParentFile().mkdirs();
+
+        return artifactFile;
+    }
+
+    /**
+     * Copy a single artifact to the repository
+     * @throws MojoExecutionException
+     */
+    private void copyArtifactToRepository(final org.apache.sling.provisioning.model.Artifact artifact,
+            final File artifactDir)
+    throws MojoExecutionException {
+        final File artifactFile = getRepositoryFile(artifactDir, artifact);
 
         final Artifact source = ModelUtils.getArtifact(this.project, this.mavenSession, this.artifactHandlerManager, this.resolver,
                 artifact.getGroupId(),

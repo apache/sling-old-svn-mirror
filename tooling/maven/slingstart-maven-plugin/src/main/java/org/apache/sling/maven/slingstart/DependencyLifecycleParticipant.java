@@ -77,11 +77,14 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
     private ArtifactResolver resolver;
 
     public static final class ProjectInfo {
+
         public MavenProject project;
         public Plugin       plugin;
         public Model        localModel;
         public boolean      done = false;
         public Model        model;
+        public final Map<org.apache.sling.provisioning.model.Artifact, Model> includedModels = new HashMap<org.apache.sling.provisioning.model.Artifact, Model>();
+
     }
 
     public static final class Environment {
@@ -281,27 +284,35 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
 
                             // if it's a project from the current reactor build, we can't resolve it right now
                             final String key = a.getGroupId() + ":" + a.getArtifactId();
-                            if ( env.modelProjects.containsKey(key) ) {
+                            final ProjectInfo depInfo = env.modelProjects.get(key);
+                            if ( depInfo != null ) {
                                 env.logger.debug("Found reactor " + a.getType() + " dependency : " + a);
-                                final Model model = addDependencies(env, env.modelProjects.get(key));
+                                final Model model = addDependencies(env, depInfo);
                                 if ( model == null ) {
                                     throw new MavenExecutionException("Recursive model dependency list including project " + info.project, (File)null);
                                 }
                                 dependencies.add(model);
+                                info.includedModels.put(a, depInfo.localModel);
+
                             } else {
                                 env.logger.debug("Found external " + a.getType() + " dependency: " + a);
+
                                 // "external" dependency, we can already resolve it
                                 final File modelFile = resolveSlingstartArtifact(env, info.project, dep);
                                 FileReader r = null;
                                 try {
                                     r = new FileReader(modelFile);
-                                    final Model m = ModelReader.read(r, modelFile.getAbsolutePath());
+                                    final Model model = ModelReader.read(r, modelFile.getAbsolutePath());
 
-                                    final Map<Traceable, String> errors = ModelUtility.validate(m);
+                                    info.includedModels.put(a, model);
+
+                                    final Map<Traceable, String> errors = ModelUtility.validate(model);
                                     if ( errors != null ) {
                                         throw new MavenExecutionException("Unable to read model file from " + modelFile + " : " + errors, modelFile);
                                     }
-                                    dependencies.add(m);
+                                    final Model fullModel = processSlingstartDependencies(env, info, dep,  model);
+
+                                    dependencies.add(fullModel);
                                 } catch ( final IOException ioe) {
                                     throw new MavenExecutionException("Unable to read model file from " + modelFile, ioe);
                                 } finally {
@@ -314,8 +325,6 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
                                     }
                                 }
                             }
-                            env.logger.debug("- adding dependency " + ModelUtils.toString(dep));
-                            info.project.getDependencies().add(dep);
 
                             removeList.add(a);
                         }
@@ -328,6 +337,29 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
         }
 
         return dependencies;
+    }
+
+    private static Model processSlingstartDependencies(final Environment env, final ProjectInfo info, final Dependency dep, final Model rawModel)
+    throws MavenExecutionException {
+        env.logger.debug("Processing dependency " + dep);
+
+        // we have to create an effective model to add the dependencies
+        final Model effectiveModel = ModelUtility.getEffectiveModel(rawModel, new ResolverOptions());
+
+        final List<Model> dependencies = searchSlingstartDependencies(env, info, effectiveModel);
+        Model mergingModel = new Model();
+        for(final Model d : dependencies) {
+            ModelUtility.merge(mergingModel, d);
+        }
+        ModelUtility.merge(mergingModel, effectiveModel);
+        mergingModel = ModelUtility.getEffectiveModel(mergingModel, new ResolverOptions());
+
+        final Map<Traceable, String> errors = ModelUtility.validate(mergingModel);
+        if ( errors != null ) {
+            throw new MavenExecutionException("Unable to create model file for " + dep + " : " + errors, (File)null);
+        }
+
+        return mergingModel;
     }
 
     /**
