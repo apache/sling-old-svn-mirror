@@ -67,9 +67,9 @@
                             <directory>${basedir}</directory>
                             <includes>
                                 <include>derby.log</include>
-                                <include>cachedir</include>
-                                <include>sling</include>
-                                <include>jackrabbit</include>
+                                <include>cachedir/**</include>
+                                <include>sling/**</include>
+                                <include>jackrabbit/**</include>
                                 <include>coverage.ec</include>
                             </includes>
                         </fileset>
