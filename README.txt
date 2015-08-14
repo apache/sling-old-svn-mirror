@@ -64,11 +64,11 @@ in the top-level directory of the Sling source code.
 
 2) Start the generated war with
 
-	 mvn jetty:run
+	 mvn jetty:run-war
 
 3) Browse Sling in:
 
-        http://localhost:8080
+        http://localhost:8888
         
   OR
   
