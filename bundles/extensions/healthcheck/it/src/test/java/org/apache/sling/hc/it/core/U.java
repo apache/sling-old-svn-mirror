@@ -75,11 +75,13 @@ public class U {
                     provision(
                             mavenBundle("org.apache.felix", "org.apache.felix.gogo.shell", "0.10.0"),
                             mavenBundle("org.apache.felix", "org.apache.felix.gogo.runtime", "0.10.0"),
-                            mavenBundle("org.apache.felix", "org.apache.felix.gogo.command", "0.12.0")
+                            mavenBundle("org.apache.felix", "org.apache.felix.gogo.command", "0.12.0"),
+                            mavenBundle("org.apache.felix", "org.apache.felix.shell.remote", "1.1.2")
                     )
             ),
             provision(
                     mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.6.2"),
+                    mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.8"),
                     mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", "1.1.0"),
                     mavenBundle("org.apache.sling", "org.apache.sling.hc.core", coreVersion),
                     mavenBundle("org.apache.sling", "org.apache.sling.hc.samples", samplesVersion),
