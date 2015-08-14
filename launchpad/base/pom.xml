@@ -41,10 +41,6 @@
         by the various launchpad modules..
     </description>
 
-    <properties>
-        <felix.httpservice.version>2.3.2</felix.httpservice.version>
-    </properties>
-
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/launchpad/base</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/launchpad/base</developerConnection>
@@ -275,13 +271,13 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.proxy</artifactId>
-            <version>${felix.httpservice.version}</version>
+            <version>3.0.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.bridge</artifactId>
-            <version>${felix.httpservice.version}</version>
+            <version>3.0.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
