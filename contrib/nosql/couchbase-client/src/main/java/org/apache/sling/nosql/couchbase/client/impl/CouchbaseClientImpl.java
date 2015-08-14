@@ -68,7 +68,11 @@ public class CouchbaseClientImpl implements CouchbaseClient {
 
     private String clientId;
     private boolean enabled;
+    private String[] couchbaseHosts;
     private String bucketName;
+    private String bucketPassword;
+    
+    private volatile boolean initialized;
     private Cluster cluster;
     private Bucket bucket;
 
@@ -76,33 +80,25 @@ public class CouchbaseClientImpl implements CouchbaseClient {
     private void activate(Map<String, Object> config) {
         clientId = PropertiesUtil.toString(config.get(CLIENT_ID_PROPERTY), null);
         enabled = PropertiesUtil.toBoolean(config.get(ENABLED_PROPERTY), ENABLED_PROPERTY_DEFAULT);
+        couchbaseHosts = PropertiesUtil.toStringArray(config.get(COUCHBASE_HOSTS_PROPERTY));
+        bucketName = PropertiesUtil.toString(config.get(CACHE_BUCKET_NAME_PROPERTY), null);
+        bucketPassword = PropertiesUtil.toString(config.get(CACHE_BUCKET_PASSWORD_PROPERTY), null);
+
         if (!enabled) {
             log.info("Couchbase caching for client '{}' is disabled by configuration.", clientId);
             return;
         }
 
-        String[] couchbaseHosts = PropertiesUtil.toStringArray(config.get(COUCHBASE_HOSTS_PROPERTY));
         if (couchbaseHosts == null || couchbaseHosts.length == 0) {
             enabled = false;
             log.warn("No couchbase host configured, client '{}' is disabled.", clientId);
             return;
         }
 
-        bucketName = PropertiesUtil.toString(config.get(CACHE_BUCKET_NAME_PROPERTY), null);
-        String bucketPassword = PropertiesUtil.toString(config.get(CACHE_BUCKET_PASSWORD_PROPERTY), null);
         if (bucketName == null) {
             enabled = false;
             log.warn("No couchbase bucket name configured, client '{}' is disabled.", clientId);
             return;
-        }
-
-        try {
-            cluster = CouchbaseEnvironmentSingleton.createCluster(couchbaseHosts);
-            bucket = CouchbaseEnvironmentSingleton.openBucket(cluster, bucketName, bucketPassword);
-        }
-        catch (Throwable ex) {
-            enabled = false;
-            log.error("Unable to connect to couchbase cluster or open couchbase bucket, client '" + clientId + "' is disabled.", ex);
         }
     }
 
@@ -131,11 +127,25 @@ public class CouchbaseClientImpl implements CouchbaseClient {
     }
 
     public Bucket getBucket() {
+        if (!initialized) {
+            synchronized (this) {
+                if (!initialized) {
+                    try {
+                        cluster = CouchbaseEnvironmentSingleton.createCluster(couchbaseHosts);
+                        bucket = CouchbaseEnvironmentSingleton.openBucket(cluster, bucketName, bucketPassword);
+                        initialized = true;
+                    }
+                    catch (Throwable ex) {
+                        throw new RuntimeException("Unable to connect to couchbase cluster or open couchbase bucket, client '" + clientId + "'.", ex);
+                    }
+                }
+            }
+        }
         return bucket;
     }
 
     public AsyncBucket getAsyncBucket() {
-        return bucket.async();
+        return getBucket().async();
     }
 
 }
