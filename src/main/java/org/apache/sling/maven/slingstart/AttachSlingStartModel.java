@@ -58,8 +58,6 @@ public class AttachSlingStartModel extends AbstractSlingStartMojo {
 
         Writer writer = null;
         try {
-
-
             writer = new FileWriter(outputFile);
             ModelWriter.write(writer, model);
         } catch (IOException e) {
