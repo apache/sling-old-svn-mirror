@@ -97,7 +97,7 @@
 
 [artifacts startLevel=10]
     org.apache.felix/org.apache.felix.scr/1.8.2
-    org.apache.felix/org.apache.felix.metatype/1.0.12
+    org.apache.felix/org.apache.felix.metatype/1.1.2
     org.apache.tika/tika-core/1.6
     org.apache.tika/tika-bundle/1.6
 
