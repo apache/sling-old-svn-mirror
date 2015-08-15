@@ -23,7 +23,7 @@
 		<c:if test="${theResource.path != '/reseditor'}">
 			<% Resource theResource = (Resource) pageContext.getAttribute("theResource");
 			   Node node = theResource.adaptTo(Node.class);
-			   String nodeType = (node !=null) ? node.getPrimaryNodeType().getName() : "";
+			   String nodeType = (node !=null) ? node.getPrimaryNodeType().getName() : "nt:unstructured";
 			   pageContext.setAttribute("nodeType", nodeType);
 			%>
 			{

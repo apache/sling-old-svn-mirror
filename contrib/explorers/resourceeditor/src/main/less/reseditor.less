@@ -70,16 +70,13 @@ body
 }
 
 .plate-background {
-	background: -moz-linear-gradient(-45deg,  rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.7) 100%); /* FF3.6+ */
-	background: -webkit-gradient(linear, left top, right bottom, color-stop(0%,rgba(0,0,0,0.4)), color-stop(100%,rgba(0,0,0,0.7))); /* Chrome,Safari4+ */
-	background: -webkit-linear-gradient(-45deg,  rgba(0,0,0,0.4) 0%,rgba(0,0,0,0.7) 100%); /* Chrome10+,Safari5.1+ */
-	background: -o-linear-gradient(-45deg,  rgba(0,0,0,0.4) 0%,rgba(0,0,0,0.7) 100%); /* Opera 11.10+ */
-	background: -ms-linear-gradient(-45deg,  rgba(0,0,0,0.4) 0%,rgba(0,0,0,0.7) 100%); /* IE10+ */
-	background: linear-gradient(-45deg,  rgba(0,0,0,0.4) 0%,rgba(0,0,0,0.7) 100%); /* W3C */
+	   /* Fallback for web browsers that doesn't support RGBa */
+    background: rgb(0, 0, 0) transparent;
+    /* RGBa with 0.6 opacity */
+    background: rgba(0, 0, 0, 0.6);
 }
 
 .ie9filter-plate-div {
-	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a0000000', endColorstr='#c9000000',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
 	height: 100%;
 }
 .plate-box-shadow {
@@ -92,16 +89,23 @@ body
     .rounded(7px);
 }
 
+.full-height {
+	height: 100%;
+}
+
+#iframe_main {
+	padding-bottom: 40px;
+	.rounded;
+}
+
 @dark-gray: #303030;
 
 .plate-text-shadow {
 	text-shadow: 1px 1px 0px @dark-gray, 0px 0px 0px black;
 }
+
 .plate-selected-text-shadow {
 	text-shadow: 1px 1px 0px black, 0px 0px 0px #202020;
-}
-.plate-margin {
-	margin: 15px;
 }
 
 .plate {
@@ -111,9 +115,6 @@ body
 	.plate-text-shadow;
 	
 	overflow: hidden;
-	
-	.plate-margin;
-	
 }
 
 /* .logo has to be defined after .plate to overwrite the font properties */
@@ -127,6 +128,13 @@ body
 	margin: 10px;
 	position: relative;
 	top: 10px;
+}
+
+#main-row {
+	margin-top: 15px;	
+}
+#content-tabs {
+	margin-left: 10px;
 }
 
 .edition {
@@ -166,7 +174,7 @@ body
     width: 100%;
 }
 #inner_content_margin {
-    margin: 10px;
+    margin: 0 10px;
 }
 
 #footer {
@@ -358,11 +366,11 @@ input.jstree-rename-input{
 	text-shadow: none;
 }
 
-#properties .ie9filter-plate-div {
+#node-content .ie9filter-plate-div {
 	overflow-y: auto;
 	overflow-x: hidden;
 }
 
 #properties-info-icon {
-	margin-top: -4px;
+	margin-top: 5px;
 }

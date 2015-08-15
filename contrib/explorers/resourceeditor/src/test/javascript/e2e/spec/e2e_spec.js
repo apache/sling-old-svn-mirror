@@ -171,7 +171,7 @@ describe('A user of the Apache Sling Resource Editor', function() {
 			  client = client.url(homeURL);
 			  client
 			  .waitForExist('#last-element').click("#root li[nodename=\"aTestNode\"] i.add-icon")
-			  	.waitForVisible('#addNodeDialog.add-node-finished', 1000).addValue('#select2-drop .select2-input', 'Return').click('#addNodeDialog .btn.btn-primary.submit')
+			  	.waitForVisible('#addNodeDialog.add-node-finished', 2000).addValue('#select2-drop .select2-input', 'Return').click('#addNodeDialog .btn.btn-primary.submit')
 			  	// The open node animation will take longer than 500ms thus setting 2000ms as max.
 			  	.waitForExist('#root li[nodename="aTestNode"].opened', 2000).elements('#root li[nodename="aTestNode"].opened li a .jstree-themeicon', function(err, res) {
 				    client
@@ -225,13 +225,13 @@ describe('A user of the Apache Sling Resource Editor', function() {
 		  function addProperty(type, editorTagName){
 			  var encodedNodeNameSelector = '#root li[nodename="aTestNode"].opened li[nodename="a node with a resource type"]';
 			  var encodedNodeNameOpenSelector = encodedNodeNameSelector +' i.open-icon';
-			  var addPropertyMenuItemSelector = "#properties .add-property-menu [data-property-type='"+type+"']";
+			  var addPropertyMenuItemSelector = "#node-content .add-property-menu [data-property-type='"+type+"']";
 			  var key="a"+type+"Key";
 			  var value="a "+type+" value";
 			  var propValueEditorSelector = "#addPropertyDialog div[data-property-type='"+type+"'] "+editorTagName;
 			  client.url(homeURL).waitForExist('#last-element')
-			  .click("#root li[nodename=\"aTestNode\"] i.open-icon").waitForExist("#properties .add-property-menu-item", 1000)
-			  .click("#properties .add-property-menu-item").waitForExist(addPropertyMenuItemSelector, 1000)
+			  .click("#root li[nodename=\"aTestNode\"] i.open-icon").waitForExist("#node-content .add-property-menu-item", 1000)
+			  .click("#node-content .add-property-menu-item").waitForExist(addPropertyMenuItemSelector, 1000)
 			  .click(addPropertyMenuItemSelector).waitForVisible('#new-property-key', 1000)
 			  /* 
 			   * The value is not always set completely the first time for some strange reason so I set it twice.
@@ -245,7 +245,7 @@ describe('A user of the Apache Sling Resource Editor', function() {
 			  .click("#addPropertyDialog .btn-primary.submit").waitForExist("label.proplabel[for='"+key+"']", 1000, function(err, existed) {
 				  assert(typeof err === "undefined" || err === null);
 				  assert(existed === true);
-				  client.getValue("#properties div[data-property-name='"+key+"'].row .propinput.property-value", function(err, resultingValue) {
+				  client.getValue("#node-content div[data-property-name='"+key+"'].row .propinput.property-value", function(err, resultingValue) {
 					  assert(typeof err === "undefined" || err === null);
 					  assert(value === resultingValue);
 				  });
@@ -255,12 +255,12 @@ describe('A user of the Apache Sling Resource Editor', function() {
 	  });
 
 	  describe('can save a String property', function(){
-		  var inputElementSelector = "#properties div[data-property-name='aStringKey'].row .propinput.property-value";
+		  var inputElementSelector = "#node-content div[data-property-name='aStringKey'].row .propinput.property-value";
 		  
 		  it('with the icon', function(done) {
 			  var stringValue = "new String value";
 			  setStringFieldValue(client, stringValue);
-			  client.click("#properties div[data-property-name='aStringKey'].row .property-icon.glyphicon-save").waitForExist("div.alert-success.growl-notify", 1000).refresh();
+			  client.click("#node-content div[data-property-name='aStringKey'].row .property-icon.glyphicon-save").waitForExist("div.alert-success.growl-notify", 1000).refresh();
 			  testStringFieldValue(client, stringValue);
 			  client.call(done);
 		  });
@@ -285,8 +285,8 @@ describe('A user of the Apache Sling Resource Editor', function() {
 		  
 		  function setStringFieldValue(client, value){
 			  client.url(homeURL).waitForExist('#last-element')
-			  .click("#root li[nodename=\"aTestNode\"] i.open-icon").waitForExist("#properties label.proplabel[for='aStringKey']", 1000)
-			  .setValue("#properties div[data-property-name='aStringKey'].row .propinput.property-value", value);
+			  .click("#root li[nodename=\"aTestNode\"] i.open-icon").waitForExist("#node-content label.proplabel[for='aStringKey']", 1000)
+			  .setValue("#node-content div[data-property-name='aStringKey'].row .propinput.property-value", value);
 		  }
 		  
 		  function testStringFieldValue(client, value){
@@ -304,7 +304,7 @@ describe('A user of the Apache Sling Resource Editor', function() {
 			  var value= "aStringKey";
 			  focusInputField(client, value);
 			  client
-			  .click("#properties div[data-property-name='"+value+"'].row .property-icon.glyphicon-remove");
+			  .click("#node-content div[data-property-name='"+value+"'].row .property-icon.glyphicon-remove");
 			  testRemoval(client, value);
 			  client.call(done);
 		  });
@@ -329,7 +329,7 @@ describe('A user of the Apache Sling Resource Editor', function() {
 		  });
 		  
 		  function focusInputField(client, value){
-			  var stringPropertyInputFieldSelector = "#properties div[data-property-name='"+value+"'].row .propinput.property-value";
+			  var stringPropertyInputFieldSelector = "#node-content div[data-property-name='"+value+"'].row .propinput.property-value";
 			  client.url(homeURL).waitForExist('#last-element')
 			  .click("#root li[nodename=\"aTestNode\"] i.open-icon").waitForExist(stringPropertyInputFieldSelector, 1000)
 			  .click(stringPropertyInputFieldSelector);
@@ -339,7 +339,7 @@ describe('A user of the Apache Sling Resource Editor', function() {
 			  client
 			  .waitForVisible("div.bootbox-confirm .btn-primary", 1000)
 			  .click("div.bootbox-confirm .btn-primary").waitForExist("div.alert-success.growl-notify", 1000).refresh()
-			  .waitForExist("#properties div[data-property-name='"+value+"'].row", true/*reverse*/, function(err, existed) {
+			  .waitForExist("#node-content div[data-property-name='"+value+"'].row", true/*reverse*/, function(err, existed) {
 				  assert(typeof err === "undefined" || err === null);
 				  assert(existed === false);
 			  })

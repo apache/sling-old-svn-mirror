@@ -128,7 +128,7 @@ new org.apache.sling.reseditor.PropertyController({}, mainController);
 		<div id="login" class="row">
 			<div class="col-sm-12">
 			 	<div class="logo">
-				The Sling Resource Editor <span class="edition">node-edit version</span>
+				The Sling Resource Editor <span class="edition">build with passion</span>
 				</div>			 	
 				<div class="tabbable tabs-below"> 
 				  <div id="login_tab_content" class="tab-content plate-background plate-box-shadow" style="display:none;">
@@ -191,8 +191,8 @@ new org.apache.sling.reseditor.PropertyController({}, mainController);
 		  		</div>
 		  	</div>		
 		</div>
-		<div class="row">
-			<div class="col-sm-4">
+		<div id="main-row" class="row">
+			<div id="sidebar-col" class="col-sm-4">
 				<div id="sidebar" class="plate">
 					<div class="ie9filter-plate-div">
 						<div style="display:none;" class="info-content-container" >
@@ -215,9 +215,8 @@ new org.apache.sling.reseditor.PropertyController({}, mainController);
 					</div>
 				</div>
 			</div>
-			
-			<%@ include file="properties.jsp" %>
-	    </div>
+			<%@ include file="node-content.jsp" %>
+	    </div> 
 		<div class="row" style="visibility:hidden; display:none;">
 			<div class="col-sm-12">
 				 <div id="footer" class="plate">

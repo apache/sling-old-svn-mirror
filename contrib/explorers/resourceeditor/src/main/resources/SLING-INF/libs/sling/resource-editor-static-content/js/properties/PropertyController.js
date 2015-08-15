@@ -48,19 +48,19 @@ org.apache.sling.reseditor.PropertyController = (function() {
 			'</div>'
 			});
 
-			$( "#properties" ).on( "click", ".dropdown-menu.add-property-menu li a", function() {
+			$( "#node-content" ).on( "click", ".dropdown-menu.add-property-menu li a", function() {
 				var dataType = $(this).attr('data-property-type');
 				thisPropertyController.openAddPropertyDialog(dataType);
 			});
 			$('#addPropertyDialog .submit').click(function(){
 				thisPropertyController.addProperty();
 			});
-			$( "#properties" ).on( "click", ".property-icon.glyphicon-remove", function() {
+			$( "#node-content" ).on( "click", ".property-icon.glyphicon-remove", function() {
 				var parentRow = $(this).parents(".row:first");
 				var propertyKey = parentRow.find(".proplabel").attr("for");
 				thisPropertyController.removeProperty(propertyKey, parentRow);
 			});
-			$( "#properties" ).on( "click", ".property-icon.glyphicon-save", function() {
+			$( "#node-content" ).on( "click", ".property-icon.glyphicon-save", function() {
 				var parentRow = $(this).parents(".row:first");
 				var key, value;
 				if (parentRow.hasClass('new-property')){
@@ -74,12 +74,12 @@ org.apache.sling.reseditor.PropertyController = (function() {
 			});
 
 			$("#properties-info-icon").on("click", function(e, data) {
-				$('#properties .info-content-container').slideToggle();
+				$('#node-content .info-content-container').slideToggle();
 			});
-			$("#properties .info-content-container .close").on("click", function(e, data) {
-				$('#properties .info-content-container').slideToggle();
+			$("#node-content .info-content-container .close").on("click", function(e, data) {
+				$('#node-content .info-content-container').slideToggle();
 			});
-			$( "#properties" ).on( "keydown", function(event, data) {
+			$( "#node-content" ).on( "keydown", function(event, data) {
 		    	// see http://www.javascripter.net/faq/keycodes.htm
 				if (event.ctrlKey || event.metaKey) {
 					var pressedKey = String.fromCharCode(event.which).toLowerCase();
@@ -102,7 +102,7 @@ org.apache.sling.reseditor.PropertyController = (function() {
 					        break;
 					    case n:
 					    	event.preventDefault();
-					    	$('#properties .add-property-menu-item.dropdown-toggle').dropdown('toggle');
+					    	$('#node-content .add-property-menu-item.dropdown-toggle').dropdown('toggle');
 					        break;
 					}
 				}
@@ -147,13 +147,14 @@ org.apache.sling.reseditor.PropertyController = (function() {
 	PropertyController.prototype.saveProperty = function(key, value){
 		var thisPropertyController = this;
 		var data = {};
-		data[key] = [value,value];
+//		data[key] = [value,value];
+		data[key] = value;
 		data["_charset_"] = "utf-8";
 		$.ajax({
 	  	  type: 'POST',
-		  url: location.href+"?"+key+"="+value,
-		  dataType: "json"
-//	  	  ,data: data
+		  url: location.href,
+		  dataType: "json",
+	  	  data: data
 	  	})
 		.done(function() {
 			$.notify({
