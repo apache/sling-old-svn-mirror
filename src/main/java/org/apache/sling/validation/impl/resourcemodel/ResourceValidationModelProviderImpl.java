@@ -70,8 +70,7 @@ import org.slf4j.LoggerFactory;
 @Component
 public class ResourceValidationModelProviderImpl implements ValidationModelProvider, EventHandler {
 
-    static final String MODEL_XPATH_QUERY = "/jcr:root%s/" + Constants.MODELS_HOME
-            + "/*[@sling:resourceType=\"%s\" and @%s=\"%s\"]";
+    static final String MODEL_XPATH_QUERY = "/jcr:root%s/*[@sling:resourceType=\""+Constants.VALIDATION_MODEL_RESOURCE_TYPE+"\" and @"+Constants.VALIDATED_RESOURCE_TYPE+"=\"%s\"]";
     static final String[] TOPICS = { SlingConstants.TOPIC_RESOURCE_REMOVED, SlingConstants.TOPIC_RESOURCE_CHANGED,
             SlingConstants.TOPIC_RESOURCE_ADDED };
 
@@ -187,8 +186,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
         Collection<ValidationModel> validationModels = new ArrayList<ValidationModel>();
         String[] searchPaths = resourceResolver.getSearchPath();
         for (String searchPath : searchPaths) {
-            final String queryString = String.format(MODEL_XPATH_QUERY, searchPath,
-                    Constants.VALIDATION_MODEL_RESOURCE_TYPE, Constants.VALIDATED_RESOURCE_TYPE, relativeResourceType);
+            final String queryString = String.format(MODEL_XPATH_QUERY, searchPath, relativeResourceType);
             Iterator<Resource> models = resourceResolver.findResources(queryString, "xpath");
             while (models.hasNext()) {
                 Resource model = models.next();
