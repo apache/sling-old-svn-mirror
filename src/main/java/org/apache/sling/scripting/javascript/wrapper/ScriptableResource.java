@@ -18,6 +18,7 @@ package org.apache.sling.scripting.javascript.wrapper;
 
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.scripting.javascript.SlingWrapper;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
@@ -51,6 +52,7 @@ import org.slf4j.LoggerFactory;
  * <li>[Resource[]] getChildren()</li>
  * <li>[Resource[]] listChildren()</li>
  * <li>[Boolean] isResourceType(String)</li>
+ * <li>[Object] properties</li>
  * </ul>
  */
 public class ScriptableResource extends ScriptableObject implements
@@ -63,6 +65,7 @@ public class ScriptableResource extends ScriptableObject implements
     private static final Class<?>[] WRAPPED_CLASSES = { Resource.class };
 
     private Resource resource;
+    private ValueMap properties;
 
     public ScriptableResource() {
     }
@@ -305,6 +308,13 @@ public class ScriptableResource extends ScriptableObject implements
         }
 
         return Undefined.instance;
+    }
+
+    public Object jsGet_properties() {
+        if (properties == null) {
+            properties = resource.adaptTo(ValueMap.class);
+        }
+        return properties;
     }
 
     // --------- ScriptableObject API
