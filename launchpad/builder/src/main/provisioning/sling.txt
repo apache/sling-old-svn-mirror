@@ -69,7 +69,7 @@
     org.apache.geronimo.bundles/jstl/1.2_1
     org.apache.sling/org.apache.sling.models.api/1.2.0
     org.apache.sling/org.apache.sling.models.impl/1.2.0
-    org.apache.felix/org.apache.felix.http.whiteboard/2.3.2
+    org.apache.felix/org.apache.felix.http.whiteboard/3.0.0
     org.apache.sling/org.apache.sling.installer.console/1.0.0
     org.apache.sling/org.apache.sling.installer.provider.jcr/3.1.16
 
@@ -96,6 +96,7 @@
     org.apache.aries.jmx/org.apache.aries.jmx.whiteboard/1.0.0
 
 [artifacts startLevel=10]
+    org.apache.felix/org.apache.felix.http.sslfilter/1.0.2
     org.apache.felix/org.apache.felix.scr/2.0.0
     org.apache.felix/org.apache.felix.metatype/1.1.2
     org.apache.tika/tika-core/1.6
@@ -104,8 +105,8 @@
 [artifacts startLevel=15]
     commons-io/commons-io/2.4
     org.apache.sling/org.apache.sling.jcr.jcr-wrapper/2.0.0
-    org.apache.sling/org.apache.sling.jcr.api/2.3.1-SNAPSHOT
-    org.apache.sling/org.apache.sling.jcr.base/2.3.1-SNAPSHOT
+    org.apache.sling/org.apache.sling.jcr.api/2.3.0
+    org.apache.sling/org.apache.sling.jcr.base/2.3.0
     org.apache.sling/org.apache.sling.jcr.registration/1.0.2
     org.apache.jackrabbit/jackrabbit-api/2.10.1
     org.apache.jackrabbit/jackrabbit-jcr-commons/2.10.1
