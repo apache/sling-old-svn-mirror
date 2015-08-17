@@ -111,10 +111,12 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever, E
             Collection<ValidationModel> modelsToMerge = new ArrayList<ValidationModel>();
             while ((currentResourceType = resourceResolver.getParentResourceType(currentResourceType)) != null) {
                 ValidationModel modelToMerge = getModel(currentResourceType, resourcePath, resourceResolver);
-                if (baseModel == null) {
-                    baseModel = modelToMerge;
-                } else {
-                    modelsToMerge.add(modelToMerge);
+                if (modelToMerge != null) {
+                    if (baseModel == null) {
+                        baseModel = modelToMerge;
+                    } else {
+                        modelsToMerge.add(modelToMerge);
+                    }
                 }
             }
             if (!modelsToMerge.isEmpty()) {
