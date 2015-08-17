@@ -21,7 +21,7 @@ import javax.script.ScriptException;
 
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
-import org.apache.sling.scripting.RepositoryScriptingTestBase;
+import org.apache.sling.scripting.javascript.RepositoryScriptingTestBase;
 import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
 import org.junit.After;
 import org.junit.Before;

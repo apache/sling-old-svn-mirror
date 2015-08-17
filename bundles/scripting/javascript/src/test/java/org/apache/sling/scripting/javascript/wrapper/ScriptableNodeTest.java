@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.wrapper;
+package org.apache.sling.scripting.javascript.wrapper;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -26,7 +26,7 @@ import javax.jcr.Property;
 import javax.jcr.Value;
 
 import org.apache.sling.commons.json.jcr.JsonItemWriter;
-import org.apache.sling.scripting.RepositoryScriptingTestBase;
+import org.apache.sling.scripting.javascript.RepositoryScriptingTestBase;
 import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
 
 /** Test the ScriptableNode class "live", by retrieving

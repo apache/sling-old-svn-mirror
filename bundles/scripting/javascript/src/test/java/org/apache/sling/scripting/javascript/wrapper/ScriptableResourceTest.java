@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.wrapper;
+package org.apache.sling.scripting.javascript.wrapper;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -45,7 +45,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.commons.testing.sling.MockResourceResolver;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
-import org.apache.sling.scripting.RepositoryScriptingTestBase;
+import org.apache.sling.scripting.javascript.RepositoryScriptingTestBase;
 import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
 import org.mozilla.javascript.Wrapper;
 import org.slf4j.Logger;
