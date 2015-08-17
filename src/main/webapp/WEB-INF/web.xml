@@ -23,13 +23,6 @@
          xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_3_0.xsd">
     <display-name>Sling Launchpad Web Application</display-name>
 
-    <!-- The Felix Http Service Listener Proxy for HTTP Session events -->
-    <listener>
-        <listener-class>
-            org.apache.sling.launchpad.webapp.SlingSessionListener
-        </listener-class>
-    </listener>
-
     <servlet>
         <display-name>Sling Servlet</display-name>
         <servlet-name>sling</servlet-name>
