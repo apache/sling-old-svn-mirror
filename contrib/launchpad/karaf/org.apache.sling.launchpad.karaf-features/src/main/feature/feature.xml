@@ -66,7 +66,7 @@
   </feature>
   <!-- Apache Sling Commons -->
   <feature name="sling-commons-scheduler" version="${project.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.commons.scheduler/2.4.8</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.commons.scheduler/2.4.10</bundle>
     <!-- dependencies -->
     <feature>scr</feature>
     <feature version="${project.version}">sling-commons-threads</feature>
@@ -130,7 +130,7 @@
     <feature version="${project.version}">sling</feature>
   </feature>
   <feature name="sling-extension-i18n" version="${project.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.i18n/2.3.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.i18n/2.4.4</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
   </feature>
@@ -188,16 +188,16 @@
   </feature>
   <!-- Apache Sling JCR -->
   <feature name="sling-jcr" version="${project.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.api/2.2.0</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.base/2.2.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.api/2.3.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.base/2.3.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.classloader/3.2.2</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.contentloader/2.1.10</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.davex/1.2.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.davex/1.3.0</bundle>
     <!-- (not using org.apache.sling.jcr.jcr-wrapper) -->
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.registration/1.0.2</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.resource/2.5.4</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.webconsole/1.0.2</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.webdav/2.2.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.webdav/2.3.0</bundle>
     <!-- dependencies -->
     <feature>webconsole</feature>
     <feature version="${project.version}">sling</feature>
@@ -212,7 +212,7 @@
   </feature>
   <!-- Apache Sling JCR Jackrabbit -->
   <feature name="sling-jcr-jackrabbit" version="${project.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.jackrabbit.server/2.2.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.jackrabbit.server/2.3.0</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling-jcr</feature>
     <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.concurrent/1.3.4_1</bundle>
@@ -318,14 +318,14 @@
   <!-- Apache Sling Scripting -->
   <feature name="sling-scripting" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.api/2.1.8</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.core/2.0.32</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.core/2.0.34</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
     <feature>webconsole</feature>
     <bundle>mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
   </feature>
   <feature name="sling-scripting-javascript" version="${project.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.javascript/2.0.20</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.javascript/2.0.22</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling-scripting</feature>
     <feature version="${project.version}">sling-jcr</feature>
@@ -338,7 +338,7 @@
   </feature>
   <feature name="sling-scripting-sightly" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly/1.0.2</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.6</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.8</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-jcr</feature>
