@@ -220,6 +220,25 @@ public class ResourceValidationModelProviderImplTest {
     }
 
     @Test
+    public void testGetValidationModelOutsideSearchPath() throws Exception {
+        // build two models manually (which are identical except for the applicable path)
+        ValidationModel model1 = modelBuilder.build("sling/validation/test");
+
+        Resource contentValidatorsRoot = ResourceUtil.getOrCreateResource(rr, "/content",
+                (Map<String, Object>) null, "sling:Folder", true);
+        try {
+            // build models in JCR outside any search path /apps or /libs
+            createValidationModelResource(rr, contentValidatorsRoot.getPath(), "testValidationModel1", model1);
+
+            // check that no model is found
+            Collection<ValidationModel> models = modelProvider.getModel("sling/validation/test", validatorMap, rr);
+            Assert.assertThat("Model was placed outside resource resolver search path but still found", models, Matchers.empty());
+        } finally {
+            rr.delete(contentValidatorsRoot);
+        }
+    }
+
+    @Test
     public void testGetValidationModelWithChildren() throws Exception {
         // build two models manually (which are identical except for the applicable path)
         ResourcePropertyBuilder resourcePropertyBuilder = new ResourcePropertyBuilder();
