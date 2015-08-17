@@ -24,11 +24,11 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>24</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.testing.resourceresolver-mock</artifactId>
-    <version>1.1.7-SNAPSHOT</version>
+    <version>1.1.8</version>
 
     <name>Apache Sling Testing Resource Resolver Mock</name>
     <description>
@@ -36,9 +36,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/mocks/resourceresolver-mock</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/mocks/resourceresolver-mock</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/testing/mocks/resourceresolver-mock</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.testing.resourceresolver-mock-1.1.8</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.testing.resourceresolver-mock-1.1.8</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.testing.resourceresolver-mock-1.1.8</url>
     </scm>
 
     <reporting>
