@@ -19,25 +19,37 @@
 package org.apache.sling.scripting.wrapper;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-
+import java.util.Map;
 import javax.jcr.Item;
 import javax.jcr.NamespaceException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.commons.testing.sling.MockResourceResolver;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.scripting.RepositoryScriptingTestBase;
 import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
 import org.mozilla.javascript.Wrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ScriptableResourceTest extends RepositoryScriptingTestBase {
 
@@ -48,6 +60,8 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
     private static final String RESOURCE_TYPE = "testWrappedResourceType";
 
     private static final String RESOURCE_SUPER_TYPE = "testWrappedResourceSuperType";
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ScriptableResourceTest.class);
 
     @Override
     protected void setUp() throws Exception {
@@ -215,6 +229,17 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
         assertEquals(true, script.eval("resource.adaptTo(Packages.java.util.Date) == undefined", data));
     }
 
+    public void testProperties() throws Exception {
+        final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
+        Calendar date = new GregorianCalendar();
+        node.setProperty(JcrConstants.JCR_LASTMODIFIED, date);
+        node.setProperty("test", "testProperties");
+        node.getSession().save();
+        data.put("resource", new TestResource(node));
+        assertEquals(date.getTimeInMillis(), script.eval("(resource.properties['jcr:lastModified']).getTimeInMillis()", data));
+        assertEquals("testProperties", script.eval("resource.properties.test", data));
+    }
+
     private void assertEquals(Node expected, Object actual) {
         while (actual instanceof Wrapper) {
             actual = ((Wrapper) actual).unwrap();
@@ -271,6 +296,75 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
         public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
             if (type == Node.class || type == Item.class) {
                 return (AdapterType) node;
+            } else if (type == ValueMap.class) {
+                try {
+
+                    PropertyIterator iterator = node.getProperties();
+                    Map<String, Object> properties = new HashMap<String, Object>();
+                    while (iterator.hasNext()) {
+                        Property prop = iterator.nextProperty();
+                        if (prop.isMultiple()) {
+                            Value[] values = prop.getValues();
+                            Object[] array = new Object[values.length];
+                            int index = 0;
+                            for (Value value : values) {
+                                switch (value.getType()) {
+                                    case PropertyType.BINARY:
+                                        array[index++] = value.getBinary();
+                                        break;
+                                    case PropertyType.BOOLEAN:
+                                        array[index++] = value.getBoolean();
+                                        break;
+                                    case PropertyType.DATE:
+                                        array[index++] = value.getDate();
+                                        break;
+                                    case PropertyType.DECIMAL:
+                                        array[index++] = value.getDecimal();
+                                        break;
+                                    case PropertyType.DOUBLE:
+                                        array[index++] = value.getDouble();
+                                        break;
+                                    case PropertyType.LONG:
+                                        array[index++] = value.getLong();
+                                        break;
+                                    default:
+                                        array[index++] = value.getString();
+                                        break;
+                                }
+                            }
+                            properties.put(prop.getName(), array);
+
+                        } else {
+                            Value value = prop.getValue();
+                            switch (value.getType()) {
+                                case PropertyType.BINARY:
+                                    properties.put(prop.getName(), value.getBinary());
+                                    break;
+                                case PropertyType.BOOLEAN:
+                                    properties.put(prop.getName(), value.getBoolean());
+                                    break;
+                                case PropertyType.DATE:
+                                    properties.put(prop.getName(), value.getDate());
+                                    break;
+                                case PropertyType.DECIMAL:
+                                    properties.put(prop.getName(), value.getDecimal());
+                                    break;
+                                case PropertyType.DOUBLE:
+                                    properties.put(prop.getName(), value.getDouble());
+                                    break;
+                                case PropertyType.LONG:
+                                    properties.put(prop.getName(), value.getLong());
+                                    break;
+                                default:
+                                    properties.put(prop.getName(), value.getString());
+                                    break;
+                            }
+                        }
+                    }
+                    return ((AdapterType) (new ValueMapDecorator(properties)));
+                } catch (RepositoryException e) {
+                    LOGGER.error("Unable to adapt resource " + getPath() + " to a ValueMap.", e);
+                }
             }
 
             return null;
