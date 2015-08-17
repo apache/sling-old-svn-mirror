@@ -46,7 +46,7 @@ import org.osgi.service.component.ComponentContext;
                 name = SightlyEngineConfiguration.SCR_PROP_NAME_DEVMODE,
                 boolValue = SightlyEngineConfiguration.SCR_PROP_DEFAULT_DEVMODE,
                 label = "Development Mode",
-                description = "If enabled, Sightly components will be recompiled at every request instead of loading objects from memory."
+                description = "If enabled, Sightly components will be recompiled at every request instead of loading objects from memory. Also this will give out the Java classes' source via the ClassLoaderWriter."
         ),
         @Property(
                 name = SightlyEngineConfiguration.SCR_PROP_NAME_ENCODING,
