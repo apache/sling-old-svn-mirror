@@ -198,4 +198,37 @@ public class ValidationModelRetrieverImplTest {
         Assert.assertNotNull(model);
         Assert.assertThat(model.getResourceProperties(), Matchers.containsInAnyOrder(new ResourcePropertyNameMatcher("test/type"), new ResourcePropertyNameMatcher("test/supertype")));
     }
+    
+    @Test
+    public void testGetModelWithResourceInheritanceAndNoSuitableBaseModelFound() {
+        // no model found for base type and no resource super type set
+        ValidationModel model = validationModelRetriever.getModel("test/type", "/content/site1", true, resourceResolver);
+        Assert.assertNull("Found model although no model has been specified", model);
+        
+        // set super super type
+        Mockito.when(resourceResolver.getParentResourceType("test/type")).thenReturn("test/supertype");
+        // no model found at all (neither base nor super type)
+        model = validationModelRetriever.getModel("test/type", "/content/site1", true, resourceResolver);
+        Assert.assertNull("Found model although no model has been specified (neither in base nor in super type)", model);
+        
+        validationModelRetriever.validationModelsCache.clear();
+        
+        // only supertype has model being set
+        applicablePathPerResourceType.put("test/supertype", "/content/site1");
+        model = validationModelRetriever.getModel("test/type", "/content/site1", true, resourceResolver);
+        Assert.assertNotNull(model);
+        Assert.assertThat(model.getResourceProperties(), Matchers.contains(new ResourcePropertyNameMatcher("test/supertype")));
+    }
+    
+    @Test
+    public void testGetModelWithResourceInheritanceAndNoModelForSuperTypeFound() {
+        applicablePathPerResourceType.put("test/type", "/content/site1");
+        Mockito.when(resourceResolver.getParentResourceType("test/type")).thenReturn("test/supertype");
+        Mockito.when(resourceResolver.getParentResourceType("test/supertype")).thenReturn("test/supersupertype");
+        
+        // only model found for base type
+        ValidationModel model = validationModelRetriever.getModel("test/type", "/content/site1", true, resourceResolver);
+        Assert.assertNotNull(model);
+        Assert.assertThat(model.getResourceProperties(), Matchers.contains(new ResourcePropertyNameMatcher("test/type")));
+    }
 }
