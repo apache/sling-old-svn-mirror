@@ -16,30 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting;
+package org.apache.sling.scripting.javascript;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.naming.NamingException;
-
-import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
 
 
-/** Base class for tests which need a Repository
- *  and scripting functionality */
-public class RepositoryScriptingTestBase extends RepositoryTestBase {
-    protected ScriptEngineHelper script;
-    private int counter;
+/** Verify that our test environment works */
+public class TestSetupTest extends RepositoryScriptingTestBase {
     
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        script = new ScriptEngineHelper();
+    /** Test our test repository setup */
+    public void testRootNode() throws Exception {
+        assertNotNull(getTestRootNode());
     }
     
-    protected Node getNewNode() throws RepositoryException, NamingException {
-        return getTestRootNode().addNode("test-" + (++counter));
+    /** Test our script engine setup */
+    public void testScripting() throws Exception {
+        assertEquals("something",script.evalToString("out.print('something')"));
     }
-
+    
+    public void testScriptingWithData() throws Exception {
+        final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
+        data.put("a", "A");
+        data.put("b", "B");
+        assertEquals("A1",script.evalToString("out.print(a + b.length)", data));
+    }
 }
