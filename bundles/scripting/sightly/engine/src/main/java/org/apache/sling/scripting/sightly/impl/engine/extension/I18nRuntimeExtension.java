@@ -35,8 +35,8 @@ import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.i18n.ResourceBundleProvider;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
-import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.impl.filter.I18nFilter;
+import org.apache.sling.scripting.sightly.impl.utils.RenderUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,13 +52,12 @@ public class I18nRuntimeExtension implements RuntimeExtension {
 
     @Override
     public Object call(final RenderContext renderContext, Object... arguments) {
-        RenderContextImpl renderContextImpl = (RenderContextImpl) renderContext;
         ExtensionUtils.checkArgumentCount(I18nFilter.FUNCTION, arguments, 2);
-        String text = renderContextImpl.toString(arguments[0]);
+        String text = RenderUtils.toString(arguments[0]);
         Map<String, Object> options = (Map<String, Object>) arguments[1];
-        String locale = renderContextImpl.toString(options.get(I18nFilter.LOCALE_OPTION));
-        String hint = renderContextImpl.toString(options.get(I18nFilter.HINT_OPTION));
-        final Bindings bindings = renderContextImpl.getBindings();
+        String locale = RenderUtils.toString(options.get(I18nFilter.LOCALE_OPTION));
+        String hint = RenderUtils.toString(options.get(I18nFilter.HINT_OPTION));
+        final Bindings bindings = renderContext.getBindings();
         return get(bindings, text, locale, hint);
     }
 

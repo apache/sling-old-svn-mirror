@@ -28,6 +28,7 @@ import javax.script.SimpleBindings;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
+import org.apache.sling.scripting.sightly.impl.utils.RenderUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -67,9 +68,9 @@ public class RenderContextImplTest {
     public void testGetCollectionWithOneElement() {
         String stringObject = "test";
         Integer numberObject = 1;
-        Collection stringCollection = renderContext.toCollection(stringObject);
+        Collection stringCollection = RenderUtils.toCollection(stringObject);
         assertTrue(stringCollection.size() == 1 && stringCollection.contains(stringObject));
-        Collection numberCollection = renderContext.toCollection(numberObject);
+        Collection numberCollection = RenderUtils.toCollection(numberObject);
         assertTrue(numberCollection.size() == 1 && numberCollection.contains(numberObject));
     }
 }

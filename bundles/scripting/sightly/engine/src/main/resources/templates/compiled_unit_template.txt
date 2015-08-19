@@ -24,6 +24,7 @@ import javax.script.Bindings;
 
 import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderUnit;
 import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
+import org.apache.sling.scripting.sightly.impl.utils.RenderUtils;
 
 public final class ##ClassName## extends RenderUnit {
 

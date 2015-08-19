@@ -39,6 +39,7 @@ import org.apache.sling.scripting.sightly.impl.compiler.ris.command.OutVariable;
 import org.apache.sling.scripting.sightly.impl.compiler.ris.command.Procedure;
 import org.apache.sling.scripting.sightly.impl.compiler.ris.command.VariableBinding;
 import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
+import org.apache.sling.scripting.sightly.impl.utils.RenderUtils;
 
 /**
  * Java code generator
@@ -117,7 +118,7 @@ public class CodeGenVisitor implements CommandVisitor {
         if (descriptor.getType() == Type.BOOLEAN) {
             source.append(descriptor.getAssignedName());
         } else {
-            source.startMethodCall(SourceGenConstants.RENDER_CONTEXT_INSTANCE, RenderContextImpl.BOOLEAN_COERCE)
+            source.startMethodCall(SourceGenConstants.RENDER_UTILS, RenderUtils.BOOLEAN_COERCE)
                     .append(descriptor.getAssignedName())
                     .endCall();
         }
@@ -179,7 +180,7 @@ public class CodeGenVisitor implements CommandVisitor {
         String variable = analyzer.assignedName(outVariable.getVariableName());
         source.startStatement()
                 .startMethodCall(SourceGenConstants.OUT_BUFFER, SourceGenConstants.WRITE_METHOD)
-                .startMethodCall(SourceGenConstants.RENDER_CONTEXT_INSTANCE, RenderContextImpl.STRING_COERCE)
+                .startMethodCall(SourceGenConstants.RENDER_UTILS, RenderUtils.STRING_COERCE)
                 .append(variable)
                 .endCall()
                 .endCall()
@@ -204,7 +205,7 @@ public class CodeGenVisitor implements CommandVisitor {
                 .startStatement()
                 .append(collectionVar)
                 .assign()
-                .startMethodCall(SourceGenConstants.RENDER_CONTEXT_INSTANCE, RenderContextImpl.COLLECTION_COERCE)
+                .startMethodCall(SourceGenConstants.RENDER_UTILS, RenderUtils.COLLECTION_COERCE)
                 .append(listVariable)
                 .endCall()
                 .endStatement()
