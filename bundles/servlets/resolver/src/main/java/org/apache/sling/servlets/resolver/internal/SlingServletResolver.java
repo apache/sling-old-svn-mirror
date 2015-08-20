@@ -1274,7 +1274,7 @@ public class SlingServletResolver
                         servlets = locationUtil.getServlets(resourceResolver);
                     }
                     tr(pw);
-                    tdLabel(pw, "&nbsp;");
+                    tdLabel(pw, "Candidates");
                     tdContent(pw);
 
                     if (servlets == null || servlets.isEmpty()) {
