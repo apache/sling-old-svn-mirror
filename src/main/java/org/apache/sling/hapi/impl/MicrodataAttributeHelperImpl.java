@@ -59,7 +59,7 @@ public class MicrodataAttributeHelperImpl implements MicrodataAttributeHelper {
     public Map<String, String> itemtypeMap() {
         Map<String, String> attrMap = new AttrMap(2);
         attrMap.put("itemtype", type.getPath() + ".html");
-        attrMap.put("itemscope", !type.getAllProperties().isEmpty());
+        attrMap.put("itemscope", String.valueOf(!type.getAllProperties().isEmpty()));
         
         return attrMap;
     }
