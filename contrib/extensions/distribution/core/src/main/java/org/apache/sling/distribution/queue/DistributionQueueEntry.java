@@ -16,24 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.sling.distribution.queue;
 
-import javax.annotation.Nonnull;
+public final class DistributionQueueEntry {
 
-import aQute.bnd.annotation.ProviderType;
 
-/**
- * Processor of {@link DistributionQueueItem}s
- */
-@ProviderType
-public interface DistributionQueueProcessor {
+    private final DistributionQueueItem item;
+    private final DistributionQueueItemStatus status;
 
-    /**
-     * Process an item from a certain {@link org.apache.sling.distribution.queue.DistributionQueue}
-     *
-     * @param queueName            the name of the {@link org.apache.sling.distribution.queue.DistributionQueue} to be processed
-     * @param queueEntry the {@link org.apache.sling.distribution.queue.DistributionQueueEntry} to be processed
-     * @return {@code true} if the item was successfully processed, {@code false} otherwise
-     */
-    public boolean process(@Nonnull String queueName, @Nonnull DistributionQueueEntry queueEntry);
+    public DistributionQueueEntry(DistributionQueueItem item, DistributionQueueItemStatus status) {
+
+        this.item = item;
+        this.status = status;
+    }
+
+    public DistributionQueueItemStatus getStatus() {
+        return status;
+    }
+
+    public DistributionQueueItem getItem() {
+        return item;
+    }
+
 }

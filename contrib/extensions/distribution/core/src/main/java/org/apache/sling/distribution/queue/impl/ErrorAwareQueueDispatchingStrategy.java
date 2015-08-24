@@ -30,8 +30,10 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
+import org.apache.sling.distribution.queue.DistributionQueueEntry;
 import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
+import org.apache.sling.distribution.queue.DistributionQueueItemState;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.osgi.service.component.ComponentContext;
@@ -85,9 +87,9 @@ public class ErrorAwareQueueDispatchingStrategy implements DistributionQueueDisp
         DistributionQueueItem queueItem = getItem(distributionPackage);
         DistributionQueue queue = queueProvider.getQueue(DEFAULT_QUEUE_NAME);
         if (queue.add(queueItem)) {
-            return Arrays.asList(queue.getStatus(queueItem));
+            return Arrays.asList(queue.getItem(queueItem.getId()).getStatus());
         } else {
-            return Arrays.asList(new DistributionQueueItemStatus(DistributionQueueItemStatus.ItemState.ERROR, queue.getName()));
+            return Arrays.asList(new DistributionQueueItemStatus(DistributionQueueItemState.ERROR, queue.getName()));
         }
     }
 
@@ -99,9 +101,10 @@ public class ErrorAwareQueueDispatchingStrategy implements DistributionQueueDisp
     private void checkAndRemoveStuckItems(DistributionQueueProvider queueProvider) throws DistributionQueueException {
         DistributionQueue defaultQueue = queueProvider.getQueue(DEFAULT_QUEUE_NAME);
         // get first item in the queue with its status
-        DistributionQueueItem firstItem = defaultQueue.getHead();
-        if (firstItem != null) {
-            DistributionQueueItemStatus status = defaultQueue.getStatus(firstItem);
+        DistributionQueueEntry entry = defaultQueue.getHead();
+        if (entry != null) {
+            DistributionQueueItem firstItem = entry.getItem();
+            DistributionQueueItemStatus status = entry.getStatus();
             // if item is still in the queue after a max no. of attempts, move it to the error queue
             int attempts = status.getAttempts();
             Calendar entered = status.getEntered();

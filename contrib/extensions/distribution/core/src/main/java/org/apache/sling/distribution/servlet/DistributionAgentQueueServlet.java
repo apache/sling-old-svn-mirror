@@ -31,6 +31,7 @@ import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
+import org.apache.sling.distribution.queue.DistributionQueueEntry;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.resources.DistributionResourceTypes;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
@@ -83,19 +84,20 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
     }
 
     protected void deleteItems(ResourceResolver resourceResolver, DistributionQueue queue, int limit) {
-       for(DistributionQueueItem item : queue.getItems(0, limit)) {
+       for(DistributionQueueEntry item : queue.getItems(0, limit)) {
             deleteItem(resourceResolver, queue, item);
        }
     }
 
     protected void deleteItems(ResourceResolver resourceResolver, DistributionQueue queue, String[] ids) {
         for(String id : ids) {
-            DistributionQueueItem item = queue.getItem(id);
+            DistributionQueueEntry item = queue.getItem(id);
             deleteItem(resourceResolver, queue, item);
         }
     }
 
-    protected void deleteItem(ResourceResolver resourceResolver, DistributionQueue queue, DistributionQueueItem item) {
+    protected void deleteItem(ResourceResolver resourceResolver, DistributionQueue queue, DistributionQueueEntry entry) {
+        DistributionQueueItem item = entry.getItem();
         String id = item.getId();
         queue.remove(id);
         DistributionPackageInfo info = DistributionPackageUtils.fromQueueItem(item);

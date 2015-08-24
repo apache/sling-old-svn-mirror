@@ -18,6 +18,7 @@
  */
 package org.apache.sling.distribution.queue.impl.jobhandling;
 
+import org.apache.sling.distribution.queue.DistributionQueueEntry;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueProcessor;
 import org.apache.sling.event.jobs.Job;
@@ -38,7 +39,7 @@ public class DistributionAgentJobConsumerTest {
     @Test
     public void testJobWithSuccessfulAgent() throws Exception {
         DistributionQueueProcessor queueProcessor = mock(DistributionQueueProcessor.class);
-        when(queueProcessor.process(anyString(), any(DistributionQueueItem.class))).thenReturn(true);
+        when(queueProcessor.process(anyString(), any(DistributionQueueEntry.class))).thenReturn(true);
 
         DistributionAgentJobConsumer distributionAgentJobConsumer = new DistributionAgentJobConsumer(queueProcessor);
         Job job = mock(Job.class);
@@ -49,7 +50,7 @@ public class DistributionAgentJobConsumerTest {
     @Test
     public void testJobWithUnsuccessfulAgent() throws Exception {
         DistributionQueueProcessor queueProcessor = mock(DistributionQueueProcessor.class);
-        when(queueProcessor.process(anyString(), any(DistributionQueueItem.class))).thenReturn(false);
+        when(queueProcessor.process(anyString(), any(DistributionQueueEntry.class))).thenReturn(false);
 
         DistributionAgentJobConsumer distributionAgentJobConsumer = new DistributionAgentJobConsumer(queueProcessor);
         Job job = mock(Job.class);

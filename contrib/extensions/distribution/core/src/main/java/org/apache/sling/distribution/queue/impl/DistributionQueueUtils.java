@@ -19,23 +19,16 @@
 
 package org.apache.sling.distribution.queue.impl;
 
-import org.apache.sling.distribution.queue.DistributionQueue;
-import org.apache.sling.distribution.queue.DistributionQueueException;
+
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.distribution.queue.DistributionQueueState;
 
 public class DistributionQueueUtils {
 
-    public static DistributionQueueState calculateState(DistributionQueue queue) {
-        if (queue.getItemsCount() > 0) {
-            DistributionQueueItem item = queue.getHead();
-            DistributionQueueItemStatus status = null;
-            try {
-                status = queue.getStatus(item);
-            } catch (DistributionQueueException e) {
-                return DistributionQueueState.BLOCKED;
-            }
+
+    public static DistributionQueueState calculateState(DistributionQueueItem item, DistributionQueueItemStatus status) {
+        if (item != null && status != null) {
 
             int attempts = status.getAttempts();
 

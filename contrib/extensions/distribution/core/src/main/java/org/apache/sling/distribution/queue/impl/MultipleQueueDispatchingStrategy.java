@@ -18,13 +18,13 @@
  */
 package org.apache.sling.distribution.queue.impl;
 
-import org.apache.jackrabbit.vault.packaging.PackageManager;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.SharedDistributionPackage;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
+import org.apache.sling.distribution.queue.DistributionQueueItemState;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.slf4j.Logger;
@@ -34,7 +34,6 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 import java.util.UUID;
 
 /**
@@ -68,11 +67,11 @@ public class MultipleQueueDispatchingStrategy implements DistributionQueueDispat
         try {
             for (String queueName: queueNames) {
                 DistributionQueue queue = queueProvider.getQueue(queueName);
-                DistributionQueueItemStatus status = new DistributionQueueItemStatus(DistributionQueueItemStatus.ItemState.ERROR, queue.getName());
+                DistributionQueueItemStatus status = new DistributionQueueItemStatus(DistributionQueueItemState.ERROR, queue.getName());
 
                 DistributionPackageUtils.acquire(distributionPackage, queueName);
                 if (queue.add(queueItem)) {
-                    status = queue.getStatus(queueItem);
+                    status = queue.getItem(queueItem.getId()).getStatus();
                 } else {
                     DistributionPackageUtils.releaseOrDelete(distributionPackage, queueName);
                 }

@@ -18,13 +18,12 @@
  */
 package org.apache.sling.distribution.queue.impl.jobhandling;
 
-import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.distribution.DistributionRequestType;
-import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.distribution.queue.DistributionQueueEntry;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
+import org.apache.sling.distribution.queue.DistributionQueueItemState;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.event.jobs.Job;
 
@@ -81,12 +80,24 @@ public class JobHandlingUtils {
 
     public static DistributionQueueItemStatus getStatus(final Job job) {
         String queueName = getQueueName(job);
+        int attempts = job.getRetryCount();
 
         DistributionQueueItemStatus status = new DistributionQueueItemStatus(job.getCreated(),
-                DistributionQueueItemStatus.ItemState.valueOf(job.getJobState().toString()),
-                job.getRetryCount(), queueName);
+                attempts > 0 ? DistributionQueueItemState.ERROR: DistributionQueueItemState.QUEUED,
+                attempts, queueName);
 
         return status;
+    }
+
+    public static DistributionQueueEntry getEntry(final Job job) {
+        DistributionQueueItem item = getItem(job);
+        DistributionQueueItemStatus itemStatus = getStatus(job);
+
+        if (item != null && itemStatus != null) {
+            return new DistributionQueueEntry(item, itemStatus);
+        }
+
+        return null;
     }
 
 
