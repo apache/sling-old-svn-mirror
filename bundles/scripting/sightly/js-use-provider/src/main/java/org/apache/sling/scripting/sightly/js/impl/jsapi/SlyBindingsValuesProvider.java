@@ -21,10 +21,10 @@ package org.apache.sling.scripting.sightly.js.impl.jsapi;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -45,6 +45,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.js.impl.JsEnvironment;
 import org.apache.sling.scripting.sightly.js.impl.Variables;
 import org.apache.sling.scripting.sightly.js.impl.async.AsyncContainer;
@@ -92,10 +93,10 @@ public class SlyBindingsValuesProvider {
 
     private static final String REQ_NS = SlyBindingsValuesProvider.class.getCanonicalName();
 
-    private static final Logger log = LoggerFactory.getLogger(SlyBindingsValuesProvider.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SlyBindingsValuesProvider.class);
 
     @Reference
-    private ScriptEngineManager scriptEngineManager;
+    private ScriptEngineManager scriptEngineManager = null;
 
     @Reference
     private ResourceResolverFactory rrf = null;
@@ -109,9 +110,15 @@ public class SlyBindingsValuesProvider {
     private Script qScript;
     private final ScriptableObject qScope = createQScope();
 
-    public void processBindings(Bindings bindings) {
+    public void initialise(Bindings bindings) {
         if (needsInit()) {
             init(bindings);
+        }
+    }
+
+    public void processBindings(Bindings bindings) {
+        if (needsInit()) {
+            throw new SightlyException("Attempted to call processBindings without calling initialise first.");
         }
         Context context = null;
         try {
@@ -128,6 +135,10 @@ public class SlyBindingsValuesProvider {
                 Context.exit();
             }
         }
+    }
+
+    public Map<String, String> getScriptPaths() {
+        return Collections.unmodifiableMap(scriptPaths);
     }
 
     @Activate
@@ -200,18 +211,17 @@ public class SlyBindingsValuesProvider {
             resolver = rrf.getAdministrativeResourceResolver(null);
             Resource resource = resolver.getResource(path);
             if (resource == null) {
-                log.warn("Sly namespace loader could not find the following script: " + path);
-                return null;
+                throw new SightlyException("Sly namespace loader could not find the following script: " + path);
+
             }
             AsyncContainer container = jsEnvironment.runResource(resource, createBindings(bindings), new SimpleBindings());
             Object obj = container.getResult();
             if (!(obj instanceof Function)) {
-                log.warn("Script was expected to return a function");
-                return null;
+                throw new SightlyException("Script " + path + " was expected to return a function.");
             }
             return (Function) obj;
         } catch (LoginException e) {
-            log.error("Cannot evaluate script " + path, e);
+            LOGGER.error("Cannot evaluate script " + path, e);
             return null;
         } finally {
             if (resolver != null) {
@@ -280,12 +290,12 @@ public class SlyBindingsValuesProvider {
             resourceResolver = rrf.getAdministrativeResourceResolver(null);
             Resource resource = resourceResolver.getResource(Q_PATH);
             if (resource == null) {
-                log.warn("Could not load Q library at path: " + Q_PATH);
+                LOGGER.warn("Could not load Q library at path: " + Q_PATH);
                 return null;
             }
             reader = resource.adaptTo(InputStream.class);
             if (reader == null) {
-                log.warn("Could not read content of Q library");
+                LOGGER.warn("Could not read content of Q library");
                 return null;
             }
             return context.compileReader(new InputStreamReader(reader), Q_PATH, 0, null);
@@ -298,7 +308,7 @@ public class SlyBindingsValuesProvider {
                 try {
                     reader.close();
                 } catch (IOException e) {
-                    log.error("Error while closing reader", e);
+                    LOGGER.error("Error while closing reader", e);
                 }
             }
             if (resourceResolver != null) {

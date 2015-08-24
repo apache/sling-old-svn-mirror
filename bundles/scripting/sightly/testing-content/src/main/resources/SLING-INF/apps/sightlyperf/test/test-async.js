@@ -16,7 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
+/*global use, properties, resource, sightly*/
 use(function () {
+    'use strict';
+
     var test = {};
 
     test.text = properties.get('text') ||  resource.getPath();
