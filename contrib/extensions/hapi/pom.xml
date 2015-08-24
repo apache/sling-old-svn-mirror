@@ -27,42 +27,15 @@
         <relativePath/>
     </parent>
 
-    <artifactId>org.apache.sling.hapi.samplecontent</artifactId>
+    <artifactId>org.apache.sling.hapi.reactor</artifactId>
     <version>1.0.0-SNAPSHOT</version>
-    <packaging>bundle</packaging>
+    <packaging>pom</packaging>
 
-    <name>HApi - Sample Content</name>
-    <description>Sling Hypermedia Api demo content</description>
+    <name>HApi - Sling Hypermedia API Tools Reactor</name>
 
-    <properties>
-        <sling.java.version>6</sling.java.version>
-    </properties>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-scr-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.sling</groupId>
-                <artifactId>maven-sling-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <instructions>
-                        <Bundle-Category>sling</Bundle-Category>
-                        <Sling-Initial-Content>SLING-INF;overwrite=true</Sling-Initial-Content>
-                    </instructions>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-
-    <dependencies>
-    </dependencies>
-
+    <modules>
+        <module>core</module>
+        <module>samplecontent</module>
+    </modules>
 </project>
