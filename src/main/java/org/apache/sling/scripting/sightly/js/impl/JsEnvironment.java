@@ -30,14 +30,8 @@ import javax.script.SimpleBindings;
 import javax.script.SimpleScriptContext;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.api.scripting.SlingBindings;
-import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.core.ScriptNameAwareReader;
-import org.apache.sling.scripting.sightly.ResourceResolution;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.js.impl.async.AsyncContainer;
 import org.apache.sling.scripting.sightly.js.impl.async.TimingBindingsValuesProvider;
@@ -80,31 +74,6 @@ public class JsEnvironment {
         Context.exit();
     }
 
-    /**
-     * Run a Js script at a given path
-     * @param caller the resource of the script that invokes the Js code
-     * @param path the path to the JS script
-     * @param globalBindings the global bindings for the script
-     * @param arguments the arguments from the use-plugin
-     * @param callback callback that will receive the result of the script
-     */
-    public void run(Resource caller, String path, Bindings globalBindings, Bindings arguments, UnaryCallback callback) {
-        Resource scriptResource = caller.getChild(path);
-        SlingScriptHelper scriptHelper = (SlingScriptHelper) globalBindings.get(SlingBindings.SLING);
-        Resource componentCaller = ResourceResolution.getResourceForRequest(caller.getResourceResolver(), scriptHelper.getRequest());
-        if (scriptResource == null) {
-            if (isResourceOverlay(caller, componentCaller)) {
-                scriptResource = ResourceResolution.getResourceFromSearchPath(componentCaller, path);
-            } else {
-                scriptResource = ResourceResolution.getResourceFromSearchPath(caller, path);
-            }
-        }
-        if (scriptResource == null) {
-            throw new SightlyException("Required script resource could not be located: " + path);
-        }
-        runResource(scriptResource, globalBindings, arguments, callback);
-    }
-
     public void runResource(Resource scriptResource, Bindings globalBindings, Bindings arguments, UnaryCallback callback) {
         ScriptContext scriptContext = new SimpleScriptContext();
         CommonJsModule module = new CommonJsModule();
@@ -117,22 +86,6 @@ public class JsEnvironment {
     public AsyncContainer runResource(Resource scriptResource, Bindings globalBindings, Bindings arguments) {
         AsyncContainer asyncContainer = new AsyncContainer();
         runResource(scriptResource, globalBindings, arguments, asyncContainer.createCompletionCallback());
-        return asyncContainer;
-    }
-
-    /**
-     * Run a script at a given path
-     *
-     * @param caller         the resource of the script that invokes the Js code
-     * @param path           the path to the JS script
-     * @param globalBindings bindings for the JS script
-     * @param arguments      the arguments for the JS script
-     * @return an asynchronous container for the result
-     * @throws UnsupportedOperationException if this method is run when the event loop is not empty
-     */
-    public AsyncContainer run(Resource caller, String path, Bindings globalBindings, Bindings arguments) {
-        AsyncContainer asyncContainer = new AsyncContainer();
-        run(caller, path, globalBindings, arguments, asyncContainer.createCompletionCallback());
         return asyncContainer;
     }
 
@@ -186,31 +139,5 @@ public class JsEnvironment {
         });
     }
 
-    /**
-     * Using the inheritance chain created with the help of {@code sling:resourceSuperType} this method checks if {@code resourceB}
-     * inherits from {@code resourceA}. In case {@code resourceA} is a {@code nt:file}, its parent will be used for the inheritance check.
-     *
-     * @param resourceA the base resource
-     * @param resourceB the potentially overlaid resource
-     * @return {@code true} if {@code resourceB} overlays {@code resourceB}, {@code false} otherwise
-     */
-    private boolean isResourceOverlay(Resource resourceA, Resource resourceB) {
-        String resourceBSuperType = resourceB.getResourceSuperType();
-        if (StringUtils.isNotEmpty(resourceBSuperType)) {
-            ResourceResolver resolver = resourceA.getResourceResolver();
-            String parentResourceType = resourceA.getResourceType();
-            if ("nt:file".equals(parentResourceType)) {
-                parentResourceType = ResourceUtil.getParent(resourceA.getPath());
-            }
-            Resource parentB = resolver.getResource(resourceBSuperType);
-            while (parentB != null && !"/".equals(parentB.getPath()) && StringUtils.isNotEmpty(resourceBSuperType)) {
-                if (parentB.getPath().equals(parentResourceType)) {
-                    return true;
-                }
-                resourceBSuperType = parentB.getResourceSuperType();
-                parentB = resolver.getResource(resourceBSuperType);
-            }
-        }
-        return false;
-    }
+
 }

@@ -51,7 +51,8 @@ public class DependencyResolver {
         if (!Utils.isJsScript(dependency)) {
             throw new SightlyException("Only JS scripts are allowed as dependencies. Invalid dependency: " + dependency);
         }
-        jsEnvironment.run(caller, dependency, globalBindings, Utils.EMPTY_BINDINGS, callback);
+        Resource scriptResource = Utils.getScriptResource(caller, dependency, globalBindings);
+        jsEnvironment.runResource(scriptResource, globalBindings, Utils.EMPTY_BINDINGS, callback);
     }
 
 }

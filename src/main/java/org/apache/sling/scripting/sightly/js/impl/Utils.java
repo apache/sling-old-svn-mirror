@@ -23,8 +23,14 @@ import javax.script.SimpleBindings;
 import java.util.Collections;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
+import org.apache.sling.scripting.sightly.ResourceResolution;
+import org.apache.sling.scripting.sightly.SightlyException;
 
 /**
  * Utilities for script evaluation
@@ -41,6 +47,51 @@ public class Utils {
     public static boolean isJsScript(String identifier) {
         String extension = StringUtils.substringAfterLast(identifier, ".");
         return JS_EXTENSION.equalsIgnoreCase(extension);
+    }
+
+    public static Resource getScriptResource(Resource caller, String path, Bindings bindings) {
+        Resource scriptResource = caller.getChild(path);
+        Resource componentCaller = ResourceResolution.getResourceForRequest(caller.getResourceResolver(), (SlingHttpServletRequest) bindings.get
+            (SlingBindings.REQUEST));
+        if (scriptResource == null) {
+            if (isResourceOverlay(caller, componentCaller)) {
+                scriptResource = ResourceResolution.getResourceFromSearchPath(componentCaller, path);
+            } else {
+                scriptResource = ResourceResolution.getResourceFromSearchPath(caller, path);
+            }
+        }
+        if (scriptResource == null) {
+            throw new SightlyException("Required script resource could not be located: " + path);
+        }
+        return scriptResource;
+    }
+
+    /**
+     * Using the inheritance chain created with the help of {@code sling:resourceSuperType} this method checks if {@code resourceB}
+     * inherits from {@code resourceA}. In case {@code resourceA} is a {@code nt:file}, its parent will be used for the inheritance check.
+     *
+     * @param resourceA the base resource
+     * @param resourceB the potentially overlaid resource
+     * @return {@code true} if {@code resourceB} overlays {@code resourceB}, {@code false} otherwise
+     */
+    private static boolean isResourceOverlay(Resource resourceA, Resource resourceB) {
+        String resourceBSuperType = resourceB.getResourceSuperType();
+        if (StringUtils.isNotEmpty(resourceBSuperType)) {
+            ResourceResolver resolver = resourceA.getResourceResolver();
+            String parentResourceType = resourceA.getResourceType();
+            if ("nt:file".equals(parentResourceType)) {
+                parentResourceType = ResourceUtil.getParent(resourceA.getPath());
+            }
+            Resource parentB = resolver.getResource(resourceBSuperType);
+            while (parentB != null && !"/".equals(parentB.getPath()) && StringUtils.isNotEmpty(resourceBSuperType)) {
+                if (parentB.getPath().equals(parentResourceType)) {
+                    return true;
+                }
+                resourceBSuperType = parentB.getResourceSuperType();
+                parentB = resolver.getResource(resourceBSuperType);
+            }
+        }
+        return false;
     }
 
 }
