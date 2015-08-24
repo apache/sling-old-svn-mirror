@@ -98,7 +98,7 @@ public class DistributionServiceResourceProvider extends AbstractReadableResourc
             Map<String, Object> properties = new HashMap<String, Object>();
 
             properties.put(DistributionComponentConstants.PN_NAME, resourceName);
-            properties.put(ADAPTABLE_PROPERTY_NAME, component.getService());
+            properties.put(INTERNAL_ADAPTABLE, component.getService());
 
             String resourceType = getResourceType(kind);
             properties.put(SLING_RESOURCE_TYPE, resourceType);

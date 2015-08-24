@@ -54,16 +54,6 @@ public interface DistributionQueue {
      */
     boolean add(@Nonnull DistributionQueueItem item);
 
-    /**
-     * get the status of a certain item in the queue
-     *
-     * @param item the distribution item to get the status for
-     * @return the item status in the queue
-     * @throws DistributionQueueException if any error occurs while getting the status
-     */
-    @Nonnull
-    DistributionQueueItemStatus getStatus(@Nonnull DistributionQueueItem item)
-            throws DistributionQueueException;
 
     /**
      * get the first item (in a FIFO strategy, the next to be processed) from the queue
@@ -71,7 +61,7 @@ public interface DistributionQueue {
      * @return the first item into the queue or {@code null} if the queue is empty
      */
     @CheckForNull
-    DistributionQueueItem getHead();
+    DistributionQueueEntry getHead();
 
     /**
      * get all the items in the queue
@@ -81,7 +71,7 @@ public interface DistributionQueue {
      * @return a {@link java.lang.Iterable} of {@link DistributionQueueItem}s
      */
     @Nonnull
-    Iterable<DistributionQueueItem> getItems(int skip, int limit);
+    Iterable<DistributionQueueEntry> getItems(int skip, int limit);
 
 
     /**
@@ -92,7 +82,7 @@ public interface DistributionQueue {
      * doesn't exist
      */
     @CheckForNull
-    DistributionQueueItem getItem(@Nonnull String itemId);
+    DistributionQueueEntry getItem(@Nonnull String itemId);
 
     /**
      * remove an item from the queue by specifying its id
@@ -102,25 +92,13 @@ public interface DistributionQueue {
      * doesn't exist
      */
     @CheckForNull
-    DistributionQueueItem remove(@Nonnull String itemId);
+    DistributionQueueEntry remove(@Nonnull String itemId);
 
 
     /**
-     * check if the queue is empty
-     *
-     * @return {@code true} if the queue is empty, {@code false} otherwise
-     */
-    boolean isEmpty();
-
-    /**
-     * returns the count of items in the queue
-     */
-    int getItemsCount();
-
-    /**
-     * returns the state of the queue
-     * @return the queue state
+     * returns the status of the queue
+     * @return the queue status
      */
     @Nonnull
-    DistributionQueueState getState();
+    DistributionQueueStatus getStatus();
 }

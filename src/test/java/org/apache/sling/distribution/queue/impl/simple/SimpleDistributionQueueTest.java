@@ -19,6 +19,7 @@
 package org.apache.sling.distribution.queue.impl.simple;
 
 import org.apache.sling.distribution.queue.DistributionQueue;
+import org.apache.sling.distribution.queue.DistributionQueueEntry;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.junit.Test;
@@ -26,6 +27,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -40,7 +42,7 @@ public class SimpleDistributionQueueTest {
         DistributionQueue queue = new SimpleDistributionQueue("agentName", "default");
         DistributionQueueItem pkg = mock(DistributionQueueItem.class);
         assertTrue(queue.add(pkg));
-        assertFalse(queue.isEmpty());
+        assertFalse(queue.getStatus().isEmpty());
     }
 
     @Test
@@ -49,12 +51,11 @@ public class SimpleDistributionQueueTest {
         DistributionQueueItem pkg = mock(DistributionQueueItem.class);
         when(pkg.getId()).thenReturn("id");
         assertTrue(queue.add(pkg));
-        assertFalse(queue.isEmpty());
+        assertFalse(queue.getStatus().isEmpty());
         assertNotNull(queue.remove(pkg.getId()));
-        assertTrue(queue.isEmpty());
-        DistributionQueueItemStatus status = queue.getStatus(pkg);
-        assertNotNull(status);
-        assertTrue(status.isSuccessful());
+        assertTrue(queue.getStatus().isEmpty());
+        DistributionQueueEntry entry = queue.getItem(pkg.getId());
+        assertNull(entry);
     }
 
     @Test
@@ -63,14 +64,13 @@ public class SimpleDistributionQueueTest {
         DistributionQueueItem pkg = mock(DistributionQueueItem.class);
         when(pkg.getId()).thenReturn("id");
         assertTrue(queue.add(pkg));
-        assertFalse(queue.isEmpty());
-        assertEquals(pkg, queue.getHead());
-        assertFalse(queue.isEmpty());
+        assertFalse(queue.getStatus().isEmpty());
+        assertEquals(pkg, queue.getHead().getItem());
+        assertFalse(queue.getStatus().isEmpty());
+        DistributionQueueItemStatus status = queue.getItem(pkg.getId()).getStatus();
         assertNotNull(queue.remove(pkg.getId()));
-        assertTrue(queue.isEmpty());
-        DistributionQueueItemStatus status = queue.getStatus(pkg);
+        assertTrue(queue.getStatus().isEmpty());
         assertNotNull(status);
-        assertTrue(status.isSuccessful());
         assertEquals(1, status.getAttempts());
     }
 

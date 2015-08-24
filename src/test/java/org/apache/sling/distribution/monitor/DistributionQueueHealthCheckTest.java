@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.queue.DistributionQueue;
+import org.apache.sling.distribution.queue.DistributionQueueEntry;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.hc.api.Result;
@@ -32,6 +33,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -79,8 +81,8 @@ public class DistributionQueueHealthCheckTest {
         DistributionQueueItem item = mock(DistributionQueueItem.class);
         DistributionQueueItemStatus status = mock(DistributionQueueItemStatus.class);
         when(status.getAttempts()).thenReturn(1);
-        when(queue.getStatus(item)).thenReturn(status);
-        when(queue.getHead()).thenReturn(item);
+        when(queue.getItem(any(String.class))).thenReturn(new DistributionQueueEntry(item, status));
+        when(queue.getHead()).thenReturn(new DistributionQueueEntry(item, status));
         DistributionAgent distributionAgent = mock(DistributionAgent.class);
 
         List<String> queues = new ArrayList<String>();
@@ -104,8 +106,8 @@ public class DistributionQueueHealthCheckTest {
         DistributionQueueItem item = mock(DistributionQueueItem.class);
         DistributionQueueItemStatus status = mock(DistributionQueueItemStatus.class);
         when(status.getAttempts()).thenReturn(10);
-        when(queue.getStatus(item)).thenReturn(status);
-        when(queue.getHead()).thenReturn(item);
+        when(queue.getItem(any(String.class))).thenReturn(new DistributionQueueEntry(item, status));
+        when(queue.getHead()).thenReturn(new DistributionQueueEntry(item, status));
         DistributionAgent distributionAgent = mock(DistributionAgent.class);
 
         List<String> queues = new ArrayList<String>();

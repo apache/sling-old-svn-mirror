@@ -25,18 +25,20 @@ import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
+import org.apache.sling.distribution.queue.DistributionQueueItemState;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
-import org.apache.sling.distribution.queue.DistributionQueueItemStatus.ItemState;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobBuilder;
 import org.apache.sling.event.jobs.JobManager;
 import org.junit.Test;
 
+
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -78,7 +80,7 @@ public class JobHandlingDistributionQueueTest {
         when(builder.add()).thenReturn(job);
         String topic = JobHandlingDistributionQueue.DISTRIBUTION_QUEUE_TOPIC + "/aname";
         when(jobManager.createJob(topic)).thenReturn(builder);
-        when(jobManager.findJobs(JobManager.QueryType.ALL, topic, -1)).thenReturn(Collections.<Job>emptySet());
+        when(jobManager.getJob(anyString(), anyMap())).thenReturn(job);
         when(builder.properties(any(Map.class))).thenReturn(builder);
         DistributionQueue queue = new JobHandlingDistributionQueue("aname", topic, jobManager, true);
         DistributionPackageInfo packageInfo = new DistributionPackageInfo("type");
@@ -86,10 +88,9 @@ public class JobHandlingDistributionQueueTest {
         packageInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, DistributionRequestType.ADD);
         DistributionQueueItem distributionQueueItem = new DistributionQueueItem("an-id", packageInfo);
         assertTrue(queue.add(distributionQueueItem));
-        DistributionQueueItemStatus status = queue.getStatus(distributionQueueItem);
+        DistributionQueueItemStatus status = queue.getItem(distributionQueueItem.getId()).getStatus();
         assertNotNull(status);
-        assertFalse(status.isSuccessful());
-        assertEquals(ItemState.DROPPED, status.getItemState());
+        assertEquals(DistributionQueueItemState.QUEUED, status.getItemState());
     }
 
 }

@@ -28,32 +28,28 @@ public class DistributionQueueItemStatus {
 
     private final int attempts;
 
-    private final ItemState state;
+    private final DistributionQueueItemState state;
 
     private final Calendar entered;
 
     private final String queueName;
 
-    public DistributionQueueItemStatus(Calendar entered, ItemState state, int attempts, String queueName) {
+    public DistributionQueueItemStatus(Calendar entered, DistributionQueueItemState state, int attempts, String queueName) {
         this.entered = entered;
         this.state = state;
         this.attempts = attempts;
         this.queueName = queueName;
     }
 
-    public DistributionQueueItemStatus(ItemState state, String queueName) {
+    public DistributionQueueItemStatus(DistributionQueueItemState state, String queueName) {
         this(Calendar.getInstance(), state, 0, queueName);
-    }
-
-    public boolean isSuccessful() {
-        return ItemState.SUCCEEDED.equals(state);
     }
 
     public int getAttempts() {
         return attempts;
     }
 
-    public ItemState getItemState() {
+    public DistributionQueueItemState getItemState() {
         return state;
     }
 
@@ -63,23 +59,11 @@ public class DistributionQueueItemStatus {
 
     @Override
     public String toString() {
-        return "{\"attempts\":\"" + attempts + "\",\"" + "successful\":\"" + isSuccessful() + "\",\"" + "state\":\"" + state +
+        return "{\"attempts\":\"" + attempts + "\",\"" +  "\",\"" + "state\":\"" + state +
                 "\",\"" + "queueName\":\"" + queueName + "\"}";
     }
 
     public Calendar getEntered() {
         return entered;
     }
-
-
-    public enum ItemState {
-        QUEUED, // waiting in queue after adding or for restart after failing
-        ACTIVE, // job is currently in processing
-        SUCCEEDED, // processing finished successfully
-        STOPPED, // processing was stopped by a user
-        GIVEN_UP, // number of retries reached
-        ERROR, // processing signaled CANCELLED or throw an exception
-        DROPPED // dropped jobs
-    }
-
 }

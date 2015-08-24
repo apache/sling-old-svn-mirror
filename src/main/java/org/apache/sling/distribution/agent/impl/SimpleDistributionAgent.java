@@ -19,7 +19,6 @@
 package org.apache.sling.distribution.agent.impl;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -28,7 +27,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
@@ -57,6 +55,8 @@ import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
+import org.apache.sling.distribution.queue.DistributionQueueEntry;
+import org.apache.sling.distribution.queue.DistributionQueueItemState;
 import org.apache.sling.distribution.queue.DistributionQueueState;
 import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueException;
@@ -68,7 +68,6 @@ import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.distribution.trigger.DistributionTriggerException;
 
-import static org.apache.sling.distribution.queue.DistributionQueueItemStatus.ItemState;
 
 /**
  * Basic implementation of a {@link org.apache.sling.distribution.agent.DistributionAgent}
@@ -290,7 +289,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
             }
 
             if (queue != null) {
-                DistributionQueueState state = queue.getState();
+                DistributionQueueState state = queue.getStatus().getState();
                 if (DistributionQueueState.BLOCKED.equals(state)) {
                     return DistributionAgentState.BLOCKED;
                 }
@@ -490,7 +489,9 @@ public class SimpleDistributionAgent implements DistributionAgent {
     }
 
     class PackageQueueProcessor implements DistributionQueueProcessor {
-        public boolean process(@Nonnull String queueName, @Nonnull DistributionQueueItem queueItem) {
+        public boolean process(@Nonnull String queueName, @Nonnull DistributionQueueEntry queueEntry) {
+            DistributionQueueItem queueItem = queueEntry.getItem();
+
             try {
                 log.debug("queue {} processing item {}", queueName, queueItem);
 
@@ -538,28 +539,13 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
 
     /* Convert the state of a certain item in the queue into a request state */
-    private DistributionRequestState getRequestStateFromQueueState(ItemState itemState) {
+    private DistributionRequestState getRequestStateFromQueueState(DistributionQueueItemState itemState) {
         DistributionRequestState requestState;
         switch (itemState) {
             case QUEUED:
                 requestState = DistributionRequestState.ACCEPTED;
                 break;
-            case ACTIVE:
-                requestState = DistributionRequestState.ACCEPTED;
-                break;
-            case SUCCEEDED:
-                requestState = DistributionRequestState.DISTRIBUTED;
-                break;
-            case STOPPED:
-                requestState = DistributionRequestState.DROPPED;
-                break;
-            case GIVEN_UP:
-                requestState = DistributionRequestState.DROPPED;
-                break;
             case ERROR:
-                requestState = DistributionRequestState.DROPPED;
-                break;
-            case DROPPED:
                 requestState = DistributionRequestState.DROPPED;
                 break;
             default:

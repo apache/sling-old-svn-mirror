@@ -32,6 +32,7 @@ import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
+import org.apache.sling.distribution.queue.DistributionQueueEntry;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilderProvider;
@@ -78,9 +79,10 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
             log.debug("getting packages from queue {}", queueName);
 
             DistributionQueue queue = agent.getQueue(queueName);
-            DistributionQueueItem queueItem = queue.getHead();
+            DistributionQueueEntry entry = queue.getHead();
             DistributionPackage distributionPackage;
-            if (queueItem != null) {
+            if (entry != null) {
+                DistributionQueueItem queueItem = entry.getItem();
                 DistributionPackageInfo info = DistributionPackageUtils.fromQueueItem(queueItem);
                 DistributionPackageBuilder packageBuilder = packageBuilderProvider.getPackageBuilder(info.getType());
 
@@ -111,10 +113,11 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
             log.debug("getting package from queue {}", queueName);
 
             DistributionQueue queue = agent.getQueue(queueName);
-            DistributionQueueItem queueItem = queue.getHead();
+            DistributionQueueEntry entry = queue.getHead();
             DistributionPackage distributionPackage;
 
-            if (queueItem != null) {
+            if (entry != null) {
+                DistributionQueueItem queueItem = entry.getItem();
                 DistributionPackageInfo info = DistributionPackageUtils.fromQueueItem(queueItem);
 
                 DistributionPackageBuilder packageBuilder = packageBuilderProvider.getPackageBuilder(info.getType());
@@ -153,7 +156,7 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
         @Override
         public void delete() {
             String id = distributionPackage.getId();
-            DistributionQueueItem item = queue.remove(id);
+            queue.remove(id);
             DistributionPackageUtils.releaseOrDelete(distributionPackage, queue.getName());
         }
     }
