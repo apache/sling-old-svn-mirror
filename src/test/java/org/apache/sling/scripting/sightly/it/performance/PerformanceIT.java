@@ -98,9 +98,15 @@ public class PerformanceIT {
     }
 
     @PerformanceTest(runinvocations = INVOCATIONS, warmupinvocations = WARMUP_INVOCATIONS, threshold = 8)
-    public void test4SlyJS() {
-        getStringContent("/sightlyperf/loop.html?selector=sly-js&count=" + CONTENT_LOOP_COUNT,
+    public void test4SlyJSAsync() {
+        getStringContent("/sightlyperf/loop.html?selector=sly-js-async&count=" + CONTENT_LOOP_COUNT,
                 HttpStatus.SC_OK);
+    }
+
+    @PerformanceTest(runinvocations = INVOCATIONS, warmupinvocations = WARMUP_INVOCATIONS, threshold = 8)
+    public void test5SlyJSSync() {
+        getStringContent("/sightlyperf/loop.html?selector=sly-js-sync&count=" + CONTENT_LOOP_COUNT,
+            HttpStatus.SC_OK);
     }
 
 }
