@@ -1,0 +1,4 @@
+{
+  "jcr:primaryType": "nt:unstructured",
+  "sling:resourceType": "sling/hapi_sample/components/sample1"
+}
