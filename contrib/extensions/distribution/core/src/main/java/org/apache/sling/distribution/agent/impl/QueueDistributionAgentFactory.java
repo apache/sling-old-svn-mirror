@@ -49,7 +49,10 @@ import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * An OSGi service factory for {@link org.apache.sling.distribution.agent.DistributionAgent}s which references already existing OSGi services.
@@ -155,13 +158,16 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
         allowedRoots = SettingsUtils.removeEmptyEntries(allowedRoots);
 
         DistributionQueueProvider queueProvider =  new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
-        DistributionQueueDispatchingStrategy dispatchingStrategy = new SingleQueueDispatchingStrategy();
+        DistributionQueueDispatchingStrategy exportQueueStrategy = new SingleQueueDispatchingStrategy();
+        DistributionQueueDispatchingStrategy importQueueStrategy = null;
+
         DistributionPackageExporter packageExporter = new LocalDistributionPackageExporter(packageBuilder);
         DistributionRequestType[] allowedRequests = new DistributionRequestType[] { DistributionRequestType.ADD, DistributionRequestType.DELETE };
+        Set<String> processingQueues = new HashSet<String>();
+        processingQueues.addAll(exportQueueStrategy.getQueueNames());
 
-
-        return new SimpleDistributionAgent(agentName, false, null,
+        return new SimpleDistributionAgent(agentName, false, processingQueues,
                 serviceName, null, packageExporter, requestAuthorizationStrategy,
-                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory, distributionLog, allowedRequests, allowedRoots);
+                queueProvider, exportQueueStrategy, importQueueStrategy, distributionEventFactory, resourceResolverFactory, distributionLog, allowedRequests, allowedRoots, 0);
     }
 }
