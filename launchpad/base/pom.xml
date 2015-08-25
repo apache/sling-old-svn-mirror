@@ -101,7 +101,7 @@
                         <Export-Package>!*</Export-Package>
                         <DynamicImport-Package>*</DynamicImport-Package>
                         <Embed-Dependency>
-                            org.apache.felix.framework;inline=org/**|META-INF/**,
+                            org.apache.felix.framework;inline=org/**|META-INF/**|default.properties,
                             org.apache.felix.http.proxy;inline=org/apache/**,
                             org.apache.sling.launchpad.api;inline=org/apache/sling/launchpad/api/**
                         </Embed-Dependency>
