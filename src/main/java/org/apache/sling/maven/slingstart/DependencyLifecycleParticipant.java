@@ -171,7 +171,8 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
         for(final Model d : dependencies) {
             ModelUtility.merge(info.model, d);
         }
-        ModelUtility.merge(info.model, effectiveModel);
+        ModelUtility.merge(info.model, info.localModel);
+        info.localModel = info.model;
         info.model = ModelUtility.getEffectiveModel(info.model, resolverOptions);
 
         final Map<Traceable, String> errors = ModelUtility.validate(info.model);
@@ -331,6 +332,7 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
                     }
                     for(final org.apache.sling.provisioning.model.Artifact r : removeList) {
                         group.remove(r);
+                        info.localModel.getFeature(feature.getName()).getRunMode(runMode.getNames()).getArtifactGroup(group.getStartLevel()).remove(r);
                     }
                 }
             }
