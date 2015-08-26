@@ -25,20 +25,26 @@ import java.net.URLEncoder;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.commons.testing.integration.HttpTestBase;
+import org.apache.sling.commons.testing.integration.HttpTest;
 import org.apache.sling.testing.tools.retry.RetryLoop;
 import org.apache.sling.testing.tools.retry.RetryLoop.Condition;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * The <tt>FullTextIndexingTest</tt> verifies that a PDF file which is uploaded will have its contents indexed and
- * available for full-text searches
+ * available for full-text searches, in several different paths.
  * 
  */
-public class FullTextIndexingTest extends HttpTestBase {
+public class FullTextIndexingTest {
+
+    private final HttpTest H = new HttpTest();
 
     private String folderName;
     private String fileName = "lorem-ipsum.pdf";
 
+    @Test
     public void testUploadedPdfIsIndexed() throws IOException, JSONException {
 
         String localPath = "/integration-test/indexing/" + fileName;
@@ -46,18 +52,18 @@ public class FullTextIndexingTest extends HttpTestBase {
         if (resourceToUpload == null)
             throw new IllegalArgumentException("No resource to upload found at " + localPath);
 
-        testClient.mkdir(WEBDAV_BASE_URL + "/" + folderName);
-        testClient.upload(WEBDAV_BASE_URL + "/" + folderName + "/" + fileName, resourceToUpload);
+        H.getTestClient().mkdir(HttpTest.WEBDAV_BASE_URL + "/" + folderName);
+        H.getTestClient().upload(HttpTest.WEBDAV_BASE_URL + "/" + folderName + "/" + fileName, resourceToUpload);
 
         final String fullTextSearchParameter = "Excepteur";
-        final String queryUrl = WEBDAV_BASE_URL + "/content.query.json?queryType=xpath&statement="
+        final String queryUrl = HttpTest.WEBDAV_BASE_URL + "/content.query.json?queryType=xpath&statement="
                 + URLEncoder.encode("/jcr:root/" + folderName 
                 + "//*[jcr:contains(.,'" + fullTextSearchParameter+ "')]", "UTF-8");
 
         new RetryLoop(new Condition() {
 
             public boolean isTrue() throws Exception {
-                String result = getContent(queryUrl, CONTENT_TYPE_JSON);
+                String result = H.getContent(queryUrl, HttpTest.CONTENT_TYPE_JSON);
 
                 JSONArray results = new JSONArray(result);
 
@@ -65,7 +71,7 @@ public class FullTextIndexingTest extends HttpTestBase {
                     return false;
                 }
 
-                String expectedPath = SERVLET_CONTEXT + "/" + folderName + "/" + fileName + "/jcr:content";
+                String expectedPath = HttpTest.SERVLET_CONTEXT + "/" + folderName + "/" + fileName + "/jcr:content";
 
                 for (int i = 0; i < results.length(); i++) {
                     JSONObject object = results.getJSONObject(i);
@@ -83,16 +89,16 @@ public class FullTextIndexingTest extends HttpTestBase {
         }, 10, 50);
     }
 
-    protected void setUp() throws Exception {
-        super.setUp();
-
+    @Before
+    public void setUp() throws Exception {
+        H.setUp();
         folderName = getClass().getSimpleName();
-        testClient.delete(WEBDAV_BASE_URL + "/" + folderName);
+        H.getTestClient().delete(HttpTest.WEBDAV_BASE_URL + "/" + folderName);
     }
 
-    protected void tearDown() throws Exception {
-
-        testClient.delete(WEBDAV_BASE_URL + "/" + folderName);
-        super.tearDown();
+    @After
+    public void tearDown() throws Exception {
+        H.getTestClient().delete(HttpTest.WEBDAV_BASE_URL + "/" + folderName);
+        H.tearDown();
     }
 }
