@@ -353,10 +353,9 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
         for(final Model d : dependencies) {
             ModelUtility.merge(mergingModel, d);
         }
-        ModelUtility.merge(mergingModel, effectiveModel);
-        mergingModel = ModelUtility.getEffectiveModel(mergingModel, new ResolverOptions());
+        ModelUtility.merge(mergingModel, rawModel);
 
-        final Map<Traceable, String> errors = ModelUtility.validate(mergingModel);
+        final Map<Traceable, String> errors = ModelUtility.validate(ModelUtility.getEffectiveModel(mergingModel, new ResolverOptions()));
         if ( errors != null ) {
             throw new MavenExecutionException("Unable to create model file for " + dep + " : " + errors, (File)null);
         }
