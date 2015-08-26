@@ -114,7 +114,7 @@
     org.apache.jackrabbit/jackrabbit-spi-commons/2.10.1
     org.apache.jackrabbit/jackrabbit-webdav/2.10.1
     org.apache.jackrabbit/jackrabbit-jcr-rmi/2.10.1
-    org.apache.sling/org.apache.sling.jcr.webdav/2.2.2
+    org.apache.sling/org.apache.sling.jcr.webdav/2.3.0
     org.apache.sling/org.apache.sling.jcr.davex/1.2.2
     org.apache.sling/org.apache.sling.jcr.jackrabbit.usermanager/2.2.3-SNAPSHOT
     org.apache.sling/org.apache.sling.jcr.jackrabbit.accessmanager/2.1.2
