@@ -1,4 +1,5 @@
 Apache Sling Launchpad Testing module
+=====================================
 
 This module builds a Sling instance using bundles from the trunk, and
 runs integration tests against it, via HTTP.
@@ -26,17 +27,23 @@ you can checkout the latest source using the following command:
 
 See the Subversion documentation for other source control features.
 
-Integration tests
------------------
+Default build with integration tests
+------------------------------------
 This module runs number of integration tests provided by the sibling 
-integration-tests module. By default the instance is started, then the 
-integration-tests are executed and the instance is being shutdown again.
+integration-tests module. By default the instance is started, the integration
+tests are executed and the instance is stopped.
 
-To run individual tests, see the README.txt in the integration-tests module.
+Executing individual tests
+--------------------------
+To run individual tests against this instance, with the exact same setup used
+by the full build use
 
-Use mvn slingstart:start -Dlaunchpad.keep.running=true to start this test instance.
-It allows you to run and debug individual tests against it (on client-side). 
-To debug this instance on server-side start with mvn slingstart:run -Dlaunchpad.keep.running=true -Ddebug.
-That allows to connect to it via Java Remote Debugging on port 8000.
-You can stop the instance via Ctrl+C.
+  mvn clean install -Dlaunchpad.keep.running=true -Dhttp.port=4502 -Ddebug
 
+The -Ddebug option enables server-side debugging of the instance under test, 
+on port 8000. It can be omitted, of course.
+
+Use CTRL-C to stop that instance.
+
+See the README.txt in the integration-tests module for how to run specific 
+tests against that instance.
