@@ -15,7 +15,7 @@ Executing individual tests
 To run individual tests against this instance, with the exact same setup used
 in the full build, use
 
-  mvn clean install -Dlaunchpad.keep.running=true -Dhttp.port=4502 -Ddebug
+  mvn clean install -Dlaunchpad.keep.running=true -Dhttp.port=8080 -Ddebug
 
 The -Ddebug option enables server-side debugging of the instance under test, 
 on port 8000. It can be omitted, of course.
