@@ -197,8 +197,11 @@ class MockSession implements Session {
     RangeIterator listChildren(final String parentPath, final ItemFilter filter) throws RepositoryException {
         List<Item> children = new ArrayList<Item>();
 
+        //remove trailing slash or make root path / empty string
+        final String path = parentPath.replaceFirst("/$", "");
+
         // build regex pattern for all child paths of parent
-        Pattern pattern = Pattern.compile("^" + Pattern.quote(parentPath) + "/[^/]+$");
+        Pattern pattern = Pattern.compile("^" + Pattern.quote(path) + "/[^/]+$");
 
         // collect child resources
         for (ItemData item : this.items.values()) {
