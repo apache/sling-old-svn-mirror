@@ -45,7 +45,6 @@ import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.validation.Validator;
 import org.apache.sling.validation.impl.Constants;
-import org.apache.sling.validation.impl.ValidationModelRetrieverImpl;
 import org.apache.sling.validation.impl.model.ChildResourceImpl;
 import org.apache.sling.validation.impl.model.ParameterizedValidatorImpl;
 import org.apache.sling.validation.impl.model.ResourcePropertyImpl;
@@ -80,7 +79,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
     @Reference
     private ValidationModelCache cache;
 
-    private static final Logger LOG = LoggerFactory.getLogger(ValidationModelRetrieverImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ResourceValidationModelProviderImpl.class);
 
     @Reference
     private ThreadPoolManager tpm = null;
@@ -190,7 +189,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
             Iterator<Resource> models = resourceResolver.findResources(queryString, "xpath");
             while (models.hasNext()) {
                 Resource model = models.next();
-                LOG.info("Found validation model resource {}.", model.getPath());
+                LOG.debug("Found validation model resource {}.", model.getPath());
                 String jcrPath = model.getPath();
                 try {
                     ValueMap validationModelProperties = model.adaptTo(ValueMap.class);
