@@ -57,6 +57,22 @@ public class MockSessionTest {
     }
 
     @Test
+    public void testRootGetNodes() throws RepositoryException {
+        Session s = MockJcr.newSession();
+        Node root = s.getRootNode();
+        root.addNode("node1");
+        root.addNode("node2");
+
+        int countChildren = 0;
+        NodeIterator iter = s.getRootNode().getNodes();
+        while (iter.hasNext()) {
+            iter.next();
+            countChildren++;
+        }
+        assertEquals(2, countChildren);
+    }
+	
+    @Test
     public void testNodePropertyCreateRead() throws RepositoryException {
         Node rootNode = this.session.getNode("/");
         assertEquals(rootNode, this.session.getRootNode());
