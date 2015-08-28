@@ -22,6 +22,7 @@ import java.util.Collection;
 
 import javax.annotation.Nonnull;
 
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.Validator;
 import org.apache.sling.validation.exceptions.SlingValidationException;
@@ -62,7 +63,7 @@ public class ValidatorTypeUtilTest {
     private class InnerStringValidator implements Validator<String> {
 
         @Override
-        public String validate(@Nonnull String data, @Nonnull ValueMap valueMap, @Nonnull ValueMap arguments)
+        public String validate(@Nonnull String data, @Nonnull ValueMap valueMap, Resource resource, @Nonnull ValueMap arguments)
                 throws SlingValidationException {
             return null;
         }
@@ -79,7 +80,7 @@ public class ValidatorTypeUtilTest {
     public void testGetValidatorTypeWithAnonymousClass() {
         Assert.assertThat((Class<String>)ValidatorTypeUtil.getValidatorType(new Validator<String>() {
             @Override
-            public String validate(@Nonnull String data, @Nonnull ValueMap valueMap, @Nonnull ValueMap arguments)
+            public String validate(@Nonnull String data, @Nonnull ValueMap valueMap, Resource resource, @Nonnull ValueMap arguments)
                     throws SlingValidationException {
                 return null;
             }
@@ -97,7 +98,7 @@ public class ValidatorTypeUtilTest {
     public void testGetValidatorTypeWithCollectionType() {
         ValidatorTypeUtil.getValidatorType(new Validator<Collection<String>>() {
             @Override
-            public String validate(@Nonnull Collection<String> data, @Nonnull ValueMap valueMap, @Nonnull ValueMap arguments)
+            public String validate(@Nonnull Collection<String> data, @Nonnull ValueMap valueMap, Resource resource, @Nonnull ValueMap arguments)
                     throws SlingValidationException {
                 return null;
             }
@@ -106,7 +107,7 @@ public class ValidatorTypeUtilTest {
     
     private class InnerStringValidatorWithAdditionalBaseClass extends GenericTypeParameterBaseClass<Integer> implements Validator<String> {
         @Override
-        public String validate(@Nonnull String data, @Nonnull ValueMap valueMap, @Nonnull ValueMap arguments)
+        public String validate(@Nonnull String data, @Nonnull ValueMap valueMap, Resource resource, @Nonnull ValueMap arguments)
                 throws SlingValidationException {
             return null;
         }
@@ -114,7 +115,7 @@ public class ValidatorTypeUtilTest {
     
     @Test
     public void testGetValidatorTypeWithUnrelatedSuperClass() {
-    	// http://stackoverflow.com/questions/24093000/how-do-i-match-a-class-against-a-specific-class-instance-in-a-hamcrest-matche
+        // http://stackoverflow.com/questions/24093000/how-do-i-match-a-class-against-a-specific-class-instance-in-a-hamcrest-matche
         Assert.assertThat((Class<?>)ValidatorTypeUtil.getValidatorType(new InnerStringValidatorWithAdditionalBaseClass()), Matchers.is(CoreMatchers.<Class<?>>equalTo(String.class)));
     }
 }
