@@ -137,7 +137,7 @@ public class ValidationServiceImpl implements ValidationService{
         ValidationResultImpl result = new ValidationResultImpl();
 
         // validate direct properties of the resource
-        validateValueMap(resource.adaptTo(ValueMap.class), relativePath, model.getResourceProperties(), result );
+        validateValueMap(resource.adaptTo(ValueMap.class), resource, relativePath, model.getResourceProperties(), result );
 
         // validate children resources, if any
         validateChildren(resource, relativePath, model.getChildren(), result);
@@ -180,9 +180,9 @@ public class ValidationServiceImpl implements ValidationService{
             } 
         }
     }
-    
+
     private void validateChildResource(Resource resource, String relativePath, ChildResource childResource, ValidationResultImpl result) {
-        validateValueMap(resource.adaptTo(ValueMap.class), relativePath + resource.getName() + "/", childResource.getProperties(), result);
+        validateValueMap(resource.adaptTo(ValueMap.class), resource, relativePath + resource.getName() + "/", childResource.getProperties(), result);
         validateChildren(resource, relativePath + resource.getName() + "/", childResource.getChildren(), result);
     }
 
@@ -192,7 +192,7 @@ public class ValidationServiceImpl implements ValidationService{
             throw new IllegalArgumentException("ValidationResult.validate - cannot accept null parameters");
         }
         ValidationResultImpl result = new ValidationResultImpl();
-        validateValueMap(valueMap,  "", model.getResourceProperties(), result);
+        validateValueMap(valueMap, null, "", model.getResourceProperties(), result);
         return result;
     }    
 
@@ -204,32 +204,31 @@ public class ValidationServiceImpl implements ValidationService{
         return visitor.getResult();
     }
 
-    private void validateValueMap(ValueMap valueMap, String relativePath, Collection<ResourceProperty> resourceProperties,
+    private void validateValueMap(ValueMap valueMap, Resource resource, String relativePath, Collection<ResourceProperty> resourceProperties,
             ValidationResultImpl result) {
         if (valueMap == null) {
             throw new IllegalArgumentException("ValueMap may not be null");
         }
         for (ResourceProperty resourceProperty : resourceProperties) {
-        	Pattern pattern = resourceProperty.getNamePattern();
+            Pattern pattern = resourceProperty.getNamePattern();
             if (pattern != null) {
                 boolean foundMatch = false;
                 for (String key : valueMap.keySet()) {
                     if (pattern.matcher(key).matches()) {
                         foundMatch = true;
-                        validateValueMap(key, valueMap, relativePath, resourceProperty, result);
+                        validatePropertyValue(key, valueMap, resource, relativePath, resourceProperty, result);
                     }
                 }
                 if (!foundMatch && resourceProperty.isRequired()) {
                     result.addFailureMessage(relativePath + resourceProperty.getNamePattern(), "Missing required property.");
                 }
             } else {
-                validateValueMap(resourceProperty.getName(), valueMap, relativePath, resourceProperty, result);
+                validatePropertyValue(resourceProperty.getName(), valueMap, resource, relativePath, resourceProperty, result);
             }
         }
     }
-    
-    
-    private void validateValueMap(String property, ValueMap valueMap, String relativePath, ResourceProperty resourceProperty, ValidationResultImpl result) {
+
+    private void validatePropertyValue(String property, ValueMap valueMap, Resource resource, String relativePath, ResourceProperty resourceProperty, ValidationResultImpl result) {
         Object fieldValues = valueMap.get(property);
         if (fieldValues == null) {
             if (resourceProperty.isRequired()) {
@@ -244,12 +243,7 @@ public class ValidationServiceImpl implements ValidationService{
                 return;
             }
         }
-        validatePropertyValue(result, property, relativePath, valueMap, validators);
-    }
-
-    
-    @SuppressWarnings("null")
-	private void validatePropertyValue(ValidationResultImpl result, String property, String relativePath, ValueMap valueMap, List<ParameterizedValidator> validators) {
+        
         for (ParameterizedValidator validator : validators) {
             // convert the type always to an array
             Class<?> type = validator.getType();
@@ -273,16 +267,16 @@ public class ValidationServiceImpl implements ValidationService{
             // see https://issues.apache.org/jira/browse/SLING-662 for a description on how multivalue properties are treated with ValueMap
             if (validator.getType().isArray()) {
                 // ValueMap already returns an array in both cases (property is single value or multivalue)
-                validateValue(result, typedValue, property, relativePath, valueMap, validator);
+                validateValue(result, typedValue, property, relativePath, valueMap, resource, validator);
             } else {
                 // call validate for each entry in the array (supports both singlevalue and multivalue)
                 @Nonnull Object[] array = (Object[])typedValue;
                 if (array.length == 1) {
-                   validateValue(result, array[0], property, relativePath, valueMap, validator);
+                   validateValue(result, array[0], property, relativePath, valueMap, resource, validator);
                 } else {
                     int n = 0;
                     for (Object item : array) {
-                        validateValue(result, item, property + "[" + n++ + "]", relativePath, valueMap, validator);
+                        validateValue(result, item, property + "[" + n++ + "]", relativePath, valueMap, resource, validator);
                     }
                 }
             }
@@ -290,10 +284,10 @@ public class ValidationServiceImpl implements ValidationService{
     }
     
     @SuppressWarnings("rawtypes")
-    private void validateValue(ValidationResultImpl result, @Nonnull Object value, String property, String relativePath, @Nonnull ValueMap valueMap, ParameterizedValidator validator) {
+    private void validateValue(ValidationResultImpl result, @Nonnull Object value, String property, String relativePath, @Nonnull ValueMap valueMap, Resource resource, ParameterizedValidator validator) {
         try {
             @SuppressWarnings("unchecked")
-            String validatorMessage = ((Validator)validator.getValidator()).validate(value, valueMap, validator.getParameters());
+            String validatorMessage = ((Validator)validator.getValidator()).validate(value, valueMap, resource, validator.getParameters());
             if (validatorMessage != null) {
                 if (validatorMessage.isEmpty()) {
                     validatorMessage = "Property does not contain a valid value for the " + validator
