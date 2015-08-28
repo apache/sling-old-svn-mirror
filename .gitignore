@@ -16,3 +16,4 @@ bundles/extensions/models/integration-tests/sling
 bundles/extensions/i18n/jackrabbit
 bundles/jcr/contentloader/jackrabbit
 testing/mocks/sling-mock-oak/dependency-reduced-pom.xml
+contrib/extensions/distribution/it/sling
