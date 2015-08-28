@@ -69,7 +69,7 @@ public interface Validator <T> {
      *
      * @param data the data to validate (primary property), never {@code null}.
      * @param valueMap all properties of the validated resource/valuemap (only used for validations considering multiple properties), never {@code null}.
-     * @param resource the resource on which the validation was triggered. {@code null} in case the validation was triggered on a {@link ValueMap} only via {@link ValidationService#validate(ValueMap, org.apache.sling.validation.model.ValidationModel)}.
+     * @param resource the resource on which the validation was triggered. {@code null} in case the validation was triggered on a {@link ValueMap} (via {@link ValidationService#validate(ValueMap, org.apache.sling.validation.model.ValidationModel)}).
      * @param arguments the parameterization of the validator. Never {@code null} but might be the empty map.
      * @return validation error message if validation was not successful, {@code null} otherwise. In case an empty string is returned a generic validation error message is used.
      * @throws org.apache.sling.validation.exceptions.SlingValidationException if some expected arguments are missing from the arguments map
