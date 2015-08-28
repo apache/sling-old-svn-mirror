@@ -47,10 +47,12 @@ public class ObservationListenerSupport  {
 
     private final ServiceTracker eventAdminTracker;
 
-    private ServiceReference resourceResolverFactoryReference;
+    private volatile ServiceTracker resourceResolverFactoryTracker;
+
+    private volatile int resourceResolverFactoryChangeCount = -1;
 
     /** The admin resource resolver. */
-    private ResourceResolver resourceResolver;
+    private volatile ResourceResolver resourceResolver;
 
     private final BundleContext bundleContext;
 
@@ -75,9 +77,9 @@ public class ObservationListenerSupport  {
             this.resourceResolver = null;
         }
 
-        if ( this.resourceResolverFactoryReference != null ) {
-            this.bundleContext.ungetService(this.resourceResolverFactoryReference);
-            this.resourceResolverFactoryReference = null;
+        if ( this.resourceResolverFactoryTracker != null ) {
+            this.resourceResolverFactoryTracker.close();
+            this.resourceResolverFactoryTracker = null;
         }
         this.eventAdminTracker.close();
 
@@ -99,20 +101,26 @@ public class ObservationListenerSupport  {
      * @return the resolver
      */
     public ResourceResolver getResourceResolver() {
-        if ( this.resourceResolver == null ) {
-            final ServiceReference ref = this.bundleContext.getServiceReference(ResourceResolverFactory.class.getName());
-            if ( ref != null ) {
-                final ResourceResolverFactory factory = (ResourceResolverFactory) this.bundleContext.getService(ref);
-                if ( factory != null ) {
-                    final Map<String, Object> authInfo = new HashMap<String, Object>();
-                    authInfo.put(JcrResourceConstants.AUTHENTICATION_INFO_SESSION, this.session);
-                    try {
-                        this.resourceResolver = factory.getResourceResolver(authInfo);
-                        this.resourceResolverFactoryReference = ref;
-                    } catch (final LoginException le) {
-                        logger.error("Unable to get administrative resource resolver.", le);
-                        this.bundleContext.ungetService(ref);
-                    }
+        if ( this.resourceResolver == null
+             || (this.resourceResolverFactoryTracker != null && (resourceResolverFactoryChangeCount < this.resourceResolverFactoryTracker.getTrackingCount())) ) {
+            if ( this.resourceResolver != null ) {
+                this.resourceResolver.close();
+                this.resourceResolver = null;
+            }
+            if ( this.resourceResolverFactoryTracker == null ) {
+                this.resourceResolverFactoryTracker = new ServiceTracker(this.bundleContext, ResourceResolverFactory.class.getName(), null);
+                this.resourceResolverFactoryTracker.open();
+            }
+
+            final ResourceResolverFactory factory = (ResourceResolverFactory)  this.resourceResolverFactoryTracker.getService();
+            if ( factory != null ) {
+                final Map<String, Object> authInfo = new HashMap<String, Object>();
+                authInfo.put(JcrResourceConstants.AUTHENTICATION_INFO_SESSION, this.session);
+                try {
+                    this.resourceResolver = factory.getResourceResolver(authInfo);
+                    this.resourceResolverFactoryChangeCount = this.resourceResolverFactoryTracker.getTrackingCount();
+                } catch (final LoginException le) {
+                    logger.error("Unable to get administrative resource resolver.", le);
                 }
             }
         }
