@@ -16,13 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-package org.apache.sling.scripting.sightly.impl.engine;
+package org.apache.sling.scripting.sightly.impl.compiler;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
@@ -30,8 +31,11 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.scripting.sightly.impl.engine.SightlyEngineConfiguration;
+import org.apache.sling.scripting.sightly.impl.engine.SightlyScriptEngineFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
@@ -46,12 +50,15 @@ public class UnitChangeMonitor {
 
     private static final Logger LOG = LoggerFactory.getLogger(UnitChangeMonitor.class);
 
-    private Map<String, Long> slyScriptsMap = new ConcurrentHashMap<String, Long>();
+    private Map<String, SightlyScript> slyScriptsMap = new ConcurrentHashMap<String, SightlyScript>();
     private Map<String, Long> slyJavaUseMap = new ConcurrentHashMap<String, Long>();
     private ServiceRegistration eventHandlerServiceRegistration;
 
     @Reference
     private ResourceResolverFactory rrf = null;
+
+    @Reference
+    private SightlyEngineConfiguration sightlyEngineConfiguration = null;
 
     /**
      * Returns the last modified date for a Sightly script.
@@ -63,32 +70,62 @@ public class UnitChangeMonitor {
         if (script == null) {
             return 0;
         }
-        Long date = slyScriptsMap.get(script);
-        return date != null ? date : 0;
+        SightlyScript sightlyScript = slyScriptsMap.get(script);
+        if (sightlyScript != null) {
+            return sightlyScript.lastModified;
+        }
+        return 0;
+    }
+
+    public String getScriptEncoding(String script) {
+        SightlyScript sightlyScript = slyScriptsMap.get(script);
+        return sightlyScript.encoding;
     }
 
     /**
      * Returns the last modified date for a Java Use-API object stored in the repository.
      *
-     * @param path the full path of the file defining the Java Use-API object
+     * @param className the full path of the file defining the Java Use-API object
      * @return the Java Use-API file's last modified date or 0 if there's no information about this file
      */
-    public long getLastModifiedDateForJavaUseObject(String path) {
-        if (path == null) {
+    public long getLastModifiedDateForJavaUseObject(String className) {
+        if (className == null) {
             return 0;
         }
-        Long date = slyJavaUseMap.get(path);
+        Long date = slyJavaUseMap.get(className);
         return date != null ? date : 0;
     }
 
 
     public void touchScript(String script) {
-        slyScriptsMap.put(script, System.currentTimeMillis());
+        SightlyScript sightlyScript = slyScriptsMap.get(script);
+        if (sightlyScript != null) {
+            sightlyScript.lastModified = System.currentTimeMillis();
+        } else {
+            ResourceResolver resolver = null;
+            String encoding = null;
+            try {
+                resolver =  rrf.getAdministrativeResourceResolver(null);
+                ResourceMetadata scriptResourceMetadata = resolver.getResource(script).getResourceMetadata();
+                encoding = scriptResourceMetadata.getCharacterEncoding();
+            } catch (LoginException e) {
+                // do nothing; we'll just return the default encoding
+                LOG.warn("Cannot read character encoding value for script " + script);
+            } finally {
+                if (resolver != null) {
+                    resolver.close();
+                }
+            }
+            if (StringUtils.isEmpty(encoding)) {
+                encoding = sightlyEngineConfiguration.getEncoding();
+            }
+            slyScriptsMap.put(script, new SightlyScript(script, encoding, System.currentTimeMillis()));
+        }
     }
 
-    public void clearJavaUseObject(String path) {
-        if (path != null) {
-            slyJavaUseMap.remove(path);
+    public void clearJavaUseObject(String className) {
+        if (StringUtils.isNotEmpty(className)) {
+            slyJavaUseMap.remove(className);
         }
     }
 
@@ -145,16 +182,47 @@ public class UnitChangeMonitor {
         String topic = event.getTopic();
         if (SlingConstants.TOPIC_RESOURCE_ADDED.equals(topic) || SlingConstants.TOPIC_RESOURCE_CHANGED.equals(topic)) {
             if (path.endsWith(".java")) {
-                slyJavaUseMap.put(path, System.currentTimeMillis());
+                slyJavaUseMap.put(Utils.getJavaNameFromPath(path), System.currentTimeMillis());
             } else if (path.endsWith(SightlyScriptEngineFactory.EXTENSION)) {
-                slyScriptsMap.put(path, System.currentTimeMillis());
+                ResourceResolver resolver = null;
+                String encoding = null;
+                try {
+                    resolver =  rrf.getAdministrativeResourceResolver(null);
+                    ResourceMetadata scriptResourceMetadata = resolver.getResource(path).getResourceMetadata();
+                    encoding = scriptResourceMetadata.getCharacterEncoding();
+                } catch (LoginException e) {
+                    // do nothing; we'll just return the default encoding
+                    LOG.warn("Cannot read character encoding value for script " + path);
+                } finally {
+                    if (resolver != null) {
+                        resolver.close();
+                    }
+                }
+                if (StringUtils.isEmpty(encoding)) {
+                    encoding = sightlyEngineConfiguration.getEncoding();
+                }
+                slyScriptsMap.put(path, new SightlyScript(path, encoding, System.currentTimeMillis()));
             }
         } else if (SlingConstants.TOPIC_RESOURCE_REMOVED.equals(topic)) {
             if (path.endsWith(".java")) {
-                slyJavaUseMap.remove(path);
+                slyJavaUseMap.remove(Utils.getJavaNameFromPath(path));
             } else if (path.endsWith(SightlyScriptEngineFactory.EXTENSION)) {
                 slyScriptsMap.remove(path);
             }
+        }
+    }
+
+    private class SightlyScript {
+        String encoding;
+        String className;
+        String path;
+        long lastModified;
+
+        public SightlyScript(String path, String encoding, long lastModified) {
+            this.encoding = encoding;
+            className = Utils.getJavaNameFromPath(path);
+            this.path = path;
+            this.lastModified = lastModified;
         }
     }
 

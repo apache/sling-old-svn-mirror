@@ -27,7 +27,7 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.classloader.ClassLoaderWriter;
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 
 /**
@@ -48,7 +48,7 @@ public class SightlyScriptEngineFactory extends AbstractScriptEngineFactory {
     private ExtensionRegistryService extensionRegistryService = null;
 
     @Reference
-    private ClassLoaderWriter classLoaderWriter = null;
+    private DynamicClassLoaderManager dynamicClassLoaderManager = null;
 
     public final static String SHORT_NAME = "sightly";
 
@@ -79,6 +79,6 @@ public class SightlyScriptEngineFactory extends AbstractScriptEngineFactory {
     }
 
     protected ClassLoader getClassLoader() {
-        return classLoaderWriter.getClassLoader();
+        return dynamicClassLoaderManager.getDynamicClassLoader();
     }
 }

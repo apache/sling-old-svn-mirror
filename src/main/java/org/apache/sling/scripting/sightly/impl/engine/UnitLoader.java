@@ -43,6 +43,7 @@ import org.apache.sling.scripting.sightly.impl.compiled.JavaClassBackend;
 import org.apache.sling.scripting.sightly.impl.compiler.SightlyCompilerService;
 import org.apache.sling.scripting.sightly.impl.compiler.SightlyJavaCompilerService;
 import org.apache.sling.scripting.sightly.impl.compiler.SightlyParsingException;
+import org.apache.sling.scripting.sightly.impl.compiler.UnitChangeMonitor;
 import org.apache.sling.scripting.sightly.impl.compiler.util.GlobalShadowCheckBackend;
 import org.apache.sling.scripting.sightly.impl.engine.compiled.JavaClassTemplate;
 import org.apache.sling.scripting.sightly.impl.engine.compiled.SourceIdentifier;
@@ -92,25 +93,24 @@ public class UnitLoader {
      * @throws Exception if the unit creation fails
      */
     public RenderUnit createUnit(Resource scriptResource, Bindings bindings, RenderContextImpl renderContext) throws Exception {
-        ResourceMetadata resourceMetadata = scriptResource.getResourceMetadata();
-        String encoding = resourceMetadata.getCharacterEncoding();
-        if (encoding == null) {
-            encoding = sightlyEngineConfiguration.getEncoding();
-        }
-        SlingHttpServletResponse response = (SlingHttpServletResponse) bindings.get(SlingBindings.RESPONSE);
-        response.setCharacterEncoding(encoding);
         ResourceResolver adminResolver = renderContext.getScriptResourceResolver();
         SourceIdentifier sourceIdentifier = obtainIdentifier(scriptResource);
         Object obj;
+        String encoding;
         if (needsUpdate(sourceIdentifier)) {
+            unitChangeMonitor.touchScript(scriptResource.getPath());
+            encoding = unitChangeMonitor.getScriptEncoding(scriptResource.getPath());
             String sourceCode = getSourceCodeForScript(adminResolver, sourceIdentifier, bindings, encoding, renderContext);
             obj = sightlyJavaCompilerService.compileSource(sourceCode, sourceIdentifier.getFullyQualifiedName());
         } else {
-            obj = sightlyJavaCompilerService.getInstance(adminResolver, null, sourceIdentifier.getFullyQualifiedName());
+            encoding = unitChangeMonitor.getScriptEncoding(scriptResource.getPath());
+            obj = sightlyJavaCompilerService.getInstance(adminResolver, null, sourceIdentifier.getFullyQualifiedName(), false);
         }
         if (!(obj instanceof RenderUnit)) {
             throw new SightlyException("Class is not a RenderUnit instance");
         }
+        SlingHttpServletResponse response = (SlingHttpServletResponse) bindings.get(SlingBindings.RESPONSE);
+        response.setCharacterEncoding(encoding);
         return (RenderUnit) obj;
     }
 
@@ -224,21 +224,10 @@ public class UnitLoader {
             return true;
         }
         String slyPath = sourceIdentifier.getResource().getPath();
+        long slyScriptChangeDate = unitChangeMonitor.getLastModifiedDateForScript(slyPath);
         String javaCompilerPath = "/" + sourceIdentifier.getFullyQualifiedName().replaceAll("\\.", "/") + ".class";
         long javaFileDate = classLoaderWriter.getLastModified(javaCompilerPath);
-        if (javaFileDate > -1) {
-            long slyScriptChangeDate = unitChangeMonitor.getLastModifiedDateForScript(slyPath);
-            if (slyScriptChangeDate != 0) {
-                if (slyScriptChangeDate < javaFileDate) {
-                    return false;
-                }
-            } else {
-                unitChangeMonitor.touchScript(slyPath);
-            }
-            return true;
-        }
-        unitChangeMonitor.touchScript(slyPath);
-        return true;
+        return ((slyScriptChangeDate == 0 && javaFileDate > -1) || (slyScriptChangeDate > javaFileDate));
     }
 
 }
