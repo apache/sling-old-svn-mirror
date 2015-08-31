@@ -33,7 +33,6 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
@@ -94,14 +93,15 @@ public class UnitLoader {
      */
     public RenderUnit createUnit(Resource scriptResource, Bindings bindings, RenderContextImpl renderContext) throws Exception {
         ResourceResolver adminResolver = renderContext.getScriptResourceResolver();
-        SourceIdentifier sourceIdentifier = obtainIdentifier(scriptResource);
+        SourceIdentifier sourceIdentifier = new SourceIdentifier(sightlyEngineConfiguration, unitChangeMonitor, classLoaderWriter,
+            scriptResource, CLASS_NAME_PREFIX);
         Object obj;
         String encoding;
-        if (needsUpdate(sourceIdentifier)) {
+        if (sourceIdentifier.needsUpdate()) {
             unitChangeMonitor.touchScript(scriptResource.getPath());
             encoding = unitChangeMonitor.getScriptEncoding(scriptResource.getPath());
             String sourceCode = getSourceCodeForScript(adminResolver, sourceIdentifier, bindings, encoding, renderContext);
-            obj = sightlyJavaCompilerService.compileSource(sourceCode, sourceIdentifier.getFullyQualifiedName());
+            obj = sightlyJavaCompilerService.compileSource(sourceIdentifier, sourceCode, sourceIdentifier.getFullyQualifiedName());
         } else {
             encoding = unitChangeMonitor.getScriptEncoding(scriptResource.getPath());
             obj = sightlyJavaCompilerService.getInstance(adminResolver, null, sourceIdentifier.getFullyQualifiedName(), false);
@@ -119,10 +119,6 @@ public class UnitLoader {
     protected void activate(ComponentContext componentContext) {
         mainTemplate = resourceFile(componentContext, MAIN_TEMPLATE_PATH);
         childTemplate = resourceFile(componentContext, CHILD_TEMPLATE_PATH);
-    }
-
-    private SourceIdentifier obtainIdentifier(Resource resource) {
-        return new SourceIdentifier(resource, CLASS_NAME_PREFIX);
     }
 
     private String getSourceCodeForScript(ResourceResolver resolver, SourceIdentifier identifier, Bindings bindings, String encoding,
@@ -218,16 +214,4 @@ public class UnitLoader {
         }
         return ++line;
     }
-
-    private boolean needsUpdate(SourceIdentifier sourceIdentifier) {
-        if (sightlyEngineConfiguration.isDevMode()) {
-            return true;
-        }
-        String slyPath = sourceIdentifier.getResource().getPath();
-        long slyScriptChangeDate = unitChangeMonitor.getLastModifiedDateForScript(slyPath);
-        String javaCompilerPath = "/" + sourceIdentifier.getFullyQualifiedName().replaceAll("\\.", "/") + ".class";
-        long javaFileDate = classLoaderWriter.getLastModified(javaCompilerPath);
-        return ((slyScriptChangeDate == 0 && javaFileDate > -1) || (slyScriptChangeDate > javaFileDate));
-    }
-
 }
