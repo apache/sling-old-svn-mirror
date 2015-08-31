@@ -26,13 +26,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.compiler.CompilationResult;
 import org.apache.sling.commons.compiler.CompilationUnit;
 import org.apache.sling.commons.compiler.CompilerMessage;
 import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.commons.compiler.Options;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyEngineConfiguration;
-import org.apache.sling.scripting.sightly.impl.engine.UnitChangeMonitor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +42,6 @@ import org.mockito.stubbing.Answer;
 import org.powermock.reflect.Whitebox;
 
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -52,13 +51,12 @@ public class SightlyJavaCompilerServiceTest {
 
     private SightlyJavaCompilerService compiler;
     private UnitChangeMonitor ucm;
-    private SightlyEngineConfiguration sightlyEngineConfiguration;
 
     @Before
     public void setUp() throws Exception {
         compiler = new SightlyJavaCompilerService();
         ucm = spy(new UnitChangeMonitor());
-        sightlyEngineConfiguration = mock(SightlyEngineConfiguration.class);
+        SightlyEngineConfiguration sightlyEngineConfiguration = mock(SightlyEngineConfiguration.class);
         when(sightlyEngineConfiguration.isDevMode()).thenReturn(false);
         Whitebox.setInternalState(compiler, "sightlyEngineConfiguration", sightlyEngineConfiguration);
         Whitebox.setInternalState(compiler, "unitChangeMonitor", ucm);
@@ -94,13 +92,13 @@ public class SightlyJavaCompilerServiceTest {
     @Test
     public void testGetInstanceForCachedPojoFromRepo() throws Exception {
         final String pojoPath = "/apps/my-project/test_components/a/Pojo.java";
-        String className = "apps.my_project.test_components.a.Pojo";
+        final String className = "apps.my_project.test_components.a.Pojo";
         Map<String, Long> slyJavaUseMap = new ConcurrentHashMap<String, Long>() {{
-            put(pojoPath, System.currentTimeMillis());
+            put(className, System.currentTimeMillis());
         }};
         Whitebox.setInternalState(ucm, "slyJavaUseMap", slyJavaUseMap);
         getInstancePojoTest(pojoPath, className);
-        verify(ucm).clearJavaUseObject(pojoPath);
+        verify(ucm).clearJavaUseObject(className);
     }
 
     private void getInstancePojoTest(String pojoPath, String className) throws Exception {
@@ -118,8 +116,18 @@ public class SightlyJavaCompilerServiceTest {
                 return MockPojo.class;
             }
         });
+        ClassLoaderWriter clw = Mockito.mock(ClassLoaderWriter.class);
+        ClassLoader classLoader = Mockito.mock(ClassLoader.class);
+        when(clw.getClassLoader()).thenReturn(classLoader);
+        when(classLoader.loadClass(className)).thenAnswer(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                return MockPojo.class;
+            }
+        });
+        Whitebox.setInternalState(compiler, "classLoaderWriter", clw);
         Whitebox.setInternalState(compiler, "javaCompiler", javaCompiler);
-        Object obj = compiler.getInstance(resolver, null, className);
+        Object obj = compiler.getInstance(resolver, null, className, false);
         assertTrue("Expected to obtain a " + MockPojo.class.getName() + " object.", obj instanceof MockPojo);
     }
 }

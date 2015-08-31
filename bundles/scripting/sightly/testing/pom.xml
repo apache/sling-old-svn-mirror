@@ -165,7 +165,7 @@
                         <server>
                             <port>${http.port}</port>
                             <controlPort>${sling.control.port}</controlPort>
-                            <runmode>jackrabbit</runmode>
+                            <runmode>oak</runmode>
                             <contextPath>${http.base.path}</contextPath>
                             <debug>${debug.options}</debug>
                         </server>

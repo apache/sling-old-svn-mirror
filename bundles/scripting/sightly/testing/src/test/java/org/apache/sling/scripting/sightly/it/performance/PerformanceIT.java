@@ -92,19 +92,25 @@ public class PerformanceIT {
     }
 
     @PerformanceTest(runinvocations = INVOCATIONS, warmupinvocations = WARMUP_INVOCATIONS, threshold = 2)
-    public void test3SlyJava() {
-        getStringContent("/sightlyperf/loop.html?selector=sly-java&count=" + CONTENT_LOOP_COUNT,
+    public void test3SlyJavaPojoRepo() {
+        getStringContent("/sightlyperf/loop.html?selector=sly-java-pojo-repo&count=" + CONTENT_LOOP_COUNT,
                 HttpStatus.SC_OK);
     }
 
-    @PerformanceTest(runinvocations = INVOCATIONS, warmupinvocations = WARMUP_INVOCATIONS, threshold = 8)
-    public void test4SlyJSAsync() {
+    @PerformanceTest(runinvocations = INVOCATIONS, warmupinvocations = WARMUP_INVOCATIONS, threshold = 2)
+    public void test4SlyJavaPojoBundle() {
+        getStringContent("/sightlyperf/loop.html?selector=sly-java-pojo-bundle&count=" + CONTENT_LOOP_COUNT,
+            HttpStatus.SC_OK);
+    }
+
+    @PerformanceTest(runinvocations = INVOCATIONS, warmupinvocations = WARMUP_INVOCATIONS, threshold = 4)
+    public void test5SlyJSAsync() {
         getStringContent("/sightlyperf/loop.html?selector=sly-js-async&count=" + CONTENT_LOOP_COUNT,
                 HttpStatus.SC_OK);
     }
 
-    @PerformanceTest(runinvocations = INVOCATIONS, warmupinvocations = WARMUP_INVOCATIONS, threshold = 8)
-    public void test5SlyJSSync() {
+    @PerformanceTest(runinvocations = INVOCATIONS, warmupinvocations = WARMUP_INVOCATIONS, threshold = 4)
+    public void test6SlyJSSync() {
         getStringContent("/sightlyperf/loop.html?selector=sly-js-sync&count=" + CONTENT_LOOP_COUNT,
             HttpStatus.SC_OK);
     }

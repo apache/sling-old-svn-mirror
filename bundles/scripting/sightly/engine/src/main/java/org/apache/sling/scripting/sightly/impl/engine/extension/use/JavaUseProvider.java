@@ -34,9 +34,8 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
-import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
+import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.scripting.sightly.ResourceResolution;
-import org.apache.sling.scripting.sightly.impl.compiler.CompilerException;
 import org.apache.sling.scripting.sightly.impl.compiler.SightlyJavaCompilerService;
 import org.apache.sling.scripting.sightly.pojo.Use;
 import org.apache.sling.scripting.sightly.render.RenderContext;
@@ -71,7 +70,7 @@ public class JavaUseProvider implements UseProvider {
     private SightlyJavaCompilerService sightlyJavaCompilerService = null;
 
     @Reference
-    private DynamicClassLoaderManager dynamicClassLoaderManager = null;
+    private ClassLoaderWriter classLoaderWriter = null;
 
     @Override
     public ProviderOutcome provide(String identifier, RenderContext renderContext, Bindings arguments) {
@@ -89,7 +88,7 @@ public class JavaUseProvider implements UseProvider {
 
         Object result;
         try {
-            Class<?> cls = dynamicClassLoaderManager.getDynamicClassLoader().loadClass(identifier);
+            Class<?> cls = classLoaderWriter.getClassLoader().loadClass(identifier);
             result = resource.adaptTo(cls);
             if (result == null) {
                 result = request.adaptTo(cls);
@@ -98,7 +97,7 @@ public class JavaUseProvider implements UseProvider {
                 return ProviderOutcome.success(result);
             } else {
                 /**
-                 * the object was cached by the classloader but it's not adaptable from {@link Resource} or {@link
+                 * the object was cached by the class loader but it's not adaptable from {@link Resource} or {@link
                  * SlingHttpServletRequest}; attempt to load it like a regular POJO that optionally could implement {@link Use}
                  */
                 result = cls.newInstance();
@@ -108,27 +107,21 @@ public class JavaUseProvider implements UseProvider {
                 return ProviderOutcome.notNullOrFailure(result);
             }
         } catch (ClassNotFoundException e) {
-            // this object might not be exported from a bundle; let's try to load it from the repository
-            return getPOJOFromRepository(renderContext, sling, identifier, bindings);
-        } catch (Exception e) {
-            // any other exception is an error
-            return ProviderOutcome.failure(e);
-        } finally {
-            resetRequestAttribute(request, overrides);
-        }
-    }
-
-    private ProviderOutcome getPOJOFromRepository(RenderContext renderContext, SlingScriptHelper sling, String identifier, Bindings bindings) {
-        try {
+            /**
+             * this object is either not exported from a bundle, or it's a POJO from the repository that wasn't loaded before
+             */
             ResourceResolver adminResolver = renderContext.getScriptResourceResolver();
-            Resource resource = ResourceResolution.getResourceForRequest(adminResolver, sling.getRequest());
-            Object result = sightlyJavaCompilerService.getInstance(adminResolver, resource, identifier);
+            Resource caller = ResourceResolution.getResourceForRequest(adminResolver, sling.getRequest());
+            result = sightlyJavaCompilerService.getInstance(adminResolver, caller, identifier, true);
             if (result instanceof Use) {
                 ((Use) result).init(bindings);
             }
             return ProviderOutcome.success(result);
         } catch (Exception e) {
+            // any other exception is an error
             return ProviderOutcome.failure(e);
+        } finally {
+            resetRequestAttribute(request, overrides);
         }
     }
 
