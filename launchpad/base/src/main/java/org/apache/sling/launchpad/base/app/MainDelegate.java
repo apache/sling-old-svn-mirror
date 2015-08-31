@@ -395,7 +395,7 @@ public class MainDelegate implements Launcher {
 
             switch (level) {
                 case LOG_DEBUG:
-                    debug("DEBUG: " + s, null);
+                    debug("DEBUG: " + s);
                     break;
                 case LOG_INFO:
                     info("INFO: " + s, null);
