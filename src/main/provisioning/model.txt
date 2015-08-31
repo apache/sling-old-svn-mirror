@@ -16,7 +16,7 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-[feature name=launchpad-testing]
+[feature name=sling]
 # Dependencies
 [artifacts]
   org.apache.sling/org.apache.sling.launchpad/8-SNAPSHOT/slingstart
@@ -28,9 +28,14 @@
 # additional configuration for testing
 [configurations]
 
-  org.apache.sling.servlets.resolver.SlingServletResolver
-    # Set the servlet resolver's cache size to zero for testing
-    servletresolver.cacheSize=I"0"
+  org.apache.sling.jcr.webdav.impl.servlets.SimpleWebDavServlet
+    dav.root="/dav"
+
+  org.apache.sling.commons.log.LogManager.factory.config-2ef75700-a318-4eae-bed4-86777e1bdfd2
+    org.apache.sling.commons.log.pattern="{0,date,dd.MM.yyyy\ HH:mm:ss.SSS}\ *{4}*\ [{2}]\ {3}\ {5}"
+    org.apache.sling.commons.log.names=["org.apache.sling.scripting.sightly.js.impl.jsapi.ProxyAsyncScriptableFactory"]
+    org.apache.sling.commons.log.file="logs/error.log"
+    org.apache.sling.commons.log.level="error"
 
 [settings]
   sling.system.packages.class.com.vladium.emma.rt.RT=com.vladium.emma.rt
