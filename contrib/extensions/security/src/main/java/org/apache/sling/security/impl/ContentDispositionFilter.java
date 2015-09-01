@@ -285,13 +285,13 @@ public class ContentDispositionFilter implements Filter {
             boolean jcrData = false;
             if (resource!= null) {
                 ValueMap props = resource.adaptTo(ValueMap.class);
-                if (props.containsKey(PROP_JCR_DATA) ) {
+                if (props != null && props.containsKey(PROP_JCR_DATA) ) {
                     jcrData = true;
                 } else {
                     Resource jcrContent = resource.getChild(JCR_CONTENT_LEAF);
                     if (jcrContent!= null) {
                         props = jcrContent.adaptTo(ValueMap.class);
-                        if (props.containsKey(PROP_JCR_DATA) ) {
+                        if (props != null && props.containsKey(PROP_JCR_DATA) ) {
                             jcrData = true;
                         }
                     }
