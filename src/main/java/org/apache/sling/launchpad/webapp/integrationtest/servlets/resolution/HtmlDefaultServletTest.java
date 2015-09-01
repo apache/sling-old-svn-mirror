@@ -17,31 +17,51 @@
 package org.apache.sling.launchpad.webapp.integrationtest.servlets.resolution;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.httpclient.NameValuePair;
+import org.apache.sling.testing.tools.retry.RetryLoop;
+import org.apache.sling.testing.tools.retry.RetryLoop.Condition;
 
 /** Test for SLING-1069 */
 public class HtmlDefaultServletTest extends ResolutionTestBase {
 
+    public static final String CONFIG_SERVLET = HTTP_BASE_URL + "/system/console/configMgr/org.apache.sling.launchpad.testservices.servlets.HtmlDefaultServlet";
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+        
         // enable the HtmlDefaultServlet before testing
-        changeComponent(
-            "org.apache.sling.launchpad.testservices.servlets.HtmlDefaultServlet",
-            "enable");
+        Map<String, String> properties = new HashMap<String, String>();
+        properties.put("apply", "true");
+        properties.put("GET", "sling.servlet.methods");
+        properties.put("propertylist", "sling.servlet.methods");
+        assertEquals(302, testClient.post(CONFIG_SERVLET, properties));
     }
 
     @Override
     protected void tearDown() throws Exception {
         // disable the HtmlDefaultServlet after testing
-        changeComponent(
-            "org.apache.sling.launchpad.testservices.servlets.HtmlDefaultServlet",
-            "disable");
+        Map<String, String> properties = new HashMap<String, String>();
+        properties.put("apply", "true");
+        properties.put("delete", "true");
+        assertEquals(200, testClient.post(CONFIG_SERVLET, properties));
+        
+        // Verify that our test servlet is gone
+        final String url = testNodeNORT.nodeUrl + ".html"; 
+        final Condition c = new Condition() {
+            public String getDescription() {
+                return url + " is not served by a test servlet";
+            }
+
+            public boolean isTrue() throws Exception {
+                assertNotTestServlet(getContent(url, CONTENT_TYPE_HTML));
+                return true;
+            }
+        };
+        new RetryLoop(c, 10, 100);
+        
         // we need to wait a little bit as starting with version 1.1.12 of
         // org.apache.sling.resourceresolver, unregistering a resource provider
         // forces an async reregistration of the resource resolver factory
@@ -54,21 +74,32 @@ public class HtmlDefaultServletTest extends ResolutionTestBase {
     }
 
     public void testHtmlExtension() throws IOException {
-        assertServlet(
-            getContent(testNodeNORT.nodeUrl + ".html", CONTENT_TYPE_PLAIN),
-            HTML_DEFAULT_SERVLET_SUFFIX);
+        final String url = testNodeNORT.nodeUrl + ".html"; 
+        final Condition c = new Condition() {
+            public String getDescription() {
+                return url + " returns plain text";
+            }
+
+            public boolean isTrue() throws Exception {
+                assertServlet(getContent(url, CONTENT_TYPE_PLAIN), HTML_DEFAULT_SERVLET_SUFFIX);
+                return true;
+            }
+        };
+        new RetryLoop(c, 10, 100);
     }
 
     public void testJsonExtension() throws IOException {
-        assertNotTestServlet(getContent(testNodeNORT.nodeUrl + ".json",
-            CONTENT_TYPE_DONTCARE));
-    }
+        final String url = testNodeNORT.nodeUrl + ".json"; 
+        final Condition c = new Condition() {
+            public String getDescription() {
+                return url + " returns JSON";
+            }
 
-    protected void changeComponent(final String component, final String action)
-            throws IOException {
-        List<NameValuePair> pars = new ArrayList<NameValuePair>();
-        pars.add(new NameValuePair("action", action));
-        assertPostStatus(HTTP_BASE_URL + "/system/console/components/"
-            + component, HttpServletResponse.SC_OK, pars, null);
+            public boolean isTrue() throws Exception {
+                assertNotTestServlet(getContent(url,CONTENT_TYPE_DONTCARE));
+                return true;
+            }
+        };
+        new RetryLoop(c, 10, 100);
     }
 }
