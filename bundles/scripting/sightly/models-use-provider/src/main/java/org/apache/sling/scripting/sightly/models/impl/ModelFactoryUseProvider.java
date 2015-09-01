@@ -100,11 +100,11 @@ public class ModelFactoryUseProvider implements UseProvider {
                 // next use provider will be queried
                 return ProviderOutcome.failure();
             }
-            // try to instantiate class via Sling Models (first via resource, then via request)
-            if (modelFactory.canCreateFromAdaptable(resource, cls)) {
-                obj = modelFactory.createModel(resource, cls);
-            } else if (modelFactory.canCreateFromAdaptable(request, cls)) {
+            // try to instantiate class via Sling Models (first via request, then via resource)
+            if (modelFactory.canCreateFromAdaptable(request, cls)) {
                 obj = modelFactory.createModel(request, cls);
+            } else if (modelFactory.canCreateFromAdaptable(resource, cls)) {
+                obj = modelFactory.createModel(resource, cls);
             } else {
                 return ProviderOutcome.failure(new IllegalStateException("Could not adapt the given Sling Model from neither resource nor request: " + cls));
             }
