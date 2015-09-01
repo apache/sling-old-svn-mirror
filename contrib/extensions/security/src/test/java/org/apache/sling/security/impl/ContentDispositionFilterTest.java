@@ -280,6 +280,8 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
                 will(returnValue(null));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
@@ -320,6 +322,8 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
                 will(returnValue(null));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
@@ -366,6 +370,8 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
                 allowing(response).containsHeader("Content-Disposition");
                 will(returnValue(false));
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
@@ -412,6 +418,8 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
                 will(returnValue(null));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
@@ -458,6 +466,8 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
                 allowing(response).containsHeader("Content-Disposition");
                 will(returnValue(false));
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
@@ -510,6 +520,8 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
                 allowing(response).containsHeader("Content-Disposition");
                 will(returnValue(false));
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
@@ -556,6 +568,8 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
                 will(returnValue(null));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
@@ -596,6 +610,8 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
                 will(returnValue(null));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
@@ -635,6 +651,8 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
                 will(returnValue(null));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
@@ -680,6 +698,8 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
                 allowing(response).containsHeader("Content-Disposition");
                 will(returnValue(false));
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
@@ -726,6 +746,8 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
                 will(returnValue(null));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
@@ -766,6 +788,8 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
                 will(returnValue(null));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
@@ -805,6 +829,8 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
                 will(returnValue(null));
                 allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
@@ -851,6 +877,8 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
                 allowing(response).containsHeader("Content-Disposition");
                 will(returnValue(false));
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
@@ -907,6 +935,8 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
                 allowing(response).containsHeader("Content-Disposition");
                 will(returnValue(false));
                 exactly(1).of(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
@@ -967,6 +997,8 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
                 exactly(1).of(response).containsHeader("Content-Disposition");
                 will(returnValue(false));
                 exactly(1).of(response).containsHeader("Content-Disposition");
@@ -1029,6 +1061,8 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
                 exactly(1).of(response).containsHeader("Content-Disposition");
                 will(returnValue(false));
                 exactly(1).of(response).containsHeader("Content-Disposition");
@@ -1090,6 +1124,8 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
                 exactly(1).of(response).containsHeader("Content-Disposition");
                 will(returnValue(false));
                 exactly(1).of(response).containsHeader("Content-Disposition");
@@ -1150,6 +1186,8 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
                 exactly(1).of(response).containsHeader("Content-Disposition");
                 will(returnValue(false));
                 exactly(1).of(response).containsHeader("Content-Disposition");
@@ -1210,6 +1248,8 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
                 exactly(1).of(response).containsHeader("Content-Disposition");
                 will(returnValue(false));
                 exactly(1).of(response).containsHeader("Content-Disposition");
@@ -1269,6 +1309,8 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
                 allowing(response).containsHeader("Content-Disposition");
                 will(returnValue(false));
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
@@ -1322,6 +1364,8 @@ public class ContentDispositionFilterTest {
         
         context.checking(new Expectations() {
             {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
                 allowing(response).containsHeader("Content-Disposition");
                 will(returnValue(false));
                 allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
