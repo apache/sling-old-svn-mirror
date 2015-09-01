@@ -151,4 +151,6 @@
   org.apache.sling.scripting.core.impl.ScriptCacheImpl
     org.apache.sling.scripting.cache.additional_extensions=["js"]
 
-
+  # WebDAV servlet requires config now
+  org.apache.sling.jcr.webdav.impl.servlets.SimpleWebDavServlet
+    dav.root="/dav"
