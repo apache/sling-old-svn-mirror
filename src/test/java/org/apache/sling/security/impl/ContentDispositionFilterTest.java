@@ -1474,4 +1474,61 @@ public class ContentDispositionFilterTest {
         
         Assert.assertTrue(result);
     }
+    
+    @Test
+    public void test_isJcrData6() throws Throwable {
+        contentDispositionFilter = new ContentDispositionFilter();
+        final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
+        final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);       
+        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response);
+        
+        
+        final Resource resource = context.mock(Resource.class);
+        final ValueMap properties = context.mock(ValueMap.class);
+        
+        context.checking(new Expectations() {
+            {
+                allowing(resource).adaptTo(ValueMap.class);
+                will(returnValue(null));
+                allowing(resource).getChild(JCR_CONTENT_LEAF);
+                will(returnValue(null));
+            }
+        });     
+        
+        Boolean result = (Boolean) PrivateAccessor.invoke(rewriterResponse,"isJcrData",  new Class[]{Resource.class},new Object[]{resource});
+        
+        Assert.assertFalse(result);
+    }
+    
+    
+    @Test
+    public void test_isJcrData7() throws Throwable {
+        contentDispositionFilter = new ContentDispositionFilter();
+        final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
+        final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);       
+        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response);
+        
+        final Resource child = context.mock(Resource.class, "child");
+        final Resource resource = context.mock(Resource.class, "resource" );
+        final ValueMap properties = context.mock(ValueMap.class);
+        final ValueMap childPropoerties = context.mock(ValueMap.class, "childPropoerties");
+
+        
+        context.checking(new Expectations() {
+            {
+                allowing(resource).adaptTo(ValueMap.class);
+                will(returnValue(properties));
+                allowing(properties).containsKey(PROP_JCR_DATA);
+                will(returnValue(false));
+                allowing(resource).getChild(JCR_CONTENT_LEAF);
+                will(returnValue(child));
+                allowing(child).adaptTo(ValueMap.class);
+                will(returnValue(null));
+            }
+        });     
+        
+        Boolean result = (Boolean) PrivateAccessor.invoke(rewriterResponse,"isJcrData",  new Class[]{Resource.class},new Object[]{resource});
+        
+        Assert.assertFalse(result);
+    }
 }
