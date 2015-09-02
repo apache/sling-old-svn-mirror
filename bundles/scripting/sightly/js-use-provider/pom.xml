@@ -33,7 +33,7 @@
     <!-- P R O J E C T                                                           -->
     <!-- ======================================================================= -->
     <artifactId>org.apache.sling.scripting.sightly.js.provider</artifactId>
-    <version>1.0.9-SNAPSHOT</version>
+    <version>1.0.10</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Scripting Sightly JavaScript Use Provider</name>
@@ -43,9 +43,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/js-use-provider</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/js-use-provider</developerConnection>
-        <url>http://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/js-use-provider</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.sightly.js.provider-1.0.10</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.sightly.js.provider-1.0.10</developerConnection>
+        <url>http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.sightly.js.provider-1.0.10</url>
     </scm>
 
     <!-- ======================================================================= -->
