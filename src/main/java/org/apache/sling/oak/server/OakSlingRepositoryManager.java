@@ -322,7 +322,7 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
         @SuppressWarnings("unchecked")
         Dictionary<String, Object> properties = componentContext.getProperties();
-        final String defaultWorkspace = PropertiesUtil.toString(properties.get(PROPERTY_DEFAULT_WORKSPACE), "oak.sling");
+        final String defaultWorkspace = PropertiesUtil.toString(properties.get(PROPERTY_DEFAULT_WORKSPACE), "default");
         final boolean disableLoginAdministrative = !PropertiesUtil.toBoolean(
             properties.get(PROPERTY_LOGIN_ADMIN_ENABLED), DEFAULT_LOGIN_ADMIN_ENABLED);
 
