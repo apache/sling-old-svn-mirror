@@ -231,16 +231,16 @@ public class RequestData {
         requestProgressTracker.startTimer("ResourceResolution");
         final SlingHttpServletRequest request = getSlingRequest();
 
-        final String requestURI = servletRequest.getRequestURI();
+        StringBuffer requestURL = servletRequest.getRequestURL();
         String path = request.getPathInfo();
-        if (requestURI.contains(";") && !path.contains(";")) {
-            final String decodedURI;
+        if (requestURL.indexOf(";") > -1 && !path.contains(";")) {
+            final String decodedURL;
             try {
-                decodedURI = URLDecoder.decode(requestURI, "UTF-8");
+                decodedURL = URLDecoder.decode(requestURL.toString(), "UTF-8");
             } catch (UnsupportedEncodingException e) {
                 throw new AssertionError("UTF-8 encoding is not supported");
             }
-            path = path.concat(decodedURI.substring(decodedURI.indexOf(';')));
+            path = path.concat(decodedURL.substring(decodedURL.indexOf(';')));
         }
 
         Resource resource = resourceResolver.resolve(request, path);
