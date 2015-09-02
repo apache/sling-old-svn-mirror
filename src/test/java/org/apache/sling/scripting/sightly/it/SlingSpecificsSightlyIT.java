@@ -65,6 +65,13 @@ public class SlingSpecificsSightlyIT {
     }
 
     @Test
+    public void testUseAPIWithOSGIService() {
+        String url = launchpadURL + SLING_USE;
+        String pageContent = client.getStringContent(url, 200);
+        assertEquals("Hello World!", HTMLExtractor.innerHTML(url, pageContent, "#osgi"));
+    }
+
+    @Test
     public void testErroneousUseObject() {
         String url = launchpadURL + SLING_JAVA_USE_NPE;
         String pageContent = client.getStringContent(url, 500);
