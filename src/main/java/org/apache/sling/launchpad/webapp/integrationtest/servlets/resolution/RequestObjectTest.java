@@ -46,9 +46,9 @@ public class RequestObjectTest extends ResolutionTestBase {
     
     final TestItem [] TESTS = {
             new TestItem("","",""),
-            new TestItem(";v=1.1",";v=1.1",";v=1.1"),
-            new TestItem(";v=1.1?foo=bar",";v=1.1",";v=1.1"),
-            new TestItem(";v=1.1?foo=bar&ga+bu=zo+meu",";v=1.1",";v=1.1")
+            new TestItem(";v=1.1","",";v=1.1"),
+            new TestItem(";v=1.1?foo=bar","",";v=1.1"),
+            new TestItem(";v=1.1?foo=bar&ga+bu=zo+meu","",";v=1.1")
     };
     
     @Override

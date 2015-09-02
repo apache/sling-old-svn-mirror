@@ -68,7 +68,6 @@ public class WebDavDoubleSlashTest {
         // An empty JCR workspace name results in a URL like "/dav//test/..."
         // which correctly returns 404 now, but used to work as the WebDAV
         // servlets used the default workspace name in that case.
-        // TODO reverted to 207 for SLING-4978, need to sort that out...
-        assertEquals(207, getPropfindStatus("", testPath));
+        assertEquals(404, getPropfindStatus("", testPath));
     }
 }
