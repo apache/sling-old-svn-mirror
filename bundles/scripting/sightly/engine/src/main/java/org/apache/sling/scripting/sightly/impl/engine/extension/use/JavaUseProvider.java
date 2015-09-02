@@ -89,6 +89,11 @@ public class JavaUseProvider implements UseProvider {
         Object result;
         try {
             Class<?> cls = classLoaderWriter.getClassLoader().loadClass(identifier);
+            // attempt OSGi service load
+            result = sling.getService(cls);
+            if (result != null) {
+                return ProviderOutcome.success(result);
+            }
             result = resource.adaptTo(cls);
             if (result == null) {
                 result = request.adaptTo(cls);
