@@ -130,6 +130,7 @@ public class UnitLoader {
                 scriptSource = IOUtils.toString(scriptResource.adaptTo(InputStream.class), encoding);
                 return obtainResultSource(scriptSource, identifier, bindings, renderContext);
             }
+            throw new SightlyException("Cannot find template " + identifier.getResource().getPath() + " in the repository.");
         } catch (SightlyParsingException e) {
             String offendingInput = e.getOffendingInput();
             if (StringUtils.isNotEmpty(offendingInput)) {
@@ -141,9 +142,8 @@ public class UnitLoader {
                 throw e;
             }
         } catch (IOException e) {
-            throw new SightlyException(e);
+            throw new SightlyException("Unable to read the contents of " + identifier.getResource().getPath(), e);
         }
-        throw new SightlyException("Unable to generate Java class for template " + identifier.getResource().getPath());
     }
 
     private String obtainResultSource(String scriptSource, SourceIdentifier identifier, Bindings bindings, RenderContextImpl renderContext) {
