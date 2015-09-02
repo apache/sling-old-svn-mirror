@@ -61,7 +61,7 @@ public class Utils {
             }
         }
         if (scriptResource == null) {
-            throw new SightlyException("Required script resource could not be located: " + path);
+            throw new SightlyException("Required script resource could not be located: " + path + ". The caller is " + caller.getPath());
         }
         return scriptResource;
     }
@@ -81,6 +81,9 @@ public class Utils {
             String parentResourceType = resourceA.getResourceType();
             if ("nt:file".equals(parentResourceType)) {
                 parentResourceType = ResourceUtil.getParent(resourceA.getPath());
+                if (parentResourceType.equals(resourceB.getPath())) {
+                    return true;
+                }
             }
             Resource parentB = resolver.getResource(resourceBSuperType);
             while (parentB != null && !"/".equals(parentB.getPath()) && StringUtils.isNotEmpty(resourceBSuperType)) {
