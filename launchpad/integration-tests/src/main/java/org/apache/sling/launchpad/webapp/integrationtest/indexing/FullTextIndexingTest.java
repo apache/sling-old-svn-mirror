@@ -111,7 +111,8 @@ public class FullTextIndexingTest {
         H.getTestClient().mkdirs(HttpTest.WEBDAV_BASE_URL, uploadPath);
         H.getTestClient().upload(HttpTest.WEBDAV_BASE_URL + uploadPath + "/" + fileName, resourceToUpload);
 
-        new RetryLoop(c, 10, 50);
+        // Increased the timeout to 45 seconds to avoid failures with Oak - indexes not ready??
+        new RetryLoop(c, 45, 50);
     }
 
     @Before
