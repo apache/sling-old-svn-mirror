@@ -132,7 +132,7 @@ public final class SlingContext extends SlingContextImpl implements TestRule {
             try {
                 this.setUpCallback.execute(this);
             } catch (Throwable ex) {
-                throw new RuntimeException("Executing setup callback failed.", ex);
+                throw new RuntimeException("Setup failed: " + ex.getMessage(), ex);
             }
         }
     }
@@ -142,7 +142,7 @@ public final class SlingContext extends SlingContextImpl implements TestRule {
             try {
                 this.tearDownCallback.execute(this);
             } catch (Throwable ex) {
-                throw new RuntimeException("Executing setup callback failed.", ex);
+                throw new RuntimeException("Teardown failed: " + ex.getMessage(), ex);
             }
         }
     }
