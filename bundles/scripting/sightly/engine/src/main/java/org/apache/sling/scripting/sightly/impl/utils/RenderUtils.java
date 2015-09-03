@@ -123,6 +123,14 @@ public class RenderUtils {
         return Collections.emptyMap();
     }
 
+    /**
+     * Resolve a property of a target object and return its value. The property can
+     * be either an index or a name
+     *
+     * @param target - the target object
+     * @param property - the property to be resolved
+     * @return - the value of the property
+     */
     public static Object resolveProperty(Object target, Object property) {
         Object resolved;
         if (property instanceof Number) {
@@ -133,7 +141,7 @@ public class RenderUtils {
         return resolved;
     }
 
-    public static Object getProperty(Object target, Object propertyObj) {
+    private static Object getProperty(Object target, Object propertyObj) {
         String property = toString(propertyObj);
         if (StringUtils.isEmpty(property)) {
             throw new IllegalArgumentException("Invalid property name");
