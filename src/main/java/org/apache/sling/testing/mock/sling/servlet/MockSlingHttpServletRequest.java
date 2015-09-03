@@ -66,6 +66,8 @@ import org.apache.sling.testing.mock.sling.MockSling;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
+import com.google.common.collect.ImmutableList;
+
 /**
  * Mock {@link SlingHttpServletRequest} implementation.
  */
@@ -463,7 +465,48 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
         }
         return resourceBundle;
     }
-    
+
+    @Override
+    public RequestParameter getRequestParameter(String name) {
+        String value = getParameter(name);
+        if (value != null) {
+            return new MockRequestParameter(name, value);
+        }
+        return null;
+    }
+
+    @Override
+    public RequestParameterMap getRequestParameterMap() {
+        MockRequestParameterMap map = new MockRequestParameterMap();
+        for (Map.Entry<String,String[]> entry : getParameterMap().entrySet()) {
+            map.put(entry.getKey(), getRequestParameters(entry.getKey()));
+        }
+        return map;
+    }
+
+    @Override
+    public RequestParameter[] getRequestParameters(String name) {
+        String[] values = getParameterValues(name);
+        if (values == null) {
+            return null;
+        }
+        RequestParameter[] requestParameters = new RequestParameter[values.length];
+        for (int i = 0; i < values.length; i++) {
+            requestParameters[i] = new MockRequestParameter(name, values[i]);
+        }
+        return requestParameters;
+    }
+
+    // part of Sling API 2.7
+    public List<RequestParameter> getRequestParameterList() {
+        List<RequestParameter> params = new ArrayList<RequestParameter>();
+        for (RequestParameter[] requestParameters : getRequestParameterMap().values()) {
+            params.addAll(ImmutableList.copyOf(requestParameters));
+        }
+        return params;
+    }
+
+
     // --- unsupported operations ---
 
     @Override
@@ -478,21 +521,6 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     @Override
     public RequestDispatcher getRequestDispatcher(Resource dispatcherResource, RequestDispatcherOptions options) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public RequestParameter getRequestParameter(String name) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public RequestParameterMap getRequestParameterMap() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public RequestParameter[] getRequestParameters(String name) {
         throw new UnsupportedOperationException();
     }
 
@@ -718,11 +746,6 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     @Override
     public DispatcherType getDispatcherType() {
-        throw new UnsupportedOperationException();
-    }
-
-    // part of Sling API 2.7
-    public List<RequestParameter> getRequestParameterList() {
         throw new UnsupportedOperationException();
     }
 
