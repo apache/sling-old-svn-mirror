@@ -26,6 +26,9 @@ import java.io.UnsupportedEncodingException;
 
 import javax.servlet.ServletOutputStream;
 
+import org.apache.commons.lang3.CharEncoding;
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * Manage response body content.
  */
@@ -60,9 +63,9 @@ class ResponseBodySupport {
     public PrintWriter getWriter(String charset) {
         if (printWriter == null) {
             try {
-                printWriter = new PrintWriter(new OutputStreamWriter(getOutputStream(), charset));
+                printWriter = new PrintWriter(new OutputStreamWriter(getOutputStream(), defaultCharset(charset)));
             } catch (UnsupportedEncodingException ex) {
-                throw new RuntimeException("Unsupported encoding: " + charset, ex);
+                throw new RuntimeException("Unsupported encoding: " + defaultCharset(charset), ex);
             }
         }
         return printWriter;
@@ -84,10 +87,14 @@ class ResponseBodySupport {
             printWriter.flush();
         }
         try {
-            return new String(getOutput(), charset);
+            return new String(getOutput(), defaultCharset(charset));
         } catch (UnsupportedEncodingException ex) {
-            throw new RuntimeException("Unsupported encoding: " + charset, ex);
+            throw new RuntimeException("Unsupported encoding: " + defaultCharset(charset), ex);
         }
+    }
+    
+    private String defaultCharset(String charset) {
+        return StringUtils.defaultString(charset, CharEncoding.UTF_8);
     }
 
 }
