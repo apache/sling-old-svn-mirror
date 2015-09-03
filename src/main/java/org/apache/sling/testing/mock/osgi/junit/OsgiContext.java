@@ -90,7 +90,7 @@ public final class OsgiContext extends OsgiContextImpl implements TestRule {
             try {
                 this.setUpCallback.execute(this);
             } catch (Throwable ex) {
-                throw new RuntimeException("Executing setup callback failed.", ex);
+                throw new RuntimeException("Setup failed: " + ex.getMessage(), ex);
             }
         }
     }
@@ -100,7 +100,7 @@ public final class OsgiContext extends OsgiContextImpl implements TestRule {
             try {
                 this.tearDownCallback.execute(this);
             } catch (Throwable ex) {
-                throw new RuntimeException("Executing setup callback failed.", ex);
+                throw new RuntimeException("Teardown failed: " + ex.getMessage(), ex);
             }
         }
     }
