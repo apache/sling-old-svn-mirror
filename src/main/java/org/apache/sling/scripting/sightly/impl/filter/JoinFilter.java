@@ -32,7 +32,7 @@ import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.Expression;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.ExpressionNode;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.node.RuntimeCall;
-import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
+import org.apache.sling.scripting.sightly.impl.utils.RenderUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 
 /**
@@ -64,23 +64,22 @@ public class JoinFilter extends FilterComponent implements RuntimeExtension {
         if (arguments.length != 2) {
             throw new SightlyException("Join function must be called with two arguments.");
         }
-        RenderContextImpl renderContextImpl = (RenderContextImpl) renderContext;
         Object joinArgument = arguments[0];
-        Collection<?> collection = renderContextImpl.toCollection(joinArgument);
+        Collection<?> collection = RenderUtils.toCollection(joinArgument);
         if (joinArgument != null && collection.isEmpty()) {
             collection = Arrays.asList(new Object[] {
                 joinArgument
             });
         }
-        String joinString = renderContextImpl.toString(arguments[1]);
-        return join(renderContextImpl, collection, joinString);
+        String joinString = RenderUtils.toString(arguments[1]);
+        return join(collection, joinString);
     }
 
-    private String join(final RenderContextImpl renderContext, Collection<?> collection, String joinString) {
+    private String join(Collection<?> collection, String joinString) {
         StringBuilder sb = new StringBuilder();
         Iterator<?> iterator = collection.iterator();
         while (iterator.hasNext()) {
-            String element = renderContext.toString(iterator.next());
+            String element = RenderUtils.toString(iterator.next());
             sb.append(element);
             if (iterator.hasNext()) {
                 sb.append(joinString);

@@ -46,8 +46,8 @@ import org.apache.sling.scripting.sightly.impl.compiler.UnitChangeMonitor;
 import org.apache.sling.scripting.sightly.impl.compiler.util.GlobalShadowCheckBackend;
 import org.apache.sling.scripting.sightly.impl.engine.compiled.JavaClassTemplate;
 import org.apache.sling.scripting.sightly.impl.engine.compiled.SourceIdentifier;
-import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderUnit;
+import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,7 +91,7 @@ public class UnitLoader {
      * @return the render unit
      * @throws Exception if the unit creation fails
      */
-    public RenderUnit createUnit(Resource scriptResource, Bindings bindings, RenderContextImpl renderContext) throws Exception {
+    public RenderUnit createUnit(Resource scriptResource, Bindings bindings, RenderContext renderContext) throws Exception {
         ResourceResolver adminResolver = renderContext.getScriptResourceResolver();
         SourceIdentifier sourceIdentifier = new SourceIdentifier(sightlyEngineConfiguration, unitChangeMonitor, classLoaderWriter,
             scriptResource, CLASS_NAME_PREFIX);
@@ -100,7 +100,7 @@ public class UnitLoader {
         if (sourceIdentifier.needsUpdate()) {
             unitChangeMonitor.touchScript(scriptResource.getPath());
             encoding = unitChangeMonitor.getScriptEncoding(scriptResource.getPath());
-            String sourceCode = getSourceCodeForScript(adminResolver, sourceIdentifier, bindings, encoding, renderContext);
+            String sourceCode = getSourceCodeForScript(adminResolver, sourceIdentifier, bindings, encoding);
             obj = sightlyJavaCompilerService.compileSource(sourceIdentifier, sourceCode, sourceIdentifier.getFullyQualifiedName());
         } else {
             encoding = unitChangeMonitor.getScriptEncoding(scriptResource.getPath());
@@ -121,14 +121,13 @@ public class UnitLoader {
         childTemplate = resourceFile(componentContext, CHILD_TEMPLATE_PATH);
     }
 
-    private String getSourceCodeForScript(ResourceResolver resolver, SourceIdentifier identifier, Bindings bindings, String encoding,
-                             RenderContextImpl renderContext) {
+    private String getSourceCodeForScript(ResourceResolver resolver, SourceIdentifier identifier, Bindings bindings, String encoding) {
         String scriptSource = null;
         try {
             Resource scriptResource = resolver.getResource(identifier.getResource().getPath());
             if (scriptResource != null) {
                 scriptSource = IOUtils.toString(scriptResource.adaptTo(InputStream.class), encoding);
-                return obtainResultSource(scriptSource, identifier, bindings, renderContext);
+                return obtainResultSource(scriptSource, identifier, bindings);
             }
             throw new SightlyException("Cannot find template " + identifier.getResource().getPath() + " in the repository.");
         } catch (SightlyParsingException e) {
@@ -146,18 +145,18 @@ public class UnitLoader {
         }
     }
 
-    private String obtainResultSource(String scriptSource, SourceIdentifier identifier, Bindings bindings, RenderContextImpl renderContext) {
+    private String obtainResultSource(String scriptSource, SourceIdentifier identifier, Bindings bindings) {
         JavaClassTemplate classTemplate = newMainTemplate();
         classTemplate.setClassName(identifier.getClassName());
         classTemplate.setPackageName(identifier.getPackageName());
-        CompilationOutput compilationOutput = obtainOutput(scriptSource, bindings, renderContext);
+        CompilationOutput compilationOutput = obtainOutput(scriptSource, bindings);
         processCompilationResult(compilationOutput, classTemplate);
         return classTemplate.toString();
     }
 
-    private CompilationOutput obtainOutput(String source, Bindings bindings, RenderContextImpl renderContext) {
+    private CompilationOutput obtainOutput(String source, Bindings bindings) {
         JavaClassBackend backend = new JavaClassBackend();
-        sightlyCompilerService.compile(source, new GlobalShadowCheckBackend(backend, bindings.keySet()), renderContext);
+        sightlyCompilerService.compile(source, new GlobalShadowCheckBackend(backend, bindings.keySet()));
         return backend.build();
     }
 

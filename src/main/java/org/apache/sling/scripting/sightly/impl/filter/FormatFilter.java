@@ -32,6 +32,7 @@ import org.apache.sling.scripting.sightly.impl.compiler.expression.Expression;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.ExpressionNode;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.node.RuntimeCall;
 import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
+import org.apache.sling.scripting.sightly.impl.utils.RenderUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 
 /**
@@ -64,23 +65,22 @@ public class FormatFilter extends FilterComponent implements RuntimeExtension {
 
     @Override
     public Object call(final RenderContext renderContext, Object... arguments) {
-        RenderContextImpl renderContextImpl = (RenderContextImpl) renderContext;
         if (arguments.length != 2) {
             throw new SightlyException("Format function must be called with two arguments");
         }
-        String source = renderContextImpl.toString(arguments[0]);
-        Object[] params = decodeParams(renderContextImpl, arguments[1]);
-        return replace(renderContextImpl, source, params);
+        String source = RenderUtils.toString(arguments[0]);
+        Object[] params = decodeParams(arguments[1]);
+        return replace(source, params);
     }
 
-    private Object[] decodeParams(final RenderContextImpl renderContext, Object paramObj) {
-        if (renderContext.isCollection(paramObj)) {
-            return renderContext.toCollection(paramObj).toArray();
+    private Object[] decodeParams(Object paramObj) {
+        if (RenderUtils.isCollection(paramObj)) {
+            return RenderUtils.toCollection(paramObj).toArray();
         }
         return new Object[] {paramObj};
     }
 
-    private String replace(final RenderContextImpl renderContext, String source, Object[] params) {
+    private String replace(String source, Object[] params) {
         Matcher matcher = PLACEHOLDER_REGEX.matcher(source);
         StringBuilder builder = new StringBuilder();
         int lastPos = 0;
@@ -89,7 +89,7 @@ public class FormatFilter extends FilterComponent implements RuntimeExtension {
             matched = matcher.find();
             if (matched) {
                 int paramIndex = placeholderIndex(matcher.group());
-                String replacement = param(renderContext, params, paramIndex);
+                String replacement = param(params, paramIndex);
                 int matchStart = matcher.start();
                 int matchEnd = matcher.end();
                 builder.append(source, lastPos, matchStart).append(replacement);
@@ -100,9 +100,9 @@ public class FormatFilter extends FilterComponent implements RuntimeExtension {
         return builder.toString();
     }
 
-    private String param(final RenderContextImpl renderContext, Object[] params, int index) {
+    private String param(Object[] params, int index) {
         if (index >= 0 && index < params.length) {
-            return renderContext.toString(params[index]);
+            return RenderUtils.toString(params[index]);
         }
         return "";
     }

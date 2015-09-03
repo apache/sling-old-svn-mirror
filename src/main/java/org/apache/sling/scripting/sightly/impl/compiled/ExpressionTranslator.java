@@ -38,7 +38,7 @@ import org.apache.sling.scripting.sightly.impl.compiler.expression.node.TernaryO
 import org.apache.sling.scripting.sightly.impl.compiler.expression.node.UnaryOperation;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.node.UnaryOperator;
 import org.apache.sling.scripting.sightly.impl.compiler.util.expression.SideEffectVisitor;
-import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
+import org.apache.sling.scripting.sightly.impl.utils.RenderUtils;
 
 /**
  * Builds expressions within a sling source file.
@@ -80,7 +80,7 @@ public final class ExpressionTranslator extends SideEffectVisitor {
             visit(propertyAccess.getProperty());
             source.endCall();
         } else {
-            source.startMethodCall(SourceGenConstants.RENDER_CONTEXT_INSTANCE, RenderContextImpl.PROPERTY_ACCESS);
+            source.startMethodCall(SourceGenConstants.RENDER_UTILS, RenderUtils.PROPERTY_ACCESS);
             visit(propertyAccess.getTarget());
             source.separateArgument();
             visit(propertyAccess.getProperty());

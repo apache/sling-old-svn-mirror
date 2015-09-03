@@ -19,8 +19,7 @@
 package org.apache.sling.scripting.sightly.impl.compiler.expression.node;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
-import org.apache.sling.scripting.sightly.render.RenderContext;
+import org.apache.sling.scripting.sightly.impl.utils.RenderUtils;
 
 /**
  * Unary operators used in expressions
@@ -30,18 +29,16 @@ public enum UnaryOperator {
     /** Evaluates to logical negation of the operand */
     NOT {
         @Override
-        public Object eval(RenderContext renderContext, Object operand) {
-            RenderContextImpl renderContextImpl = (RenderContextImpl) renderContext;
-            return !renderContextImpl.toBoolean(operand);
+        public Object eval(Object operand) {
+            return !RenderUtils.toBoolean(operand);
         }
     },
 
     /** Evaluates whether the operand is a string of only whitespace characters */
     IS_WHITESPACE  {
         @Override
-        public Object eval(RenderContext renderContext, Object operand) {
-            RenderContextImpl renderContextImpl = (RenderContextImpl) renderContext;
-            return StringUtils.isWhitespace(renderContextImpl.toString(operand));
+        public Object eval(Object operand) {
+            return StringUtils.isWhitespace(RenderUtils.toString(operand));
         }
     },
 
@@ -50,12 +47,11 @@ public enum UnaryOperator {
      */
     LENGTH {
         @Override
-        public Object eval(RenderContext renderContext, Object operand) {
-            RenderContextImpl renderContextImpl = (RenderContextImpl) renderContext;
-            return renderContextImpl.toCollection(operand).size();
+        public Object eval(Object operand) {
+            return RenderUtils.toCollection(operand).size();
         }
     };
 
-    public abstract Object eval(RenderContext model, Object operand);
+    public abstract Object eval(Object operand);
 
 }
