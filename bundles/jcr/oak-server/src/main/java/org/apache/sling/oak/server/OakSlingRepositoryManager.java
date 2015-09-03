@@ -250,7 +250,10 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         }
 
         final ContentRepository contentRepository = oak.createContentRepository();
-        return new OsgiRepository(contentRepository, whiteboard, securityProvider, observationQueueLength, commitRateLimiter);
+        final boolean fastQueryResultSize = true;
+        return new OsgiRepository(
+                contentRepository, whiteboard, securityProvider, observationQueueLength, 
+                commitRateLimiter, fastQueryResultSize);
     }
 
     @Override
