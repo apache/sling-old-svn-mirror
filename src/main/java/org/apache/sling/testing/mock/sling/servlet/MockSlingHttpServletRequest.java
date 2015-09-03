@@ -18,7 +18,12 @@
  */
 package org.apache.sling.testing.mock.sling.servlet;
 
+import static org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletResponse.CHARSET_SEPARATOR;
+
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -88,6 +93,9 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
     private String method = HttpConstants.METHOD_GET;
     private final HeaderSupport headerSupport = new HeaderSupport();
     private final CookieSupport cookieSupport = new CookieSupport();
+    private String contentType;
+    private String characterEncoding;
+    private byte[] content;
     
     private static final ResourceBundle EMPTY_RESOURCE_BUNDLE = new ListResourceBundle() {
         @Override
@@ -506,6 +514,60 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
         return params;
     }
 
+    @Override
+    public String getCharacterEncoding() {
+        return this.characterEncoding;
+    }
+
+    @Override
+    public void setCharacterEncoding(String charset) {
+        this.characterEncoding = charset;
+    }
+
+    @Override
+    public String getContentType() {
+        if (this.contentType == null) {
+            return null;
+        } else {
+            return this.contentType
+                    + (StringUtils.isNotBlank(characterEncoding) ? CHARSET_SEPARATOR + characterEncoding : "");
+        }
+    }
+    
+    public void setContentType(String type) {
+        this.contentType = type;
+        if (StringUtils.contains(this.contentType, CHARSET_SEPARATOR)) {
+            this.characterEncoding = StringUtils.substringAfter(this.contentType, CHARSET_SEPARATOR);
+            this.contentType = StringUtils.substringBefore(this.contentType, CHARSET_SEPARATOR);
+        }
+    }
+
+    @Override
+    public ServletInputStream getInputStream() {
+        if (content == null) {
+            return null;
+        }
+        return new ServletInputStream() {
+            private final InputStream is = new ByteArrayInputStream(content);
+            @Override
+            public int read() throws IOException {
+                return is.read();
+            }
+        };  
+    }
+
+    @Override
+    public int getContentLength() {
+        if (content == null) {
+            return 0;
+        }
+        return content.length;
+    }
+    
+    public void setContent(byte[] content) {
+        this.content = content;
+    }
+
 
     // --- unsupported operations ---
 
@@ -610,26 +672,6 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
     }
 
     @Override
-    public String getCharacterEncoding() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public int getContentLength() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getContentType() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ServletInputStream getInputStream() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public String getLocalAddr() {
         throw new UnsupportedOperationException();
     }
@@ -681,11 +723,6 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     @Override
     public RequestDispatcher getRequestDispatcher(String path) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void setCharacterEncoding(String env) {
         throw new UnsupportedOperationException();
     }
 

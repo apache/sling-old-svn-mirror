@@ -41,6 +41,7 @@ import java.util.ResourceBundle;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.CharEncoding;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -266,4 +267,34 @@ public class MockSlingHttpServletRequestTest {
         assertNull(request.getRequestParameters("unknown"));
     }
 
+    @Test
+    public void testContentTypeCharset() throws Exception {
+        assertNull(request.getContentType());
+        assertNull(request.getCharacterEncoding());
+
+        request.setContentType("image/gif");
+        assertEquals("image/gif", request.getContentType());
+        assertNull(request.getCharacterEncoding());
+        
+        request.setContentType("text/plain;charset=UTF-8");
+        assertEquals("text/plain;charset=UTF-8", request.getContentType());
+        assertEquals(CharEncoding.UTF_8, request.getCharacterEncoding());
+        
+        request.setCharacterEncoding(CharEncoding.ISO_8859_1);
+        assertEquals("text/plain;charset=ISO-8859-1", request.getContentType());
+        assertEquals(CharEncoding.ISO_8859_1, request.getCharacterEncoding());
+    }
+
+    @Test
+    public void testContent() throws Exception {
+        assertEquals(0, request.getContentLength());
+        assertNull(request.getInputStream());
+        
+        byte[] data = new byte[] { 0x01,0x02,0x03 };
+        request.setContent(data);
+
+        assertEquals(data.length, request.getContentLength());
+        assertArrayEquals(data, IOUtils.toByteArray(request.getInputStream()));
+    }
+    
 }
