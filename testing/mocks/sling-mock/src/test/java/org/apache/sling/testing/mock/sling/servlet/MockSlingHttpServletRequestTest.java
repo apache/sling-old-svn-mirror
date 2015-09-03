@@ -250,4 +250,20 @@ public class MockSlingHttpServletRequestTest {
         assertFalse(bundle2.getKeys().hasMoreElements());
     }
 
+    @Test
+    public void testRequestParameter() throws Exception {
+        request.setQueryString("param1=123&param2=" + URLEncoder.encode("äöüß€!:!", CharEncoding.UTF_8)
+                + "&param3=a&param3=b");
+
+        assertEquals(3, request.getRequestParameterMap().size());
+        assertEquals(4, request.getRequestParameterList().size());
+        assertEquals("123", request.getRequestParameter("param1").getString());
+        assertEquals("äöüß€!:!", request.getRequestParameter("param2").getString());
+        assertEquals("a",request.getRequestParameters("param3")[0].getString());
+        assertEquals("b",request.getRequestParameters("param3")[1].getString());
+
+        assertNull(request.getRequestParameter("unknown"));
+        assertNull(request.getRequestParameters("unknown"));
+    }
+
 }
