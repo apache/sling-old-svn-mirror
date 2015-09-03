@@ -30,6 +30,7 @@ import javax.script.SimpleBindings;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.sightly.Record;
+import org.apache.sling.scripting.sightly.impl.utils.RenderUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 
 /**
@@ -73,9 +74,8 @@ public abstract class RenderUnit implements Record<RenderUnit> {
             return;
         }
         RenderUnit unit = (RenderUnit) templateObj;
-        RenderContextImpl renderContextImpl = (RenderContextImpl) renderContext;
-        SlingScriptHelper ssh = (SlingScriptHelper) renderContextImpl.getBindings().get(SlingBindings.SLING);
-        Map<String, Object> argumentsMap = renderContextImpl.toMap(argsObj);
+        SlingScriptHelper ssh = (SlingScriptHelper) renderContext.getBindings().get(SlingBindings.SLING);
+        Map<String, Object> argumentsMap = RenderUtils.toMap(argsObj);
         Bindings arguments = new SimpleBindings(Collections.unmodifiableMap(argumentsMap));
         unit.render(renderContext, arguments);
     }

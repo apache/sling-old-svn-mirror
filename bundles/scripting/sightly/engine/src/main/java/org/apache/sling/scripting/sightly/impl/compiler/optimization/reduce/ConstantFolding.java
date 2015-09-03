@@ -31,25 +31,22 @@ import org.apache.sling.scripting.sightly.impl.compiler.util.stream.EmitterVisit
 import org.apache.sling.scripting.sightly.impl.compiler.util.stream.PushStream;
 import org.apache.sling.scripting.sightly.impl.compiler.util.stream.Streams;
 import org.apache.sling.scripting.sightly.impl.compiler.visitor.TrackingVisitor;
-import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 
 /**
  * Optimization which evaluates constant expressions during compilation-time
  */
 public final class ConstantFolding extends TrackingVisitor<EvalResult> implements EmitterVisitor {
 
-    private final RenderContextImpl renderContext;
     private final PushStream outStream = new PushStream();
 
-    private ConstantFolding(RenderContextImpl renderContext) {
-        this.renderContext = renderContext;
+    private ConstantFolding() {
     }
 
-    public static StreamTransformer transformer(final RenderContextImpl renderContext) {
+    public static StreamTransformer transformer() {
         return new StreamTransformer() {
             @Override
             public CommandStream transform(CommandStream inStream) {
-                return Streams.map(inStream, new ConstantFolding(renderContext));
+                return Streams.map(inStream, new ConstantFolding());
             }
         };
     }
@@ -58,7 +55,7 @@ public final class ConstantFolding extends TrackingVisitor<EvalResult> implement
     public void visit(VariableBinding.Start variableBindingStart) {
         String variable = variableBindingStart.getVariableName();
         ExpressionNode node = variableBindingStart.getExpression();
-        EvalResult result = ExpressionReducer.reduce(node, tracker, renderContext);
+        EvalResult result = ExpressionReducer.reduce(node, tracker);
         result = avoidFoldingDataStructures(result);
         tracker.pushVariable(variable, result);
         outStream.emit(new VariableBinding.Start(variable, result.getNode()));

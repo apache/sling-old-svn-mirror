@@ -41,6 +41,8 @@ public final class SourceGenConstants {
 
     public static final String RENDER_CONTEXT_INSTANCE = "renderContext";
 
+    public static final String RENDER_UTILS = "RenderUtils";
+
     public static final String RUNTIME_CALL_METHOD = "call";
 
     public static final String COLLECTION_LENGTH_METHOD = "size";

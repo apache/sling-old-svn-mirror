@@ -41,6 +41,7 @@ import org.apache.sling.scripting.sightly.impl.compiler.expression.node.RuntimeC
 import org.apache.sling.scripting.sightly.impl.engine.extension.ExtensionUtils;
 import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.impl.utils.PathInfo;
+import org.apache.sling.scripting.sightly.impl.utils.RenderUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 
 /**
@@ -99,9 +100,8 @@ public class URIManipulationFilter extends FilterComponent implements RuntimeExt
     @SuppressWarnings("unchecked")
     public Object call(RenderContext renderContext, Object... arguments) {
         ExtensionUtils.checkArgumentCount(URI_MANIPULATION_FUNCTION, arguments, 2);
-        RenderContextImpl rci = (RenderContextImpl) renderContext;
-        String uriString = rci.toString(arguments[0]);
-        Map<String, Object> options = rci.toMap(arguments[1]);
+        String uriString = RenderUtils.toString(arguments[0]);
+        Map<String, Object> options = RenderUtils.toMap(arguments[1]);
         if (uriString == null) {
             return null;
         }
@@ -160,7 +160,7 @@ public class URIManipulationFilter extends FilterComponent implements RuntimeExt
         }
         sb.append(newPath);
         Set<String> selectors = pathInfo.getSelectors();
-        handleSelectors(rci, selectors, options);
+        handleSelectors(selectors, options);
         for (String selector : selectors) {
             if (StringUtils.isNotBlank(selector) && !selector.contains(" ")) {
                 // make sure not to append empty or invalid selectors
@@ -198,7 +198,7 @@ public class URIManipulationFilter extends FilterComponent implements RuntimeExt
             sb.append(newSuffix);
         }
         Map<String, Collection<String>> parameters = pathInfo.getParameters();
-        handleParameters(rci, parameters, options);
+        handleParameters(parameters, options);
         if (!parameters.isEmpty()) {
             sb.append("?");
             for (Map.Entry<String, Collection<String>> entry : parameters.entrySet()) {
@@ -244,7 +244,7 @@ public class URIManipulationFilter extends FilterComponent implements RuntimeExt
         return defaultValue;
     }
 
-    private void handleSelectors(RenderContextImpl rci, Set<String> selectors, Map<String, Object> options) {
+    private void handleSelectors(Set<String> selectors, Map<String, Object> options) {
         if (options.containsKey(SELECTORS)) {
             Object selectorsOption = options.get(SELECTORS);
             if (selectorsOption == null) {
@@ -259,7 +259,7 @@ public class URIManipulationFilter extends FilterComponent implements RuntimeExt
                 String[] selectorsArray = new String[selectorsURIArray.length];
                 int index = 0;
                 for (Object selector : selectorsURIArray) {
-                    selectorsArray[index++] = rci.toString(selector);
+                    selectorsArray[index++] = RenderUtils.toString(selector);
                 }
                 replaceSelectors(selectors, selectorsArray);
             }
@@ -274,7 +274,7 @@ public class URIManipulationFilter extends FilterComponent implements RuntimeExt
             String[] selectorsArray = new String[selectorsURIArray.length];
             int index = 0;
             for (Object selector : selectorsURIArray) {
-                selectorsArray[index++] = rci.toString(selector);
+                selectorsArray[index++] = RenderUtils.toString(selector);
             }
             addSelectors(selectors, selectorsArray);
         }
@@ -288,7 +288,7 @@ public class URIManipulationFilter extends FilterComponent implements RuntimeExt
             String[] selectorsArray = new String[selectorsURIArray.length];
             int index = 0;
             for (Object selector : selectorsURIArray) {
-                selectorsArray[index++] = rci.toString(selector);
+                selectorsArray[index++] = RenderUtils.toString(selector);
             }
             removeSelectors(selectors, selectorsArray);
         }
@@ -309,42 +309,42 @@ public class URIManipulationFilter extends FilterComponent implements RuntimeExt
     }
 
     @SuppressWarnings("unchecked")
-    private void handleParameters(RenderContextImpl rci, Map<String, Collection<String>> parameters, Map<String, Object> options) {
+    private void handleParameters(Map<String, Collection<String>> parameters, Map<String, Object> options) {
         if (options.containsKey(QUERY)) {
             Object queryOption = options.get(QUERY);
             parameters.clear();
-            Map<String, Object> queryParameters = rci.toMap(queryOption);
+            Map<String, Object> queryParameters = RenderUtils.toMap(queryOption);
             for (Map.Entry<String, Object> entry : queryParameters.entrySet()) {
                 Object entryValue = entry.getValue();
-                if (rci.isCollection(entryValue)) {
-                    Collection<Object> collection = rci.toCollection(entryValue);
+                if (RenderUtils.isCollection(entryValue)) {
+                    Collection<Object> collection = RenderUtils.toCollection(entryValue);
                     Collection<String> values = new ArrayList<String>(collection.size());
                     for (Object o : collection) {
-                        values.add(rci.toString(o));
+                        values.add(RenderUtils.toString(o));
                     }
                     parameters.put(entry.getKey(), values);
                 } else {
                     Collection<String> values = new ArrayList<String>(1);
-                    values.add(rci.toString(entryValue));
+                    values.add(RenderUtils.toString(entryValue));
                     parameters.put(entry.getKey(), values);
                 }
             }
         }
         Object addQueryOption = options.get(ADD_QUERY);
         if (addQueryOption != null) {
-            Map<String, Object> addParams = rci.toMap(addQueryOption);
+            Map<String, Object> addParams = RenderUtils.toMap(addQueryOption);
             for (Map.Entry<String, Object> entry : addParams.entrySet()) {
                 Object entryValue = entry.getValue();
-                if (rci.isCollection(entryValue)) {
-                    Collection<Object> collection = rci.toCollection(entryValue);
+                if (RenderUtils.isCollection(entryValue)) {
+                    Collection<Object> collection = RenderUtils.toCollection(entryValue);
                     Collection<String> values = new ArrayList<String>(collection.size());
                     for (Object o : collection) {
-                        values.add(rci.toString(o));
+                        values.add(RenderUtils.toString(o));
                     }
                     parameters.put(entry.getKey(), values);
                 } else {
                     Collection<String> values = new ArrayList<String>(1);
-                    values.add(rci.toString(entryValue));
+                    values.add(RenderUtils.toString(entryValue));
                     parameters.put(entry.getKey(), values);
                 }
             }
@@ -356,7 +356,7 @@ public class URIManipulationFilter extends FilterComponent implements RuntimeExt
             } else if (removeQueryOption instanceof Object[]) {
                 Object[] removeQueryParamArray = (Object[]) removeQueryOption;
                 for (Object param : removeQueryParamArray) {
-                    String paramString = rci.toString(param);
+                    String paramString = RenderUtils.toString(param);
                     if (paramString != null) {
                         parameters.remove(paramString);
                     }
