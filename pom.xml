@@ -162,7 +162,8 @@
         <dependency>
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
-            <version>0.9.10</version>
+            <!-- Do not use version 0.9.10, it created threading issues when running junit tests in parallel (see SLING-5002) -->
+            <version>0.9.9</version>
             <scope>compile</scope>
             <!-- exclude all optional dependencies -->
             <exclusions>
