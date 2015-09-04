@@ -96,6 +96,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
     private String contentType;
     private String characterEncoding;
     private byte[] content;
+    private MockRequestDispatcherFactory requestDispatcherFactory;
     
     private static final ResourceBundle EMPTY_RESOURCE_BUNDLE = new ListResourceBundle() {
         @Override
@@ -568,23 +569,44 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
         this.content = content;
     }
 
+    @Override
+    public RequestDispatcher getRequestDispatcher(String path) {
+        if (requestDispatcherFactory == null) {
+            throw new IllegalStateException("Please provdide a MockRequestDispatcherFactory (setRequestDispatcherFactory).");
+        }
+        return requestDispatcherFactory.getRequestDispatcher(path,  null);
+    }
+
+    @Override
+    public RequestDispatcher getRequestDispatcher(String path, RequestDispatcherOptions options) {
+        if (requestDispatcherFactory == null) {
+            throw new IllegalStateException("Please provdide a MockRequestDispatcherFactory (setRequestDispatcherFactory).");
+        }
+        return requestDispatcherFactory.getRequestDispatcher(path,  options);
+    }
+
+    @Override
+    public RequestDispatcher getRequestDispatcher(Resource resource) {
+        if (requestDispatcherFactory == null) {
+            throw new IllegalStateException("Please provdide a MockRequestDispatcherFactory (setRequestDispatcherFactory).");
+        }
+        return requestDispatcherFactory.getRequestDispatcher(resource, null);
+    }
+
+    @Override
+    public RequestDispatcher getRequestDispatcher(Resource resource, RequestDispatcherOptions options) {
+        if (requestDispatcherFactory == null) {
+            throw new IllegalStateException("Please provdide a MockRequestDispatcherFactory (setRequestDispatcherFactory).");
+        }
+        return requestDispatcherFactory.getRequestDispatcher(resource, options);
+    }
+    
+    public void setRequestDispatcherFactory(MockRequestDispatcherFactory requestDispatcherFactory) {
+        this.requestDispatcherFactory = requestDispatcherFactory;
+    }
+
 
     // --- unsupported operations ---
-
-    @Override
-    public RequestDispatcher getRequestDispatcher(Resource dispatcherResource) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public RequestDispatcher getRequestDispatcher(String dispatcherPath, RequestDispatcherOptions options) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public RequestDispatcher getRequestDispatcher(Resource dispatcherResource, RequestDispatcherOptions options) {
-        throw new UnsupportedOperationException();
-    }
 
     @Override
     public RequestProgressTracker getRequestProgressTracker() {
@@ -718,11 +740,6 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     @Override
     public int getRemotePort() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public RequestDispatcher getRequestDispatcher(String path) {
         throw new UnsupportedOperationException();
     }
 
