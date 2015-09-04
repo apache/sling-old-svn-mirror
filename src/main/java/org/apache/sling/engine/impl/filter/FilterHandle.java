@@ -40,8 +40,10 @@ public class FilterHandle implements Comparable<FilterHandle> {
     private AtomicLong calls;
 
     private AtomicLong time;
+    
+    FilterProcessorMBeanImpl mbean;
 
-    FilterHandle(Filter filter, String pattern, Long filterId, int order, final String orderSource) {
+    FilterHandle(Filter filter, String pattern, Long filterId, int order, final String orderSource, FilterProcessorMBeanImpl mbean) {
         this.filter = filter;
         if (pattern != null && pattern.length() > 0) {
             this.regex = Pattern.compile(pattern);
@@ -54,6 +56,7 @@ public class FilterHandle implements Comparable<FilterHandle> {
         this.orderSource = orderSource;
         this.calls = new AtomicLong();
         this.time = new AtomicLong();
+        this.mbean = mbean;
     }
 
     public Filter getFilter() {
@@ -104,6 +107,9 @@ public class FilterHandle implements Comparable<FilterHandle> {
 
     void trackTime(long time) {
         this.time.addAndGet(time);
+        if (mbean != null) {
+            mbean.addFilterHandle(this);
+        }
     }
 
     /**

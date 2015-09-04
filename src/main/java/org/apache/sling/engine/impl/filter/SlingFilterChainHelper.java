@@ -43,11 +43,11 @@ public class SlingFilterChainHelper {
     }
 
     public synchronized Filter addFilter(final Filter filter,  String pattern,
-            final Long filterId, final int order, final String orderSource) {
+            final Long filterId, final int order, final String orderSource, FilterProcessorMBeanImpl mbean) {
         if (filterList == null) {
             filterList = new TreeSet<FilterHandle>();
         }
-        filterList.add(new FilterHandle(filter, pattern, filterId, order, orderSource));
+        filterList.add(new FilterHandle(filter, pattern, filterId, order, orderSource, mbean));
         filters = getFiltersInternal();
         return filter;
     }
