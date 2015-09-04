@@ -25,6 +25,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -38,11 +39,13 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 
+import javax.servlet.RequestDispatcher;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.CharEncoding;
+import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.HttpConstants;
@@ -295,6 +298,26 @@ public class MockSlingHttpServletRequestTest {
 
         assertEquals(data.length, request.getContentLength());
         assertArrayEquals(data, IOUtils.toByteArray(request.getInputStream()));
+    }
+
+    @Test
+    public void testGetRequestDispatcher() {
+        MockRequestDispatcherFactory requestDispatcherFactory = mock(MockRequestDispatcherFactory.class);
+        RequestDispatcher requestDispatcher = mock(RequestDispatcher.class);
+        when(requestDispatcherFactory.getRequestDispatcher(any(Resource.class), any(RequestDispatcherOptions.class))).thenReturn(requestDispatcher);
+        when(requestDispatcherFactory.getRequestDispatcher(any(String.class), any(RequestDispatcherOptions.class))).thenReturn(requestDispatcher);
+        
+        request.setRequestDispatcherFactory(requestDispatcherFactory);
+        
+        assertSame(requestDispatcher, request.getRequestDispatcher("/path"));
+        assertSame(requestDispatcher, request.getRequestDispatcher("/path", new RequestDispatcherOptions()));
+        assertSame(requestDispatcher, request.getRequestDispatcher(resource));
+        assertSame(requestDispatcher, request.getRequestDispatcher(resource, new RequestDispatcherOptions()));
+    }
+    
+    @Test(expected = IllegalStateException.class)
+    public void testGetRequestDispatcherWithoutFactory() {
+        request.getRequestDispatcher("/path");
     }
     
 }
