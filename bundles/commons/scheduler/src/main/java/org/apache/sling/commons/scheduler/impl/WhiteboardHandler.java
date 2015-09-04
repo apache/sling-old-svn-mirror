@@ -63,17 +63,17 @@ public class WhiteboardHandler {
                  "(" + Constants.OBJECTCLASS + "=" + Job.class.getName() + "))"),
                 new ServiceTrackerCustomizer() {
 
-            public synchronized void  removedService(final ServiceReference reference, final Object service) {
+            public void  removedService(final ServiceReference reference, final Object service) {
                 unregister(reference, service);
                 btx.ungetService(reference);
             }
 
-            public synchronized void modifiedService(final ServiceReference reference, final Object service) {
+            public void modifiedService(final ServiceReference reference, final Object service) {
                 unregister(reference, service);
                 register(reference, service);
             }
 
-            public synchronized Object addingService(final ServiceReference reference) {
+            public Object addingService(final ServiceReference reference) {
                 final Object obj = btx.getService(reference);
                 if ( obj != null ) {
                     register(reference, obj);
