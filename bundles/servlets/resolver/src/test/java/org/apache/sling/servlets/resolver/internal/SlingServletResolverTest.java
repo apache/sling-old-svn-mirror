@@ -18,11 +18,13 @@
  */
 package org.apache.sling.servlets.resolver.internal;
 
+import static junit.framework.TestCase.assertNull;
+import static junit.framework.TestCase.assertTrue;
 import static org.apache.sling.servlets.resolver.internal.ServletResolverConstants.SLING_SERLVET_NAME;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.List;
@@ -46,6 +48,8 @@ import org.apache.sling.commons.testing.sling.MockResource;
 import org.apache.sling.commons.testing.sling.MockResourceResolver;
 import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
 import org.apache.sling.servlets.resolver.internal.resource.MockServletResource;
+import org.apache.sling.servlets.resolver.internal.resource.ServletResourceProvider;
+import org.apache.sling.servlets.resolver.internal.resource.ServletResourceProviderFactory;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JMock;
 import org.jmock.integration.junit4.JUnit4Mockery;
@@ -53,6 +57,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 @RunWith(JMock.class)
@@ -193,6 +198,44 @@ public class SlingServletResolverTest {
         Servlet result = servletResolver.resolveServlet(insecureRequest);
         assertTrue("Did not ignore unwanted request",
             result.getClass() != MockSlingRequestHandlerServlet.class);
+    }
+
+    @Test public void testCreateServiceRegistrationProperties() throws Throwable {
+        MockServiceReference msr = new MockServiceReference(null);
+
+        msr.setProperty(ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES, "sample");
+        msr.setProperty(ServletResolverConstants.SLING_SERVLET_METHODS, "GET");
+
+        Field srpf = SlingServletResolver.class.getDeclaredField("servletResourceProviderFactory");
+        srpf.setAccessible(true);
+        ServletResourceProviderFactory factory = (ServletResourceProviderFactory) srpf.get(servletResolver);
+
+        ServletResourceProvider servlet = factory.create(msr);
+
+        Method createServiceProperties = SlingServletResolver.class.getDeclaredMethod("createServiceProperties", ServiceReference.class, ServletResourceProvider.class);
+        createServiceProperties.setAccessible(true);
+
+        // no ranking
+        assertNull(msr.getProperty(Constants.SERVICE_RANKING));
+        @SuppressWarnings("unchecked")
+        final Dictionary<String, Object> p1 = (Dictionary<String, Object>) createServiceProperties.invoke(servletResolver, msr, servlet);
+        assertNull(p1.get(Constants.SERVICE_RANKING));
+
+        // illegal type of ranking
+        Object nonIntValue = "Some Non Integer Value";
+        msr.setProperty(Constants.SERVICE_RANKING, nonIntValue);
+        assertEquals(nonIntValue, msr.getProperty(Constants.SERVICE_RANKING));
+        @SuppressWarnings("unchecked")
+        final Dictionary<String, Object> p2 = (Dictionary<String, Object>) createServiceProperties.invoke(servletResolver, msr, servlet);
+        assertNull(p2.get(Constants.SERVICE_RANKING));
+
+        // illegal type of ranking
+        Object intValue = Integer.valueOf(123);
+        msr.setProperty(Constants.SERVICE_RANKING, intValue);
+        assertEquals(intValue, msr.getProperty(Constants.SERVICE_RANKING));
+        @SuppressWarnings("unchecked")
+        final Dictionary<String, Object> p3 = (Dictionary<String, Object>) createServiceProperties.invoke(servletResolver, msr, servlet);
+        assertEquals(intValue, p3.get(Constants.SERVICE_RANKING));
     }
 
     /**

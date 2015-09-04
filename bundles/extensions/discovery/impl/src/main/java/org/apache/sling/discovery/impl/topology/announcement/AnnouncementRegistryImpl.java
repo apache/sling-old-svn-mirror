@@ -137,6 +137,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
     }
 
     public synchronized Collection<Announcement> listAnnouncementsInSameCluster(final ClusterView localClusterView) {
+        logger.debug("listAnnouncementsInSameCluster: start. localClusterView: {}", localClusterView);
         if (localClusterView==null) {
             throw new IllegalArgumentException("clusterView must not be null");
         }
@@ -157,14 +158,17 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
             while (it0.hasNext()) {
                 Resource aClusterInstanceResource = it0.next();
                 final String instanceId = aClusterInstanceResource.getName();
+                logger.debug("listAnnouncementsInSameCluster: handling clusterInstance: {}", instanceId);
                 if (localInstance!=null && localInstance.getSlingId().equals(instanceId)) {
                     // this is the local instance then - which we serve from the cache only
+                    logger.debug("listAnnouncementsInSameCluster: matched localInstance, filling with cache: {}", instanceId);
                     fillWithCachedAnnouncements(incomingAnnouncements);
                     continue;
                 }
                 
                 //TODO: add ClusterView.contains(instanceSlingId) for convenience to next api change
                 if (!contains(localClusterView, instanceId)) {
+                    logger.debug("listAnnouncementsInSameCluster: instance is not in my view, ignoring: {}", instanceId);
                     // then the instance is not in my view, hence ignore its announcements
                     // (corresponds to earlier expiry-handling)
                     continue;
@@ -172,8 +176,10 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                 final Resource announcementsResource = aClusterInstanceResource
                         .getChild("announcements");
                 if (announcementsResource == null) {
+                    logger.debug("listAnnouncementsInSameCluster: instance has no announcements: {}", instanceId);
                     continue;
                 }
+                logger.debug("listAnnouncementsInSameCluster: instance has announcements: {}", instanceId);
                 Iterator<Resource> it = announcementsResource.getChildren()
                         .iterator();
                 Announcement topologyAnnouncement;
@@ -184,6 +190,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                                     .adaptTo(ValueMap.class).get(
                                             "topologyAnnouncement",
                                             String.class));
+                    logger.debug("listAnnouncementsInSameCluster: found announcement: {}", topologyAnnouncement);
                     incomingAnnouncements.add(topologyAnnouncement);
                     // SLING-3389: no longer check for expired announcements - 
                     // instead make use of the fact that this instance
@@ -444,8 +451,63 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                 it.remove();
                 
                 final String instanceId = entry.getKey();
-                logger.info("checkExpiredAnnouncements: topology connector of "+instanceId+" has expired.");
+                logger.info("checkExpiredAnnouncements: topology connector of "+instanceId+
+                        " (to me="+settingsService.getSlingId()+
+                        ", inherited="+entry.getValue().getAnnouncement().isInherited()+") has expired.");
                 deleteAnnouncementsOf(instanceId);
+            }
+        }
+        //SLING-4139 : also make sure there are no stale announcements
+        //             in the repository (from a crash or any other action).
+        //             The ownAnnouncementsCache is the authorative set
+        //             of announcements that are registered to this
+        //             instance's registry - and the repository must not
+        //             contain any additional announcements
+        final String instanceId = settingsService.getSlingId();
+        ResourceResolver resourceResolver = null;
+        try {
+            resourceResolver = resourceResolverFactory
+                    .getAdministrativeResourceResolver(null);
+            final Resource announcementsResource = ResourceHelper
+                    .getOrCreateResource(
+                            resourceResolver,
+                            config.getClusterInstancesPath()
+                                    + "/"
+                                    + instanceId
+                                    + "/announcements");
+            final Iterator<Resource> it = announcementsResource.getChildren().iterator();
+            while(it.hasNext()) {
+            	final Resource res = it.next();
+            	final String ownerId = res.getName();
+            	// ownerId is the slingId of the owner of the announcement (ie of the peer of the connector).
+            	// let's check if the we have that owner's announcement in the cache
+            	
+            	if (ownAnnouncementsCache.containsKey(ownerId)) {
+            		// fine then, we'll leave this announcement untouched
+            		continue;
+            	}
+            	// otherwise this announcement is likely from an earlier incarnation
+            	// of this instance - hence stale - hence we must remove it now
+            	//  (SLING-4139)
+            	ResourceHelper.deleteResource(resourceResolver, 
+            			res.getPath());
+            }
+            resourceResolver.commit();
+            resourceResolver.close();
+            resourceResolver = null;
+        } catch (LoginException e) {
+            logger.error(
+                    "checkExpiredAnnouncements: could not log in administratively when checking "
+                    + "for expired announcements of instanceId="+instanceId+": " + e, e);
+        } catch (PersistenceException e) {
+            logger.error(
+                    "checkExpiredAnnouncements: got PersistenceException when checking "
+                    + "for expired announcements of instanceId="+instanceId+": " + e, e);
+        } finally {
+            if (resourceResolver!=null) {
+                resourceResolver.revert();
+                resourceResolver.close();
+                resourceResolver = null;
             }
         }
     }
@@ -482,17 +544,21 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
     }
 
     public synchronized Collection<InstanceDescription> listInstances(final ClusterView localClusterView) {
+        logger.debug("listInstances: start. localClusterView: {}", localClusterView);
         final Collection<InstanceDescription> instances = new LinkedList<InstanceDescription>();
 
         final Collection<Announcement> announcements = listAnnouncementsInSameCluster(localClusterView);
         if (announcements == null) {
+            logger.debug("listInstances: no announcement found. end. instances: {}", instances);
             return instances;
         }
 
         for (Iterator<Announcement> it = announcements.iterator(); it.hasNext();) {
             final Announcement announcement = it.next();
+            logger.debug("listInstances: adding announcement: {}", announcement);
             instances.addAll(announcement.listInstances());
         }
+        logger.debug("listInstances: announcements added. end. instances: {}", instances);
         return instances;
     }
 

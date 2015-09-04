@@ -16,10 +16,10 @@
  */
 package org.apache.sling.provisioning.model;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 /**
  * Helper class to hold key value pairs.
@@ -29,7 +29,7 @@ public class KeyValueMap<T>
     implements Iterable<Map.Entry<String, T>> {
 
     /** The map holding the actual key value pairs. */
-    private final Map<String, T> properties = new HashMap<String, T>();
+    private final Map<String, T> properties = new TreeMap<String, T>();
 
     /**
      * Get an item from the map.
@@ -47,6 +47,16 @@ public class KeyValueMap<T>
      */
     public void put(final String key, final T value) {
         this.properties.put(key, value);
+    }
+
+    /**
+     * Remove an item from the map
+     * @param key The key of the item.
+     * @return The previously stored value for the key or {@code null}.
+     * @since 1.1
+     */
+    public T remove(final String key) {
+        return this.properties.remove(key);
     }
 
     /**
@@ -73,5 +83,14 @@ public class KeyValueMap<T>
     @Override
     public String toString() {
         return properties.toString();
+    }
+
+    /**
+     * Get the size of the map.
+     * @return The size of the map.
+     * @since 1.1
+     */
+    public int size() {
+        return this.properties.size();
     }
 }

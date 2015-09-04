@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
 public class ScriptableNode extends ScriptableBase implements SlingWrapper {
 
     public static final String CLASSNAME = "Node";
-    public static final Class<?> [] WRAPPED_CLASSES = { Node.class };
+    private static final Class<?> [] WRAPPED_CLASSES = { Node.class };
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());

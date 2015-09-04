@@ -18,8 +18,6 @@
  */
 package org.apache.sling.engine;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.Servlet;
@@ -46,29 +44,8 @@ public class RequestUtil {
      * @return A Map indexed by the Token names where the values are Map
      *         instances indexed by parameter name
      */
-    public static Map<String, Map<String, String>> parserHeader(String value) {
-        Map<String, Map<String, String>> result = new HashMap<String, Map<String, String>>();
-        String[] tokens = value.split(",");
-        for (int i = 0; i < tokens.length; i++) {
-            String[] parameters = tokens[i].split(";");
-            String name = parameters[0].trim();
-            Map<String, String> parMap;
-            if (parameters.length > 0) {
-                parMap = new HashMap<String, String>();
-                for (int j = 1; j < parameters.length; j++) {
-                    String[] content = parameters[j].split("=", 2);
-                    if (content.length > 1) {
-                        parMap.put(content[0].trim(), content[1].trim());
-                    } else {
-                        parMap.put(content[0].trim(), content[0].trim());
-                    }
-                }
-            } else {
-                parMap = Collections.emptyMap();
-            }
-            result.put(name, parMap);
-        }
-        return result;
+    public static Map<String, Map<String, String>> parserHeader(final String value) {
+        return org.apache.sling.api.request.RequestUtil.parserHeader(value);
     }
 
     /**
@@ -87,30 +64,8 @@ public class RequestUtil {
      *         <code>Double</code> instances providing the value of the
      *         <code>q</code> parameter.
      */
-    public static Map<String, Double> parserAcceptHeader(String value) {
-        Map<String, Double> result = new HashMap<String, Double>();
-        String[] tokens = value.split(",");
-        for (int i = 0; i < tokens.length; i++) {
-            String[] parameters = tokens[i].split(";");
-            String name = parameters[0];
-            Double qVal = new Double(1.0);
-            if (parameters.length > 1) {
-                for (int j = 1; j < parameters.length; j++) {
-                    String[] content = parameters[j].split("=", 2);
-                    if (content.length > 1 && "q".equals(content[0])) {
-                        try {
-                            qVal = Double.valueOf(content[1]);
-                        } catch (NumberFormatException nfe) {
-                            // don't care
-                        }
-                    }
-                }
-            }
-            if (qVal != null) {
-                result.put(name, qVal);
-            }
-        }
-        return result;
+    public static Map<String, Double> parserAcceptHeader(final String value) {
+        return org.apache.sling.api.request.RequestUtil.parserAcceptHeader(value);
     }
 
     /**
@@ -124,20 +79,8 @@ public class RequestUtil {
      * <li>Otherwise use the fully qualified name of the servlet class
      * </ol>
      */
-    public static String getServletName(Servlet servlet) {
-        String name = null;
-
-        if (servlet.getServletConfig() != null) {
-            name = servlet.getServletConfig().getServletName();
-        }
-        if (name == null || name.length() == 0) {
-            name = servlet.getServletInfo();
-        }
-        if (name == null || name.length() == 0) {
-            name = servlet.getClass().getName();
-        }
-
-        return name;
+    public static String getServletName(final Servlet servlet) {
+        return org.apache.sling.api.request.RequestUtil.getServletName(servlet);
     }
 
     /**
@@ -147,18 +90,12 @@ public class RequestUtil {
      * @param request The request object whose attribute is to be set.
      * @param name The name of the attribute to be set.
      * @param value The new value of the attribute. If this is <code>null</code>
-     *            the attribte is actually removed from the request.
+     *            the attribute is actually removed from the request.
      * @return The previous value of the named request attribute or
      *         <code>null</code> if it was not set.
      */
-    public static Object setRequestAttribute(HttpServletRequest request,
-            String name, Object value) {
-        Object oldValue = request.getAttribute(name);
-        if (value == null) {
-            request.removeAttribute(name);
-        } else {
-            request.setAttribute(name, value);
-        }
-        return oldValue;
+    public static Object setRequestAttribute(final HttpServletRequest request,
+            final String name, final Object value) {
+        return org.apache.sling.api.request.RequestUtil.setRequestAttribute(request, name, value);
     }
 }

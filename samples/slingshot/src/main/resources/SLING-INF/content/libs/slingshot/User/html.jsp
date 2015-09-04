@@ -35,7 +35,7 @@
     <sling:include resource="<%= resource %>" replaceSelectors="trail"/>
     <h1><%= title %></h1>
     <hr/>
-    <sling:include resource="<%= resource %>" replaceSelectors="itemlist"/>
+    <sling:include resource="<%= resource.getChild("content") %>" replaceSelectors="itemlist"/>
   </div>
 </body>
 </html>

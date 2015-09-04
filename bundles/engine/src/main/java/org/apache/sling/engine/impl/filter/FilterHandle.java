@@ -19,12 +19,17 @@
 package org.apache.sling.engine.impl.filter;
 
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Pattern;
 
 import javax.servlet.Filter;
+
+import org.apache.sling.api.SlingHttpServletRequest;
 
 public class FilterHandle implements Comparable<FilterHandle> {
 
     private final Filter filter;
+    
+    private final Pattern regex;
 
     private final Long filterId;
 
@@ -35,14 +40,23 @@ public class FilterHandle implements Comparable<FilterHandle> {
     private AtomicLong calls;
 
     private AtomicLong time;
+    
+    FilterProcessorMBeanImpl mbean;
 
-    FilterHandle(Filter filter, Long filterId, int order, final String orderSource) {
+    FilterHandle(Filter filter, String pattern, Long filterId, int order, final String orderSource, FilterProcessorMBeanImpl mbean) {
         this.filter = filter;
+        if (pattern != null && pattern.length() > 0) {
+            this.regex = Pattern.compile(pattern);
+        } else {
+            this.regex = null;
+        }
+        
         this.filterId = filterId;
         this.order = order;
         this.orderSource = orderSource;
         this.calls = new AtomicLong();
         this.time = new AtomicLong();
+        this.mbean = mbean;
     }
 
     public Filter getFilter() {
@@ -59,6 +73,20 @@ public class FilterHandle implements Comparable<FilterHandle> {
 
     public String getOrderSource() {
         return orderSource;
+    }
+    
+    boolean select(SlingHttpServletRequest slingHttpServletRequest) {
+        boolean select = true;        
+        if (regex != null) {
+            String uri = slingHttpServletRequest.getPathInfo();
+            // assume root if uri is null
+            if (uri == null)
+            {
+                uri = "/";
+            }
+            select = this.regex.matcher(uri).matches();
+        }        
+        return select;
     }
 
     public long getCalls() {
@@ -79,6 +107,9 @@ public class FilterHandle implements Comparable<FilterHandle> {
 
     void trackTime(long time) {
         this.time.addAndGet(time);
+        if (mbean != null) {
+            mbean.addFilterHandle(this);
+        }
     }
 
     /**

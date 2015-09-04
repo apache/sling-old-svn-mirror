@@ -27,30 +27,27 @@ import java.io.InputStream;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.serialization.impl.AbstractDistributionPackage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * a FileVault {@link org.apache.sling.distribution.packaging.DistributionPackage}
  */
 public class FileVaultDistributionPackage extends AbstractDistributionPackage implements DistributionPackage {
 
-    private static final long serialVersionUID = 1L;
-
-    private final String id;
+    Logger log = LoggerFactory.getLogger(FileVaultDistributionPackage.class);
 
     private final VaultPackage pkg;
 
-    public FileVaultDistributionPackage(VaultPackage pkg) {
+    public FileVaultDistributionPackage(String type, VaultPackage pkg) {
+        super(pkg.getFile().getAbsolutePath(), type);
         this.pkg = pkg;
         String[] paths = VltUtils.getPaths(pkg.getMetaInf());
-        this.getInfo().setPaths(paths);
-        this.getInfo().setRequestType(DistributionRequestType.ADD);
-        this.id = pkg.getFile().getAbsolutePath();
-    }
 
-    @Nonnull
-    public String getId() {
-        return id;
+        this.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, paths);
+        this.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, DistributionRequestType.ADD);
     }
 
     @Nonnull
@@ -58,30 +55,23 @@ public class FileVaultDistributionPackage extends AbstractDistributionPackage im
         return new FileInputStream(pkg.getFile());
     }
 
-    @Nonnull
-    public String getType() {
-        return FileVaultDistributionPackageBuilder.PACKAGING_TYPE;
-    }
 
     public void close() {
         pkg.close();
     }
 
     public void delete() {
-        close();
         try {
-            File file = new File(id);
-            if (file.exists()) {
-                file.delete();
-            }
-        } catch (Exception e) {
+            VltUtils.deletePackage(pkg);
+        } catch (Throwable e) {
+            log.error("cannot delete file", e);
         }
     }
 
     @Override
     public String toString() {
         return "FileVaultDistributionPackage{" +
-                "id='" + id + '\'' +
+                "id='" + getId() + '\'' +
                 ", pkg=" + pkg +
                 '}';
     }

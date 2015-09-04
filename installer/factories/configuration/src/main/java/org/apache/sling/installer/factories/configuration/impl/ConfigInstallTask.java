@@ -52,7 +52,7 @@ public class ConfigInstallTask extends AbstractConfigTask {
             try {
                 String location = (String)this.getResource().getDictionary().get(ConfigurationConstants.PROPERTY_BUNDLE_LOCATION);
                 if ( location == null ) {
-                    location = "?"; // default
+                    location = Activator.DEFAULT_LOCATION; // default
                 } else if ( location.length() == 0 ) {
                     location = null;
                 }

@@ -39,7 +39,7 @@ public class SlingExtensionModelsIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling-extension-models")
+            addSlingFeatures("sling-extension-models")
         );
     }
 

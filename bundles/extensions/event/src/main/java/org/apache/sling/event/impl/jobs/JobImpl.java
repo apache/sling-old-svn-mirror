@@ -48,6 +48,11 @@ public class JobImpl implements Job, Comparable<JobImpl> {
     public static final String PROPERTY_DELAY_OVERRIDE = ":slingevent:delayOverride";
 
     /**
+     * Internal job property specifying when the job was put into the queue.
+     */
+    public static final String PROPERTY_JOB_QUEUED = "event.job.queued.time";
+
+    /**
      * This property contains the finished state of a job once it's marked as finished.
      * The value is either "CANCELLED" or "SUCCEEDED".
      * This property is read-only and can't be specified when the job is created.
@@ -196,37 +201,37 @@ public class JobImpl implements Job, Comparable<JobImpl> {
 
     @Override
     public int getRetryCount() {
-        return (Integer)this.getProperty(Job.PROPERTY_JOB_RETRY_COUNT);
+        return this.getProperty(Job.PROPERTY_JOB_RETRY_COUNT, Integer.class);
     }
 
     @Override
     public int getNumberOfRetries() {
-        return (Integer)this.getProperty(Job.PROPERTY_JOB_RETRIES);
+        return this.getProperty(Job.PROPERTY_JOB_RETRIES, Integer.class);
     }
 
     @Override
     public String getQueueName() {
-        return (String)this.getProperty(Job.PROPERTY_JOB_QUEUE_NAME);
+        return this.getProperty(Job.PROPERTY_JOB_QUEUE_NAME, String.class);
     }
 
     @Override
     public String getTargetInstance() {
-        return (String)this.getProperty(Job.PROPERTY_JOB_TARGET_INSTANCE);
+        return this.getProperty(Job.PROPERTY_JOB_TARGET_INSTANCE, String.class);
     }
 
     @Override
     public Calendar getProcessingStarted() {
-        return (Calendar)this.getProperty(Job.PROPERTY_JOB_STARTED_TIME);
+        return this.getProperty(Job.PROPERTY_JOB_STARTED_TIME, Calendar.class);
     }
 
     @Override
     public Calendar getCreated() {
-        return (Calendar)this.getProperty(Job.PROPERTY_JOB_CREATED);
+        return this.getProperty(Job.PROPERTY_JOB_CREATED, Calendar.class);
     }
 
     @Override
     public String getCreatedInstance() {
-        return (String)this.getProperty(Job.PROPERTY_JOB_CREATED_INSTANCE);
+        return this.getProperty(Job.PROPERTY_JOB_CREATED_INSTANCE, String.class);
     }
 
     /**

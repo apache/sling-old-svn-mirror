@@ -21,7 +21,7 @@ package org.apache.sling.query.iterator;
 
 import java.util.Iterator;
 
-import org.apache.sling.query.api.function.Option;
+import org.apache.sling.query.api.internal.Option;
 
 public class ArgumentResettingIterator<T> implements Iterator<Option<T>> {
 

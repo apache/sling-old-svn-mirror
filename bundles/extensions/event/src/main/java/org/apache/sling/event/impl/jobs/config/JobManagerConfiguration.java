@@ -24,6 +24,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -62,7 +63,7 @@ import org.slf4j.LoggerFactory;
            label="Apache Sling Job Manager",
            description="This is the central service of the job handling.",
            name="org.apache.sling.event.impl.jobs.jcr.PersistenceHandler")
-@Service(value={JobManagerConfiguration.class, TopologyEventListener.class})
+@Service(value={JobManagerConfiguration.class})
 @Properties({
     @Property(name=JobManagerConfiguration.PROPERTY_DISABLE_DISTRIBUTION,
               boolValue=JobManagerConfiguration.DEFAULT_DISABLE_DISTRIBUTION,
@@ -80,10 +81,13 @@ import org.slf4j.LoggerFactory;
     @Property(name=JobManagerConfiguration.PROPERTY_BACKGROUND_LOAD_DELAY,
               longValue=JobManagerConfiguration.DEFAULT_BACKGROUND_LOAD_DELAY, propertyPrivate=true),
 })
-public class JobManagerConfiguration implements TopologyEventListener, ConfigurationChangeListener {
+public class JobManagerConfiguration implements TopologyEventListener {
 
     /** Logger. */
     private final Logger logger = LoggerFactory.getLogger("org.apache.sling.event.impl.jobs");
+
+    /** Audit Logger. */
+    private final Logger auditLogger = LoggerFactory.getLogger("org.apache.sling.event.jobs.audit");
 
     /** Default resource path for jobs. */
     public static final String DEFAULT_REPOSITORY_PATH = "/var/eventing/jobs";
@@ -173,8 +177,13 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
     @Reference
     private Scheduler scheduler;
 
+    /** Is this still active? */
+    private final AtomicBoolean active = new AtomicBoolean(false);
+
     /** The topology capabilities. */
     private volatile TopologyCapabilities topologyCapabilities;
+
+    private final AtomicBoolean firstTopologyEvent = new AtomicBoolean(true);
 
     /**
      * Activate this component.
@@ -218,6 +227,7 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
         } finally {
             resolver.close();
         }
+        this.active.set(true);
         this.queueConfigManager.addListener(this);
     }
 
@@ -236,23 +246,31 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
      */
     @Deactivate
     protected void deactivate() {
-        this.stopProcessing(true);
+        this.active.set(false);
+        this.stopProcessing();
         this.queueConfigManager.removeListener();
+    }
+
+    public boolean isActive() {
+        return this.active.get();
     }
 
     /**
      * Create a new resource resolver for reading and writing the resource tree.
      * The resolver needs to be closed by the client.
-     * @return A resource resolver
+     * @return A resource resolver or {@code null} if the component is already deactivated.
      * @throws RuntimeException if the resolver can't be created.
      */
     public ResourceResolver createResourceResolver() {
         ResourceResolver resolver = null;
-        try {
-            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-        } catch ( final LoginException le) {
-            logger.error("Unable to create new resource resolver: " + le.getMessage(), le);
-            throw new RuntimeException(le);
+        final ResourceResolverFactory factory = this.resourceResolverFactory;
+        if ( factory != null ) {
+            try {
+                resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
+            } catch ( final LoginException le) {
+                logger.error("Unable to create new resource resolver: " + le.getMessage(), le);
+                throw new RuntimeException(le);
+            }
         }
         return resolver;
     }
@@ -340,8 +358,6 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
      * Get the unique job id
      */
     public String getUniqueId(final String jobTopic) {
-        final String convTopic = jobTopic.replace('/', '.');
-
         final Calendar now = Calendar.getInstance();
         final StringBuilder sb = new StringBuilder();
         sb.append(now.get(Calendar.YEAR));
@@ -354,8 +370,6 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
         sb.append('/');
         sb.append(now.get(Calendar.MINUTE));
         sb.append('/');
-        sb.append(convTopic);
-        sb.append('_');
         sb.append(Environment.APPLICATION_ID);
         sb.append('_');
         sb.append(jobCounter.getAndIncrement());
@@ -439,15 +453,10 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
      * This method is invoked by the queue configuration manager
      * whenever the queue configuration changes.
      */
-    @Override
-    public void configurationChanged(final boolean active) {
+    public void queueConfigurationChanged() {
         final TopologyCapabilities caps = this.topologyCapabilities;
-        if ( caps != null ) {
-            synchronized ( this.listeners ) {
-                this.stopProcessing(false);
-
-                this.startProcessing(Type.PROPERTIES_CHANGED, caps, true);
-            }
+        if ( caps != null && this.isActive() ) {
+            this.startProcessing(Type.PROPERTIES_CHANGED, caps, true);
         }
     }
 
@@ -455,16 +464,15 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
      * Stop processing
      * @param deactivate Whether to deactivate the capabilities
      */
-    private void stopProcessing(final boolean deactivate) {
+    private void stopProcessing() {
         logger.debug("Stopping job processing...");
-        boolean notify = this.topologyCapabilities != null;
-        // deactivate old capabilities - this stops all background processes
-        if ( deactivate && this.topologyCapabilities != null ) {
-            this.topologyCapabilities.deactivate();
-        }
-        this.topologyCapabilities = null;
+        final TopologyCapabilities caps = this.topologyCapabilities;
 
-        if ( notify ) {
+        if ( caps != null ) {
+            // deactivate old capabilities - this stops all background processes
+            caps.deactivate();
+            this.topologyCapabilities = null;
+
             // stop all listeners
             this.notifiyListeners();
         }
@@ -495,23 +503,30 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
         final CheckTopologyTask mt = new CheckTopologyTask(this);
         mt.fullRun(!isConfigChange, isConfigChange);
 
-        // and run checker again in some seconds (if leader)
-        // notify listeners afterwards
-        scheduler.schedule(new Runnable() {
+        if ( eventType == Type.TOPOLOGY_INIT ) {
+            notifiyListeners();
+        } else {
+            // and run checker again in some seconds (if leader)
+            // notify listeners afterwards
+            final Scheduler local = this.scheduler;
+            if ( local != null ) {
+                local.schedule(new Runnable() {
 
-                @Override
-                public void run() {
-                    if ( newCaps.isLeader() && newCaps.isActive() ) {
-                        mt.assignUnassignedJobs();
-                    }
-                    // start listeners
-                    synchronized ( listeners ) {
-                        if ( topologyCapabilities != null && newCaps.isActive() ) {
-                            notifiyListeners();
+                        @Override
+                        public void run() {
+                            if ( newCaps.isLeader() && newCaps.isActive() ) {
+                                mt.assignUnassignedJobs();
+                            }
+                            // start listeners
+                            if ( newCaps.isActive() ) {
+                                synchronized ( listeners ) {
+                                    notifiyListeners();
+                                }
+                            }
                         }
-                    }
-                }
-            }, scheduler.AT(new Date(System.currentTimeMillis() + this.backgroundLoadDelay * 1000)));
+                    }, local.AT(new Date(System.currentTimeMillis() + this.backgroundLoadDelay * 1000)));
+            }
+        }
         logger.debug("Job processing started");
     }
 
@@ -537,18 +552,24 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
             }
         }
 
+        TopologyEvent.Type eventType = event.getType();
+        if( this.firstTopologyEvent.compareAndSet(true, false) ) {
+            if ( eventType == Type.TOPOLOGY_CHANGED ) {
+                eventType = Type.TOPOLOGY_INIT;
+            }
+        }
         synchronized ( this.listeners ) {
 
-            if ( event.getType() == Type.TOPOLOGY_CHANGING ) {
-               this.stopProcessing(true);
+            if ( eventType == Type.TOPOLOGY_CHANGING ) {
+               this.stopProcessing();
 
-            } else if ( event.getType() == Type.TOPOLOGY_INIT
+            } else if ( eventType == Type.TOPOLOGY_INIT
                 || event.getType() == Type.TOPOLOGY_CHANGED
                 || event.getType() == Type.PROPERTIES_CHANGED ) {
 
-                this.stopProcessing(true);
+                this.stopProcessing();
 
-                this.startProcessing(event.getType(), new TopologyCapabilities(event.getNewView(), this), false);
+                this.startProcessing(eventType, new TopologyCapabilities(event.getNewView(), this), false);
             }
 
         }
@@ -602,5 +623,13 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
         synchronized ( retryList ) {
             return retryList.get(jobId);
         }
+    }
+
+    /**
+     * The audit logger is logging actions for auditing.
+     * @return The logger
+     */
+    public Logger getAuditLogger() {
+        return this.auditLogger;
     }
 }

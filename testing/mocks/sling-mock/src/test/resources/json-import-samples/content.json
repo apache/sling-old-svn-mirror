@@ -14,6 +14,7 @@
     "sling:resourceType": "sample/components/homepage",
     "app:designPath": "/etc/designs/sample",
     "app:lastModifiedBy": "admin",
+    "utf8Property": "äöüß€",
     "par": {
       "jcr:primaryType": "nt:unstructured",
       "sling:resourceType": "foundation/components/parsys",

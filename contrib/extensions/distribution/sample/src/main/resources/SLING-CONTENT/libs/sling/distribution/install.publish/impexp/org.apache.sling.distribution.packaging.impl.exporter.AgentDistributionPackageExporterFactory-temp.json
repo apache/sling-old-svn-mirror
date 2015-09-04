@@ -1,0 +1,6 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "temp",
+
+    "agent.target": "(name=temp)"
+}

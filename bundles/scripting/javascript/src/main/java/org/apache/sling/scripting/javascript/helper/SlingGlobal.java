@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Serializable;
+import java.nio.charset.Charset;
 
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
@@ -48,7 +49,6 @@ import org.slf4j.LoggerFactory;
  * The <code>SlingGlobal</code> class provides two interesting new global
  * functions which are not part of the ECMAScript standard but which are
  * available in the Rhino Shell and which may be of use by JavaScripts:
- * <p>
  * <dl>
  * <dt><code>print(args, ...)</code></dt>
  * <dd>Prints the arguments <code>args</code> in a single message to the scripts
@@ -76,7 +76,7 @@ public class SlingGlobal implements Serializable, IdFunctionCall {
 	private static final int LAST_SCOPE_FUNCTION_ID = 3;
 
 	/** default log */
-	private final Logger defaultLog = LoggerFactory.getLogger(getClass());
+	private static final Logger defaultLog = LoggerFactory.getLogger(SlingGlobal.class);
 
 	public static void init(Scriptable scope, boolean sealed) {
 		SlingGlobal obj = new SlingGlobal();
@@ -189,7 +189,7 @@ public class SlingGlobal implements Serializable, IdFunctionCall {
 
 			try {
 				// reader for the stream
-				Reader scriptReader = new InputStreamReader(scriptStream);
+				Reader scriptReader = new InputStreamReader(scriptStream, Charset.forName("UTF-8"));
 
 				// check whether we have to wrap the basic reader
 				if (scriptName
@@ -287,7 +287,7 @@ public class SlingGlobal implements Serializable, IdFunctionCall {
 
 		try {
 			// reader for the stream
-			Reader scriptReader = new InputStreamReader(scriptStream);
+			Reader scriptReader = new InputStreamReader(scriptStream, Charset.forName("UTF-8"));
 
 			// check whether we have to wrap the basic reader
 			if (scriptName

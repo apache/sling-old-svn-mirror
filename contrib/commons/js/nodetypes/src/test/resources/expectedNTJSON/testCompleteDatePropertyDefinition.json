@@ -1,0 +1,24 @@
+{
+  "ntWithPropertyDefs": {
+    "declaredPropertyDefinitions": [
+      {
+        "defaultValues": [
+          {
+            "date": "2012-02-01T00:00:00.000+01:00",
+            "type": "Date"
+          }
+        ],
+        "requiredType": "Date",
+        "valueConstraints": [
+          "2012-04-01T00:00:00Z"
+        ],
+        "multiple": true,
+        "autoCreated": true,
+        "mandatory": true,
+        "protected": true,
+        "onParentVersion": "VERSION",
+        "name": "datePropertyDef"
+      }
+    ]
+  }
+}

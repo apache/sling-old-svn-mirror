@@ -23,11 +23,14 @@ import java.io.IOException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * The <code>ErrorHandler</code> defines the interface of the service used by
  * the Sling to handle calls to <code>HttpServletResponse.sendError</code> and
  * to handle uncaught <code>Throwable</code>s.
  */
+@ConsumerType
 public interface ErrorHandler {
 
     /**

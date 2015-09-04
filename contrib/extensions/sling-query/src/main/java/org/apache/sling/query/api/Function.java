@@ -19,6 +19,8 @@
 
 package org.apache.sling.query.api;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * Function can transform one value into another.
  * 
@@ -27,6 +29,7 @@ package org.apache.sling.query.api;
  * @param <F> Input type
  * @param <T> Output type
  */
+@ConsumerType
 public interface Function<F, T> {
 	/**
 	 * Take input F and transform it into output T.

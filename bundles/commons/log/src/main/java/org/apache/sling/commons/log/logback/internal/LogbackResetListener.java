@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.commons.log.logback.internal;
 
 import ch.qos.logback.classic.LoggerContext;

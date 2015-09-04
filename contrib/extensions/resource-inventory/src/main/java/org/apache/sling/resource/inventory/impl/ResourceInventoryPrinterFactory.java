@@ -35,6 +35,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.json.JSONException;
+import org.slf4j.LoggerFactory;
 
 @Component(configurationFactory=true, policy=ConfigurationPolicy.REQUIRE, metatype=true)
 @Service(value=InventoryPrinter.class)
@@ -78,8 +79,8 @@ public class ResourceInventoryPrinterFactory implements InventoryPrinter {
             }
         } catch (final LoginException e) {
             // ignore
-        } catch (JSONException e) {
-            // ignore
+        } catch (final JSONException ignore) {
+            LoggerFactory.getLogger(this.getClass()).warn("Unable to create resource json", ignore);
         } finally {
             if ( resolver != null ) {
                 resolver.close();

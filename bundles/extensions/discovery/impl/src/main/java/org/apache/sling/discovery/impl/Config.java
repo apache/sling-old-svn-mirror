@@ -91,6 +91,13 @@ public class Config {
     @Property
     public static final String LEADER_ELECTION_REPOSITORY_DESCRIPTOR_NAME_KEY = "leaderElectionRepositoryDescriptor";
     
+    /**
+     * Whether or not (default false) the leaderElectionRepositoryDescriptor should be inverted (if that one
+     * is configured at all).
+     */
+    @Property(boolValue=false)
+    public static final String INVERT_REPOSITORY_DESCRIPTOR_NAME_KEY = "invertRepositoryDescriptor";
+    
     /** URLs where to join a topology, eg http://localhost:4502/libs/sling/topology/connector */
     @Property(cardinality=1024)
     public static final String TOPOLOGY_CONNECTOR_URLS_KEY = "topologyConnectorUrls";
@@ -107,6 +114,15 @@ public class Config {
     @Property(value=DEFAULT_DISCOVERY_RESOURCE_PATH, propertyPrivate=true)
     public static final String DISCOVERY_RESOURCE_PATH_KEY = "discoveryResourcePath";
     private String discoveryResourcePath = DEFAULT_DISCOVERY_RESOURCE_PATH;
+
+    /**
+     * If set to true the TOPOLOGY_INIT event will be sent only once the cluster view was established.
+     * This can mean there is a delay until the voting in the cluster was finished.
+     * But the advantage of delaying the INIT event is to make sure no two instances see themselves
+     * as leader at startup. (see SLING-3750).
+     */
+    @Property(boolValue=true)
+    private static final String DELAY_INIT_EVENT_UNTIL_VOTED = "delayInitEventUntilVoted";
 
     /**
      * If set to true, local-loops of topology connectors are automatically stopped when detected so.
@@ -162,8 +178,13 @@ public class Config {
 
     private String leaderElectionRepositoryDescriptor ;
 
+    private boolean invertRepositoryDescriptor = false; /* default: false */
+    
     /** True when auto-stop of a local-loop is enabled. Default is false. **/
     private boolean autoStopLocalLoopEnabled;
+    
+    /** True to make sure the INIT delay is only sent once there is (the first) established view in the cluster **/
+    private boolean delayInitEventUntilVoted = true; /* default: true */
     
     /**
      * True when the hmac is enabled and signing is disabled.
@@ -289,7 +310,14 @@ public class Config {
                 null);
         logger.debug("configure: leaderElectionRepositoryDescriptor='{}'",
                 this.leaderElectionRepositoryDescriptor);
+        
+        this.invertRepositoryDescriptor = PropertiesUtil.toBoolean(
+                properties.get(INVERT_REPOSITORY_DESCRIPTOR_NAME_KEY),
+                false /* default: false*/);
+        logger.debug("configure: invertRepositoryDescriptor='{}'",
+                this.invertRepositoryDescriptor);
 
+        delayInitEventUntilVoted = PropertiesUtil.toBoolean(properties.get(DELAY_INIT_EVENT_UNTIL_VOTED), true);
         autoStopLocalLoopEnabled = PropertiesUtil.toBoolean(properties.get(AUTO_STOP_LOCAL_LOOP_ENABLED), false);
         gzipConnectorRequestsEnabled = PropertiesUtil.toBoolean(properties.get(GZIP_CONNECTOR_REQUESTS_ENABLED), false);
         
@@ -416,6 +444,18 @@ public class Config {
     public String getLeaderElectionRepositoryDescriptor() {
         return leaderElectionRepositoryDescriptor;
     }
+    
+    /**
+     * Returns true when the value of the repository descriptor identified
+     * via the property 'leaderElectionRepositoryDescriptor' should be 
+     * inverted - only applies when 'leaderElectionRepositoryDescriptor' 
+     * is configured of course.
+     * @return true when property resulting from 'leaderElectionRepositoryDescriptor'
+     * should be inverted, false if it should remain unchanged.
+     */
+    public boolean shouldInvertRepositoryDescriptor() {
+        return invertRepositoryDescriptor;
+    }
 
     /**
      * @return true if hmac is enabled.
@@ -451,6 +491,14 @@ public class Config {
      */
     public boolean isGzipConnectorRequestsEnabled() {
         return gzipConnectorRequestsEnabled;
+    }
+    
+    /**
+     * @return true to make sure the INIT event is only sent to topology listeners once
+     * there is (eg the first) an established cluster view
+     */
+    public boolean isDelayInitEventUntilVoted() {
+        return delayInitEventUntilVoted;
     }
     
     /**

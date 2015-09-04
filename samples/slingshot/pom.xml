@@ -7,9 +7,9 @@
     to you under the Apache License, Version 2.0 (the
     "License"); you may not use this file except in compliance
     with the License.  You may obtain a copy of the License at
-    
+
     http://www.apache.org/licenses/LICENSE-2.0
-    
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on an
     "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -17,12 +17,14 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>22</version>
+        <version>24</version>
+        <relativePath/>
     </parent>
 
     <artifactId>org.apache.sling.sample.slingshot</artifactId>
@@ -57,6 +59,21 @@
                             SLING-INF/content/libs/slingshot;overwrite:=true;path:=/libs/slingshot;maven:mount:=true
                         </Sling-Initial-Content>
                     </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>src/main/resources/SLING-INF/content/**/*.json</exclude>
+                        <exclude>src/main/resources/SLING-INF/content/slingshot/resources/css/iconFont.css</exclude>
+                        <exclude>src/main/resources/SLING-INF/content/slingshot/resources/css/jquery-*</exclude>
+                        <exclude>src/main/resources/SLING-INF/content/slingshot/resources/css/metro-bootstrap.min.css</exclude>
+                        <exclude>src/main/resources/SLING-INF/content/slingshot/resources/fonts/*.svg</exclude>
+                        <exclude>src/main/resources/SLING-INF/content/slingshot/resources/js/jquery*.js</exclude>
+                        <exclude>src/main/resources/SLING-INF/content/slingshot/resources/js/metro.min.js</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
         </plugins>
@@ -97,8 +114,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr.annotations</artifactId>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>

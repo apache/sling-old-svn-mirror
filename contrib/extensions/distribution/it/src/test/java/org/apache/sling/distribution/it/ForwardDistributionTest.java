@@ -41,6 +41,15 @@ public class ForwardDistributionTest extends DistributionIntegrationTestBase {
     }
 
     @Test
+    public void testTestContent() throws Exception {
+        String nodePath = createRandomNode(authorClient, "/content/forward_test_" + System.nanoTime());
+        assertExists(authorClient, nodePath);
+        distribute(author, "publish", DistributionRequestType.TEST, nodePath);
+        Thread.sleep(10000);
+        assertNotExists(publishClient, nodePath);
+    }
+
+    @Test
     public void testDeleteContent() throws Exception {
         String nodePath = createRandomNode(publishClient, "/content/forward_del_" + System.nanoTime());
         assertExists(publishClient, nodePath);
@@ -74,6 +83,26 @@ public class ForwardDistributionTest extends DistributionIntegrationTestBase {
         distributeDeep(author, "publish", DistributionRequestType.ADD, nodePath);
         assertExists(publishClient, nodePath);
         assertExists(publishClient, childPath);
+    }
+
+    @Test
+    public void testDeepAddTreeExcludedContent() throws Exception {
+        String nodePath = createRandomNode(authorClient, "/content/forward_add_" + System.nanoTime());
+        assertExists(authorClient, nodePath);
+
+        String childPath = nodePath + "/child";
+        authorClient.createNode(childPath);
+        assertExists(authorClient, childPath);
+
+        String excludedChildPath = nodePath + "/excluded";
+        authorClient.createNode(excludedChildPath);
+        assertExists(authorClient, excludedChildPath);
+
+        distributeDeep(author, "publish", DistributionRequestType.ADD, nodePath);
+        assertExists(publishClient, nodePath);
+        assertExists(publishClient, childPath);
+        assertNotExists(publishClient, excludedChildPath);
+
     }
 
 

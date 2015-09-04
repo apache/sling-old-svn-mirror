@@ -26,7 +26,7 @@
     </parent>
 	<groupId>org.apache.sling.ide</groupId>
 	<artifactId>reactor</artifactId>
-	<version>1.0.5-SNAPSHOT</version>
+	<version>1.0.7-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Sling IDE Tools: Reactor</name>
     <url>http://sling.apache.org</url>
@@ -194,7 +194,7 @@
     </pluginRepositories>    
 
 	<properties>
-		<tycho.version>0.21.0</tycho.version>
+		<tycho.version>0.22.0</tycho.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 

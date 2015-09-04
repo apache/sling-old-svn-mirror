@@ -18,6 +18,7 @@
  */
 package org.apache.sling.event.impl.jobs.tasks;
 
+import java.util.Calendar;
 import java.util.Iterator;
 
 import org.apache.sling.api.resource.ModifiableValueMap;
@@ -61,6 +62,9 @@ public class FindUnfinishedJobsTask {
     private void initialScan() {
         logger.debug("Scanning repository for unfinished jobs...");
         final ResourceResolver resolver = configuration.createResourceResolver();
+        if ( resolver == null ) {
+            return;
+        }
         try {
             final Resource baseResource = resolver.getResource(configuration.getLocalJobsPath());
 
@@ -93,6 +97,7 @@ public class FindUnfinishedJobsTask {
             @Override
             public boolean handle(final JobImpl job) {
                 if ( job.getProcessingStarted() != null ) {
+                    logger.debug("Found unfinished job {}", job.getId());
                     job.retry();
                     try {
                         final Resource jobResource = topicResource.getResourceResolver().getResource(job.getResourcePath());
@@ -101,12 +106,29 @@ public class FindUnfinishedJobsTask {
                             final ModifiableValueMap mvm = jobResource.adaptTo(ModifiableValueMap.class);
                             mvm.remove(Job.PROPERTY_JOB_STARTED_TIME);
                             mvm.put(Job.PROPERTY_JOB_RETRY_COUNT, job.getRetryCount());
+                            if ( job.getProperty(JobImpl.PROPERTY_JOB_QUEUED, Calendar.class) == null) {
+                                mvm.put(JobImpl.PROPERTY_JOB_QUEUED, Calendar.getInstance());
+                            }
                             jobResource.getResourceResolver().commit();
                         }
                     } catch ( final PersistenceException ignore) {
                         logger.error("Unable to update unfinished job " + job, ignore);
                     }
+                } else if ( job.getProperty(JobImpl.PROPERTY_JOB_QUEUED, Calendar.class) == null) {
+                    logger.debug("Found job without queued date {}", job.getId());
+                    try {
+                        final Resource jobResource = topicResource.getResourceResolver().getResource(job.getResourcePath());
+                        // sanity check
+                        if ( jobResource != null ) {
+                            final ModifiableValueMap mvm = jobResource.adaptTo(ModifiableValueMap.class);
+                            mvm.put(JobImpl.PROPERTY_JOB_QUEUED, Calendar.getInstance());
+                            jobResource.getResourceResolver().commit();
+                        }
+                    } catch ( final PersistenceException ignore) {
+                        logger.error("Unable to update queued date for job " + job.getId(), ignore);
+                    }
                 }
+
                 return true;
             }
         });

@@ -21,7 +21,7 @@ package org.apache.sling.query.selector;
 
 import org.apache.sling.query.api.Function;
 import org.apache.sling.query.api.SearchStrategy;
-import org.apache.sling.query.api.TreeProvider;
+import org.apache.sling.query.api.internal.TreeProvider;
 import org.apache.sling.query.function.ChildrenFunction;
 import org.apache.sling.query.function.FindFunction;
 import org.apache.sling.query.function.IdentityFunction;

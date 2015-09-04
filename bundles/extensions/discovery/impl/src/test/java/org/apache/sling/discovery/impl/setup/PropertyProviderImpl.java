@@ -22,8 +22,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.discovery.PropertyProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PropertyProviderImpl implements PropertyProvider {
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final Map<String, String> properties = new HashMap<String, String>();
 
@@ -35,6 +39,7 @@ public class PropertyProviderImpl implements PropertyProvider {
 
     public String getProperty(String name) {
         getCnt++;
+        logger.warn("getProperty: name="+name+", new getCnt="+getCnt, new Exception("getProperty-stacktrace"));
         return properties.get(name);
     }
 

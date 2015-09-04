@@ -58,68 +58,63 @@ In order to properly handle large number of _requests_ against the same _agent_ 
 where the exported _packages_ are sent, the _agent_ takes then care to process such a _queue_ in order to _import_ each 
 _package_. 
  
-### Distribution agents
-
-Each distribution agent is an OSGi service and is resolved using a [Sling Resource Provider](#Resource_Providers) who locate it under `libs/sling/distribution/services/agents`.
-
-Distribution agents can be triggered by sending `HTTP POST` requests to 
-
-`http://$host:$port/libs/sling/distribution/services/agents/$agentname` 
-
-with HTTP parameters `action` and `path`.
-
-### Resource providers
-
-One can configure a resource provider for a distribution resource to give access to OSGI distribution services.
-Already configured ones are: _DistributionAgents_, _DistributionPackageExporters_ and _DistributionPackageImporters_.
-Here is an example of the configuration for exposing _DistributionAgent_ services as resources:
-
-    {
-         "jcr:primaryType" : "sling:OsgiConfig",
-    
-         "name" : "distributionAgents",
-    
-         "provider.roots" : [ "/libs/sling/distribution/services/agents" ],
-    
-         "serviceType" : "org.apache.sling.distribution.agent.DistributionAgent",
-    
-         "resourceProperties" : [
-    
-             "sling:resourceType=sling/distribution/service/agent",
-    
-             "sling:resourceSuperType=sling/distribution/service",
-    
-             "name={name}",
-    
-             "queue/sling:resourceType=distribution/agent/queue"
-    
-         ]
-    
-     }
-
-When configuring such a provider you specify the service interface _DistributionAgent_, the url and some properties one 
-wants that resource to have like resourceType so basically this config governs _/libs/sling/distribution/services/agents_.
-Sub resources to an agent can also be added, as the _queue_ for example and add properties to it by specifying _queue/propertyName = propertyValue_.
-That's the mechanism to expose services as resources.
 
 ### Distribution agents configuration
 
-Distribution agents configurations are proper OSGi configurations (backed by nodes of type `sling:OsgiConfig` in the repository), see [CompactSimpleDistributionAgentServiceFactory-publish.json](src/main/resources/SLING-CONTENT/libs/sling/distribution/install.author/org.apache.sling.distribution.agent.impl.CompactSimpleDistributionAgentFactory-publish.json).
+Distribution agents configurations are proper OSGi configurations (backed by nodes of type `sling:OsgiConfig` in the repository).
 
-Distribution agents configuration include:
 
-- Name: the name of the agent
-- Package exporter: algorithm for retrieving a distribution package
-- Package importer: algorithm for installing a distribution package
-- Queue provider: current implementations are:
--- In memory
--- Sling Job Handling based
-- Queue distribution: how items to be distributed are distributed to agent's queues
-- Triggers: triggers able to handle distribution requests
+
+There are specialized factories for each supported scenario:
+- "forward" agents, see [ForwardDistributionAgentFactory-publish.json](sample/src/main/resources/SLING-CONTENT/libs/sling/distribution/install.author/publish/org.apache.sling.distribution.agent.impl.ForwardDistributionAgentFactory-publish.json).
+- "reverse" agents, see [ReverseDistributionAgentFactory-publish-reverse.json](sample/src/main/resources/SLING-CONTENT/libs/sling/distribution/install.author/publish-reverse/org.apache.sling.distribution.agent.impl.ReverseDistributionAgentFactory-publish-reverse.json).
+- "sync" agents, see [SyncDistributionAgentFactory-pubsync.json](sample/src/main/resources/SLING-CONTENT/libs/sling/distribution/install.author/pubsync/org.apache.sling.distribution.agent.impl.SyncDistributionAgentFactory-pubsync.json).
+- "queue" agents, see [QueueDistributionAgentFactory-reverse.json](sample/src/main/resources/SLING-CONTENT/libs/sling/distribution/install.publish/reverse/org.apache.sling.distribution.agent.impl.QueueDistributionAgentFactory-reverse.json).
+
+
+For example a "forward" agent can be defined specifying
+- The name of the agent (name property)
+- The sub service name used to access content and build packages (serviceName property)
+- The endpoints where the packages are to be imported (packageImporter.endpoints property)
+
+
+
+The sample package contains endpoints for exposing configuration for distribution agents.
+The _DistributionConfigurationResourceProviderFactory_ is used to expose agent configurations as resources.
+
+  {
+      "jcr:primaryType": "sling:OsgiConfig",
+      "provider.roots": [ "/libs/sling/distribution/settings/agents" ],
+      "kind" : "agent"
+  }
+
 
 Distribution agents' configurations can be retrieved via `HTTP GET`:
 
-- `http -a admin:admin -v -f GET http://localhost:8080/libs/sling/distribution/settings/agents/publish`
+- `http -a admin:admin -v -f GET http://localhost:8080/libs/sling/distribution/settings/agents/{agentName}`
+
+
+
+### Distribution agents services
+
+Each distribution agent is an OSGi service and is resolved using a [Sling Resource Provider](#Resource_Providers) who locate it under `libs/sling/distribution/services/agents`.
+
+The _DistributionConfigurationResourceProviderFactory_ allows one to configure HTTP endpoints to access distribution OSGI configurations.
+The sample package contains endpoints for exposing distribution agents.
+The _DistributionServiceResourceProviderFactory_ is used to expose agent services as resources.
+
+ {
+     "jcr:primaryType": "sling:OsgiConfig",
+     "provider.roots": [ "/libs/sling/distribution/services/agents" ],
+     "kind" : "agent"
+ }
+
+
+Distribution agents can be triggered by sending `HTTP POST` requests to
+
+`http://$host:$port/libs/sling/distribution/services/agents/{agentName}`
+
+with HTTP parameters `action` and `path`.
 
 ### Distribution queues
 
@@ -151,37 +146,57 @@ The currently available distribution strategies are
  
 ## Usecases
 
-### Forward distribution (PUSH)
+### Forward distribution
 
-User/client makes an `HTTP POST`request to `http://localhost:8080/libs/sling/distribution/services/agents/publish` with parameters `action=ADD` and `path=/content`
+In order to configure the "forward" distribution workflow, that transfers content from an author instance to a publish instance:
+- configure a remote importer on publish
+- configure a "forward" agent on author pointing to the url of the importer on publish
 
-- `DistributionAgentServlet` servlet is triggered
-- `DistributionAgentServlet` servlet adapts the resource to a `DistributionAgent` via a registered `OsgiPropertiesResourceProviderFactory` 
-- `DistributionAgent` executes the distribution request (add the resource at path /content)
-- `DistributionAgent` get the status of the request and update the response accordingly
-- `DistributionAgentServlet` maps the agent response to an HTTP response accordingly
+Send `HTTP POST`request to `http://localhost:8080/libs/sling/distribution/services/agents/publish` with parameters `action=ADD` and `path=/content`
 
-## HOWTOs
+- create/update content
+```http -a admin:admin -v -f POST http://localhost:8080/libs/sling/distribution/services/agents/publish action=ADD path=/content/sample1```
+- delete content
+```http -a admin:admin -v -f POST http://localhost:8080/libs/sling/distribution/services/agents/publish action=DELETE path=/content/sample1```
+
+
+### Reverse distribution
+
+In order to configure the "reverse" distribution workflow, that transfers content from a publish instance to an author instance:
+- configure a queue agent on publish to hold the packages that need to be distributed to author
+- configure a remote exporter on publish that exports package from the queue agent
+- configure a "reverse" agent on author pointing to the url of the exporter on publish
+
+Send `HTTP POST`request to `http://localhost:8080/libs/sling/distribution/services/agents/publish-reverse` with parameters `action=PULL`
+
+
+- create/update content
+
+```http -a admin:admin -v -f POST http://localhost:8081/libs/sling/distribution/services/agents/reverse action=ADD path=/content/sample1```
+```http -a admin:admin -v -f POST http://localhost:8080/libs/sling/distribution/services/agents/publish-reverse action=PULL```
+
+### Sync distribution
+
+
+In order to configure the "sync" distribution workflow, that transfers content from two publish instances via an author instance:
+- configure a remote exporter on each publish instance
+- configure a remote importer on each publish instance
+- configure a "sync" agent on author pointing to the urls of the exporter and importers on publish
+
+Send `HTTP POST`request to `http://localhost:8080/libs/sling/distribution/services/agents/pubsync` with parameters `action=PULL`
+
+
+- create/update content
+
+```http -a admin:admin -v -f POST http://localhost:8081/libs/sling/distribution/services/agents/reverse-pubsync action=ADD path=/content/sample1```
+```http -a admin:admin -v -f POST http://localhost:8080/libs/sling/distribution/services/agents/pubsync action=PULL```
+
+
 
 ### Installation
 
 - install the dependency bundles on all Sling instances
 - install Sling Distribution api, core, samples on all Sling instances
-
-### Push resources
-
-#### Push changes
-
-- create/update some content on author (e.g. /content/sample1)
-- add 'content/sample1' by sending an HTTP POST on sender instance: 
-
-```http -a admin:admin -v -f POST http://localhost:8080/libs/sling/distribution/services/agents/publish action=ADD path=/content/sample1```
-
-#### Push deletions
-
-- delete 'content' by sending an HTTP POST on sender instance:
- 
-```http -a admin:admin -v -f POST http://localhost:8080/libs/sling/distribution/services/agents/publish action=DELETE path=/content/sample1```
 
 ## HTTP API
 
@@ -202,9 +217,9 @@ We need to expose APIs for configuring, commanding and monitoring distribution a
 
 #### Configuration API
 - Create config:  - POST _/libs/sling/distribution/settings/agents_
-- Read config - GET _/libs/sling/distribution/settings/agents/{config identifier}_
-- Update config - PUT _/libs/sling/distribution/settings/agents/{config identifier}_
-- Delete config - DELETE _/libs/sling/distribution/settings/agents/{config identifier}_ or POST with :operation=delete
+- Read config - GET _/libs/sling/distribution/settings/agents/{agentName}_
+- Update config - PUT _/libs/sling/distribution/settings/agents/{agentName}_
+- Delete config - DELETE _/libs/sling/distribution/settings/agents/{agentName}_
 
 #### Command API
 - Distribute - POST _/libs/sling/distribution/services/agents/{agentName}_
@@ -212,16 +227,15 @@ We need to expose APIs for configuring, commanding and monitoring distribution a
 - Export package - POST _/libs/sling/distribution/services/exporters/{exporterName}_
 
 #### Monitoring API
-- Distribution history - GET _/libs/sling/distribution/services/agents/{agentName}/history_ (not implemented yet)
-- Import package history - GET _/libs/sling/distribution/services/importers/{importerName}/history_ (not implemented yet)
-- Export package history - GET _/libs/sling/distribution/services/exporters/{exporterName}/history_ (not implemented yet)
-- Agent queue inspection  - GET _/libs/sling/distribution/services/agents/{agentName}/queue_ or _{agentName}.queue_
+- Distribution history - GET _/libs/sling/distribution/services/agents/{agentName}/log_
+- Agent queue inspection  - GET _/libs/sling/distribution/services/agents/{agentName}/queues_
 
-### API Implementation 
-TODO
+## Java API
 
-#### Sample payloads
-TODO
+There is a single entry point in triggering a distribution workflow, via [Distributor](api/src/main/java/org/apache/sling/distribution/Distributor.java) API.
+
+```Distributor.distribute(agentName, resourceResolver, distributionRequest)```
+
 
 ## Ideas for future developments
 

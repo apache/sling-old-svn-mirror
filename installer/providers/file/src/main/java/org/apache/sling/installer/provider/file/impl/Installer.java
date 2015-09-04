@@ -26,9 +26,11 @@ import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.OsgiInstaller;
+import org.apache.sling.settings.SlingSettingsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,13 +48,23 @@ public class Installer
     /** The OSGi installer service. */
     private final OsgiInstaller installer;
 
+    /** The settings service. */
+    private final Set<String> activeRunModes;
+
     /** The scheme to use. */
     private final String scheme;
 
+    /** Prefix. */
+    private final String prefix;
+
     public Installer(final OsgiInstaller installer,
+            final SlingSettingsService settings,
+            final String root,
             final String id) {
         this.scheme = FileInstaller.SCHEME_PREFIX + id;
         this.installer = installer;
+        this.activeRunModes = settings.getRunModes();
+        this.prefix = new File(root).getAbsolutePath() + File.separator;
     }
 
     /**
@@ -126,27 +138,59 @@ public class Installer
 
     private InstallableResource createResource(final File file) {
         try {
-            final InputStream is = new FileInputStream(file);
-            final String digest = String.valueOf(file.lastModified());
-            // if this is a bundle check for start level directory!
-            final Dictionary<String, Object> dict = new Hashtable<String, Object>();
-            if ( file.getName().endsWith(".jar") || file.getName().endsWith(".war") ) {
-                final String parentName = file.getParentFile().getName();
-                try {
-                    final int startLevel = Integer.valueOf(parentName);
-                    if ( startLevel > 0 ) {
-                        dict.put(InstallableResource.BUNDLE_START_LEVEL, startLevel);
-                    }
-                } catch (NumberFormatException nfe) {
-                    // ignore this
+            // check for run modes
+            final String name = file.getAbsolutePath().substring(this.prefix.length()).replace(File.separatorChar, '/');
+            boolean isActive = true;
+            Integer prio = null;
+            final int pos = name.indexOf('/');
+            if ( pos != -1 && name.startsWith("install.") ) {
+                final String runModes = name.substring(8, pos);
+                final int activeModes = this.isActive(runModes);
+                if ( activeModes > 0 ) {
+                    prio = InstallableResource.DEFAULT_PRIORITY + activeModes;
+                } else {
+                    isActive = false;
                 }
             }
-            dict.put(InstallableResource.RESOURCE_URI_HINT, file.toURI().toString());
-            return new InstallableResource(file.getAbsolutePath(), is, dict, digest,
-                null, null);
+            if ( isActive ) {
+                final InputStream is = new FileInputStream(file);
+                final String digest = String.valueOf(file.lastModified());
+                // if this is a bundle check for start level directory!
+                final Dictionary<String, Object> dict = new Hashtable<String, Object>();
+                if ( file.getName().endsWith(".jar") || file.getName().endsWith(".war") ) {
+                    final String parentName = file.getParentFile().getName();
+                    try {
+                        final int startLevel = Integer.valueOf(parentName);
+                        if ( startLevel > 0 ) {
+                            dict.put(InstallableResource.BUNDLE_START_LEVEL, startLevel);
+                        }
+                    } catch (NumberFormatException nfe) {
+                        // ignore this
+                    }
+                }
+                dict.put(InstallableResource.RESOURCE_URI_HINT, file.toURI().toString());
+                return new InstallableResource(file.getAbsolutePath(), is, dict, digest,
+                    null, prio);
+            } else {
+                logger.info("Ignoring inactive resource at {}", file);
+            }
+
         } catch (IOException io) {
             logger.error("Unable to read file " + file, io);
         }
         return null;
+    }
+
+    private int isActive(final String runModesString) {
+        final String[] runModes = runModesString.split("\\.");
+        boolean active = true;
+        for(final String mode : runModes) {
+            if ( !activeRunModes.contains(mode) ) {
+                active = false;
+                break;
+            }
+        }
+
+        return active ? runModes.length : 0;
     }
 }

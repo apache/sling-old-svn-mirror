@@ -59,16 +59,16 @@ import org.thymeleaf.templateresolver.ITemplateResolver;
     @Property(name = Constants.SERVICE_DESCRIPTION, value = "scripting engine for Thymeleaf templates"),
     @Property(name = Constants.SERVICE_RANKING, intValue = 0, propertyPrivate = false)
 })
-public class ThymeleafScriptEngineFactory extends AbstractScriptEngineFactory {
+public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFactory {
 
     @Reference(referenceInterface = ITemplateResolver.class, cardinality = ReferenceCardinality.MANDATORY_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    final private Set<ITemplateResolver> templateResolvers = new LinkedHashSet<ITemplateResolver>();
+    private final Set<ITemplateResolver> templateResolvers = new LinkedHashSet<ITemplateResolver>();
 
     @Reference(referenceInterface = IMessageResolver.class, cardinality = ReferenceCardinality.MANDATORY_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    final private Set<IMessageResolver> messageResolvers = new LinkedHashSet<IMessageResolver>();
+    private final Set<IMessageResolver> messageResolvers = new LinkedHashSet<IMessageResolver>();
 
     @Reference(referenceInterface = IDialect.class, cardinality = ReferenceCardinality.MANDATORY_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    final private Set<IDialect> dialects = new LinkedHashSet<IDialect>();
+    private final Set<IDialect> dialects = new LinkedHashSet<IDialect>();
 
     private TemplateEngine templateEngine;
 

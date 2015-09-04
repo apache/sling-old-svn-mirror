@@ -32,7 +32,7 @@ public class ScriptableCalendar extends ScriptableBase implements SlingWrapper {
 	private SimpleDateFormat calendarFormat;
 
 	/** Calendar is a class, not an interface - so we need to enumerate possible implementations here */
-    public static final Class<?> [] WRAPPED_CLASSES = { Calendar.class, GregorianCalendar.class };
+    private static final Class<?> [] WRAPPED_CLASSES = { Calendar.class, GregorianCalendar.class };
 
     /**
      * The wrapped Calendar. Will be {@code null} if the

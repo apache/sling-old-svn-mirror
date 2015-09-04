@@ -61,6 +61,9 @@ public class JcrPropertyMapCacheEntry {
 
     /**
      * Create a new cache entry from a property.
+     *
+     * @param prop the property
+     * @throws RepositoryException if the provided property cannot be converted to a Java Object
      */
     public JcrPropertyMapCacheEntry(final Property prop)
     throws RepositoryException {
@@ -75,6 +78,9 @@ public class JcrPropertyMapCacheEntry {
 
     /**
      * Create a new cache entry from a value.
+     * @param value the value
+     * @param node the node
+     * @throws RepositoryException if the provided value cannot be stored
      */
     public JcrPropertyMapCacheEntry(final Object value, final Node node)
     throws RepositoryException {
@@ -91,8 +97,8 @@ public class JcrPropertyMapCacheEntry {
             failIfCannotStore(value, node);
         }
      }
-    
-    private void failIfCannotStore(final Object value, final Node node) 
+
+    private void failIfCannotStore(final Object value, final Node node)
     throws RepositoryException {
         if (value instanceof InputStream) {
             // InputStream is storable and calling createValue for nothing
@@ -110,6 +116,10 @@ public class JcrPropertyMapCacheEntry {
      * If the value type is supported directly through a jcr property type,
      * the corresponding value is created. If the value is serializable,
      * it is serialized through an object stream. Otherwise null is returned.
+     *
+     * @param obj the object
+     * @param  node the node
+     * @return the converted value
      */
     private Value createValue(final Object obj, final Node node)
     throws RepositoryException {
@@ -149,8 +159,6 @@ public class JcrPropertyMapCacheEntry {
             values = ArrayUtils.toObject((float[])value);
         } else if (value instanceof short[]) {
             values = ArrayUtils.toObject((short[])value);
-        } else if (value instanceof long[]) {
-            values = ArrayUtils.toObject((long[])value);
         } else if (value instanceof boolean[]) {
             values = ArrayUtils.toObject((boolean[])value);
         } else if (value instanceof char[]) {
@@ -193,7 +201,9 @@ public class JcrPropertyMapCacheEntry {
     /**
      * Convert the default value to the given type
      * @param type The type class
-     * @param session The JCR session
+     * @param node The node
+     * @param dynamicClassLoader The classloader
+     * @param <T> The type
      * @return The converted object
      */
     @SuppressWarnings("unchecked")
@@ -245,7 +255,7 @@ public class JcrPropertyMapCacheEntry {
             final Class<T> type,
             final Node node,
             final ClassLoader dynamicClassLoader)
-    throws ValueFormatException, RepositoryException {
+    throws RepositoryException {
         List<T> values = new ArrayList<T>();
         for (int i = 0; i < sourceArray.length; i++) {
             T value = convertToType(i, sourceArray[i], type, node, dynamicClassLoader);
@@ -266,7 +276,7 @@ public class JcrPropertyMapCacheEntry {
                                 final Class<T> type,
                                 final Node node,
                                 final ClassLoader dynamicClassLoader)
-    throws ValueFormatException, RepositoryException {
+    throws RepositoryException {
         if ( type.isInstance(initialValue) ) {
             return (T) initialValue;
         }

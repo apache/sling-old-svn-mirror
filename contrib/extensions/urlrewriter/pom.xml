@@ -24,12 +24,12 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>20</version>
-    <relativePath>../../../parent/pom.xml</relativePath>
+    <version>24</version>
+    <relativePath/>
   </parent>
 
   <artifactId>org.apache.sling.urlrewriter</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.3-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
   <name>Apache Sling URL Rewriter</name>
@@ -38,7 +38,6 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <sling.java.version>6</sling.java.version>
   </properties>
 
   <scm>
@@ -124,9 +123,7 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Bundle-Category>sling</Bundle-Category>
-            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-            <Export-Package/>
+            <Export-Package />
             <Embed-Dependency>
               org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/PropertiesUtil.*"
             </Embed-Dependency>

@@ -24,8 +24,8 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>22</version>
-    <relativePath>../../../parent/pom.xml</relativePath>
+    <version>24</version>
+    <relativePath/>
   </parent>
 
   <artifactId>sling-launchpad-karaf-builder</artifactId>
@@ -44,7 +44,8 @@
     <module>org.apache.sling.launchpad.karaf</module>
     <module>org.apache.sling.launchpad.karaf-features</module>
     <module>org.apache.sling.launchpad.karaf-integration-tests</module>
-    <module>org.apache.sling.launchpad.karaf-launchpad-integration-tests</module>
+    <module>org.apache.sling.launchpad.karaf-launchpad-jackrabbit-derby-integration-tests</module>
+    <module>org.apache.sling.launchpad.karaf-launchpad-oak-tar-integration-tests</module>
   </modules>
 
 </project>

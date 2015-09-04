@@ -16,6 +16,9 @@
  */
 package org.apache.sling.api.scripting;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+
 import org.apache.sling.api.resource.ResourceResolver;
 
 import aQute.bnd.annotation.ProviderType;
@@ -48,5 +51,5 @@ public interface SlingScriptResolver {
      *         <code>null</code> otherwise.
      * @throws org.apache.sling.api.SlingException If an error occurrs trying to resolve the name.
      */
-    SlingScript findScript(ResourceResolver resourceResolver, String name);
+    @CheckForNull SlingScript findScript(@Nonnull ResourceResolver resourceResolver, @Nonnull String name);
 }

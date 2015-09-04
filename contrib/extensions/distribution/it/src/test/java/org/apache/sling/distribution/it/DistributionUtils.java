@@ -21,6 +21,7 @@ package org.apache.sling.distribution.it;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,6 +29,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.jackrabbit.util.Text;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
@@ -201,10 +203,24 @@ public class DistributionUtils {
     public static String createRandomNode(SlingClient slingClient, String parentPath) throws Exception {
         String nodePath = parentPath + "/" + UUID.randomUUID();
         if (!slingClient.exists(parentPath)) {
-            slingClient.mkdirs(parentPath);
+            createNode(slingClient, parentPath);
         }
+
         slingClient.createNode(nodePath, "jcr:primaryType", "nt:unstructured", "propName", "propValue");
         return nodePath;
+    }
+
+    public static void createNode(SlingClient slingClient, String path) throws IOException {
+
+        if (slingClient.exists(path)) {
+            return;
+        }
+
+        String parentPath = Text.getRelativeParent(path, 1);
+
+        createNode(slingClient, parentPath);
+
+        slingClient.createNode(path, "jcr:primaryType", "nt:unstructured");
     }
 
     public static String agentRootUrl() {
@@ -217,6 +233,10 @@ public class DistributionUtils {
 
     public static String queueUrl(String agentName) {
         return agentUrl(agentName) + "/queues";
+    }
+
+    public static String logUrl(String agentName) {
+        return agentUrl(agentName) + "/log";
     }
 
     public static String authorAgentConfigUrl(String agentName) {
@@ -263,6 +283,32 @@ public class DistributionUtils {
 
     public static String triggerEventUrl(String triggerName) {
         return triggerRootUrl() + "/" + triggerName + ".event";
+    }
+
+
+    public static void assertEmptyFolder(SlingInstance instance, SlingClient client, String path) throws IOException, JSONException {
+
+        if (client.exists(path)) {
+            List<String> children = getChildrenForFolder(instance, path);
+
+            assertEquals(0, children.size());
+        }
+
+    }
+
+
+    public static List<String> getChildrenForFolder(SlingInstance instance, String path) throws IOException, JSONException {
+        List<String> result = new ArrayList<String>();
+        JSONObject authorJson = getResource(instance, path + ".1.json");
+        Iterator<String> it = authorJson.keys();
+        while (it.hasNext()) {
+            String key = it.next();
+
+            if (!key.contains(":")) {
+                result.add(key);
+            }
+        }
+        return result;
     }
 
 }

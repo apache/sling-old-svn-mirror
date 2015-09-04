@@ -39,7 +39,7 @@ public class SlingScriptingJspIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling-scripting-jsp")
+            addSlingFeatures("sling-scripting-jsp")
         );
     }
 

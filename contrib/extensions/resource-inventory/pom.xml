@@ -23,12 +23,13 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>17</version>
+        <version>24</version>
+        <relativePath/>
     </parent>
 
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.resource.inventory</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.5-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Inventory Printer Based on Resources</name>

@@ -18,14 +18,16 @@
  */
 package org.apache.sling.distribution.event.impl;
 
-import javax.annotation.Nonnull;
 import java.util.Dictionary;
 import java.util.Hashtable;
+
+import javax.annotation.Nonnull;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.distribution.event.DistributionEventType;
+import org.apache.sling.distribution.component.impl.DistributionComponentKind;
+import org.apache.sling.distribution.event.DistributionEventProperties;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -35,7 +37,7 @@ import org.slf4j.LoggerFactory;
 /**
  * {@link DistributionEventFactory} OSGi service
  */
-@Component(immediate = true, label = "Event Factory for Distribution Events")
+@Component(immediate = true)
 @Service(value = DistributionEventFactory.class)
 public class DefaultDistributionEventFactory implements DistributionEventFactory {
 
@@ -44,17 +46,29 @@ public class DefaultDistributionEventFactory implements DistributionEventFactory
     @Reference
     private EventAdmin eventAdmin;
 
-    public void generateEvent(@Nonnull DistributionEventType distributionEventType, @Nonnull Dictionary<?, ?> properties) {
-        eventAdmin.postEvent(new Event(distributionEventType.getTopic(), properties));
-        log.debug("distribution event {} posted", distributionEventType.name());
+    private void generateEvent(@Nonnull String distributionEventTopic, @Nonnull Dictionary<?, ?> properties) {
+        eventAdmin.postEvent(new Event(distributionEventTopic, properties));
+        log.debug("distribution event {} posted", distributionEventTopic);
     }
 
-    public void generateAgentPackageEvent(@Nonnull DistributionEventType distributionEventType, @Nonnull String agentName, @Nonnull DistributionPackageInfo info) {
-        Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
-        dictionary.put("distribution.agent.name", agentName);
-        dictionary.put("distribution.request.type", info.getRequestType());
-        dictionary.put("distribution.path", info.getPaths());
-        generateEvent(distributionEventType, dictionary);
+    public void generatePackageEvent(@Nonnull String distributionEventTopic, @Nonnull DistributionComponentKind kind,
+                                     @Nonnull String name, @Nonnull DistributionPackageInfo info) {
+        try {
+            Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
+            dictionary.put(DistributionEventProperties.DISTRIBUTION_COMPONENT_NAME, name);
+            dictionary.put(DistributionEventProperties.DISTRIBUTION_COMPONENT_KIND, kind.name());
+            if (info.getRequestType() != null) {
+                dictionary.put(DistributionEventProperties.DISTRIBUTION_TYPE, info.getRequestType());
+            }
+            if (info.getPaths() != null) {
+                dictionary.put(DistributionEventProperties.DISTRIBUTION_PATHS, info.getPaths());
+            }
+            generateEvent(distributionEventTopic, dictionary);
+
+        } catch (Throwable e) {
+            log.error("Cannot generate package event", e);
+        }
+
     }
 
 }

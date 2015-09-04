@@ -35,7 +35,10 @@ import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
 /**
  * This implementation of the value map allows to change
  * the properties and save them later on.
+ *
+ * @deprecated Resources should be adapted to a modifiable value map instead
  */
+@Deprecated
 public final class JcrModifiablePropertyMap
     extends JcrPropertyMap
     implements PersistableValueMap {

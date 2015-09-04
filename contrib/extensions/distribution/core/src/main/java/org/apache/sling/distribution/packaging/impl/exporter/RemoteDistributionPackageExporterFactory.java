@@ -33,7 +33,10 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.DistributionRequest;
-import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
+import org.apache.sling.distribution.component.impl.DistributionComponentKind;
+import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
+import org.apache.sling.distribution.component.impl.SettingsUtils;
+import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExportException;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
@@ -46,7 +49,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Default implementation of {@link org.apache.sling.distribution.packaging.DistributionPackageExporter}
  */
-@Component(label = "Sling Distribution Exporter - Remote Package Exporter Factory",
+@Component(label = "Apache Sling Distribution Exporter - Remote Package Exporter Factory",
         metatype = true,
         configurationFactory = true,
         specVersion = "1.1",
@@ -62,7 +65,7 @@ public class RemoteDistributionPackageExporterFactory implements DistributionPac
      * name of this exporter.
      */
     @Property(label = "Name", description = "The name of the exporter.")
-    public static final String NAME = DistributionComponentUtils.PN_NAME;
+    public static final String NAME = DistributionComponentConstants.PN_NAME;
 
     /**
      * endpoints property
@@ -109,11 +112,20 @@ public class RemoteDistributionPackageExporterFactory implements DistributionPac
         log.info("activating remote exporter with pb {} and dtsp {}", packageBuilder, transportSecretProvider);
 
         String[] endpoints = PropertiesUtil.toStringArray(config.get(ENDPOINTS), new String[0]);
+        endpoints = SettingsUtils.removeEmptyEntries(endpoints);
+
         String endpointStrategyName = PropertiesUtil.toString(config.get(ENDPOINTS_STRATEGY), "One");
         int pollItems = PropertiesUtil.toInteger(config.get(PULL_ITEMS), Integer.MAX_VALUE);
 
         TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(endpointStrategyName);
-        exporter = new RemoteDistributionPackageExporter(packageBuilder, transportSecretProvider, endpoints,
+
+
+        String exporterName = PropertiesUtil.toString(config.get(NAME), null);
+
+        DefaultDistributionLog distributionLog = new DefaultDistributionLog(DistributionComponentKind.EXPORTER, exporterName, RemoteDistributionPackageExporter.class, DefaultDistributionLog.LogLevel.ERROR);
+
+
+        exporter = new RemoteDistributionPackageExporter(distributionLog, packageBuilder, transportSecretProvider, endpoints,
                 transportEndpointStrategyType, pollItems);
     }
 

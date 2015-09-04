@@ -20,6 +20,8 @@ package org.apache.sling.api.resource;
 
 import java.util.Iterator;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.SlingException;
@@ -63,7 +65,7 @@ public interface ResourceProvider {
      * no other providers are asked for resources under this root if this
      * provider does not have a resource. (value is "provider.ownsRoots").
      *
-     * @since 2.2
+     * @since 2.2 (Sling API Bundle 2.2.0)
      */
     String OWNS_ROOTS = "provider.ownsRoots";
 
@@ -75,7 +77,7 @@ public interface ResourceProvider {
      * the underlying storage already provides it.
      * The default for this value is <code>false</code>.
      * (value is "provider.useResourceAccessSecurity")
-     * @since 2.4
+     * @since 2.4 (Sling API Bundle 2.5.0)
      */
     String USE_RESOURCE_ACCESS_SECURITY = "provider.useResourceAccessSecurity";
 
@@ -111,7 +113,7 @@ public interface ResourceProvider {
      * @deprecated since 2.2.0 (and JCR Resource 2.1.0), this method will not be invoked.
      */
     @Deprecated
-    Resource getResource(ResourceResolver resourceResolver, HttpServletRequest request, String path);
+    @CheckForNull Resource getResource(@Nonnull ResourceResolver resourceResolver, @Nonnull HttpServletRequest request, @Nonnull String path);
 
     /**
      * Returns a resource from this resource provider or <code>null</code> if
@@ -126,12 +128,13 @@ public interface ResourceProvider {
      *
      * @param resourceResolver
      *            The {@link ResourceResolver} to which the returned {@link Resource} is attached.
+     * @param path The full path of the resource.
      * @return <code>null</code> If this provider does not have a resource for
      *         the path.
      * @throws org.apache.sling.api.SlingException
      *             may be thrown in case of any problem creating the <code>Resource</code> instance.
      */
-    Resource getResource(ResourceResolver resourceResolver, String path);
+    @CheckForNull Resource getResource(@Nonnull ResourceResolver resourceResolver, @Nonnull String path);
 
     /**
      * Returns an <code>Iterator</code> of {@link Resource} objects loaded from
@@ -162,5 +165,5 @@ public interface ResourceProvider {
      * @throws SlingException
      *             If any error occurs acquiring the child resource iterator.
      */
-    Iterator<Resource> listChildren(Resource parent);
+    @CheckForNull Iterator<Resource> listChildren(@Nonnull Resource parent);
 }

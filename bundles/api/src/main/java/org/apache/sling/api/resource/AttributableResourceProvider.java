@@ -34,7 +34,7 @@ import aQute.bnd.annotation.ConsumerType;
  * @see ResourceResolver#getAttribute(String)
  * @see ResourceResolver#getAttributeNames()
  *
- * @since 2.2
+ * @since 2.2 (Sling API Bundle 2.2.0)
  */
 @ConsumerType
 public interface AttributableResourceProvider extends ResourceProvider {

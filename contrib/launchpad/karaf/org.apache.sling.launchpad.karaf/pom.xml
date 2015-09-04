@@ -24,8 +24,8 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>22</version>
-    <relativePath>../../../../parent/pom.xml</relativePath>
+    <version>24</version>
+    <relativePath/>
   </parent>
 
   <artifactId>org.apache.sling.launchpad.karaf</artifactId>
@@ -35,16 +35,13 @@
   <name>Apache Sling Launchpad Karaf</name>
   <description>Apache Sling Launchpad Karaf</description>
 
-  <properties>
-    <sling.java.version>6</sling.java.version>
-  </properties>
-
   <dependencies>
     <!-- Sling -->
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.launchpad.api</artifactId>
       <version>1.1.0</version>
+      <scope>provided</scope>
     </dependency>
     <!-- OSGi -->
     <dependency>
@@ -80,8 +77,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <!-- Version newer than the one declared in the parent pom -->
-        <version>3.1</version>
+        <version>3.3</version>
         <configuration>
           <source>1.6</source>
           <target>1.6</target>

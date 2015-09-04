@@ -30,7 +30,7 @@ import aQute.bnd.annotation.ConsumerType;
  * {@link ResourceProvider} interface and {@link ResourceProvider}s
  * returned through a {@link ResourceProviderFactory}.
  *
- * @since 2.2.0
+ * @since 2.2  (Sling API Bundle 2.2.0)
  */
 @ConsumerType
 public interface QueriableResourceProvider extends ResourceProvider {

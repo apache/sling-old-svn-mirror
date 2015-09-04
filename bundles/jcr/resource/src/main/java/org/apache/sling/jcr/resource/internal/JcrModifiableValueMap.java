@@ -59,22 +59,19 @@ public final class JcrModifiableValueMap
     /** Has the node been read completely? */
     private boolean fullyRead;
 
-    /** keep all prefixes for escaping */
-    private String[] namespacePrefixes;
-
-    private final ClassLoader dynamicClassLoader;
+    private final HelperData helper;
 
     /**
      * Constructor
      * @param node The underlying node.
-     * @param dynamicCL Dynamic class loader for loading serialized objects.
+     * @param helper Helper data object
      */
-    public JcrModifiableValueMap(final Node node, final ClassLoader dynamicCL) {
+    public JcrModifiableValueMap(final Node node, final HelperData helper) {
         this.node = node;
         this.cache = new LinkedHashMap<String, JcrPropertyMapCacheEntry>();
         this.valueCache = new LinkedHashMap<String, Object>();
         this.fullyRead = false;
-        this.dynamicClassLoader = dynamicCL;
+        this.helper = helper;
     }
 
     /**
@@ -110,7 +107,7 @@ public final class JcrModifiableValueMap
         if ( entry == null ) {
             return null;
         }
-        return entry.convertToType(type, node, dynamicClassLoader);
+        return entry.convertToType(type, node, helper.dynamicClassLoader);
     }
 
     /**
@@ -216,6 +213,7 @@ public final class JcrModifiableValueMap
     /**
      * Return the path of the current node.
      *
+     * @return the path
      * @throws IllegalStateException If a repository exception occurs
      */
     public String getPath() {
@@ -352,15 +350,16 @@ public final class JcrModifiableValueMap
      * Handles key name escaping by taking into consideration if it contains a
      * registered prefix
      *
-     * @param key
+     * @param key the key to escape
      * @return escaped key name
+     * @throws RepositoryException if the repository's namespace prefixes cannot be retrieved
      */
     protected String escapeKeyName(final String key) throws RepositoryException {
         final int indexOfPrefix = key.indexOf(':');
         // check if colon is neither the first nor the last character
         if (indexOfPrefix > 0 && key.length() > indexOfPrefix + 1) {
             final String prefix = key.substring(0, indexOfPrefix);
-            for (final String existingPrefix : getNamespacePrefixes()) {
+            for (final String existingPrefix : this.helper.getNamespacePrefixes(this.node.getSession())) {
                 if (existingPrefix.equals(prefix)) {
                     return prefix
                             + ":"
@@ -370,16 +369,6 @@ public final class JcrModifiableValueMap
             }
         }
         return Text.escapeIllegalJcrChars(key);
-    }
-
-    /**
-    * Read namespace prefixes and store as member variable to minimize number of JCR API calls
-    */
-    private String[] getNamespacePrefixes() throws RepositoryException {
-        if (this.namespacePrefixes == null) {
-            this.namespacePrefixes = getNode().getSession().getNamespacePrefixes();
-        }
-        return this.namespacePrefixes;
     }
 
     /**
@@ -452,13 +441,13 @@ public final class JcrModifiableValueMap
             this.cache.put(key, entry);
             final String name = escapeKeyName(key);
             if ( NodeUtil.MIXIN_TYPES.equals(name) ) {
-                NodeUtil.handleMixinTypes(node, entry.convertToType(String[].class, node, dynamicClassLoader));
+                NodeUtil.handleMixinTypes(node, entry.convertToType(String[].class, node, this.helper.dynamicClassLoader));
             } else if ( "jcr:primaryType".equals(name) ) {
-                node.setPrimaryType(entry.convertToType(String.class, node, dynamicClassLoader));
+                node.setPrimaryType(entry.convertToType(String.class, node, this.helper.dynamicClassLoader));
             } else if ( entry.isArray() ) {
-                node.setProperty(name, entry.convertToType(Value[].class, node, dynamicClassLoader));
+                node.setProperty(name, entry.convertToType(Value[].class, node, this.helper.dynamicClassLoader));
             } else {
-                node.setProperty(name, entry.convertToType(Value.class, node, dynamicClassLoader));
+                node.setProperty(name, entry.convertToType(Value.class, node, this.helper.dynamicClassLoader));
             }
         } catch (final RepositoryException re) {
             throw new IllegalArgumentException("Value for key " + key + " can't be put into node: " + value, re);

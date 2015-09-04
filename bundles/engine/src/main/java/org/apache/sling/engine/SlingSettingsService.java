@@ -18,11 +18,14 @@
  */
 package org.apache.sling.engine;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * The <code>SlingSettingsService</code> provides basic Sling settings.
  * @deprecated Use the {@link org.apache.sling.settings.SlingSettingsService}
  */
 @Deprecated
+@ProviderType
 public interface SlingSettingsService {
 
     /**

@@ -25,6 +25,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.artifacts.EmbeddedArtifact;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
+import org.apache.sling.ide.eclipse.core.SlingLaunchpadConfigurationDefaults;
 import org.apache.sling.ide.eclipse.ui.internal.Activator;
 import org.apache.sling.ide.eclipse.ui.internal.SlingLaunchpadCombo;
 import org.apache.sling.ide.osgi.OsgiClient;
@@ -386,10 +387,11 @@ public class SetupServerWizardPage extends WizardPage {
                 wc.setName(newServerName.getText());
 				wc.setAttribute(ISlingLaunchpadServer.PROP_PORT, getPort());
 				wc.setAttribute(ISlingLaunchpadServer.PROP_DEBUG_PORT, Integer.parseInt(newServerDebugPort.getText()));
-                wc.setAttribute(ISlingLaunchpadServer.PROP_INSTALL_LOCALLY, installToolingSupportBundle.getSelection());
                 wc.setAttribute(ISlingLaunchpadServer.PROP_USERNAME, newServerUsername.getText());
                 wc.setAttribute(ISlingLaunchpadServer.PROP_PASSWORD, newServerPassword.getText());
-                wc.setAttribute("auto-publish-time", 0);
+                
+                SlingLaunchpadConfigurationDefaults.applyDefaultValues(wc);
+                
                 if (finalVersion != null) {
                     wc.setAttribute(String.format(ISlingLaunchpadServer.PROP_BUNDLE_VERSION_FORMAT,
                         EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME), finalVersion.toString());

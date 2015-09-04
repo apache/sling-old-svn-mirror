@@ -103,6 +103,7 @@ public class VotingView extends View {
             Map<String, Object> properties = new HashMap<String, Object>();
             if (memberId.equals(initiatorId)) {
                 properties.put("initiator", true);
+                properties.put("votedAt", Calendar.getInstance());
             }
             Resource instanceResource = ResourceHelper.getOrCreateResource(
                     resourceResolver, config.getClusterInstancesPath() + "/"
@@ -297,6 +298,7 @@ public class VotingView extends View {
             memberMap.remove("vote");
         } else {
             memberMap.put("vote", vote);
+            memberMap.put("votedAt", Calendar.getInstance());
         }
         try {
             getResource().getResourceResolver().commit();

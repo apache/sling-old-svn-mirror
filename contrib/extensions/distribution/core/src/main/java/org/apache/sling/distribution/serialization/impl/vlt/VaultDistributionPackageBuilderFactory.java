@@ -35,7 +35,8 @@ import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.DistributionRequest;
-import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
+import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
+import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.serialization.DistributionPackageBuildingException;
@@ -43,7 +44,7 @@ import org.apache.sling.distribution.serialization.DistributionPackageReadingExc
 import org.apache.sling.distribution.serialization.impl.ResourceSharedDistributionPackageBuilder;
 
 @Component(metatype = true,
-        label = "Sling Distribution Packaging - Vault Package Builder Factory",
+        label = "Apache Sling Distribution Packaging - Vault Package Builder Factory",
         description = "OSGi configuration for vault package builders",
         configurationFactory = true,
         specVersion = "1.1",
@@ -57,7 +58,7 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
      * name of this package builder.
      */
     @Property(label = "Name", description = "The name of the package builder.")
-    public static final String NAME = DistributionComponentUtils.PN_NAME;
+    public static final String NAME = DistributionComponentConstants.PN_NAME;
 
 
 
@@ -72,7 +73,7 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
                     value = "file packages"
             )},
             value = "jcrvlt", label = "type", description = "The type of this package builder")
-    public static final String TYPE = DistributionComponentUtils.PN_TYPE;
+    public static final String TYPE = DistributionComponentConstants.PN_TYPE;
 
 
     /**
@@ -84,8 +85,33 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
     /**
      * ACL handling property for file vault package builder
      */
-    @Property(label = "Acl Handling", description = "The vltacl handling mode for created packages.")
+    @Property(label = "Acl Handling", description = "The vlt acl handling mode for created packages.")
     public static final String ACL_HANDLING = "aclHandling";
+
+    /**
+     * Package roots
+     */
+    @Property(label = "Package Roots", description = "The package roots to be used for created packages. (this is useful for assembling packages with an user that cannot read above the package root)")
+    public static final String PACKAGE_ROOTS = "package.roots";
+
+    /**
+     * Package filters
+     */
+    @Property(label = "Package Filters", description = "The package path filters. Filter format: path|+include|-exclude", cardinality = 100)
+    public static final String PACKAGE_FILTERS = "package.filters";
+
+
+    /**
+     * Temp file folder
+     */
+    @Property(label = "Temp Filesystem Folder", description = "The filesystem folder where the temporary files should be saved.")
+    public static final String TEMP_FS_FOLDER = "tempFsFolder";
+
+    /**
+     * Temp file folder
+     */
+    @Property(label = "Temp JCR Folder", description = "The jcr folder where the temporary files should be saved")
+    public static final String TEMP_JCR_FOLDER = "tempJcrFolder";
 
     @Reference
     private Packaging packaging;
@@ -96,24 +122,37 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
     @Activate
     public void activate(Map<String, Object> config) {
 
+        String name = PropertiesUtil.toString(config.get(NAME), null);
         String type = PropertiesUtil.toString(config.get(TYPE), null);
-        String importModeString = PropertiesUtil.toString(config.get(IMPORT_MODE), null);
-        String aclHandlingString = PropertiesUtil.toString(config.get(ACL_HANDLING), null);
+        String importModeString = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(IMPORT_MODE), null));
+        String aclHandlingString = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(ACL_HANDLING), null));
+
+        String[] packageRoots = SettingsUtils.removeEmptyEntries(PropertiesUtil.toStringArray(config.get(PACKAGE_ROOTS), null));
+        String[] packageFilters = SettingsUtils.removeEmptyEntries(PropertiesUtil.toStringArray(config.get(PACKAGE_FILTERS), null));
+
+        String tempFsFolder =  SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(TEMP_FS_FOLDER), null));
+        String tempJcrFolder = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(TEMP_JCR_FOLDER), null));
 
         ImportMode importMode = null;
-        if (importMode != null) {
-            importMode = ImportMode.valueOf(importModeString);
+        if (importModeString != null) {
+            importMode = ImportMode.valueOf(importModeString.trim());
         }
 
         AccessControlHandling aclHandling = null;
         if (aclHandlingString != null) {
-            aclHandling= AccessControlHandling.valueOf(aclHandlingString);
+            aclHandling= AccessControlHandling.valueOf(aclHandlingString.trim());
         }
-        if (FileVaultDistributionPackageBuilder.PACKAGING_TYPE.equals(type)) {
-            packageBuilder = new ResourceSharedDistributionPackageBuilder(new FileVaultDistributionPackageBuilder(packaging, importMode, aclHandling));
+
+        if ("filevlt".equals(type)) {
+            packageBuilder = new ResourceSharedDistributionPackageBuilder(new FileVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, packageFilters, tempFsFolder));
         } else  {
-            packageBuilder = new ResourceSharedDistributionPackageBuilder(new JcrVaultDistributionPackageBuilder(packaging, importMode, aclHandling));
+            packageBuilder = new ResourceSharedDistributionPackageBuilder(new JcrVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, packageFilters, tempFsFolder, tempJcrFolder));
         }
+    }
+
+
+    public String getType() {
+        return packageBuilder.getType();
     }
 
 

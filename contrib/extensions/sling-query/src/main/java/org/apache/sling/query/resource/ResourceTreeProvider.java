@@ -25,7 +25,7 @@ import java.util.List;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.query.api.Predicate;
-import org.apache.sling.query.api.TreeProvider;
+import org.apache.sling.query.api.internal.TreeProvider;
 import org.apache.sling.query.resource.jcr.JcrQueryIterator;
 import org.apache.sling.query.resource.jcr.JcrTypeResolver;
 import org.apache.sling.query.resource.jcr.SessionJcrTypeResolver;

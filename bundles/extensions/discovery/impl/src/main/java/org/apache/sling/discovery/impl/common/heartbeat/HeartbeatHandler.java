@@ -18,8 +18,14 @@
  */
 package org.apache.sling.discovery.impl.common.heartbeat;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -29,6 +35,8 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifiableValueMap;
@@ -50,7 +58,10 @@ import org.apache.sling.launchpad.api.StartupListener;
 import org.apache.sling.launchpad.api.StartupMode;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.http.HttpService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,12 +74,26 @@ import org.slf4j.LoggerFactory;
  */
 @Component
 @Service(value = { HeartbeatHandler.class, StartupListener.class })
+@Reference(referenceInterface=HttpService.class,
+           cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
+           policy=ReferencePolicy.DYNAMIC)
 public class HeartbeatHandler implements Runnable, StartupListener {
+
+    private static final String PROPERTY_ID_LAST_HEARTBEAT = "lastHeartbeat";
+
+    private static final String PROPERTY_ID_ENDPOINTS = "endpoints";
+
+    private static final String PROPERTY_ID_SLING_HOME_PATH = "slingHomePath";
+
+    private static final String PROPERTY_ID_RUNTIME = "runtimeId";
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    /** Endpoint service registration property from RFC 189 */
+    private static final String REG_PROPERTY_ENDPOINTS = "osgi.http.service.endpoints";
+
     /** the name used for the period job with the scheduler **/
-    private static final String NAME = "discovery.impl.heartbeat.runner";
+    private String NAME = "discovery.impl.heartbeat.runner.";
 
     @Reference
     private SlingSettingsService slingSettingsService;
@@ -127,6 +152,9 @@ public class HeartbeatHandler implements Runnable, StartupListener {
     /** SLING-3382 : force ping instructs the servlet to start the backoff from scratch again **/
     private boolean forcePing;
 
+    /** SLING-4765 : store endpoints to /clusterInstances for more verbose duplicate slingId/ghost detection **/
+    private final Map<Long, String[]> endpoints = new HashMap<Long, String[]>();
+
     public void inform(StartupMode mode, boolean finished) {
     	if (finished) {
     		startupFinished(mode);
@@ -150,6 +178,7 @@ public class HeartbeatHandler implements Runnable, StartupListener {
     		this.context = context;
 
 	        slingId = slingSettingsService.getSlingId();
+	        NAME = "discovery.impl.heartbeat.runner." + slingId;
 	        // on activate the resetLeaderElectionId is set to true to ensure that
 	        // the 'leaderElectionId' property is reset on next heartbeat issuance.
 	        // the idea being that a node which leaves the cluster should not
@@ -163,6 +192,7 @@ public class HeartbeatHandler implements Runnable, StartupListener {
 	        lastHeartbeatWritten = null;
 
 	        activated = true;
+	        logger.info("activate: activated with runtimeId: {}, slingId: {}", runtimeId, slingId);
     	}
     }
 
@@ -191,8 +221,10 @@ public class HeartbeatHandler implements Runnable, StartupListener {
         }
 
         try {
+            final long interval = config.getHeartbeatInterval();
+            logger.info("initialize: starting periodic heartbeat job for "+slingId+" with interval "+interval+" sec.");
             scheduler.addPeriodicJob(NAME, this,
-                    null, config.getHeartbeatInterval(), false);
+                    null, interval, false);
         } catch (Exception e) {
             logger.error("activate: Could not start heartbeat runner: " + e, e);
         }
@@ -232,7 +264,10 @@ public class HeartbeatHandler implements Runnable, StartupListener {
         forcePing = true;
         try {
             // then fire a job immediately
-            scheduler.fireJob(this, null);
+            // use 'fireJobAt' here, instead of 'fireJob' to make sure the job can always be triggered
+            // 'fireJob' checks for a job from the same job-class to already exist
+            // 'fireJobAt' though allows to pass a name for the job - which can be made unique, thus does not conflict/already-exist
+            scheduler.fireJobAt(NAME+UUID.randomUUID(), this, null, new Date(System.currentTimeMillis()-1000 /* make sure it gets triggered immediately*/));
         } catch (Exception e) {
             logger.info("triggerHeartbeat: Could not trigger heartbeat: " + e);
         }
@@ -266,12 +301,18 @@ public class HeartbeatHandler implements Runnable, StartupListener {
         	logger.debug("issueRemoteHeartbeats: not issuing remote heartbeat yet, startup not yet finished");
         	return;
         }
+        if (logger.isDebugEnabled()) {
+            logger.debug("issueRemoteHeartbeats: pinging outgoing topology connectors (if there is any) for "+slingId);
+        }
         connectorRegistry.pingOutgoingConnectors(forcePing);
         forcePing = false;
     }
 
     /** Issue a cluster local heartbeat (into the repository) **/
     private void issueClusterLocalHeartbeat() {
+        if (logger.isDebugEnabled()) {
+            logger.debug("issueClusterLocalHeartbeat: storing cluster-local heartbeat to repository for "+slingId);
+        }
         ResourceResolver resourceResolver = null;
         final String myClusterNodePath = getLocalClusterNodePath();
         final Calendar currentTime = Calendar.getInstance();
@@ -295,7 +336,7 @@ public class HeartbeatHandler implements Runnable, StartupListener {
             	if (timeSinceFirstHeartbeat > 2*config.getHeartbeatInterval()) {
             		// but wait at least 2 heartbeat intervals to handle the situation
             		// where a bundle is refreshed, and startup cases.
-            		final Calendar lastHeartbeat = resourceMap.get("lastHeartbeat", Calendar.class);
+            		final Calendar lastHeartbeat = resourceMap.get(PROPERTY_ID_LAST_HEARTBEAT, Calendar.class);
             		if (lastHeartbeat!=null) {
             			// if there is a heartbeat value, check if it is what I've written
             			// the last time
@@ -318,13 +359,19 @@ public class HeartbeatHandler implements Runnable, StartupListener {
             	//              'runtimeId' is set as a property (ignoring any former value).
             	//              If in subsequent calls the value of 'runtimeId' changes, then
             	//              there is someone else around with the same slingId.
-            	final String readRuntimeId = resourceMap.get("runtimeId", String.class);
+            	final String readRuntimeId = resourceMap.get(PROPERTY_ID_RUNTIME, String.class);
             	if ( readRuntimeId == null ) { // SLING-3977
             	    // someone deleted the resource property
             	    firstHeartbeatWritten = -1;
             	} else if (!runtimeId.equals(readRuntimeId)) {
-            		logger.error("issueClusterLocalHeartbeat: SLING-2091: Detected more than 1 instance running in this cluster " +
-            				" with the same sling.id. My sling.id is "+slingId+", " +
+                    final String slingHomePath = slingSettingsService==null ? "n/a" : slingSettingsService.getSlingHomePath();
+                    final String endpointsAsString = getEndpointsAsString();
+                    final String readEndpoints = resourceMap.get(PROPERTY_ID_ENDPOINTS, String.class);
+                    final String readSlingHomePath = resourceMap.get(PROPERTY_ID_SLING_HOME_PATH, String.class);
+            		logger.error("issueClusterLocalHeartbeat: SLING-2901: Detected more than 1 instance running in this cluster " +
+            				" with the same sling.id. " +
+            				"My sling.id: "+slingId+", my runtimeId: " + runtimeId+", my endpoints: "+endpointsAsString+", my slingHomePath: "+slingHomePath+
+            				", other runtimeId: "+readRuntimeId+", other endpoints: "+readEndpoints+", other slingHomePath:"+readSlingHomePath+
     						" Check for sling.id.file in your installation of all instances in this cluster " +
     						"to verify this! Duplicate sling.ids are not allowed within a cluster!");
             		logger.error("issueClusterLocalHeartbeat: sending TOPOLOGY_CHANGING before self-disabling.");
@@ -344,16 +391,24 @@ public class HeartbeatHandler implements Runnable, StartupListener {
             		return;
             	}
             }
-            resourceMap.put("lastHeartbeat", currentTime);
+            resourceMap.put(PROPERTY_ID_LAST_HEARTBEAT, currentTime);
             if (firstHeartbeatWritten==-1) {
-            	resourceMap.put("runtimeId", runtimeId);
+            	resourceMap.put(PROPERTY_ID_RUNTIME, runtimeId);
+            	// SLING-4765 : store more infos to be able to be more verbose on duplicate slingId/ghost detection
+            	final String slingHomePath = slingSettingsService==null ? "n/a" : slingSettingsService.getSlingHomePath();
+                resourceMap.put(PROPERTY_ID_SLING_HOME_PATH, slingHomePath);
+            	final String endpointsAsString = getEndpointsAsString();
+                resourceMap.put(PROPERTY_ID_ENDPOINTS, endpointsAsString);
+            	logger.info("issueClusterLocalHeartbeat: storing my runtimeId: {}, endpoints: {} and sling home path: {}", 
+            	        new Object[]{runtimeId, endpointsAsString, slingHomePath});
             }
             if (resetLeaderElectionId || !resourceMap.containsKey("leaderElectionId")) {
                 int maxLongLength = String.valueOf(Long.MAX_VALUE).length();
                 String currentTimeMillisStr = String.format("%0"
                         + maxLongLength + "d", System.currentTimeMillis());
 
-                String prefix = "0";
+                final boolean shouldInvertRepositoryDescriptor = config.shouldInvertRepositoryDescriptor();
+                String prefix = (shouldInvertRepositoryDescriptor ? "1" : "0");
 
                 String leaderElectionRepositoryDescriptor = config.getLeaderElectionRepositoryDescriptor();
                 if (leaderElectionRepositoryDescriptor!=null && leaderElectionRepositoryDescriptor.length()!=0) {
@@ -364,13 +419,22 @@ public class HeartbeatHandler implements Runnable, StartupListener {
                     if ( session != null ) {
                         String value = session.getRepository()
                                 .getDescriptor(leaderElectionRepositoryDescriptor);
-                        if (value != null && value.equalsIgnoreCase("true")) {
-                            prefix = "1";
+                        if (value != null) {
+                            if (value.equalsIgnoreCase("true")) {
+                                if (!shouldInvertRepositoryDescriptor) {
+                                    prefix = "1";
+                                } else {
+                                    prefix = "0";
+                                }
+                            }
                         }
                     }
                 }
-                resourceMap.put("leaderElectionId", prefix + "_"
-                        + currentTimeMillisStr + "_" + slingId);
+                final String newLeaderElectionId = prefix + "_"
+                        + currentTimeMillisStr + "_" + slingId;
+                resourceMap.put("leaderElectionId", newLeaderElectionId);
+                resourceMap.put("leaderElectionIdCreatedAt", new Date());
+                logger.debug("issueClusterLocalHeartbeat: set leaderElectionId to "+newLeaderElectionId);
                 resetLeaderElectionId = false;
             }
             resourceResolver.commit();
@@ -429,7 +493,7 @@ public class HeartbeatHandler implements Runnable, StartupListener {
     private void doCheckView(final ResourceResolver resourceResolver) throws PersistenceException {
 
         if (votingHandler==null) {
-            logger.info("doCheckView: votingHandler is null!");
+            logger.info("doCheckView: votingHandler is null! slingId="+slingId);
         } else {
             votingHandler.analyzeVotings(resourceResolver);
             try{
@@ -480,10 +544,130 @@ public class HeartbeatHandler implements Runnable, StartupListener {
         // the currently live instances.
 
         // initiate a new voting
+        doStartNewVoting(resourceResolver, liveInstances);
+    }
+
+    private void doStartNewVoting(final ResourceResolver resourceResolver,
+            final Set<String> liveInstances) throws PersistenceException {
         String votingId = nextVotingId;
         nextVotingId = UUID.randomUUID().toString();
 
         VotingView.newVoting(resourceResolver, config, votingId, slingId, liveInstances);
     }
 
+    /**
+     * Management function to trigger the otherwise algorithm-dependent
+     * start of a new voting.
+     * This can make sense when explicitly trying to force a leader
+     * change (which is otherwise not allowed by the discovery API)
+     */
+    public void startNewVoting() {
+        logger.info("startNewVoting: explicitly starting new voting...");
+        ResourceResolver resourceResolver = null;
+        try {
+            resourceResolver = getResourceResolver();
+            final Resource clusterNodesRes = ResourceHelper.getOrCreateResource(
+                    resourceResolver, config.getClusterInstancesPath());
+            final Set<String> liveInstances = ViewHelper.determineLiveInstances(
+                    clusterNodesRes, config);
+            doStartNewVoting(resourceResolver, liveInstances);
+            logger.info("startNewVoting: explicit new voting was started.");
+        } catch (LoginException e) {
+            logger.error("startNewVoting: could not log in administratively: " + e,
+                    e);
+        } catch (PersistenceException e) {
+            logger.error(
+                    "startNewVoting: encountered a persistence exception during view check: "
+                            + e, e);
+        } finally {
+            if (resourceResolver != null) {
+                resourceResolver.close();
+            }
+        }
+    }
+
+    /**
+     * Bind a http service
+     */
+    protected void bindHttpService(final ServiceReference reference) {
+        final String[] endpointUrls = toStringArray(reference.getProperty(REG_PROPERTY_ENDPOINTS));
+        if ( endpointUrls != null ) {
+            synchronized ( lock ) {
+                this.endpoints.put((Long)reference.getProperty(Constants.SERVICE_ID), endpointUrls);
+                
+                // make sure this gets written on next heartbeat
+                firstHeartbeatWritten = -1;
+                lastHeartbeatWritten = null;
+            }
+        }
+    }
+
+    /**
+     * Unbind a http service
+     */
+    protected void unbindHttpService(final ServiceReference reference) {
+        synchronized ( lock ) {
+            if ( this.endpoints.remove(reference.getProperty(Constants.SERVICE_ID)) != null ) {
+                // make sure the change gets written on next heartbeat
+                firstHeartbeatWritten = -1;
+                lastHeartbeatWritten = null;
+            }
+        }
+    }
+    
+    private String[] toStringArray(final Object propValue) {
+        if (propValue == null) {
+            // no value at all
+            return null;
+
+        } else if (propValue instanceof String) {
+            // single string
+            return new String[] { (String) propValue };
+
+        } else if (propValue instanceof String[]) {
+            // String[]
+            return (String[]) propValue;
+
+        } else if (propValue.getClass().isArray()) {
+            // other array
+            Object[] valueArray = (Object[]) propValue;
+            List<String> values = new ArrayList<String>(valueArray.length);
+            for (Object value : valueArray) {
+                if (value != null) {
+                    values.add(value.toString());
+                }
+            }
+            return values.toArray(new String[values.size()]);
+
+        } else if (propValue instanceof Collection<?>) {
+            // collection
+            Collection<?> valueCollection = (Collection<?>) propValue;
+            List<String> valueList = new ArrayList<String>(valueCollection.size());
+            for (Object value : valueCollection) {
+                if (value != null) {
+                    valueList.add(value.toString());
+                }
+            }
+            return valueList.toArray(new String[valueList.size()]);
+        }
+
+        return null;
+    }
+    
+    private String getEndpointsAsString() {
+        final StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for(final String[] points : endpoints.values()) {
+            for(final String point : points) {
+                if ( first ) {
+                    first = false;
+                } else {
+                    sb.append(",");
+                }
+                sb.append(point);
+            }
+        }
+        return sb.toString();
+        
+    }
 }

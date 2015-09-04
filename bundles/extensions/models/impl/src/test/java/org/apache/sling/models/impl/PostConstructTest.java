@@ -16,13 +16,15 @@
  */
 package org.apache.sling.models.impl;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
 
 import java.util.Hashtable;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.models.factory.ModelClassException;
+import org.apache.sling.models.factory.PostConstructException;
 import org.apache.sling.models.testmodels.classes.FailingPostConstuctModel;
 import org.apache.sling.models.testmodels.classes.SubClass;
 import org.apache.sling.models.testmodels.classes.SubClassOverriddenPostConstruct;
@@ -81,8 +83,8 @@ public class PostConstructTest {
         boolean thrown = false;
         try {
             factory.createModel(resource, FailingPostConstuctModel.class);
-        } catch (ModelClassException e) {
-            assertTrue(e.getMessage().contains("post-construct"));
+        } catch (PostConstructException e) {
+            assertTrue(e.getMessage().contains("Post-construct"));
             assertEquals("FAIL", e.getCause().getMessage());
             thrown = true;
         }

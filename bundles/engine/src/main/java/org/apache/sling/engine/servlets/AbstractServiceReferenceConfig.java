@@ -32,6 +32,8 @@ import javax.servlet.ServletContext;
 
 import org.osgi.framework.ServiceReference;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * The <code>AbstractServiceReferenceConfig</code> may be used as a base class
  * to define <code>ServletConfig</code> and <code>FilterConfig</code>
@@ -57,6 +59,7 @@ import org.osgi.framework.ServiceReference;
  * @deprecated
  */
 @Deprecated
+@ConsumerType
 public abstract class AbstractServiceReferenceConfig {
 
     /** The list of property names checked by {@link #getName(ServiceReference)} */

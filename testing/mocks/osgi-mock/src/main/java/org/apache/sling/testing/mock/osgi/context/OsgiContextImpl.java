@@ -24,6 +24,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.sling.testing.mock.osgi.MockEventAdmin;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
@@ -45,7 +46,7 @@ public class OsgiContextImpl {
      * Setup actions before test method execution
      */
     protected void setUp() {
-        // can be overridden by subclasses
+        registerDefaultServices();
     }
     
     /**
@@ -55,6 +56,13 @@ public class OsgiContextImpl {
         // can be overridden by subclasses
     }
 
+    /**
+     * Default services that should be available for every unit test
+     */
+    private void registerDefaultServices() {
+        registerInjectActivateService(new MockEventAdmin());
+    }
+    
     /**
      * @return OSGi component context
      */
@@ -163,8 +171,7 @@ public class OsgiContextImpl {
     @SuppressWarnings("unchecked")
     public final <ServiceType> ServiceType[] getServices(final Class<ServiceType> serviceType, final String filter) {
         try {
-            ServiceReference[] serviceReferences = bundleContext().getServiceReferences(serviceType.getName(),
-                    filter);
+            ServiceReference[] serviceReferences = bundleContext().getServiceReferences(serviceType.getName(), filter);
             if (serviceReferences != null) {
                 ServiceType[] services = (ServiceType[])Array.newInstance(serviceType, serviceReferences.length);
                 for (int i = 0; i < serviceReferences.length; i++) {

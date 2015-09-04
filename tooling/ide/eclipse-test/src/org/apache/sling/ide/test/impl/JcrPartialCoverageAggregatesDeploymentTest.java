@@ -32,6 +32,7 @@ import javax.jcr.RepositoryException;
 
 import org.apache.sling.ide.test.impl.helpers.DisableDebugStatusHandlers;
 import org.apache.sling.ide.test.impl.helpers.ExternalSlingLaunchpad;
+import org.apache.sling.ide.test.impl.helpers.FailOnUnsuccessfulEventsRule;
 import org.apache.sling.ide.test.impl.helpers.LaunchpadConfig;
 import org.apache.sling.ide.test.impl.helpers.Poller;
 import org.apache.sling.ide.test.impl.helpers.ProjectAdapter;
@@ -69,6 +70,9 @@ public class JcrPartialCoverageAggregatesDeploymentTest {
 
     @Rule
     public DisableDebugStatusHandlers disableDebugHandlers = new DisableDebugStatusHandlers();
+
+    @Rule
+    public FailOnUnsuccessfulEventsRule failOnEventsRule = new FailOnUnsuccessfulEventsRule();
 
     @Test
     public void deploySlingFolder() throws Exception {
@@ -346,11 +350,19 @@ public class JcrPartialCoverageAggregatesDeploymentTest {
         // change the folder's node type to nt:unstructured and make sure it's covered by the parent
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/mapping/.content.xml"),
                 getClass().getResourceAsStream("sling-mapping-with-unstructured-child.xml"));
+
+        // oh boy, where do I start ...
+        // this test keeps failing with issues which suggest concurrency problems, e.g. InvalidStateException
+        // I've tried to work around this issue by refreshing the session, serialising the executions with a
+        // SingleThreadExecutor, inspecting the before/after repo state ... but in the end only this
+        // 'harmless' sleep fixes the test. It will have to do for now, at least until SLING-4438 is fixed
+        Thread.sleep(1000);
+
         // delete the sling folder node type since the serialization is now completely covered by
         // the parent node
         project.deleteMember(Path.fromPortableString("jcr_root/content/test-root/mapping/_jcr_content"));
 
-        // first wait until the sling:Folder child node is created, to ensure that all changes are processed
+        // validate that the primary type has changed
         poller.pollUntil(new Callable<Node>() {
             @Override
             public Node call() throws RepositoryException {

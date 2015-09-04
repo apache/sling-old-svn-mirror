@@ -1,5 +1,6 @@
 {
     "jcr:primaryType": "sling:OsgiConfig",
     "name": "vlt",
-    "type": "jcrvlt"
+    "type": "jcrvlt",
+    "package.filters": ["/content|-.*/excluded"]
 }

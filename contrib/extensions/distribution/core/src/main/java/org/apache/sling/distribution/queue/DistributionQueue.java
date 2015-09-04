@@ -47,23 +47,13 @@ public interface DistributionQueue {
     /**
      * add a distribution item to this queue
      *
-     * @param item a distribution item representing a {@link org.apache.sling.distribution.packaging.DistributionPackage}
+     * @param item a distribution item, typically representing a {@link org.apache.sling.distribution.packaging.DistributionPackage}
      *             to distribute
-     * @return {@code true} if the distribution item was added correctly to the queue,
+     * @return {@code true} if the item was added correctly to the queue,
      * {@code false} otherwise
      */
     boolean add(@Nonnull DistributionQueueItem item);
 
-    /**
-     * get the status of a certain item in the queue
-     *
-     * @param item the distribution item to get the status for
-     * @return the item status in the queue
-     * @throws DistributionQueueException if any error occurs while getting the status
-     */
-    @Nonnull
-    DistributionQueueItemStatus getStatus(@Nonnull DistributionQueueItem item)
-            throws DistributionQueueException;
 
     /**
      * get the first item (in a FIFO strategy, the next to be processed) from the queue
@@ -71,7 +61,7 @@ public interface DistributionQueue {
      * @return the first item into the queue or {@code null} if the queue is empty
      */
     @CheckForNull
-    DistributionQueueItem getHead();
+    DistributionQueueEntry getHead();
 
     /**
      * get all the items in the queue
@@ -81,43 +71,34 @@ public interface DistributionQueue {
      * @return a {@link java.lang.Iterable} of {@link DistributionQueueItem}s
      */
     @Nonnull
-    Iterable<DistributionQueueItem> getItems(int skip, int limit);
+    Iterable<DistributionQueueEntry> getItems(int skip, int limit);
 
 
     /**
      * gets an item from the queue by specifying its id
      *
-     * @param packageId the id of the package represented by the item
+     * @param itemId the id of the item
      * @return the item, or {@code null} if the item with the given id
      * doesn't exist
      */
-    DistributionQueueItem getItem(@Nonnull String packageId);
+    @CheckForNull
+    DistributionQueueEntry getItem(@Nonnull String itemId);
 
     /**
      * remove an item from the queue by specifying its id
      *
-     * @param packageId the id of the package represented by the item
+     * @param itemId the id the item
      * @return the removed item, or {@code null} if the item with the given id
      * doesn't exist
      */
-    DistributionQueueItem remove(@Nonnull String packageId);
+    @CheckForNull
+    DistributionQueueEntry remove(@Nonnull String itemId);
 
 
     /**
-     * check if the queue is empty
-     *
-     * @return {@code true} if the queue is empty, {@code false} otherwise
+     * returns the status of the queue
+     * @return the queue status
      */
-    boolean isEmpty();
-
-    /**
-     * returns the count of items in the queue
-     */
-    int getItemsCount();
-
-    /**
-     * returns the state of the queue
-     * @return the queue state
-     */
-    DistributionQueueState getState();
+    @Nonnull
+    DistributionQueueStatus getStatus();
 }

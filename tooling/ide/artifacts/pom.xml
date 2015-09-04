@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.sling.ide</groupId>
         <artifactId>reactor</artifactId>
-        <version>1.0.5-SNAPSHOT</version>
+        <version>1.0.7-SNAPSHOT</version>
     </parent>
     <artifactId>org.apache.sling.ide.artifacts</artifactId>
     <packaging>eclipse-plugin</packaging>
@@ -72,7 +72,7 @@
                                 <artifactItem>
                                     <groupId>org.apache.sling</groupId>
                                     <artifactId>org.apache.sling.tooling.support.install</artifactId>
-                                    <version>1.0.0</version>
+                                    <version>1.0.2</version>
                                     <outputDirectory>${project.build.directory}/artifacts/sling-tooling-support-install</outputDirectory>
                                 </artifactItem>
                             </artifactItems>

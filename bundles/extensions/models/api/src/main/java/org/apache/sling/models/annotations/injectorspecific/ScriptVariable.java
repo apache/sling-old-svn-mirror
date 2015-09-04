@@ -29,7 +29,7 @@ import org.apache.sling.models.spi.injectorspecific.InjectAnnotation;
 
 /**
  * Annotation to be used on either methods, fields or constructor parameters to let Sling Models inject a
- * script variable (from the {@link org.apache.sling.api.scripting.SlingBindings})
+ * script variable (from the org.apache.sling.api.scripting.SlingBindings)
  *
  */
 @Target({ METHOD, FIELD, PARAMETER })

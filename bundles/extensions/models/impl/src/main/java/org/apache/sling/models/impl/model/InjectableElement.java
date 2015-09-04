@@ -22,8 +22,8 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
 
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
-import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
 
+@SuppressWarnings("deprecation")
 public interface InjectableElement {
     
     /**

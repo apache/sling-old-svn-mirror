@@ -1,0 +1,10 @@
+{
+  "ntWithPropertyDefs": {
+    "declaredPropertyDefinitions": [
+      {
+        "requiredType": "undefined",
+        "name": "simplePropertyDef"
+      }
+    ]
+  }
+}

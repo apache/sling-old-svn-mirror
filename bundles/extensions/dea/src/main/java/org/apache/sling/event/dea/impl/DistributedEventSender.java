@@ -69,7 +69,7 @@ public class DistributedEventSender
 
     private final String ownRootPathWithSlash;
 
-    private volatile ServiceRegistration<?> serviceRegistration;
+    private volatile ServiceRegistration serviceRegistration;
 
     public DistributedEventSender(final BundleContext bundleContext,
             final String rootPath,
@@ -92,7 +92,7 @@ public class DistributedEventSender
                 props.put(EventConstants.EVENT_TOPIC, SlingConstants.TOPIC_RESOURCE_ADDED);
                 props.put(EventConstants.EVENT_FILTER, "(path=" + rootPath + "/*)");
 
-                final ServiceRegistration<?> reg =
+                final ServiceRegistration reg =
                         bundleContext.registerService(new String[] {EventHandler.class.getName()},
                         DistributedEventSender.this, props);
 

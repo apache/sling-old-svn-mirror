@@ -26,7 +26,7 @@ import java.util.Iterator;
  * from application code. Concrete subclasses should implement
  * the {@link ResourceVisitor#visit(Resource)} method.
  * 
- * @since 2.2
+ * @since 2.2 (Sling API Bundle 2.2.0)
  */
 public abstract class AbstractResourceVisitor {
 

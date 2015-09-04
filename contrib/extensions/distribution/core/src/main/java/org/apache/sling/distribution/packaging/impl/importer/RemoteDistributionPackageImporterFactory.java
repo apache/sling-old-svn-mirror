@@ -31,11 +31,14 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
+import org.apache.sling.distribution.component.impl.DistributionComponentKind;
+import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
+import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyType;
 import org.slf4j.Logger;
@@ -44,7 +47,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Remote implementation of {@link org.apache.sling.distribution.packaging.DistributionPackageImporter}
  */
-@Component(label = "Sling Distribution Importer - Remote Package Importer Factory",
+@Component(label = "Apache Sling Distribution Importer - Remote Package Importer Factory",
         metatype = true,
         configurationFactory = true,
         specVersion = "1.1",
@@ -59,7 +62,7 @@ public class RemoteDistributionPackageImporterFactory implements DistributionPac
      * name of this importer.
      */
     @Property(label = "Name", description = "The name of the importer.")
-    public static final String NAME = DistributionComponentUtils.PN_NAME;
+    public static final String NAME = DistributionComponentConstants.PN_NAME;
 
 
     /**
@@ -99,7 +102,12 @@ public class RemoteDistributionPackageImporterFactory implements DistributionPac
 
         TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(endpointStrategyName);
 
-        importer =  new RemoteDistributionPackageImporter(transportSecretProvider, endpoints, transportEndpointStrategyType);
+        String importerName = PropertiesUtil.toString(config.get(NAME), null);
+
+        DefaultDistributionLog distributionLog = new DefaultDistributionLog(DistributionComponentKind.IMPORTER, importerName, RemoteDistributionPackageImporter.class, DefaultDistributionLog.LogLevel.ERROR);
+
+
+        importer =  new RemoteDistributionPackageImporter(distributionLog, transportSecretProvider, endpoints, transportEndpointStrategyType);
 
     }
 
@@ -107,7 +115,7 @@ public class RemoteDistributionPackageImporterFactory implements DistributionPac
         importer.importPackage(resourceResolver, distributionPackage);
     }
 
-    public DistributionPackage importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException {
+    public DistributionPackageInfo importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException {
         return importer.importStream(resourceResolver, stream);
     }
 }

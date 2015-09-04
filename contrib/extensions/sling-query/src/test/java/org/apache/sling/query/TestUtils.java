@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.query.api.function.Option;
+import org.apache.sling.query.api.internal.Option;
 import org.apache.sling.query.mock.json.JsonToResource;
 import org.junit.Assert;
 

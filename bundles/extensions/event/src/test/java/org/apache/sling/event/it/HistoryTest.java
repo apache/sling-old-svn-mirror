@@ -128,6 +128,10 @@ public class HistoryTest extends AbstractJobHandlingTest {
             assertEquals(0, this.getJobManager().findJobs(JobManager.QueryType.GIVEN_UP, TOPIC, -1, (Map<String, Object>[])null).size());
             assertEquals(0, this.getJobManager().findJobs(JobManager.QueryType.STOPPED, TOPIC, -1, (Map<String, Object>[])null).size());
             assertEquals(7, this.getJobManager().findJobs(JobManager.QueryType.SUCCEEDED, TOPIC, -1, (Map<String, Object>[])null).size());
+
+            // find all topics
+            assertEquals(7, this.getJobManager().findJobs(JobManager.QueryType.SUCCEEDED, null, -1, (Map<String, Object>[])null).size());
+
             // verify order, message and state
             long last = 9;
             for(final Job j : col) {

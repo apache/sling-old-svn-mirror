@@ -23,52 +23,80 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import javax.servlet.http.HttpSession;
-
 import org.junit.Before;
 import org.junit.Test;
 
 public class MockHttpSessionTest {
 
-    private HttpSession httpSession;
+    private MockHttpSession httpSession;
 
     @Before
     public void setUp() throws Exception {
-        this.httpSession = new MockHttpSession();
+        httpSession = new MockHttpSession();
     }
 
     @Test
     public void testServletContext() {
-        assertNotNull(this.httpSession.getServletContext());
+        assertNotNull(httpSession.getServletContext());
     }
 
     @Test
     public void testId() {
-        assertNotNull(this.httpSession.getId());
+        assertNotNull(httpSession.getId());
     }
 
     @Test
     public void testCreationTime() {
-        assertNotNull(this.httpSession.getCreationTime());
+        assertNotNull(httpSession.getCreationTime());
     }
 
     @Test
     public void testAttributes() {
-        this.httpSession.setAttribute("attr1", "value1");
-        assertTrue(this.httpSession.getAttributeNames().hasMoreElements());
-        assertEquals("value1", this.httpSession.getAttribute("attr1"));
-        this.httpSession.removeAttribute("attr1");
-        assertFalse(this.httpSession.getAttributeNames().hasMoreElements());
+        httpSession.setAttribute("attr1", "value1");
+        assertTrue(httpSession.getAttributeNames().hasMoreElements());
+        assertEquals("value1", httpSession.getAttribute("attr1"));
+        httpSession.removeAttribute("attr1");
+        assertFalse(httpSession.getAttributeNames().hasMoreElements());
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void testValues() {
-        this.httpSession.putValue("attr1", "value1");
-        assertEquals(1, this.httpSession.getValueNames().length);
-        assertEquals("value1", this.httpSession.getValue("attr1"));
-        this.httpSession.removeValue("attr1");
-        assertEquals(0, this.httpSession.getValueNames().length);
+        httpSession.putValue("attr1", "value1");
+        assertEquals(1, httpSession.getValueNames().length);
+        assertEquals("value1", httpSession.getValue("attr1"));
+        httpSession.removeValue("attr1");
+        assertEquals(0, httpSession.getValueNames().length);
+    }
+
+    @Test
+    public void testInvalidate() {
+        httpSession.invalidate();
+        assertTrue(httpSession.isInvalidated());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testInvalidateStateCheck() {
+        httpSession.invalidate();
+        httpSession.getAttribute("attr1");
+    }
+
+    @Test
+    public void testIsNew() {
+        assertTrue(httpSession.isNew());
+        httpSession.setNew(false);
+        assertFalse(httpSession.isNew());
+   }
+
+    @Test
+    public void testGetLastAccessedTime() {
+        assertNotNull(httpSession.getLastAccessedTime());
+    }
+
+    @Test
+    public void testGetMaxInactiveInterval() {
+        assertTrue(httpSession.getMaxInactiveInterval() > 0);
+        httpSession.setMaxInactiveInterval(123);
+        assertEquals(123, httpSession.getMaxInactiveInterval());
     }
 
 }

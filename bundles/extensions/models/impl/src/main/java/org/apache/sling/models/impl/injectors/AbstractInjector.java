@@ -18,6 +18,11 @@
  */
 package org.apache.sling.models.impl.injectors;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.List;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.resource.Resource;
@@ -48,6 +53,17 @@ abstract class AbstractInjector {
         } else {
             return null;
         }
+    }
+    
+    protected boolean isDeclaredTypeCollection(Type declaredType) {
+        boolean isCollection = false;
+        if (declaredType instanceof ParameterizedType) {
+            ParameterizedType type = (ParameterizedType) declaredType;
+            Class<?> collectionType = (Class<?>) type.getRawType();
+            isCollection = collectionType.equals(Collection.class)
+                    || collectionType.equals(List.class);
+        }
+        return isCollection;
     }
 
 }

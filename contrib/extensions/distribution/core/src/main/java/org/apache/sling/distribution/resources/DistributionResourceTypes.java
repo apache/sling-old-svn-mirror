@@ -33,7 +33,7 @@ public class DistributionResourceTypes {
     public static final String AGENT_QUEUE_LIST_RESOURCE_TYPE = "sling/distribution/service/agent/queue/list";
     public static final String AGENT_QUEUE_ITEM_RESOURCE_TYPE = "sling/distribution/service/agent/queue/item";
 
-
+    public static final String LOG_RESOURCE_TYPE = "sling/distribution/service/log";
 
     public static final String IMPORTER_RESOURCE_TYPE = "sling/distribution/service/importer";
     public static final String IMPORTER_LIST_RESOURCE_TYPE = "sling/distribution/service/importer/list";

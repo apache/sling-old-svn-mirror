@@ -22,8 +22,8 @@ package org.apache.sling.query.function;
 import java.util.Iterator;
 
 import org.apache.sling.query.api.Predicate;
-import org.apache.sling.query.api.function.IteratorToIteratorFunction;
-import org.apache.sling.query.api.function.Option;
+import org.apache.sling.query.api.internal.IteratorToIteratorFunction;
+import org.apache.sling.query.api.internal.Option;
 import org.apache.sling.query.iterator.FilteringIterator;
 
 public class EvenFunction<T> implements IteratorToIteratorFunction<T> {

@@ -265,7 +265,7 @@ public class SlingConstants {
      * to the resource tree.
      * The event contains at least the {@link #PROPERTY_PATH}, {@link #PROPERTY_RESOURCE_SUPER_TYPE}
      * and {@link #PROPERTY_RESOURCE_TYPE} properties.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
     public static final String TOPIC_RESOURCE_ADDED = "org/apache/sling/api/resource/Resource/ADDED";
 
@@ -274,7 +274,7 @@ public class SlingConstants {
      * from the resource tree.
      * The event contains at least the {@link #PROPERTY_PATH}. As the resource has already been removed
      * no further information like resource type etc. might be available.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
     public static final String TOPIC_RESOURCE_REMOVED = "org/apache/sling/api/resource/Resource/REMOVED";
 
@@ -286,7 +286,7 @@ public class SlingConstants {
      * Since 2.2.0 the event might contain these properties {@link #PROPERTY_ADDED_ATTRIBUTES},
      * {@link #PROPERTY_REMOVED_ATTRIBUTES}, {@link #PROPERTY_CHANGED_ATTRIBUTES}. All of them are
      * optional.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
     public static final String TOPIC_RESOURCE_CHANGED = "org/apache/sling/api/resource/Resource/CHANGED";
 
@@ -294,7 +294,7 @@ public class SlingConstants {
      * The topic for the OSGi event which is sent when a resource provider has been
      * added to the resource tree.
      * The event contains at least the {@link #PROPERTY_PATH} property.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
     public static final String TOPIC_RESOURCE_PROVIDER_ADDED = "org/apache/sling/api/resource/ResourceProvider/ADDED";
 
@@ -302,37 +302,37 @@ public class SlingConstants {
      * The topic for the OSGi event which is sent when a resource provider has been
      * removed from the resource tree.
      * The event contains at least the {@link #PROPERTY_PATH} property.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
     public static final String TOPIC_RESOURCE_PROVIDER_REMOVED = "org/apache/sling/api/resource/ResourceProvider/REMOVED";
 
     /**
      * The topic for the OSGi event which is sent when the resource mapping changes.
-     * @since 2.2.0
+     * @since 2.2.0 (Sling API Bundle 2.2.0)
      */
     public static final String TOPIC_RESOURCE_RESOLVER_MAPPING_CHANGED = "org/apache/sling/api/resource/ResourceResolverMapping/CHANGED";
 
     /**
      * The name of the event property holding the resource path.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
     public static final String PROPERTY_PATH = "path";
 
     /**
      * The name of the event property holding the userid. This property is optional.
-     * @since 2.1.0
+     * @since 2.1.0  (Sling API Bundle 2.1.0)
      */
     public static final String PROPERTY_USERID = "userid";
 
     /**
      * The name of the event property holding the resource type.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
     public static final String PROPERTY_RESOURCE_TYPE = "resourceType";
 
     /**
      * The name of the event property holding the resource super type.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
     public static final String PROPERTY_RESOURCE_SUPER_TYPE = "resourceSuperType";
 
@@ -340,7 +340,7 @@ public class SlingConstants {
      * The name of the event property holding the changed attribute names
      * of a resource for an {@link #TOPIC_RESOURCE_CHANGED} event.
      * The value of the property is a string array.
-     * @since 2.2.0
+     * @since 2.2.0 (Sling API Bundle 2.2.0)
      */
     public static final String PROPERTY_CHANGED_ATTRIBUTES = "resourceChangedAttributes";
 
@@ -348,7 +348,7 @@ public class SlingConstants {
      * The name of the event property holding the added attribute names
      * of a resource for an {@link #TOPIC_RESOURCE_CHANGED} event.
      * The value of the property is a string array.
-     * @since 2.2.0
+     * @since 2.2.0 (Sling API Bundle 2.2.0)
      */
     public static final String PROPERTY_ADDED_ATTRIBUTES = "resourceAddedAttributes";
 
@@ -356,7 +356,7 @@ public class SlingConstants {
      * The name of the event property holding the removed attribute names
      * of a resource for an {@link #TOPIC_RESOURCE_CHANGED} event.
      * The value of the property is a string array.
-     * @since 2.2.0
+     * @since 2.2.0 (Sling API Bundle 2.2.0)
      */
     public static final String PROPERTY_REMOVED_ATTRIBUTES = "resourceRemovedAttributes";
 
@@ -364,7 +364,7 @@ public class SlingConstants {
      * The topic for the OSGi event which is sent when an adapter factory has been added.
      * The event contains at least the {@link #PROPERTY_ADAPTABLE_CLASSES},
      * and {@link #PROPERTY_ADAPTER_CLASSES} poperties.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
     public static final String TOPIC_ADAPTER_FACTORY_ADDED = "org/apache/sling/api/adapter/AdapterFactory/ADDED";
 
@@ -372,7 +372,7 @@ public class SlingConstants {
      * The topic for the OSGi event which is sent when an adapter factory has been removed.
      * The event contains at least the {@link #PROPERTY_ADAPTABLE_CLASSES},
      * and {@link #PROPERTY_ADAPTER_CLASSES} poperties.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
     public static final String TOPIC_ADAPTER_FACTORY_REMOVED = "org/apache/sling/api/adapter/AdapterFactory/REMOVED";
 
@@ -380,7 +380,7 @@ public class SlingConstants {
      * The event property listing the fully qualified names of
      * classes which can be adapted by this adapter factory (value is
      * "adaptables"). The type of the value is a string array.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
     public static final String PROPERTY_ADAPTABLE_CLASSES = "adaptables";
 
@@ -388,7 +388,7 @@ public class SlingConstants {
      * The event property listing the fully qualified names of
      * classes to which this factory can adapt adaptables (value is "adapters").
      * The type of the value is a string array.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
     public static final String PROPERTY_ADAPTER_CLASSES = "adapters";
 
@@ -398,7 +398,7 @@ public class SlingConstants {
      * attribute is set immediately before calling the
      * <code>Servlet.service()</code> method and reset to any previously
      * stored value after the service method returns.
-     * @since 2.1
+     * @since 2.1 (Sling API Bundle 2.1.0)
      */
     public static final String SLING_CURRENT_SERVLET_NAME = "sling.core.current.servletName";
 }

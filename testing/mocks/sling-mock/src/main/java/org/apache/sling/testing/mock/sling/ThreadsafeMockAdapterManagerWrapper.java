@@ -18,8 +18,13 @@
  */
 package org.apache.sling.testing.mock.sling;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
+
 import org.apache.sling.api.adapter.AdapterManager;
+import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
 /**
  * Wrapper for {@link MockAdapterManager} which makes sure multiple unit tests
@@ -28,16 +33,16 @@ import org.osgi.framework.BundleContext;
  */
 class ThreadsafeMockAdapterManagerWrapper implements AdapterManager {
 
-    private static final ThreadLocal<MockAdapterManager> THREAD_LOCAL = new ThreadLocal<MockAdapterManager>() {
+    private static final ThreadLocal<AdapterManagerBundleContextFactory> THREAD_LOCAL = new ThreadLocal<AdapterManagerBundleContextFactory>() {
         @Override
-        protected MockAdapterManager initialValue() {
-            return new MockAdapterManager();
+        protected AdapterManagerBundleContextFactory initialValue() {
+            return new AdapterManagerBundleContextFactory();
         }
     };
 
     @Override
     public <AdapterType> AdapterType getAdapter(final Object adaptable, final Class<AdapterType> type) {
-        MockAdapterManager adapterManager = THREAD_LOCAL.get();
+        AdapterManager adapterManager = THREAD_LOCAL.get().getAdapterManager();
         return adapterManager.getAdapter(adaptable, type);
     }
 
@@ -46,7 +51,7 @@ class ThreadsafeMockAdapterManagerWrapper implements AdapterManager {
      * @param bundleContext Bundle context
      */
     public void setBundleContext(final BundleContext bundleContext) {
-        MockAdapterManager adapterManager = THREAD_LOCAL.get();
+        AdapterManagerBundleContextFactory adapterManager = THREAD_LOCAL.get();
         adapterManager.setBundleContext(bundleContext);
     }
 
@@ -54,8 +59,43 @@ class ThreadsafeMockAdapterManagerWrapper implements AdapterManager {
      * Removes bundle context reference.
      */
     public void clearBundleContext() {
-        MockAdapterManager adapterManager = THREAD_LOCAL.get();
+        AdapterManagerBundleContextFactory adapterManager = THREAD_LOCAL.get();
         adapterManager.clearBundleContext();
+    }
+    
+    
+    private static class AdapterManagerBundleContextFactory {
+        
+        private BundleContext bundleContext;
+        
+        public void setBundleContext(final BundleContext bundleContext) {
+            this.bundleContext = bundleContext;
+
+            // register adapter manager
+            MockAdapterManagerImpl adapterManagerImpl = new MockAdapterManagerImpl();
+            Dictionary<String,Object> properties = new Hashtable<String, Object>();
+            MockOsgi.injectServices(adapterManagerImpl, bundleContext);
+            MockOsgi.activate(adapterManagerImpl, bundleContext, properties);
+            bundleContext.registerService(AdapterManager.class.getName(), adapterManagerImpl, properties);
+        }
+
+        public void clearBundleContext() {
+            this.bundleContext = null;
+        }
+        
+        public synchronized AdapterManager getAdapterManager() {
+            if (bundleContext == null) {
+                setBundleContext(MockOsgi.newBundleContext());
+            }
+            ServiceReference serviceReference = bundleContext.getServiceReference(AdapterManager.class.getName());
+            if (serviceReference != null) {
+                return (AdapterManager)bundleContext.getService(serviceReference);
+            }
+            else {
+                throw new RuntimeException("AdapterManager not registered in bundle context.");
+            }
+        }
+        
     }
 
 }

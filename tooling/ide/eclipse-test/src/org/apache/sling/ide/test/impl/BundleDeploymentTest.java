@@ -26,6 +26,7 @@ import org.apache.commons.httpclient.HttpException;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.test.impl.helpers.DisableDebugStatusHandlers;
 import org.apache.sling.ide.test.impl.helpers.ExternalSlingLaunchpad;
+import org.apache.sling.ide.test.impl.helpers.FailOnUnsuccessfulEventsRule;
 import org.apache.sling.ide.test.impl.helpers.LaunchpadConfig;
 import org.apache.sling.ide.test.impl.helpers.MavenDependency;
 import org.apache.sling.ide.test.impl.helpers.OsgiBundleManifest;
@@ -68,6 +69,9 @@ public class BundleDeploymentTest {
 
     @Rule
     public DisableDebugStatusHandlers disableDebugHandlers = new DisableDebugStatusHandlers();
+
+    @Rule
+    public FailOnUnsuccessfulEventsRule failOnEventsRule = new FailOnUnsuccessfulEventsRule();
 
     @Test
     public void deployBundleOnServer_localInstall() throws Exception {

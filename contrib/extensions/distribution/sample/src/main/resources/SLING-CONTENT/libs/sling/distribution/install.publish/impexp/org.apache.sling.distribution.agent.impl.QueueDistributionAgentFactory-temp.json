@@ -1,0 +1,10 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "temp",
+
+    "serviceName" : "distributionService",
+
+    "requestAuthorizationStrategy.target" : "(name=privilegeRead)",
+
+    "packageBuilder.target" : "(name=tempvlt)"
+}

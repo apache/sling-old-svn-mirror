@@ -45,7 +45,12 @@ public enum DistributionRequestType {
     /**
      * Action type for pulling content
      */
-    PULL;
+    PULL,
+
+    /**
+     * Action type for testing connection. No content is modified.
+     */
+    TEST;
 
     /**
      * Creates an action type for the given name. if the name cannot be mapped to a enum type or if

@@ -32,6 +32,12 @@ import org.apache.sling.distribution.packaging.DistributionPackage;
 public interface DistributionPackageBuilder {
 
     /**
+     * returns the type of a package. Only packages of this type will be accepted by the package builder.
+     * @return the package type.
+     */
+    String getType();
+
+    /**
      * creates a {@link org.apache.sling.distribution.packaging.DistributionPackage} for a specific {@link org.apache.sling.distribution.DistributionRequest}
      *
      * @param resourceResolver the resource resolver used to access the resources to be packaged

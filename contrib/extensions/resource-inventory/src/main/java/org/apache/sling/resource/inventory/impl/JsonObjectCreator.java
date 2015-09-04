@@ -32,6 +32,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
+import org.slf4j.LoggerFactory;
 
 /**
  * Creates a JSONObject from a resource
@@ -128,8 +129,6 @@ public abstract class JsonObjectCreator {
             return value;
         } else if ( value instanceof Integer ) {
             return value;
-        } else if ( value instanceof Double ) {
-            return value;
         } else if ( value != null ) {
             return value.toString();
         } else {
@@ -149,8 +148,7 @@ public abstract class JsonObjectCreator {
     private static void createProperty(final JSONObject obj,
                                  final ValueMap valueMap,
                                  final String key,
-                                 final Object value)
-    throws JSONException {
+                                 final Object value) {
         Object[] values = null;
         if (value.getClass().isArray()) {
             if (value instanceof long[]) {
@@ -176,7 +174,11 @@ public abstract class JsonObjectCreator {
             }
             // write out empty array
             if ( values.length == 0 ) {
-                obj.put(key, new JSONArray());
+                try {
+                    obj.put(key, new JSONArray());
+                } catch ( final JSONException ignore ) {
+                    // we ignore this
+                }
                 return;
             }
         }
@@ -188,26 +190,36 @@ public abstract class JsonObjectCreator {
             // their name
             // (colon is not allowed as a JCR property name)
             // in the name, and the value should be the size of the binary data
-            if (values == null) {
-                obj.put(":" + key, getLength(valueMap, -1, key, (InputStream)value));
-            } else {
-                final JSONArray result = new JSONArray();
-                for (int i = 0; i < values.length; i++) {
-                    result.put(getLength(valueMap, i, key, (InputStream)values[i]));
+            try {
+                if (values == null) {
+                    obj.put(":" + key, getLength(valueMap, -1, key, (InputStream)value));
+                } else {
+                    final JSONArray result = new JSONArray();
+                    for (int i = 0; i < values.length; i++) {
+                        result.put(getLength(valueMap, i, key, (InputStream)values[i]));
+                    }
+                    obj.put(":" + key, result);
                 }
-                obj.put(":" + key, result);
+            } catch ( final JSONException ignore ) {
+                // we ignore this
+                LoggerFactory.getLogger(JsonObjectCreator.class).warn("Unable to create JSON value", ignore);
             }
             return;
         }
 
-        if (!value.getClass().isArray()) {
-            obj.put(key, getValue(value));
-        } else {
-            final JSONArray result = new JSONArray();
-            for (Object v : values) {
-                result.put(getValue(v));
+        try {
+            if (!value.getClass().isArray()) {
+                obj.put(key, getValue(value));
+            } else {
+                final JSONArray result = new JSONArray();
+                for (Object v : values) {
+                    result.put(getValue(v));
+                }
+                obj.put(key, result);
             }
-            obj.put(key, result);
+        } catch ( final JSONException ignore ) {
+            // we ignore this
+            LoggerFactory.getLogger(JsonObjectCreator.class).warn("Unable to create JSON value", ignore);
         }
     }
 

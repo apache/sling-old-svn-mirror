@@ -18,7 +18,6 @@
  */
 package org.apache.sling.engine.impl;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Enumeration;
@@ -53,9 +52,9 @@ import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.engine.impl.filter.ServletFilterManager;
+import org.apache.sling.engine.impl.helper.ClientAbortException;
 import org.apache.sling.engine.impl.helper.RequestListenerManager;
 import org.apache.sling.engine.impl.helper.SlingServletContext;
-import org.apache.sling.engine.impl.helper.SlingServletContext3;
 import org.apache.sling.engine.impl.request.RequestData;
 import org.apache.sling.engine.impl.request.RequestHistoryConsolePlugin;
 import org.apache.sling.engine.jmx.RequestProcessorMBean;
@@ -110,7 +109,7 @@ public class SlingMainServlet extends GenericServlet {
 
     @Property
     private static final String PROP_SERVER_INFO = "sling.serverinfo";
-    
+
 
     @Property(value = {"X-Content-Type-Options=nosniff"},
             label = "Additional response headers",
@@ -181,7 +180,7 @@ public class SlingMainServlet extends GenericServlet {
     private ServiceRegistration requestProcessorMBeanRegistration;
 
     private String configuredServerInfo;
-    
+
     // ---------- Servlet API -------------------------------------------------
 
     @Override
@@ -217,13 +216,8 @@ public class SlingMainServlet extends GenericServlet {
                 requestProcessor.doProcessRequest(request, (HttpServletResponse) res,
                     resolver);
 
-            } catch (IOException ioe) {
-
-                // SLING-3498: Jetty with NIO does not have a wrapped
-                // SocketException any longer but a plain IOException
-                // from the NIO Socket channel. Hence we don't care for
-                // unwrapping and just log at DEBUG level
-                log.debug("service: Probably client aborted request or any other network problem", ioe);
+            } catch (ClientAbortException cae) {
+                log.debug("service: ClientAbortException, probable cause is client aborted request or network problem", cae);
 
             } catch (Throwable t) {
 
@@ -342,9 +336,9 @@ public class SlingMainServlet extends GenericServlet {
     @Activate
     protected void activate(final BundleContext bundleContext,
             final Map<String, Object> componentConfig) {
-        
+
         final String[] props = PropertiesUtil.toStringArray(componentConfig.get(PROP_ADDITIONAL_RESPONSE_HEADERS));
-        
+
         final ArrayList<StaticResponseHeader> mappings = new ArrayList<StaticResponseHeader>(props.length);
         for (final String prop : props) {
             if (prop != null && prop.trim().length() > 0 ) {
@@ -357,7 +351,7 @@ public class SlingMainServlet extends GenericServlet {
             }
         }
         RequestData.setAdditionalResponseHeaders(mappings);
-        
+
         configuredServerInfo = PropertiesUtil.toString(componentConfig.get(PROP_SERVER_INFO), null);
 
         // setup server info
@@ -410,11 +404,7 @@ public class SlingMainServlet extends GenericServlet {
 
         // now that the sling main servlet is registered with the HttpService
         // and initialized we can register the servlet context
-        if (getServletContext() == null || getServletContext().getMajorVersion() < 3) {
-            slingServletContext = new SlingServletContext(bundleContext, this);
-        } else {
-            slingServletContext = new SlingServletContext3(bundleContext, this);
-        }
+        slingServletContext = new SlingServletContext(bundleContext, this);
 
         // register render filters already registered after registration with
         // the HttpService as filter initialization may cause the servlet

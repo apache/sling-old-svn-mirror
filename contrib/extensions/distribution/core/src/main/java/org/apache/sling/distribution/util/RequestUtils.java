@@ -51,6 +51,13 @@ public class RequestUtils {
         URIBuilder uriBuilder = new URIBuilder(uri);
         uriBuilder.addParameter(DistributionParameter.ACTION.toString(), distributionRequest.getRequestType().name());
 
+        String[] paths = distributionRequest.getPaths();
+
+        if (paths != null) {
+            for (String path: paths) {
+                uriBuilder.addParameter(DistributionParameter.PATH.toString(), path);
+            }
+        }
 
         return uriBuilder.build();
     }

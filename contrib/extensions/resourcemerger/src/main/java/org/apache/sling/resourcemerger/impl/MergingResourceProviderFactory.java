@@ -33,28 +33,32 @@ class MergingResourceProviderFactory implements ResourceProviderFactory {
 
     private final boolean readOnly;
 
+    private final boolean traverseHierarchie;
+
     MergingResourceProviderFactory(final String mergeRootPath,
             final MergedResourcePicker picker,
-            final boolean readOnly) {
+            final boolean readOnly,
+            final boolean traverseHierarchie) {
         this.mergeRootPath = mergeRootPath;
         this.picker = picker;
         this.readOnly = readOnly;
+        this.traverseHierarchie = traverseHierarchie;
     }
 
     public ResourceProvider getResourceProvider(final Map<String, Object> authenticationInfo)
     throws LoginException {
         if ( this.readOnly ) {
-            return new MergingResourceProvider(mergeRootPath, picker, this.readOnly);
+            return new MergingResourceProvider(mergeRootPath, picker, this.readOnly, this.traverseHierarchie);
         }
-        return new CRUDMergingResourceProvider(mergeRootPath, picker);
+        return new CRUDMergingResourceProvider(mergeRootPath, picker, this.traverseHierarchie);
     }
 
     public ResourceProvider getAdministrativeResourceProvider(final Map<String, Object> authenticationInfo)
     throws LoginException {
         if ( this.readOnly ) {
-            return new MergingResourceProvider(mergeRootPath, picker, this.readOnly);
+            return new MergingResourceProvider(mergeRootPath, picker, this.readOnly, this.traverseHierarchie);
         }
-        return new CRUDMergingResourceProvider(mergeRootPath, picker);
+        return new CRUDMergingResourceProvider(mergeRootPath, picker, this.traverseHierarchie);
     }
 
 }

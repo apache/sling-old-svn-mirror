@@ -154,6 +154,11 @@ public class EngineConstants {
      * @since 2.1, Sling Engine 2.2
      */
     public static final String SLING_FILTER_SCOPE = "sling.filter.scope";
+    
+    /**
+     *@since 2.2, Sling Engine 2.4
+     */
+    public static final String SLING_FILTER_PATTERN = "sling.filter.pattern";
 
     /**
      * Filter scope value identifying a component level filter.

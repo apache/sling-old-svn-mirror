@@ -24,8 +24,8 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>20</version>
-    <relativePath>../../parent/pom.xml</relativePath>
+    <version>24</version>
+    <relativePath/>
   </parent>
 
   <groupId>org.apache.sling.samples</groupId>
@@ -45,8 +45,15 @@
   <dependencies>
     <!-- javax -->
     <dependency>
+      <groupId>javax.inject</groupId>
+      <artifactId>javax.inject</artifactId>
+      <version>1</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>javax.jcr</groupId>
       <artifactId>jcr</artifactId>
+      <version>2.0</version>
       <scope>provided</scope>
     </dependency>
     <!-- OSGi -->
@@ -79,7 +86,7 @@
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.query</artifactId>
-      <version>2.0.0</version>
+      <version>3.0.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -98,6 +105,15 @@
   </dependencies>
 
   <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.sling</groupId>
+          <artifactId>maven-sling-plugin</artifactId>
+          <version>2.1.0</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -134,13 +150,36 @@
 
   <profiles>
     <profile>
-      <id>localhost</id>
+      <id>launchpad@localhost</id>
       <build>
         <plugins>
           <plugin>
             <groupId>org.apache.sling</groupId>
             <artifactId>maven-sling-plugin</artifactId>
-            <version>2.1.0</version>
+            <executions>
+              <execution>
+                <phase>install</phase>
+                <goals>
+                  <goal>install</goal>
+                </goals>
+                <configuration>
+                  <slingUrl>http://localhost:8080/system/console/install</slingUrl>
+                  <user>admin</user>
+                  <password>admin</password>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>karaf@localhost</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>maven-sling-plugin</artifactId>
             <executions>
               <execution>
                 <phase>install</phase>
@@ -149,8 +188,8 @@
                 </goals>
                 <configuration>
                   <slingUrl>http://localhost:8181/system/console/install</slingUrl>
-                  <user>admin</user>
-                  <password>admin</password>
+                  <user>karaf</user>
+                  <password>karaf</password>
                 </configuration>
               </execution>
             </executions>

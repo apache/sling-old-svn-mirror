@@ -16,11 +16,15 @@
  */
 package org.apache.sling.ide.impl.resource.transport;
 
+import java.util.Collections;
+import java.util.Set;
+
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.RepositoryException;
 import org.apache.sling.ide.transport.RepositoryInfo;
 import org.apache.sling.ide.transport.Result;
+import org.apache.sling.ide.transport.Repository.CommandExecutionFlag;
 import org.apache.sling.ide.util.PathUtil;
 
 public abstract class AbstractCommand<T> implements Command<T> {
@@ -61,6 +65,12 @@ public abstract class AbstractCommand<T> implements Command<T> {
         // TODO - consider all 2xx and possibly 3xx as success?
 
         return responseStatus == 200 /* OK */|| responseStatus == 201 /* CREATED */;
+    }
+
+    @Override
+    public Set<CommandExecutionFlag> getFlags() {
+        // TODO - this is not supported
+        return Collections.emptySet();
     }
 
 }

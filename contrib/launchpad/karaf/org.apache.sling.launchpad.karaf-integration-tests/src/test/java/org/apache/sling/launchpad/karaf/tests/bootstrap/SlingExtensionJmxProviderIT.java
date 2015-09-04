@@ -39,7 +39,7 @@ public class SlingExtensionJmxProviderIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling-extension-jmx-provider")
+            addSlingFeatures("sling-extension-jmx-provider")
         );
     }
 

@@ -24,8 +24,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -55,12 +58,15 @@ import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.discovery.impl.cluster.ClusterViewService;
 import org.apache.sling.discovery.impl.common.heartbeat.HeartbeatHandler;
+import org.apache.sling.discovery.impl.common.resource.IsolatedInstanceDescription;
 import org.apache.sling.discovery.impl.common.resource.ResourceHelper;
 import org.apache.sling.discovery.impl.topology.TopologyViewImpl;
 import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistry;
 import org.apache.sling.discovery.impl.topology.connector.ConnectorRegistry;
 import org.apache.sling.settings.SlingSettingsService;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,8 +79,151 @@ import org.slf4j.LoggerFactory;
 @Service(value = { DiscoveryService.class, DiscoveryServiceImpl.class })
 public class DiscoveryServiceImpl implements DiscoveryService {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final static Logger logger = LoggerFactory.getLogger(DiscoveryServiceImpl.class);
 
+    /** SLING-4755 : encapsulates an event that yet has to be sent (asynchronously) for a particular listener **/
+    private final static class AsyncEvent {
+        private final TopologyEventListener listener;
+        private final TopologyEvent event;
+        AsyncEvent(TopologyEventListener listener, TopologyEvent event) {
+            if (listener==null) {
+                throw new IllegalArgumentException("listener must not be null");
+            }
+            if (event==null) {
+                throw new IllegalArgumentException("event must not be null");
+            }
+            this.listener = listener;
+            this.event = event;
+        }
+        @Override
+        public String toString() {
+            return "an AsyncEvent[event="+event+", listener="+listener+"]";
+        }
+    }
+    
+    /** 
+     * SLING-4755 : background runnable that takes care of asynchronously sending events.
+     * <p>
+     * API is: enqueue() puts a listener-event tuple onto the internal Q, which
+     * is processed in a loop in run that does so (uninterruptably, even catching
+     * Throwables to be 'very safe', but sleeps 5sec if an Error happens) until
+     * flushThenStop() is called - which puts the sender in a state where any pending
+     * events are still sent (flush) but then stops automatically. The argument of
+     * using flush before stop is that the event was originally meant to be sent
+     * before the bundle was stopped - thus just because the bundle is stopped
+     * doesn't undo the event and it still has to be sent. That obviously can
+     * mean that listeners can receive a topology event after deactivate. But I
+     * guess that was already the case before the change to become asynchronous.
+     */
+    private final static class AsyncEventSender implements Runnable {
+        
+        /** stopped is always false until flushThenStop is called **/
+        private boolean stopped = false;
+
+        /** eventQ contains all AsyncEvent objects that have yet to be sent - in order to be sent **/
+        private final List<AsyncEvent> eventQ = new LinkedList<AsyncEvent>();
+        
+        /** Enqueues a particular event for asynchronous sending to a particular listener **/
+        void enqueue(TopologyEventListener listener, TopologyEvent event) {
+            final AsyncEvent asyncEvent = new AsyncEvent(listener, event);
+            synchronized(eventQ) {
+                eventQ.add(asyncEvent);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("enqueue: enqueued event {} for async sending (Q size: {})", asyncEvent, eventQ.size());
+                }
+                eventQ.notifyAll();
+            }
+        }
+        
+        /**
+         * Stops the AsyncEventSender as soon as the queue is empty
+         */
+        void flushThenStop() {
+            synchronized(eventQ) {
+                logger.info("AsyncEventSender.flushThenStop: flushing (size: {}) & stopping...", eventQ.size());
+                stopped = true;
+                eventQ.notifyAll();
+            }
+        }
+        
+        /** Main worker loop that dequeues from the eventQ and calls sendTopologyEvent with each **/
+        public void run() {
+            logger.info("AsyncEventSender.run: started.");
+            try{
+                while(true) {
+                    try{
+                        final AsyncEvent asyncEvent;
+                        synchronized(eventQ) {
+                            while(!stopped && eventQ.isEmpty()) {
+                                try {
+                                    eventQ.wait();
+                                } catch (InterruptedException e) {
+                                    // issue a log debug but otherwise continue
+                                    logger.debug("AsyncEventSender.run: interrupted while waiting for async events");
+                                }
+                            }
+                            if (stopped) {
+                                if (eventQ.isEmpty()) {
+                                    // then we have flushed, so we can now finally stop
+                                    logger.info("AsyncEventSender.run: flush finished. stopped.");
+                                    return;
+                                } else {
+                                    // otherwise the eventQ is not yet empty, so we are still in flush mode
+                                    logger.info("AsyncEventSender.run: flushing another event. (pending {})", eventQ.size());
+                                }
+                            }
+                            asyncEvent = eventQ.remove(0);
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("AsyncEventSender.run: dequeued event {}, remaining: {}", asyncEvent, eventQ.size());
+                            }
+                        }
+                        if (asyncEvent!=null) {
+                            sendTopologyEvent(asyncEvent);
+                        }
+                    } catch(Throwable th) {
+                        // Even though we should never catch Error or RuntimeException
+                        // here's the thinking about doing it anyway:
+                        //  * in case of a RuntimeException that would be less dramatic
+                        //    and catching it is less of an issue - we rather want
+                        //    the background thread to be able to continue than
+                        //    having it finished just because of a RuntimeException
+                        //  * catching an Error is of course not so nice.
+                        //    however, should we really give up this thread even in
+                        //    case of an Error? It could be an OOM or some other 
+                        //    nasty one, for sure. But even if. Chances are that
+                        //    other parts of the system would also get that Error
+                        //    if it is very dramatic. If not, then catching it
+                        //    sounds feasible. 
+                        // My two cents..
+                        // the goal is to avoid quitting the AsyncEventSender thread
+                        logger.error("AsyncEventSender.run: Throwable occurred. Sleeping 5sec. Throwable: "+th, th);
+                        try {
+                            Thread.sleep(5000);
+                        } catch (InterruptedException e) {
+                            logger.warn("AsyncEventSender.run: interrupted while sleeping");
+                        }
+                    }
+                }
+            } finally {
+                logger.info("AsyncEventSender.run: quits (finally).");
+            }
+        }
+
+        /** Actual sending of the asynchronous event - catches RuntimeExceptions a listener can send. (Error is caught outside) **/
+        private void sendTopologyEvent(AsyncEvent asyncEvent) {
+            final TopologyEventListener listener = asyncEvent.listener;
+            final TopologyEvent event = asyncEvent.event;
+            logger.debug("sendTopologyEvent: start: listener: {}, event: {}", listener, event);
+            try{
+                listener.handleTopologyEvent(event);
+            } catch(final Exception e) {
+                logger.warn("sendTopologyEvent: handler threw exception. handler: "+listener+", exception: "+e, e);
+            }
+            logger.debug("sendTopologyEvent: start: listener: {}, event: {}", listener, event);
+        }
+        
+    }
+    
     @Reference
     private SlingSettingsService settingsService;
 
@@ -96,6 +245,9 @@ public class DiscoveryServiceImpl implements DiscoveryService {
      **/
     private boolean activated = false;
 
+    /** SLING-3750 : set when activate() could not send INIT events due to being in isolated mode **/
+    private boolean initEventDelayed = false;
+    
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
 
@@ -123,14 +275,44 @@ public class DiscoveryServiceImpl implements DiscoveryService {
     /** the old view previously valid and sent to the TopologyEventListeners **/
     private TopologyViewImpl oldView;
 
-    /** whether or not there is a delayed event sending pending **/
-    private boolean delayedEventPending = false;
+    /** 
+     * whether or not there is a delayed event sending pending.
+     * Marked volatile to allow getTopology() to read this without need for
+     * synchronized(lock) (which would be deadlock-prone). (introduced with SLING-4638).
+     **/
+    private volatile boolean delayedEventPending = false;
 
+    private ServiceRegistration mbeanRegistration;
+
+    /** SLING-4755 : reference to the background AsyncEventSender. Started/stopped in activate/deactivate **/
+    private AsyncEventSender asyncEventSender;
+
+    protected void registerMBean(BundleContext bundleContext) {
+        if (this.mbeanRegistration!=null) {
+            try{
+                if ( this.mbeanRegistration != null ) {
+                    this.mbeanRegistration.unregister();
+                    this.mbeanRegistration = null;
+                }
+            } catch(Exception e) {
+                logger.error("registerMBean: Error on unregister: "+e, e);
+            }
+        }
+        try {
+            final Dictionary<String, String> mbeanProps = new Hashtable<String, String>();
+            mbeanProps.put("jmx.objectname", "org.apache.sling:type=discovery,name=DiscoveryServiceImpl");
+
+            final DiscoveryServiceMBeanImpl mbean = new DiscoveryServiceMBeanImpl(heartbeatHandler);
+            this.mbeanRegistration = bundleContext.registerService(DiscoveryServiceMBeanImpl.class.getName(), mbean, mbeanProps);
+        } catch (Throwable t) {
+            logger.warn("registerMBean: Unable to register DiscoveryServiceImpl MBean", t);
+        }
+    }
     /**
      * Activate this service
      */
     @Activate
-    protected void activate() {
+    protected void activate(final BundleContext bundleContext) {
         logger.debug("DiscoveryServiceImpl activating...");
 
         if (settingsService == null) {
@@ -143,6 +325,7 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         slingId = settingsService.getSlingId();
 
         oldView = (TopologyViewImpl) getTopology();
+        oldView.markOld();
 
         // make sure the first heartbeat is issued as soon as possible - which
         // is right after this service starts. since the two (discoveryservice
@@ -153,14 +336,35 @@ public class DiscoveryServiceImpl implements DiscoveryService {
 
         final TopologyEventListener[] registeredServices;
         synchronized (lock) {
+            // SLING-4755 : start the asyncEventSender in the background
+            //              will be stopped in deactivate (at which point
+            //              all pending events will still be sent but no
+            //              new events can be enqueued)
+            asyncEventSender = new AsyncEventSender();
+            Thread th = new Thread(asyncEventSender);
+            th.setName("Discovery-AsyncEventSender");
+            th.setDaemon(true);
+            th.start();
+
             registeredServices = this.eventListeners;
             doUpdateProperties();
 
             TopologyViewImpl newView = (TopologyViewImpl) getTopology();
-            TopologyEvent event = new TopologyEvent(Type.TOPOLOGY_INIT, null,
-                    newView);
-            for (final TopologyEventListener da : registeredServices) {
-                sendTopologyEvent(da, event);
+            final boolean isIsolatedView = isIsolated(newView);
+            if (config.isDelayInitEventUntilVoted() && isIsolatedView) {
+                // SLING-3750: just issue a log.info about the delaying
+                logger.info("activate: this instance is in isolated mode and must yet finish voting before it can send out TOPOLOGY_INIT.");
+                initEventDelayed = true;
+            } else {
+                if (isIsolatedView) {
+                    // SLING-3750: issue a log.info about not-delaying even though isolated
+                    logger.info("activate: this instance is in isolated mode and likely should delay TOPOLOGY_INIT - but corresponding config ('delayInitEventUntilVoted') is disabled.");
+                }
+                final TopologyEvent event = new TopologyEvent(Type.TOPOLOGY_INIT, null,
+                        newView);
+                for (final TopologyEventListener da : registeredServices) {
+                    enqueueAsyncTopologyEvent(da, event);
+                }
             }
             activated = true;
             oldView = newView;
@@ -180,18 +384,33 @@ public class DiscoveryServiceImpl implements DiscoveryService {
                 }
             }
         }
+        
+        registerMBean(bundleContext);        
 
         logger.debug("DiscoveryServiceImpl activated.");
     }
 
-    private void sendTopologyEvent(final TopologyEventListener da, final TopologyEvent event) {
-    	if (logger.isDebugEnabled()) {
-    		logger.debug("sendTopologyEvent: sending topologyEvent {}, to {}", event, da);
-    	}
-        try{
-            da.handleTopologyEvent(event);
-        } catch(final Exception e) {
-            logger.warn("sendTopologyEvent: handler threw exception. handler: "+da+", exception: "+e, e);
+    private boolean isIsolated(TopologyViewImpl view) {
+        final InstanceDescription localInstance = view.getLocalInstance();
+        // 'instanceof' is not so nice here - but anything else requires 
+        // excessive changing (introducing new classes/interfaces)
+        // which is an overkill in and of itself.. thus: 'instanceof'
+        return localInstance instanceof IsolatedInstanceDescription;
+    }
+
+    private void enqueueAsyncTopologyEvent(final TopologyEventListener da, final TopologyEvent event) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("enqueueAsyncTopologyEvent: sending topologyEvent {}, to {}", event, da);
+        }
+        if (asyncEventSender==null) {
+            // this should never happen - sendTopologyEvent should only be called
+            // when activated
+            logger.warn("enqueueAsyncTopologyEvent: asyncEventSender is null, cannot send event ({}, {})!", da, event);
+            return;
+        }
+        asyncEventSender.enqueue(da, event);
+        if (logger.isDebugEnabled()) {
+            logger.debug("enqueueAsyncTopologyEvent: sending topologyEvent {}, to {}", event, da);
         }
     }
 
@@ -203,6 +422,19 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         logger.debug("DiscoveryServiceImpl deactivated.");
         synchronized (lock) {
             activated = false;
+            if (asyncEventSender!=null) {
+                // it should always be not-null though
+                asyncEventSender.flushThenStop();
+                asyncEventSender = null;
+            }
+        }
+        try{
+            if ( this.mbeanRegistration != null ) {
+                this.mbeanRegistration.unregister();
+                this.mbeanRegistration = null;
+            }
+        } catch(Exception e) {
+            logger.error("deactivate: Error on unregister: "+e, e);
         }
     }
 
@@ -214,19 +446,23 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         logger.debug("bindTopologyEventListener: Binding TopologyEventListener {}",
                 eventListener);
 
-        boolean activated = false;
         synchronized (lock) {
             final List<TopologyEventListener> currentList = new ArrayList<TopologyEventListener>(
                     Arrays.asList(eventListeners));
             currentList.add(eventListener);
             this.eventListeners = currentList
                     .toArray(new TopologyEventListener[currentList.size()]);
-            activated = this.activated;
-        }
-
-        if (activated) {
-            sendTopologyEvent(eventListener, new TopologyEvent(
-                    Type.TOPOLOGY_INIT, null, getTopology()));
+            if (activated && !initEventDelayed) {
+                final TopologyViewImpl topology = (TopologyViewImpl) getTopology();
+                if (delayedEventPending) {
+                    // that means that for other TopologyEventListeners that were already bound
+                    // and in general: the topology is currently CHANGING
+                    // so we must reflect this with the isCurrent() flag (SLING-4638)
+                    topology.markOld();
+                }
+                enqueueAsyncTopologyEvent(eventListener, new TopologyEvent(
+                        Type.TOPOLOGY_INIT, null, topology));
+            }
         }
     }
 
@@ -424,7 +660,10 @@ public class DiscoveryServiceImpl implements DiscoveryService {
                 .listInstances(localClusterView);
         topology.addInstances(attachedInstances);
 
-        // TODO: isCurrent() might be wrong!!!
+        // SLING-4638: set 'current' correctly
+        if (isIsolated(topology) || delayedEventPending) {
+            topology.markOld();
+        }
 
         return topology;
     }
@@ -465,6 +704,31 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         }
         TopologyViewImpl newView = (TopologyViewImpl) getTopology();
         TopologyViewImpl oldView = this.oldView;
+        
+        if (initEventDelayed) {
+            if (isIsolated(newView)) {
+                // we cannot proceed until we're out of the isolated mode..
+                // SLING-4535 : while this has warning character, it happens very frequently,
+                //              eg also when binding a PropertyProvider (so normal processing)
+                //              hence lowering to info for now
+                logger.info("handlePotentialTopologyChange: still in isolated mode - cannot send TOPOLOGY_INIT yet.");
+                return;
+            }
+            logger.info("handlePotentialTopologyChange: new view is no longer isolated sending delayed TOPOLOGY_INIT now.");
+            final TopologyEvent initEvent = new TopologyEvent(Type.TOPOLOGY_INIT, null,
+                    newView); // SLING-4638: OK: newView is current==true as we're just coming out of initEventDelayed first time.
+            for (final TopologyEventListener da : eventListeners) {
+                enqueueAsyncTopologyEvent(da, initEvent);
+            }
+            // now after having sent INIT events, we need to set oldView to what we've
+            // just sent out - which is newView. This makes sure that we don't send
+            // out any CHANGING/CHANGED event afterwards based on an 'isolated-oldView'
+            // (which would be wrong). Hence:
+            this.oldView = newView;
+            oldView = newView;
+
+            initEventDelayed = false;
+        }
 
         Type difference = newView.compareTopology(oldView);
         if (difference == null) {
@@ -481,14 +745,14 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         oldView.markOld();
         if (difference!=Type.TOPOLOGY_CHANGED) {
             for (final TopologyEventListener da : eventListeners) {
-                sendTopologyEvent(da, new TopologyEvent(difference, oldView,
+                enqueueAsyncTopologyEvent(da, new TopologyEvent(difference, oldView,
                         newView));
             }
         } else { // TOPOLOGY_CHANGED
 
         	// send a TOPOLOGY_CHANGING first
             for (final TopologyEventListener da : eventListeners) {
-                sendTopologyEvent(da, new TopologyEvent(Type.TOPOLOGY_CHANGING, oldView,
+                enqueueAsyncTopologyEvent(da, new TopologyEvent(Type.TOPOLOGY_CHANGING, oldView,
                         null));
             }
 
@@ -510,7 +774,7 @@ public class DiscoveryServiceImpl implements DiscoveryService {
                             // irrespective of the difference, send the latest topology
                             // via a topology_changed event (since we already sent a changing)
                             for (final TopologyEventListener da : eventListeners) {
-                                sendTopologyEvent(da, new TopologyEvent(Type.TOPOLOGY_CHANGED,
+                                enqueueAsyncTopologyEvent(da, new TopologyEvent(Type.TOPOLOGY_CHANGED,
                                         DiscoveryServiceImpl.this.oldView, newView));
                             }
                             DiscoveryServiceImpl.this.oldView = newView;
@@ -531,7 +795,7 @@ public class DiscoveryServiceImpl implements DiscoveryService {
 
         	// otherwise, send the TOPOLOGY_CHANGED now
             for (final TopologyEventListener da : eventListeners) {
-                sendTopologyEvent(da, new TopologyEvent(Type.TOPOLOGY_CHANGED, oldView,
+                enqueueAsyncTopologyEvent(da, new TopologyEvent(Type.TOPOLOGY_CHANGED, oldView,
                         newView));
             }
         }
@@ -663,8 +927,10 @@ public class DiscoveryServiceImpl implements DiscoveryService {
 	            return;
 	        }
 	        logger.error("forcedShutdown: sending TOPOLOGY_CHANGING to all listeners");
+	        // SLING-4638: make sure the oldView is really marked as old:
+	        oldView.markOld();
             for (final TopologyEventListener da : eventListeners) {
-                sendTopologyEvent(da, new TopologyEvent(Type.TOPOLOGY_CHANGING, oldView,
+                enqueueAsyncTopologyEvent(da, new TopologyEvent(Type.TOPOLOGY_CHANGING, oldView,
                         null));
             }
 	        logger.error("forcedShutdown: deactivating DiscoveryService.");

@@ -213,6 +213,7 @@ public class RunMode
         if ( found == null ) {
             found = new Configuration(pid, factoryPid);
             this.configurations.add(found);
+            Collections.sort(this.configurations.items);
         }
         return found;
     }

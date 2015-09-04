@@ -39,7 +39,7 @@ public class SlingAuthOpenidIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling-auth-openid")
+            addSlingFeatures("sling-auth-openid")
         );
     }
 

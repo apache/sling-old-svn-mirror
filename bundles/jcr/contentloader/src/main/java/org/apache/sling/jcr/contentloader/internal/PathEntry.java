@@ -74,12 +74,12 @@ public class PathEntry extends ImportOptions {
     public static final String AUTOCHECKOUT_DIRECTIVE = "autoCheckout";
 
     /**
-     * The ignore import providers directive specifying whether the available {@link ImportProvider}s
+     * The ignore content readers directive specifying whether the available {@link ContentReader}s
      * should be used during content loading. This is a string value that defaults to the empty
      * string..
      * @since 2.0.4
      */
-    public static final String IGNORE_IMPORT_PROVIDERS_DIRECTIVE = "ignoreImportProviders";
+    public static final String IGNORE_CONTENT_READERS_DIRECTIVE = "ignoreImportProviders";
 
     /** The path for the initial content. */
     private final String path;
@@ -99,8 +99,8 @@ public class PathEntry extends ImportOptions {
     /** Should versionable nodes be auto checked out when necessary? */
     private final boolean autoCheckout;
     
-    /** Which import providers should be ignored? @since 2.0.4 */
-    private final List<String> ignoreImportProviders;
+    /** Which content readers should be ignored? @since 2.0.4 */
+    private final List<String> ignoreContentReaders;
 
     /**
      * Target path where initial content will be loaded. If it´s null then
@@ -190,12 +190,12 @@ public class PathEntry extends ImportOptions {
         }
 
         // expand directive
-        this.ignoreImportProviders = new ArrayList<String>();
-        final String expandValue = entry.getDirectiveValue(IGNORE_IMPORT_PROVIDERS_DIRECTIVE);
+        this.ignoreContentReaders = new ArrayList<String>();
+        final String expandValue = entry.getDirectiveValue(IGNORE_CONTENT_READERS_DIRECTIVE);
         if ( expandValue != null && expandValue.length() > 0 ) {
             final StringTokenizer st = new StringTokenizer(expandValue, ",");
             while ( st.hasMoreTokens() ) {
-                this.ignoreImportProviders.add(st.nextToken());
+                this.ignoreContentReaders.add(st.nextToken());
             }
         }
 
@@ -257,7 +257,7 @@ public class PathEntry extends ImportOptions {
         if ( extension.startsWith(".") ) {
             extension = extension.substring(1);
         }
-        return this.ignoreImportProviders.contains(extension);
+        return this.ignoreContentReaders.contains(extension);
     }
 
     public String getTarget() {

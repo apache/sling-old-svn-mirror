@@ -47,7 +47,6 @@ import org.apache.jackrabbit.oak.spi.commit.Observer;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProvider;
 import org.apache.sling.jcr.resource.internal.helper.jcr.PathMapper;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -80,7 +79,8 @@ public class OakResourceListener extends NodeObserver implements Closeable {
             final ObservationListenerSupport support,
             final BundleContext bundleContext,
             final Executor executor,
-            final PathMapper pathMapper)
+            final PathMapper pathMapper,
+            final int  observationQueueLength)
     throws RepositoryException {
         super("/", "jcr:primaryType", "sling:resourceType", "sling:resourceSuperType");
         this.support = support;
@@ -91,13 +91,22 @@ public class OakResourceListener extends NodeObserver implements Closeable {
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling JCR Observation Listener for Oak");
 
-        final Observer observer = new BackgroundObserver(this, executor);
+        final Observer observer = new BackgroundObserver(this, executor, observationQueueLength) {
+            @Override
+            protected void added(int queueSize) {
+                if (queueSize == observationQueueLength) {
+                    logger.warn("Revision queue for observer {} is full (max = {}). Further revisions will be compacted.",
+                            getClass().getName(), observationQueueLength);
+                }
+            }
+        };
         serviceRegistration = bundleContext.registerService(Observer.class.getName(), observer, props);
     }
 
     /**
      * Dispose this listener.
      */
+    @Override
     public void close() throws IOException {
         serviceRegistration.unregister();
         this.support.dispose();
@@ -112,7 +121,9 @@ public class OakResourceListener extends NodeObserver implements Closeable {
             final CommitInfo commitInfo) {
         final Map<String, Object> changes = toEventProperties(added, deleted, changed);
         addCommitInfo(changes, commitInfo);
-        logger.debug("added(changes={})", changes);
+        if ( logger.isDebugEnabled() ) {
+            logger.debug("added(path={}, added={}, deleted={}, changed={})", new Object[] {path, added, deleted, changed});
+        }
         sendOsgiEvent(path, TOPIC_RESOURCE_ADDED, changes, properties);
     }
 
@@ -125,7 +136,9 @@ public class OakResourceListener extends NodeObserver implements Closeable {
             final CommitInfo commitInfo) {
         final Map<String, Object> changes = toEventProperties(added, deleted, changed);
         addCommitInfo(changes, commitInfo);
-        logger.debug("deleted(changes={})", changes);
+        if ( logger.isDebugEnabled() ) {
+            logger.debug("deleted(path={}, added={}, deleted={}, changed={})", new Object[] {path, added, deleted, changed});
+        }
         sendOsgiEvent(path, TOPIC_RESOURCE_REMOVED, changes, properties);
     }
 
@@ -138,7 +151,9 @@ public class OakResourceListener extends NodeObserver implements Closeable {
             final CommitInfo commitInfo) {
         final Map<String, Object> changes = toEventProperties(added, deleted, changed);
         addCommitInfo(changes, commitInfo);
-        logger.debug("changed (changes={})", changes);
+        if ( logger.isDebugEnabled() ) {
+            logger.debug("changed(path={}, added={}, deleted={}, changed={})", new Object[] {path, added, deleted, changed});
+        }
         sendOsgiEvent(path, TOPIC_RESOURCE_CHANGED, changes, properties);
     }
 

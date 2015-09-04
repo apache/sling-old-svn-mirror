@@ -151,6 +151,10 @@ public class Activator extends Plugin {
         return (Logger) ServiceUtil.getNotNull(tracer);
     }
     
+    /**
+     * @deprecated This should not be used directly to communicate with the client . There is no direct replacement
+     */
+    @Deprecated
     public void issueConsoleLog(String actionType, String path, String message) {
         Map<String, Object> props = new HashMap<String, Object>();
         props.put(CommandExecutionProperties.RESULT_TEXT, message);

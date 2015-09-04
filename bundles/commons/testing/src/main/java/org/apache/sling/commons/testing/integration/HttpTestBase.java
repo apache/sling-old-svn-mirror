@@ -79,6 +79,9 @@ public class HttpTestBase extends TestCase {
 
     public static final String SLING_POST_SERVLET_CREATE_SUFFIX = "/";
 	public static final String DEFAULT_EXT = ".txt";
+	
+	private String readinessCheckExtension = ".txt";
+	private String readinessCheckContentTypePrefix = "text/plain";
 
 	public static final String EXECUTE_RESOURCE_TYPE = "SlingTesting" + HttpTestBase.class.getSimpleName();
 	private static int executeCounter;
@@ -100,6 +103,10 @@ public class HttpTestBase extends TestCase {
 
     /** Need to execute javascript code */
     private final JavascriptEngine javascriptEngine = new JavascriptEngine();
+
+    public HttpTestBase() {
+        super("");
+    }
 
     /** Class that creates a test node under the given parentPath, and
      *  stores useful values for testing. Created for JspScriptingTest,
@@ -272,7 +279,7 @@ public class HttpTestBase extends TestCase {
         String urlOfNewNode = null; 
         try {
             urlOfNewNode = testClient.createNode(url, props, null, true);
-            final GetMethod get = new GetMethod(urlOfNewNode + DEFAULT_EXT);
+            final GetMethod get = new GetMethod(urlOfNewNode + readinessCheckExtension);
             final int status = httpClient.executeMethod(get);
             if(status!=200) {
                 throw new HttpStatusCodeException(200, status, "GET", urlOfNewNode);
@@ -280,8 +287,8 @@ public class HttpTestBase extends TestCase {
 
             final Header h = get.getResponseHeader("Content-Type");
             final String contentType = h==null ? "" : h.getValue();
-            if(!contentType.startsWith("text/plain")) {
-                throw new IOException("Expected Content-Type=text/plain but got '" + contentType + "' for URL=" + urlOfNewNode);
+            if(!contentType.startsWith(readinessCheckContentTypePrefix)) {
+                throw new IOException("Expected Content-Type=" + readinessCheckContentTypePrefix + " but got '" + contentType + "' for URL=" + urlOfNewNode);
             }
 
             final String content = get.getResponseBodyAsString();
@@ -545,5 +552,11 @@ public class HttpTestBase extends TestCase {
             }
         }
         return content.toString();
+    }
+
+    /** Set the extension and content-type prefix to use for GET requests that check Sling readiness */
+    public final void setReadinessContentType(String extension, String contentTypePrefix) {
+        readinessCheckExtension = extension;
+        readinessCheckContentTypePrefix = contentTypePrefix;
     }
 }

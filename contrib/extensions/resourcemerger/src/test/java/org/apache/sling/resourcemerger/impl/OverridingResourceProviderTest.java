@@ -55,10 +55,16 @@ public class OverridingResourceProviderTest {
      * /apps/a/1/d
      * /apps/a/1/d/1
      * /apps/a/1/d/1/a
+     * /apps/a/1/d/1/b/1
      * /apps/a/1/c
      * /apps/a/2/c
-     * 
+     * /apps/a/3
+     *
      * /apps/a/2 has the super type of /apps/a/1
+     * /apps/a/3 has the super type of /apps/a/2
+     *
+     * /apps/a/4 has the super type of /apps/a/4/b/4
+     * /apps/x has the super type of x/y
      */
     @Before
     public void setup() throws Exception {
@@ -76,12 +82,22 @@ public class OverridingResourceProviderTest {
                     .resource("/apps/a/1/d").p("a", "1").p("b", "2")
                     .resource("1").p("1", "a").p("2", "b")
                     .resource("a")
+                    .resource("/apps/a/1/d/1/b")
+                    .resource("1")
                     .resource("/apps/a/1/c").p("1", "a").p("2", "b")
                     .resource("/apps/a/2").p(SUPER_TYPE, "a/1").p("b", "2").p(MergedResourceConstants.PN_HIDE_CHILDREN, new String[] {"b"})
                     .resource("c").p("1", "c")
+                    .resource("/apps/a/3").p(SUPER_TYPE, "a/2")
+                    .resource("/apps/a/4").p(SUPER_TYPE, "/apps/a/4/b/4")
+                    .resource("b")
+                    .resource("4")
+                    .resource("d")
+                    .resource("/apps/x").p(SUPER_TYPE, "x/y")
+                    .resource("y")
+                    .resource("z")
                     .commit();
 
-        this.provider = new MergingResourceProvider("/override", new OverridingResourcePicker(), true);
+        this.provider = new MergingResourceProvider("/override", new OverridingResourcePicker(), false, true);
     }
 
     @Test
@@ -105,6 +121,14 @@ public class OverridingResourceProviderTest {
     }
 
     @Test
+    public void testInheritingFromGrandParent() {
+        assertNotNull(this.provider.getResource(this.resolver, "/override/apps/a/3/a"));
+        assertNull(this.provider.getResource(this.resolver, "/override/apps/a/3/b"));
+        assertNotNull(this.provider.getResource(this.resolver, "/override/apps/a/3/c"));
+        assertNotNull(this.provider.getResource(this.resolver, "/override/apps/a/3/d"));
+    }
+
+    @Test
     public void testHideChildrenFromList() {
         final Resource rsrcA2 = this.provider.getResource(this.resolver, "/override/apps/a/2");
         final Iterator<Resource> children = this.provider.listChildren(rsrcA2);
@@ -122,6 +146,9 @@ public class OverridingResourceProviderTest {
         assertNotNull(this.provider.getResource(this.resolver, "/override/apps/a/1/b/1"));
         assertNull(this.provider.getResource(this.resolver, "/override/apps/a/2/b"));
         assertNull(this.provider.getResource(this.resolver, "/override/apps/a/2/b/1"));
+        assertNotNull(this.provider.getResource(this.resolver, "/override/apps/a/2/d/1/a"));
+        assertNotNull(this.provider.getResource(this.resolver, "/override/apps/a/2/d/1/b"));
+        assertNotNull(this.provider.getResource(this.resolver, "/override/apps/a/2/d/1/b/1"));
     }
 
     // doing it this way because the mock resource resolver doesn't
@@ -151,4 +178,14 @@ public class OverridingResourceProviderTest {
         assertNotNull(d1a);
     }
 
+    @Test
+    public void testLoopInInheritance() {
+        final Resource rsrcA4 = this.provider.getResource(this.resolver, "/override/apps/a/4");
+
+        Resource d = getChildResource(rsrcA4, "d");
+        assertNotNull(d);
+
+        final Resource z = this.provider.getResource(this.resolver, "/override/apps/x/z");
+        assertNotNull(z);
+    }
 }

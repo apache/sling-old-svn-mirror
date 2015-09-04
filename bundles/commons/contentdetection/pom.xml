@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>sling</artifactId>
+        <version>24</version>
+        <relativePath />
+    </parent>
+
+    <artifactId>org.apache.sling.commons.contentdetection</artifactId>
+    <version>1.0.3-SNAPSHOT</version>
+    <packaging>bundle</packaging>
+
+    <name>Apache Sling Content Detection Support</name>
+    <description>Content-based MIME type detection</description>
+
+    <properties>
+        <exam.version>3.5.0</exam.version>
+        <url.version>1.5.2</url.version>
+        <bundle.file.name>${basedir}/target/${project.build.finalName}.jar</bundle.file.name>
+        <sling.launchpad.version>7</sling.launchpad.version>
+        <powermock.version>1.6.2</powermock.version>
+        <pax.vm.options>-Xmx256M -XX:MaxPermSize=256m</pax.vm.options>
+        
+        <!-- argLine needs to be here so that jacoco plugin adds its own stuff to it -->
+        <argLine>${pax.vm.options}</argLine>
+    </properties>
+    
+    <scm>
+        <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/contentdetection</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/contentdetection</developerConnection>
+        <url>http://sling.apache.org/documentation/bundles/mime-type-support-commons-mime.html</url>
+    </scm>
+
+    <dependencies>
+
+        <!-- OSGi Dependencies-->
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Sling Dependencies-->
+        <dependency>
+            <version>2.1.8</version>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.mime</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Other Dependencies-->
+        <dependency>
+            <version>1.2</version>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Test Dependencies-->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.junit.core</artifactId>
+            <version>1.0.10</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit-addons</groupId>
+            <artifactId>junit-addons</artifactId>
+            <version>1.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.launchpad</artifactId>
+            <version>${sling.launchpad.version}</version>
+            <type>xml</type>
+            <classifier>bundlelist</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.paxexam.util</artifactId>
+            <version>1.0.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-container-native</artifactId>
+            <version>${exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-link-mvn</artifactId>
+            <version>${exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.framework</artifactId>
+            <version>4.2.1</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>derby.log</exclude>
+                        <exclude>jackrabbit/**</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <systemPropertyVariables>
+                        <java.protocol.handler.pkgs>org.ops4j.pax.url</java.protocol.handler.pkgs>
+                        <bundle.file.name>${bundle.file.name}</bundle.file.name>
+                        <sling.launchpad.version>${sling.launchpad.version}</sling.launchpad.version>
+                    </systemPropertyVariables>
+                    <classpathDependencyExcludes>
+                        <!-- The osgi.org dependencies cause trouble with pax exam -->
+                        <classpathDependencyExcludes>org.osgi:org.osgi.core</classpathDependencyExcludes>
+                        <classpathDependencyExcludes>org.osgi:org.osgi.compendium</classpathDependencyExcludes>
+                    </classpathDependencyExcludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>${basedir}</directory>
+                            <includes>
+                                <include>oak/**</include>
+                                <include>jackrabbit/**</include>
+                                <include>derby.log</include>
+                            </includes>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

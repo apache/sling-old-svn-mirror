@@ -50,7 +50,7 @@ public class LargeTopologyWithHubTest {
     public static void setup() throws Throwable {
         instances = new LinkedList<Instance>();
         hub = TopologyTestHelper.createInstance(instances, "hub");
-        final int defaultHeartbeatTimeout = 300;
+        final int defaultHeartbeatTimeout = 1500;
         final int heartbeatTimeout = TimeoutsProvider.getInstance().getTimeout(defaultHeartbeatTimeout);
         hub.getConfig().setHeartbeatTimeout(heartbeatTimeout);
         
@@ -76,7 +76,8 @@ public class LargeTopologyWithHubTest {
     
     @Test
     @Retry(timeoutMsec=30000, intervalMsec=500)
-    public void testLargeTopologyWithHub() {
+    public void testLargeTopologyWithHub() throws Exception {
+        hub.dumpRepo();
         final TopologyView tv = hub.getDiscoveryService().getTopology();
         logger.info(
                 "testLargeTopologyWithHub: checking if all connectors are registered, TopologyView has {} Instances", 

@@ -97,7 +97,7 @@ public class DistributedEventReceiver
     private volatile Set<String> instances;
 
     /** The service registration. */
-    private volatile ServiceRegistration<?> serviceRegistration;
+    private volatile ServiceRegistration serviceRegistration;
 
     public DistributedEventReceiver(final BundleContext bundleContext,
             final String rootPath,
@@ -127,7 +127,7 @@ public class DistributedEventReceiver
                 props.put("scheduler.period", 1800L);
                 props.put("scheduler.concurrent", Boolean.FALSE);
 
-                final ServiceRegistration<?> reg =
+                final ServiceRegistration reg =
                         bundleContext.registerService(new String[] {EventHandler.class.getName(),
                                                                    Runnable.class.getName(),
                                                                    TopologyEventListener.class.getName()},
@@ -301,7 +301,7 @@ public class DistributedEventReceiver
                 final Resource baseResource = resolver.getResource(this.rootPath);
                 // sanity check - should never be null
                 if ( baseResource != null ) {
-                    final ResourceUtil.BatchResourceRemover brr = ResourceUtil.getBatchResourceRemover(50);
+                    final ResourceHelper.BatchResourceRemover brr = ResourceHelper.getBatchResourceRemover(50);
                     final Iterator<Resource> iter = baseResource.listChildren();
                     while ( iter.hasNext() ) {
                         final Resource rootResource = iter.next();
@@ -333,7 +333,7 @@ public class DistributedEventReceiver
             ResourceResolver resolver = null;
             try {
                 resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-                final ResourceUtil.BatchResourceRemover brr = ResourceUtil.getBatchResourceRemover(50);
+                final ResourceHelper.BatchResourceRemover brr = ResourceHelper.getBatchResourceRemover(50);
 
                 final Resource baseResource = resolver.getResource(this.ownRootPath);
                 // sanity check - should never be null

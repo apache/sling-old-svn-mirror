@@ -61,16 +61,20 @@ public class PABundleRefresher implements BundleRefresher, FrameworkListener {
     public void refreshBundles(final InstallationContext ctx,
                                final List<Bundle> bundles,
                                final boolean wait) {
-        if ( bundles.size() > 0 ) {
-            ctx.log("Refreshing {} bundles: {}", bundles.size(), bundles);
+        if ( bundles == null || bundles.size() > 0 ) {
+            if ( bundles == null ) {
+                ctx.log("Full package refreshing");
+            } else {
+                ctx.log("Refreshing {} bundles: {}", bundles.size(), bundles);
+            }
             if ( !wait ) {
-                this.pckAdmin.refreshPackages(bundles.toArray(new Bundle[bundles.size()]));
+                this.pckAdmin.refreshPackages(bundles == null ? null : bundles.toArray(new Bundle[bundles.size()]));
             } else {
                 this.refreshEventCount = -1;
                 this.bundleContext.addFrameworkListener(this);
                 try {
                     this.refreshEventCount = 0;
-                    this.pckAdmin.refreshPackages(bundles.toArray(new Bundle[bundles.size()]));
+                    this.pckAdmin.refreshPackages(bundles == null ? null : bundles.toArray(new Bundle[bundles.size()]));
                     final long end = System.currentTimeMillis() + (MAX_REFRESH_PACKAGES_WAIT_SECONDS * 1000);
                     do {
                         synchronized ( this.lock ) {
@@ -95,7 +99,11 @@ public class PABundleRefresher implements BundleRefresher, FrameworkListener {
                     this.bundleContext.removeFrameworkListener(this);
                 }
             }
-            ctx.log("Done refreshing {} bundles", bundles.size());
+            if ( bundles == null ) {
+                ctx.log("Done full package refresh");
+            } else {
+                ctx.log("Done refreshing {} bundles", bundles.size());
+            }
         }
     }
 

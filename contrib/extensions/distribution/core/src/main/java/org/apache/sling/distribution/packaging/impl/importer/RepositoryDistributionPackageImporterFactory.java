@@ -30,10 +30,11 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
+import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +42,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Factory for {@link org.apache.sling.distribution.packaging.impl.importer.RepositoryDistributionPackageImporter}s
  */
-@Component(label = "Sling Distribution Importer - Repository Package Importer Factory",
+@Component(label = "Apache Sling Distribution Importer - Repository Package Importer Factory",
         metatype = true,
         configurationFactory = true,
         specVersion = "1.1",
@@ -55,7 +56,7 @@ public class RepositoryDistributionPackageImporterFactory implements Distributio
      * name of this component.
      */
     @Property
-    private static final String NAME = DistributionComponentUtils.PN_NAME;
+    private static final String NAME = DistributionComponentConstants.PN_NAME;
 
     @Property(name = "service.name")
     private static String SERVICE_NAME;
@@ -85,7 +86,7 @@ public class RepositoryDistributionPackageImporterFactory implements Distributio
 
     }
 
-    public DistributionPackage importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException {
+    public DistributionPackageInfo importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException {
         return importer.importStream(resourceResolver, stream);
     }
 }

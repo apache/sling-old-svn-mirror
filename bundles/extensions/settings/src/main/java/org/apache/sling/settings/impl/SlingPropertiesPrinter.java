@@ -58,7 +58,15 @@ public class SlingPropertiesPrinter {
                 final InputStream is = url.openStream();
                 final Properties tmp = new Properties();
                 tmp.load(is);
+                // update props
+                for(final Object key : tmp.keySet()) {
+                    final Object value = bundleContext.getProperty(key.toString());
+                    if ( value != null ) {
+                        tmp.put(key, value);
+                    }
+                }
                 props = tmp;
+
             } catch (IOException ioe) {
                 LOGGER.warn("Unable to read sling properties from " + propUrl, ioe);
             }

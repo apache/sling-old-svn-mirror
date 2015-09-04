@@ -20,6 +20,8 @@ package org.apache.sling.resourceresolver.impl.tree;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.commons.collections.MapUtils;
+import org.apache.sling.api.resource.ParametrizableResourceProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -46,8 +48,14 @@ public class ResourceProviderHandler extends ProviderHandler {
     /**
      * @see ResourceProvider#getResource(ResourceResolver, String)
      */
-    public Resource getResource(final ResourceResolverContext ctx, final ResourceResolver resourceResolver, final String path) {
-        return getReadableResource(ctx, this.resourceProvider.getResource(resourceResolver, path) );
+    public Resource getResource(final ResourceResolverContext ctx, final ResourceResolver resourceResolver, final String path, final Map<String, String> parameters) {
+        final Resource resource;
+        if (MapUtils.isNotEmpty(parameters) && this.resourceProvider instanceof ParametrizableResourceProvider) {
+            resource = ((ParametrizableResourceProvider)this.resourceProvider).getResource(resourceResolver, path, parameters);
+        } else {
+            resource = this.resourceProvider.getResource(resourceResolver, path);
+        }
+        return getReadableResource(ctx, resource);
     }
 
     /**

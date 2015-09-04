@@ -39,7 +39,7 @@ public class SlingExtensionI18nIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling-extension-i18n")
+            addSlingFeatures("sling-extension-i18n")
         );
     }
 

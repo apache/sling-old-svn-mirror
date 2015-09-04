@@ -40,6 +40,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
+import org.apache.sling.testing.mock.sling.builder.ContentBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -160,7 +161,8 @@ public abstract class AbstractSlingCrudResourceResolverTest {
         // TODO: enable this test when JCR resource implementation supports
         // writing Date objects (SLING-3846)
         if (getResourceResolverType() != ResourceResolverType.JCR_MOCK
-                && getResourceResolverType() != ResourceResolverType.JCR_JACKRABBIT) {
+                && getResourceResolverType() != ResourceResolverType.JCR_JACKRABBIT 
+                && getResourceResolverType() != ResourceResolverType.JCR_OAK ) {
             assertEquals(DATE_VALUE, props.get("dateProp", Date.class));
         }
     }
@@ -172,7 +174,8 @@ public abstract class AbstractSlingCrudResourceResolverTest {
         // TODO: enable this test when JCR resource implementation supports
         // writing Date objects (SLING-3846)
         if (getResourceResolverType() != ResourceResolverType.JCR_MOCK
-                && getResourceResolverType() != ResourceResolverType.JCR_JACKRABBIT) {
+                && getResourceResolverType() != ResourceResolverType.JCR_JACKRABBIT
+                && getResourceResolverType() != ResourceResolverType.JCR_OAK ) {
             Calendar calendarValue = props.get("dateProp", Calendar.class);
             assertNotNull(calendarValue);
             assertEquals(DATE_VALUE, calendarValue.getTime());
@@ -227,6 +230,29 @@ public abstract class AbstractSlingCrudResourceResolverTest {
     public void testPrimaryTypeResourceType() throws PersistenceException {
         Resource resource = this.resourceResolver.getResource(getTestRootResource().getPath());
         assertEquals(JcrConstants.NT_UNSTRUCTURED, resource.getResourceType());
+    }
+
+    @Test
+    public void testGetRootResourceByNullPath() {
+        Resource rootResource = this.resourceResolver.resolve((String)null);
+        assertNotNull(rootResource);
+        assertEquals("/", rootResource.getPath());
+    }
+
+    @Test
+    public void testSearchPath() {
+        ContentBuilder builder = new ContentBuilder(this.resourceResolver);
+        builder.resource("/libs/any/path");
+
+        Resource resource = this.resourceResolver.getResource("any/path");
+        assertNotNull(resource);
+        assertEquals("/libs/any/path", resource.getPath());
+
+        builder.resource("/apps/any/path");
+
+        resource = this.resourceResolver.getResource("any/path");
+        assertNotNull(resource);
+        assertEquals("/apps/any/path", resource.getPath());
     }
 
 }

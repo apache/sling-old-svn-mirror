@@ -1,58 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    
     <modelVersion>4.0.0</modelVersion>
-
     <parent>
-        <groupId>org.apache</groupId>
-        <artifactId>apache</artifactId>
-        <version>10</version>
-        <relativePath />
+        <groupId>org.apache.sling</groupId>
+        <artifactId>sling</artifactId>
+        <version>22</version>
     </parent>
-
+    
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.crankstart.reactor</artifactId>
+    <version>1.9.9-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <version>0.0.1-SNAPSHOT</version>
-
     <name>Apache Sling Crankstart Reactor</name>
-    <inceptionYear>2014</inceptionYear>
-    
-    <description>
-        A different way of starting Sling - reactor pom
-    </description>
-
-    <scm>
-      <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/crankstart</connection>
-      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/crankstart</developerConnection>
-      <url>http://sling.apache.org</url>
-    </scm>
-
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-clean-plugin</artifactId>
-                <version>2.2</version>
-                <configuration>
-                    <filesets>
-                        <fileset>
-                            <directory>${basedir}</directory>
-                            <includes>
-                                <include>sling-crankstart</include>
-                            </includes>
-                        </fileset>
-                    </filesets>
-                </configuration>
-            </plugin>
-          </plugins>
-    </build>
 
     <modules>
-      <module>api</module>
-      <module>api-fragment</module>
-      <module>core</module>
-      <module>launcher</module>
-      <module>test-services</module>
-      <module>sling-extensions</module>
+        <module>test-services</module>
+        <module>test-model</module>
+        <module>launcher</module>
     </modules>
 </project>

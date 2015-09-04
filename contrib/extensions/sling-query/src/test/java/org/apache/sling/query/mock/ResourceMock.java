@@ -19,9 +19,12 @@
 
 package org.apache.sling.query.mock;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.resource.Resource;
@@ -34,19 +37,12 @@ public class ResourceMock implements Resource {
 
 	private final Map<String, Resource> children;
 
-	private final Map<String, String> properties;
-
 	private final Resource parent;
 
 	public ResourceMock(Resource parent, String name) {
 		this.name = name;
 		this.parent = parent;
 		this.children = new LinkedHashMap<String, Resource>();
-		this.properties = new LinkedHashMap<String, String>();
-	}
-
-	public void setProperty(String name, String value) {
-		properties.put(name, value);
 	}
 
 	public void addChild(Resource resource) {
@@ -65,7 +61,13 @@ public class ResourceMock implements Resource {
 
 	@Override
 	public Iterator<Resource> listChildren() {
-		return children.values().iterator();
+		List<Resource> nonProperties = new ArrayList<Resource>();
+		for (Resource r : children.values()) {
+			if (!(r instanceof PropertyResourceMock)) {
+				nonProperties.add(r);
+			}
+		}
+		return nonProperties.iterator();
 	}
 
 	@Override
@@ -76,13 +78,10 @@ public class ResourceMock implements Resource {
 			if (children.containsKey(firstPart)) {
 				return children.get(firstPart).getChild(rest);
 			}
-		} else {
-			if (children.containsKey(relPath)) {
-				return children.get(relPath);
-			} else if (properties.containsKey(relPath)) {
-				return new StringResourceMock(this, relPath, properties.get(relPath));
-			}
+		} else if (children.containsKey(relPath)) {
+			return children.get(relPath);
 		}
+
 		return null;
 	}
 
@@ -90,7 +89,18 @@ public class ResourceMock implements Resource {
 	@Override
 	public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
 		if (type.isAssignableFrom(Map.class)) {
-			return (AdapterType) properties;
+			Map<String, Object> map = new LinkedHashMap<String, Object>();
+			for (Entry<String, Resource> e : children.entrySet()) {
+				Resource o = e.getValue();
+				String[] stringArray = o.adaptTo(String[].class);
+				String stringValue = o.adaptTo(String.class);
+				if (stringValue != null) {
+					map.put(e.getKey(), stringValue);
+				} else if (stringArray != null) {
+					map.put(e.getKey(), stringArray);
+				}
+			}
+			return (AdapterType) map;
 		} else {
 			return null;
 		}
@@ -99,16 +109,16 @@ public class ResourceMock implements Resource {
 	@Override
 	public boolean isResourceType(String resourceType) {
 		return StringUtils.isNotBlank(resourceType)
-				&& (resourceType.equals(properties.get("sling:resourceType")) || resourceType
-						.equals(properties.get("jcr:primaryType")));
+				&& (resourceType.equals(getPropertyAsString("sling:resourceType")) || resourceType
+						.equals(getPropertyAsString("jcr:primaryType")));
 	}
 
 	@Override
 	public String getResourceType() {
-		if (properties.containsKey("sling:resourceType")) {
-			return properties.get("sling:resourceType");
+		if (children.containsKey("sling:resourceType")) {
+			return getPropertyAsString("sling:resourceType");
 		} else {
-			return properties.get("jcr:primaryType");
+			return getPropertyAsString("jcr:primaryType");
 		}
 	}
 
@@ -139,6 +149,13 @@ public class ResourceMock implements Resource {
 	@Override
 	public String toString() {
 		return String.format("ResourceMock[%s]", name);
+	}
+
+	private String getPropertyAsString(String name) {
+		if (children.containsKey(name)) {
+			return children.get(name).adaptTo(String.class);
+		}
+		return null;
 	}
 
 }

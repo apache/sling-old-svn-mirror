@@ -59,5 +59,5 @@ public @interface RequestAttribute {
      * If even those are not available the default injection strategy defined on the {@link org.apache.sling.models.annotations.Model} applies.
      * Default value = DEFAULT.
      */
-    public InjectionStrategy injectonStrategy() default InjectionStrategy.DEFAULT;
+    public InjectionStrategy injectionStrategy() default InjectionStrategy.DEFAULT;
 }

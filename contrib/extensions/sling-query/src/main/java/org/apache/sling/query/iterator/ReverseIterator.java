@@ -21,9 +21,9 @@ package org.apache.sling.query.iterator;
 
 import java.util.Iterator;
 
-import org.apache.sling.query.LazyList;
-import org.apache.sling.query.api.function.IteratorToIteratorFunction;
-import org.apache.sling.query.api.function.Option;
+import org.apache.sling.query.api.internal.IteratorToIteratorFunction;
+import org.apache.sling.query.api.internal.Option;
+import org.apache.sling.query.util.LazyList;
 
 public class ReverseIterator<T> extends AbstractIterator<Option<T>> {
 

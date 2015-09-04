@@ -46,7 +46,15 @@ import org.apache.sling.jcr.resource.internal.helper.LazyInputStream;
  */
 public class JcrResourceUtil {
 
-    /** Helper method to execute a JCR query */
+    /**
+     * Helper method to execute a JCR query.
+     *
+     * @param session the session
+     * @param query the query
+     * @param language the language
+     * @return the query's result
+     * @throws RepositoryException if the {@link QueryManager} cannot be retrieved
+     */
     public static QueryResult query(Session session, String query,
             String language) throws RepositoryException {
         QueryManager qManager = session.getWorkspace().getQueryManager();
@@ -54,7 +62,13 @@ public class JcrResourceUtil {
         return q.execute();
     }
 
-    /** Converts a JCR Value to a corresponding Java Object */
+    /**
+     * Converts a JCR Value to a corresponding Java Object
+     *
+     * @param value the JCR Value to convert
+     * @return the Java Object
+     * @throws RepositoryException if the value cannot be converted
+     */
     public static Object toJavaObject(Value value) throws RepositoryException {
         switch (value.getType()) {
             case PropertyType.DECIMAL:
@@ -83,6 +97,10 @@ public class JcrResourceUtil {
      * Converts the value(s) of a JCR Property to a corresponding Java Object.
      * If the property has multiple values the result is an array of Java
      * Objects representing the converted values of the property.
+     *
+     * @param property the property to be converted to the corresponding Java Object
+     * @throws RepositoryException if the conversion cannot take place
+     * @return the Object resulting from the conversion
      */
     public static Object toJavaObject(Property property)
             throws RepositoryException {
@@ -167,6 +185,7 @@ public class JcrResourceUtil {
      * @param node         The node where the property will be set on.
      * @param propertyName The name of the property.
      * @param propertyValue The value for the property.
+     * @throws RepositoryException if the property cannot be set
      */
     public static void setProperty(final Node node,
                                    final String propertyName,

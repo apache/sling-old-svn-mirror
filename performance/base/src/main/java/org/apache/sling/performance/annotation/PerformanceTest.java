@@ -42,6 +42,7 @@ public @interface PerformanceTest {
 	// set the number of invocations to run
 	// in the warm up phase
 	int warmupinvocations() default 0;
-	
-	
+
+	// set the performance threshold
+	double threshold() default 0;
 }

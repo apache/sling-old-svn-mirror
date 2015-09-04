@@ -15,8 +15,8 @@
 	<parent>
 		<groupId>org.apache.sling</groupId>
 		<artifactId>sling</artifactId>
-		<version>22</version>
-		<relativePath>../../../parent/pom.xml</relativePath>
+		<version>24</version>
+		<relativePath/>
 	</parent>
 
 	<artifactId>org.apache.sling.commons.json</artifactId>
@@ -48,6 +48,28 @@
 						</DynamicImport-Package>
 					</instructions>
 				</configuration>
+			</plugin>
+			<plugin>
+			    <groupId>org.apache.rat</groupId>
+			    <artifactId>apache-rat-plugin</artifactId>
+			    <configuration>
+			        <excludes>
+                        <exclude>src/main/java/org/apache/sling/commons/json/JSONArray.java</exclude>
+                        <exclude>src/main/java/org/apache/sling/commons/json/JSONException.java</exclude>
+                        <exclude>src/main/java/org/apache/sling/commons/json/JSONObject.java</exclude>
+                        <exclude>src/main/java/org/apache/sling/commons/json/JSONString.java</exclude>
+                        <exclude>src/main/java/org/apache/sling/commons/json/JSONTokener.java</exclude>
+			            <exclude>src/main/java/org/apache/sling/commons/json/http/Cookie.java</exclude>
+                        <exclude>src/main/java/org/apache/sling/commons/json/http/CookieList.java</exclude>
+                        <exclude>src/main/java/org/apache/sling/commons/json/http/HTTP.java</exclude>
+                        <exclude>src/main/java/org/apache/sling/commons/json/http/HTTPTokener.java</exclude>
+                        <exclude>src/main/java/org/apache/sling/commons/json/io/JSONStringer.java</exclude>
+                        <exclude>src/main/java/org/apache/sling/commons/json/io/JSONWriter.java</exclude>
+                        <exclude>src/main/java/org/apache/sling/commons/json/util/CDL.java</exclude>
+                        <exclude>src/main/java/org/apache/sling/commons/json/xml/XML.java</exclude>
+                        <exclude>src/main/java/org/apache/sling/commons/json/xml/XMLTokener.java</exclude>
+			        </excludes>
+			    </configuration>
 			</plugin>
 		</plugins>
 	</build>

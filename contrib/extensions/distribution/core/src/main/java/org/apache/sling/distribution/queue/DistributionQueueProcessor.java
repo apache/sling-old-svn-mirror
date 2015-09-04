@@ -32,8 +32,8 @@ public interface DistributionQueueProcessor {
      * Process an item from a certain {@link org.apache.sling.distribution.queue.DistributionQueue}
      *
      * @param queueName            the name of the {@link org.apache.sling.distribution.queue.DistributionQueue} to be processed
-     * @param distributionQueueItem the {@link org.apache.sling.distribution.queue.DistributionQueueItem} to be processed
+     * @param queueEntry the {@link org.apache.sling.distribution.queue.DistributionQueueEntry} to be processed
      * @return {@code true} if the item was successfully processed, {@code false} otherwise
      */
-    public boolean process(@Nonnull String queueName, @Nonnull DistributionQueueItem distributionQueueItem);
+    public boolean process(@Nonnull String queueName, @Nonnull DistributionQueueEntry queueEntry);
 }

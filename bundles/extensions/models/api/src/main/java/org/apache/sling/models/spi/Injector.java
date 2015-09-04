@@ -19,6 +19,9 @@ package org.apache.sling.models.spi;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+
 /**
  * Service interface for pluggable value injectors.
  */
@@ -29,13 +32,13 @@ public interface Injector {
      *
      * @return the injector's name
      */
-    String getName();
+    @Nonnull String getName();
 
     /**
      * Produce a value for an injection point.
      *
      * @param adaptable the object which should be used as the basis for value resolution.
-     * @param name the injection point name
+     * @param name the injection point name (may be only {@code null} if injector implements the {@link AcceptsNullName} interface, otherwise never {@code null})
      * @param declaredType the declared type of the injection point
      * @param element the injection point itself
      * @param callbackRegistry a registry object to register a callback object which will be
@@ -43,5 +46,5 @@ public interface Injector {
      *
      * @return the value to be injected or null if no value could be resolved
      */
-    Object getValue(Object adaptable, String name, Type declaredType, AnnotatedElement element, DisposalCallbackRegistry callbackRegistry);
+    @CheckForNull Object getValue(@Nonnull Object adaptable, String name, @Nonnull Type declaredType, @Nonnull AnnotatedElement element, @Nonnull DisposalCallbackRegistry callbackRegistry);
 }

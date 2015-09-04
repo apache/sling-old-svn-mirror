@@ -23,6 +23,7 @@ import static org.apache.sling.api.SlingConstants.SLING_CURRENT_SERVLET_NAME;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 
 import javax.servlet.Servlet;
@@ -48,7 +49,6 @@ import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
 import org.apache.sling.engine.impl.SlingHttpServletRequestImpl;
-import org.apache.sling.engine.impl.SlingHttpServletRequestImpl3;
 import org.apache.sling.engine.impl.SlingHttpServletResponseImpl;
 import org.apache.sling.engine.impl.SlingMainServlet;
 import org.apache.sling.engine.impl.SlingRequestProcessorImpl;
@@ -230,7 +230,20 @@ public class RequestData {
         // resolve the resource
         requestProgressTracker.startTimer("ResourceResolution");
         final SlingHttpServletRequest request = getSlingRequest();
-        Resource resource = resourceResolver.resolve(request, request.getPathInfo());
+
+        StringBuffer requestURL = servletRequest.getRequestURL();
+        String path = request.getPathInfo();
+        if (requestURL.indexOf(";") > -1 && !path.contains(";")) {
+            final String decodedURL;
+            try {
+                decodedURL = URLDecoder.decode(requestURL.toString(), "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                throw new AssertionError("UTF-8 encoding is not supported");
+            }
+            path = path.concat(decodedURL.substring(decodedURL.indexOf(';')));
+        }
+
+        Resource resource = resourceResolver.resolve(request, path);
         if (request.getAttribute(REQUEST_RESOURCE_PATH_ATTR) == null) {
             request.setAttribute(REQUEST_RESOURCE_PATH_ATTR, resource.getPath());
         }
@@ -681,22 +694,12 @@ public class RequestData {
     private static SlingHttpServletRequestFactory getSlingHttpServletRequestFactory() {
         SlingHttpServletRequestFactory factory = RequestData.REQUEST_FACTORY;
         if (factory == null) {
-            SlingMainServlet servlet = RequestData.SLING_MAIN_SERVLET;
-            if (servlet == null || servlet.getServletContext() == null
-                || servlet.getServletContext().getMajorVersion() < 3) {
-
-                factory = new SlingHttpServletRequestFactory() {
-                    public SlingHttpServletRequest createRequest(RequestData requestData, HttpServletRequest request) {
-                        return new SlingHttpServletRequestImpl(requestData, request);
-                    }
-                };
-            } else {
-                factory = new SlingHttpServletRequestFactory() {
-                    public SlingHttpServletRequest createRequest(RequestData requestData, HttpServletRequest request) {
-                        return new SlingHttpServletRequestImpl3(requestData, request);
-                    }
-                };
-            }
+            factory = new SlingHttpServletRequestFactory() {
+                @Override
+                public SlingHttpServletRequest createRequest(RequestData requestData, HttpServletRequest request) {
+                    return new SlingHttpServletRequestImpl(requestData, request);
+                }
+            };
             RequestData.REQUEST_FACTORY = factory;
         }
         return factory;

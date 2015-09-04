@@ -18,6 +18,9 @@
  */
 package org.apache.sling.api.security;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 
@@ -82,29 +85,29 @@ public interface ResourceAccessSecurity {
      *  instead of the one that was passed into the method.
      *  @return null if {@link Resource} cannot be read
      */
-    Resource getReadableResource(Resource resource);
+    @CheckForNull Resource getReadableResource(Resource resource);
 
     /** @return true if a {@link Resource} can be created at the supplied
      *  absolute path. */
-    boolean canCreate(String absPathName, ResourceResolver resourceResolver);
+    boolean canCreate(@Nonnull String absPathName, @Nonnull ResourceResolver resourceResolver);
 
     /** @return true if supplied {@link Resource} can be updated */
-    boolean canUpdate(Resource resource);
+    boolean canUpdate(@Nonnull Resource resource);
 
     /** @return true if supplied {@link Resource} can be deleted */
-    boolean canDelete(Resource resource);
+    boolean canDelete(@Nonnull Resource resource);
 
     /** @return true if supplied {@link Resource} can be executed as a script */
-    boolean canExecute(Resource resource);
+    boolean canExecute(@Nonnull Resource resource);
 
     /** @return true if the "valueName" value of supplied {@link Resource} can be read */
-    boolean canReadValue(Resource resource, String valueName);
+    boolean canReadValue(@Nonnull Resource resource, @Nonnull String valueName);
 
     /** @return true if the "valueName" value of supplied {@link Resource} can be set */
-    boolean canSetValue(Resource resource, String valueName);
+    boolean canSetValue(@Nonnull Resource resource, @Nonnull String valueName);
 
     /** @return true if the "valueName" value of supplied {@link Resource} can be deleted */
-    boolean canDeleteValue(Resource resource, String valueName);
+    boolean canDeleteValue(@Nonnull Resource resource, @Nonnull String valueName);
 
     /**
      * Optionally transform a query based on the current
@@ -121,7 +124,7 @@ public interface ResourceAccessSecurity {
      * @return the transformed query
      * @throws AccessSecurityException
      */
-    String transformQuery(String query, String language, ResourceResolver resourceResolver)
+    @Nonnull String transformQuery(@Nonnull String query, @Nonnull String language, @Nonnull ResourceResolver resourceResolver)
     throws AccessSecurityException;
 
 }

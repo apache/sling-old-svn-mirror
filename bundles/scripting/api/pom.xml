@@ -24,12 +24,12 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>22</version>
-    <relativePath>../../../parent/pom.xml</relativePath>
+    <version>24</version>
+    <relativePath />
   </parent>
 
   <artifactId>org.apache.sling.scripting.api</artifactId>
-  <version>2.1.7-SNAPSHOT</version>
+  <version>2.1.9-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
   <name>Apache Sling Scripting Implementation API</name>
@@ -41,10 +41,6 @@
     </developerConnection>
     <url>http://svn.apache.org/viewvc/sling/trunk/bundles/scripting/api</url>
   </scm>
-
-  <properties>
-    <sling.java.version>6</sling.java.version>
-  </properties>
 
   <build>
     <plugins>
@@ -58,7 +54,7 @@
               javax.script
             </Import-Package>
             <Export-Package>
-              org.apache.sling.scripting.api;version=2.2.0
+              org.apache.sling.scripting.api;version=2.3.0
             </Export-Package>
           </instructions>
         </configuration>

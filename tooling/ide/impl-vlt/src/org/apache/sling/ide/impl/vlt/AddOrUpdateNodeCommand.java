@@ -57,6 +57,7 @@ import org.apache.jackrabbit.vault.util.JcrConstants;
 import org.apache.jackrabbit.vault.util.Text;
 import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.transport.FileInfo;
+import org.apache.sling.ide.transport.Repository.CommandExecutionFlag;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.util.PathUtil;
 
@@ -66,9 +67,9 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
     private FileInfo fileInfo;
 
     public AddOrUpdateNodeCommand(Repository jcrRepo, Credentials credentials, FileInfo fileInfo,
-            ResourceProxy resource, Logger logger) {
+            ResourceProxy resource, Logger logger, CommandExecutionFlag... flags) {
 
-        super(jcrRepo, credentials, resource.getPath(), logger);
+        super(jcrRepo, credentials, resource.getPath(), logger, flags);
 
         this.fileInfo = fileInfo;
         this.resource = resource;
@@ -94,6 +95,10 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         } else {
             node = createNode(resource, session);
             getLogger().trace("Created node at {0} with primaryType {1}", path, node.getPrimaryNodeType().getName());
+        }
+
+        if (nodeExists && getFlags().contains(CommandExecutionFlag.CREATE_ONLY_WHEN_MISSING)) {
+            return;
         }
 
         updateNode(node, resource);
@@ -154,13 +159,13 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         }
 
         String primaryType = (String) resource.getProperties().get(JCR_PRIMARYTYPE);
-
+        Node parent = session.getNode(parentLocation);
+        String childName = PathUtil.getName(resource.getPath());
         if (primaryType == null) {
-            throw new IllegalArgumentException("Missing " + JCR_PRIMARYTYPE + " for ResourceProxy at path "
-                    + resource.getPath());
+            return parent.addNode(childName);
+        } else {
+            return parent.addNode(childName, primaryType);
         }
-
-        return session.getNode(parentLocation).addNode(PathUtil.getName(resource.getPath()), primaryType);
     }
 
     private void updateNode(Node node, ResourceProxy resource) throws RepositoryException, IOException {
@@ -174,6 +179,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         while (properties.hasNext()) {
             Property property = properties.nextProperty();
             if (property.getDefinition().isProtected()
+                    || property.getDefinition().isAutoCreated()
                     || property.getDefinition().getRequiredType() == PropertyType.BINARY) {
                 continue;
             }
@@ -199,7 +205,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         }
         
         String primaryType = (String) resource.getProperties().get(JcrConstants.JCR_PRIMARYTYPE);
-        if (!node.getPrimaryNodeType().getName().equals(primaryType) && node.getDepth() != 0) {
+        if (primaryType != null && !node.getPrimaryNodeType().getName().equals(primaryType) && node.getDepth() != 0) {
             node.setPrimaryType(primaryType);
             session.save();
             getLogger().trace("Set new primary type {0} for node at {1}", primaryType, node.getPath());
@@ -297,7 +303,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         }
 
         PropertyDefinition definition = property.getDefinition();
-        if (definition.getRequiredType() != expectedType) {
+        if (definition.getRequiredType() != expectedType && definition.getRequiredType() != PropertyType.UNDEFINED) {
             getLogger().trace("Removing property {0} of type {1} since we need type {2}", property.getName(),
                     definition.getRequiredType(), expectedType);
             property.remove();

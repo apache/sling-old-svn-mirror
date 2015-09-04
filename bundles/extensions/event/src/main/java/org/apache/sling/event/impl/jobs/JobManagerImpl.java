@@ -47,13 +47,13 @@ import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
 import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
 import org.apache.sling.event.impl.jobs.notifications.NotificationUtility;
-import org.apache.sling.event.impl.jobs.queues.AbstractJobQueue;
+import org.apache.sling.event.impl.jobs.queues.JobQueueImpl;
 import org.apache.sling.event.impl.jobs.queues.QueueManager;
+import org.apache.sling.event.impl.jobs.scheduling.JobSchedulerImpl;
 import org.apache.sling.event.impl.jobs.stats.StatisticsManager;
 import org.apache.sling.event.impl.jobs.tasks.CleanUpTask;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
-import org.apache.sling.event.impl.support.ScheduleInfoImpl;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.Job.JobState;
 import org.apache.sling.event.jobs.JobBuilder;
@@ -120,10 +120,10 @@ public class JobManagerImpl
     @Reference
     private QueueManager qManager;
 
-    private CleanUpTask maintenanceTask;
+    private volatile CleanUpTask maintenanceTask;
 
     /** Job Scheduler. */
-    private JobSchedulerImpl jobScheduler;
+    private org.apache.sling.event.impl.jobs.scheduling.JobSchedulerImpl jobScheduler;
 
     /**
      * Activate this component.
@@ -131,8 +131,8 @@ public class JobManagerImpl
      */
     @Activate
     protected void activate(final Map<String, Object> props) throws LoginException {
-        this.jobScheduler = new JobSchedulerImpl(this.configuration, this.scheduler, this);
-        this.maintenanceTask = new CleanUpTask(this.configuration);
+        this.jobScheduler = new org.apache.sling.event.impl.jobs.scheduling.JobSchedulerImpl(this.configuration, this.scheduler, this);
+        this.maintenanceTask = new CleanUpTask(this.configuration, this.jobScheduler);
 
         logger.info("Apache Sling Job Manager started on instance {}", Environment.APPLICATION_ID);
     }
@@ -347,9 +347,10 @@ public class JobManagerImpl
                         resolver.close();
                     }
                 } else {
-                    final JobHandler jh = new JobHandler(job, this.configuration);
-                    jh.finished(Job.JobState.DROPPED, true, -1);
+                    final JobHandler jh = new JobHandler(job, null, this.configuration);
+                    jh.finished(Job.JobState.DROPPED, true, null);
                 }
+                this.configuration.getAuditLogger().debug("REMOVE OK : {}", jobId);
             }
         } else {
             logger.debug("Job for removal does not exist (anymore): {}", jobId);
@@ -524,9 +525,11 @@ public class JobManagerImpl
             buf.append(ResourceHelper.RESOURCE_TYPE_JOB);
             buf.append(")[@");
             buf.append(ISO9075.encode(ResourceHelper.PROPERTY_JOB_TOPIC));
-            buf.append(" = '");
-            buf.append(topic);
-            buf.append("'");
+            if (topic != null) {
+                buf.append(" = '");
+                buf.append(topic);
+                buf.append("'");
+            }
 
             // restricting on the type - history or unfinished
             if ( isHistoryQuery ) {
@@ -768,6 +771,13 @@ public class JobManagerImpl
                         jobName,
                         jobProperties,
                         info);
+                if ( info.targetId != null ) {
+                    this.configuration.getAuditLogger().debug("ASSIGN OK {} : {}",
+                            info.targetId, job.getId());
+                } else {
+                    this.configuration.getAuditLogger().debug("UNASSIGN OK : {}",
+                            job.getId());
+                }
                 return job;
             } catch (final PersistenceException re ) {
                 // something went wrong, so let's log it
@@ -820,6 +830,7 @@ public class JobManagerImpl
         properties.put(Job.PROPERTY_JOB_RETRIES, info.queueConfiguration.getMaxRetries());
 
         properties.put(Job.PROPERTY_JOB_CREATED, Calendar.getInstance());
+        properties.put(JobImpl.PROPERTY_JOB_QUEUED, Calendar.getInstance());
         properties.put(Job.PROPERTY_JOB_CREATED_INSTANCE, Environment.APPLICATION_ID);
         if ( info.targetId != null ) {
             properties.put(Job.PROPERTY_JOB_TARGET_INSTANCE, info.targetId);
@@ -854,7 +865,7 @@ public class JobManagerImpl
         if ( job != null && !this.configuration.isStoragePath(job.getResourcePath()) ) {
             // get the queue configuration
             final QueueInfo queueInfo = this.configuration.getQueueConfigurationManager().getQueueInfo(job.getTopic());
-            final AbstractJobQueue queue = (AbstractJobQueue)this.qManager.getQueue(queueInfo.queueName);
+            final JobQueueImpl queue = (JobQueueImpl)this.qManager.getQueue(queueInfo.queueName);
 
             boolean stopped = false;
             if ( queue != null ) {
@@ -862,8 +873,8 @@ public class JobManagerImpl
             }
             if ( forward && !stopped ) {
                 // mark the job as stopped
-                final JobHandler jh = new JobHandler(job,this.configuration);
-                jh.finished(JobState.STOPPED, true, -1);
+                final JobHandler jh = new JobHandler(job, null, this.configuration);
+                jh.finished(JobState.STOPPED, true, null);
             }
         }
     }
@@ -894,49 +905,6 @@ public class JobManagerImpl
         return this.jobScheduler.getScheduledJobs(topic, limit, templates);
     }
 
-    public ScheduledJobInfo addScheduledJob(final String topic,
-            final String jobName,
-            final Map<String, Object> properties,
-            final String scheduleName,
-            final boolean isSuspended,
-            final List<ScheduleInfoImpl> scheduleInfos,
-            final List<String> errors) {
-        final List<String> msgs = new ArrayList<String>();
-        if ( scheduleName == null || scheduleName.length() == 0 ) {
-            msgs.add("Schedule name not specified");
-        }
-        final String errorMessage = Utility.checkJob(topic, properties);
-        if ( errorMessage != null ) {
-            msgs.add(errorMessage);
-        }
-        if ( scheduleInfos.size() == 0 ) {
-            msgs.add("No schedule defined for " + scheduleName);
-        }
-        for(final ScheduleInfoImpl info : scheduleInfos) {
-            info.check(msgs);
-        }
-        if ( msgs.size() == 0 ) {
-            try {
-                final ScheduledJobInfo info = this.jobScheduler.writeJob(topic, jobName, properties, scheduleName, isSuspended, scheduleInfos);
-                if ( info != null ) {
-                    return info;
-                }
-                msgs.add("Unable to persist scheduled job.");
-            } catch ( final PersistenceException pe) {
-                msgs.add("Unable to persist scheduled job: " + scheduleName);
-                logger.warn("Unable to persist scheduled job", pe);
-            }
-        } else {
-            for(final String msg : msgs) {
-                logger.warn(msg);
-            }
-        }
-        if ( errors != null ) {
-            errors.addAll(msgs);
-        }
-        return null;
-    }
-
     /**
      * Internal method to add a job
      */
@@ -949,15 +917,50 @@ public class JobManagerImpl
             if ( errors != null ) {
                 errors.add(errorMessage);
             }
+            this.configuration.getAuditLogger().debug("ADD FAILED topic={}{}{}, properties={} : {}",
+                    new Object[] {topic,
+                                  name == null ? "" : ",name=",
+                                  name == null ? "" : name,
+                                  properties,
+                                  errorMessage});
             return null;
         }
         if ( name != null ) {
             Utility.logDeprecated(logger, "Job is using deprecated name feature: " + Utility.toString(topic, name, properties));
         }
-        Job result = this.addJobInteral(topic, name, properties, errors);
-        if ( result == null && name != null ) {
-            result = this.getJobByName(name);
+        final List<String> errorList = new ArrayList<String>();
+        Job result = this.addJobInteral(topic, name, properties, errorList);
+        if ( errors != null ) {
+            errors.addAll(errorList);
         }
+        if ( result == null ) {
+            if ( name != null ) {
+                result = this.getJobByName(name);
+            }
+            if ( result == null ) {
+                this.configuration.getAuditLogger().debug("ADD FAILED topic={}{}{}, properties={} : {}",
+                        new Object[] {topic,
+                                      name == null ? "" : ",name=",
+                                      name == null ? "" : name,
+                                      properties,
+                                      errorList});
+            } else {
+                this.configuration.getAuditLogger().debug("ADD DUP topic={}{}{}, properties={} : {}",
+                        new Object[] {topic,
+                                      name == null ? "" : ",name=",
+                                      name == null ? "" : name,
+                                      properties,
+                                      result.getId()});
+            }
+        } else {
+            this.configuration.getAuditLogger().debug("ADD OK topic={}{}{}, properties={} : {}",
+                    new Object[] {topic,
+                                  name == null ? "" : ",name=",
+                                  name == null ? "" : name,
+                                  properties,
+                                  result.getId()});
+        }
+
         return result;
     }
 
@@ -972,5 +975,9 @@ public class JobManagerImpl
             return this.addJob(job.getTopic(), job.getName(), job.getProperties());
         }
         return null;
+    }
+
+    public JobSchedulerImpl getJobScheduler() {
+        return this.jobScheduler;
     }
 }

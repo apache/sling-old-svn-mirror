@@ -193,8 +193,6 @@ public class SlingServlet extends GenericServlet implements Notifiable {
      */
     @Override
     public void destroy() {
-        SlingSessionListener.stopDelegatee();
-
         if (sling != null) {
             sling.destroy();
         }
@@ -215,6 +213,7 @@ public class SlingServlet extends GenericServlet implements Notifiable {
      * Note, that a new request coming in while the web application is still
      * running, will actually cause Sling to restart !
      */
+    @Override
     public void stopped() {
         /**
          * This method is called if the framework is stopped from within by
@@ -228,7 +227,6 @@ public class SlingServlet extends GenericServlet implements Notifiable {
 
         // clear the reference to the framework
         sling = null;
-        SlingSessionListener.stopDelegatee();
     }
 
     /**
@@ -243,13 +241,13 @@ public class SlingServlet extends GenericServlet implements Notifiable {
      *            file. If <code>null</code> the existing launcher jar will be
      *            used again.
      */
+    @Override
     public void updated(File updateFile) {
 
         // drop the sling reference to be able to restart
         synchronized (this) {
             if (startingSling == null) {
                 sling = null;
-                SlingSessionListener.stopDelegatee();
             }
         }
 
@@ -285,6 +283,7 @@ public class SlingServlet extends GenericServlet implements Notifiable {
         if (startingSling == null) {
             slingHome = getSlingHome((HttpServletRequest) request);
             Thread starter = new Thread(new Runnable() {
+                @Override
                 public void run() {
                     startSling();
                 }
@@ -376,8 +375,6 @@ public class SlingServlet extends GenericServlet implements Notifiable {
                 slingLauncher.setCommandLine(properties);
                 slingLauncher.setSlingHome(slingHome);
             }
-
-            SlingSessionListener.startDelegate(sling.getClass().getClassLoader());
 
             try {
                 log("Starting launcher ...");

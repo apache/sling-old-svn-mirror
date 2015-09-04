@@ -18,25 +18,44 @@
  */
 package org.apache.sling.discovery.impl.cluster.helpers;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AssertingTopologyEventListener implements TopologyEventListener {
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final List<TopologyEventAsserter> expectedEvents = new LinkedList<TopologyEventAsserter>();
 
+    private String debugInfo = null;
+    
     public AssertingTopologyEventListener() {
     }
 
+    public AssertingTopologyEventListener(String debugInfo) {
+        this.debugInfo = debugInfo;
+    }
+    
     private List<TopologyEvent> events_ = new LinkedList<TopologyEvent>();
 
+    private List<TopologyEvent> unexpectedEvents_ = new LinkedList<TopologyEvent>();
+
     public void handleTopologyEvent(TopologyEvent event) {
+        final String logPrefix = "handleTopologyEvent["+(debugInfo!=null ? debugInfo : "this="+this) +"] ";
+        logger.info(logPrefix + "got event=" + event);
         TopologyEventAsserter asserter = null;
         synchronized (expectedEvents) {
             if (expectedEvents.size() == 0) {
+                unexpectedEvents_.add(event);
                 throw new IllegalStateException(
                         "no expected events anymore. But got: " + event);
             }
@@ -45,7 +64,57 @@ public class AssertingTopologyEventListener implements TopologyEventListener {
         if (asserter == null) {
             throw new IllegalStateException("this should not occur");
         }
-        asserter.assertOk(event);
+        try{
+            asserter.assertOk(event);
+            logger.info(logPrefix + "event matched expectations (" + event+")");
+        } catch(RuntimeException re) {
+            synchronized(expectedEvents) {
+                unexpectedEvents_.add(event);
+            }
+            throw re;
+        } catch(Error er) {
+            synchronized(expectedEvents) {
+                unexpectedEvents_.add(event);
+            }
+            throw er;
+        }
+        try{
+        switch(event.getType()) {
+        case PROPERTIES_CHANGED: {
+            assertNotNull(event.getOldView());
+            assertNotNull(event.getNewView());
+            assertTrue(event.getNewView().isCurrent());
+            assertFalse(event.getOldView().isCurrent());
+            break;
+        }
+        case TOPOLOGY_CHANGED: {
+            assertNotNull(event.getOldView());
+            assertNotNull(event.getNewView());
+            assertTrue(event.getNewView().isCurrent());
+            assertFalse(event.getOldView().isCurrent());
+            break;
+        }
+        case TOPOLOGY_CHANGING: {
+            assertNotNull(event.getOldView());
+            assertNull(event.getNewView());
+            assertFalse(event.getOldView().isCurrent());
+            break;
+        }
+        case TOPOLOGY_INIT: {
+            assertNull(event.getOldView());
+            assertNotNull(event.getNewView());
+            // cannot make any assertions on event.getNewView().isCurrent()
+            // as that can be true or false
+            break;
+        }
+        }
+        } catch(RuntimeException re) {
+            logger.error("RuntimeException: "+re, re);
+            throw re;
+        } catch(AssertionError e) {
+            logger.error("AssertionError: "+e, e);
+            throw e;
+        }
         events_.add(event);
     }
 
@@ -63,5 +132,9 @@ public class AssertingTopologyEventListener implements TopologyEventListener {
 
     public int getRemainingExpectedCount() {
         return expectedEvents.size();
+    }
+    
+    public int getUnexpectedCount() {
+        return unexpectedEvents_.size();
     }
 }

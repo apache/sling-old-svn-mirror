@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -40,19 +41,19 @@ public class JackrabbitRepositoryIT extends CommonTests {
         final List<Option> opt = new LinkedList<Option>();
         opt.addAll(commonOptions());
 
-        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-api", "2.6.5"));
-        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-jcr-commons", "2.6.5"));
-        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-spi", "2.6.5"));
-        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-spi-commons", "2.6.5"));
-        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-jcr-rmi", "2.6.5"));
+        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-api", "2.10.1"));
+        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-jcr-commons", "2.10.1"));
+        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-spi", "2.10.1"));
+        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-spi-commons", "2.10.1"));
+        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-jcr-rmi", "2.10.1"));
         opt.add(mavenBundle("org.apache.derby", "derby", "10.5.3.0_1"));
-        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.jackrabbit.server", "2.2.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.jackrabbit.server", "2.3.1-SNAPSHOT"));
 
         return opt.toArray(new Option[]{});
     }
 
-    @Override
-    protected void doCheckRepositoryDescriptors() {
+    @Test
+    public void doCheckRepositoryDescriptors() {
         assertEquals("Jackrabbit", repository.getDescriptor("jcr.repository.name"));
     }
 

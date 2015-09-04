@@ -22,6 +22,8 @@ import javax.annotation.CheckForNull;
 
 import aQute.bnd.annotation.ConsumerType;
 
+import java.net.URI;
+
 /**
  * A provider for {@link org.apache.sling.distribution.transport.DistributionTransportSecret}s
  * <p/>
@@ -33,11 +35,12 @@ import aQute.bnd.annotation.ConsumerType;
 public interface DistributionTransportSecretProvider {
 
     /**
-     * Get a {@link org.apache.sling.distribution.transport.DistributionTransportSecret}
+     * Get a {@link org.apache.sling.distribution.transport.DistributionTransportSecret} for the specified URI
      *
+     * @param uri - the uri than needs authentication
      * @return a {@link org.apache.sling.distribution.transport.DistributionTransportSecret secret}, or {@code null} if
      * that cannot be obtained
      */
     @CheckForNull
-    DistributionTransportSecret getSecret();
+    DistributionTransportSecret getSecret(URI uri);
 }

@@ -37,6 +37,7 @@ import org.apache.sling.ide.serialization.SerializationException;
 import org.apache.sling.ide.test.impl.helpers.DisableDebugStatusHandlers;
 import org.apache.sling.ide.test.impl.helpers.ExternalSlingLaunchpad;
 import org.apache.sling.ide.test.impl.helpers.FailOnModificationEventsRule;
+import org.apache.sling.ide.test.impl.helpers.FailOnUnsuccessfulEventsRule;
 import org.apache.sling.ide.test.impl.helpers.LaunchpadConfig;
 import org.apache.sling.ide.test.impl.helpers.ProjectAdapter;
 import org.apache.sling.ide.test.impl.helpers.RepositoryAccessor;
@@ -74,6 +75,9 @@ public class ContentImportTest {
 
     @Rule
     public FailOnModificationEventsRule deh = new FailOnModificationEventsRule();
+
+    @Rule
+    public FailOnUnsuccessfulEventsRule failOnEventsRule = new FailOnUnsuccessfulEventsRule();
 
     @Test
     public void importFilesAndFolders() throws Exception {

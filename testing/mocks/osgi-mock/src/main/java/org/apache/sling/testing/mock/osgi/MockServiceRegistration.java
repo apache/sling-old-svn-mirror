@@ -24,33 +24,40 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.felix.framework.FilterImpl;
+import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.OsgiMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.w3c.dom.Document;
 
 import com.google.common.collect.ImmutableList;
 
 /**
  * Mock {@link ServiceRegistration} implementation.
  */
-class MockServiceRegistration implements ServiceRegistration {
+class MockServiceRegistration implements ServiceRegistration, Comparable<MockServiceRegistration> {
 
     private static volatile long serviceCounter;
 
+    private final Long serviceId;
     private final Set<String> clazzes;
     private final Object service;
     private Dictionary<String, Object> properties;
     private final ServiceReference serviceReference;
+    private final MockBundleContext bundleContext;
 
     public MockServiceRegistration(final Bundle bundle, final String[] clazzes, final Object service,
-            final Dictionary<String, Object> properties) {
+            final Dictionary<String, Object> properties, MockBundleContext bundleContext) {
+        this.serviceId = ++serviceCounter;
         this.clazzes = new HashSet<String>(ImmutableList.copyOf(clazzes));
         this.service = service;
         this.properties = properties != null ? properties : new Hashtable<String,Object>();
-        this.properties.put(Constants.SERVICE_ID, ++serviceCounter);
+        this.properties.put(Constants.SERVICE_ID, this.serviceId);
+        this.properties.put(Constants.OBJECTCLASS, clazzes);
         this.serviceReference = new MockServiceReference(bundle, this);
+        this.bundleContext = bundleContext;
         readOsgiMetadata();
     }
 
@@ -67,20 +74,43 @@ class MockServiceRegistration implements ServiceRegistration {
 
     @Override
     public void unregister() {
-        // do nothing for now
+        bundleContext.unregisterService(this);
     }
 
     Dictionary<String, Object> getProperties() {
         return this.properties;
     }
 
-    boolean matches(final String clazz, final String filter) {
+    boolean matches(final String clazz, final String filter) throws InvalidSyntaxException {
         // ignore filter for now
-        return this.clazzes.contains(clazz);
+        return this.clazzes.contains(clazz)
+                && (filter == null || new FilterImpl(filter).match(properties));
+    }
+    
+    Set<String> getClasses() {
+        return clazzes;
     }
 
     Object getService() {
         return this.service;
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof MockServiceRegistration)) {
+            return false;
+        }
+        return serviceId.equals(((MockServiceRegistration)obj).serviceId);
+    }
+
+    @Override
+    public int hashCode() {
+        return serviceId.hashCode();
+    }
+
+    @Override
+    public int compareTo(MockServiceRegistration obj) {
+        return serviceId.compareTo(obj.serviceId);
     }
 
     /**
@@ -89,16 +119,16 @@ class MockServiceRegistration implements ServiceRegistration {
      */
     private void readOsgiMetadata() {
         Class<?> serviceClass = service.getClass();
-        Document doc = OsgiMetadataUtil.getMetadata(serviceClass);
-        if (doc == null) {
+        OsgiMetadata metadata = OsgiMetadataUtil.getMetadata(serviceClass);
+        if (metadata == null) {
             return;
         }
 
         // add service interfaces from OSGi metadata
-        clazzes.addAll(OsgiMetadataUtil.getServiceInterfaces(serviceClass, doc));
+        clazzes.addAll(metadata.getServiceInterfaces());
 
         // add properties from OSGi metadata
-        Map<String, Object> props = OsgiMetadataUtil.getProperties(serviceClass, doc);
+        Map<String, Object> props = metadata.getProperties();
         for (Map.Entry<String, Object> entry : props.entrySet()) {
             properties.put(entry.getKey(), entry.getValue());
         }

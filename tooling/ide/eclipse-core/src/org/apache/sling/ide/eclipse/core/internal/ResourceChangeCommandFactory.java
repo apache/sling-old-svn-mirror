@@ -35,7 +35,6 @@ import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterResult;
 import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.serialization.SerializationDataBuilder;
-import org.apache.sling.ide.serialization.SerializationException;
 import org.apache.sling.ide.serialization.SerializationKind;
 import org.apache.sling.ide.serialization.SerializationKindManager;
 import org.apache.sling.ide.serialization.SerializationManager;
@@ -55,6 +54,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.ui.statushandlers.StatusManager;
 
 /**
  * The <tt>ResourceChangeCommandFactory</tt> creates new {@link #Command commands} correspoding to resource addition,
@@ -78,22 +78,23 @@ public class ResourceChangeCommandFactory {
     public Command<?> newCommandForAddedOrUpdated(Repository repository, IResource addedOrUpdated) throws CoreException {
         try {
             return addFileCommand(repository, addedOrUpdated);
-        } catch (SerializationException e) {
-            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, "Failed updating " + addedOrUpdated,
-                    e));
         } catch (IOException e) {
             throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, "Failed updating " + addedOrUpdated,
                     e));
         }
     }
 
-    private Command<?> addFileCommand(Repository repository, IResource resource) throws SerializationException,
-            CoreException, IOException {
+    private Command<?> addFileCommand(Repository repository, IResource resource) throws CoreException, IOException {
 
         ResourceAndInfo rai = buildResourceAndInfo(resource, repository);
         
         if (rai == null) {
             return null;
+        }
+
+        if (rai.isOnlyWhenMissing()) {
+            return repository.newAddOrUpdateNodeCommand(rai.getInfo(), rai.getResource(),
+                    Repository.CommandExecutionFlag.CREATE_ONLY_WHEN_MISSING);
         }
 
         return repository.newAddOrUpdateNodeCommand(rai.getInfo(), rai.getResource());
@@ -110,7 +111,7 @@ public class ResourceChangeCommandFactory {
      * @throws IOException
      */
     public ResourceAndInfo buildResourceAndInfo(IResource resource, Repository repository) throws CoreException,
-            SerializationException, IOException {
+            IOException {
         if (ignoredFileNames.contains(resource.getName())) {
             return null;
         }
@@ -171,7 +172,9 @@ public class ResourceChangeCommandFactory {
                 }
 
             } catch (IOException e) {
-                Activator.getDefault().getPluginLogger().warn(e.getMessage(), e);
+                Status s = new Status(Status.WARNING, Activator.PLUGIN_ID, "Failed reading file at "
+                        + resource.getFullPath(), e);
+                StatusManager.getManager().handle(s, StatusManager.LOG | StatusManager.SHOW);
                 return null;
             } finally {
                 IOUtils.closeQuietly(contents);
@@ -193,15 +196,26 @@ public class ResourceChangeCommandFactory {
             resourceProxy = buildResourceProxyForPlainFileOrFolder(resource, syncDirectory, repository);
         }
 
-        if (isFiltered(filter, resourceProxy, resource)) {
-            return null;
-        }
+        FilterResult filterResult = getFilterResult(resource, resourceProxy, filter);
 
-        return new ResourceAndInfo(resourceProxy, info);
+        switch (filterResult) {
+
+            case ALLOW:
+                return new ResourceAndInfo(resourceProxy, info);
+            case PREREQUISITE:
+                // never try to 'create' the root node, we assume it exists
+                if (!resourceProxy.getPath().equals("/")) {
+                    // we don't explicitly set the primary type, which will allow the the repository to choose the best
+                    // suited one ( typically nt:unstructured )
+                    return new ResourceAndInfo(new ResourceProxy(resourceProxy.getPath()), null, true);
+                }
+            case DENY: // falls through
+            default:
+                return null;
+        }
     }
 
-    private FileInfo createFileInfo(IResource resource) throws SerializationException,
-            CoreException {
+    private FileInfo createFileInfo(IResource resource) throws CoreException {
 
         if (resource.getType() != IResource.FILE) {
             return null;
@@ -220,15 +234,37 @@ public class ResourceChangeCommandFactory {
         return info;
     }
 
-    private FilterResult getFilterResult(IResource resource, Filter filter) throws SerializationException {
+    /**
+     * Gets the filter result for a resource/resource proxy combination
+     * 
+     * <p>
+     * The resourceProxy may be null, typically when a resource is already deleted.
+     * 
+     * <p>
+     * The filter may be null, in which case all combinations are included in the filed, i.e. allowed.
+     * 
+     * @param resource the resource to filter for, must not be <code>null</code>
+     * @param resourceProxy the resource proxy to filter for, possibly <code>null</code>
+     * @param filter the filter to use, possibly <tt>null</tt>
+     * @return the filtering result, never <code>null</code>
+     */
+    private FilterResult getFilterResult(IResource resource, ResourceProxy resourceProxy, Filter filter) {
+
+        if (filter == null) {
+            return FilterResult.ALLOW;
+        }
 
         File contentSyncRoot = ProjectUtil.getSyncDirectoryFile(resource.getProject());
 
-        String repositoryPath = getRepositoryPathForDeletedResource(resource, contentSyncRoot);
+        String repositoryPath = resourceProxy != null ? resourceProxy.getPath() : getRepositoryPathForDeletedResource(
+                resource, contentSyncRoot);
 
-        Activator.getDefault().getPluginLogger().trace("Filtering by {0} for {1}", repositoryPath, resource);
+        FilterResult filterResult = filter.filter(ProjectUtil.getSyncDirectoryFile(resource.getProject()),
+                repositoryPath);
 
-        return filter.filter(contentSyncRoot, repositoryPath);
+        Activator.getDefault().getPluginLogger().trace("Filter result for {0} for {1}", repositoryPath, filterResult);
+
+        return filterResult;
     }
 
     private String getRepositoryPathForDeletedResource(IResource resource, File contentSyncRoot) {
@@ -246,19 +282,6 @@ public class ResourceChangeCommandFactory {
                 .trace("Repository path for deleted resource {0} is {1}", resource, repositoryPath);
 
         return repositoryPath;
-    }
-
-    private boolean isFiltered(Filter filter, ResourceProxy resourceProxy, IResource resource) {
-
-        if (filter == null) {
-            return false;
-        }
-
-        FilterResult filterResult = filter.filter(ProjectUtil.getSyncDirectoryFile(resource.getProject()),
-                resourceProxy.getPath());
-        Activator.getDefault().getPluginLogger().trace("FilterResult for {0} is {1}", resource, filterResult);
-
-        return filterResult == FilterResult.DENY || filterResult == FilterResult.PREREQUISITE;
     }
 
     private ResourceProxy buildResourceProxyForPlainFileOrFolder(IResource changedResource, IFolder syncDirectory,
@@ -492,15 +515,12 @@ public class ResourceChangeCommandFactory {
         
         try {
             return removeFileCommand(repository, removed);
-        } catch (SerializationException e) {
-            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, "Failed removing" + removed, e));
         } catch (IOException e) {
             throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, "Failed removing" + removed, e));
         }
     }
 
-    private Command<?> removeFileCommand(Repository repository, IResource resource) throws CoreException,
-            SerializationException, IOException {
+    private Command<?> removeFileCommand(Repository repository, IResource resource) throws CoreException, IOException {
 
         if (resource.isTeamPrivateMember(IResource.CHECK_ANCESTORS)) {
             Activator.getDefault().getPluginLogger().trace("Skipping team-private resource {0}", resource);
@@ -515,33 +535,29 @@ public class ResourceChangeCommandFactory {
 
         Filter filter = ProjectUtil.loadFilter(syncDirectory.getProject());
 
-        if (filter != null) {
-            FilterResult filterResult = getFilterResult(resource, filter);
-            if (filterResult == FilterResult.DENY || filterResult == FilterResult.PREREQUISITE) {
-                return null;
-            }
+        FilterResult filterResult = getFilterResult(resource, null, filter);
+        if (filterResult == FilterResult.DENY || filterResult == FilterResult.PREREQUISITE) {
+            return null;
         }
         
         String resourceLocation = getRepositoryPathForDeletedResource(resource,
                 ProjectUtil.getSyncDirectoryFile(resource.getProject()));
         
-        // make sure that a 'plain' folder being deleted does not signal that the content structure
+        // verify whether a resource being deleted does not signal that the content structure
         // was rearranged under a covering parent aggregate
-        if (resource.getType() == IResource.FOLDER) {
-            IPath serializationFilePath = Path.fromOSString(serializationManager.getSerializationFilePath(
-                    resourceLocation, SerializationKind.FOLDER));
+        IPath serializationFilePath = Path.fromOSString(serializationManager.getSerializationFilePath(resourceLocation,
+                SerializationKind.FOLDER));
 
-            ResourceProxy coveringParentData = findSerializationDataFromCoveringParent(resource, syncDirectory,
-                    resourceLocation, serializationFilePath);
-            if (coveringParentData != null) {
-                Activator
-                        .getDefault()
-                        .getPluginLogger()
-                        .trace("Found covering resource data for resource at {0},  skipping deletion and performing an update instead",
-                                resource.getFullPath());
-                FileInfo info = createFileInfo(resource);
-                return repository.newAddOrUpdateNodeCommand(info, coveringParentData);
-            }
+        ResourceProxy coveringParentData = findSerializationDataFromCoveringParent(resource, syncDirectory,
+                resourceLocation, serializationFilePath);
+        if (coveringParentData != null) {
+            Activator
+                    .getDefault()
+                    .getPluginLogger()
+                    .trace("Found covering resource data ( repository path = {0} ) for resource at {1},  skipping deletion and performing an update instead",
+                            coveringParentData.getPath(), resource.getFullPath());
+            FileInfo info = createFileInfo(resource);
+            return repository.newAddOrUpdateNodeCommand(info, coveringParentData);
         }
         
         return repository.newDeleteNodeCommand(serializationManager.getRepositoryPath(resourceLocation));
@@ -552,14 +568,11 @@ public class ResourceChangeCommandFactory {
         try {
             ResourceAndInfo rai = buildResourceAndInfo(res, repository);
 
-            if (rai == null) {
+            if (rai == null || rai.isOnlyWhenMissing()) {
                 return null;
             }
 
             return repository.newReorderChildNodesCommand(rai.getResource());
-        } catch (SerializationException e) {
-            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, "Failed reordering child nodes for "
-                    + res, e));
         } catch (IOException e) {
             throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, "Failed reordering child nodes for "
                     + res, e));

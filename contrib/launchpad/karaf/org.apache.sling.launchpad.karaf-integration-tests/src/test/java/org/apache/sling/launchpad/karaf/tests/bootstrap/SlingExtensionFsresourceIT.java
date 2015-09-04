@@ -39,7 +39,7 @@ public class SlingExtensionFsresourceIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling-extension-fsresource")
+            addSlingFeatures("sling-extension-fsresource")
         );
     }
 

@@ -19,11 +19,13 @@
 package org.apache.sling.resourceresolver.impl;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,6 +56,7 @@ import org.apache.sling.resourceresolver.impl.helper.StarResource;
 import org.apache.sling.resourceresolver.impl.helper.URI;
 import org.apache.sling.resourceresolver.impl.helper.URIException;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntry;
+import org.apache.sling.resourceresolver.impl.tree.params.ParsedParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,6 +65,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
     /** Default logger */
     private final Logger logger = LoggerFactory.getLogger(ResourceResolverImpl.class);
+
+    private static final Map<String, String> EMPTY_PARAMETERS = Collections.emptyMap();
 
     private static final String MANGLE_NAMESPACE_IN_SUFFIX = "_";
 
@@ -89,7 +94,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     private final CommonResourceResolverFactoryImpl factory;
 
     /** Closed marker. */
-    private volatile boolean closed = false;
+    private final AtomicBoolean isClosed = new AtomicBoolean(false);
 
     /** Resource resolver context. */
     private final ResourceResolverContext context;
@@ -97,14 +102,17 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * The resource resolver context.
      */
-    public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final ResourceResolverContext ctx) {
+    public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory,
+            final ResourceResolverContext ctx) {
         this.factory = factory;
         this.context = ctx;
+        this.factory.register(this, ctx);
     }
 
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#clone(Map)
      */
+    @Override
     public ResourceResolver clone(final Map<String, Object> authenticationInfo)
             throws LoginException {
         // ensure resolver is still live
@@ -131,30 +139,19 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#isLive()
      */
+    @Override
     public boolean isLive() {
-        return !this.closed && this.context.isLive();
+        return !this.isClosed.get() && this.context.isLive() && this.factory.isLive();
     }
 
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#close()
      */
-    public void close() {
-        if (!this.closed) {
-            this.closed = true;
-            this.context.close();
-            this.factory.closed(this);
-        }
-    }
-
-    /**
-     * Calls the {@link #close()} method to ensure the resolver is properly
-     * cleaned up before it is being collected by the garbage collector because
-     * it is not referred to any more.
-     */
     @Override
-    protected void finalize() throws Throwable {
-        close();
-        super.finalize();
+    public void close() {
+        if ( this.isClosed.compareAndSet(false, true)) {
+            this.factory.unregister(this, this.context);
+        }
     }
 
     /**
@@ -164,7 +161,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      *             If the resolver is already closed
      */
     private void checkClosed() {
-        if (this.closed) {
+        if (this.isClosed.get()) {
             throw new IllegalStateException("Resource resolver is already closed.");
         }
     }
@@ -174,6 +171,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#getAttributeNames()
      */
+    @Override
     public Iterator<String> getAttributeNames() {
         checkClosed();
         return this.factory.getRootProviderEntry().getAttributeNames(this.context, this);
@@ -182,6 +180,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#getAttribute(String)
      */
+    @Override
     public Object getAttribute(final String name) {
         checkClosed();
         if (name == null) {
@@ -196,6 +195,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#resolve(java.lang.String)
      */
+    @Override
     public Resource resolve(final String path) {
         checkClosed();
 
@@ -206,6 +206,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#resolve(javax.servlet.http.HttpServletRequest)
      */
+    @Override
     @SuppressWarnings("javadoc")
     public Resource resolve(final HttpServletRequest request) {
         checkClosed();
@@ -219,6 +220,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      * @see org.apache.sling.api.resource.ResourceResolver#resolve(javax.servlet.http.HttpServletRequest,
      *      java.lang.String)
      */
+    @Override
     public Resource resolve(final HttpServletRequest request, String path) {
         checkClosed();
 
@@ -311,7 +313,9 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
         Resource res = null;
         for (int i = 0; res == null && i < realPathList.length; i++) {
-            final String realPath = realPathList[i];
+            final ParsedParameters parsedPath = new ParsedParameters(realPathList[i]);
+            final String realPath = parsedPath.getRawPath();
+
 
             // first check whether the requested resource is a StarResource
             if (StarResource.appliesTo(realPath)) {
@@ -324,24 +328,24 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
                     // let's check it with a direct access first
                     logger.debug("resolve: Try absolute mapped path {}", realPath);
-                    res = resolveInternal(realPath);
+                    res = resolveInternal(realPath, parsedPath.getParameters());
 
                 } else {
 
                     final String[] searchPath = getSearchPath();
                     for (int spi = 0; res == null && spi < searchPath.length; spi++) {
                         logger.debug("resolve: Try relative mapped path with search path entry {}", searchPath[spi]);
-                        res = resolveInternal(searchPath[spi] + realPath);
+                        res = resolveInternal(searchPath[spi] + realPath, parsedPath.getParameters());
                     }
 
                 }
             }
-
         }
 
         // if no resource has been found, use a NonExistingResource
         if (res == null) {
-            final String resourcePath = ensureAbsPath(realPathList[0]);
+            final ParsedParameters parsedPath = new ParsedParameters(realPathList[0]);
+            final String resourcePath = ensureAbsPath(parsedPath.getRawPath());
             logger.debug("resolve: Path {} does not resolve, returning NonExistingResource at {}", absPath, resourcePath);
 
             res = new NonExistingResource(this, resourcePath);
@@ -354,6 +358,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             if (index != -1) {
                 res.getResourceMetadata().setResolutionPathInfo(resourcePath.substring(index));
             }
+            res.getResourceMetadata().setParameterMap(parsedPath.getParameters());
         } else {
             logger.debug("resolve: Path {} resolves to Resource {}", absPath, res);
         }
@@ -366,6 +371,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      *
      * @see org.apache.sling.api.resource.ResourceResolver#map(java.lang.String)
      */
+    @Override
     public String map(final String resourcePath) {
         checkClosed();
         return map(null, resourcePath);
@@ -379,6 +385,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      * @see org.apache.sling.api.resource.ResourceResolver#map(javax.servlet.http.HttpServletRequest,
      *      java.lang.String)
      */
+    @Override
     public String map(final HttpServletRequest request, final String resourcePath) {
         checkClosed();
 
@@ -418,7 +425,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
         }
 
-        final Resource res = resolveInternal(mappedPath);
+        ParsedParameters parsed = new ParsedParameters(mappedPath);
+        final Resource res = resolveInternal(parsed.getRawPath(), parsed.getParameters());
 
         if (res != null) {
 
@@ -439,8 +447,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
                 if (current != null && !path.endsWith(JCR_CONTENT_LEAF)) {
                     if (factory.getMapEntries().isOptimizeAliasResolutionEnabled()) {
                         logger.debug("map: Optimize Alias Resolution is Enabled");
-                        String parentPath = ResourceUtil.getParent(path);    
-                        if (parentPath != null) {         
+                        String parentPath = ResourceUtil.getParent(path);
+                        if (parentPath != null) {
                             final Map<String, String> aliases = factory.getMapEntries().getAliasMap(parentPath);
                             if (aliases!= null && aliases.containsValue(current.getName())) {
                                 for (String key:aliases.keySet()) {
@@ -449,12 +457,12 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
                                         break;
                                     }
                                 }
-                            } 
+                            }
                         }
                     } else {
                         logger.debug("map: Optimize Alias Resolution is Disabled");
                         alias = ResourceResolverContext.getProperty(current, PROP_ALIAS);
-                    }                    
+                    }
                 }
                 if (alias == null || alias.length() == 0) {
                     alias = ResourceUtil.getName(path);
@@ -577,6 +585,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#getSearchPath()
      */
+    @Override
     public String[] getSearchPath() {
         checkClosed();
         return factory.getSearchPath().clone();
@@ -587,6 +596,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#getResource(java.lang.String)
      */
+    @Override
     public Resource getResource(String path) {
         checkClosed();
         final Resource result = this.getResourceInternal(path);
@@ -597,16 +607,34 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      * @see org.apache.sling.api.resource.ResourceResolver#getResource(org.apache.sling.api.resource.Resource,
      *      java.lang.String)
      */
+    @Override
     public Resource getResource(final Resource base, final String path) {
         checkClosed();
 
         String absolutePath = path;
         if (absolutePath != null && !absolutePath.startsWith("/") && base != null) {
-            absolutePath = base.getPath() + "/" + absolutePath;
+            absolutePath = appendToPath(base.getPath(), absolutePath);
         }
 
         final Resource result = getResourceInternal(absolutePath);
         return result;
+    }
+
+    /**
+     * Methods concatenates two paths. If the first path contains parameters separated semicolon, they are
+     * moved at the end of the result.
+     *
+     * @param pathWithParameters
+     * @param segmentToAppend
+     * @return
+     */
+    private static String appendToPath(final String pathWithParameters, final String segmentToAppend) {
+        final ParsedParameters parsed = new ParsedParameters(pathWithParameters);
+        if (parsed.getParametersString() == null) {
+            return String.format("%s/%s", parsed.getRawPath(), segmentToAppend);
+        } else {
+            return String.format("%s/%s%s", parsed.getRawPath(), segmentToAppend, parsed.getParametersString());
+        }
     }
 
     private Resource getResourceInternal(String path) {
@@ -615,8 +643,9 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         if ( path != null ) {
             // if the path is absolute, normalize . and .. segments and get res
             if (path.startsWith("/")) {
-                path = ResourceUtil.normalize(path);
-                result = (path != null) ? getAbsoluteResourceInternal(path, false) : null;
+                ParsedParameters parsedPath = new ParsedParameters(path);
+                path = ResourceUtil.normalize(parsedPath.getRawPath());
+                result = (path != null) ? getAbsoluteResourceInternal(path, parsedPath.getParameters(), false) : null;
                 if (result != null) {
                     result = this.factory.getResourceDecoratorTracker().decorate(result);
                 }
@@ -642,6 +671,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#listChildren(org.apache.sling.api.resource.Resource)
      */
+    @Override
     public Iterator<Resource> listChildren(final Resource parent) {
         checkClosed();
 
@@ -655,9 +685,11 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.Resource#getChildren()
      */
+    @Override
     public Iterable<Resource> getChildren(final Resource parent) {
         return new Iterable<Resource>() {
 
+            @Override
             public Iterator<Resource> iterator() {
                 return listChildren(parent);
             }
@@ -672,6 +704,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      * @see org.apache.sling.api.resource.ResourceResolver#findResources(java.lang.String,
      *      java.lang.String)
      */
+    @Override
     public Iterator<Resource> findResources(final String query, final String language) throws SlingException {
         checkClosed();
 
@@ -684,6 +717,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      * @see org.apache.sling.api.resource.ResourceResolver#queryResources(java.lang.String,
      *      java.lang.String)
      */
+    @Override
     public Iterator<Map<String, Object>> queryResources(final String query, final String language)
             throws SlingException {
         checkClosed();
@@ -695,6 +729,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#getUserID()
      */
+    @Override
     public String getUserID() {
         checkClosed();
 
@@ -817,14 +852,14 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      *         the part of the <code>absPath</code> which has been cut off by
      *         the {@link ResourcePathIterator} to resolve the resource.
      */
-    private Resource resolveInternal(final String absPath) {
+    private Resource resolveInternal(final String absPath, final Map<String, String> parameters) {
         Resource resource = null;
         String curPath = absPath;
         try {
             final ResourcePathIterator it = new ResourcePathIterator(absPath);
             while (it.hasNext() && resource == null) {
                 curPath = it.next();
-                resource = getAbsoluteResourceInternal(curPath, true);
+                resource = getAbsoluteResourceInternal(curPath, parameters, true);
             }
         } catch (final Exception ex) {
             throw new SlingException("Problem trying " + curPath + " for request path " + absPath, ex);
@@ -838,6 +873,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             final String rpi = absPath.substring(curPath.length());
             resource.getResourceMetadata().setResolutionPath(absPath.substring(0, curPath.length()));
             resource.getResourceMetadata().setResolutionPathInfo(rpi);
+            resource.getResourceMetadata().setParameterMap(parameters);
 
             logger.debug("resolveInternal: Found resource {} with path info {} for {}", new Object[] { resource, rpi, absPath });
 
@@ -845,7 +881,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
             // no direct resource found, so we have to drill down into the
             // resource tree to find a match
-            resource = getAbsoluteResourceInternal("/", true);
+            resource = getAbsoluteResourceInternal("/", parameters, true);
             final StringBuilder resolutionPath = new StringBuilder();
             final StringTokenizer tokener = new StringTokenizer(absPath, "/");
             while (resource != null && tokener.hasMoreTokens()) {
@@ -888,6 +924,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
                 resource.getResourceMetadata().setResolutionPath(path);
                 resource.getResourceMetadata().setResolutionPathInfo(pathInfo);
+                resource.getResourceMetadata().setParameterMap(parameters);
 
                 logger.debug("resolveInternal: Found resource {} with path info {} for {}", new Object[] { resource, pathInfo,
                         absPath });
@@ -904,7 +941,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         } else {
             path = parent.getPath() + '/' + childName;
         }
-        Resource child = getAbsoluteResourceInternal( ResourceUtil.normalize(path), true );
+        Resource child = getAbsoluteResourceInternal( ResourceUtil.normalize(path), EMPTY_PARAMETERS, true );
         if (child != null) {
             final String alias = ResourceResolverContext.getProperty(child, PROP_REDIRECT_INTERNAL);
             if (alias != null) {
@@ -932,7 +969,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
                     } else {
                         aliasPath = parent.getPath() + '/' + aliasName;
                     }
-                    final Resource aliasedChild = getAbsoluteResourceInternal( ResourceUtil.normalize(aliasPath), true );
+                    final Resource aliasedChild = getAbsoluteResourceInternal( ResourceUtil.normalize(aliasPath), EMPTY_PARAMETERS, true );
                     logger.debug("getChildInternal: Found Resource {} with alias {} to use", aliasedChild, childName);
                     return aliasedChild;
                 }
@@ -948,7 +985,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
                         for (final String alias : aliases) {
                             if (childName.equals(alias)) {
                                 logger.debug("getChildInternal: Found Resource {} with alias {} to use", child, childName);
-                                final Resource aliasedChild = getAbsoluteResourceInternal( ResourceUtil.normalize(child.getPath()) , true);
+                                final Resource aliasedChild = getAbsoluteResourceInternal( ResourceUtil.normalize(child.getPath()) , EMPTY_PARAMETERS, true);
                                 return aliasedChild;
                             }
                         }
@@ -965,11 +1002,12 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * Creates a resource with the given path if existing
      */
-    private Resource getAbsoluteResourceInternal(final String path, final boolean isResolve) {
+    private Resource getAbsoluteResourceInternal(final String path, final Map<String, String> parameters, final boolean isResolve) {
 
-        final Resource resource = this.factory.getRootProviderEntry().getResource(this.context, this, path ,isResolve);
+        final Resource resource = this.factory.getRootProviderEntry().getResource(this.context, this, path, parameters, isResolve);
         if (resource != null) {
             resource.getResourceMetadata().setResolutionPath(path);
+            resource.getResourceMetadata().setParameterMap(parameters);
             return resource;
         }
 
@@ -1076,6 +1114,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#delete(org.apache.sling.api.resource.Resource)
      */
+    @Override
     public void delete(final Resource resource)
             throws PersistenceException {
         // check if the resource is non existing - throws NPE if resource is null as stated in the API
@@ -1090,6 +1129,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#create(org.apache.sling.api.resource.Resource, java.lang.String, Map)
      */
+    @Override
     public Resource create(final Resource parent, final String name, final Map<String, Object> properties)
             throws PersistenceException {
         // if parent or name is null, we get an NPE as stated in the API
@@ -1117,6 +1157,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#revert()
      */
+    @Override
     public void revert() {
         this.context.revert(this);
     }
@@ -1124,6 +1165,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#commit()
      */
+    @Override
     public void commit() throws PersistenceException {
         this.context.commit(this);
     }
@@ -1131,6 +1173,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#hasChanges()
      */
+    @Override
     public boolean hasChanges() {
         return this.context.hasChanges(this);
     }
@@ -1138,13 +1181,15 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#hasChildren()
      */
-	public boolean hasChildren(Resource resource) {
+	@Override
+    public boolean hasChildren(Resource resource) {
 		return listChildren(resource).hasNext();
 	}
 
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#getParentResourceType(org.apache.sling.api.resource.Resource)
      */
+    @Override
     public String getParentResourceType(final Resource resource) {
         String resourceSuperType = null;
         if ( resource != null ) {
@@ -1159,6 +1204,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#getParentResourceType(java.lang.String)
      */
+    @Override
     public String getParentResourceType(final String resourceType) {
         return this.context.getParentResourceType(this.factory, this, resourceType);
     }
@@ -1166,6 +1212,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#isResourceType(org.apache.sling.api.resource.Resource, java.lang.String)
      */
+    @Override
     public boolean isResourceType(final Resource resource, final String resourceType) {
         boolean result = false;
         if ( resource != null && resourceType != null ) {
@@ -1192,7 +1239,24 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#refresh()
      */
+    @Override
     public void refresh() {
         this.context.refresh();
+    }
+
+    @Override
+    public Resource getParent(final Resource child) {
+        // TODO Auto-generated method stub
+        return this.getResource(ResourceUtil.getParent(child.getPath()));
+    }
+
+    @Override
+    public void copy(final String srcAbsPath, final String destAbsPath) throws PersistenceException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void move(final String srcAbsPath, final String destAbsPath) throws PersistenceException {
+        throw new UnsupportedOperationException();
     }
 }

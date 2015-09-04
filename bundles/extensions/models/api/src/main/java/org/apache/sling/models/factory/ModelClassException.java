@@ -25,11 +25,15 @@ package org.apache.sling.models.factory;
  * 
  * @see ModelFactory
  */
-public final class ModelClassException extends RuntimeException {
+public class ModelClassException extends RuntimeException {
 
     private static final long serialVersionUID = 4323592065808565135L;
 
     public ModelClassException(String message) {
         super(message);
+    }
+    
+    public ModelClassException(String message, Throwable e) {
+        super(message, e);
     }
 }

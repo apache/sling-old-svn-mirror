@@ -28,6 +28,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -57,14 +58,12 @@ public class OakRepositoryIT extends CommonTests {
         // Oak
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.oak.server", slingOakServerVersion));
         opt.add(mavenBundle("com.google.guava", "guava", "15.0"));
-        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-api", "2.7.5"));
-        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-jcr-commons", "2.7.5"));
-        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-jcr-rmi", "2.4.2"));
+        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-api", "2.10.1"));
+        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-jcr-commons", "2.10.1"));
+        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-jcr-rmi", "2.10.1"));
         opt.add(mavenBundle("org.apache.jackrabbit", "oak-core", oakVersion));
         // embedded for now opt.add(mavenBundle("org.apache.jackrabbit", "oak-jcr", oakVersion));
         opt.add(mavenBundle("org.apache.jackrabbit", "oak-commons", oakVersion));
-
-        opt.add(mavenBundle("org.apache.jackrabbit", "oak-mk-api", oakVersion));
 
         opt.add(mavenBundle("org.apache.jackrabbit", "oak-lucene", oakVersion));
         opt.add(mavenBundle("org.apache.jackrabbit", "oak-blob", oakVersion));
@@ -73,8 +72,8 @@ public class OakRepositoryIT extends CommonTests {
         return opt.toArray(new Option[]{});
     }
 
-    @Override
-    protected void doCheckRepositoryDescriptors() {
+    @Test
+    public void doCheckRepositoryDescriptors() {
         final String propName = "jcr.repository.name";
         final String name = repository.getDescriptor(propName);
         final String expected = "Oak";

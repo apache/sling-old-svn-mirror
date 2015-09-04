@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <title>Sightly REPL</title>
+
+        <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+        <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">
+
+        <link rel="stylesheet" type="text/css" href="/etc/clientlibs/repl/style.css">
+    </head>
+
+    <body>
+        <div id="logo">&nbsp;</div>
+        <h1><small>Read-Eval-Print Loop</small></h1>
+
+        <div id="main" class="row">
+            <div id="input" class="col-xs-6">
+                <div class="editorContainer">
+                    <p class="lead">template.html</p>
+                    <div id="template" class="editor" data-src="/apps/repl/components/repl/template.html" data-mode="ace/mode/html" data-writeable></div>
+                </div>
+
+                <div class="editorContainer">
+                    <p class="lead">logic.js</p>
+                    <div id="logic" class="editor" data-src="/apps/repl/components/repl/logic.js" data-mode="ace/mode/javascript" data-writeable></div>
+                </div>
+            </div>
+            <div id="output" class="editorContainer col-xs-6">
+                <div class="clearfix">
+                    <p class="lead pull-left">output.html</p>
+                    <ul class="nav nav-pills navbar-right">
+                        <li class="active"><a data-toggle="tab" href="#source">Source</a></li>
+                        <li><a data-toggle="tab" href="#view">View</a></li>
+                        <li><a data-toggle="tab" href="#java">Java</a></li>
+                    </ul>
+                </div>
+                <div id="source" class="output-view editor" data-src="/sightly/repl.template.html" data-mode="ace/mode/html"></div>
+                <iframe id="view" class="output-view hidden" src="/sightly/repl.template.html"></iframe>
+                <div id="java" class="output-view editor hidden" data-src="/sightly/repl.java.html" data-mode="ace/mode/java"></div>
+            </div>
+        </div>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+        <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/ace/1.1.01/ace.js"></script>
+
+        <!--[if lt IE 9]>
+          <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+          <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+        <script src="/etc/clientlibs/repl/script.js"></script>
+    </body>
+</html>

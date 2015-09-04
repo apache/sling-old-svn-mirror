@@ -22,13 +22,13 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>22</version>
-        <relativePath>../../../parent/pom.xml</relativePath>
+        <version>24</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.jcr.jackrabbit.server</artifactId>
     <packaging>bundle</packaging>
-    <version>2.2.1-SNAPSHOT</version>
+    <version>2.3.1-SNAPSHOT</version>
 
     <name>Apache Sling Jackrabbit Embedded Repository</name>
     <description>
@@ -43,7 +43,7 @@
     </scm>
 
     <properties>
-      <org.apache.jackrabbit.version>2.6.5</org.apache.jackrabbit.version>
+      <org.apache.jackrabbit.version>2.10.1</org.apache.jackrabbit.version>
       <org.apache.lucene.version>3.6.2</org.apache.lucene.version>
     </properties>
 
@@ -91,6 +91,7 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
+                    <skip>true</skip>
                     <instructions>
                         <Bundle-Category>
                             sling,jcr,jackrabbit
@@ -160,13 +161,13 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.api</artifactId>
-            <version>2.1.0</version>
+            <version>2.3.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.base</artifactId>
-            <version>2.2.2</version>
+            <version>2.3.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 
@@ -174,12 +175,18 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-api</artifactId>
-            <version>2.6.5</version>
+            <version>${org.apache.jackrabbit.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-core</artifactId>
+            <version>${org.apache.jackrabbit.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-data</artifactId>
             <version>${org.apache.jackrabbit.version}</version>
             <scope>compile</scope>
         </dependency>

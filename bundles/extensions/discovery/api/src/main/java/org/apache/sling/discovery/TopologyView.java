@@ -30,21 +30,21 @@ import aQute.bnd.annotation.ProviderType;
 @ProviderType
 public interface TopologyView {
 
-	/**
-	 * Checks if this TopologyView is currently valid - or if the
-	 * service knows of a topology change just going on (or another
-	 * uncertainty about the topology such as IOException etc)
-	 * @return true if this TopologyView is currently valid, false
-	 * if the service knows of a topology change just going on (or
-	 * another issue with discovery like IOException etc)
-	 */
-	boolean isCurrent();
+    /**
+     * Checks if this TopologyView is currently valid - or if the
+     * service knows of a topology change just going on (or another
+     * uncertainty about the topology such as IOException etc)
+     * @return true if this TopologyView is currently valid, false
+     * if the service knows of a topology change just going on (or
+     * another issue with discovery like IOException etc)
+     */
+    boolean isCurrent();
 
-	/**
-	 * Provides the InstanceDescription belonging to <b>this</b> instance.
-	 * @return the InstanceDescription belonging to <b>this</b> instance
-	 */
-	InstanceDescription getLocalInstance();
+    /**
+     * Provides the InstanceDescription belonging to <b>this</b> instance.
+     * @return the InstanceDescription belonging to <b>this</b> instance
+     */
+    InstanceDescription getLocalInstance();
 
     /**
      * Provides the set of InstanceDescriptions in the entire topology,
@@ -52,16 +52,16 @@ public interface TopologyView {
      * @return the set of InstanceDescriptions in the entire topology,
      * without any particular order
      */
-	Set<InstanceDescription> getInstances();
+    Set<InstanceDescription> getInstances();
 
-	/**
-	 * Searches through this topology and picks those accepted by the provided
-	 * <code>InstanceFilter</code> - and returns them without any particular order
-	 * @param filter the filter to use
-	 * @return the set of InstanceDescriptions which were accepted by the InstanceFilter,
-	 * without any particular order
-	 */
-	Set<InstanceDescription> findInstances(InstanceFilter filter);
+    /**
+     * Searches through this topology and picks those accepted by the provided
+     * <code>InstanceFilter</code> - and returns them without any particular order
+     * @param filter the filter to use
+     * @return the set of InstanceDescriptions which were accepted by the InstanceFilter,
+     * without any particular order
+     */
+    Set<InstanceDescription> findInstances(InstanceFilter filter);
 
     /**
      * Provides the collection of ClusterViews.
@@ -70,5 +70,5 @@ public interface TopologyView {
      * including InstanceDescriptions that form "a cluster of 1"
      * @return the set of ClusterViews, without any particular order
      */
-	Set<ClusterView> getClusterViews();
+    Set<ClusterView> getClusterViews();
 }

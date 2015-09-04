@@ -45,6 +45,20 @@ public class ResourcePropertyPredicate implements Predicate<Resource> {
 		} else if (value == null) {
 			return true;
 		} else {
+			return isEqualToValue(property);
+		}
+	}
+
+	private boolean isEqualToValue(Resource property) {
+		final String[] multiProperty = property.adaptTo(String[].class);
+		if (multiProperty != null) {
+			for (String p : multiProperty) {
+				if (operator.accepts(p, value)) {
+					return true;
+				}
+			}
+			return false;
+		} else {
 			return operator.accepts(property.adaptTo(String.class), value);
 		}
 	}

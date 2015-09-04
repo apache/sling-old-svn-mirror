@@ -1,5 +1,0 @@
-# Minimal setup to test factory configs
-osgi.property org.osgi.framework.storage ${osgi.storage.path}
-start.framework
-bundle mvn:org.apache.felix/org.apache.felix.configadmin/1.6.0
-start.all.bundles

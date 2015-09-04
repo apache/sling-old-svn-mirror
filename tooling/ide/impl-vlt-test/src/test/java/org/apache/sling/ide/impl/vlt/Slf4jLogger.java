@@ -29,6 +29,8 @@ import org.slf4j.LoggerFactory;
  */
 class Slf4jLogger implements Logger {
 
+    private static final long PERF_IGNORE_THRESHOLD = 50;
+
     private final org.slf4j.Logger wrapped = LoggerFactory.getLogger(Slf4jLogger.class);
 
     @Override
@@ -65,5 +67,13 @@ class Slf4jLogger implements Logger {
     @Override
     public void error(String message) {
         wrapped.error(message);
+    }
+
+    @Override
+    public void tracePerformance(String message, long duration, Object... arguments) {
+        if (duration < PERF_IGNORE_THRESHOLD) {
+            return;
+        }
+        trace(message + " took " + duration + " ms", arguments);
     }
 }

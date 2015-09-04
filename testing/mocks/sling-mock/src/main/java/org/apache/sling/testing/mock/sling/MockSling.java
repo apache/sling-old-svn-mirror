@@ -58,14 +58,26 @@ public final class MockSling {
      * @return Resource resolver factory instance
      */
     public static ResourceResolverFactory newResourceResolverFactory(final ResourceResolverType type) {
+        return newResourceResolverFactory(type, MockOsgi.newBundleContext());
+    }
+    
+    /**
+     * Creates new sling resource resolver factory instance.
+     * @param type Type of underlying repository.
+     * @return Resource resolver factory instance
+     */
+    public static ResourceResolverFactory newResourceResolverFactory(final ResourceResolverType type,
+            final BundleContext bundleContext) {
         ResourceResolverTypeAdapter adapter = getResourceResolverTypeAdapter(type);
         ResourceResolverFactory factory = adapter.newResourceResolverFactory();
         if (factory == null) {
             SlingRepository repository = adapter.newSlingRepository();
             if (repository == null) {
-                throw new RuntimeException("Adapter neither provides resource resolver factory nor sling repository.");
+                factory = new MockNoneResourceResolverFactory(bundleContext);
             }
-            factory = new MockJcrResourceResolverFactory(repository);
+            else {
+                factory = new MockJcrResourceResolverFactory(repository, bundleContext);
+            }
         }
         return factory;
     }
@@ -74,20 +86,23 @@ public final class MockSling {
         try {
             Class clazz = Class.forName(type.getResourceResolverTypeAdapterClass());
             return (ResourceResolverTypeAdapter) clazz.newInstance();
-        } catch (ClassNotFoundException ex) {
+        }
+        catch (ClassNotFoundException ex) {
             throw new RuntimeException("Unable to instantiate resourcer resolver: "
                     + type.getResourceResolverTypeAdapterClass()
-                    + (type.getArtifactCoordinates() != null ? "Make sure this maven dependency is included: "
+                    + (type.getArtifactCoordinates() != null ? ". Make sure this maven dependency is included: "
                             + type.getArtifactCoordinates() : ""), ex);
-        } catch (InstantiationException ex) {
+        }
+        catch (InstantiationException ex) {
             throw new RuntimeException("Unable to instantiate resourcer resolver: "
                     + type.getResourceResolverTypeAdapterClass()
-                    + (type.getArtifactCoordinates() != null ? "Make sure this maven dependency is included: "
+                    + (type.getArtifactCoordinates() != null ? ". Make sure this maven dependency is included: "
                             + type.getArtifactCoordinates() : ""), ex);
-        } catch (IllegalAccessException ex) {
+        }
+        catch (IllegalAccessException ex) {
             throw new RuntimeException("Unable to instantiate resourcer resolver: "
                     + type.getResourceResolverTypeAdapterClass()
-                    + (type.getArtifactCoordinates() != null ? "Make sure this maven dependency is included: "
+                    + (type.getArtifactCoordinates() != null ? ". Make sure this maven dependency is included: "
                             + type.getArtifactCoordinates() : ""), ex);
         }
     }

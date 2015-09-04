@@ -179,4 +179,12 @@ public abstract class AbstractContentLoaderJsonTest {
         assertEquals(24, calendar.get(Calendar.SECOND));
     }
     
+    @Test
+    public void testUTF8Chars() {
+        Resource resource = this.resourceResolver.getResource("/content/sample/en/jcr:content");
+        ValueMap props = ResourceUtil.getValueMap(resource);
+        
+        assertEquals("äöüß€", props.get("utf8Property"));
+    }
+    
 }

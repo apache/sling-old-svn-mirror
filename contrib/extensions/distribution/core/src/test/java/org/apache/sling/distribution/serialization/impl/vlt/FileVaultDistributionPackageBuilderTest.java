@@ -76,8 +76,8 @@ public class FileVaultDistributionPackageBuilderTest {
         when(resourceResolver.adaptTo(Session.class)).thenReturn(session);
 
 
-        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder(packaging, null, null);
-        DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, new String[]{"/"});
+        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder("filevlt", packaging, null, null, null, null, null);
+        DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
         DistributionPackage distributionPackage = fileVaultdistributionPackageBuilder.createPackageForAdd(resourceResolver, request);
         assertNotNull(distributionPackage);
     }
@@ -88,12 +88,19 @@ public class FileVaultDistributionPackageBuilderTest {
         PackageManager packageManager = mock(PackageManager.class);
         when(packaging.getPackageManager()).thenReturn(packageManager);
 
-        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder(packaging, null, null);
+        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder("filevlt", packaging, null, null, null, null, null);
 
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         InputStream stream = new ByteArrayInputStream("some binary".getBytes("UTF-8"));
-        DistributionPackage distributionPackage = fileVaultdistributionPackageBuilder.readPackageInternal(resourceResolver, stream);
-        assertNull(distributionPackage);
+
+        boolean throwsException  = false;
+        try {
+            DistributionPackage distributionPackage = fileVaultdistributionPackageBuilder.readPackageInternal(resourceResolver, stream);
+        } catch (Exception e) {
+            throwsException = true;
+        }
+
+        assertTrue(throwsException);
     }
 
     @Test
@@ -102,7 +109,7 @@ public class FileVaultDistributionPackageBuilderTest {
         PackageManager packageManager = mock(PackageManager.class);
         when(packaging.getPackageManager()).thenReturn(packageManager);
 
-        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder(packaging, null, null);
+        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder("filevlt", packaging, null, null, null, null, null);
 
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         String id = "some-id";
@@ -119,7 +126,7 @@ public class FileVaultDistributionPackageBuilderTest {
         when(packageManager.open(tempFile)).thenReturn(vaultPackage);
         when(packaging.getPackageManager()).thenReturn(packageManager);
 
-        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder(packaging, null, null);
+        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder("filevlt", packaging, null, null, null, null, null);
 
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         Session session = mock(Session.class);
@@ -130,9 +137,10 @@ public class FileVaultDistributionPackageBuilderTest {
         when(resourceResolver.adaptTo(Session.class)).thenReturn(session);
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         when(distributionPackage.getId()).thenReturn(tempFile.getAbsolutePath());
-        DistributionPackageInfo info = new DistributionPackageInfo();
-        info.setRequestType(DistributionRequestType.ADD);
-        info.setPaths(new String[]{"/something"});
+        when(distributionPackage.getType()).thenReturn("filevlt");
+        DistributionPackageInfo info = new DistributionPackageInfo("filevlt");
+        info.put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, DistributionRequestType.ADD);
+        info.put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, new String[]{"/something"});
         when(distributionPackage.getInfo()).thenReturn(info);
 
         boolean success = fileVaultdistributionPackageBuilder.installPackage(resourceResolver, distributionPackage);
@@ -148,8 +156,8 @@ public class FileVaultDistributionPackageBuilderTest {
         when(packageManager.open(tempFile)).thenReturn(vaultPackage);
         when(packaging.getPackageManager()).thenReturn(packageManager);
 
-        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder(packaging,
-                ImportMode.MERGE, AccessControlHandling.MERGE);
+        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder("filevlt", packaging,
+                ImportMode.MERGE, AccessControlHandling.MERGE, null, null, null);
 
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         Session session = mock(Session.class);
@@ -160,9 +168,10 @@ public class FileVaultDistributionPackageBuilderTest {
         when(resourceResolver.adaptTo(Session.class)).thenReturn(session);
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         when(distributionPackage.getId()).thenReturn(tempFile.getAbsolutePath());
-        DistributionPackageInfo info = new DistributionPackageInfo();
-        info.setRequestType(DistributionRequestType.ADD);
-        info.setPaths(new String[]{"/something"});
+        when(distributionPackage.getType()).thenReturn("filevlt");
+        DistributionPackageInfo info = new DistributionPackageInfo("filevlt");
+        info.put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, DistributionRequestType.ADD);
+        info.put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, new String[]{"/something"});
         when(distributionPackage.getInfo()).thenReturn(info);
 
         boolean success = fileVaultdistributionPackageBuilder.installPackage(resourceResolver, distributionPackage);

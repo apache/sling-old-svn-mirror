@@ -80,12 +80,60 @@ public class ResourceHelper {
         return sb;
     }
 
+    /**
+     * Move resource to given path. Try to do it optimized via JCR API.
+     * If JCR is not available, fallback to Sling Resource API. 
+     * @param res Source resource
+     * @param path Target path
+     * @throws PersistenceException
+     */
     public static void moveResource(Resource res, String path) throws PersistenceException {
-        try{
-            Session session = res.adaptTo(Node.class).getSession();
-            session.move(res.getPath(), path);
-        } catch(RepositoryException re) {
-            throw new PersistenceException(String.valueOf(re), re);
+        Node node = res.adaptTo(Node.class);
+        if (node != null) {
+            try {
+                Session session = node.getSession();
+                session.move(res.getPath(), path);
+            }
+            catch (RepositoryException re) {
+                throw new PersistenceException("Move from " + res.getPath() + " to " + path + " failed.", re);
+            }
+        }
+        else {
+            moveResourceWithResourceAPI(res, path);
+        }
+    }
+    
+    /**
+     * Move resource to given path with Sling Resource API.
+     * @param res Source resource
+     * @param path target path
+     * @throws PersistenceException
+     */
+    private static void moveResourceWithResourceAPI(Resource res, String path) throws PersistenceException {
+        String parentPath = ResourceUtil.getParent(path);
+        Resource parent = res.getResourceResolver().getResource(parentPath);
+        if (parent == null) {
+            throw new PersistenceException("Parent resource does not exist: " + parentPath);
+        }
+
+        // make move with copy + delete
+        copyResourceWithResourceAPI(res, parent, ResourceUtil.getName(path));
+        res.getResourceResolver().delete(res);
+    }
+
+    /**
+     * Copy resource to given target with Sling Resource API.
+     * @param source Source resource
+     * @param destParent Destination parent
+     * @param name Destination resource name
+     * @throws PersistenceException
+     */
+    private static void copyResourceWithResourceAPI(Resource source, Resource destParent, String name) throws PersistenceException {
+        Resource copy = source.getResourceResolver().create(destParent, name, ResourceUtil.getValueMap(source));
+        Iterator<Resource> children = source.listChildren();
+        while (children.hasNext()) {
+            Resource child = children.next();
+            copyResourceWithResourceAPI(child, copy, child.getName());
         }
     }
 

@@ -27,10 +27,8 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.scripting.thymeleaf.internal.processor.attr.SlingAddSelectorsAttrProcessor;
 import org.apache.sling.scripting.thymeleaf.internal.processor.attr.SlingIncludeAttrProcessor;
-import org.apache.sling.scripting.thymeleaf.internal.processor.attr.SlingPathAttrProcessor;
 import org.apache.sling.scripting.thymeleaf.internal.processor.attr.SlingReplaceSelectorsAttrProcessor;
 import org.apache.sling.scripting.thymeleaf.internal.processor.attr.SlingReplaceSuffixAttrProcessor;
-import org.apache.sling.scripting.thymeleaf.internal.processor.attr.SlingResourceAttrProcessor;
 import org.apache.sling.scripting.thymeleaf.internal.processor.attr.SlingResourceTypeAttrProcessor;
 import org.apache.sling.scripting.thymeleaf.internal.processor.attr.SlingUnwrapAttrProcessor;
 import org.osgi.framework.Constants;
@@ -38,17 +36,14 @@ import org.thymeleaf.dialect.AbstractDialect;
 import org.thymeleaf.processor.IProcessor;
 
 @Component(
-    label = "Apache Sling Scripting Thymeleaf “Sling Dialect”",
-    description = "Sling dialect for Sling Scripting Thymeleaf",
-    immediate = true,
-    metatype = true
+    immediate = true
 )
 @Service
 @Properties({
     @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
     @Property(name = Constants.SERVICE_DESCRIPTION, value = "Sling dialect for Sling Scripting Thymeleaf")
 })
-public class SlingDialect extends AbstractDialect {
+public final class SlingDialect extends AbstractDialect {
 
     public static final String PREFIX = "sling";
 
@@ -62,10 +57,8 @@ public class SlingDialect extends AbstractDialect {
         final Set<IProcessor> processors = new HashSet<IProcessor>();
         processors.add(new SlingAddSelectorsAttrProcessor());
         processors.add(new SlingIncludeAttrProcessor());
-        processors.add(new SlingPathAttrProcessor());
         processors.add(new SlingReplaceSelectorsAttrProcessor());
         processors.add(new SlingReplaceSuffixAttrProcessor());
-        processors.add(new SlingResourceAttrProcessor());
         processors.add(new SlingResourceTypeAttrProcessor());
         processors.add(new SlingUnwrapAttrProcessor());
         return processors;

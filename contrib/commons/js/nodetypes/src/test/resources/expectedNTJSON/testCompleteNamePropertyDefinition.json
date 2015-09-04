@@ -1,0 +1,24 @@
+{
+  "ntWithPropertyDefs": {
+    "declaredPropertyDefinitions": [
+      {
+        "defaultValues": [
+          {
+            "name": "myapp:myName",
+            "type": "Name"
+          }
+        ],
+        "requiredType": "Name",
+        "valueConstraints": [
+          "myapp:myName"
+        ],
+        "multiple": true,
+        "autoCreated": true,
+        "mandatory": true,
+        "protected": true,
+        "onParentVersion": "VERSION",
+        "name": "namePropertyDef"
+      }
+    ]
+  }
+}

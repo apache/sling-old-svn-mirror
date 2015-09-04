@@ -24,7 +24,7 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>16</version>
-        <relativePath>../../parent/pom.xml</relativePath>
+        <relativePath/>
     </parent>
 
     <groupId>org.apache.sling.samples</groupId>

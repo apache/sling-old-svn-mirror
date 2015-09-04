@@ -18,46 +18,65 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest.indexing;
 
-import java.io.IOException;
+import static org.junit.Assert.assertFalse;
+
 import java.io.InputStream;
 import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.commons.testing.integration.HttpTestBase;
+import org.apache.sling.commons.testing.integration.HttpTest;
 import org.apache.sling.testing.tools.retry.RetryLoop;
 import org.apache.sling.testing.tools.retry.RetryLoop.Condition;
-
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 /**
  * The <tt>FullTextIndexingTest</tt> verifies that a PDF file which is uploaded will have its contents indexed and
- * available for full-text searches
+ * available for full-text searches, in several different paths.
  * 
  */
-public class FullTextIndexingTest extends HttpTestBase {
+@RunWith(Parameterized.class)
+public class FullTextIndexingTest {
 
-    private String folderName;
-    private String fileName = "lorem-ipsum.pdf";
+    private final HttpTest H = new HttpTest();
 
-    public void testUploadedPdfIsIndexed() throws IOException, JSONException {
+    private final String uploadPath;
+    private final String fileName;
+    private final String expectedText;
 
-        String localPath = "/integration-test/indexing/" + fileName;
-        InputStream resourceToUpload = getClass().getResourceAsStream(localPath);
-        if (resourceToUpload == null)
-            throw new IllegalArgumentException("No resource to upload found at " + localPath);
+    @Parameters(name="{index} - {0}")
+    public static Collection<Object[]> data() {
+        final List<Object []> result = new ArrayList<Object []>();
+        result.add(new Object[] { "lorem-ipsum.pdf", "Excepteur", "/tmp/test-" });
+        result.add(new Object[] { "another.pdf", "some text that we will search for", "/var/test-" });
+        result.add(new Object[] { "french.pdf", "un autre PDF pour le test fulltext", "/libs/test-" });
+        return result;
+    }
+    
+    public FullTextIndexingTest(String filename, String expectedText, String uploadPathPrefix) {
+        this.fileName = filename;
+        this.expectedText = expectedText;
+        this.uploadPath = uploadPathPrefix + getClass().getSimpleName();
+    }
 
-        testClient.mkdir(WEBDAV_BASE_URL + "/" + folderName);
-        testClient.upload(WEBDAV_BASE_URL + "/" + folderName + "/" + fileName, resourceToUpload);
+    @Test
+    public void testUploadedPdfIsIndexed() throws Exception {
 
-        final String fullTextSearchParameter = "Excepteur";
-        final String queryUrl = WEBDAV_BASE_URL + "/content.query.json?queryType=xpath&statement="
-                + URLEncoder.encode("/jcr:root/" + folderName 
-                + "//*[jcr:contains(.,'" + fullTextSearchParameter+ "')]", "UTF-8");
+        final String queryUrl = HttpTest.WEBDAV_BASE_URL + "/content.query.json?queryType=xpath&statement="
+                + URLEncoder.encode("/jcr:root" + uploadPath 
+                + "//*[jcr:contains(.,'" + expectedText + "')]", "UTF-8");
 
-        new RetryLoop(new Condition() {
+        final Condition c = new Condition() {
 
             public boolean isTrue() throws Exception {
-                String result = getContent(queryUrl, CONTENT_TYPE_JSON);
+                String result = H.getContent(queryUrl, HttpTest.CONTENT_TYPE_JSON);
 
                 JSONArray results = new JSONArray(result);
 
@@ -65,7 +84,7 @@ public class FullTextIndexingTest extends HttpTestBase {
                     return false;
                 }
 
-                String expectedPath = SERVLET_CONTEXT + "/" + folderName + "/" + fileName + "/jcr:content";
+                String expectedPath = HttpTest.SERVLET_CONTEXT + uploadPath + "/" + fileName + "/jcr:content";
 
                 for (int i = 0; i < results.length(); i++) {
                     JSONObject object = results.getJSONObject(i);
@@ -78,21 +97,33 @@ public class FullTextIndexingTest extends HttpTestBase {
             }
 
             public String getDescription() {
-                return "A document containing '" + fullTextSearchParameter + "' is found under /" + folderName;
+                return "A document containing '" + expectedText + "' is found under " + uploadPath;
             }
-        }, 10, 50);
+        };
+        
+        assertFalse("Expecting search to return nothing before upload", c.isTrue());
+        
+        String localPath = "/integration-test/indexing/" + fileName;
+        InputStream resourceToUpload = getClass().getResourceAsStream(localPath);
+        if (resourceToUpload == null)
+            throw new IllegalArgumentException("No resource to upload found at " + localPath);
+
+        H.getTestClient().mkdirs(HttpTest.WEBDAV_BASE_URL, uploadPath);
+        H.getTestClient().upload(HttpTest.WEBDAV_BASE_URL + uploadPath + "/" + fileName, resourceToUpload);
+
+        // Increased the timeout to 45 seconds to avoid failures with Oak - indexes not ready??
+        new RetryLoop(c, 45, 50);
     }
 
-    protected void setUp() throws Exception {
-        super.setUp();
-
-        folderName = getClass().getSimpleName();
-        testClient.delete(WEBDAV_BASE_URL + "/" + folderName);
+    @Before
+    public void setUp() throws Exception {
+        H.setUp();
+        H.getTestClient().delete(HttpTest.WEBDAV_BASE_URL + uploadPath);
     }
 
-    protected void tearDown() throws Exception {
-
-        testClient.delete(WEBDAV_BASE_URL + "/" + folderName);
-        super.tearDown();
+    @After
+    public void tearDown() throws Exception {
+        H.getTestClient().delete(HttpTest.WEBDAV_BASE_URL + uploadPath);
+        H.tearDown();
     }
 }

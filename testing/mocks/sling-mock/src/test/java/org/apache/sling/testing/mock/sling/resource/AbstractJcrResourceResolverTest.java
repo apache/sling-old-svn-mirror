@@ -155,7 +155,7 @@ public abstract class AbstractJcrResourceResolverTest {
     }
 
     @Test
-    public void testCreateNodeType() throws RepositoryException, PersistenceException {
+    public void testCreateNodeWithPrimaryType() throws RepositoryException, PersistenceException {
         Resource parent = resourceResolver.getResource(getTestRootNode().getPath());
 
         Resource child = resourceResolver.create(parent, "nodeTypeResource", ImmutableMap.<String, Object> builder()
@@ -163,6 +163,17 @@ public abstract class AbstractJcrResourceResolverTest {
         assertNotNull(child);
         assertEquals(JcrConstants.NT_UNSTRUCTURED, child.getResourceType());
         assertEquals(JcrConstants.NT_UNSTRUCTURED, child.adaptTo(Node.class).getPrimaryNodeType().getName());
+    }
+    
+    @Test
+    public void testCreateNodeWithResourceType() throws RepositoryException, PersistenceException {
+        Resource parent = resourceResolver.getResource(getTestRootNode().getPath());
+
+        Resource child = ResourceUtil.getOrCreateResource(resourceResolver, parent.getPath() + "/intermediate/child",
+                "sling/resource/type", JcrConstants.NT_UNSTRUCTURED, true);
+        assertNotNull(child);
+        assertEquals(JcrConstants.NT_UNSTRUCTURED, parent.getResourceType());
+        assertEquals("sling/resource/type", child.getResourceType());
     }
 
 }

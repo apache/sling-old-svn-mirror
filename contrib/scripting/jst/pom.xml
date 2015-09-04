@@ -23,8 +23,8 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>22</version>
-        <relativePath>../../../parent/pom.xml</relativePath>
+        <version>24</version>
+        <relativePath/>
     </parent>
 
     <artifactId>org.apache.sling.scripting.jst</artifactId>
@@ -86,6 +86,20 @@
                         <ScriptEngine-Name>${project.name}</ScriptEngine-Name>
                         <ScriptEngine-Version>${project.version}</ScriptEngine-Version>
                     </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>src/test/resources/htmlcode/htmlcode1.expected.html</exclude>
+                        <exclude>src/test/resources/htmlcode/htmlcode1.input.jst</exclude>
+                        <exclude>src/test/resources/jscode/jscode1.expected.js</exclude>
+                        <exclude>src/test/resources/jscode/jscode1.input.jst</exclude>
+                        <exclude>src/test/resources/jscode/jscode2.expected.js</exclude>
+                        <exclude>src/test/resources/jscode/jscode2.input.jst</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
         </plugins>

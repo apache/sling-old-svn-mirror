@@ -19,39 +19,31 @@
 echo $0 $*
 [ "$DEBUG" ] && set -x
 
-
-
-SLING_DEFAULTS=/etc/default/sling
-if [ ! -e $SLING_DEFAULTS ] ; then
-	cp $SLING_DEFAULTS.sample $SLING_DEFAULTS
-fi
-. $SLING_DEFAULTS
-
-chmod +x /etc/init.d/sling
-
-# Check for sling user
-if ! getent passwd | grep -q sling ; then
-	useradd --home-dir $SLING_HOME --gid adm $SLING_USER
+SLING_COMMON=/opt/sling/scripts/sling-common.sh
+if [ -r $SLING_COMMON ] ; then
+	. $SLING_COMMON
+else
+	log_failure_msg "Missing $SLING_COMMON file, cannot read env settings."
+	exit -1
 fi
 
-# Make data dir
-SLING_DATA=/var/lib/sling
-if [ ! -d $SLING_DATA ] ; then
-	echo Create $SLING_DATA
-	mkdir -p $SLING_DATA
-	chown -R $SLING_USER:adm $SLING_DATA
+SLING_USER=${SLING_USER:-sling}
+SLING_GROUP=${SLING_GROUP:-sling}
+
+
+# Check for sling user and group
+if ! getent group | grep -q $SLING_USER ; then
+	groupadd --system $SLING_GROUP
+fi
+if ! getent passwd | grep -q $SLING_GROUP ; then
+	useradd --home-dir $SLING_EXEC --gid $SLING_GROUP $SLING_USER
 fi
 
-# Make log dir
-if [ ! -d $SLING_LOG_DIR ] ; then
-	echo Create $SLING_LOG_DIR
-	mkdir -p $SLING_LOG_DIR
-	chown -R $SLING_USER:adm $SLING_LOG_DIR
-fi
+check_sling_permissions force
 
 update-rc.d sling defaults
 
+# Only restart if already running
 if service sling status; then
 	service sling restart
 fi
-

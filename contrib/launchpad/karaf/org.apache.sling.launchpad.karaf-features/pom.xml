@@ -24,8 +24,8 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>22</version>
-    <relativePath>../../../../parent/pom.xml</relativePath>
+    <version>24</version>
+    <relativePath/>
   </parent>
 
   <artifactId>org.apache.sling.launchpad.karaf-features</artifactId>
@@ -40,8 +40,36 @@
       <plugin>
         <groupId>org.apache.karaf.tooling</groupId>
         <artifactId>karaf-maven-plugin</artifactId>
-        <version>3.0.2</version>
+        <version>4.0.1</version>
         <extensions>true</extensions>
+        <executions>
+          <execution>
+            <id>generate-features-file</id>
+            <goals>
+              <goal>features-generate-descriptor</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>features-create-kar</id>
+            <goals>
+              <goal>kar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>ianal-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>verify-legal-files</goal>
+            </goals>
+            <configuration>
+              <strict>false</strict>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

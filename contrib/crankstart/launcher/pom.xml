@@ -13,13 +13,15 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.crankstart.launcher</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.9.9-SNAPSHOT</version>
 
     <name>Apache Sling Crankstart Launcher</name>
     <inceptionYear>2014</inceptionYear>
     
     <description>
-        A different way of starting Sling
+        Sling launcher that gets artifacts defined in a Sling Provisioning
+        Model at runtime, instead of embedding them in the launcher jar like
+        the Sling Launchpad does.
     </description>
 
     <scm>
@@ -40,7 +42,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.apache.sling.crankstart.launcher.Main</mainClass>
+                            <mainClass>org.apache.sling.crankstart.launcher.Launcher</mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                     </archive>
@@ -56,7 +58,8 @@
                             <goal>unpack-dependencies</goal>
                         </goals>
                         <configuration>
-                            <includeGroupIds>org.slf4j,org.ops4j.pax.url</includeGroupIds>
+                            <includeGroupIds>org.slf4j,org.ops4j.pax.url,org.apache.sling</includeGroupIds>
+                            <includeTypes>jar</includeTypes>
                             <excludeTransitive>false</excludeTransitive>
                             <outputDirectory>${project.build.directory}/classes</outputDirectory>
                             <overWriteReleases>false</overWriteReleases>
@@ -81,7 +84,10 @@
                         <fileset>
                             <directory>${basedir}</directory>
                             <includes>
-                                <include>sling-crankstart</include>
+                                <include>CRANKSTART</include>
+                                <include>felix-cache</include>
+                                <include>jackrabbit</include>
+                                <include>derby.log</include>
                             </includes>
                         </fileset>
                     </filesets>
@@ -89,46 +95,30 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <systemProperties>
-                        <!-- pax url needs the local Maven repository to find snapshots we just built  -->
-                        <org.ops4j.pax.url.mvn.localRepository>${settings.localRepository}/</org.ops4j.pax.url.mvn.localRepository>
-                    </systemProperties>
-                </configuration>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
           </plugins>
     </build>   
 
     <dependencies>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.crankstart.api</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
+       <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
+            <version>4.2.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.crankstart.api.fragment</artifactId>
-            <version>1.0.3-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.crankstart.core</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-	    <groupId>org.apache.sling</groupId>
-	    <artifactId>org.apache.sling.crankstart.test.services</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-	    <groupId>org.apache.sling</groupId>
-	    <artifactId>org.apache.sling.crankstart.sling.extensions</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.framework</artifactId>
+            <version>4.0.0</version>
             <scope>provided</scope>
         </dependency>
          <dependency>
@@ -144,6 +134,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.provisioning.model</artifactId>
+            <version>1.2.0</version>
+            <scope>provided</scope>
+        </dependency>
+         <dependency>
             <groupId>org.ops4j.pax.url</groupId>
             <artifactId>pax-url-aether</artifactId>
             <version>${pax.url.version}</version>
@@ -165,6 +161,26 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.testing</artifactId>
             <version>2.0.16</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.cransktart.test.model</artifactId>
+            <type>txt</type>
+            <!-- TODO should also be <classifier>slingfeature</classifier> -->
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.crankstart.test.services</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.tools</artifactId>
+            <version>1.0.10</version>
             <scope>test</scope>
         </dependency>
         <dependency>

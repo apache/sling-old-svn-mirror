@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,7 @@ import org.apache.sling.scripting.jsp.jasper.JspCompilationContext;
 /**
  * Contains static utilities for generating SMAP data based on the
  * current version of Jasper.
- * 
+ *
  * @author Jayson Falkner
  * @author Shawn Bayern
  * @author Robert Field (inner SDEInstaller class)
@@ -77,7 +77,7 @@ public class SmapUtil {
 
         // set up our SMAP generator
         SmapGenerator g = new SmapGenerator();
-        
+
         /** Disable reading of input SMAP because:
             1. There is a bug here: getRealPath() is null if .jsp is in a jar
         	Bugzilla 14660.
@@ -245,7 +245,7 @@ public class SmapUtil {
                 throw new IOException("classFile.delete() failed");
             }
             if (!ctxt.rename(tmpFile, classFile)) {
-                throw new IOException("tmpFile.renameTo(classFile) failed");
+                throw new IOException("tmpFile.renameTo(classFile) failed (" + tmpFile + " -> " + classFile + ")");
             }
         }
 
@@ -397,7 +397,7 @@ public class SmapUtil {
         }
 
         int readU1() {
-            return ((int)orig[origPos++]) & 0xFF;
+            return (orig[origPos++]) & 0xFF;
         }
 
         int readU2() {
@@ -527,6 +527,7 @@ public class SmapUtil {
             this.innerClassMap = map;
         }
 
+        @Override
         public void visitBody(Node n) throws JasperException {
             SmapStratum smapSave = smap;
             String innerClass = n.getInnerClassName();
@@ -537,91 +538,110 @@ public class SmapUtil {
             smap = smapSave;
         }
 
+        @Override
         public void visit(Node.Declaration n) throws JasperException {
             doSmapText(n);
         }
 
+        @Override
         public void visit(Node.Expression n) throws JasperException {
             doSmapText(n);
         }
 
+        @Override
         public void visit(Node.Scriptlet n) throws JasperException {
             doSmapText(n);
         }
 
+        @Override
         public void visit(Node.IncludeAction n) throws JasperException {
             doSmap(n);
             visitBody(n);
         }
 
+        @Override
         public void visit(Node.ForwardAction n) throws JasperException {
             doSmap(n);
             visitBody(n);
         }
 
+        @Override
         public void visit(Node.GetProperty n) throws JasperException {
             doSmap(n);
             visitBody(n);
         }
 
+        @Override
         public void visit(Node.SetProperty n) throws JasperException {
             doSmap(n);
             visitBody(n);
         }
 
+        @Override
         public void visit(Node.UseBean n) throws JasperException {
             doSmap(n);
             visitBody(n);
         }
 
+        @Override
         public void visit(Node.PlugIn n) throws JasperException {
             doSmap(n);
             visitBody(n);
         }
 
+        @Override
         public void visit(Node.CustomTag n) throws JasperException {
             doSmap(n);
             visitBody(n);
         }
 
+        @Override
         public void visit(Node.UninterpretedTag n) throws JasperException {
             doSmap(n);
             visitBody(n);
         }
 
+        @Override
         public void visit(Node.JspElement n) throws JasperException {
             doSmap(n);
             visitBody(n);
         }
 
+        @Override
         public void visit(Node.JspText n) throws JasperException {
             doSmap(n);
             visitBody(n);
         }
 
+        @Override
         public void visit(Node.NamedAttribute n) throws JasperException {
             visitBody(n);
         }
 
+        @Override
         public void visit(Node.JspBody n) throws JasperException {
             doSmap(n);
             visitBody(n);
         }
 
+        @Override
         public void visit(Node.InvokeAction n) throws JasperException {
             doSmap(n);
             visitBody(n);
         }
 
+        @Override
         public void visit(Node.DoBodyAction n) throws JasperException {
             doSmap(n);
             visitBody(n);
         }
 
+        @Override
         public void visit(Node.ELExpression n) throws JasperException {
             doSmap(n);
         }
 
+        @Override
         public void visit(Node.TemplateText n) throws JasperException {
             Mark mark = n.getStart();
             if (mark == null) {
@@ -636,7 +656,7 @@ public class SmapUtil {
             int iInputStartLine = mark.getLineNumber();
             int iOutputStartLine = n.getBeginJavaLine();
             int iOutputLineIncrement = breakAtLF? 1: 0;
-            smap.addLineData(iInputStartLine, fileName, 1, iOutputStartLine, 
+            smap.addLineData(iInputStartLine, fileName, 1, iOutputStartLine,
                              iOutputLineIncrement);
 
             // Output additional mappings in the text
@@ -726,6 +746,7 @@ public class SmapUtil {
 
         HashMap map = new HashMap();
 
+        @Override
         public void doVisit(Node n) {
             String inner = n.getInnerClassName();
             if (inner != null && !map.containsKey(inner)) {
@@ -737,5 +758,5 @@ public class SmapUtil {
             return map;
         }
     }
-    
+
 }

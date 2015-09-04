@@ -16,8 +16,11 @@
  */
 package org.apache.sling.sample.slingshot.impl;
 
+import java.io.IOException;
 import java.security.Principal;
+import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 
 import javax.jcr.RepositoryException;
@@ -38,9 +41,16 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.sample.slingshot.SlingshotConstants;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * The setup service sets up difference things.
+ */
 @Component
 public class SetupService {
 
@@ -49,15 +59,24 @@ public class SetupService {
     @Reference
     private ResourceResolverFactory factory;
 
+    @Reference
+    private ConfigurationAdmin configAdmin;
+
     private static final String[] USERS = new String[] {"slingshot1", "slingshot2"};
 
+    private static final String[] FOLDERS = new String[] {
+        "content:" + SlingshotConstants.RESOURCETYPE_CONTENT,
+        "info",
+        "profile",
+        "ugc"};
+
     @Activate
-    protected void activate() throws LoginException, PersistenceException, RepositoryException {
+    protected void activate(final BundleContext bc) throws IOException, LoginException, PersistenceException, RepositoryException {
         logger.info("Setting up SlingShot...");
         ResourceResolver resolver = null;
         try {
             resolver = this.factory.getAdministrativeResourceResolver(null);
-            setupUsers(resolver);
+            setupUsers(bc, resolver);
             setupContent(resolver);
             setupACL(resolver);
         } finally {
@@ -71,15 +90,22 @@ public class SetupService {
     private void setupACL(final ResourceResolver resolver) throws RepositoryException {
         final Session session = resolver.adaptTo(Session.class);
 
+        // create default slingshot users
         for(final String principalId : USERS) {
-            final String resourcePath = SlingshotConstants.APP_ROOT_PATH + "/public/" + principalId;
+            final String resourcePath = SlingshotConstants.APP_ROOT_PATH + "/users/" + principalId;
 
             final Map<String, String> privileges = new HashMap<String, String>();
             privileges.put(Privilege.JCR_ALL, "granted");
 
             modifyAce(session, resourcePath, principalId, Privilege.JCR_ALL, true);
 
+            // ugc path
+            final String ugcPath = resourcePath + "/ugc";
             privileges.clear();
+            privileges.put(Privilege.JCR_ALL, "granted");
+
+            modifyAce(session, ugcPath, InternalConstants.SERVICE_USER_NAME,
+                    Privilege.JCR_ALL, true);
         }
     }
 
@@ -112,7 +138,7 @@ public class SetupService {
         }
     }
 
-    private void setupUsers(final ResourceResolver resolver) throws RepositoryException {
+    private void setupUsers(final BundleContext bc, final ResourceResolver resolver) throws RepositoryException, IOException {
         final UserManager um = AccessControlUtil.getUserManager(resolver.adaptTo(Session.class));
         for(final String userName : USERS) {
             Authorizable user = um.getAuthorizable(userName);
@@ -121,26 +147,76 @@ public class SetupService {
                 um.createUser(userName, userName);
             }
         }
+
+        // create a service user
+        Authorizable user = um.getAuthorizable(InternalConstants.SERVICE_USER_NAME);
+        if ( user == null ) {
+            logger.info("Creating user {}", InternalConstants.SERVICE_USER_NAME);
+            // TODO - jackrabbit 2 does not support creating a system user
+            // um.createSystemUser(InternalConstants.SERVICE_USER_NAME, null);
+
+            um.createUser(InternalConstants.SERVICE_USER_NAME, InternalConstants.SERVICE_USER_NAME);
+        }
+
+        // check for service user config
+        boolean exists = false;
+        try {
+            final Configuration[] configs = this.configAdmin.listConfigurations("(&("
+                    + ConfigurationAdmin.SERVICE_FACTORYPID + "=org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended"
+                    + ")(user.mapping=" + bc.getBundle().getSymbolicName() + "*"
+                    + "))");
+            if ( configs != null && configs.length > 0 ) {
+                exists = true;
+            }
+        } catch (final InvalidSyntaxException e) {
+            exists = false;
+        }
+        if ( !exists ) {
+            logger.info("Creating service user mapping");
+            final Configuration c = this.configAdmin.createFactoryConfiguration("org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended", null);
+            final Dictionary<String, Object> dict = new Hashtable<String, Object>();
+            dict.put("user.mapping", bc.getBundle().getSymbolicName() + "=" + InternalConstants.SERVICE_USER_NAME);
+
+            c.update(dict);
+        }
     }
 
     private void setupContent(final ResourceResolver resolver) throws PersistenceException {
         final Resource root = resolver.getResource(SlingshotConstants.APP_ROOT_PATH);
         if ( root != null ) {
             // fix resource type of root folder
-            if ( !root.isResourceType(SlingshotConstants.RESOURCETYPE_HOME)) {
+            if ( !root.isResourceType(InternalConstants.RESOURCETYPE_HOME)) {
                 final ModifiableValueMap mvm = root.adaptTo(ModifiableValueMap.class);
-                mvm.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, SlingshotConstants.RESOURCETYPE_HOME);
+                mvm.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, InternalConstants.RESOURCETYPE_HOME);
                 resolver.commit();
             }
-            final Resource publicResource = root.getChild("public");
+            final Resource usersResource = root.getChild("users");
             for(final String userName : USERS) {
-                final String path = SlingshotConstants.APP_ROOT_PATH + "/public/" + userName;
-                final Resource homeResource = resolver.getResource(path);
+                Resource homeResource = resolver.getResource(usersResource, userName);
                 if ( homeResource == null ) {
                     final Map<String, Object> props = new HashMap<String, Object>();
                     props.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, SlingshotConstants.RESOURCETYPE_USER);
-                    resolver.create(publicResource, userName, props);
+                    homeResource = resolver.create(usersResource, userName, props);
                     resolver.commit();
+                }
+                for(final String def : FOLDERS) {
+                    final int index = def.indexOf(':');
+                    final String name;
+                    final String rt;
+                    if ( index == -1 ) {
+                        name = def;
+                        rt = "sling:OrderedFolder";
+                    } else {
+                        name = def.substring(0, index);
+                        rt = def.substring(index + 1);
+                    }
+                    final Resource rsrc = resolver.getResource(homeResource, name);
+                    if ( rsrc == null ) {
+                        final Map<String, Object> props = new HashMap<String, Object>();
+                        props.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, rt);
+                        resolver.create(homeResource, name, props);
+                        resolver.commit();
+                    }
                 }
             }
         }

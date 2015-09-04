@@ -84,6 +84,8 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
      */
     private static final String NEW_PASSWORD = "user.newpassword";
 
+    private static final int DEFAULT_OBSERVATION_QUEUE_LENGTH = 1000;
+
     /** Logger */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -92,6 +94,12 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
               label="Optimize For Oak",
               description="If this switch is enabled, and Oak is used as the repository implementation, some optimized components are used.")
     private static final String PROPERTY_OPTIMIZE_FOR_OAK = "optimize.oak";
+
+    @Property(
+            intValue = DEFAULT_OBSERVATION_QUEUE_LENGTH,
+            label = "Observation queue length",
+            description = "Maximum number of pending revisions in a observation listener queue")
+    private static final String OBSERVATION_QUEUE_LENGTH = "oak.observation.queue-length";
 
     private static final String REPOSITORY_REFERNENCE_NAME = "repository";
 
@@ -147,8 +155,9 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
         try {
             if ( isOak ) {
                 try {
-                    this.listener = new OakResourceListener(root, support, context.getBundleContext(), executor, pathMapper);
-                    log.info("Detected Oak based repository. Using improved JCR Resource Listener");
+                    int observationQueueLength = PropertiesUtil.toInteger(context.getProperties().get(OBSERVATION_QUEUE_LENGTH), DEFAULT_OBSERVATION_QUEUE_LENGTH);
+                    this.listener = new OakResourceListener(root, support, context.getBundleContext(), executor, pathMapper, observationQueueLength);
+                    log.info("Detected Oak based repository. Using improved JCR Resource Listener with observation queue length {}", observationQueueLength);
                 } catch ( final RepositoryException re ) {
                     throw re;
                 } catch ( final Throwable t ) {

@@ -1,0 +1,32 @@
+{
+    "mixin": false,
+    "orderableChildNodes": false,
+    "declaredSupertypes": [
+      "nt:base"
+    ],
+    "declaredPropertyDefinitions": [
+      {
+        "defaultValues": null,
+        "valueConstraints": null,
+        "requiredType": "String",
+        "multiple": false,
+        "autoCreated": false,
+        "mandatory": false,
+        "protected": false,
+        "onParentVersion": "COPY"
+      }
+    ],
+    "declaredChildNodeDefinitions": [
+      {
+        "allowsSameNameSiblings": false,
+        "defaultPrimaryType": null,
+        "requiredPrimaryTypes": [
+          "nt:base"
+        ],
+        "autoCreated": false,
+        "mandatory": false,
+        "protected": false,
+        "onParentVersion": "COPY"
+      }
+    ]
+}

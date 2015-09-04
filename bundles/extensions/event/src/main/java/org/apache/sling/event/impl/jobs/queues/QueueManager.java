@@ -39,7 +39,9 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.scheduler.Scheduler;
+import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
+import org.apache.sling.event.impl.EventingThreadPool;
 import org.apache.sling.event.impl.jobs.JobConsumerManager;
 import org.apache.sling.event.impl.jobs.JobHandler;
 import org.apache.sling.event.impl.jobs.JobImpl;
@@ -56,7 +58,6 @@ import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.Queue;
-import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.jmx.QueuesMBean;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -67,13 +68,13 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * Implementation of the job manager.
+ * Implementation of the queue manager.
  */
 @Component(immediate=true)
 @Service(value={Runnable.class, QueueManager.class, EventHandler.class})
 @Properties({
-    @Property(name="scheduler.period", longValue=60),
-    @Property(name="scheduler.concurrent", boolValue=false),
+    @Property(name=Scheduler.PROPERTY_SCHEDULER_PERIOD, longValue=60),
+    @Property(name=Scheduler.PROPERTY_SCHEDULER_CONCURRENT, boolValue=false),
     @Property(name=EventConstants.EVENT_TOPIC, value=NotificationConstants.TOPIC_JOB_ADDED)
 })
 public class QueueManager
@@ -97,6 +98,12 @@ public class QueueManager
     @Reference
     private ThreadPoolManager threadPoolManager;
 
+    /**
+     * Our thread pool.
+     */
+    @Reference(referenceInterface=EventingThreadPool.class)
+    private ThreadPool threadPool;
+
     /** The job manager configuration. */
     @Reference
     private JobManagerConfiguration configuration;
@@ -108,7 +115,7 @@ public class QueueManager
     private final Object queuesLock = new Object();
 
     /** All active queues. */
-    private final Map<String, AbstractJobQueue> queues = new ConcurrentHashMap<String, AbstractJobQueue>();
+    private final Map<String, JobQueueImpl> queues = new ConcurrentHashMap<String, JobQueueImpl>();
 
     /** We count the scheduler runs. */
     private volatile long schedulerRuns;
@@ -117,7 +124,7 @@ public class QueueManager
     private final AtomicBoolean isActive = new AtomicBoolean(false);
 
     /** The queue services. */
-    private QueueServices queueServices;
+    private volatile QueueServices queueServices;
 
     /**
      * Activate this component.
@@ -133,6 +140,7 @@ public class QueueManager
         queueServices.scheduler = this.scheduler;
         queueServices.threadPoolManager = this.threadPoolManager;
         queueServices.statisticsManager = statisticsManager;
+        queueServices.eventingThreadPool = this.threadPool;
         this.configuration.addListener(this);
     }
 
@@ -144,9 +152,9 @@ public class QueueManager
         logger.debug("Apache Sling Queue Manager stopping on instance {}", Environment.APPLICATION_ID);
 
         this.configuration.removeListener(this);
-        final Iterator<AbstractJobQueue> i = this.queues.values().iterator();
+        final Iterator<JobQueueImpl> i = this.queues.values().iterator();
         while ( i.hasNext() ) {
-            final AbstractJobQueue jbq = i.next();
+            final JobQueueImpl jbq = i.next();
             jbq.close();
             // update mbeans
             ((QueuesMBeanImpl)queuesMBean).sendEvent(new QueueStatusEvent(null, jbq));
@@ -166,10 +174,16 @@ public class QueueManager
         this.schedulerRuns++;
         logger.debug("Queue manager maintenance: Starting #{}", this.schedulerRuns);
 
-        // check for unprocessed jobs first
-        logger.debug("Checking for unprocessed jobs...");
-        for(final AbstractJobQueue jbq : this.queues.values() ) {
-            jbq.checkForUnprocessedJobs();
+        // queue maintenance
+        if ( this.isActive.get() ) {
+            for(final JobQueueImpl jbq : this.queues.values() ) {
+                jbq.maintain();
+            }
+        }
+
+        // full topic scan is done every third run
+        if ( schedulerRuns % 3 == 0 && this.isActive.get() ) {
+            this.fullTopicScan();
         }
 
         // we only do a full clean up on every fifth run
@@ -181,10 +195,10 @@ public class QueueManager
 
            // we synchronize to avoid creating a queue which is about to be removed during cleanup
             synchronized ( queuesLock ) {
-                final Iterator<Map.Entry<String, AbstractJobQueue>> i = this.queues.entrySet().iterator();
+                final Iterator<Map.Entry<String, JobQueueImpl>> i = this.queues.entrySet().iterator();
                 while ( i.hasNext() ) {
-                    final Map.Entry<String, AbstractJobQueue> current = i.next();
-                    final AbstractJobQueue jbq = current.getValue();
+                    final Map.Entry<String, JobQueueImpl> current = i.next();
+                    final JobQueueImpl jbq = current.getValue();
                     if ( jbq.tryToClose() ) {
                         logger.debug("Removing idle job queue {}", jbq);
                         // remove
@@ -207,10 +221,11 @@ public class QueueManager
      * @param topics The topics
      */
     private void start(final QueueInfo queueInfo,
-            final Set<String> topics) {
+                       final Set<String> topics) {
         final InternalQueueConfiguration config = queueInfo.queueConfiguration;
         // get or create queue
-        AbstractJobQueue queue = null;
+        boolean isNewQueue = false;
+        JobQueueImpl queue = null;
         // we synchronize to avoid creating a queue which is about to be removed during cleanup
         synchronized ( queuesLock ) {
             queue = this.queues.get(queueInfo.queueName);
@@ -221,24 +236,20 @@ public class QueueManager
                 queue = null;
             }
             if ( queue == null ) {
-                if ( config.getType() == QueueConfiguration.Type.ORDERED
-                  || config.getType() == QueueConfiguration.Type.TOPIC_ROUND_ROBIN ) {
-                    queue = new OrderedJobQueue(queueInfo.queueName, config, queueServices, topics);
-                } else if ( config.getType() == QueueConfiguration.Type.UNORDERED ) {
-                    queue = new ParallelJobQueue(queueInfo.queueName, config, queueServices, topics);
-                }
-                // this is just a sanity check, actually we always have a queue instance here
+                queue = JobQueueImpl.createQueue(queueInfo.queueName, config, queueServices, topics);
+                // on startup the queue might be empty and we get null back from createQueue
                 if ( queue != null ) {
+                    isNewQueue = true;
                     queues.put(queueInfo.queueName, queue);
                     ((QueuesMBeanImpl)queuesMBean).sendEvent(new QueueStatusEvent(queue, null));
-                    queue.start();
-                } else {
-                    // we log anyway
-                    logger.error("Unable to create new queue: unknown queue type {}", config);
                 }
-            } else {
+            }
+        }
+        if ( queue != null ) {
+            if ( !isNewQueue ) {
                 queue.wakeUpQueue(topics);
             }
+            queue.startJobs();
         }
     }
 
@@ -252,7 +263,7 @@ public class QueueManager
         this.maintain();
     }
 
-    private void outdateQueue(final AbstractJobQueue queue) {
+    private void outdateQueue(final JobQueueImpl queue) {
         // remove the queue with the old name
         // check for main queue
         final String oldName = ResourceHelper.filterQueueName(queue.getName());
@@ -282,8 +293,8 @@ public class QueueManager
     private void restart() {
         // let's rename/close all queues and clear them
         synchronized ( queuesLock ) {
-            final List<AbstractJobQueue> queues = new ArrayList<AbstractJobQueue>(this.queues.values());
-            for(final AbstractJobQueue queue : queues ) {
+            final List<JobQueueImpl> queues = new ArrayList<JobQueueImpl>(this.queues.values());
+            for(final JobQueueImpl queue : queues ) {
                 this.outdateQueue(queue);
             }
         }
@@ -292,7 +303,7 @@ public class QueueManager
         if ( config != null ) {
             final List<Job> rescheduleList = this.configuration.clearJobRetryList();
             for(final Job j : rescheduleList) {
-                final JobHandler jh = new JobHandler((JobImpl)j, this.configuration);
+                final JobHandler jh = new JobHandler((JobImpl)j, null, this.configuration);
                 jh.reschedule();
             }
         }
@@ -309,7 +320,7 @@ public class QueueManager
      * @see org.apache.sling.event.jobs.JobManager#getQueues()
      */
     public Iterable<Queue> getQueues() {
-        final Iterator<AbstractJobQueue> jqI = this.queues.values().iterator();
+        final Iterator<JobQueueImpl> jqI = this.queues.values().iterator();
         return new Iterable<Queue>() {
 
             @Override
@@ -346,23 +357,27 @@ public class QueueManager
             logger.debug("Topology changed {}", active);
             this.isActive.set(active);
             if ( active ) {
-                final Set<String> topics = this.initialScan();
-                final Map<QueueInfo, Set<String>> mapping = this.updateTopicMapping(topics);
-                // start queues
-                for(final Map.Entry<QueueInfo, Set<String>> entry : mapping.entrySet() ) {
-                    this.start(entry.getKey(), entry.getValue());
-                }
+                fullTopicScan();
             } else {
                 this.restart();
             }
         }
     }
 
+    private void fullTopicScan() {
+        logger.debug("Scanning repository for existing topics...");
+        final Set<String> topics = this.scanTopics();
+        final Map<QueueInfo, Set<String>> mapping = this.updateTopicMapping(topics);
+        // start queues
+        for(final Map.Entry<QueueInfo, Set<String>> entry : mapping.entrySet() ) {
+            this.start(entry.getKey(), entry.getValue());
+        }
+    }
+
     /**
      * Scan the resource tree for topics.
      */
-    private Set<String> initialScan() {
-        logger.debug("Scanning repository for existing topics...");
+    private Set<String> scanTopics() {
         final Set<String> topics = new HashSet<String>();
 
         final ResourceResolver resolver = this.configuration.createResourceResolver();
@@ -414,5 +429,15 @@ public class QueueManager
 
         this.logger.debug("Established new topic mapping: {}", mapping);
         return mapping;
+    }
+
+    protected void bindThreadPool(final EventingThreadPool etp) {
+        this.threadPool = etp;
+    }
+
+    protected void unbindThreadPool(final EventingThreadPool etp) {
+        if ( this.threadPool == etp ) {
+            this.threadPool = null;
+        }
     }
 }

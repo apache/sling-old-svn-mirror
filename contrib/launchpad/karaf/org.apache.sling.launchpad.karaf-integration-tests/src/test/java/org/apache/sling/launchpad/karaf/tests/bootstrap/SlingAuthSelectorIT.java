@@ -39,7 +39,7 @@ public class SlingAuthSelectorIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling-auth-selector")
+            addSlingFeatures("sling-auth-selector")
         );
     }
 

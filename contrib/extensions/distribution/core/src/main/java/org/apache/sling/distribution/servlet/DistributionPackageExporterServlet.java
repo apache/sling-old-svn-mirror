@@ -34,6 +34,7 @@ import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.resources.DistributionResourceTypes;
+import org.apache.sling.distribution.transport.impl.HttpTransportUtils;
 import org.apache.sling.distribution.util.RequestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,8 +47,36 @@ public class DistributionPackageExporterServlet extends SlingAllMethodsServlet {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+
+
     @Override
     protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
+            throws ServletException, IOException {
+
+        String operation = request.getParameter("operation");
+
+        try {
+            if ("delete".equals(operation)) {
+
+                deletePackage(request, response);
+
+            } else if ("fetch".equals(operation)) {
+
+                exportOnePackage(request, response, false);
+
+            } else {
+
+                exportOnePackage(request, response, true);
+            }
+
+        } catch (Throwable t) {
+            response.setStatus(503);
+            log.error("error while exporting package", t);
+        }
+    }
+
+
+    protected void exportOnePackage(SlingHttpServletRequest request, SlingHttpServletResponse response, boolean delete)
             throws ServletException, IOException {
 
         DistributionPackageExporter distributionPackageExporter = request
@@ -77,18 +106,25 @@ public class DistributionPackageExporterServlet extends SlingAllMethodsServlet {
                         InputStream inputStream = null;
                         int bytesCopied = -1;
                         try {
+                            response.addHeader(HttpTransportUtils.HEADER_DISTRIBUTION_ORIGINAL_ID, distributionPackage.getId());
+
                             inputStream = distributionPackage.createInputStream();
+
                             bytesCopied = IOUtils.copy(inputStream, response.getOutputStream());
                         } finally {
                             IOUtils.closeQuietly(inputStream);
                         }
 
-                        // delete the package permanently
-                        distributionPackage.delete();
+                        String packageId = distributionPackage.getId();
+                        if (delete) {
+                            // delete the package permanently
+                            distributionPackage.delete();
+                        }
+
 
                         // everything ok
                         response.setStatus(200);
-                        log.info("{} bytes written into the response", bytesCopied);
+                        log.info("exported package {} was sent (and deleted={}), bytes written {}", new Object[] { packageId, delete, bytesCopied });
                     } else {
                         log.warn("fetched a null package");
                     }
@@ -101,10 +137,37 @@ public class DistributionPackageExporterServlet extends SlingAllMethodsServlet {
                 log.debug("nothing to fetch");
             }
 
-        } catch (Exception e) {
+        } catch (Throwable e) {
             response.setStatus(503);
-            log.error("error while exporting from {}", request.getRequestURL(), e);
+            log.error("error while exporting package", e);
         }
+    }
+
+
+
+    void deletePackage(final SlingHttpServletRequest request, final SlingHttpServletResponse response) {
+        DistributionPackageExporter distributionPackageExporter = request
+                .getResource()
+                .adaptTo(DistributionPackageExporter.class);
+
+        ResourceResolver resourceResolver = request.getResourceResolver();
+
+
+        String id = request.getParameter("id");
+
+        DistributionPackage distributionPackage = distributionPackageExporter.getPackage(resourceResolver, id);
+
+        if (distributionPackage != null) {
+            distributionPackage.delete();
+            log.info("exported package {} was deleted", distributionPackage.getId());
+
+            response.setStatus(200);
+        } else {
+            response.setStatus(204);
+            log.debug("nothing to delete {}", id);
+        }
+
+
     }
 
 }

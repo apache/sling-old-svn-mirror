@@ -73,7 +73,7 @@ public abstract class AbstractTemplateModeHandler implements SlingTemplateModeHa
 
     protected abstract void configure(final ComponentContext componentContext);
 
-    protected synchronized void configurePatternSpec(final String[] strings) {
+    protected void configurePatternSpec(final String[] strings) {
         final Set<String> set = new HashSet<String>();
         Collections.addAll(set, strings);
         final PatternSpec patternSpec = new PatternSpec(); // isInitialized() is private, so create a new PatternSpec

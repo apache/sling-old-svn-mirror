@@ -19,6 +19,7 @@
 package org.apache.sling.discovery.impl.setup;
 
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -272,8 +273,10 @@ public class MockedResourceResolver implements ResourceResolver {
                         child.setProperty(entry.getKey(), (String)entry.getValue());
                     } else if (entry.getValue() instanceof Boolean) {
                         child.setProperty(entry.getKey(), (Boolean)entry.getValue());
+                    } else if (entry.getValue() instanceof Calendar) {
+                        child.setProperty(entry.getKey(), (Calendar)entry.getValue());
                     } else {
-                        throw new UnsupportedOperationException("Not implemented");
+                        throw new UnsupportedOperationException("Not implemented (entry.getValue(): "+entry.getValue()+")");
                     }
                 }
             }

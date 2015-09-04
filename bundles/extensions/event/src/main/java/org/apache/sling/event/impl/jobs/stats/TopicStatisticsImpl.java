@@ -27,27 +27,27 @@ public class TopicStatisticsImpl implements TopicStatistics {
 
     private final String topic;
 
-    private long lastActivated = -1;
+    private volatile long lastActivated = -1;
 
-    private long lastFinished = -1;
+    private volatile long lastFinished = -1;
 
-    private long averageWaitingTime;
+    private volatile long averageWaitingTime;
 
-    private long averageProcessingTime;
+    private volatile long averageProcessingTime;
 
-    private long waitingTime;
+    private volatile long waitingTime;
 
-    private long processingTime;
+    private volatile long processingTime;
 
-    private long waitingCount;
+    private volatile long waitingCount;
 
-    private long processingCount;
+    private volatile long processingCount;
 
-    private long finishedJobs;
+    private volatile long finishedJobs;
 
-    private long failedJobs;
+    private volatile long failedJobs;
 
-    private long cancelledJobs;
+    private volatile long cancelledJobs;
 
     /** Constructor. */
     public TopicStatisticsImpl(final String topic) {
@@ -57,6 +57,7 @@ public class TopicStatisticsImpl implements TopicStatistics {
     /**
      * @see org.apache.sling.event.jobs.TopicStatistics#getTopic()
      */
+    @Override
     public String getTopic() {
         return this.topic;
     }
@@ -64,6 +65,7 @@ public class TopicStatisticsImpl implements TopicStatistics {
     /**
      * @see org.apache.sling.event.jobs.TopicStatistics#getNumberOfProcessedJobs()
      */
+    @Override
     public synchronized long getNumberOfProcessedJobs() {
         return getNumberOfCancelledJobs() + getNumberOfFailedJobs() + getNumberOfFinishedJobs();
     }
@@ -71,6 +73,7 @@ public class TopicStatisticsImpl implements TopicStatistics {
     /**
      * @see org.apache.sling.event.jobs.TopicStatistics#getAverageWaitingTime()
      */
+    @Override
     public synchronized long getAverageWaitingTime() {
         return averageWaitingTime;
     }
@@ -78,6 +81,7 @@ public class TopicStatisticsImpl implements TopicStatistics {
     /**
      * @see org.apache.sling.event.jobs.TopicStatistics#getAverageProcessingTime()
      */
+    @Override
     public synchronized long getAverageProcessingTime() {
         return averageProcessingTime;
     }
@@ -85,6 +89,7 @@ public class TopicStatisticsImpl implements TopicStatistics {
     /**
      * @see org.apache.sling.event.jobs.TopicStatistics#getNumberOfFinishedJobs()
      */
+    @Override
     public synchronized long getNumberOfFinishedJobs() {
         return finishedJobs;
     }
@@ -92,6 +97,7 @@ public class TopicStatisticsImpl implements TopicStatistics {
     /**
      * @see org.apache.sling.event.jobs.TopicStatistics#getNumberOfCancelledJobs()
      */
+    @Override
     public synchronized long getNumberOfCancelledJobs() {
         return cancelledJobs;
     }
@@ -99,6 +105,7 @@ public class TopicStatisticsImpl implements TopicStatistics {
     /**
      * @see org.apache.sling.event.jobs.TopicStatistics#getNumberOfFailedJobs()
      */
+    @Override
     public synchronized long getNumberOfFailedJobs() {
         return failedJobs;
     }
@@ -106,6 +113,7 @@ public class TopicStatisticsImpl implements TopicStatistics {
     /**
      * @see org.apache.sling.event.jobs.TopicStatistics#getLastActivatedJobTime()
      */
+    @Override
     public synchronized long getLastActivatedJobTime() {
         return this.lastActivated;
     }
@@ -113,6 +121,7 @@ public class TopicStatisticsImpl implements TopicStatistics {
     /**
      * @see org.apache.sling.event.jobs.TopicStatistics#getLastFinishedJobTime()
      */
+    @Override
     public synchronized long getLastFinishedJobTime() {
         return this.lastFinished;
     }
@@ -124,7 +133,7 @@ public class TopicStatisticsImpl implements TopicStatistics {
     public synchronized void addFinished(final long jobTime) {
         this.finishedJobs++;
         this.lastFinished = System.currentTimeMillis();
-        if ( jobTime != -1 ) {
+        if ( jobTime > 0 ) {
             this.processingTime += jobTime;
             this.processingCount++;
             this.averageProcessingTime = this.processingTime / this.processingCount;
@@ -137,7 +146,7 @@ public class TopicStatisticsImpl implements TopicStatistics {
      */
     public synchronized void addActivated(final long queueTime) {
         this.lastActivated = System.currentTimeMillis();
-        if ( queueTime != -1 ) {
+        if ( queueTime > 0 ) {
             this.waitingTime += queueTime;
             this.waitingCount++;
             this.averageWaitingTime = this.waitingTime / this.waitingCount;

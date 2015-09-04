@@ -41,7 +41,7 @@ import aQute.bnd.annotation.ConsumerType;
  * @see ResourceProviderFactory#getResourceProvider(java.util.Map)
  * @see ResourceProviderFactory#getAdministrativeResourceProvider(java.util.Map)
  *
- * @since 2.2.0
+ * @since 2.2  (Sling API Bundle 2.2.0)
  */
 @ConsumerType
 public interface ModifyingResourceProvider extends ResourceProvider {

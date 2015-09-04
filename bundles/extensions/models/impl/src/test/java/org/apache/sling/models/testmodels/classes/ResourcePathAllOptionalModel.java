@@ -40,6 +40,11 @@ public class ResourcePathAllOptionalModel {
     @Named("propertyContainingAPath")
     @Optional
     private Resource derefProperty;
+    
+    @Inject
+    @Path(paths={"/some/path", "/some/path2"})
+    @Optional
+    private Resource manyFromPathNonList;
 
     @ResourcePath(path = "/some/path2", optional=true)
     private Resource fromPath2;

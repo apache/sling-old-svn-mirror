@@ -31,7 +31,8 @@ public abstract class ConfigurationConstants {
 
     /**
      * This property defines the value to be used as a bundle location if a configuration
-     * is created by the installer. This property is a string value defaulting to "?".
+     * is created by the installer. This property is a string value defaulting either
+     * to {@code null} or "?".
      * If this property contains the empty string, {@code null} is used as the value.
      *
      * The property should be used, if a configuration should be bound to a specific client.

@@ -1,5 +1,5 @@
 {
     "jcr:primaryType": "sling:OsgiConfig",
     "user.default": "",
-    "user.mapping": "org.apache.sling.distribution.core:distributionService=admin"
+    "user.mapping": "org.apache.sling.distribution.core:distributionService=testDistributionUser"
 }

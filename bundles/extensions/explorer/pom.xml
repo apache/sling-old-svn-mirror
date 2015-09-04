@@ -21,8 +21,8 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>22</version>
-        <relativePath>../../../parent/pom.xml</relativePath>
+        <version>24</version>
+        <relativePath/>
     </parent>
 
     <groupId>org.apache.sling</groupId>
@@ -56,6 +56,19 @@
 						</Sling-Bundle-Resources>
                     </instructions>
                 </configuration>
+            </plugin>
+          <plugin>
+              <groupId>org.apache.rat</groupId>
+              <artifactId>apache-rat-plugin</artifactId>
+              <configuration>
+                <excludes>
+                    <exclude>src/main/resources/libs/sling/explorer/css/jquery-ui.css</exclude>
+                    <exclude>src/main/resources/libs/sling/explorer/css/ui.theme.css</exclude>
+                    <exclude>src/main/resources/libs/sling/explorer/js/jquery-1.4.2.min.js</exclude>
+                    <exclude>src/main/resources/libs/sling/explorer/js/jquery-ui.min.js</exclude>
+                    <exclude>src/main/resources/libs/sling/explorer/js/ui.datetimebox.js</exclude>
+                </excludes>
+              </configuration>
             </plugin>
         </plugins>
     </build>

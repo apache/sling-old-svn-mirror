@@ -41,6 +41,9 @@ public class MergedResource extends AbstractResource {
     /** Resource type. */
     private final String resourceType;
 
+    /** Resource super type. */
+    private final String resourceSuperType;
+
     /** Resource meta data. */
     private final ResourceMetadata metadata = new ResourceMetadata();
 
@@ -64,7 +67,12 @@ public class MergedResource extends AbstractResource {
         this.path = (relativePath.length() == 0 ? mergeRootPath : mergeRootPath + "/" + relativePath);
         this.properties = new DeepReadValueMapDecorator(this, new MergedValueMap(valueMaps));
         // get resource type
-        String rt = (relativePath.length() == 0 ? "/" : relativePath);
+        final String slingPropRT = this.properties.get(ResourceResolver.PROPERTY_RESOURCE_TYPE, String.class);
+        String rt = slingPropRT;
+        if (rt == null) {
+            rt = relativePath.length() == 0 ? "/" : relativePath;
+        }
+        // use the resource type of the last resource in the set that provides one
         for(final Resource rsrc : mappedResources) {
             final String value = rsrc.getResourceType();
             if ( value != null ) {
@@ -72,6 +80,11 @@ public class MergedResource extends AbstractResource {
             }
         }
         this.resourceType = rt;
+        if ( !rt.equals(slingPropRT) ) {
+            this.resourceSuperType = slingPropRT;
+        } else {
+            this.resourceSuperType = null;
+        }
         metadata.put(MergedResourceConstants.METADATA_FLAG, true);
         final String[] resourcePaths = new String[mappedResources.size()];
         int i = 0;
@@ -100,8 +113,7 @@ public class MergedResource extends AbstractResource {
      * {@inheritDoc}
      */
     public String getResourceSuperType() {
-        // So far, there's no concept of resource super type for a merged resource
-        return null;
+        return this.resourceSuperType;
     }
 
     /**

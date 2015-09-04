@@ -29,13 +29,35 @@ import org.apache.sling.discovery.impl.setup.Instance;
 import org.apache.sling.discovery.impl.setup.MockFactory;
 import org.apache.sling.discovery.impl.setup.OSGiFactory;
 import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistry;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 public class ConnectorRegistryTest {
 
+    private Instance i;
+
+    @Before
+    public void setup() throws Exception {
+        i = Instance.newStandaloneInstance("i", true);
+    }
+    
+    @After
+    public void teardown() throws Exception {
+        if (i!=null) {
+            try {
+                i.stopHeartbeats();
+            } catch (Throwable e) {
+                e.printStackTrace();
+                i.stop();
+                throw new RuntimeException(e);
+            }
+            i.stop();
+        }
+    }
+    
     @Test
     public void testRegisterUnregister() throws Exception {
-        Instance i = Instance.newStandaloneInstance("i", true);
         Config config = new Config() {
             @Override
             public long getHeartbeatTimeout() {

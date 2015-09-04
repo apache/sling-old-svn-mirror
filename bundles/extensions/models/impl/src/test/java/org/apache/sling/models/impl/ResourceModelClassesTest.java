@@ -200,8 +200,7 @@ public class ResourceModelClassesTest {
         try {
             factory.createModel(res, ResourceModelWithRequiredField.class);
         } catch (MissingElementsException e) {
-            assertEquals(ResourceModelWithRequiredField.class, e.getType());
-            assertEquals("required", ((Field) e.getMissingElements().iterator().next()).getName());
+            assertEquals("required", ((Field) e.getMissingElements().iterator().next().getElement()).getName());
             thrown = true;
         }
         assertTrue(thrown);

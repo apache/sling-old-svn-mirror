@@ -23,7 +23,7 @@ import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.apache.sling.query.api.TreeProvider;
+import org.apache.sling.query.api.internal.TreeProvider;
 import org.apache.sling.query.iterator.AbstractIterator;
 
 public class BfsTreeIterator<T> extends AbstractIterator<T> {

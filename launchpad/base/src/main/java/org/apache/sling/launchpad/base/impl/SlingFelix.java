@@ -24,8 +24,12 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.felix.framework.Felix;
+import org.apache.felix.framework.Logger;
+import org.apache.felix.framework.util.FelixConstants;
+import org.apache.felix.framework.util.Util;
 import org.apache.sling.launchpad.base.shared.Loader;
 import org.apache.sling.launchpad.base.shared.Notifiable;
 import org.osgi.framework.Bundle;
@@ -41,9 +45,32 @@ public class SlingFelix extends Felix {
     // see getBundle(Class) below
     private Method getBundleMethod;
 
-    public SlingFelix(final Notifiable notifiable, final Map<?, ?> props) throws Exception {
-        super(props);
+    public SlingFelix(final Notifiable notifiable, @SuppressWarnings("rawtypes") final Map props) throws Exception {
+        super(getPropsAndDefaultProps(props));
         this.notifiable = notifiable;
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private static Map getPropsAndDefaultProps(final Map props) {
+        final Logger logger = (Logger)props.get(FelixConstants.LOG_LOGGER_PROP);
+        if ( logger != null ) {
+            final Properties fullProps = new Properties();
+            final Properties defaultProps = Util.loadDefaultProperties(logger);
+            fullProps.putAll(defaultProps);
+            fullProps.putAll(props);
+
+            // replace variables
+            for(final Object name : defaultProps.keySet()) {
+                if ( !props.containsKey(name) ) {
+                    final String value = (String)fullProps.get(name);
+                    final String substValue = Util.substVars(value, name.toString(), null, fullProps);
+                    fullProps.put(name, substValue);
+                }
+            }
+
+            return fullProps;
+        }
+        return props;
     }
 
     @Override
@@ -79,6 +106,7 @@ public class SlingFelix extends Felix {
         super.stop();
     }
 
+    @Override
     public void stop(final int status) throws BundleException {
         startNotifier(false, null);
         super.stop(status);
@@ -160,6 +188,7 @@ public class SlingFelix extends Felix {
             }
         }
 
+        @Override
         public void run() {
 
             try {

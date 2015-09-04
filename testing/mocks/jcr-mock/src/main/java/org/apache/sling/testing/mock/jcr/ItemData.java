@@ -37,14 +37,15 @@ class ItemData {
     private final NodeType nodeType;
     private Value[] values;
     private boolean isMultiple;
+    private boolean isNew;
     
     private ItemData(String path, boolean isNode, String uuid, NodeType nodeType) {
-        super();
         this.path = path;
         this.name = ResourceUtil.getName(path);
         this.uuid = uuid;
         this.isNode = isNode;
         this.nodeType = nodeType;
+        this.isNew = true;
     }
     
     public String getPath() {
@@ -114,6 +115,14 @@ class ItemData {
         }
     }
     
+    public boolean isNew() {
+        return isNew;
+    }
+
+    public void setIsNew(boolean isNew) {
+        this.isNew = isNew;
+    }
+
     @Override
     public int hashCode() {
         return path.hashCode();

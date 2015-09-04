@@ -39,13 +39,20 @@ public class SlingExtensionEventIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling-extension-event")
+            addSlingFeatures("sling-extension-event")
         );
     }
 
     @Test
     public void testOrgApacheSlingEvent() {
         final Bundle bundle = findBundle("org.apache.sling.event");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
+    public void testOrgApacheSlingEventDea() {
+        final Bundle bundle = findBundle("org.apache.sling.event.dea");
         assertNotNull(bundle);
         assertEquals(Bundle.ACTIVE, bundle.getState());
     }

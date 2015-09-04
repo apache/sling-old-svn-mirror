@@ -63,7 +63,7 @@ public class HttpOsgiClient implements OsgiClient {
     @Override
     public Version getBundleVersion(String bundleSymbolicName) throws OsgiClientException {
 
-        GetMethod method = new GetMethod(repositoryInfo.getUrl() + "system/console/bundles.json");
+        GetMethod method = new GetMethod(repositoryInfo.appendPath("system/console/bundles.json"));
         HttpClient client = getHttpClient();
         InputStream input = null;
 
@@ -126,7 +126,7 @@ public class HttpOsgiClient implements OsgiClient {
         }
 
         // append pseudo path after root URL to not get redirected for nothing
-        final PostMethod filePost = new PostMethod(repositoryInfo.getUrl()+"system/console/install");
+        final PostMethod filePost = new PostMethod(repositoryInfo.appendPath("system/console/install"));
 
         try {
             // set referrer
@@ -203,7 +203,7 @@ public class HttpOsgiClient implements OsgiClient {
 
         void installBundle() throws OsgiClientException {
 
-            PostMethod method = new PostMethod(repositoryInfo.getUrl() + "system/sling/tooling/install");
+            PostMethod method = new PostMethod(repositoryInfo.appendPath("system/sling/tooling/install"));
 
             try {
                 configureRequest(method);

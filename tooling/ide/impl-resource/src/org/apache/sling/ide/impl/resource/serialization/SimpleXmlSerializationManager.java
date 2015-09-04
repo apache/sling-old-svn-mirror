@@ -22,6 +22,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -133,7 +136,8 @@ public class SimpleXmlSerializationManager implements SerializationManager, Seri
             handler.setResult(sr);
             handler.startDocument();
             startElement(handler, TAG_RESOURCE);
-            for (Map.Entry<String, Object> property : content.entrySet()) {
+            Set<Entry<String, Object>> entrySet = new TreeMap<String, Object>(content).entrySet();
+            for (Map.Entry<String, Object> property : entrySet) {
                 Object value = property.getValue();
                 if (value instanceof String) {
                     String tagName = property.getKey();

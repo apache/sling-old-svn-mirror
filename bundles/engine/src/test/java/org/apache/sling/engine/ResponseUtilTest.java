@@ -26,21 +26,21 @@ public class ResponseUtilTest extends TestCase {
     public void testNullInput() {
         assertNull(ResponseUtil.escapeXml(null));
     }
-    
+
     public void testNoEscapes() {
         assertEquals("foo and bar", ResponseUtil.escapeXml("foo and bar"));
     }
-    
+
     public void testEscapes() {
-        assertEquals("&lt;bonnie&gt; &amp; &lt;/clyde&gt; &amp;&amp; others", 
-                ResponseUtil.escapeXml("<bonnie> & </clyde> && others"));
+        assertEquals("&lt;bonnie&gt; &amp; &lt;/clyde&gt; &amp;&amp; others are having fun with &quot; and &apos; characters",
+                ResponseUtil.escapeXml("<bonnie> & </clyde> && others are having fun with \" and ' characters"));
     }
-    
+
     public void testXmlEscapingWriter() throws IOException {
         final StringWriter sw = new StringWriter();
         final Writer w = ResponseUtil.getXmlEscapingWriter(sw);
-        w.write("<bonnie> & </clyde> && others");
+        w.write("<bonnie> & </clyde> && others are having fun with \" and ' characters");
         w.flush();
-        assertEquals("&lt;bonnie&gt; &amp; &lt;/clyde&gt; &amp;&amp; others", sw.toString()); 
+        assertEquals("&lt;bonnie&gt; &amp; &lt;/clyde&gt; &amp;&amp; others are having fun with &quot; and &apos; characters", sw.toString());
     }
 }

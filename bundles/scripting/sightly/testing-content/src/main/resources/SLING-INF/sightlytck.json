@@ -1,0 +1,100 @@
+{
+    "jcr:primaryType": "sling:Folder",
+    "exprlang": {
+        "jcr:primaryType": "sling:Folder",
+        "operators": {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "/sightlytck/scripts/exprlang/operators"
+        },
+        "filters": {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "/sightlytck/scripts/exprlang/filters"
+        },
+        "filteroptions": {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "/sightlytck/scripts/exprlang/filteroptions"
+        },
+        "strings": {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "/sightlytck/scripts/exprlang/strings"
+        },
+        "casing": {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "/sightlytck/scripts/exprlang/casing"
+        },
+        "xss" : {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "/sightlytck/scripts/exprlang/xss"
+        },
+        "escapedexpr": {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "/sightlytck/scripts/exprlang/escapedexpr"
+        }
+    },
+    "blockstatements": {
+        "jcr:primaryType": "sling:Folder",
+        "list": {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "/sightlytck/scripts/blockstatements/list"
+        },
+        "test": {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "/sightlytck/scripts/blockstatements/test"
+        },
+        "use": {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "/sightlytck/scripts/blockstatements/use"
+        },
+        "unwrap": {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "/sightlytck/scripts/blockstatements/unwrap"
+        },
+        "text": {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "/sightlytck/scripts/blockstatements/text"
+        },
+        "resource": {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "/sightlytck/scripts/blockstatements/resource"
+        },
+        "templatecall": {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "/sightlytck/scripts/blockstatements/templatecall"
+        },
+        "attribute": {
+            "jcr:primartyType": "nt:unstructured",
+            "sling:resourceType": "/sightlytck/scripts/blockstatements/attribute"
+        },
+        "include": {
+            "jcr:primartyType": "nt:unstructured",
+            "sling:resourceType": "/sightlytck/scripts/blockstatements/include"
+        },
+        "element": {
+            "jcr:primartyType": "nt:unstructured",
+            "sling:resourceType": "/sightlytck/scripts/blockstatements/element"
+        },
+        "repeat": {
+            "jcr:primartyType": "nt:unstructured",
+            "sling:resourceType": "/sightlytck/scripts/blockstatements/repeat"
+        }
+
+    },
+    "tags": {
+        "jcr:primaryType": "sling:Folder",
+        "sly": {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "/sightlytck/scripts/tags/sly"
+        }
+    },
+    "helpers": {
+        "jcr:primaryType": "sling:Folder",
+        "testresource": {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "/sightlytck/scripts/helpers/testresource"
+        },
+        "remotetemplate": {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "/sightlytck/scripts/helpers/remotetemplate"
+        }
+    }
+}

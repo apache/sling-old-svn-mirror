@@ -47,7 +47,7 @@ public class MergedValueMap extends ValueMapDecorator {
     /**
      * Constructor
      *
-     * @param resource The merged resource to get properties from
+     * @param valueMaps a list of value maps to be aggregated into <i>this</i> value map
      */
     public MergedValueMap(final List<ValueMap> valueMaps) {
         super(new HashMap<String, Object>());

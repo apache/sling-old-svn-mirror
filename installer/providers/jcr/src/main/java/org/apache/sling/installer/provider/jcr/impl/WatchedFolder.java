@@ -31,9 +31,6 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.observation.Event;
-import javax.jcr.observation.EventIterator;
-import javax.jcr.observation.EventListener;
 
 import org.apache.sling.installer.api.InstallableResource;
 import org.slf4j.Logger;
@@ -42,11 +39,12 @@ import org.slf4j.LoggerFactory;
 /** Watch a single folder in the JCR Repository, detecting changes
  *  to it and providing InstallableData for its contents.
  */
-class WatchedFolder implements EventListener{
+class WatchedFolder {
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final String path;
+    private final String pathWithSlash;
     private final int priority;
     private final Session session;
     private final Collection <JcrInstaller.NodeConverter> converters;
@@ -72,32 +70,15 @@ class WatchedFolder implements EventListener{
         }
 
         this.path = path;
+        this.pathWithSlash = path.concat("/");
         this.converters = converters;
         this.priority = priority;
-
         this.session = session;
     }
 
-    public void start() throws RepositoryException {
-        // observe any changes in our folder (and under it, as changes to properties
-        // might be lower in the hierarchy)
-        final int eventTypes = Event.NODE_ADDED | Event.NODE_REMOVED
-                | Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED;
-        final boolean isDeep = true;
-        final boolean noLocal = true;
-        session.getWorkspace().getObservationManager().addEventListener(this, eventTypes, path,
-                isDeep, null, null, noLocal);
+    public void start() {
+        logger.info("Watching folder {} (priority {})", path, priority);
         this.needsScan = true;
-
-        log.info("Watching folder {} (priority {})", path, priority);
-    }
-
-    public void stop() {
-    	try {
-	    	session.getWorkspace().getObservationManager().removeEventListener(this);
-    	} catch(RepositoryException re) {
-    		log.warn("RepositoryException in stop()", re);
-    	}
     }
 
     @Override
@@ -109,11 +90,15 @@ class WatchedFolder implements EventListener{
         return path;
     }
 
+    public String getPathWithSlash() {
+        return this.pathWithSlash;
+    }
+
     /**
      * Update scan flag whenever an observation event occurs.
      */
-    public void onEvent(final EventIterator it) {
-        log.debug("JCR events received for path {}", path);
+    public void markForScan() {
+        logger.debug("JCR events received for path {}", path);
         needsScan = true;
     }
 
@@ -129,7 +114,7 @@ class WatchedFolder implements EventListener{
      * <code>ScanResult</code> containing the <code>InstallableResource</code>s.
      */
     public ScanResult scan() throws RepositoryException {
-        log.debug("Scanning {}", path);
+        logger.debug("Scanning {}", path);
         needsScan = false;
 
         Node folder = null;
@@ -180,8 +165,8 @@ class WatchedFolder implements EventListener{
                     processed = true;
                     resourcesSeen.add(r.getId());
                     final String oldDigest = digests.get(r.getId());
-                    if(r.getDigest().equals(oldDigest)) {
-                        log.debug("Digest didn't change, ignoring " + r);
+                    if (r.getDigest().equals(oldDigest)) {
+                        logger.debug("Digest didn't change, ignoring " + r);
                     } else {
                         result.toAdd.add(r);
                     }

@@ -29,7 +29,7 @@ import org.apache.sling.models.spi.injectorspecific.InjectAnnotation;
 
 /**
  * Annotation to be used on either methods, fields or constructor parameters to let Sling Models inject a
- * resource by path. The path may be either in the path attribute or in a value map property with the given name.
+ * resource by path(s). The path may be either in the path/paths attribute or in a value map property with the given name.
  */
 @Target({ METHOD, FIELD, PARAMETER })
 @Retention(RUNTIME)
@@ -41,6 +41,11 @@ public @interface ResourcePath {
      * Specifies the path of the resource. If not provided, the path is derived from the property name.
      */
     public String path() default "";
+    
+    /**
+     * Specifies more than one path for the resource. If not provided, a single path is derived from the property name.
+     */
+    public String[] paths() default {};
 
     /**
      * Specifies the name of the property containing the resource path. If empty or not set, then the name

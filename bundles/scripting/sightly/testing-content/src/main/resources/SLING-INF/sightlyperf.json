@@ -1,0 +1,227 @@
+{
+    "jcr:primaryType": "sling:Folder",
+    "test" : {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "/apps/sightlyperf/test",
+        "text": "<page>",
+        "tag": "b",
+        "includeChildren": "true",
+        "head": {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "/apps/sightlyperf/test",
+            "text": "<head>",
+            "includeChildren": "true",
+            "title": {
+                "jcr:primaryType": "nt:unstructured",
+                "sling:resourceType": "/apps/sightlyperf/test",
+                "text": "<title>"
+            },
+            "style": {
+                "jcr:primaryType": "nt:unstructured",
+                "sling:resourceType": "/apps/sightlyperf/test",
+                "text": "<style>"
+            }
+        },
+        "body": {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "/apps/sightlyperf/test",
+            "text": "<body>",
+            "includeChildren": "true",
+            "topnav": {
+                "jcr:primaryType": "nt:unstructured",
+                "sling:resourceType": "/apps/sightlyperf/test",
+                "text": "<topnav>",
+                "includeChildren": "true",
+                "logo": {
+                    "jcr:primaryType": "nt:unstructured",
+                    "sling:resourceType": "/apps/sightlyperf/test",
+                    "text": "<logo>"
+                },
+                "menu": {
+                    "jcr:primaryType": "nt:unstructured",
+                    "sling:resourceType": "/apps/sightlyperf/test",
+                    "text": "<menu>",
+                    "includeChildren": "true",
+                    "home": {
+                        "jcr:primaryType": "nt:unstructured",
+                        "sling:resourceType": "/apps/sightlyperf/test",
+                        "text": "<home>"
+                    },
+                    "products": {
+                        "jcr:primaryType": "nt:unstructured",
+                        "sling:resourceType": "/apps/sightlyperf/test",
+                        "text": "<products>"
+                    },
+                    "services": {
+                        "jcr:primaryType": "nt:unstructured",
+                        "sling:resourceType": "/apps/sightlyperf/test",
+                        "text": "<services>"
+                    },
+                    "about": {
+                        "jcr:primaryType": "nt:unstructured",
+                        "sling:resourceType": "/apps/sightlyperf/test",
+                        "text": "<about>"
+                    },
+                    "contact": {
+                        "jcr:primaryType": "nt:unstructured",
+                        "sling:resourceType": "/apps/sightlyperf/test",
+                        "text": "<contact>"
+                    }
+                },
+                "breadcrumbs": {
+                    "jcr:primaryType": "nt:unstructured",
+                    "sling:resourceType": "/apps/sightlyperf/test",
+                    "text": "<breadcrumbs>",
+                    "includeChildren": "true",
+                    "home": {
+                        "jcr:primaryType": "nt:unstructured",
+                        "sling:resourceType": "/apps/sightlyperf/test",
+                        "text": "<home>"
+                    },
+                    "products": {
+                        "jcr:primaryType": "nt:unstructured",
+                        "sling:resourceType": "/apps/sightlyperf/test",
+                        "text": "<products>"
+                    },
+                    "productPage": {
+                        "jcr:primaryType": "nt:unstructured",
+                        "sling:resourceType": "/apps/sightlyperf/test",
+                        "text": "<productPage>"
+                    }
+                }
+            },
+            "main": {
+                "jcr:primaryType": "nt:unstructured",
+                "sling:resourceType": "/apps/sightlyperf/test",
+                "text": "<main>",
+                "includeChildren": "true",
+                "sidebar": {
+                    "jcr:primaryType": "nt:unstructured",
+                    "sling:resourceType": "/apps/sightlyperf/test",
+                    "text": "<sidebar>",
+                    "includeChildren": "true",
+                    "title": {
+                        "jcr:primaryType": "nt:unstructured",
+                        "sling:resourceType": "/apps/sightlyperf/test",
+                        "text": "<title>"
+                    },
+                    "links": {
+                        "jcr:primaryType": "nt:unstructured",
+                        "sling:resourceType": "/apps/sightlyperf/test",
+                        "text": "<links>",
+                        "includeChildren": "true",
+                        "home": {
+                            "jcr:primaryType": "nt:unstructured",
+                            "sling:resourceType": "/apps/sightlyperf/test",
+                            "text": "<home>"
+                        },
+                        "products": {
+                            "jcr:primaryType": "nt:unstructured",
+                            "sling:resourceType": "/apps/sightlyperf/test",
+                            "text": "<products>"
+                        },
+                        "services": {
+                            "jcr:primaryType": "nt:unstructured",
+                            "sling:resourceType": "/apps/sightlyperf/test",
+                            "text": "<services>"
+                        },
+                        "about": {
+                            "jcr:primaryType": "nt:unstructured",
+                            "sling:resourceType": "/apps/sightlyperf/test",
+                            "text": "<about>"
+                        },
+                        "contact": {
+                            "jcr:primaryType": "nt:unstructured",
+                            "sling:resourceType": "/apps/sightlyperf/test",
+                            "text": "<contact>"
+                        }
+                    }
+                },
+                "content": {
+                    "jcr:primaryType": "nt:unstructured",
+                    "sling:resourceType": "/apps/sightlyperf/test",
+                    "text": "<content>",
+                    "includeChildren": "true",
+                    "carousel": {
+                        "jcr:primaryType": "nt:unstructured",
+                        "sling:resourceType": "/apps/sightlyperf/test",
+                        "text": "<carousel>",
+                        "tag": "blink",
+                        "includeChildren": "true",
+                        "image": {
+                            "jcr:primaryType": "nt:unstructured",
+                            "sling:resourceType": "/apps/sightlyperf/test",
+                            "text": "<image>"
+                        },
+                        "video": {
+                            "jcr:primaryType": "nt:unstructured",
+                            "sling:resourceType": "/apps/sightlyperf/test",
+                            "text": "<video>"
+                        }
+                    },
+                    "title": {
+                        "jcr:primaryType": "nt:unstructured",
+                        "sling:resourceType": "/apps/sightlyperf/test",
+                        "text": "<title>"
+                    },
+                    "paragraph1": {
+                        "jcr:primaryType": "nt:unstructured",
+                        "sling:resourceType": "/apps/sightlyperf/test",
+                        "text": "<paragraph1>"
+                    },
+                    "paragraph2": {
+                        "jcr:primaryType": "nt:unstructured",
+                        "sling:resourceType": "/apps/sightlyperf/test",
+                        "text": "<paragraph2>"
+                    },
+                    "paragraph3": {
+                        "jcr:primaryType": "nt:unstructured",
+                        "sling:resourceType": "/apps/sightlyperf/test",
+                        "text": "<paragraph3>"
+                    }
+                },
+                "bottomnav": {
+                    "jcr:primaryType": "nt:unstructured",
+                    "sling:resourceType": "/apps/sightlyperf/test",
+                    "text": "<bottomnav>",
+                    "includeChildren": "true",
+                    "links": {
+                        "jcr:primaryType": "nt:unstructured",
+                        "sling:resourceType": "/apps/sightlyperf/test",
+                        "text": "<links>",
+                        "includeChildren": "true",
+                        "home": {
+                            "jcr:primaryType": "nt:unstructured",
+                            "sling:resourceType": "/apps/sightlyperf/test",
+                            "text": "<home>"
+                        },
+                        "about": {
+                            "jcr:primaryType": "nt:unstructured",
+                            "sling:resourceType": "/apps/sightlyperf/test",
+                            "text": "<about>"
+                        },
+                        "contact": {
+                            "jcr:primaryType": "nt:unstructured",
+                            "sling:resourceType": "/apps/sightlyperf/test",
+                            "text": "<contact>"
+                        }
+                    },
+                    "copyright": {
+                        "jcr:primaryType": "nt:unstructured",
+                        "sling:resourceType": "/apps/sightlyperf/test",
+                        "text": "<copyright>"
+                    }
+                }
+            }
+        },
+        "foot": {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "/apps/sightlyperf/test",
+            "text": "<foot>"
+        }
+    },
+    "loop" : {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "/apps/sightlyperf/loop"
+    }
+}

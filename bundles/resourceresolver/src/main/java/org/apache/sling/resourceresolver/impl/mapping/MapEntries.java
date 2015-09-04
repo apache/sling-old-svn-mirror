@@ -124,6 +124,8 @@ public class MapEntries implements EventHandler {
     
     private final long maxCachedVanityPathEntries;
     
+    private final boolean maxCachedVanityPathEntriesStartup;
+    
     private final int vanityBloomFilterMaxBytes;
 
     private final boolean enableOptimizeAliasResolution;
@@ -156,6 +158,7 @@ public class MapEntries implements EventHandler {
         this.eventAdmin = null;
         this.enabledVanityPaths = true;
         this.maxCachedVanityPathEntries = -1;
+        this.maxCachedVanityPathEntriesStartup = true;
         this.vanityBloomFilterMaxBytes = 0;
         this.enableOptimizeAliasResolution = true;
         this.vanityPathConfig = null;
@@ -172,6 +175,7 @@ public class MapEntries implements EventHandler {
         this.mapRoot = factory.getMapRoot();
         this.enabledVanityPaths = factory.isVanityPathEnabled();
         this.maxCachedVanityPathEntries = factory.getMaxCachedVanityPathEntries();
+        this.maxCachedVanityPathEntriesStartup = factory.isMaxCachedVanityPathEntriesStartup();
         this.vanityBloomFilterMaxBytes = factory.getVanityBloomFilterMaxBytes();
         this.vanityPathConfig = factory.getVanityPathConfig();
         this.enableOptimizeAliasResolution = factory.isOptimizeAliasResolutionEnabled();
@@ -278,8 +282,7 @@ public class MapEntries implements EventHandler {
                 timer.schedule(new BloomFilterTask(), 60 * 1000);
 
                 final Map<String, List<String>> vanityTargets = this
-                        .loadVanityPaths(resolver, resolveMapsMap,
-                                createVanityBloomFilter);
+                        .loadVanityPaths(createVanityBloomFilter);
                 this.vanityTargets = vanityTargets;
             }
         } finally {
@@ -297,17 +300,20 @@ public class MapEntries implements EventHandler {
         }
         try {
             Resource resource = resolver.getResource(path);
-            final ValueMap props = resource.adaptTo(ValueMap.class);
-            if (props.containsKey(PROP_VANITY_PATH)) {
-                doAddVanity(path);
-            }
-            if (props.containsKey(ResourceResolverImpl.PROP_ALIAS)) {
-                doAddAlias(path);
-            }
-            if (path.startsWith(this.mapRoot)) {
-                doUpdateConfiguration();
+            if (resource != null) {
+                final ValueMap props = resource.adaptTo(ValueMap.class);
+                if (props.containsKey(PROP_VANITY_PATH)) {
+                    doAddVanity(path);
+                }
+                if (props.containsKey(ResourceResolverImpl.PROP_ALIAS)) {
+                    doAddAlias(path);
+                }
+                if (path.startsWith(this.mapRoot)) {
+                    doUpdateConfiguration();
+                }
             }
             sendChangeEvent();
+            
         } finally {
             this.initializing.unlock();
         }
@@ -446,10 +452,9 @@ public class MapEntries implements EventHandler {
 
     private void doAddVanity(String path) {
         Resource resource = resolver.getResource(path);
-        if (maxCachedVanityPathEntries < vanityCounter.longValue()) {
+        if (isAllVanityPathEntriesCached() || vanityCounter.longValue() < maxCachedVanityPathEntries) {
             // fill up the cache and the bloom filter
             loadVanityPath(resource, resolveMapsMap, vanityTargets, true, true);
-            vanityCounter.incrementAndGet();
         } else {
             // fill up the bloom filter
             loadVanityPath(resource, resolveMapsMap, vanityTargets, false, true);
@@ -484,7 +489,7 @@ public class MapEntries implements EventHandler {
         }
         vanityTargets.remove(actualContentPath);
         if (vanityCounter.longValue() > 0) {
-            vanityCounter.decrementAndGet();
+            vanityCounter.addAndGet(-2);
         }     
     }
 
@@ -850,19 +855,35 @@ public class MapEntries implements EventHandler {
      */
     private Map<String, List<MapEntry>> getVanityPaths(String vanityPath) {
 
-        final Map<String, List<MapEntry>> entryMap = new HashMap<String, List<MapEntry>>();  
-        final Map <String, List<String>> targetPaths = new HashMap <String, List<String>>();
+        Map<String, List<MapEntry>> entryMap = new HashMap<String, List<MapEntry>>();    
         
         // sling:VanityPath (uppercase V) is the mixin name
         // sling:vanityPath (lowercase) is the property name        
         final String queryString = "SELECT sling:vanityPath, sling:redirect, sling:redirectStatus FROM sling:VanityPath WHERE sling:vanityPath ="
                 + "'"+escapeIllegalXpathSearchChars(vanityPath).replaceAll("'", "''")+"' OR sling:vanityPath ="+ "'"+escapeIllegalXpathSearchChars(vanityPath.substring(1)).replaceAll("'", "''")+"' ORDER BY sling:vanityOrder DESC";
-        final Iterator<Resource> i = resolver.findResources(queryString, "sql");
+        
+        ResourceResolver queryResolver = null;
 
-        while (i.hasNext()) {
-            final Resource resource = i.next();
-            loadVanityPath(resource, entryMap, targetPaths, true, false);
-        }        
+        try {
+            queryResolver = factory.getAdministrativeResourceResolver(null);
+            final Iterator<Resource> i = queryResolver.findResources(queryString, "sql");
+            while (i.hasNext()) {
+                final Resource resource = i.next();
+                if (maxCachedVanityPathEntriesStartup || vanityCounter.longValue() < maxCachedVanityPathEntries) {                    
+                    loadVanityPath(resource, resolveMapsMap, vanityTargets, true, false);
+                    entryMap = resolveMapsMap;
+                } else {                    
+                    final Map <String, List<String>> targetPaths = new HashMap <String, List<String>>();
+                    loadVanityPath(resource, entryMap, targetPaths, true, false);
+                }               
+            }
+        } catch (LoginException e) {
+            log.error("Exception while obtaining queryResolver", e);
+        } finally {
+            if (queryResolver != null) {
+                queryResolver.close();
+            }
+        }
         return entryMap;        
     }
     
@@ -999,17 +1020,25 @@ public class MapEntries implements EventHandler {
      * Add an entry to the resolve map.
      */
     private boolean addEntry(final Map<String, List<MapEntry>> entryMap, final String key, final MapEntry entry) {
+        
         if (entry==null){
             return false;
         }
+        
         List<MapEntry> entries = entryMap.get(key);
         if (entries == null) {
             entries = new ArrayList<MapEntry>();
+            entries.add(entry);
+            // and finally sort list
+            Collections.sort(entries);
             entryMap.put(key, entries);
+        } else {
+            List<MapEntry> entriesCopy =new ArrayList<MapEntry>(entries);
+            entriesCopy.add(entry);
+            // and finally sort list
+            Collections.sort( entriesCopy);
+            entryMap.put(key, entriesCopy);
         }
-        entries.add(entry);
-        // and finally sort list
-        Collections.sort(entries);
         return true;
     }
 
@@ -1094,23 +1123,22 @@ public class MapEntries implements EventHandler {
      * Load vanity paths Search for all nodes inheriting the sling:VanityPath
      * mixin
      */
-    private Map <String, List<String>> loadVanityPaths(final ResourceResolver resolver, final Map<String, List<MapEntry>> entryMap, boolean createVanityBloomFilter) {
+    private Map <String, List<String>> loadVanityPaths(boolean createVanityBloomFilter) {
         // sling:VanityPath (uppercase V) is the mixin name
         // sling:vanityPath (lowercase) is the property name
         final Map <String, List<String>> targetPaths = new ConcurrentHashMap <String, List<String>>();
         final String queryString = "SELECT sling:vanityPath, sling:redirect, sling:redirectStatus FROM sling:VanityPath WHERE sling:vanityPath IS NOT NULL";
         final Iterator<Resource> i = resolver.findResources(queryString, "sql");
 
-        while (i.hasNext() && (createVanityBloomFilter || maxCachedVanityPathEntries < vanityCounter.longValue())) {
+        while (i.hasNext() && (createVanityBloomFilter || isAllVanityPathEntriesCached() || vanityCounter.longValue() < maxCachedVanityPathEntries)) {
             final Resource resource = i.next();
-            if (maxCachedVanityPathEntries < vanityCounter.longValue()) {
+            if (isAllVanityPathEntriesCached() || vanityCounter.longValue() < maxCachedVanityPathEntries) {
                 // fill up the cache and the bloom filter
-                loadVanityPath(resource, entryMap, targetPaths, true,
+                loadVanityPath(resource, resolveMapsMap, targetPaths, true,
                         createVanityBloomFilter);
-                vanityCounter.incrementAndGet();
             } else {
                 // fill up the bloom filter
-                loadVanityPath(resource, entryMap, targetPaths, false,
+                loadVanityPath(resource, resolveMapsMap, targetPaths, false,
                         createVanityBloomFilter);
             }
 
@@ -1184,7 +1212,12 @@ public class MapEntries implements EventHandler {
                     }
                     if (addedEntry) {
                         // 3. keep the path to return
-                        this.updateTargetPaths(targetPaths, redirect, checkPath);  
+                        this.updateTargetPaths(targetPaths, redirect, checkPath); 
+                        //increment only if the instance variable
+                        if (entryMap == resolveMapsMap) {
+                            vanityCounter.addAndGet(2);
+                        }
+
                         if (newVanity) {
                             // update bloom filter
                             BloomFilterUtils.add(vanityBloomFilter, checkPath);

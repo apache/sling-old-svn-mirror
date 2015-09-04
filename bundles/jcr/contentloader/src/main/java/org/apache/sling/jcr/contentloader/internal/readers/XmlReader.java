@@ -49,9 +49,13 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import org.apache.sling.jcr.contentloader.internal.ContentCreator;
-import org.apache.sling.jcr.contentloader.internal.ContentReader;
-import org.apache.sling.jcr.contentloader.internal.ImportProvider;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.jcr.contentloader.ContentCreator;
+import org.apache.sling.jcr.contentloader.ContentReader;
 import org.kxml2.io.KXmlParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,6 +98,12 @@ import org.xmlpull.v1.XmlPullParserException;
  * If you want to include a binary file in your loaded content, you may specify it using a
  * {@link org.apache.sling.jcr.contentloader.internal.readers.XmlReader.FileDescription <code>&lt;nt:file&gt;</code>} element.
  */
+@Component
+@Service
+@Properties({
+    @Property(name = ContentReader.PROPERTY_EXTENSIONS, value = "xml"),
+    @Property(name = ContentReader.PROPERTY_TYPES, value = {"application/xml", "text/xml"})
+})
 public class XmlReader implements ContentReader {
 
     /*
@@ -130,23 +140,10 @@ public class XmlReader implements ContentReader {
     private static final String ELEM_FILE_NAMESPACE = "http://www.jcp.org/jcr/nt/1.0";
     private static final String ELEM_FILE_NAME = "file";
 
-    public static final ImportProvider PROVIDER = new ImportProvider() {
-        private XmlReader xmlReader;
-
-        public ContentReader getReader() throws IOException {
-            if (xmlReader == null) {
-                try {
-                    xmlReader = new XmlReader();
-                } catch (Throwable t) {
-                    throw (IOException) new IOException(t.getMessage()).initCause(t);
-                }
-            }
-            return xmlReader;
-        }
-    };
     private KXmlParser xmlParser;
 
-    XmlReader() {
+    @Activate
+    protected void activate() {
         this.xmlParser = new KXmlParser();
         try {
             // Make namespace-aware
@@ -160,7 +157,7 @@ public class XmlReader implements ContentReader {
 
 
     /**
-     * @see org.apache.sling.jcr.contentloader.internal.ContentReader#parse(URL, org.apache.sling.jcr.contentloader.internal.ContentCreator)
+     * @see org.apache.sling.jcr.contentloader.ContentReader#parse(URL, org.apache.sling.jcr.contentloader.ContentCreator)
      */
     public synchronized void parse(final URL url, final ContentCreator creator)
     throws IOException, RepositoryException {
@@ -177,7 +174,7 @@ public class XmlReader implements ContentReader {
     }
 
     /* (non-Javadoc)
-	 * @see org.apache.sling.jcr.contentloader.internal.ContentReader#parse(java.io.InputStream, org.apache.sling.jcr.contentloader.internal.ContentCreator)
+	 * @see org.apache.sling.jcr.contentloader.ContentReader#parse(java.io.InputStream, org.apache.sling.jcr.contentloader.ContentCreator)
 	 */
 	public void parse(InputStream ins, ContentCreator creator)
 			throws IOException, RepositoryException {

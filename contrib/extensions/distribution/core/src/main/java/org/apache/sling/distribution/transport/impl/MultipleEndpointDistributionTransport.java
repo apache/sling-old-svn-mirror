@@ -29,6 +29,7 @@ import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.transport.core.DistributionTransport;
 import org.apache.sling.distribution.transport.core.DistributionTransportException;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
@@ -55,8 +56,7 @@ public class MultipleEndpointDistributionTransport implements DistributionTransp
         this(SettingsUtils.toMap(transportHelpers, "endpoint"), endpointStrategyType);
     }
 
-    public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage,
-                                                      @Nonnull DistributionTransportSecret secret) throws DistributionTransportException {
+    public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionTransportException {
 
         if (endpointStrategyType.equals(TransportEndpointStrategyType.One)) {
             DistributionPackageInfo info = distributionPackage.getInfo();
@@ -69,13 +69,13 @@ public class MultipleEndpointDistributionTransport implements DistributionTransp
             }
 
             if (distributionTransport != null) {
-                distributionTransport.deliverPackage(resourceResolver, distributionPackage, secret);
+                distributionTransport.deliverPackage(resourceResolver, distributionPackage);
             }
 
 
         } else if  (endpointStrategyType.equals(TransportEndpointStrategyType.All)) {
             for (DistributionTransport distributionTransport: transportHelpers.values()) {
-                distributionTransport.deliverPackage(resourceResolver, distributionPackage, secret);
+                distributionTransport.deliverPackage(resourceResolver, distributionPackage);
 
             }
 
@@ -83,8 +83,7 @@ public class MultipleEndpointDistributionTransport implements DistributionTransp
     }
 
     @Nonnull
-    public List<DistributionPackage> retrievePackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest,
-                                                      @Nonnull DistributionTransportSecret secret) throws DistributionTransportException {
+    public List<DistributionPackage> retrievePackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionTransportException {
         List<DistributionPackage> result = new ArrayList<DistributionPackage>();
 
 
@@ -93,7 +92,7 @@ public class MultipleEndpointDistributionTransport implements DistributionTransp
             DistributionTransport distributionTransport = getDefaultTransport();
 
             if (distributionTransport != null) {
-                Iterable<DistributionPackage> retrievedPackages = distributionTransport.retrievePackages(resourceResolver, distributionRequest, secret);
+                Iterable<DistributionPackage> retrievedPackages = distributionTransport.retrievePackages(resourceResolver, distributionRequest);
 
                 for (DistributionPackage retrievedPackage : retrievedPackages) {
                     result.add(retrievedPackage);
@@ -103,7 +102,7 @@ public class MultipleEndpointDistributionTransport implements DistributionTransp
 
         } else if  (endpointStrategyType.equals(TransportEndpointStrategyType.All)) {
             for (DistributionTransport distributionTransport: transportHelpers.values()) {
-                Iterable<DistributionPackage> retrievedPackages = distributionTransport.retrievePackages(resourceResolver, distributionRequest, secret);
+                Iterable<DistributionPackage> retrievedPackages = distributionTransport.retrievePackages(resourceResolver, distributionRequest);
 
                 for (DistributionPackage retrievedPackage : retrievedPackages) {
                     result.add(retrievedPackage);

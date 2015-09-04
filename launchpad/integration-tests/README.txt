@@ -6,7 +6,7 @@ separated in their own jar to be reusable.
 To run a single test or a specific set of tests against a running Sling
 instance, use for example:
 
-    mvn test -Dtest=UploadFileTest
+    mvn test -Dtest=UploadFileTest -Dhttp.port=1234
     
 Where UploadFileTest is the test to run. Wildcards are allowed, and test
 classes are found in the src/main folder (not a typo - that's not src/test
@@ -32,14 +32,15 @@ are excluded, to switch to them use -Dsling.run.modes=oak
 To run the tests against the same instance that is used in the full build,
 start an instance by running
 
-  mvn launchpad:run
+   mvn slingstart:start -Dlaunchpad.keep.running=true
 
 in the launchpad/testing folder, optionally using -Dsling.run.modes=oak to
-use Oak instead of Jackrabbit.
+use Oak instead of Jackrabbit. Since that instance is using an arbitrary
+http port you have to give exactly that port as parameter if you execute the test.
 
 The standard -Dmaven.surefire.debug option can be used to debug the tests
-themselves. To debug the server-side Sling code, set the appropriate JVM
-options on the VM that runs it.
+themselves. Have a look at the README.txt in the launchpad.testing module on how
+to debug the server-side Sling code.
 
 Note that, for all tests to pass, the Sling instance under test needs the 
 org.apache.sling.launchpad.test-services bundle, and the war file of the

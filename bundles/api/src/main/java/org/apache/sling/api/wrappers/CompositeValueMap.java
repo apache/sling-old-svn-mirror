@@ -33,7 +33,7 @@ import org.apache.sling.api.resource.ValueMap;
  * In case you would like to avoid duplicating properties on multiple resources,
  * you can use a <code>CompositeValueMap</code> to get a concatenated map of
  * properties.
- * @since 2.3
+ * @since 2.3 (Sling API Bundle 2.5.0)
  */
 public class CompositeValueMap implements ValueMap {
 

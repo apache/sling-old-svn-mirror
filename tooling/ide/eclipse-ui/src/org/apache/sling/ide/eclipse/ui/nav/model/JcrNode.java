@@ -34,12 +34,9 @@ import javax.jcr.PropertyType;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.util.ISO9075;
-import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
 import org.apache.sling.ide.eclipse.core.internal.Activator;
@@ -91,11 +88,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.part.ResourceTransfer;
 import org.eclipse.ui.views.properties.IPropertySource;
 import org.eclipse.ui.views.properties.tabbed.ITabbedPropertySheetPageContributor;
-import org.eclipse.wst.server.core.IServer;
-import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
 
 import de.pdark.decentxml.Attribute;
 import de.pdark.decentxml.Document;
@@ -103,48 +96,23 @@ import de.pdark.decentxml.Element;
 import de.pdark.decentxml.Namespace;
 import de.pdark.decentxml.Node;
 import de.pdark.decentxml.Text;
+import de.pdark.decentxml.XMLParseException;
 import de.pdark.decentxml.XMLTokenizer.Type;
 
 /** WIP: model object for a jcr node shown in the content package view in project explorer **/
 public class JcrNode implements IAdaptable {
 
-    private final class JcrRootHandler extends DefaultHandler {
-		boolean firstElement = true;
-		boolean isVaultFile = false;
-
-		public boolean isVaultFile() {
-			return isVaultFile;
-		}
-
-		@Override
-		public void startElement(String uri, String localName,
-				String qName, Attributes attributes)
-				throws SAXException {
-			if (!firstElement) {
-				return;
-			}
-			firstElement = false;
-			if ("jcr:root".equals(qName)) {
-				String ns = attributes.getValue("xmlns:jcr");
-				if (ns!=null && ns.startsWith("http://www.jcp.org/jcr")) {
-					// then this is a vault file with a jcr:root at the beginning
-					isVaultFile = true;
-				}
-			}
-		}
-	}
-
 	private final static WorkbenchLabelProvider workbenchLabelProvider = new WorkbenchLabelProvider();
 	
 	final GenericJcrRootFile underlying;
 
-	JcrNode parent;
+    JcrNode parent;
 	
-	DirNode dirSibling;
+    DirNode dirSibling;
 
 	final List<JcrNode> children = new LinkedList<JcrNode>();
 
-	Element domElement;
+    Element domElement;
 
 	private IResource resource;
 	
@@ -378,10 +346,17 @@ public class JcrNode implements IAdaptable {
                             continue;
                         }
 						if (isVaultFile(iResource)) {
-							GenericJcrRootFile gjrf = new GenericJcrRootFile(this, (IFile)iResource);
-							it.remove();
-							//gjrf.getChildren();
-							gjrf.pickResources(membersList);
+							GenericJcrRootFile gjrf;
+                            try {
+                                gjrf = new GenericJcrRootFile(this, (IFile)iResource);
+                                it.remove();
+                                // gjrf.getChildren();
+                                gjrf.pickResources(membersList);
+                            } catch (XMLParseException e) {
+                                // don't try to parse it
+                                // errors will be reported by the XML validation infrastructure
+                                it.remove();
+                            }
 							
 							// as this might have added some new children, go through the children again and
 							// add them if they're not already added
@@ -409,12 +384,6 @@ public class JcrNode implements IAdaptable {
 						newNodes.add(node);
 						it.remove();
 					}
-					for (Iterator<JcrNode> it = newNodes.iterator(); it
-							.hasNext();) {
-						JcrNode jcrNode = it.next();
-						// load the children - to make sure we get vault files loaded too
-						jcrNode.initChildren();
-					}
 				}
 			}
 			resourceChildrenAdded = true;
@@ -437,28 +406,10 @@ public class JcrNode implements IAdaptable {
         return res.getType() == IResource.FILE && res.getName().equals(".vlt");
     }
 
-    private boolean isVaultFile(IResource iResource)
-			throws ParserConfigurationException, SAXException, IOException,
-			CoreException {
-		if (iResource.getName().endsWith(".xml")) {
-			// then it could potentially be a vlt file. 
-			// let's check if it contains a jcr:root element with the appropriate namespace
-			
-			IFile file = (IFile)iResource;
-			
-		    SAXParserFactory factory = SAXParserFactory.newInstance();
-		    SAXParser saxParser = factory.newSAXParser();
+    private boolean isVaultFile(IResource iResource) {
 
-		    JcrRootHandler h = new JcrRootHandler();
-			InputStream contents = file.getContents();
-            try {
-                saxParser.parse(new InputSource(contents), h);
-                return h.isVaultFile();
-            } finally {
-                IOUtils.closeQuietly(contents);
-            }
-		}
-		return false;
+        return Activator.getDefault().getSerializationManager()
+                .isSerializationFile(iResource.getLocation().toOSString());
 	}
 
 	public void setResource(IResource resource) {
@@ -479,12 +430,7 @@ public class JcrNode implements IAdaptable {
 		typeFile |= (resource!=null && primaryType==null);
 		boolean typeUnstructured = primaryType!=null && ((primaryType.equals("nt:unstructured")));
 		
-		boolean isVaultFile = false;
-		try {
-			isVaultFile = resource!=null && isVaultFile(resource);
-		} catch (Exception e) {
-			// this empty catch is okay
-		}
+        boolean isVaultFile = resource != null && isVaultFile(resource);
 		
 		String mimeType = null;
 		mimeType = getJcrContentProperty("jcr:mimeType");
@@ -1136,13 +1082,6 @@ public class JcrNode implements IAdaptable {
 			return underlying.file.getProject();
 		}
 		return null;
-	}
-
-	public String getURLForBrowser(IServer server) {
-		final String host = server.getHost();
-		final int port = server.getAttribute(ISlingLaunchpadServer.PROP_PORT, 8080);
-        final String url = "http://"+host+":"+port+""+getJcrPath();
-		return url;
 	}
 
     public boolean isInContentXml() {

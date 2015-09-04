@@ -1,0 +1,376 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+ 
+ @import "../../../frontend/node_modules/bootstrap/less/bootstrap.less";
+ 
+/* ################################################################# */
+/* --- Overwriting Bootstrap styles ---  */
+/* ################################################################# */
+// see http://lesselements.com/
+@import "elements.less";
+@import "variables.less";
+@import "alerts.less";
+@import "navs.less";
+@import "scaffolding.less";
+@import "forms.less";
+@import "buttons.less";
+@import "modals.less";
+@import "glyphicons.less";
+ 
+
+/* ################################################################# */
+/* --- Main-Seperator ---  */
+/* ################################################################# */
+    
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+/* --- Sub-Seperator  ---*/
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+
+
+html /* shows always scrollbar in Firefox*/
+{
+    overflow: visible;
+}   
+    
+body
+{
+    background: transparent url(../../img/alu.gif) repeat left top;
+}
+
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+/* --- Main Layout - Header / Logo / Content / Footer  ---*/
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+
+::-webkit-scrollbar-thumb {
+	background-color:@textColor;
+	-webkit-border-radius:7px;
+}
+::-webkit-scrollbar-corner {
+	background-color: transparent;
+}
+::-webkit-scrollbar {
+	width:10px;
+	height:10px;
+}
+
+.plate-background {
+	   /* Fallback for web browsers that doesn't support RGBa */
+    background: rgb(0, 0, 0) transparent;
+    /* RGBa with 0.6 opacity */
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.ie9filter-plate-div {
+	height: 100%;
+}
+.plate-box-shadow {
+    box-shadow: 5px 5px 5px #888;
+    -moz-box-shadow: 5px 5px 5px #888;
+	-webkit-box-shadow: 5px 5px 5px #888;
+}
+
+.rounded {
+    .rounded(7px);
+}
+
+.full-height {
+	height: 100%;
+}
+
+#iframe_main {
+	padding-bottom: 40px;
+	.rounded;
+}
+
+@dark-gray: #303030;
+
+.plate-text-shadow {
+	text-shadow: 1px 1px 0px @dark-gray, 0px 0px 0px black;
+}
+
+.plate-selected-text-shadow {
+	text-shadow: 1px 1px 0px black, 0px 0px 0px #202020;
+}
+
+.plate {
+	.plate-background;
+	.plate-box-shadow;
+	border-radius: 7px;
+	.plate-text-shadow;
+	
+	overflow: hidden;
+}
+
+/* .logo has to be defined after .plate to overwrite the font properties */
+.logo {
+	font-family: 'Michroma', sans-serif;
+	font-weight: bold;
+	font-size: 24px;
+	color: @brand-primary;
+	text-shadow: 0 2px 2px #dddddd;
+	display: inline;
+	margin: 10px;
+	position: relative;
+	top: 10px;
+}
+
+#main-row {
+	margin-top: 15px;	
+}
+#content-tabs {
+	margin-left: 10px;
+}
+
+.edition {
+	font-size: 11px;
+	font-weight: normal;
+	margin-left: 4px;
+}
+
+#login .logout a {
+	.rounded;
+	border: 1px solid @brand-primary;
+	color: @brand-primary;
+	text-shadow: 0 1px 1px #EEE;
+	font-size: 15px;
+	margin: 10px 10px 0 0;
+	box-shadow: inset 0px 0px 1px black, 1px 1px 0px white;
+}
+#login .logout a:hover {
+	background-color: @textColor;
+}
+
+#login_error {
+	width: 200px;
+}
+
+#tree
+{
+    overflow: auto;
+    height: 100%;
+    width: 100%;
+}
+
+#inner_content
+{
+    overflow: auto;
+    height: 100%;
+    width: 100%;
+}
+#inner_content_margin {
+    margin: 0 10px;
+}
+
+#footer {
+    margin: 10px;
+    padding: 5px;
+}
+
+.proplabel
+{
+	line-height: 24px;
+	color: @textColor;
+	font-weight: normal;
+}
+.propinputmultival
+{
+	float: left;
+	width: 100%;
+	margin: 0 5px 0 0;
+}
+.propmultival_fieldset
+{
+	float: left;
+	margin: 0 5px 0 0
+}
+
+.clear {
+    clear: both
+}
+
+#tree a, #tree :visited, #tree :link {
+	border:1px solid transparent; 
+	padding:0px 1px;
+	font-family: arial, helvetica, sans-serif, times;
+	color: @textColor
+}
+
+#tree .jstree-hovered, #tree .jstree-hovered.jstree-clicked { 
+	.plate-selected-text-shadow;
+	color: #FFF;
+	background: transparent; 
+	border: 1px solid #000000; 
+	padding: 0px 1px;
+    -moz-border-radius: 5px;
+    border-radius: 5px
+}
+
+.jstree-default .jstree-icon.node-icon{
+	background-position: 1px 3px;
+	border:1px solid transparent; 
+    display: inline-block;
+    background-repeat: no-repeat;
+    height: 16px;
+    margin-top: 4px;
+    padding-right: 1px;
+    padding-top: 12px;
+    width: 13px;
+}
+
+.jstree-default .jstree-icon.open-icon{
+	background-image: url(../../img/right_arrow_lightgray.png);
+}
+
+.jstree-default .jstree-icon.remove-icon{
+	background-image: url(../../img/remove.png);
+}
+
+.property-icon {
+  	margin-top: 5px;
+}
+
+.icon {
+	cursor: pointer;
+	border: 1px solid transparent; 
+	padding: 3px;
+	-moz-border-radius: 3px;
+    border-radius: 3px;
+}
+
+.property-icon:hover {
+	border: 1px solid black;
+	background-color: @selectedBackground;
+}
+
+.jstree-default .jstree-icon.add-icon{
+	background-image: url(../../img/add.png);
+    margin-right: 3px;
+}
+
+.jstree-default .open-icon:hover,.jstree-default .remove-icon:hover,.jstree-default .add-icon:hover{
+	border:1px solid darkgray; 
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+}
+
+
+
+.jstree-default ins.jstree-icon{ 
+	background-image: url(../../img/folder_lightgray.png);
+	background-position-y: 5px; 
+}
+
+.jstree-default .jstree-icon.jstree-themeicon { 
+	background-image: url(../../img/folder_lightgray.png); 
+	background-position: 0 6px;
+}
+
+.jstree ins {
+	width: 15px !important;
+}
+
+.jstree-default .jstree-clicked {
+  background: transparent;
+  .rounded;
+  box-shadow: none;
+}
+
+#tree .jstree-clicked 
+{
+	background: @selectedBackground; 
+	border:1px solid black; 
+	padding:0px 1px;
+    -moz-border-radius: 5px;
+    border-radius: 5px
+}
+
+#vakata-contextmenu ul {
+	min-width: 250px !important;
+}
+
+span.jstree-anchor {
+	background-image: none;
+	color: black;
+}
+
+input.jstree-rename-input{
+    height: 17px !important;
+    line-height: 16px !important;
+	color: black !important;
+}
+
+.jstree-anchor {
+	margin-top: 1px;
+}
+.jstree-default .jstree-anchor {
+    height: 22px;
+    line-height: 20px;
+}
+
+.info-content-container {
+	padding: 15px;
+	text-shadow: none;
+}
+
+#addNodeDialog .info-icon {
+	margin-right: 10px;
+	margin-top: 4px;
+}
+#tree-info-icon {
+	margin-right: 10px;
+	margin-top: 5px;
+}
+
+.info-icon {
+    height: 15px;
+    width: 16px;
+    display: inline-block;
+}
+.info-icon-dark {
+	background-image: url(../../img/info_darkgray.png);
+}
+.info-icon-dark:hover {
+	background-image: url(../../img/info_black.png);
+}
+
+.info-icon-lightgray {
+	background-image: url(../../img/info_lightgray.png);
+}
+.info-icon-lightgray:hover {
+	background-image: url(../../img/info_black.png);
+}
+.modal-body.vertical-form .form-group {
+	margin-bottom: 10px;
+}
+#addNodeDialog .form-group label a{
+	font-weight: normal;
+}
+
+.propertyTypeMenu {
+	text-shadow: none;
+}
+
+#node-content .ie9filter-plate-div {
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+#properties-info-icon {
+	margin-top: 5px;
+}

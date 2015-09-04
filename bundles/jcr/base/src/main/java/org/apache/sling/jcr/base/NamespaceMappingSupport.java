@@ -35,8 +35,10 @@ import aQute.bnd.annotation.ProviderType;
  * instances.
  *
  * @see AbstractSlingRepositoryManager
- * @since API version 2.3 (bundle version 2.3)
+ * @since API version 2.3 (bundle version 2.2.2)
+ * @deprecated as of API version 2.4 (bundle version 2.3)
  */
+@Deprecated
 @ProviderType
 public abstract class NamespaceMappingSupport {
 

@@ -17,11 +17,15 @@
 package org.apache.sling.models.impl;
 
 import java.io.PrintWriter;
+import java.util.Collection;
 
 import org.apache.sling.models.spi.ImplementationPicker;
 import org.apache.sling.models.spi.Injector;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
+import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory2;
+import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 
+@SuppressWarnings("deprecation")
 public class ModelConfigurationPrinter {
 
     private final ModelAdapterFactory modelAdapterFactory;
@@ -34,8 +38,8 @@ public class ModelConfigurationPrinter {
         
         // injectors
         printWriter.println("Sling Models Injectors:");
-        Injector[] injectors = modelAdapterFactory.getInjectors();
-        if (injectors == null || injectors.length == 0) {
+        Collection<Injector> injectors = modelAdapterFactory.getInjectors();
+        if (injectors.isEmpty()) {
             printWriter.println("none");
         } else {
             for (Injector injector : injectors) {
@@ -47,10 +51,22 @@ public class ModelConfigurationPrinter {
         
         // inject annotations processor factories
         printWriter.println("Sling Models Inject Annotation Processor Factories:");
-        InjectAnnotationProcessorFactory[] factories = modelAdapterFactory.getInjectAnnotationProcessorFactories();
-        if (factories == null || factories.length == 0) {
+        Collection<InjectAnnotationProcessorFactory> factories = modelAdapterFactory.getInjectAnnotationProcessorFactories();
+        Collection<InjectAnnotationProcessorFactory2> factories2 = modelAdapterFactory.getInjectAnnotationProcessorFactories2();
+        Collection<StaticInjectAnnotationProcessorFactory> staticFactories = modelAdapterFactory.getStaticInjectAnnotationProcessorFactories();
+        if ((factories.isEmpty())
+                && (factories2.isEmpty())
+                && (staticFactories.isEmpty())) {
             printWriter.println("none");
         } else {
+            for (StaticInjectAnnotationProcessorFactory factory : staticFactories) {
+                printWriter.printf("%s", factory.getClass().getName());
+                printWriter.println();
+            }
+            for (InjectAnnotationProcessorFactory2 factory : factories2) {
+                printWriter.printf("%s", factory.getClass().getName());
+                printWriter.println();
+            }
             for (InjectAnnotationProcessorFactory factory : factories) {
                 printWriter.printf("%s", factory.getClass().getName());
                 printWriter.println();

@@ -19,12 +19,18 @@
 package org.apache.sling.event.impl.jobs.queues;
 
 import org.apache.sling.commons.scheduler.Scheduler;
+import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.event.impl.jobs.JobConsumerManager;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.stats.StatisticsManager;
 import org.osgi.service.event.EventAdmin;
 
+/**
+ * The queue services class is a helper class containing all
+ * services used by the queue implementations.
+ * This avoids passing a set of separate objects.
+ */
 public class QueueServices {
 
     public JobManagerConfiguration configuration;
@@ -38,4 +44,6 @@ public class QueueServices {
     public Scheduler scheduler;
 
     public StatisticsManager statisticsManager;
+
+    public ThreadPool eventingThreadPool;
 }

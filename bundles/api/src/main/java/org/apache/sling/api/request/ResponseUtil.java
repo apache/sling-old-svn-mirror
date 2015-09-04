@@ -21,13 +21,15 @@ package org.apache.sling.api.request;
 import java.io.IOException;
 import java.io.Writer;
 
+import javax.annotation.Nonnull;
+
 /**
  * Response related utility methods
  * <p>
  * This class is not intended to be extended or instantiated because it just
  * provides static utility methods not intended to be overwritten.
  *
- * @since 2.1
+ * @since 2.1 (Sling API Bundle 2.1.0)
  */
 public class ResponseUtil {
 
@@ -116,7 +118,7 @@ public class ResponseUtil {
 
     /** Return a Writer that writes escaped XML text to target
      */
-    public static Writer getXmlEscapingWriter(Writer target) {
+    public static @Nonnull Writer getXmlEscapingWriter(@Nonnull Writer target) {
         return new XmlEscapingWriter(target);
     }
 }

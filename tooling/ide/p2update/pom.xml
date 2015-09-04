@@ -21,7 +21,7 @@
   <parent>
     <groupId>org.apache.sling.ide</groupId>
     <artifactId>reactor</artifactId>
-    <version>1.0.5-SNAPSHOT</version>
+    <version>1.0.7-SNAPSHOT</version>
   </parent>
   <artifactId>org.apache.sling.ide.p2update</artifactId>
   <packaging>eclipse-repository</packaging>
@@ -48,7 +48,7 @@
       <plugin>
         <groupId>org.jboss.tools.tycho-plugins</groupId>
         <artifactId>repository-utils</artifactId>
-        <version>0.16.0</version>
+        <version>0.22.0</version>
         <executions>
           <execution>
             <id>generate-facade</id>

@@ -18,6 +18,8 @@
  */
 package org.apache.sling.engine;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * The <code>RequestLog</code> interface defines the API to be implemented by
  * providers of destinations for request log information. To be able to any
@@ -27,6 +29,7 @@ package org.apache.sling.engine;
  * @deprecated Use the request progress tracker instead.
  */
 @Deprecated
+@ConsumerType
 public interface RequestLog {
 
     /**

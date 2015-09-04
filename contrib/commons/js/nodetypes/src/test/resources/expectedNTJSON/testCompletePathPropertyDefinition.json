@@ -1,0 +1,24 @@
+{
+  "ntWithPropertyDefs": {
+    "declaredPropertyDefinitions": [
+      {
+        "defaultValues": [
+          {
+            "path": "/myapp:myName/myapp:myChildNode/aSubChildNode",
+            "type": "Path"
+          }
+        ],
+        "requiredType": "Path",
+        "valueConstraints": [
+          "/myapp:myName/myapp:myChildNode/*"
+        ],
+        "multiple": true,
+        "autoCreated": true,
+        "mandatory": true,
+        "protected": true,
+        "onParentVersion": "VERSION",
+        "name": "pathPropertyDef"
+      }
+    ]
+  }
+}

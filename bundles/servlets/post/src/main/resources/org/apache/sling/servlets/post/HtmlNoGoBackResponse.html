@@ -1,0 +1,42 @@
+<html>
+<head>
+    <title>${title}</title>
+</head>
+    <body>
+    <h1>${title}</h1>
+    <table>
+        <tbody>
+            <tr>
+                <td>Status</td>
+                <td><div id="Status">${status.code}</div></td>
+            </tr>
+            <tr>
+                <td>Message</td>
+                <td><div id="Message">${status.message}</div></td>
+            </tr>
+            <tr>
+                <td>Location</td>
+                <td><a href="${location}" id="Location">${location}</a></td>
+            </tr>
+            <tr>
+                <td>Parent Location</td>
+                <td><a href="${parentLocation}" id="ParentLocation">${parentLocation}</a></td>
+            </tr>
+            <tr>
+                <td>Path</td>
+                <td><div id="Path">${path}</div></td>
+            </tr>
+            <tr>
+                <td>Referer</td>
+                <td><div id="Referer">${referer}</div></td>
+            </tr>
+            <tr>
+                <td>ChangeLog</td>
+                <td><div id="ChangeLog">${changeLog}</div></td>
+            </tr>
+        </tbody>
+    </table>
+    <p><a href="${location}">Modified Resource</a></p>
+    <p><a href="${parentLocation}">Parent of Modified Resource</a></p>
+    </body>
+</html>

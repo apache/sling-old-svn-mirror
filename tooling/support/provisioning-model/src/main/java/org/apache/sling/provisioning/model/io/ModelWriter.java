@@ -74,8 +74,8 @@ public class ModelWriter {
     /**
      * Writes the model to the writer.
      * The writer is not closed.
-     * @param writer
-     * @param subystem
+     * @param writer Writer
+     * @param model Model
      * @throws IOException
      */
     public static void write(final Writer writer, final Model model)
@@ -147,7 +147,7 @@ public class ModelWriter {
                             for(final Map.Entry<String, String> entry : ad.getMetadata().entrySet()) {
                                 if ( first ) {
                                     first = false;
-                                    pw.print(" { ");
+                                    pw.print(" [");
                                 } else {
                                     pw.print(", ");
                                 }
@@ -155,7 +155,7 @@ public class ModelWriter {
                                 pw.print("=");
                                 pw.print(entry.getValue());
                             }
-                            pw.print("}");
+                            pw.print("]");
                         }
                         pw.println();
                     }
@@ -175,16 +175,32 @@ public class ModelWriter {
                         if ( format == null ) {
                             format = ModelConstants.CFG_FORMAT_FELIX_CA;
                         }
+                        String cfgMode = (String)config.getProperties().get(ModelConstants.CFG_UNPROCESSED_MODE);
+                        if ( cfgMode == null ) {
+                            cfgMode = ModelConstants.CFG_MODE_OVERWRITE;
+                        }
                         pw.print("  ");
                         if ( config.getFactoryPid() != null ) {
                             pw.print(config.getFactoryPid());
                             pw.print("-");
                         }
                         pw.print(config.getPid());
-                        if ( !ModelConstants.CFG_FORMAT_FELIX_CA.equals(format) ) {
-                            pw.print(" { format=}");
-                            pw.print(format);
-                            pw.print(" }");
+                        final boolean isDefaultFormat = ModelConstants.CFG_FORMAT_FELIX_CA.equals(format);
+                        final boolean isDefaultMode = ModelConstants.CFG_MODE_OVERWRITE.equals(cfgMode);
+                        if ( !isDefaultFormat || !isDefaultMode ) {
+                            pw.print(" [");
+                            if ( !isDefaultFormat ) {
+                                pw.print("format=");
+                                pw.print(format);
+                                if ( !isDefaultMode ) {
+                                    pw.print(",");
+                                }
+                            }
+                            if ( !isDefaultMode) {
+                                pw.print("mode=");
+                                pw.print(cfgMode);
+                            }
+                            pw.print("]");
                         }
                         pw.println();
 

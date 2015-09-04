@@ -45,6 +45,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.request.ResponseUtil;
 import org.apache.sling.featureflags.Feature;
 import org.apache.sling.featureflags.Features;
 import org.osgi.framework.Constants;
@@ -155,8 +156,8 @@ public class FeatureManager implements Features, Filter, Servlet {
                 pw.println("<tr><th>Name</th><th>Description</th><th>Enabled</th></tr>");
                 final ExecutionContextImpl ctx = getCurrentExecutionContext();
                 for (final Feature feature : features) {
-                    pw.printf("<tr><td>%s</td><td>%s</td><td>%s</td></tr>%n", feature.getName(),
-                        feature.getDescription(), ctx.isEnabled(feature));
+                    pw.printf("<tr><td>%s</td><td>%s</td><td>%s</td></tr>%n", ResponseUtil.escapeXml(feature.getName()),
+                            ResponseUtil.escapeXml(feature.getDescription()), ctx.isEnabled(feature));
                 }
                 pw.println("</table>");
             }

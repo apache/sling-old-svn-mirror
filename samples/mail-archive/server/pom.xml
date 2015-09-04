@@ -22,7 +22,8 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>18</version>
+        <version>24</version>
+        <relativePath/>
     </parent>
 
     <groupId>org.apache.sling</groupId>
@@ -31,11 +32,6 @@
     <packaging>bundle</packaging>
     <name>Apache Sling Mail Archive Server</name>
     <description>Server is designed to archive messages of mailing lists and allows convenient search and navigation through them.</description>
-
-    <properties>
-        <sling.java.version>6</sling.java.version>
-    </properties>
-
 
     <build>
         <plugins>
@@ -63,41 +59,16 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.6.2.201302030002</version>
-                <executions>
-                    <execution>
-                        <id>prepare-agent</id>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>report</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>check</id>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                        <configuration>
-                            <check>
-								start with low values
-								<classRatio>40</classRatio>
-								<instructionRatio>40</instructionRatio>
-								<methodRatio>40</methodRatio>
-								<branchRatio>40</branchRatio>
-								<complexityRatio>40</complexityRatio>
-								<lineRatio>40</lineRatio>
-							</check>
-                        </configuration>
-                    </execution>
-                </executions>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                    	<!-- test mail messages can't have licenses embedded -->
+                        <exclude>src/test/resources/test-files/**</exclude>
+                        <!-- exclude JSON files - remove when SLING-4857 is fixed -->
+                        <exclude>**/*.json</exclude>
+                    </excludes>
+                </configuration>
             </plugin>
         </plugins>
     </build>

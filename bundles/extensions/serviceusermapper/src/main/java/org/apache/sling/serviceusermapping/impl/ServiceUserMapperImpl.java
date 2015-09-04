@@ -19,24 +19,38 @@
 package org.apache.sling.serviceusermapping.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
+import org.apache.sling.serviceusermapping.ServiceUserValidator;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,12 +58,19 @@ import org.slf4j.LoggerFactory;
         metatype = true,
         label = "Apache Sling Service User Mapper Service",
         description = "Configuration for the service mapping service names to names of users.")
-@Service(value=ServiceUserMapper.class)
-@Reference(name="amendment",
-           referenceInterface=MappingConfigAmendment.class,
-           cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
-           policy=ReferencePolicy.DYNAMIC,
-           updated="updateAmendment")
+@Service(value={ServiceUserMapper.class, ServiceUserMapperImpl.class})
+@References( {
+    @Reference(name="amendment",
+            referenceInterface=MappingConfigAmendment.class,
+            cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
+            policy=ReferencePolicy.DYNAMIC,
+            updated="updateAmendment"),
+    @Reference(name = "serviceUserValidator ", referenceInterface = ServiceUserValidator.class,
+    bind = "bindServiceUserValidator", unbind = "unbindServiceUserValidator",
+    cardinality= ReferenceCardinality.OPTIONAL_MULTIPLE, policy= ReferencePolicy.DYNAMIC)
+
+})
+
 public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     @Property(
@@ -83,9 +104,15 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     private Mapping[] activeMappings = new Mapping[0];
 
+    private final List<ServiceUserValidator> validators = new CopyOnWriteArrayList<ServiceUserValidator>();
+
+    private SortedMap<Mapping, Registration> activeRegistrations = new TreeMap<Mapping, Registration>();
+
+    private BundleContext bundleContext;
+
     @Activate
     @Modified
-    void configure(final Map<String, Object> config) {
+    void configure(BundleContext bundleContext, final Map<String, Object> config) {
         final String[] props = PropertiesUtil.toStringArray(config.get(PROP_SERVICE2USER_MAPPING),
             PROP_SERVICE2USER_MAPPING_DEFAULT);
 
@@ -96,67 +123,89 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
                     final Mapping mapping = new Mapping(prop.trim());
                     mappings.add(mapping);
                 } catch (final IllegalArgumentException iae) {
-                    log.info("configure: Ignoring '{}': {}", prop, iae.getMessage());
+                    log.error("configure: Ignoring '{}': {}", prop, iae.getMessage());
                 }
             }
         }
 
         this.globalServiceUserMappings = mappings.toArray(new Mapping[mappings.size()]);
         this.defaultUser = PropertiesUtil.toString(config.get(PROP_DEFAULT_USER), PROP_DEFAULT_USER_DEFAULT);
+
+        RegistrationSet registrationSet = null;
         synchronized ( this.amendments ) {
-            this.updateMappings();
+            this.bundleContext = bundleContext;
+            registrationSet = this.updateMappings();
         }
+
+        this.executeServiceRegistrations(registrationSet);
+    }
+
+    @Deactivate
+    void deactivate() {
+        RegistrationSet registrationSet = null;
+
+        synchronized ( this.amendments ) {
+            updateServiceRegistrations(new Mapping[0]);
+            bundleContext = null;
+        }
+
+        this.executeServiceRegistrations(registrationSet);
+    }
+
+    /**
+     * bind the serviceUserValidator
+     * @param serviceUserValidator
+     */
+    protected void bindServiceUserValidator(final ServiceUserValidator serviceUserValidator) {
+        validators.add(serviceUserValidator);
+    }
+
+    /**
+     * unbind the serviceUserValidator
+     * @param serviceUserValidator
+     */
+    protected void unbindServiceUserValidator(final ServiceUserValidator serviceUserValidator) {
+        validators.remove(serviceUserValidator);
     }
 
     /**
      * @see org.apache.sling.serviceusermapping.ServiceUserMapper#getServiceUserID(org.osgi.framework.Bundle, java.lang.String)
      */
+    @Override
     public String getServiceUserID(final Bundle bundle, final String subServiceName) {
-        final String serviceName = bundle.getSymbolicName();
-
-        // try with serviceInfo first
-        for (Mapping mapping : this.activeMappings) {
-            final String user = mapping.map(serviceName, subServiceName);
-            if (user != null) {
-                return user;
-            }
-        }
-
-        // second round without serviceInfo
-        for (Mapping mapping : this.activeMappings) {
-            final String user = mapping.map(serviceName, null);
-            if (user != null) {
-                return user;
-            }
-        }
-
-        // finally, fall back to default user
-        return this.defaultUser;
+        final String serviceName = getServiceName(bundle);
+        final String userId = internalGetUserId(serviceName, subServiceName);
+        return isValidUser(userId, serviceName, subServiceName) ? userId : null;
     }
 
     protected void bindAmendment(final MappingConfigAmendment amendment, final Map<String, Object> props) {
         final Long key = (Long) props.get(Constants.SERVICE_ID);
+        RegistrationSet registrationSet = null;
         synchronized ( this.amendments ) {
             amendments.put(key, amendment);
-            this.updateMappings();
+            registrationSet = this.updateMappings();
         }
+
+        executeServiceRegistrations(registrationSet);
     }
 
     protected void unbindAmendment(final MappingConfigAmendment amendment, final Map<String, Object> props) {
         final Long key = (Long) props.get(Constants.SERVICE_ID);
+        RegistrationSet registrationSet = null;
         synchronized ( this.amendments ) {
             if ( amendments.remove(key) != null ) {
-                this.updateMappings();
-            };
+                registrationSet = this.updateMappings();
+            }
         }
 
+        executeServiceRegistrations(registrationSet);
     }
 
     protected void updateAmendment(final MappingConfigAmendment amendment, final Map<String, Object> props) {
         this.bindAmendment(amendment, props);
     }
 
-    protected void updateMappings() {
+    protected RegistrationSet updateMappings() {
         final List<MappingConfigAmendment> sortedMappings = new ArrayList<MappingConfigAmendment>();
         for(final MappingConfigAmendment amendment : this.amendments.values() ) {
             sortedMappings.add(amendment);
@@ -172,7 +221,156 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
                 mappings.add(m);
             }
         }
+
         activeMappings = mappings.toArray(new Mapping[mappings.size()]);
+
+        RegistrationSet registrationSet = updateServiceRegistrations(activeMappings);
+
+        return registrationSet;
+
+    }
+
+
+    RegistrationSet updateServiceRegistrations(final Mapping[] newMappings) {
+
+        RegistrationSet result = new RegistrationSet();
+        // do not do anything if not activated
+        if (bundleContext == null) {
+            return result;
+        }
+
+        final SortedSet<Mapping> orderedNewMappings = new TreeSet<Mapping>(Arrays.asList(newMappings));
+        final SortedMap<Mapping, Registration> newRegistrations = new TreeMap<Mapping, Registration>();
+
+        // keep those that are still mapped
+        for (Map.Entry<Mapping, Registration> registrationEntry: activeRegistrations.entrySet()) {
+            boolean keepEntry = true;
+
+            if (!orderedNewMappings.contains(registrationEntry.getKey())) {
+                Registration registration = registrationEntry.getValue();
+
+                // remove it only if it is a completed registration
+                if (registration.serviceRegistration != null) {
+                    result.removed.add(registration);
+                    keepEntry = false;
+                }
+            }
+
+            if (keepEntry) {
+                newRegistrations.put(registrationEntry.getKey(), registrationEntry.getValue());
+            }
+        }
+
+        // add those that are new
+        for (final Mapping mapping: orderedNewMappings) {
+            if (!newRegistrations.containsKey(mapping)) {
+                Registration registration = new Registration(mapping, null);
+                newRegistrations.put(mapping, registration);
+                result.added.add(registration);
+            }
+        }
+
+        activeRegistrations = newRegistrations;
+
+        return result;
+    }
+
+    private void executeServiceRegistrations(RegistrationSet registrationSet) {
+
+        if (registrationSet == null) {
+            return;
+        }
+
+        for (Registration registration : registrationSet.removed) {
+            if (registration.serviceRegistration != null) {
+                try {
+                    registration.serviceRegistration.unregister();
+                } catch (IllegalStateException e) {
+                    log.error("cannot unregister ServiceUserMapped {}", registration.mapping,  e);
+                }
+                registration.serviceRegistration = null;
+            }
+        }
+
+        BundleContext savedBundleContext = bundleContext;
+
+        if (savedBundleContext == null) {
+            return;
+        }
+
+        for (Registration registration : registrationSet.added) {
+            Mapping mapping = registration.mapping;
+            final Dictionary<String, Object> properties = new Hashtable<String, Object>();
+            if (mapping.getSubServiceName() != null) {
+                properties.put(ServiceUserMapped.SUBSERVICENAME, mapping.getSubServiceName());
+            }
+
+            properties.put(Mapping.SERVICENAME, mapping.getServiceName());
+            final ServiceRegistration serviceRegistration = savedBundleContext.registerService(ServiceUserMappedImpl.SERVICEUSERMAPPED,
+                    new ServiceUserMappedImpl(), properties);
+
+            registration.serviceRegistration = serviceRegistration;
+        }
+
+    }
+
+    private String internalGetUserId(final String serviceName, final String subServiceName) {
+        // try with serviceInfo first
+        for (final Mapping mapping : this.activeMappings) {
+            final String userId = mapping.map(serviceName, subServiceName);
+            if (userId != null) {
+                return userId;
+            }
+        }
+
+        // second round without serviceInfo
+        for (Mapping mapping : this.activeMappings) {
+            final String userId = mapping.map(serviceName, null);
+            if (userId != null) {
+                return userId;
+            }
+        }
+
+        // finally, fall back to default user
+        return this.defaultUser;
+    }
+
+    private boolean isValidUser(final String userId, final String serviceName, final String subServiceName) {
+        if (userId == null) {
+            return false;
+        }
+        if ( !validators.isEmpty() ) {
+            for (final ServiceUserValidator validator : validators) {
+                if ( validator.isValid(userId, serviceName, subServiceName) ) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return true;
+    }
+
+    static String getServiceName(final Bundle bundle) {
+        return bundle.getSymbolicName();
+    }
+
+    List<Mapping> getActiveMappings() {
+        return Collections.unmodifiableList(Arrays.asList(activeMappings));
+    }
+
+    class Registration {
+        private Mapping mapping;
+        private ServiceRegistration serviceRegistration;
+
+        Registration(Mapping mapping, ServiceRegistration serviceRegistration) {
+            this.mapping = mapping;
+            this.serviceRegistration = serviceRegistration;
+        }
+    }
+
+    class RegistrationSet {
+        List<Registration> added = new ArrayList<Registration>();
+        List<Registration> removed = new ArrayList<Registration>();
     }
 }
 

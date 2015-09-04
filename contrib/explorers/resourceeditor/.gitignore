@@ -7,8 +7,6 @@ pom.xml.releaseBackup
 release.properties
 pom.xml.tag
 pom.xml.next
-website/
-jcrbrowser/src/main/resources/SLING-INF/libs/jcrbrowser/content/css/bootstrap.css
-jcrbrowser/.externalToolBuilders/Maven_Ant_Builder.launch
-jcrbrowser/maven-eclipse.xml
-org.sboehme.treeview/.externalToolBuilders/Maven_Ant_Builder.launch
+/frontend/node
+/frontend/node_modules
+/src/main/resources/SLING-INF/libs/sling/resource-editor-static-content/generated

@@ -41,7 +41,7 @@
     </div>
     <div class="ui-widget-content">
        <p>Welcome back, <%= request.getRemoteUser() %></p>
-        <p><a href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/public/<%= request.getRemoteUser() %>.html">Go to your SlingShot home page</a></p>
+        <p><a href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/users/<%= request.getRemoteUser() %>.html">Go to your SlingShot home page</a></p>
     </div>
  </div>
         <%

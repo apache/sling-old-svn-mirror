@@ -75,8 +75,10 @@ public class TracingOsgiClient implements OsgiClient {
                 osgiClient.installLocalBundle(explodedBundleLocation);
             }
             props.put(CommandExecutionProperties.RESULT_TEXT, "OK");
+            props.put(CommandExecutionProperties.RESULT_STATUS, Boolean.TRUE);
         } catch (Throwable t) {
             props.put(CommandExecutionProperties.RESULT_TEXT, "FAILED");
+            props.put(CommandExecutionProperties.RESULT_STATUS, Boolean.FALSE);
             props.put(CommandExecutionProperties.RESULT_THROWABLE, t);
             if (t instanceof OsgiClientException) {
                 throw (OsgiClientException) t;

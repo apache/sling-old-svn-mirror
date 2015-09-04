@@ -27,8 +27,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.Scheduler;
-import org.apache.sling.distribution.DistributionRequestType;
-import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
+import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.distribution.trigger.DistributionTriggerException;
@@ -39,7 +38,7 @@ import javax.annotation.Nonnull;
 import java.util.Map;
 
 @Component(metatype = true,
-        label = "Sling Distribution Trigger - Persisted Jcr Event Triggers Factory",
+        label = "Apache Sling Distribution Trigger - Persisted Jcr Event Triggers Factory",
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE
@@ -49,7 +48,7 @@ public class PersistedJcrEventDistributionTriggerFactory implements Distribution
 
 
     @Property(label = "Name", description = "The name of the trigger.")
-    public static final String NAME = DistributionComponentUtils.PN_NAME;
+    public static final String NAME = DistributionComponentConstants.PN_NAME;
 
 
     /**
@@ -77,6 +76,9 @@ public class PersistedJcrEventDistributionTriggerFactory implements Distribution
     @Reference
     private SlingRepository repository;
 
+    @Reference
+    private Scheduler scheduler;
+
 
     @Activate
     public void activate(BundleContext bundleContext, Map<String, Object> config) {
@@ -85,7 +87,8 @@ public class PersistedJcrEventDistributionTriggerFactory implements Distribution
         String serviceName = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
         String nuggetsPath = PropertiesUtil.toString(config.get(NUGGETS_PATH), null);
 
-        trigger =  new PersistedJcrEventDistributionTrigger(repository, path, serviceName, nuggetsPath);
+        trigger =  new PersistedJcrEventDistributionTrigger(repository, scheduler, path, serviceName, nuggetsPath);
+        trigger.enable();
     }
 
     @Deactivate

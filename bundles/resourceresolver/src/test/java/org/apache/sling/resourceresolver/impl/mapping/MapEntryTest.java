@@ -20,6 +20,7 @@ package org.apache.sling.resourceresolver.impl.mapping;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.lang.reflect.Method;
@@ -175,6 +176,16 @@ public class MapEntryTest {
         TestCase.assertNotNull(res);
         TestCase.assertEquals(1, res.length);
         TestCase.assertEquals(aString, res[0]);
+    }
+
+    @Test public void test_compareTo() {
+        final MapEntry a = new MapEntry("/foo", 200, false, 5, null);
+        final MapEntry b = new MapEntry("/bar", 200, false, 5, null);
+
+        assertTrue(a.compareTo(b) > 0);
+        assertTrue(b.compareTo(a) < 0);
+        assertTrue(a.compareTo(a) == 0);
+        assertTrue(b.compareTo(b) == 0);
     }
 
     private void assertEqualUri(String expected, String uriPath) {

@@ -35,6 +35,7 @@ import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.Queue;
+import org.apache.sling.event.jobs.consumer.JobExecutor;
 
 
 /**
@@ -44,21 +45,28 @@ public class JobHandler {
 
     private final JobImpl job;
 
-    public long queued = -1;
-    public long started = -1;
+    public volatile long started = -1;
 
     private volatile boolean isStopped = false;
 
     private final JobManagerConfiguration configuration;
 
+    private final JobExecutor consumer;
+
     public JobHandler(final JobImpl job,
+            final JobExecutor consumer,
             final JobManagerConfiguration configuration) {
         this.job = job;
+        this.consumer = consumer;
         this.configuration = configuration;
     }
 
     public JobImpl getJob() {
         return this.job;
+    }
+
+    public JobExecutor getConsumer() {
+        return this.consumer;
     }
 
     public boolean startProcessing(final Queue queue) {
@@ -77,11 +85,12 @@ public class JobHandler {
             final Resource jobResource = resolver.getResource(job.getResourcePath());
             if ( jobResource != null ) {
                 final ModifiableValueMap mvm = jobResource.adaptTo(ModifiableValueMap.class);
-                mvm.put(Job.PROPERTY_JOB_RETRY_COUNT, job.getProperty(Job.PROPERTY_JOB_RETRY_COUNT));
+                mvm.put(Job.PROPERTY_JOB_RETRY_COUNT, job.getProperty(Job.PROPERTY_JOB_RETRY_COUNT, Integer.class));
                 if ( job.getProperty(Job.PROPERTY_RESULT_MESSAGE) != null ) {
                     mvm.put(Job.PROPERTY_RESULT_MESSAGE, job.getProperty(Job.PROPERTY_RESULT_MESSAGE));
                 }
                 mvm.remove(Job.PROPERTY_JOB_STARTED_TIME);
+                mvm.put(JobImpl.PROPERTY_JOB_QUEUED, Calendar.getInstance());
                 try {
                     resolver.commit();
                     return true;
@@ -104,7 +113,7 @@ public class JobHandler {
      */
     public void finished(final Job.JobState state,
                           final boolean keepJobInHistory,
-                          final long duration) {
+                          final Long duration) {
         final boolean isSuccess = (state == Job.JobState.SUCCEEDED);
         final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {

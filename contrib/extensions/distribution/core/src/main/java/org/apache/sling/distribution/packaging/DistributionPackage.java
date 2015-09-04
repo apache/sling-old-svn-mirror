@@ -58,6 +58,11 @@ public interface DistributionPackage {
     InputStream createInputStream() throws IOException;
 
     /**
+     * closes all resources associated with this instance
+     */
+    void close();
+
+    /**
      * releases all resources associated with this package
      */
     void delete();

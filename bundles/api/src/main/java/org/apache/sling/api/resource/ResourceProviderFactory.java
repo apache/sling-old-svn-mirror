@@ -20,6 +20,8 @@ package org.apache.sling.api.resource;
 
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+
 import aQute.bnd.annotation.ConsumerType;
 
 /**
@@ -32,7 +34,7 @@ import aQute.bnd.annotation.ConsumerType;
  * If the resource provider is not used anymore and implements the
  * {@link DynamicResourceProvider} interface, the close method should be called.
  *
- * @since 2.2.0
+ * @since 2.2.0 (Sling API Bundle 2.2.0)
  */
 @ConsumerType
 public interface ResourceProviderFactory {
@@ -61,7 +63,7 @@ public interface ResourceProviderFactory {
      * The type of this property, if present, is
      * <code>org.osgi.framework.Bundle</code>.
      *
-     * @since 2.4 (bundle version 2.5.0)
+     * @since 2.4 (Sling API Bundle 2.5.0)
      */
     String SERVICE_BUNDLE = "sling.service.bundle";
 
@@ -99,7 +101,7 @@ public interface ResourceProviderFactory {
      *      href="http://sling.apache.org/documentation/the-sling-engine/service-authentication.html">Service
      *      Authentication</a>
      */
-    ResourceProvider getResourceProvider(Map<String, Object> authenticationInfo) throws LoginException;
+    @Nonnull ResourceProvider getResourceProvider(Map<String, Object> authenticationInfo) throws LoginException;
 
     /**
      * Returns a new {@link ResourceProvider} instance with administrative
@@ -132,5 +134,5 @@ public interface ResourceProviderFactory {
      *             {@link ResourceResolverFactory#SUBSERVICE} properties.
      */
     @Deprecated
-    ResourceProvider getAdministrativeResourceProvider(Map<String, Object> authenticationInfo) throws LoginException;
+    @Nonnull ResourceProvider getAdministrativeResourceProvider(Map<String, Object> authenticationInfo) throws LoginException;
 }

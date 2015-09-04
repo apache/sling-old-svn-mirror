@@ -25,7 +25,7 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
+import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.distribution.trigger.DistributionTriggerException;
@@ -35,7 +35,7 @@ import javax.annotation.Nonnull;
 import java.util.Map;
 
 @Component(metatype = true,
-        label = "Sling Distribution Trigger - Distribution Event Triggers Factory",
+        label = "Apache Sling Distribution Trigger - Distribution Event Triggers Factory",
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE
@@ -44,7 +44,7 @@ import java.util.Map;
 public class DistributionEventDistributeDistributionTriggerFactory implements DistributionTrigger {
 
     @Property(label = "Name", description = "The name of the trigger.")
-    public static final String NAME = DistributionComponentUtils.PN_NAME;
+    public static final String NAME = DistributionComponentConstants.PN_NAME;
 
     /**
      * chain distribution path property

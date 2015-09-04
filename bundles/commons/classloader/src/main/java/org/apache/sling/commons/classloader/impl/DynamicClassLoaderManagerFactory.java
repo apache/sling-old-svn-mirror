@@ -26,12 +26,17 @@ import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is the service factory for the dynamic class loader manager.
  */
 public class DynamicClassLoaderManagerFactory
     implements ServiceFactory {
+
+    /** The logger. */
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /** The package admin. */
     private final PackageAdmin pckAdmin;
@@ -113,6 +118,7 @@ public class DynamicClassLoaderManagerFactory
             if ( pcks != null ) {
                 for(final ExportedPackage pck : pcks ) {
                     if ( this.unresolvedPackages.contains(pck.getName()) ) {
+                        logger.debug("Bundle '{}' provides package '{}' which has been previously unsuccessfully requested!", bundle, pck.getName());
                         return true;
                     }
                 }

@@ -89,6 +89,8 @@ public class RemoteEventDistributionTrigger implements DistributionTrigger {
 
             ScheduleOptions options = scheduler.NOW();
             options.name(getJobName(requestHandler));
+            options.canRunConcurrently(false);
+            options.onLeaderOnly(true);
             scheduler.schedule(new EventBasedDistribution(requestHandler), options);
         } catch (Exception e) {
             throw new DistributionTriggerException("unable to register handler " + requestHandler, e);
@@ -157,7 +159,7 @@ public class RemoteEventDistributionTrigger implements DistributionTrigger {
 
                 CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
 
-                Map<String, String> credentialsMap = distributionTransportSecretProvider.getSecret().asCredentialsMap();
+                Map<String, String> credentialsMap = distributionTransportSecretProvider.getSecret(endpoint.getUri()).asCredentialsMap();
                 if (credentialsMap != null) {
                     String username = credentialsMap.get("username");
                     String password = credentialsMap.get("password");

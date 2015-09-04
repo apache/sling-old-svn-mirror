@@ -1,0 +1,24 @@
+{
+  "ntWithPropertyDefs": {
+    "declaredPropertyDefinitions": [
+      {
+        "defaultValues": [
+          {
+            "boolean": true,
+            "type": "Boolean"
+          }
+        ],
+        "requiredType": "Boolean",
+        "valueConstraints": [
+          "true"
+        ],
+        "multiple": true,
+        "autoCreated": true,
+        "mandatory": true,
+        "protected": true,
+        "onParentVersion": "VERSION",
+        "name": "booleanPropertyDef"
+      }
+    ]
+  }
+}

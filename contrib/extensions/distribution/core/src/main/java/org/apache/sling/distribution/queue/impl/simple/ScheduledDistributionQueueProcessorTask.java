@@ -19,6 +19,7 @@
 package org.apache.sling.distribution.queue.impl.simple;
 
 import org.apache.sling.distribution.queue.DistributionQueue;
+import org.apache.sling.distribution.queue.DistributionQueueEntry;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueProcessor;
 import org.slf4j.Logger;
@@ -42,19 +43,16 @@ class ScheduledDistributionQueueProcessorTask implements Runnable {
     public void run() {
         try {
             for (DistributionQueue queue : queueProvider.getQueues()) {
-                while (!queue.isEmpty()) {
-                    // synchronized (queue) {
-                    DistributionQueueItem item = queue.getHead();
-                    if (item != null) {
-                        if (queueProcessor.process(queue.getName(), item)) {
-                            if (queue.remove(item.getId()) != null) {
-                                log.info("item {} processed and removed from the queue", item);
-                            }
-                        } else {
-                            log.warn("processing of item {} failed", item.getId());
+                DistributionQueueEntry entry;
+                while ((entry = queue.getHead()) != null) {
+
+                    if (queueProcessor.process(queue.getName(), entry)) {
+                        if (queue.remove(entry.getItem().getId()) != null) {
+                            log.info("item {} processed and removed from the queue", entry.getItem());
                         }
+                    } else {
+                        log.warn("processing of item {} failed", entry.getItem().getId());
                     }
-                    // }
                 }
             }
         } catch (Exception e) {

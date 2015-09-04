@@ -17,10 +17,7 @@
  * under the License.
  */
 
-@Export(optional = "provide:=true")
-@Version("0.1")
+@Version("0.2")
 package org.apache.sling.jcr.contentloader;
 
-import aQute.bnd.annotation.Export;
 import aQute.bnd.annotation.Version;
-

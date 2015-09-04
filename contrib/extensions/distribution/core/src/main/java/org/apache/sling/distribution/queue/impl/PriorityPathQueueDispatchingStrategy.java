@@ -23,9 +23,12 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
+import org.apache.sling.distribution.queue.DistributionQueueItemState;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.slf4j.Logger;
@@ -46,9 +49,10 @@ public class PriorityPathQueueDispatchingStrategy implements DistributionQueueDi
 
     }
 
-    private DistributionQueue getQueue(DistributionQueueItem distributionPackage, DistributionQueueProvider queueProvider)
+    private DistributionQueue getQueue(DistributionQueueItem queueItem, DistributionQueueProvider queueProvider)
             throws DistributionQueueException {
-        String[] paths = distributionPackage.getPackageInfo().getPaths();
+        DistributionPackageInfo packageInfo = DistributionPackageUtils.fromQueueItem(queueItem);
+        String[] paths = packageInfo.getPaths();
 
         String pp = null;
 
@@ -80,9 +84,9 @@ public class PriorityPathQueueDispatchingStrategy implements DistributionQueueDi
         DistributionQueueItem queueItem = getItem(distributionPackage);
         DistributionQueue queue = getQueue(queueItem, queueProvider);
         if (queue.add(queueItem)) {
-            return Arrays.asList(queue.getStatus(queueItem));
+            return Arrays.asList(queue.getItem(queueItem.getId()).getStatus());
         } else {
-            return Arrays.asList(new DistributionQueueItemStatus(DistributionQueueItemStatus.ItemState.ERROR, queue.getName()));
+            return Arrays.asList(new DistributionQueueItemStatus(DistributionQueueItemState.ERROR, queue.getName()));
         }
     }
 
@@ -96,9 +100,7 @@ public class PriorityPathQueueDispatchingStrategy implements DistributionQueueDi
     }
 
     private DistributionQueueItem getItem(DistributionPackage distributionPackage) {
-        DistributionQueueItem distributionQueueItem = new DistributionQueueItem(distributionPackage.getId(),
-                distributionPackage.getType(),
-                distributionPackage.getInfo());
+        DistributionQueueItem distributionQueueItem = DistributionPackageUtils.toQueueItem(distributionPackage);
 
         return distributionQueueItem;
     }

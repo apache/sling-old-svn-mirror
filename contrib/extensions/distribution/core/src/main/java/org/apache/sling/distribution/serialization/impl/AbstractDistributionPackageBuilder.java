@@ -23,14 +23,13 @@ import javax.annotation.Nonnull;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.serialization.DistributionPackageBuildingException;
 import org.apache.sling.distribution.serialization.DistributionPackageReadingException;
@@ -51,6 +50,10 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         this.type = type;
     }
 
+    public String getType() {
+        return type;
+    }
+
     @CheckForNull
     public DistributionPackage createPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request)
             throws DistributionPackageBuildingException {
@@ -58,41 +61,35 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         if (DistributionRequestType.ADD.equals(request.getRequestType())) {
             distributionPackage = createPackageForAdd(resourceResolver, request);
         } else if (DistributionRequestType.DELETE.equals(request.getRequestType())) {
-            distributionPackage = new VoidDistributionPackage(request, type);
+            distributionPackage = new SimpleDistributionPackage(request, type);
         } else if (DistributionRequestType.PULL.equals(request.getRequestType())) {
-            distributionPackage = new VoidDistributionPackage(request, type);
+            distributionPackage = new SimpleDistributionPackage(request, type);
+        } else if (DistributionRequestType.TEST.equals(request.getRequestType())) {
+            distributionPackage = new SimpleDistributionPackage(request, type);
         } else {
             throw new DistributionPackageBuildingException("unknown action type "
                     + request.getRequestType());
         }
+
         if (distributionPackage != null) {
-            distributionPackage.getInfo().setRequestType(request.getRequestType());
-            distributionPackage.getInfo().setPaths(request.getPaths());
+            distributionPackage.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, request.getRequestType());
+            distributionPackage.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, request.getPaths());
         }
+
         return distributionPackage;
     }
 
     @CheckForNull
     public DistributionPackage readPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageReadingException {
-        DistributionPackage distributionPackage = null;
+
         if (!stream.markSupported()) {
             stream = new BufferedInputStream(stream);
         }
-        try {
-            stream.mark(6);
-            byte[] buffer = new byte[6];
-            int bytesRead = stream.read(buffer, 0, 6);
-            stream.reset();
-            String s = new String(buffer, "UTF-8");
-            log.info("read {} bytes as {}", bytesRead, s);
+        DistributionPackage distributionPackage = SimpleDistributionPackage.fromStream(stream, type);
 
-            if (bytesRead > 0 && buffer[0] > 0 && s.startsWith("DEL")) {
-                distributionPackage = VoidDistributionPackage.fromStream(stream);
-            }
-        } catch (Exception e) {
-            log.warn("cannot parse stream", e);
-        }
         stream.mark(-1);
+
+        // not a simple package
         if (distributionPackage == null) {
             distributionPackage = readPackageInternal(resourceResolver, stream);
         }
@@ -100,18 +97,27 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
     }
 
     public boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageReadingException {
+
         DistributionRequestType actionType = distributionPackage.getInfo().getRequestType();
-        boolean installed;
+
+        if (!type.equals(distributionPackage.getType())) {
+            throw new DistributionPackageReadingException("not supported package type" + distributionPackage.getType());
+        }
+
+        boolean installed = false;
         if (DistributionRequestType.DELETE.equals(actionType)) {
             installed = installDeletePackage(resourceResolver, distributionPackage);
-        } else {
+        } else if (DistributionRequestType.TEST.equals(actionType)) {
+            // do nothing for test packages
+            installed = true;
+        } else if (DistributionRequestType.ADD.equals(actionType))  {
             installed = installPackageInternal(resourceResolver, distributionPackage);
         }
 
         return installed;
     }
 
-    private boolean installDeletePackage(ResourceResolver resourceResolver, DistributionPackage distributionPackage) throws DistributionPackageReadingException {
+    private boolean installDeletePackage(@Nonnull ResourceResolver resourceResolver, @CheckForNull DistributionPackage distributionPackage) throws DistributionPackageReadingException {
         Session session = null;
         try {
             if (distributionPackage != null) {
@@ -133,14 +139,11 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         return false;
     }
 
+    @CheckForNull
     public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String id) {
-        DistributionPackage distributionPackage = null;
-        try {
-            distributionPackage = VoidDistributionPackage.fromStream(new ByteArrayInputStream(id.getBytes("UTF-8")));
-        } catch (IOException ex) {
-            // not a void package
-        }
+        DistributionPackage distributionPackage = SimpleDistributionPackage.fromIdString(id, type);
 
+        // not a simple package
         if (distributionPackage == null) {
             distributionPackage = getPackageInternal(resourceResolver, id);
         }
@@ -167,17 +170,19 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         }
     }
 
-    protected abstract DistributionPackage createPackageForAdd(ResourceResolver resourceResolver, DistributionRequest request)
+    @CheckForNull
+    protected abstract DistributionPackage createPackageForAdd(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request)
             throws DistributionPackageBuildingException;
 
-
-    protected abstract DistributionPackage readPackageInternal(ResourceResolver resourceResolver, InputStream stream)
+    @CheckForNull
+    protected abstract DistributionPackage readPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream)
             throws DistributionPackageReadingException;
 
 
-    protected abstract boolean installPackageInternal(ResourceResolver resourceResolver, DistributionPackage distributionPackage)
+    protected abstract boolean installPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage)
             throws DistributionPackageReadingException;
 
-    protected abstract DistributionPackage getPackageInternal(ResourceResolver resourceResolver, String id);
+    @CheckForNull
+    protected abstract DistributionPackage getPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull String id);
 
 }

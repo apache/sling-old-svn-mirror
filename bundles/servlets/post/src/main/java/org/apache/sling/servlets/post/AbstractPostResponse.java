@@ -22,6 +22,8 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.api.SlingException;
+
 /**
  * The <code>AbstractPostResponse</code> class provides a basic implementation
  * of the {@link PostResponse} interface maintaining properties to be
@@ -216,7 +218,7 @@ public abstract class AbstractPostResponse implements PostResponse {
     }
 
     public void setError(Throwable error) {
-        setProperty(PN_ERROR, error);
+        setProperty(PN_ERROR, new SlingException("Exception during response processing.", null));
     }
 
     /**
@@ -357,6 +359,15 @@ public abstract class AbstractPostResponse implements PostResponse {
      */
     protected Object getProperty(String name) {
         return properties.get(name);
+    }
+    
+    protected boolean isSafeReferer(){
+        String referer = getReferer();
+        if (referer.startsWith("http://") || referer.startsWith("https://")) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     protected abstract void doSend(HttpServletResponse response) throws IOException;

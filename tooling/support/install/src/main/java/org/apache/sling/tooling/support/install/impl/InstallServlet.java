@@ -136,17 +136,20 @@ public class InstallServlet extends HttpServlet {
                 }
 
                 final String symbolicName = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
+
                 if (symbolicName == null) {
                     logAndWriteError("Manifest does not have a " + Constants.BUNDLE_SYMBOLICNAME, resp);
                     return;
                 }
+
+                final String version = manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
 
                 // the JarInputStream is used only for validation, we need a fresh input stream for updating
                 rawInput = item.getInputStream();
 
                 Bundle found = getBundle(symbolicName);
                 try {
-                    installOrUpdateBundle(found, rawInput, null);
+                    installOrUpdateBundle(found, rawInput, "inputstream:" + symbolicName + "-" + version + ".jar");
 
                     result = new InstallationResult(true, null);
                     resp.setStatus(200);

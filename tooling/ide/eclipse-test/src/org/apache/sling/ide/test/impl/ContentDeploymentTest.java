@@ -36,6 +36,7 @@ import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.URIException;
 import org.apache.sling.ide.test.impl.helpers.DisableDebugStatusHandlers;
 import org.apache.sling.ide.test.impl.helpers.ExternalSlingLaunchpad;
+import org.apache.sling.ide.test.impl.helpers.FailOnUnsuccessfulEventsRule;
 import org.apache.sling.ide.test.impl.helpers.LaunchpadConfig;
 import org.apache.sling.ide.test.impl.helpers.Poller;
 import org.apache.sling.ide.test.impl.helpers.ProjectAdapter;
@@ -70,6 +71,9 @@ public class ContentDeploymentTest {
 
     @Rule
     public TemporaryProject projectRule = new TemporaryProject();
+
+    @Rule
+    public FailOnUnsuccessfulEventsRule failOnEventsRule = new FailOnUnsuccessfulEventsRule();
 
     @Rule
     public DisableDebugStatusHandlers disableDebugHandlers = new DisableDebugStatusHandlers();

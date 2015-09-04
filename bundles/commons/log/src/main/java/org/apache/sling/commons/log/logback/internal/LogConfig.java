@@ -27,11 +27,15 @@ import java.util.regex.Pattern;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.PatternLayout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LogConfig {
     private static final String[] LEGACY_MARKERS = {
         "{0}", "{1}", "{2}", "{3}", "{4}", "{5}"
     };
+
+    private static final Logger log = LoggerFactory.getLogger(LogConfig.class);
 
     private final String configPid;
 
@@ -49,8 +53,10 @@ public class LogConfig {
 
     private final boolean isAdditiv;
 
+    private final boolean resetToDefault;
+
     LogConfig(LogWriterProvider logWriterProvider, final String pattern, Set<String> categories, Level logLevel,
-            String logWriterName, final boolean isAdditiv, String configPid, LoggerContext loggerContext) {
+              String logWriterName, final boolean isAdditiv, String configPid, LoggerContext loggerContext, boolean resetToDefault) {
         this.logWriterProvider = logWriterProvider;
         this.configPid = configPid;
         this.pattern = pattern;
@@ -59,6 +65,7 @@ public class LogConfig {
         this.logWriterName = logWriterName;
         this.loggerContext = loggerContext;
         this.isAdditiv = isAdditiv;
+        this.resetToDefault = resetToDefault;
     }
 
     public String getConfigPid() {
@@ -87,6 +94,10 @@ public class LogConfig {
 
     public LogWriter getLogWriter() {
         return logWriterProvider.getLogWriter(getLogWriterName());
+    }
+
+    public boolean isResetToDefault() {
+        return resetToDefault;
     }
 
     public PatternLayout createLayout() {
@@ -121,8 +132,13 @@ public class LogConfig {
             // Default {0,date,dd.MM.yyyy HH:mm:ss.SSS} *{4}* [{2}] {3} {5}
             // Convert patterns to %d{dd.MM.yyyy HH:mm:ss.SSS} *%level*
             // [%thread] %logger %msg%n
-            logBackPattern = MessageFormat.format(logBackPattern, "zero", "%marker", "%thread", "%logger", "%level",
-                "%message") + "%n";
+            try {
+                logBackPattern = MessageFormat.format(logBackPattern, "zero", "%marker", "%thread", "%logger", "%level",
+                        "%message") + "%n";
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid message format provided [{}]. Would use the default pattern",logBackPattern, e);
+                logBackPattern = LogConfigManager.LOG_PATTERN_DEFAULT;
+            }
         }
 
         PatternLayout pl = new PatternLayout();
@@ -139,7 +155,7 @@ public class LogConfig {
             + logLevel + ", logWriterName='" + logWriterName + '\'' + '}';
     }
 
-    public static interface LogWriterProvider {
+    public interface LogWriterProvider {
         LogWriter getLogWriter(String writerName);
     }
 

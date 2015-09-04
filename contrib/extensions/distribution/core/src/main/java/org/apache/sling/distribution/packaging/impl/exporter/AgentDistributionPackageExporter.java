@@ -23,51 +23,81 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageExportException;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
+import org.apache.sling.distribution.queue.DistributionQueueEntry;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
+import org.apache.sling.distribution.serialization.DistributionPackageBuilderProvider;
+import org.apache.sling.distribution.serialization.impl.DistributionPackageWrapper;
+import org.apache.sling.distribution.serialization.impl.SimpleDistributionPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AgentDistributionPackageExporter implements DistributionPackageExporter {
     private final Logger log = LoggerFactory.getLogger(getClass());
+    private final DistributionPackageBuilderProvider packageBuilderProvider;
+
+    final static String PACKAGE_TYPE = "agentexporter";
 
 
     private DistributionAgent agent;
-    private final DistributionPackageBuilder packageBuilder;
     private String queueName;
 
-    public AgentDistributionPackageExporter(String queueName, DistributionAgent agent, DistributionPackageBuilder packageBuilder) {
+    public AgentDistributionPackageExporter(String queueName, DistributionAgent agent, DistributionPackageBuilderProvider packageBuilderProvider) {
+        this.packageBuilderProvider = packageBuilderProvider;
 
-        if (agent == null || packageBuilder == null) {
+        if (agent == null || packageBuilderProvider == null) {
             throw new IllegalArgumentException("Agent and package builder are required");
         }
         this.queueName = queueName;
         this.agent = agent;
-        this.packageBuilder = packageBuilder;
     }
 
     @Nonnull
-    public List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) {
+    public List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionPackageExportException {
 
         List<DistributionPackage> result = new ArrayList<DistributionPackage>();
+
+        if (DistributionRequestType.TEST.equals(distributionRequest.getRequestType())) {
+            result.add(new SimpleDistributionPackage(distributionRequest, PACKAGE_TYPE));
+            return result;
+        }
+
+        if (!DistributionRequestType.PULL.equals(distributionRequest.getRequestType())) {
+            throw new DistributionPackageExportException("request type not supported " + distributionRequest.getRequestType());
+        }
+
         try {
             log.debug("getting packages from queue {}", queueName);
 
             DistributionQueue queue = agent.getQueue(queueName);
-            DistributionQueueItem info = queue.getHead();
+            DistributionQueueEntry entry = queue.getHead();
             DistributionPackage distributionPackage;
-            if (info != null) {
-                distributionPackage = packageBuilder.getPackage(resourceResolver, info.getId());
-                DistributionQueueItem item = queue.remove(info.getId());
-                log.info("item {} fetched and removed from the queue", item);
-                if (distributionPackage != null) {
-                    result.add(distributionPackage);
+            if (entry != null) {
+                DistributionQueueItem queueItem = entry.getItem();
+                DistributionPackageInfo info = DistributionPackageUtils.fromQueueItem(queueItem);
+                DistributionPackageBuilder packageBuilder = packageBuilderProvider.getPackageBuilder(info.getType());
+
+                if (packageBuilder != null) {
+                    distributionPackage = packageBuilder.getPackage(resourceResolver, queueItem.getId());
+                    log.info("item {} fetched from the queue", info);
+                    if (distributionPackage != null) {
+                        result.add(new AgentDistributionPackage(distributionPackage, queue));
+                    } else {
+                        log.warn("cannot get package {}", info);
+                    }
+                } else {
+                    log.warn("cannot find package builder with type {}", info.getType());
                 }
+
             }
 
         } catch (Exception ex) {
@@ -78,6 +108,56 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
     }
 
     public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String distributionPackageId) {
+
+        try {
+            log.debug("getting package from queue {}", queueName);
+
+            DistributionQueue queue = agent.getQueue(queueName);
+            DistributionQueueEntry entry = queue.getHead();
+            DistributionPackage distributionPackage;
+
+            if (entry != null) {
+                DistributionQueueItem queueItem = entry.getItem();
+                DistributionPackageInfo info = DistributionPackageUtils.fromQueueItem(queueItem);
+
+                DistributionPackageBuilder packageBuilder = packageBuilderProvider.getPackageBuilder(info.getType());
+
+                if (packageBuilder != null) {
+                    distributionPackage = packageBuilder.getPackage(resourceResolver, queueItem.getId());
+                    log.info("item {} fetched from the queue", info);
+                    if (distributionPackage != null) {
+                        return new AgentDistributionPackage(distributionPackage, queue);
+                    }
+                } else {
+                    log.warn("cannot find package builder with type {}", info.getType());
+                }
+
+            }
+
+        } catch (Exception ex) {
+            log.error("Error exporting package", ex);
+        }
+
         return null;
+    }
+
+
+    private class AgentDistributionPackage extends DistributionPackageWrapper {
+
+        private final DistributionPackage distributionPackage;
+        private final DistributionQueue queue;
+
+        protected AgentDistributionPackage(DistributionPackage distributionPackage, DistributionQueue queue) {
+            super(distributionPackage);
+            this.distributionPackage = distributionPackage;
+            this.queue = queue;
+        }
+
+        @Override
+        public void delete() {
+            String id = distributionPackage.getId();
+            queue.remove(id);
+            DistributionPackageUtils.releaseOrDelete(distributionPackage, queue.getName());
+        }
     }
 }

@@ -1,8 +1,0 @@
-# The jackrabbit feature for Apache Sling
-[feature name=jackrabbit]
-
-[artifacts startLevel=15 runModes=jackrabbit]
-    org.apache.derby/derby/10.5.3.0_1
-    org.apache.sling/org.apache.sling.jcr.jackrabbit.server/2.2.0
-
-

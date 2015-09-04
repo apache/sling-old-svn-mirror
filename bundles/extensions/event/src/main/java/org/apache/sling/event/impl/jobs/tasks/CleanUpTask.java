@@ -31,6 +31,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
+import org.apache.sling.event.impl.jobs.scheduling.JobSchedulerImpl;
 import org.apache.sling.event.impl.support.BatchResourceRemover;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,14 +49,18 @@ public class CleanUpTask {
     /** Job manager configuration. */
     private final JobManagerConfiguration configuration;
 
+    /** Job scheduler. */
+    private final JobSchedulerImpl jobScheduler;
+
     /** We count the scheduler runs. */
     private volatile long schedulerRuns;
 
     /**
      * Constructor
      */
-    public CleanUpTask(final JobManagerConfiguration config) {
+    public CleanUpTask(final JobManagerConfiguration config, final JobSchedulerImpl jobScheduler) {
         this.configuration = config;
+        this.jobScheduler = jobScheduler;
     }
 
     /**
@@ -75,6 +80,10 @@ public class CleanUpTask {
                 cleanUpUnassignedPath = null;
             }
 
+            // job scheduler is handled every third run
+            if ( schedulerRuns % 3 == 1 ) {
+                this.jobScheduler.maintenance();
+            }
             if ( schedulerRuns % 60 == 0 ) { // full clean up is done every hour
                 this.fullEmptyFolderCleanup(topologyCapabilities, this.configuration.getLocalJobsPath());
                 if ( cleanUpUnassignedPath != null ) {
@@ -102,40 +111,44 @@ public class CleanUpTask {
             this.logger.debug("Cleaning up job resource tree: removing obsolete locks");
             final List<Resource> candidates = new ArrayList<Resource>();
             final ResourceResolver resolver = this.configuration.createResourceResolver();
-            try {
-                final Resource parentResource = resolver.getResource(this.configuration.getLocksPath());
-                final Calendar startDate = Calendar.getInstance();
-                startDate.add(Calendar.MINUTE, -2);
+            if ( resolver != null ) {
+                try {
+                    final Resource parentResource = resolver.getResource(this.configuration.getLocksPath());
+                    if ( parentResource != null ) {
+                        final Calendar startDate = Calendar.getInstance();
+                        startDate.add(Calendar.MINUTE, -2);
 
-                this.lockCleanup(caps, candidates, parentResource, startDate);
-                final BatchResourceRemover remover = new BatchResourceRemover();
-                boolean batchRemove = true;
-                for(final Resource lockResource : candidates) {
-                    if ( caps.isActive() ) {
-                        try {
-                            if ( batchRemove ) {
-                                remover.delete(lockResource);
+                        this.lockCleanup(caps, candidates, parentResource, startDate);
+                        final BatchResourceRemover remover = new BatchResourceRemover();
+                        boolean batchRemove = true;
+                        for(final Resource lockResource : candidates) {
+                            if ( caps.isActive() ) {
+                                try {
+                                    if ( batchRemove ) {
+                                        remover.delete(lockResource);
+                                    } else {
+                                        resolver.delete(lockResource);
+                                        resolver.commit();
+                                    }
+                                } catch ( final PersistenceException pe) {
+                                    batchRemove = false;
+                                    this.ignoreException(pe);
+                                    resolver.refresh();
+                                }
                             } else {
-                                resolver.delete(lockResource);
-                                resolver.commit();
+                                break;
                             }
+                        }
+                        try {
+                            resolver.commit();
                         } catch ( final PersistenceException pe) {
-                            batchRemove = false;
                             this.ignoreException(pe);
                             resolver.refresh();
                         }
-                    } else {
-                        break;
                     }
+                } finally {
+                    resolver.close();
                 }
-                try {
-                    resolver.commit();
-                } catch ( final PersistenceException pe) {
-                    this.ignoreException(pe);
-                    resolver.refresh();
-                }
-            } finally {
-                resolver.close();
             }
         }
     }
@@ -235,6 +248,9 @@ public class CleanUpTask {
     private void fullEmptyFolderCleanup(final TopologyCapabilities caps, final String basePath) {
         this.logger.debug("Cleaning up job resource tree: removing ALL empty folders");
         final ResourceResolver resolver = this.configuration.createResourceResolver();
+        if ( resolver == null ) {
+            return;
+        }
         try {
             final Resource baseResource = resolver.getResource(basePath);
             // sanity check - should never be null

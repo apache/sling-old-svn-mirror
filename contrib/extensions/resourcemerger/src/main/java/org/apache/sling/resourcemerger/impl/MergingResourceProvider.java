@@ -39,12 +39,16 @@ class MergingResourceProvider implements ResourceProvider {
 
     private final boolean readOnly;
 
+    protected final boolean traverseHierarchie;
+
     MergingResourceProvider(final String mergeRootPath,
             final MergedResourcePicker picker,
-            final boolean readOnly) {
+            final boolean readOnly,
+            final boolean traverseHierarchie) {
         this.mergeRootPath = mergeRootPath;
         this.picker = picker;
         this.readOnly = readOnly;
+        this.traverseHierarchie = traverseHierarchie;
     }
 
     protected static final class ExcludeEntry {
@@ -66,12 +70,16 @@ class MergingResourceProvider implements ResourceProvider {
         }
     }
 
+    /**
+     * Class to check whether a child resource must be hidden. It should not be instantiated for the underlying resource
+     * tree (which is /libs by default) because this check is expensive.
+     */
     protected static final class ParentHidingHandler {
 
         private List<ExcludeEntry> entries = new ArrayList<ExcludeEntry>();
 
-        public ParentHidingHandler(final Resource parent) {
-            final ValueMap parentProps = ResourceUtil.getValueMap(parent);
+        public ParentHidingHandler(final Resource parent, final boolean traverseParent) {
+            final ValueMap parentProps = parent.getValueMap();
             final String[] childrenToHideArray = parentProps.get(MergedResourceConstants.PN_HIDE_CHILDREN, String[].class);
             if (childrenToHideArray != null) {
                 for (final String value : childrenToHideArray) {
@@ -81,9 +89,9 @@ class MergingResourceProvider implements ResourceProvider {
             }
             if (parent != null) {
                 Resource ancestor = parent.getParent();
+                String previousAncestorName = parent.getName();
                 while (ancestor != null) {
-                    String previousAncestorName = parent.getName();
-                    final ValueMap ancestorProps = ResourceUtil.getValueMap(ancestor);
+                    final ValueMap ancestorProps = ancestor.getValueMap();
                     final String[] ancestorChildrenToHideArray = ancestorProps.get(MergedResourceConstants.PN_HIDE_CHILDREN, String[].class);
                     if (ancestorChildrenToHideArray != null) {
                         for (final String value : ancestorChildrenToHideArray) {
@@ -95,6 +103,10 @@ class MergingResourceProvider implements ResourceProvider {
                             }
                         }
                     }
+                    if ( !traverseParent ) {
+                        break;
+                    }
+                    previousAncestorName = ancestor.getName();
                     ancestor = ancestor.getParent();
                 }
             }
@@ -116,7 +128,7 @@ class MergingResourceProvider implements ResourceProvider {
 
         /**
          * Determine if an entry should hide the named resource.
-         * 
+         *
          * @return a non-null value if the entry matches; a null value if it does not
          */
         private Boolean hides(final ExcludeEntry entry, final String name) {
@@ -205,12 +217,20 @@ class MergingResourceProvider implements ResourceProvider {
                 return null;
             }
 
+            boolean isUnderlying = true;
             while (resources.hasNext()) {
                 final Resource resource = resources.next();
-                // check parent for hiding
-                // SLING 3521 : if parent is not readable, nothing is hidden
-                final Resource parent = resource.getParent();
-                final boolean hidden = new ParentHidingHandler(parent).isHidden(holder.name);
+
+                final boolean hidden;
+                if (isUnderlying) {
+                    hidden = false;
+                    isUnderlying = false;
+                } else {
+                    // check parent for hiding
+                    // SLING 3521 : if parent is not readable, nothing is hidden
+                    final Resource parent = resource.getParent();
+                    hidden = (parent == null ? false : new ParentHidingHandler(parent, this.traverseHierarchie).isHidden(holder.name));
+                }
                 if (hidden) {
                     holder.resources.clear();
                 } else if (!ResourceUtil.isNonExistingResource(resource)) {
@@ -236,9 +256,12 @@ class MergingResourceProvider implements ResourceProvider {
 
             final Iterator<Resource> resources = picker.pickResources(resolver, relativePath).iterator();
 
+            boolean isUnderlying = true;
             while (resources.hasNext()) {
                 Resource parentResource = resources.next();
-                final ParentHidingHandler handler = new ParentHidingHandler(parentResource);
+                final ParentHidingHandler handler = !isUnderlying ? new ParentHidingHandler(parentResource, this.traverseHierarchie) : null;
+                isUnderlying = false;
+
                 for (final Resource child : parentResource.getChildren()) {
                     final String rsrcName = child.getName();
                     ResourceHolder holder = null;
@@ -276,11 +299,13 @@ class MergingResourceProvider implements ResourceProvider {
                         candidates.remove(candidates.size() - 1);
                     }
                 }
-                final Iterator<ResourceHolder> iter = candidates.iterator();
-                while (iter.hasNext()) {
-                    final ResourceHolder holder = iter.next();
-                    if (handler.isHidden(holder.name)) {
-                        iter.remove();
+                if (handler != null) {
+                    final Iterator<ResourceHolder> iter = candidates.iterator();
+                    while (iter.hasNext()) {
+                        final ResourceHolder holder = iter.next();
+                        if (handler.isHidden(holder.name)) {
+                            iter.remove();
+                        }
                     }
                 }
             }

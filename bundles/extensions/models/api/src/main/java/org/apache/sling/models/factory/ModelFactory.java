@@ -18,6 +18,7 @@
  */
 package org.apache.sling.models.factory;
 
+import javax.annotation.Nonnull;
 
 /**
  * The ModelFactory instantiates Sling Model classes similar to adaptTo but is allowed to throw an exception in case
@@ -25,6 +26,7 @@ package org.apache.sling.models.factory;
  *
  */
 public interface ModelFactory {
+
     /**
      * Instantiates the given Sling Model class from the given adaptable.
      * @param adaptable the adaptable to use to instantiate the Sling Model Class
@@ -32,12 +34,13 @@ public interface ModelFactory {
      * @return a new instance for the required model (never null)
      * @throws MissingElementsException in case no injector was able to inject some required values with the given types
      * @throws InvalidAdaptableException in case the given class cannot be instantiated from the given adaptable (different adaptable on the model annotation)
-     * @throws ModelClassException in case the model could not be instanciated because model annotation was missing, reflection failed, no valid constructor was found or post-construct has thrown an error
-     * @throws InvalidValidationModelException in case an invalid validation model was found
-     * @throws InvalidResourceException in case the resource (for the Sling Model) could not be validated through Sling Validation
+     * @throws ModelClassException in case the model could not be instantiated because model annotation was missing, reflection failed, no valid constructor was found or post-construct could not be called
+     * @throws PostConstructException in case the post-construct method has thrown an exception itself
+     * @throws ValidationException in case validation could not be performed for some reason (e.g. no validation information available)
+     * @throws InvalidModelException in case the given model type could not be validated through the model validation
      */
-    public <ModelType> ModelType createModel(Object adaptable, Class<ModelType> type) throws MissingElementsException,
-            InvalidAdaptableException, ModelClassException, InvalidValidationModelException, InvalidResourceException;
+    public @Nonnull <ModelType> ModelType createModel(@Nonnull Object adaptable, @Nonnull Class<ModelType> type) throws MissingElementsException,
+            InvalidAdaptableException, ModelClassException, PostConstructException, ValidationException, InvalidModelException;
 
     /**
      * 
@@ -46,7 +49,7 @@ public interface ModelFactory {
      * @return false in case the given class can not be created from the given adaptable
      * @throws ModelClassException in case no class with the Model annotation adapts to the requested type
      */
-    public boolean canCreateFromAdaptable(Object adaptable, Class<?> type) throws ModelClassException;
+    public boolean canCreateFromAdaptable(@Nonnull Object adaptable, @Nonnull Class<?> type) throws ModelClassException;
 
     /**
      * 
@@ -56,5 +59,6 @@ public interface ModelFactory {
      * 
      * @see org.apache.sling.models.annotations.Model
      */
-    public boolean isModelClass(Object adaptable, Class<?> type);
+    public boolean isModelClass(@Nonnull Object adaptable, @Nonnull Class<?> type);
+
 }

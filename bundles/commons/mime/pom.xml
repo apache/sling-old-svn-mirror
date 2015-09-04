@@ -23,8 +23,8 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>22</version>
-        <relativePath>../../../parent/pom.xml</relativePath>
+        <version>24</version>
+        <relativePath/>
     </parent>
 
     <artifactId>org.apache.sling.commons.mime</artifactId>
@@ -65,6 +65,16 @@
                             *
                         </Import-Package>
                     </instructions>
+                </configuration>
+            </plugin>
+           <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>src/main/resources/res/jquery.treeTable.css</exclude>
+                        <exclude>src/main/resources/res/jquery.treeTable.min.js</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
         </plugins>

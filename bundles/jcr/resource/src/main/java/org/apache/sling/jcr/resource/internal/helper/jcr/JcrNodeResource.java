@@ -19,6 +19,7 @@ package org.apache.sling.jcr.resource.internal.helper.jcr;
 import static org.apache.jackrabbit.JcrConstants.JCR_CONTENT;
 import static org.apache.jackrabbit.JcrConstants.JCR_DATA;
 import static org.apache.jackrabbit.JcrConstants.NT_FILE;
+import static org.apache.jackrabbit.JcrConstants.NT_LINKEDFILE;
 
 import java.io.InputStream;
 import java.security.AccessControlException;
@@ -39,9 +40,10 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.JcrModifiablePropertyMap;
-import org.apache.sling.jcr.resource.JcrPropertyMap;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
+import org.apache.sling.jcr.resource.internal.HelperData;
 import org.apache.sling.jcr.resource.internal.JcrModifiableValueMap;
+import org.apache.sling.jcr.resource.internal.JcrValueMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,9 +65,7 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
 
     private String resourceSuperType;
 
-    private final ClassLoader dynamicClassLoader;
-
-    private final PathMapper pathMapper;
+    private final HelperData helper;
 
     /**
      * Constructor
@@ -77,12 +77,11 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
      */
     public JcrNodeResource(final ResourceResolver resourceResolver,
                            final String path,
+                           final String version,
                            final Node node,
-                           final ClassLoader dynamicClassLoader,
-                           final PathMapper pathMapper) {
-        super(resourceResolver, path, node, new JcrNodeResourceMetadata(node), pathMapper);
-        this.pathMapper = pathMapper;
-        this.dynamicClassLoader = dynamicClassLoader;
+                           final HelperData helper) {
+        super(resourceResolver, path, version, node, new JcrNodeResourceMetadata(node));
+        this.helper = helper;
         this.resourceSuperType = UNSET_RESOURCE_SUPER_TYPE;
     }
 
@@ -129,13 +128,13 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
         } else if (type == InputStream.class) {
             return (Type) getInputStream(); // unchecked cast
         } else if (type == Map.class || type == ValueMap.class) {
-            return (Type) new JcrPropertyMap(getNode(), this.dynamicClassLoader); // unchecked cast
+            return (Type) new JcrValueMap(getNode(), this.helper); // unchecked cast
         } else if (type == PersistableValueMap.class ) {
             // check write
             try {
                 getNode().getSession().checkPermission(getPath(),
                     "set_property");
-                return (Type) new JcrModifiablePropertyMap(getNode(), this.dynamicClassLoader);
+                return (Type) new JcrModifiablePropertyMap(getNode(), this.helper.dynamicClassLoader);
             } catch (AccessControlException ace) {
                 // the user has no write permission, cannot adapt
                 LOGGER.debug(
@@ -152,7 +151,7 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
             try {
                 getNode().getSession().checkPermission(getPath(),
                     "set_property");
-                return (Type) new JcrModifiableValueMap(getNode(), this.dynamicClassLoader);
+                return (Type) new JcrModifiableValueMap(getNode(), this.helper);
             } catch (AccessControlException ace) {
                 // the user has no write permission, cannot adapt
                 LOGGER.debug(
@@ -198,7 +197,7 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
                 // otherwise it is the node of this resource
                 Node content = node.isNodeType(NT_FILE)
                         ? node.getNode(JCR_CONTENT)
-                        : node;
+                        : node.isNodeType(NT_LINKEDFILE) ? node.getProperty(JCR_CONTENT).getNode() : node;
 
                 Property data;
 
@@ -241,8 +240,8 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
     Iterator<Resource> listJcrChildren() {
         try {
             if (getNode().hasNodes()) {
-                return new JcrNodeResourceIterator(getResourceResolver(),
-                    getNode().getNodes(), this.dynamicClassLoader, pathMapper);
+                return new JcrNodeResourceIterator(getResourceResolver(), path, version,
+                    getNode().getNodes(), this.helper);
             }
         } catch (final RepositoryException re) {
             LOGGER.error("listChildren: Cannot get children of " + this, re);

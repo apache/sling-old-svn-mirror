@@ -60,15 +60,15 @@ public class AppenderTracker extends ServiceTracker implements LogbackResetListe
     @SuppressWarnings("unchecked")
     @Override
     public Object addingService(final ServiceReference reference) {
-        final Appender<ILoggingEvent> a = (Appender<ILoggingEvent>) super.addingService(reference);
-        a.setContext(loggerContext);
-        a.start();
+        final Appender<ILoggingEvent> appender = (Appender<ILoggingEvent>) super.addingService(reference);
+        appender.setContext(loggerContext);
+        appender.start();
 
-        final AppenderInfo ai = new AppenderInfo(reference, a);
+        final AppenderInfo ai = new AppenderInfo(reference, appender);
         appenders.put(reference, ai);
         attachAppender(ai);
 
-        return ai;
+        return appender;
     }
 
     @SuppressWarnings("unchecked")

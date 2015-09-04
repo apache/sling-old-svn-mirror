@@ -540,6 +540,9 @@ public class SlingAuthenticator implements Authenticator,
                                     + holder + ", access forbidden", ioe);
                             done = true;
                         }
+                        if (done) {
+                            break;
+                        }
                     }
                 }
             }
@@ -815,7 +818,7 @@ public class SlingAuthenticator implements Authenticator,
             // now find a way to get credentials unless the feedback handler
             // has committed a response to the client already
             if (!response.isCommitted()) {
-                handleLoginFailure(request, response, authInfo.getUser(), re);
+                return handleLoginFailure(request, response, authInfo.getUser(), re);
             }
 
         }
@@ -885,9 +888,9 @@ public class SlingAuthenticator implements Authenticator,
 
     private boolean isAnonAllowed(HttpServletRequest request) {
 
-        final String path = getPath(request);
+        String path = getPath(request);
         if (path.length() == 0) {
-            return false;
+            path = "/";
         }
 
         final Collection<AuthenticationRequirementHolder>[] holderSetArray = authRequiredCache
@@ -924,10 +927,11 @@ public class SlingAuthenticator implements Authenticator,
         return info;
     }
 
-    private void handleLoginFailure(final HttpServletRequest request,
+    private boolean handleLoginFailure(final HttpServletRequest request,
             final HttpServletResponse response, final String user,
             final Exception reason) {
 
+        boolean processRequest = false;
         if (reason.getClass().getName().contains("TooManySessionsException")) {
 
             // to many users, send a 503 Service Unavailable
@@ -943,28 +947,32 @@ public class SlingAuthenticator implements Authenticator,
             }
 
         } else if (reason instanceof LoginException) {
-
-            // request authentication information and send 403 (Forbidden)
-            // if no handler can request authentication information.
             log.info("handleLoginFailure: Unable to authenticate {}: {}", user,
-                reason.getMessage());
-
-            if (reason.getCause() instanceof CredentialExpiredException) {
-                // force failure attribute to be set so handlers can
-                // react to this special circumstance
-                request.setAttribute(AuthenticationHandler.FAILURE_REASON_CODE,
-                        AuthenticationHandler.FAILURE_REASON_CODES.PASSWORD_EXPIRED);
-                ensureAttribute(request, AuthenticationHandler.FAILURE_REASON,
-                        "Password expired");
+                    reason.getMessage());
+            if (isAnonAllowed(request) && !expectAuthenticationHandler(request) && !AuthUtil.isValidateRequest(request)) {
+                log.debug("handleLoginFailure: LoginException on an anonymous resource, fallback to getAnonymousResolver");
+                processRequest = getAnonymousResolver(request, response, new AuthenticationInfo(null));
             } else {
-                // preset a reason for the login failure (if not done already)
-                request.setAttribute(AuthenticationHandler.FAILURE_REASON_CODE,
-                        AuthenticationHandler.FAILURE_REASON_CODES.INVALID_LOGIN);
-                ensureAttribute(request, AuthenticationHandler.FAILURE_REASON,
-                        "User name and password do not match");
-            }
+                // request authentication information and send 403 (Forbidden)
+                // if no handler can request authentication information.            
 
-            doLogin(request, response);
+                if (reason.getCause() instanceof CredentialExpiredException) {
+                    // force failure attribute to be set so handlers can
+                    // react to this special circumstance
+                    request.setAttribute(AuthenticationHandler.FAILURE_REASON_CODE,
+                            AuthenticationHandler.FAILURE_REASON_CODES.PASSWORD_EXPIRED);
+                    ensureAttribute(request, AuthenticationHandler.FAILURE_REASON,
+                            "Password expired");
+                } else {
+                    // preset a reason for the login failure (if not done already)
+                    request.setAttribute(AuthenticationHandler.FAILURE_REASON_CODE,
+                            AuthenticationHandler.FAILURE_REASON_CODES.INVALID_LOGIN);
+                    ensureAttribute(request, AuthenticationHandler.FAILURE_REASON,
+                            "User name and password do not match");
+                }
+
+                doLogin(request, response);
+            }
 
         } else {
 
@@ -982,6 +990,7 @@ public class SlingAuthenticator implements Authenticator,
                     "handleLoginFailure: Cannot send status 500 to client", ioe);
             }
         }
+        return processRequest;
 
     }
 

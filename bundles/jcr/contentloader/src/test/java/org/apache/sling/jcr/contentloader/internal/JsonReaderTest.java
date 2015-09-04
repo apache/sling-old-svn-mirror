@@ -26,6 +26,7 @@ import javax.jcr.RepositoryException;
 
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.jcr.contentloader.ContentCreator;
 import org.apache.sling.jcr.contentloader.internal.readers.JsonReader;
 import org.jmock.Expectations;
 import org.jmock.Mockery;

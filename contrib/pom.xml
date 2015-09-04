@@ -25,6 +25,7 @@
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
         <version>8</version>
+        <relativePath />
     </parent>
 
     <groupId>org.apache.sling</groupId>
@@ -88,7 +89,6 @@
           <module>auth/org.apache.sling.auth.xing.oauth</module>
           <module>auth/selector</module>
 
-          <module>commons/fsclassloader</module>
           <module>commons/html</module>
 
           <module>extensions/apt/parser</module>
@@ -100,7 +100,6 @@
           <module>extensions/ftpserver</module>
           <module>extensions/gwt/sample</module>
           <module>extensions/gwt/servlet</module>
-          <module>extensions/i18n</module>
           <module>extensions/jmxprovider</module>
           <module>extensions/leak-detector</module>
           <module>extensions/mongodb</module>
@@ -109,20 +108,25 @@
           <module>extensions/distribution/core</module>
           <module>extensions/distribution/sample</module>
           <module>extensions/distribution/it</module>
+          <module>extensions/logtail</module>
+          <module>extensions/oak-s3</module>
           <module>extensions/reqanalyzer</module>
           <module>extensions/resourcemerger</module>
+          <module>extensions/resource-inventory</module>
           <module>extensions/rewriter</module>
+          <module>extensions/security</module>
           <module>extensions/slf4j-mdc</module>
           <module>extensions/sling-query</module>
           <module>extensions/superimposing</module>
           <module>extensions/tenant</module>
-          <module>extensions/validation</module>
-          <module>extensions/xss</module>
+          <module>extensions/urlrewriter</module>
+
           <module>jcr/compiler</module>
           <module>jcr/jackrabbit-client</module>
           <module>jcr/ocm</module>
           <module>jcr/prefs</module>
           <module>jcr/resourcesecurity</module>
+
           <module>scripting/script-console</module>
           <module>scripting/jsp-taglib-atom</module>
           <module>scripting/freemarker</module>
@@ -131,14 +135,34 @@
           <module>scripting/jst</module>
           <module>scripting/python</module>
           <module>scripting/ruby</module>
+          <module>scripting/scala/script</module>
+          <module>scripting/scala/config</module>
+          <module>scripting/scala/samples/hello-world</module>
+          <module>scripting/scala/samples/forum</module>
           <module>scripting/thymeleaf</module>
           <module>scripting/velocity</module>
           <module>scripting/xproc</module>
-          <module>launchpad/karaf</module>
+
+          <module>nosql/generic</module>
+          <module>nosql/couchbase-client</module>
+          <module>nosql/couchbase-resourceprovider</module>
+
           <module>launchpad/testing</module>
-          <module>launchpad/debian</module>
+          <module>launchpad/karaf</module>
     </modules>
     <profiles>
+        <profile>
+            <!--
+              Allow the debian package to be excluded, as it might be slow/stopping
+            -->
+            <id>debian</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <modules>
+                <module>launchpad/debian</module>
+            </modules>
+        </profile>
         <profile>
             <!--
               Allow the integration tests to be excluded, as they might be slow
@@ -149,18 +173,6 @@
             </activation>
             <modules>
                 <module>launchpad/testing</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>java6plus</id>
-            <activation>
-                <jdk>[1.6,)</jdk>
-            </activation>
-            <modules>
-                <module>scripting/scala/script</module>
-                <module>scripting/scala/config</module>
-                <module>scripting/scala/samples/hello-world</module>
-                <module>scripting/scala/samples/forum</module>
             </modules>
         </profile>
     </profiles>

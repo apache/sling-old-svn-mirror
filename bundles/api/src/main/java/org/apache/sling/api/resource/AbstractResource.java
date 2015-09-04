@@ -36,7 +36,7 @@ import org.apache.sling.api.wrappers.ValueMapDecorator;
  * always be able to support new methods that might be introduced in the
  * {@link Resource} interface in the future.
  *
- * @since 2.1.0
+ * @since 2.1.0 (Sling API Bundle 2.1.0)
  */
 public abstract class AbstractResource
     extends SlingAdaptable
@@ -61,11 +61,7 @@ public abstract class AbstractResource
      * retrieve that resource from the resource resolver.
      */
     public Resource getParent() {
-        final String parentPath = ResourceUtil.getParent(getPath());
-        if (parentPath == null) {
-            return null;
-        }
-        return getResourceResolver().getResource(parentPath);
+        return getResourceResolver().getParent(this);
     }
 
     /**

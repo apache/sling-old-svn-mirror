@@ -29,6 +29,8 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.resources.DistributionResourceTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,25 +52,20 @@ public class DistributionPackageImporterServlet extends SlingAllMethodsServlet {
                 .adaptTo(DistributionPackageImporter.class);
 
         final long start = System.currentTimeMillis();
-        response.setContentType("text/plain");
-        response.setCharacterEncoding("utf-8");
+        response.setContentType("application/json");
+
 
         InputStream stream = request.getInputStream();
         ResourceResolver resourceResolver = request.getResourceResolver();
         try {
-            DistributionPackage distributionPackage = distributionPackageImporter.importStream(resourceResolver, stream);
-            if (distributionPackage != null) {
-                log.info("Package {} imported successfully", distributionPackage);
-                distributionPackage.delete();
-            } else {
-                log.warn("Cannot import distribution package from request {}", request);
-                response.setStatus(400);
-                response.getWriter().print("error: could not import a package from the request stream");
-            }
-        } catch (final Exception e) {
-            response.setStatus(400);
-            response.getWriter().print("error: " + e.toString());
-            log.error("Error during distribution import: {}", e.getMessage(), e);
+            DistributionPackageInfo distributionPackageInfo = distributionPackageImporter.importStream(resourceResolver, stream);
+
+            log.info("Package {} imported successfully", distributionPackageInfo);
+            ServletJsonUtils.writeJson(response, 200, "package imported successfully");
+
+        } catch (final Throwable e) {
+            ServletJsonUtils.writeJson(response, 400, "an unexpected error has occurred during distribution import");
+            log.error("Error during distribution import", e);
         } finally {
             long end = System.currentTimeMillis();
             log.info("Processed package import request in {} ms", end - start);

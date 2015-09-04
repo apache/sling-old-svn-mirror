@@ -32,6 +32,7 @@ import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.JobTopicTraverser;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
+import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
 import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
 import org.apache.sling.event.impl.support.ResourceHelper;
@@ -74,25 +75,27 @@ public class CheckTopologyTask {
         if ( caps.isLeader() && caps.isActive() ) {
             this.logger.debug("Checking for stopped instances...");
             final ResourceResolver resolver = this.configuration.createResourceResolver();
-            try {
-                final Resource jobsRoot = resolver.getResource(this.configuration.getAssginedJobsPath());
-                this.logger.debug("Got jobs root {}", jobsRoot);
+            if ( resolver != null ) {
+                try {
+                    final Resource jobsRoot = resolver.getResource(this.configuration.getAssginedJobsPath());
+                    this.logger.debug("Got jobs root {}", jobsRoot);
 
-                // this resource should exist, but we check anyway
-                if ( jobsRoot != null ) {
-                    final Iterator<Resource> instanceIter = jobsRoot.listChildren();
-                    while ( caps.isActive() && instanceIter.hasNext() ) {
-                        final Resource instanceResource = instanceIter.next();
+                    // this resource should exist, but we check anyway
+                    if ( jobsRoot != null ) {
+                        final Iterator<Resource> instanceIter = jobsRoot.listChildren();
+                        while ( caps.isActive() && instanceIter.hasNext() ) {
+                            final Resource instanceResource = instanceIter.next();
 
-                        final String instanceId = instanceResource.getName();
-                        if ( !caps.isActive(instanceId) ) {
-                            logger.debug("Found stopped instance {}", instanceId);
-                            assignJobs(instanceResource, true);
+                            final String instanceId = instanceResource.getName();
+                            if ( !caps.isActive(instanceId) ) {
+                                logger.debug("Found stopped instance {}", instanceId);
+                                assignJobs(instanceResource, true);
+                            }
                         }
                     }
+                } finally {
+                    resolver.close();
                 }
-            } finally {
-                resolver.close();
             }
         }
     }
@@ -104,85 +107,97 @@ public class CheckTopologyTask {
         if ( caps.isActive() ) {
             this.logger.debug("Checking for stale jobs...");
             final ResourceResolver resolver = this.configuration.createResourceResolver();
-            try {
-                final Resource jobsRoot = resolver.getResource(this.configuration.getLocalJobsPath());
+            if ( resolver != null ) {
+                try {
+                    final Resource jobsRoot = resolver.getResource(this.configuration.getLocalJobsPath());
 
-                // this resource should exist, but we check anyway
-                if ( jobsRoot != null ) {
-                    // check if this instance supports bridged jobs
-                    final List<InstanceDescription> bridgedTargets = caps.getPotentialTargets("/", null);
-                    boolean flag = false;
-                    for(final InstanceDescription desc : bridgedTargets) {
-                        if ( desc.isLocal() ) {
-                            flag = true;
-                            break;
-                        }
-                    }
-                    final boolean supportsBridged = flag;
-
-                    final Iterator<Resource> topicIter = jobsRoot.listChildren();
-                    while ( caps.isActive() && topicIter.hasNext() ) {
-                        final Resource topicResource = topicIter.next();
-
-                        final String topicName = topicResource.getName().replace('.', '/');
-                        this.logger.debug("Checking topic {}..." , topicName);
-                        final List<InstanceDescription> potentialTargets = caps.getPotentialTargets(topicName, null);
-                        boolean reassign = true;
-                        for(final InstanceDescription desc : potentialTargets) {
+                    // this resource should exist, but we check anyway
+                    if ( jobsRoot != null ) {
+                        // check if this instance supports bridged jobs
+                        final List<InstanceDescription> bridgedTargets = caps.getPotentialTargets("/", null);
+                        boolean flag = false;
+                        for(final InstanceDescription desc : bridgedTargets) {
                             if ( desc.isLocal() ) {
-                                reassign = false;
+                                flag = true;
                                 break;
                             }
                         }
-                        if ( reassign ) {
-                            final QueueInfo info = this.configuration.getQueueConfigurationManager().getQueueInfo(topicName);
-                            JobTopicTraverser.traverse(this.logger, topicResource, new JobTopicTraverser.ResourceCallback() {
+                        final boolean supportsBridged = flag;
 
-                                @Override
-                                public boolean handle(final Resource rsrc) {
-                                    try {
-                                        final ValueMap vm = ResourceHelper.getValueMap(rsrc);
-                                        if ( !supportsBridged || vm.get(JobImpl.PROPERTY_BRIDGED_EVENT) == null ) {
-                                            final String targetId = caps.detectTarget(topicName, vm, info);
+                        final Iterator<Resource> topicIter = jobsRoot.listChildren();
+                        while ( caps.isActive() && topicIter.hasNext() ) {
+                            final Resource topicResource = topicIter.next();
 
-                                            final Map<String, Object> props = new HashMap<String, Object>(vm);
-                                            props.remove(Job.PROPERTY_JOB_STARTED_TIME);
-
-                                            final String newPath;
-                                            if ( targetId != null ) {
-                                                newPath = configuration.getAssginedJobsPath() + '/' + targetId + '/' + topicResource.getName() + rsrc.getPath().substring(topicResource.getPath().length());
-                                                props.put(Job.PROPERTY_JOB_QUEUE_NAME, info.queueName);
-                                                props.put(Job.PROPERTY_JOB_TARGET_INSTANCE, targetId);
-                                            } else {
-                                                newPath = configuration.getUnassignedJobsPath() + '/' + topicResource.getName() + rsrc.getPath().substring(topicResource.getPath().length());
-                                                props.remove(Job.PROPERTY_JOB_QUEUE_NAME);
-                                                props.remove(Job.PROPERTY_JOB_TARGET_INSTANCE);
-                                            }
-                                            try {
-                                                ResourceHelper.getOrCreateResource(resolver, newPath, props);
-                                                resolver.delete(rsrc);
-                                                resolver.commit();
-                                            } catch ( final PersistenceException pe ) {
-                                                logger.warn("Unable to move stale job from " + rsrc.getPath() + " to " + newPath, pe);
-                                                resolver.refresh();
-                                                resolver.revert();
-                                            }
-                                        }
-                                    } catch (final InstantiationException ie) {
-                                        // something happened with the resource in the meantime
-                                        logger.warn("Unable to move stale job from " + rsrc.getPath(), ie);
-                                        resolver.refresh();
-                                        resolver.revert();
-                                    }
-                                    return caps.isActive();
+                            final String topicName = topicResource.getName().replace('.', '/');
+                            this.logger.debug("Checking topic {}..." , topicName);
+                            final List<InstanceDescription> potentialTargets = caps.getPotentialTargets(topicName, null);
+                            boolean reassign = true;
+                            for(final InstanceDescription desc : potentialTargets) {
+                                if ( desc.isLocal() ) {
+                                    reassign = false;
+                                    break;
                                 }
-                            });
+                            }
+                            if ( reassign ) {
+                                final QueueConfigurationManager qcm = this.configuration.getQueueConfigurationManager();
+                                if ( qcm == null ) {
+                                    break;
+                                }
+                                final QueueInfo info = qcm.getQueueInfo(topicName);
+                                JobTopicTraverser.traverse(this.logger, topicResource, new JobTopicTraverser.ResourceCallback() {
 
+                                    @Override
+                                    public boolean handle(final Resource rsrc) {
+                                        try {
+                                            final ValueMap vm = ResourceHelper.getValueMap(rsrc);
+                                            if ( !supportsBridged || vm.get(JobImpl.PROPERTY_BRIDGED_EVENT) == null ) {
+                                                final String targetId = caps.detectTarget(topicName, vm, info);
+
+                                                final Map<String, Object> props = new HashMap<String, Object>(vm);
+                                                props.remove(Job.PROPERTY_JOB_STARTED_TIME);
+
+                                                final String newPath;
+                                                if ( targetId != null ) {
+                                                    newPath = configuration.getAssginedJobsPath() + '/' + targetId + '/' + topicResource.getName() + rsrc.getPath().substring(topicResource.getPath().length());
+                                                    props.put(Job.PROPERTY_JOB_QUEUE_NAME, info.queueName);
+                                                    props.put(Job.PROPERTY_JOB_TARGET_INSTANCE, targetId);
+                                                } else {
+                                                    newPath = configuration.getUnassignedJobsPath() + '/' + topicResource.getName() + rsrc.getPath().substring(topicResource.getPath().length());
+                                                    props.remove(Job.PROPERTY_JOB_QUEUE_NAME);
+                                                    props.remove(Job.PROPERTY_JOB_TARGET_INSTANCE);
+                                                }
+                                                try {
+                                                    ResourceHelper.getOrCreateResource(resolver, newPath, props);
+                                                    resolver.delete(rsrc);
+                                                    resolver.commit();
+                                                    final String jobId = vm.get(ResourceHelper.PROPERTY_JOB_ID, String.class);
+                                                    if ( targetId != null ) {
+                                                        configuration.getAuditLogger().debug("REASSIGN OK {} : {}", targetId, jobId);
+                                                    } else {
+                                                        configuration.getAuditLogger().debug("REUNASSIGN OK : {}", jobId);
+                                                    }
+                                                } catch ( final PersistenceException pe ) {
+                                                    logger.warn("Unable to move stale job from " + rsrc.getPath() + " to " + newPath, pe);
+                                                    resolver.refresh();
+                                                    resolver.revert();
+                                                }
+                                            }
+                                        } catch (final InstantiationException ie) {
+                                            // something happened with the resource in the meantime
+                                            logger.warn("Unable to move stale job from " + rsrc.getPath(), ie);
+                                            resolver.refresh();
+                                            resolver.revert();
+                                        }
+                                        return caps.isActive();
+                                    }
+                                });
+
+                            }
                         }
                     }
+                } finally {
+                    resolver.close();
                 }
-            } finally {
-                resolver.close();
             }
         }
     }
@@ -197,16 +212,18 @@ public class CheckTopologyTask {
         if ( caps.isLeader() && caps.isActive() ) {
             logger.debug("Checking unassigned jobs...");
             final ResourceResolver resolver = this.configuration.createResourceResolver();
-            try {
-                final Resource unassignedRoot = resolver.getResource(this.configuration.getUnassignedJobsPath());
-                logger.debug("Got unassigned root {}", unassignedRoot);
+            if ( resolver != null ) {
+                try {
+                    final Resource unassignedRoot = resolver.getResource(this.configuration.getUnassignedJobsPath());
+                    logger.debug("Got unassigned root {}", unassignedRoot);
 
-                // this resource should exist, but we check anyway
-                if ( unassignedRoot != null ) {
-                    assignJobs(unassignedRoot, false);
+                    // this resource should exist, but we check anyway
+                    if ( unassignedRoot != null ) {
+                        assignJobs(unassignedRoot, false);
+                    }
+                } finally {
+                    resolver.close();
                 }
-            } finally {
-                resolver.close();
             }
         }
     }
@@ -234,7 +251,11 @@ public class CheckTopologyTask {
             // first check if there is an instance for these topics
             final List<InstanceDescription> potentialTargets = caps.getPotentialTargets(topicName, BRIDGED_JOB);
             if ( potentialTargets != null && potentialTargets.size() > 0 ) {
-                final QueueInfo info = this.configuration.getQueueConfigurationManager().getQueueInfo(topicName);
+                final QueueConfigurationManager qcm = this.configuration.getQueueConfigurationManager();
+                if ( qcm == null ) {
+                    break;
+                }
+                final QueueInfo info = qcm.getQueueInfo(topicName);
                 logger.debug("Found queue {} for {}", info.queueConfiguration, topicName);
 
                 JobTopicTraverser.traverse(this.logger, topicResource, new JobTopicTraverser.ResourceCallback() {
@@ -255,6 +276,8 @@ public class CheckTopologyTask {
                                     ResourceHelper.getOrCreateResource(resolver, newPath, props);
                                     resolver.delete(rsrc);
                                     resolver.commit();
+                                    final String jobId = vm.get(ResourceHelper.PROPERTY_JOB_ID, String.class);
+                                    configuration.getAuditLogger().debug("REASSIGN OK {} : {}", targetId, jobId);
                                 } catch ( final PersistenceException pe ) {
                                     logger.warn("Unable to move unassigned job from " + rsrc.getPath() + " to " + newPath, pe);
                                     resolver.refresh();
@@ -290,6 +313,8 @@ public class CheckTopologyTask {
                                 ResourceHelper.getOrCreateResource(resolver, newPath, props);
                                 resolver.delete(rsrc);
                                 resolver.commit();
+                                final String jobId = vm.get(ResourceHelper.PROPERTY_JOB_ID, String.class);
+                                configuration.getAuditLogger().debug("REUNASSIGN OK : {}", jobId);
                             } catch ( final PersistenceException pe ) {
                                 logger.warn("Unable to unassigned job from " + rsrc.getPath() + " to " + newPath, pe);
                                 resolver.refresh();

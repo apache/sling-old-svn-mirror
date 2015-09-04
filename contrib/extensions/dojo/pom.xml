@@ -23,8 +23,8 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>22</version>
-        <relativePath>../../../parent/pom.xml</relativePath>
+        <version>24</version>
+        <relativePath/>
     </parent>
 
     <artifactId>org.apache.sling.extensions.dojo</artifactId>
@@ -113,6 +113,16 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+           <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>src/main/dojo-override/dojo/_base/_loader/hostenv_rhino.js</exclude>
+                        <exclude>src/main/resources/META-INF/LICENSE_dojo</exclude>
+                    </excludes>
+                </configuration>
             </plugin>
             
             <plugin>

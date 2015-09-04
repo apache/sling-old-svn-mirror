@@ -43,16 +43,16 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.commons.jackrabbit.authorization.AccessControlUtils;
 import org.apache.jackrabbit.oak.Oak;
 import org.apache.jackrabbit.oak.api.ContentRepository;
+import org.apache.jackrabbit.oak.jcr.osgi.OsgiRepository;
 import org.apache.jackrabbit.oak.osgi.OsgiWhiteboard;
 import org.apache.jackrabbit.oak.plugins.commit.ConflictValidatorProvider;
 import org.apache.jackrabbit.oak.plugins.commit.JcrConflictHandler;
-import org.apache.jackrabbit.oak.plugins.index.aggregate.AggregateIndexProvider;
 import org.apache.jackrabbit.oak.plugins.index.aggregate.NodeAggregator;
 import org.apache.jackrabbit.oak.plugins.index.aggregate.SimpleNodeAggregator;
-import org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProvider;
 import org.apache.jackrabbit.oak.plugins.index.lucene.util.LuceneIndexHelper;
 import org.apache.jackrabbit.oak.plugins.name.NameValidatorProvider;
 import org.apache.jackrabbit.oak.plugins.name.NamespaceEditorProvider;
@@ -150,7 +150,7 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
     @Property(
             value = DEFAULT_ADMIN_USER,
-            label = "Administator",
+            label = "Administrator",
             description = "The user name of the administrative user. This user"
                 + "name is used to implement the SlingRepository.loginAdministrative(String)"
                 + "method. It is intended for this user to provide full read/write access to repository.")
@@ -226,7 +226,7 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         .with(new InitialContent())
         .with(new ExtraSlingContent())
 
-        .with(JcrConflictHandler.JCR_CONFLICT_HANDLER)
+        .with(JcrConflictHandler.createJcrConflictHandler())
         .with(new EditorHook(new VersionEditorProvider()))
 
         .with(securityProvider)
@@ -250,7 +250,10 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         }
 
         final ContentRepository contentRepository = oak.createContentRepository();
-        return new JcrRepositoryHacks(contentRepository, whiteboard, securityProvider, observationQueueLength, commitRateLimiter);
+        final boolean fastQueryResultSize = true;
+        return new OsgiRepository(
+                contentRepository, whiteboard, securityProvider, observationQueueLength, 
+                commitRateLimiter, fastQueryResultSize);
     }
 
     @Override
@@ -308,7 +311,7 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         this.indexEditorProvider.stop();
         this.oakExecutorServiceReference.unregister();
         this.oakExecutorServiceReference = null;
-        ((JcrRepositoryHacks) repository).shutdown();
+        ((JackrabbitRepository) repository).shutdown();
         this.adminUserName = null;
     }
 
@@ -322,7 +325,7 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
         @SuppressWarnings("unchecked")
         Dictionary<String, Object> properties = componentContext.getProperties();
-        final String defaultWorkspace = PropertiesUtil.toString(properties.get(PROPERTY_DEFAULT_WORKSPACE), "oak.sling");
+        final String defaultWorkspace = PropertiesUtil.toString(properties.get(PROPERTY_DEFAULT_WORKSPACE), "default");
         final boolean disableLoginAdministrative = !PropertiesUtil.toBoolean(
             properties.get(PROPERTY_LOGIN_ADMIN_ENABLED), DEFAULT_LOGIN_ADMIN_ENABLED);
 

@@ -25,7 +25,7 @@ import org.osgi.framework.ServiceReference;
 
 /**
  * The <code>ServiceUtil</code> is a utility class providing some
- * usefull utility methods for service handling.
+ * useful utility methods for service handling.
  * @since 2.1
  */
 public class ServiceUtil {

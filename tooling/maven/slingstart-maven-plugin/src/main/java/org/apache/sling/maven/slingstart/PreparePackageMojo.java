@@ -28,6 +28,7 @@ import java.util.TreeSet;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.felix.cm.file.ConfigurationHandler;
+import org.apache.maven.MavenExecutionException;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
@@ -90,7 +91,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        final Model model = ModelUtils.getEffectiveModel(this.project);
+        final Model model = ProjectHelper.getEffectiveModel(this.project, getResolverOptions());
 
         this.prepareGlobal(model);
         this.prepareStandaloneApp(model);
@@ -199,7 +200,8 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
     throws MojoExecutionException{
         for(final ArtifactGroup group : runMode.getArtifactGroups()) {
             for(final org.apache.sling.provisioning.model.Artifact a : group) {
-                final Artifact artifact = ModelUtils.getArtifact(this.project, this.mavenSession, this.artifactHandlerManager, this.resolver, a.getGroupId(), a.getArtifactId(), a.getVersion(), a.getType(), a.getClassifier());
+                final Artifact artifact = ModelUtils.getArtifact(this.project, this.mavenSession, this.artifactHandlerManager, this.resolver,
+                        a.getGroupId(), a.getArtifactId(), a.getVersion(), a.getType(), a.getClassifier());
                 final File artifactFile = artifact.getFile();
                 contentsMap.put(getPathForArtifact(group.getStartLevel(), artifactFile.getName(), runMode, isBoot), artifactFile);
             }
@@ -244,7 +246,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
             final RunMode launchpadRunMode = launchpadFeature.getRunMode(null);
             if ( launchpadRunMode != null ) {
                 for(final Map.Entry<String, String> entry : launchpadRunMode.getSettings()) {
-                    settings.put(entry.getKey(), entry.getValue());
+                    settings.put(entry.getKey(), deescapeVariablePlaceholders(entry.getValue()));
                 }
             }
         }
@@ -253,7 +255,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
             final RunMode bootRunMode = bootFeature.getRunMode(null);
             if ( bootRunMode != null ) {
                 for(final Map.Entry<String, String> entry : bootRunMode.getSettings()) {
-                    settings.put(entry.getKey(), entry.getValue());
+                    settings.put(entry.getKey(), deescapeVariablePlaceholders(entry.getValue()));
                 }
             }
         }
@@ -261,7 +263,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
             final RunMode packageRM = f.getRunMode(new String[] {packageRunMode});
             if ( packageRM != null ) {
                 for(final Map.Entry<String, String> entry : packageRM.getSettings()) {
-                    settings.put(entry.getKey(), entry.getValue());
+                    settings.put(entry.getKey(), deescapeVariablePlaceholders(entry.getValue()));
                 }
             }
         }
@@ -323,20 +325,24 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
      * Return the base artifact
      */
     private Artifact getBaseArtifact(final Model model, final String classifier, final String type) throws MojoExecutionException {
-        final org.apache.sling.provisioning.model.Artifact baseArtifact = ModelUtils.getBaseArtifact(model);
+        try {
+            final org.apache.sling.provisioning.model.Artifact baseArtifact = ModelUtils.findBaseArtifact(model);
 
-        final Artifact a = ModelUtils.getArtifact(this.project,  this.mavenSession, this.artifactHandlerManager, this.resolver,
-                baseArtifact.getGroupId(),
-                baseArtifact.getArtifactId(),
-                baseArtifact.getVersion(),
-                type,
-                classifier);
-        if (a == null) {
-            throw new MojoExecutionException(
-                    String.format("Project doesn't have a base dependency of groupId %s and artifactId %s",
-                            baseArtifact.getGroupId(), baseArtifact.getArtifactId()));
+            final Artifact a = ModelUtils.getArtifact(this.project,  this.mavenSession, this.artifactHandlerManager, this.resolver,
+                    baseArtifact.getGroupId(),
+                    baseArtifact.getArtifactId(),
+                    baseArtifact.getVersion(),
+                    type,
+                    classifier);
+            if (a == null) {
+                throw new MojoExecutionException(
+                        String.format("Project doesn't have a base dependency of groupId %s and artifactId %s",
+                                baseArtifact.getGroupId(), baseArtifact.getArtifactId()));
+            }
+            return a;
+        } catch ( final MavenExecutionException mee) {
+            throw new MojoExecutionException(mee.getMessage(), mee.getCause());
         }
-        return a;
     }
 
     /**
@@ -446,4 +452,17 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
                 mainName,
                 alias);
     }
+
+    /**
+     * Replace \${var} with ${var}
+     * @param text String with escaped variables
+     * @return String with deescaped variables
+     */
+    private String deescapeVariablePlaceholders(String text) {
+        if (text == null) {
+            return null;
+        }
+        return text.replaceAll("\\\\\\$", "\\$");
+    }
+
 }

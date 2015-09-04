@@ -22,29 +22,17 @@ public abstract class SlingshotConstants {
     /** This is the resource path for the root of our application. */
     public static final String APP_ROOT_PATH = "/slingshot";
 
+    /** The resource type for a user. */
+    public static final String RESOURCETYPE_USER = "slingshot/User";
+
+    /** The resource type for the content. */
+    public static final String RESOURCETYPE_CONTENT = "slingshot/Content";
+
     /** The resource type for a category. */
     public static final String RESOURCETYPE_CATEGORY = "slingshot/Category";
 
     /** The resource type for an item. */
     public static final String RESOURCETYPE_ITEM = "slingshot/Item";
-
-    /** The resource type for a user. */
-    public static final String RESOURCETYPE_USER = "slingshot/User";
-
-    /** The resource type for a comment. */
-    public static final String RESOURCETYPE_COMMENT = "slingshot/Comment";
-
-    /** The resource type for a rating. */
-    public static final String RESOURCETYPE_RATING = "slingshot/Rating";
-
-    /** The resource type for the resource holder of the comments. */
-    public static final String RESOURCETYPE_COMMENTS = "slingshot/Comments";
-
-    /** The resource type for the resource holder of the ratings */
-    public static final String RESOURCETYPE_RATINGS = "slingshot/Ratings";
-
-    /** The resource type for a user. */
-    public static final String RESOURCETYPE_HOME = "slingshot/Home";
 
     public static final String PROPERTY_TITLE = "title";
 
@@ -53,10 +41,4 @@ public abstract class SlingshotConstants {
     public static final String PROPERTY_LOCATION = "location";
 
     public static final String PROPERTY_TAGS = "tags";
-
-    public static final String PROPERTY_USER = "user";
-
-    public static final String PROPERTY_CREATED = "jcr:created";
-
-    public static final String PROPERTY_RATING = "rating";
 }

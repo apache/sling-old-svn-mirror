@@ -16,6 +16,7 @@
  */
 package org.apache.sling.ide.eclipse.ui.nav;
 
+import org.apache.sling.ide.eclipse.ui.internal.Activator;
 import org.apache.sling.ide.eclipse.ui.nav.model.JcrNode;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ILabelProviderListener;
@@ -53,7 +54,12 @@ public class JcrContentLabelProvider implements ILabelProvider, IDescriptionProv
 	public Image getImage(Object element) {
 		if (element instanceof JcrNode) {
 			JcrNode jcrNode = (JcrNode)element;
-			return jcrNode.getImage();
+			long start = System.currentTimeMillis();
+			Image image = jcrNode.getImage();
+			long end = System.currentTimeMillis();
+            Activator.getDefault().getPluginLogger()
+                    .tracePerformance("getImage for node at {0}", (end - start), jcrNode.getJcrPath());
+            return image;
 		} else {
 			// fallback to default
 			return null;

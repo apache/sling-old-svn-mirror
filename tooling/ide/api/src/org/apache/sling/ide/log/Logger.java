@@ -89,4 +89,17 @@ public interface Logger {
      * @param error the error that occured
      */
     void trace(String message, Throwable error);
+
+    /**
+     * Sends a performance trace message
+     * 
+     * <p>
+     * Note that implementations may choose to not display performance entries which take less than a predefined
+     * threshold
+     * 
+     * @param message A string message
+     * @param duration The operation's duration in milliseconds
+     * @param arguments an optional array of arguments
+     */
+    void tracePerformance(String message, long duration, Object... arguments);
 }

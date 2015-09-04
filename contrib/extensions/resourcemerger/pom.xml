@@ -23,13 +23,13 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>22</version>
+        <version>24</version>
         <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.resourcemerger</artifactId>
     <packaging>bundle</packaging>
-    <version>1.2.3-SNAPSHOT</version>
+    <version>1.2.11-SNAPSHOT</version>
 
     <name>Apache Sling Resource Merger</name>
     <description>

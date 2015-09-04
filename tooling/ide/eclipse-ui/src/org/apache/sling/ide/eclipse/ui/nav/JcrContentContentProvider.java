@@ -17,13 +17,13 @@
 package org.apache.sling.ide.eclipse.ui.nav;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.internal.ProjectHelper;
+import org.apache.sling.ide.eclipse.ui.internal.Activator;
 import org.apache.sling.ide.eclipse.ui.nav.model.JcrNode;
 import org.apache.sling.ide.eclipse.ui.nav.model.SyncDir;
 import org.eclipse.core.resources.IContainer;
@@ -58,7 +58,7 @@ public class JcrContentContentProvider implements ITreeContentProvider, IPipelin
 	        return;
 	    }
 		try {
-			final List<IResource> toBeRefreshed = new LinkedList<IResource>();
+            final Set<IProject> toBeRefreshed = new HashSet<IProject>();
 			event.getDelta().accept(new IResourceDeltaVisitor() {
 				
 				@Override
@@ -75,17 +75,17 @@ public class JcrContentContentProvider implements ITreeContentProvider, IPipelin
 					return true;
 				}
 			});
-			if (toBeRefreshed.size()==0) {
-				return;
-			}
-			for (Iterator<IResource> it = toBeRefreshed.iterator(); it
-					.hasNext();) {
-				final IResource iResource = it.next();
+
+            for (final IProject project : toBeRefreshed) {
 				viewer.getTree().getDisplay().asyncExec(new Runnable() {
 
 					@Override
 					public void run() {
-						viewer.refresh(iResource.getProject(), true);
+                        long start = System.currentTimeMillis();
+                        viewer.refresh(project, true);
+                        long end = System.currentTimeMillis();
+                        Activator.getDefault().getPluginLogger()
+                                .tracePerformance("viewer.refresh({0},true)", (end - start), project);
 					}
 				});
 			}
@@ -116,8 +116,13 @@ public class JcrContentContentProvider implements ITreeContentProvider, IPipelin
 		if (parentElement instanceof IProject) {
 			return projectGetChildren((IProject)parentElement);
 		} else if (parentElement instanceof JcrNode) {
+            long start = System.currentTimeMillis();
 			JcrNode node = (JcrNode)parentElement;
-			return node.getChildren(true);
+            Object[] children = node.getChildren(true);
+            long end = System.currentTimeMillis();
+            Activator.getDefault().getPluginLogger()
+                    .tracePerformance("node.getChildren for node at {0}", (end - start), node.getJcrPath());
+            return children;
 		} else {
 			return null;
 		}

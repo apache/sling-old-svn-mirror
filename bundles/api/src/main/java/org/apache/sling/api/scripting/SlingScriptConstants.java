@@ -24,7 +24,7 @@ package org.apache.sling.api.scripting;
  * This class is not intended to be extended or instantiated because it just
  * provides constants not intended to be overwritten.
  *
- * @since 2.0.6
+ * @since 2.0.6 (Sling API Bundle 2.0.6)
  */
 public class SlingScriptConstants {
 
@@ -33,13 +33,13 @@ public class SlingScriptConstants {
      * has been used to resolve the script. This resource resolver can be used by the
      * script engines to further locate scripts (for includes etc.).
      * The value is set in the {@link SlingScriptConstants#SLING_SCOPE} of the script context.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
     public static final String ATTR_SCRIPT_RESOURCE_RESOLVER = "org.apache.sling.api.scripting.ScriptResourceResolver";
 
     /**
      * The name of the script scope holding the {@link #ATTR_SCRIPT_RESOURCE_RESOLVER}.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
     public static final int SLING_SCOPE = -314;
 
@@ -51,7 +51,7 @@ public class SlingScriptConstants {
      * {@link #PROPERTY_SCRIPT_ENGINE_FACTORY_LANGUAGE_NAME},
      * {@link #PROPERTY_SCRIPT_ENGINE_FACTORY_LANGUAGE_VERSION},
      * and {@link #PROPERTY_SCRIPT_ENGINE_FACTORY_MIME_TYPES} poperties.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
     public static final String TOPIC_SCRIPT_ENGINE_FACTORY_ADDED = "javax/script/ScriptEngineFactory/ADDED";
 
@@ -63,47 +63,47 @@ public class SlingScriptConstants {
      * {@link #PROPERTY_SCRIPT_ENGINE_FACTORY_LANGUAGE_NAME},
      * {@link #PROPERTY_SCRIPT_ENGINE_FACTORY_LANGUAGE_VERSION},
      * and {@link #PROPERTY_SCRIPT_ENGINE_FACTORY_MIME_TYPES} poperties.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
     public static final String TOPIC_SCRIPT_ENGINE_FACTORY_REMOVED = "javax/script/ScriptEngineFactory/REMOVED";
 
     /**
      * The event property listing the script engine factory name. The value is a string.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
     public static final String PROPERTY_SCRIPT_ENGINE_FACTORY_NAME = "engineName";
 
     /**
      * The event property listing the script engine factory name. The value is a string.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
     public static final String PROPERTY_SCRIPT_ENGINE_FACTORY_VERSION = "engineVersion";
 
     /**
      * The event property listing the script engine factory extensions. The value is
      * a string array.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
     public static final String PROPERTY_SCRIPT_ENGINE_FACTORY_EXTENSIONS = "extensions";
 
     /**
      * The event property listing the script engine factory language. The value is
      * a string.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
     public static final String PROPERTY_SCRIPT_ENGINE_FACTORY_LANGUAGE_NAME = "languageName";
 
     /**
      * The event property listing the script engine factory language version. The value is
      * a string.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
     public static final String PROPERTY_SCRIPT_ENGINE_FACTORY_LANGUAGE_VERSION = "languageVersion";
 
     /**
      * The event property listing the script engine factory mime types. The value is
      * a string array.
-     * @since 2.0.6
+     * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
     public static final String PROPERTY_SCRIPT_ENGINE_FACTORY_MIME_TYPES = "mimeTypes";
 }

@@ -1,7 +1,0 @@
-{
-    "type" : "agent",
-    "agent": {
-        "type" : "service",
-        "name" : "reverse"
-    }
-}

@@ -26,6 +26,7 @@ import java.util.Calendar;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -119,10 +120,11 @@ public abstract class JsonObjectCreator {
     /** The Locale used to format date values */
     static final Locale DATE_FORMAT_LOCALE = Locale.US;
 
-    private static final DateFormat CALENDAR_FORMAT = new SimpleDateFormat(ECMA_DATE_FORMAT, DATE_FORMAT_LOCALE);
 
-    private static synchronized String format(final Calendar date) {
-        return CALENDAR_FORMAT.format(date.getTime());
+    private static String format(final Calendar date) {
+        DateFormat formatter = new SimpleDateFormat(ECMA_DATE_FORMAT, DATE_FORMAT_LOCALE);
+        formatter.setTimeZone(date.getTimeZone());
+        return formatter.format(date.getTime());
     }
 
     /** Dump only a value in the correct format */

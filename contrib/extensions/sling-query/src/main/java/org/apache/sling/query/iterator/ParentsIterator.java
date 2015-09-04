@@ -20,7 +20,7 @@
 package org.apache.sling.query.iterator;
 
 import org.apache.sling.query.api.Predicate;
-import org.apache.sling.query.api.TreeProvider;
+import org.apache.sling.query.api.internal.TreeProvider;
 
 public class ParentsIterator<T> extends AbstractIterator<T> {
 

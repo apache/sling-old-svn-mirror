@@ -20,6 +20,8 @@ package org.apache.sling.api.resource;
 
 import java.util.Iterator;
 
+import javax.annotation.Nonnull;
+
 /**
  * The <code>ResourceWrapper</code> is a wrapper for any <code>Resource</code>
  * delegating all method calls to the wrapped resource by default. Extensions of
@@ -35,7 +37,7 @@ public class ResourceWrapper implements Resource {
      * Creates a new wrapper instance delegating all method calls to the given
      * <code>resource</code>.
      */
-    public ResourceWrapper(final Resource resource) {
+    public ResourceWrapper(@Nonnull final Resource resource) {
         this.resource = resource;
     }
 
@@ -60,7 +62,7 @@ public class ResourceWrapper implements Resource {
      * Returns the value of calling <code>getName</code> on the
      * {@link #getResource() wrapped resource}.
      *
-     * @since 2.1.0
+     * @since 2.1.0 (Sling API Bundle 2.1.0)
      */
     public String getName() {
         return getResource().getName();
@@ -70,7 +72,7 @@ public class ResourceWrapper implements Resource {
      * Returns the value of calling <code>getParent</code> on the
      * {@link #getResource() wrapped resource}.
      *
-     * @since 2.1.0
+     * @since 2.1.0 (Sling API Bundle 2.1.0)
      */
     public Resource getParent() {
         return getResource().getParent();
@@ -80,7 +82,7 @@ public class ResourceWrapper implements Resource {
      * Returns the value of calling <code>getChild</code> on the
      * {@link #getResource() wrapped resource}.
      *
-     * @since 2.1.0
+     * @since 2.1.0 (Sling API Bundle 2.1.0)
      */
     public Resource getChild(String relPath) {
         return getResource().getChild(relPath);
@@ -90,7 +92,7 @@ public class ResourceWrapper implements Resource {
      * Returns the value of calling <code>listChildren</code> on the
      * {@link #getResource() wrapped resource}.
      *
-     * @since 2.1.0
+     * @since 2.1.0 (Sling API Bundle 2.1.0)
      */
     public Iterator<Resource> listChildren() {
         return getResource().listChildren();
@@ -139,7 +141,7 @@ public class ResourceWrapper implements Resource {
      * Returns the value of calling <code>hasChildren</code> on the
      * {@link #getResource() wrapped resource}.
      *
-     * @since 2.4.4
+     * @since 2.4.4  (Sling API Bundle 2.5.0)
      */
 	public boolean hasChildren() {
 		return getResource().hasChildren();
@@ -149,7 +151,7 @@ public class ResourceWrapper implements Resource {
      * Returns the value of calling <code>isResourceType</code> on the
      * {@link #getResource() wrapped resource}.
      *
-     * @since 2.1.0
+     * @since 2.1.0 (Sling API Bundle 2.1.0)
      */
     public boolean isResourceType(final String resourceType) {
         return getResource().isResourceType(resourceType);

@@ -21,7 +21,7 @@ Recommended way to find resources in the Sling repository is using tree-traversa
 
 SlingQuery is a tool that helps creating such queries in a more concise way. Above code could be written as:
 
-    import static com.cognifide.sling.query.api.SlingQuery.$;
+    import static org.apache.sling.query.SlingQuery.$;
     // ...
     $(resource).closest("cq:Page[jcr:content/cq:template=my/template]")
 
@@ -44,7 +44,7 @@ Add following Maven dependency to your `pom.xml`:
 	<dependency>
 		<groupId>org.apache.sling</groupId>
 		<artifactId>org.apache.sling.query</artifactId>
-		<version>2.0.0</version>
+		<version>3.0.0</version>
 	</dependency>
 
 ## Documentation

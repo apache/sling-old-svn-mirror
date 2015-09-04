@@ -20,6 +20,9 @@ package org.apache.sling.api.resource;
 
 import java.util.Map;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+
 import aQute.bnd.annotation.ProviderType;
 
 /**
@@ -32,7 +35,7 @@ import aQute.bnd.annotation.ProviderType;
  * All resource resolvers returned by the same resource resolver factory
  * must use the same search path
  *
- * @since 2.1
+ * @since 2.1 (Sling API Bundle 2.1.0)
  */
 @ProviderType
 public interface ResourceResolverFactory {
@@ -61,7 +64,7 @@ public interface ResourceResolverFactory {
      * the user for which to create a resource resolver and change the password during login.
      * <p>
      * The type of this property, if present, is <code>String</code>.
-     * @since 2.7
+     * @since 2.7 (Sling API Bundle 2.9.0)
      */
     String NEW_PASSWORD = "user.newpassword";
 
@@ -91,7 +94,7 @@ public interface ResourceResolverFactory {
      * The type of this property, if present, is <code>String</code>.
      *
      * @see #getServiceResourceResolver(Map)
-     * @since 2.4 (bundle version 2.5.0)
+     * @since 2.4 (Sling API Bundle 2.5.0)
      */
     String SUBSERVICE = "sling.service.subservice";
 
@@ -117,7 +120,7 @@ public interface ResourceResolverFactory {
      *             <code>ResourceResolver</code> with the provided credential
      *             data.
      */
-    ResourceResolver getResourceResolver(Map<String, Object> authenticationInfo) throws LoginException;
+    @Nonnull ResourceResolver getResourceResolver(Map<String, Object> authenticationInfo) throws LoginException;
 
     /**
      * Returns a new {@link ResourceResolver} instance with administrative
@@ -154,7 +157,7 @@ public interface ResourceResolverFactory {
      *             the {@link #getServiceResourceResolver(Map)} instead.
      */
     @Deprecated
-    ResourceResolver getAdministrativeResourceResolver(Map<String, Object> authenticationInfo) throws LoginException;
+    @Nonnull ResourceResolver getAdministrativeResourceResolver(Map<String, Object> authenticationInfo) throws LoginException;
 
     /**
      * Returns a new {@link ResourceResolver} instance with privileges assigned
@@ -177,13 +180,13 @@ public interface ResourceResolverFactory {
      * @throws LoginException If an error occurs creating the new
      *             <code>ResourceResolver</code> for the service represented by
      *             the calling bundle.
-     * @since 2.4 (bundle version 2.5.0) to replace
+     * @since 2.4 (Sling API Bundle 2.5.0) to replace
      *        {@link #getAdministrativeResourceResolver(Map)}
      * @see <a
      *      href="http://sling.apache.org/documentation/the-sling-engine/service-authentication.html">Service
      *      Authentication</a>
      */
-    ResourceResolver getServiceResourceResolver(Map<String, Object> authenticationInfo) throws LoginException;
+    @Nonnull ResourceResolver getServiceResourceResolver(Map<String, Object> authenticationInfo) throws LoginException;
 
     /**
      * Returns the {@link ResourceResolver} for the current thread.
@@ -192,10 +195,13 @@ public interface ResourceResolverFactory {
      * the thread of its creation time. From within this thread, this method returns
      * the last non-closed resource resolver. When a resource resolver is closed, the
      * association is removed.
+     * <p>
+     * This will never return a resource resolver being created via {@link #getAdministrativeResourceResolver(Map)}
+     * nor via {@link #getServiceResourceResolver(Map)}.
      *
      * @return A {@link ResourceResolver} created from the current thread or <code>null</code>.
      *
-     * @since 2.6
+     * @since 2.6 (Sling API Bundle 2.8.0)
      */
-    ResourceResolver getThreadResourceResolver();
+    @CheckForNull ResourceResolver getThreadResourceResolver();
 }

@@ -1,0 +1,176 @@
+{
+
+  "jcr:primaryType": "sling:Folder",
+  "album_card":
+
+  {
+
+    "jcr:primaryType": "nt:unstructured",
+    "description": "A demo card type for HApi",
+    "extends": "/apps/sling/hapi_sample/types/demo_card",
+    "fqdn": "org.apache.sling.hapi_sample.album_card",
+    "name": "album_card",
+    "parameters": [ ],
+    "sling:resourceType": "sling/hapi/components/type",
+    "thumbnail":
+
+    {
+
+      "jcr:primaryType": "nt:unstructured",
+      "description": "The thumbnail of the demo pic card",
+      "type": "org.apache.sling.hapi.common.Image",
+      "multiple": true
+
+    },
+    "disabled":
+    {
+
+      "jcr:primaryType": "nt:unstructured",
+      "description": "Whether this album is disabled or not",
+      "type": "org.apache.sling.hapi.common.Boolean",
+      "multiple": false
+
+    },
+    "modified":
+    {
+
+      "jcr:primaryType": "nt:unstructured",
+      "description": "When was the pic last modified",
+      "type": "org.apache.sling.hapi.common.Text",
+      "multiple": false
+
+    },
+    "cards":
+    {
+
+      "jcr:primaryType": "nt:unstructured",
+      "description": "The number of pictures in this album",
+      "type": "org.apache.sling.hapi.common.Number",
+      "multiple": false
+
+    },
+    "users":
+
+    {
+      "jcr:primaryType": "nt:unstructured",
+      "description": "The numbers of users for this album",
+      "type": "org.apache.sling.hapi.common.Number",
+      "multiple": false
+    }
+
+  },
+  "pic_card":
+  {
+
+    "jcr:primaryType": "nt:unstructured",
+    "description": "A demo card type for HApi",
+    "extends": "/apps/sling/hapi_sample/types/demo_card",
+    "fqdn": "org.apache.sling.hapi_sample.pic_card",
+    "name": "pic_card",
+    "parameters": [ ],
+    "sling:resourceType": "sling/hapi/components/type",
+    "thumbnail":
+
+    {
+
+      "jcr:primaryType": "nt:unstructured",
+      "description": "The thumbnail of the demo pic card",
+      "type": "org.apache.sling.hapi.common.Image",
+      "multiple": false
+
+    },
+    "resolution":
+    {
+
+      "jcr:primaryType": "nt:unstructured",
+      "description": "The width and height of the demo pic card",
+      "type": "/apps/sling/hapi_sample/types/resolution",
+      "multiple": false
+
+    },
+    "size":
+    {
+
+      "jcr:primaryType": "nt:unstructured",
+      "description": "The binary size of the demo pic",
+      "type": "org.apache.sling.hapi.common.Text",
+      "multiple": false
+
+    },
+    "disabled":
+    {
+
+      "jcr:primaryType": "nt:unstructured",
+      "description": "Whether this pic is disabled or not",
+      "type": "org.apache.sling.hapi.common.Boolean",
+      "multiple": false
+
+    },
+    "modified":
+
+    {
+      "jcr:primaryType": "nt:unstructured",
+      "description": "When was the pic last modified",
+      "type": "org.apache.sling.hapi.common.Text",
+      "multiple": false
+    }
+
+  },
+  "resolution":
+  {
+
+    "jcr:primaryType": "nt:unstructured",
+    "description": "A resolution of an image",
+    "fqdn": "org.apache.sling.hapi_sample.resolution",
+    "name": "resolution",
+    "sling:resourceType": "sling/hapi/components/type",
+    "width":
+
+    {
+
+      "jcr:primaryType": "nt:unstructured",
+      "description": "The width",
+      "type": "org.apache.sling.hapi.common.Number",
+      "multiple": false
+
+    },
+    "height":
+
+    {
+      "jcr:primaryType": "nt:unstructured",
+      "description": "The height",
+      "type": "org.apache.sling.hapi.common.Number",
+      "multiple": false
+    }
+
+  },
+  "demo_card":
+  {
+
+    "jcr:primaryType": "nt:unstructured",
+    "description": "A demo card type for HApi",
+    "fqdn": "org.apache.sling.hapi_sample.demo_card",
+    "name": "demo_card",
+    "parameters": [ ],
+    "sling:resourceType": "sling/hapi/components/type",
+    "title":
+
+    {
+
+      "jcr:primaryType": "nt:unstructured",
+      "description": "The title of the demo card",
+      "type": "org.apache.sling.hapi.common.Text",
+      "multiple": false
+
+    },
+    "card_description":
+
+    {
+      "jcr:primaryType": "nt:unstructured",
+      "description": "The description of the demo card",
+      "type": "org.apache.sling.hapi.common.Text",
+      "multiple": false
+    }
+  }
+
+}

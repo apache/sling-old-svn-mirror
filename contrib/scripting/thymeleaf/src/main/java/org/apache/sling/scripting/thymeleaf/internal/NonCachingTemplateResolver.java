@@ -62,7 +62,7 @@ public class NonCachingTemplateResolver implements ITemplateResolver {
     private IResourceResolver resourceResolver;
 
     @Reference(referenceInterface = SlingTemplateModeHandler.class, cardinality = ReferenceCardinality.MANDATORY_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    final private Set<SlingTemplateModeHandler> templateModeHandlers = new LinkedHashSet<SlingTemplateModeHandler>();
+    private final Set<SlingTemplateModeHandler> templateModeHandlers = new LinkedHashSet<SlingTemplateModeHandler>();
 
     private Integer order;
 
@@ -110,7 +110,7 @@ public class NonCachingTemplateResolver implements ITemplateResolver {
         templateModeHandlers.remove(templateModeHandler);
     }
 
-    private synchronized void configure(final ComponentContext componentContext) {
+    private void configure(final ComponentContext componentContext) {
         final Dictionary properties = componentContext.getProperties();
         order = PropertiesUtil.toInteger(properties.get(ORDER_PARAMETER), DEFAULT_ORDER);
         encoding = PropertiesUtil.toString(properties.get(ENCODING_PARAMETER), DEFAULT_ENCODING);

@@ -16,74 +16,20 @@
  */
 package org.apache.sling.ide.eclipse.ui.actions;
 
-import org.apache.sling.ide.eclipse.ui.editors.WebBrowserEditorInput;
-import org.apache.sling.ide.eclipse.ui.internal.SharedImages;
+import java.net.MalformedURLException;
+import java.net.URL;
+
+import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
+import org.apache.sling.ide.eclipse.ui.browser.AbstractOpenInBrowserAction;
 import org.apache.sling.ide.eclipse.ui.nav.model.JcrNode;
-import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.IEditorInput;
-import org.eclipse.ui.IObjectActionDelegate;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchPart;
-import org.eclipse.ui.PartInitException;
-import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.IServer;
-import org.eclipse.wst.server.core.ServerUtil;
 
-public class OpenHtmlInBrowserAction implements IObjectActionDelegate {
+public class OpenHtmlInBrowserAction extends AbstractOpenInBrowserAction {
 
-	private ISelection selection;
-	private Shell shell;
-	private IWorkbenchPart targetPart;
+	protected URL getUrlToOpen(JcrNode node, IServer server) throws MalformedURLException {
 
-	public OpenHtmlInBrowserAction() {
-	}
-
-	@Override
-	public void run(IAction action) {
-		if (selection==null || !(selection instanceof IStructuredSelection)) {
-			return;
-		}
-		IStructuredSelection ss = (IStructuredSelection)selection;
-		JcrNode node = (JcrNode) ss.getFirstElement();
-		
-        IWorkbenchPage page = targetPart.getSite().getPage();
-        IModule module = ServerUtil.getModule(node.getProject());
-        if (module==null) {
-			MessageDialog.openWarning(shell, "Cannot open browser", "Not configured for any server");
-        	return;
-        }
-        IServer[] servers = ServerUtil.getServersByModule(module, new NullProgressMonitor());
-        if (servers==null || servers.length==0) {
-			MessageDialog.openWarning(shell, "Cannot open browser", "Not configured for any server");
-        	return;
-        }
-        IServer server = servers[0];
-        final String url = node.getURLForBrowser(server)+".html";
-		try {
-			IEditorInput input = new WebBrowserEditorInput(url);
-			page.openEditor(input, "org.apache.sling.ide.eclipse.ui.editors.WebBrowser", true);
-		} catch (PartInitException e1) {
-			//TODO proper logging
-			e1.printStackTrace();
-			MessageDialog.openWarning(shell, "Cannot open browser", "Opening caused an exception: "+e1.getMessage());
-		}
-	}
-
-	@Override
-	public void selectionChanged(IAction action, ISelection selection) {
-		this.selection = selection;
-		action.setEnabled(true);
-	}
-
-	@Override
-	public void setActivePart(IAction action, IWorkbenchPart targetPart) {
-		this.targetPart = targetPart;
-		this.shell = targetPart.getSite().getWorkbenchWindow().getShell();
-	}
+        return new URL("http", server.getHost(), server.getAttribute(ISlingLaunchpadServer.PROP_PORT, 8080),
+                node.getJcrPath() + ".html");
+    }
 
 }

@@ -30,6 +30,7 @@ import static org.apache.sling.distribution.it.DistributionUtils.assertNotExists
 import static org.apache.sling.distribution.it.DistributionUtils.assertResponseContains;
 import static org.apache.sling.distribution.it.DistributionUtils.authorAgentConfigUrl;
 import static org.apache.sling.distribution.it.DistributionUtils.deleteNode;
+import static org.apache.sling.distribution.it.DistributionUtils.logUrl;
 import static org.apache.sling.distribution.it.DistributionUtils.publishAgentConfigUrl;
 import static org.apache.sling.distribution.it.DistributionUtils.queueUrl;
 
@@ -91,6 +92,30 @@ public class DistributionAgentResourcesIntegrationTest extends DistributionInteg
                 "reverse"        };
         for (String agentName : defaultPublishAgentNames) {
             assertNotExists(authorClient, queueUrl(agentName));
+        }
+    }
+
+    @Test
+    public void testDefaultAuthorAgentLogResources() throws Exception {
+        // these agent queues exist as they are bundled to author runMode
+        String[] defaultAuthorAgentNames = new String[]{
+                "publish",
+                "publish-reverse"
+        };
+        for (String agentName : defaultAuthorAgentNames) {
+            assertExists(authorClient, logUrl(agentName));
+        }
+    }
+
+
+
+    @Test
+    public void testDefaultPublishAgentLogResources() throws Exception {
+        // these agent queues do not exist as they are bundled to publish runMode
+        String[] defaultPublishAgentNames = new String[]{
+                "reverse"        };
+        for (String agentName : defaultPublishAgentNames) {
+            assertNotExists(authorClient, logUrl(agentName));
         }
     }
 

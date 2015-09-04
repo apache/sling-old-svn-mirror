@@ -28,18 +28,22 @@ import java.util.zip.GZIPOutputStream;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.httpclient.Credentials;
-import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.URIException;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.commons.httpclient.auth.AuthScope;
-import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
-import org.apache.commons.httpclient.methods.DeleteMethod;
-import org.apache.commons.httpclient.methods.PutMethod;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
-import org.apache.commons.httpclient.params.HttpMethodParams;
+import org.apache.http.Header;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.Credentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.config.SocketConfig;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
@@ -154,15 +158,23 @@ public class TopologyConnectorClient implements
     	if (logger.isDebugEnabled()) {
     		logger.debug("ping: connectorUrl=" + connectorUrl + ", complete uri=" + uri);
     	}
-        HttpClient httpClient = new HttpClient();
-        final PutMethod method = new PutMethod(uri);
+    	final HttpClientContext clientContext = HttpClientContext.create();
+    	final CloseableHttpClient httpClient = createHttpClient();
+    	final HttpPut putRequest = new HttpPut(uri);
+
+    	// setting the connection timeout (idle connection, configured in seconds)
+    	putRequest.setConfig(RequestConfig.
+    			custom().
+    			setConnectTimeout(1000*config.getConnectionTimeout()).
+    			build());
+
         Announcement resultingAnnouncement = null;
         try {
             String userInfo = connectorUrl.getUserInfo();
             if (userInfo != null) {
                 Credentials c = new UsernamePasswordCredentials(userInfo);
-                httpClient.getState().setCredentials(
-                        new AuthScope(method.getURI().getHost(), method
+            	clientContext.getCredentialsProvider().setCredentials(
+                        new AuthScope(putRequest.getURI().getHost(), putRequest
                                 .getURI().getPort()), c);
             }
 
@@ -201,47 +213,44 @@ public class TopologyConnectorClient implements
             if (logger.isDebugEnabled()) {
                 logger.debug("ping: topologyAnnouncement json is: " + p);
             }
-            requestValidator.trustMessage(method, p);
+            requestValidator.trustMessage(putRequest, p);
             if (config.isGzipConnectorRequestsEnabled()) {
                 // tell the server that the content is gzipped:
-                method.addRequestHeader("Content-Encoding", "gzip");
+                putRequest.addHeader("Content-Encoding", "gzip");
                 // and gzip the body:
                 final ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 final GZIPOutputStream gzipOut = new GZIPOutputStream(baos);
                 gzipOut.write(p.getBytes("UTF-8"));
                 gzipOut.close();
                 final byte[] gzippedEncodedJson = baos.toByteArray();
-                method.setRequestEntity(new ByteArrayRequestEntity(gzippedEncodedJson, "application/json"));
+                putRequest.setEntity(new ByteArrayEntity(gzippedEncodedJson, ContentType.APPLICATION_JSON));
                 lastRequestEncoding = "gzip";
             } else {
                 // otherwise plaintext:
-                method.setRequestEntity(new StringRequestEntity(p, "application/json", "UTF-8"));
+            	final StringEntity plaintext = new StringEntity(p, "UTF-8");
+            	plaintext.setContentType(ContentType.APPLICATION_JSON.getMimeType());
+            	putRequest.setEntity(plaintext);
                 lastRequestEncoding = "plaintext";
             }
             // independent of request-gzipping, we do accept the response to be gzipped,
             // so indicate this to the server:
-            method.addRequestHeader("Accept-Encoding", "gzip");
-            DefaultHttpMethodRetryHandler retryhandler = new DefaultHttpMethodRetryHandler(0, false);
-            httpClient.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, retryhandler);
-            httpClient.getHttpConnectionManager().getParams().setConnectionTimeout(1000*config.getConnectionTimeout());
-            httpClient.getHttpConnectionManager().getParams().setSoTimeout(1000*config.getSoTimeout());
-            method.getParams().setSoTimeout(1000*config.getSoTimeout());
-            httpClient.executeMethod(method);
+            putRequest.addHeader("Accept-Encoding", "gzip");
+            final CloseableHttpResponse response = httpClient.execute(putRequest, clientContext);
         	if (logger.isDebugEnabled()) {
-	            logger.debug("ping: done. code=" + method.getStatusCode() + " - "
-	                    + method.getStatusText());
+	            logger.debug("ping: done. code=" + response.getStatusLine().getStatusCode() + " - "
+	                    + response.getStatusLine().getReasonPhrase());
         	}
-            lastStatusCode = method.getStatusCode();
+            lastStatusCode = response.getStatusLine().getStatusCode();
             lastResponseEncoding = null;
-            if (method.getStatusCode()==HttpServletResponse.SC_OK) {
-                final Header contentEncoding = method.getResponseHeader("Content-Encoding");
+            if (response.getStatusLine().getStatusCode()==HttpServletResponse.SC_OK) {
+                final Header contentEncoding = response.getFirstHeader("Content-Encoding");
                 if (contentEncoding!=null && contentEncoding.getValue()!=null &&
                         contentEncoding.getValue().contains("gzip")) {
                     lastResponseEncoding = "gzip";
                 } else {
                     lastResponseEncoding = "plaintext";
                 }
-                String responseBody = requestValidator.decodeMessage(method); // limiting to 16MB, should be way enough
+                final String responseBody = requestValidator.decodeMessage(putRequest.getURI().getPath(), response); // limiting to 16MB, should be way enough
             	if (logger.isDebugEnabled()) {
             		logger.debug("ping: response body=" + responseBody);
             	}
@@ -294,9 +303,6 @@ public class TopologyConnectorClient implements
             }
         	// SLING-2882 : reset suppressPingWarnings_ flag in success case
     		suppressPingWarnings_ = false;
-        } catch (URIException e) {
-            logger.warn("ping: Got URIException: " + e + ", uri=" + uri);
-            statusDetails = e.toString();
         } catch (IOException e) {
         	// SLING-2882 : set/check the suppressPingWarnings_ flag
         	if (suppressPingWarnings_) {
@@ -315,11 +321,28 @@ public class TopologyConnectorClient implements
             logger.warn("ping: got RuntimeException: " + re, re);
             statusDetails = re.toString();
         } finally {
-            method.releaseConnection();
+            putRequest.releaseConnection();
             lastInheritedAnnouncement = resultingAnnouncement;
             lastPingedAt = System.currentTimeMillis();
+            try {
+				httpClient.close();
+			} catch (IOException e) {
+				logger.error("disconnect: could not close httpClient: "+e, e);
+			}
         }
     }
+
+	private CloseableHttpClient createHttpClient() {
+		final HttpClientBuilder builder = HttpClientBuilder.create();
+    	// setting the SoTimeout (which is configured in seconds)
+    	builder.setDefaultSocketConfig(SocketConfig.
+    			custom().
+    			setSoTimeout(1000*config.getSoTimeout()).
+    			build());
+		builder.setRetryHandler(new DefaultHttpRequestRetryHandler(0, false));
+
+    	return builder.build();
+	}
 
     public int getStatusCode() {
         return lastStatusCode;
@@ -423,34 +446,43 @@ public class TopologyConnectorClient implements
                             .getOwnerId());
         }
 
-        HttpClient httpClient = new HttpClient();
-        final DeleteMethod method = new DeleteMethod(uri);
+        final HttpClientContext clientContext = HttpClientContext.create();
+        final CloseableHttpClient httpClient = createHttpClient();
+        final HttpDelete deleteRequest = new HttpDelete(uri);
+        // setting the connection timeout (idle connection, configured in seconds)
+        deleteRequest.setConfig(RequestConfig.
+        		custom().
+        		setConnectTimeout(1000*config.getConnectionTimeout()).
+        		build());
 
         try {
             String userInfo = connectorUrl.getUserInfo();
             if (userInfo != null) {
                 Credentials c = new UsernamePasswordCredentials(userInfo);
-                httpClient.getState().setCredentials(
-                        new AuthScope(method.getURI().getHost(), method
+                clientContext.getCredentialsProvider().setCredentials(
+                        new AuthScope(deleteRequest.getURI().getHost(), deleteRequest
                                 .getURI().getPort()), c);
             }
 
-            requestValidator.trustMessage(method, null);
-            httpClient.executeMethod(method);
+            requestValidator.trustMessage(deleteRequest, null);
+            final CloseableHttpResponse response = httpClient.execute(deleteRequest, clientContext);
         	if (logger.isDebugEnabled()) {
-	            logger.debug("disconnect: done. code=" + method.getStatusCode()
-	                    + " - " + method.getStatusText());
+	            logger.debug("disconnect: done. code=" + response.getStatusLine().getStatusCode()
+	                    + " - " + response.getStatusLine().getReasonPhrase());
         	}
             // ignoring the actual statuscode though as there's little we can
             // do about it after this point
-        } catch (URIException e) {
-            logger.warn("disconnect: Got URIException: " + e);
         } catch (IOException e) {
             logger.warn("disconnect: got IOException: " + e);
         } catch (RuntimeException re) {
             logger.error("disconnect: got RuntimeException: " + re, re);
         } finally {
-            method.releaseConnection();
+            deleteRequest.releaseConnection();
+            try {
+				httpClient.close();
+			} catch (IOException e) {
+				logger.error("disconnect: could not close httpClient: "+e, e);
+			}
         }
     }
 }

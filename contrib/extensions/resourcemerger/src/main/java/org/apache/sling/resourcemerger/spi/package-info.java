@@ -20,7 +20,7 @@
 /**
  * Provides a service to merge multiple physical resources into a single one
  */
-@Version("1.0.0")
+@Version("1.1.0")
 package org.apache.sling.resourcemerger.spi;
 
 import aQute.bnd.annotation.Version;

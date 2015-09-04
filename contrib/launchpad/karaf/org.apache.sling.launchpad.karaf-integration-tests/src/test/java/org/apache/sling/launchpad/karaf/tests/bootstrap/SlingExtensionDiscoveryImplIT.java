@@ -39,13 +39,27 @@ public class SlingExtensionDiscoveryImplIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling-extension-discovery-impl")
+            addSlingFeatures("sling-extension-discovery-impl")
         );
     }
 
     @Test
     public void testOrgApacheSlingDiscoveryImpl() {
         final Bundle bundle = findBundle("org.apache.sling.discovery.impl");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
+    public void testOrgApacheHttpcomponentsHttpcore() {
+        final Bundle bundle = findBundle("org.apache.httpcomponents.httpcore");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
+    public void testOrgApacheHttpcomponentsHttpclient() {
+        final Bundle bundle = findBundle("org.apache.httpcomponents.httpclient");
         assertNotNull(bundle);
         assertEquals(Bundle.ACTIVE, bundle.getState());
     }

@@ -21,8 +21,8 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>19</version>
-        <relativePath>../../../parent/pom.xml</relativePath>
+        <version>22</version>
+        <relativePath/>
     </parent>
 
     <groupId>org.apache.sling</groupId>

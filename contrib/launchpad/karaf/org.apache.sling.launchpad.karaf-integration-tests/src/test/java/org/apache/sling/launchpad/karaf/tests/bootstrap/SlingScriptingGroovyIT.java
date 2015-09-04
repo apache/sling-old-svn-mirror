@@ -39,7 +39,7 @@ public class SlingScriptingGroovyIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling-scripting-groovy")
+            addSlingFeatures("sling-scripting-groovy")
         );
     }
 

@@ -40,6 +40,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -109,6 +114,10 @@ public class MapEntriesTest {
         Field field1 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntries");
         field1.setAccessible(true);  
         field1.set(mapEntries, -1);
+        
+        Field field2 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntriesStartup");
+        field2.setAccessible(true);  
+        field2.set(mapEntries, true);
         
     }
     
@@ -381,6 +390,11 @@ public class MapEntriesTest {
         entries = mapEntries.getResolveMaps();
         assertEquals(2, entries.size());
         
+        Field vanityCounter = MapEntries.class.getDeclaredField("vanityCounter");
+        vanityCounter.setAccessible(true);  
+        AtomicLong counter = (AtomicLong) vanityCounter.get(mapEntries);
+        assertEquals(2, counter.longValue());        
+        
         //bad vanity
         Resource badVanityPath = mock(Resource.class, "badVanityPath");
         when(resourceResolver.getResource("/badVanityPath")).thenReturn(badVanityPath);
@@ -412,6 +426,9 @@ public class MapEntriesTest {
         
         entries = mapEntries.getResolveMaps();
         assertEquals(4, entries.size());
+        
+        counter = (AtomicLong) vanityCounter.get(mapEntries);
+        assertEquals(4, counter.longValue());        
 
         vanityTargets = (Map<String, List<String>>) field.get(mapEntries);
         assertEquals(2, vanityTargets.size());
@@ -419,6 +436,81 @@ public class MapEntriesTest {
         assertNull(vanityTargets.get("/vanityPathOnJcrContent/jcr:content"));
         assertNotNull(vanityTargets.get("/vanityPathOnJcrContent"));
     }
+    
+    @Test
+    public void test_doAddVanity_1() throws Exception {
+        Field field1 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntries");
+        field1.setAccessible(true);  
+        field1.set(mapEntries, 10);
+        
+        List<MapEntry> entries = mapEntries.getResolveMaps();
+        assertEquals(0, entries.size());
+        Field field = MapEntries.class.getDeclaredField("vanityTargets");
+        field.setAccessible(true);
+        Map<String, List<String>> vanityTargets = (Map<String, List<String>>) field.get(mapEntries);
+        assertEquals(0, vanityTargets.size());
+        
+        Method method = MapEntries.class.getDeclaredMethod("doAddVanity", String.class);
+        method.setAccessible(true);
+        
+        Resource justVanityPath = mock(Resource.class, "justVanityPath");
+        when(resourceResolver.getResource("/justVanityPath")).thenReturn(justVanityPath);
+        when(justVanityPath.getPath()).thenReturn("/justVanityPath");                 
+        when(justVanityPath.getName()).thenReturn("justVanityPath");
+        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
+        
+        method.invoke(mapEntries, "/justVanityPath");
+
+        entries = mapEntries.getResolveMaps();
+        assertEquals(2, entries.size());
+        
+        Field vanityCounter = MapEntries.class.getDeclaredField("vanityCounter");
+        vanityCounter.setAccessible(true);  
+        AtomicLong counter = (AtomicLong) vanityCounter.get(mapEntries);
+        assertEquals(2, counter.longValue());        
+        
+        //bad vanity
+        Resource badVanityPath = mock(Resource.class, "badVanityPath");
+        when(resourceResolver.getResource("/badVanityPath")).thenReturn(badVanityPath);
+        when(badVanityPath.getPath()).thenReturn("/badVanityPath");
+        when(badVanityPath.getName()).thenReturn("badVanityPath");        
+        when(badVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/content/mypage/en-us-{132"));
+        
+        method.invoke(mapEntries, "/badVanityPath");
+        
+
+        assertEquals(2, entries.size());
+
+        vanityTargets = (Map<String, List<String>>) field.get(mapEntries);
+        assertEquals(1, vanityTargets.size());
+        
+        //vanity under jcr:content
+        Resource vanityPathOnJcrContentParent = mock(Resource.class, "vanityPathOnJcrContentParent");
+        when(vanityPathOnJcrContentParent.getPath()).thenReturn("/vanityPathOnJcrContent");
+        when(vanityPathOnJcrContentParent.getName()).thenReturn("vanityPathOnJcrContent");
+
+        Resource vanityPathOnJcrContent = mock(Resource.class, "vanityPathOnJcrContent");
+        when(resourceResolver.getResource("/vanityPathOnJcrContent/jcr:content")).thenReturn(vanityPathOnJcrContent);
+        when(vanityPathOnJcrContent.getPath()).thenReturn("/vanityPathOnJcrContent/jcr:content");
+        when(vanityPathOnJcrContent.getName()).thenReturn("jcr:content");
+        when(vanityPathOnJcrContent.getParent()).thenReturn(vanityPathOnJcrContentParent);
+        when(vanityPathOnJcrContent.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/vanityPathOnJcrContent"));
+        
+        method.invoke(mapEntries, "/vanityPathOnJcrContent/jcr:content");
+        
+        entries = mapEntries.getResolveMaps();
+        assertEquals(4, entries.size());
+        
+        counter = (AtomicLong) vanityCounter.get(mapEntries);
+        assertEquals(4, counter.longValue());
+
+        vanityTargets = (Map<String, List<String>>) field.get(mapEntries);
+        assertEquals(2, vanityTargets.size());
+        
+        assertNull(vanityTargets.get("/vanityPathOnJcrContent/jcr:content"));
+        assertNotNull(vanityTargets.get("/vanityPathOnJcrContent"));
+    }
+    
     
     @Test
     public void test_doUpdateVanity() throws Exception {
@@ -523,6 +615,10 @@ public class MapEntriesTest {
         
         method.invoke(mapEntries, "/justVanityPath");
         
+        Field vanityCounter = MapEntries.class.getDeclaredField("vanityCounter");
+        vanityCounter.setAccessible(true);  
+        AtomicLong counter = (AtomicLong) vanityCounter.get(mapEntries);
+        assertEquals(2, counter.longValue());  
         assertEquals(2, resolveMapsMap.size());
         assertEquals(1, vanityTargets.size());
         assertNotNull(resolveMapsMap.get("/target/justVanityPath"));
@@ -531,6 +627,9 @@ public class MapEntriesTest {
         
         //remove vanity path
         method1.invoke(mapEntries, "/justVanityPath");
+        
+        counter = (AtomicLong) vanityCounter.get(mapEntries);
+        assertEquals(0, counter.longValue());  
         
         assertEquals(1, resolveMapsMap.size());
         assertEquals(0, vanityTargets.size());      
@@ -1359,4 +1458,414 @@ public class MapEntriesTest {
         when(resource.adaptTo(ValueMap.class)).thenReturn(mock(ValueMap.class));
         assertTrue((Boolean)method.invoke(mapEntries, resource));
     }
+    
+    @Test
+    //SLING-4847
+    public void test_doNodeAdded1() throws Exception { 
+        Method method = MapEntries.class.getDeclaredMethod("doNodeAdded", String.class, boolean.class);
+        method.setAccessible(true);
+        Boolean resfreshed = (Boolean ) method.invoke(mapEntries, "/node", true);
+        assertTrue(resfreshed.booleanValue());
+    }
+    
+    @Test
+    //SLING-4891
+    public void test_getVanityPaths_1() throws Exception {
+        
+        Field field1 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntries");
+        field1.setAccessible(true);  
+        field1.set(mapEntries, 0);
+        
+        Method method = MapEntries.class.getDeclaredMethod("getVanityPaths", String.class);
+        method.setAccessible(true);
+        method.invoke(mapEntries, "/notExisting");   
+        
+        Field vanityCounter = MapEntries.class.getDeclaredField("vanityCounter");
+        vanityCounter.setAccessible(true);  
+        AtomicLong counter = (AtomicLong) vanityCounter.get(mapEntries);
+        assertEquals(0, counter.longValue());        
+    }
+    
+    @Test
+    //SLING-4891
+    public void test_getVanityPaths_2() throws Exception { 
+        
+        final Resource justVanityPath = mock(Resource.class, "justVanityPath");
+        when(resourceResolver.getResource("/justVanityPath")).thenReturn(justVanityPath);
+        when(justVanityPath.getPath()).thenReturn("/justVanityPath");                 
+        when(justVanityPath.getName()).thenReturn("justVanityPath");
+        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
+        
+        
+        when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
+
+            public Iterator<Resource> answer(InvocationOnMock invocation) throws Throwable {
+                if (invocation.getArguments()[0].toString().contains("sling:vanityPath")) {
+                    return Collections.singleton(justVanityPath).iterator();
+                } else {
+                    return Collections.<Resource> emptySet().iterator();
+                }
+            }
+        });
+        
+        Field field1 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntries");
+        field1.setAccessible(true);  
+        field1.set(mapEntries, 0);
+        
+        Method method = MapEntries.class.getDeclaredMethod("getVanityPaths", String.class);
+        method.setAccessible(true);
+        method.invoke(mapEntries, "/target/justVanityPath");   
+        
+        Field vanityCounter = MapEntries.class.getDeclaredField("vanityCounter");
+        vanityCounter.setAccessible(true);  
+        AtomicLong counter = (AtomicLong) vanityCounter.get(mapEntries);
+        assertEquals(2, counter.longValue());        
+        
+        final Resource justVanityPath2 = mock(Resource.class, "justVanityPath2");
+        when(resourceResolver.getResource("/justVanityPath2")).thenReturn(justVanityPath2);
+        when(justVanityPath2.getPath()).thenReturn("/justVanityPath2");                 
+        when(justVanityPath2.getName()).thenReturn("justVanityPath2");
+        when(justVanityPath2.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath","sling:vanityOrder", 100));
+        
+        when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
+
+            public Iterator<Resource> answer(InvocationOnMock invocation) throws Throwable {
+                if (invocation.getArguments()[0].toString().contains("sling:vanityPath")) {
+                    return Collections.singleton(justVanityPath).iterator();
+                } else {
+                    return Collections.<Resource> emptySet().iterator();
+                }
+            }
+        });
+        
+        method.invoke(mapEntries, "/target/justVanityPath");
+  
+        counter = (AtomicLong) vanityCounter.get(mapEntries);
+        assertEquals(4, counter.longValue());  
+    }
+    
+    @Test
+    //SLING-4891
+    public void test_getVanityPaths_3() throws Exception { 
+        
+        final Resource justVanityPath = mock(Resource.class, "justVanityPath");
+        when(resourceResolver.getResource("/justVanityPath")).thenReturn(justVanityPath);
+        when(justVanityPath.getPath()).thenReturn("/justVanityPath");                 
+        when(justVanityPath.getName()).thenReturn("justVanityPath");
+        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
+        
+        
+        when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
+
+            public Iterator<Resource> answer(InvocationOnMock invocation) throws Throwable {
+                if (invocation.getArguments()[0].toString().contains("sling:vanityPath")) {
+                    return Collections.singleton(justVanityPath).iterator();
+                } else {
+                    return Collections.<Resource> emptySet().iterator();
+                }
+            }
+        });
+        
+        Field field1 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntries");
+        field1.setAccessible(true);  
+        field1.set(mapEntries, 0);
+        
+        Field field2 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntriesStartup");
+        field2.setAccessible(true);  
+        field2.set(mapEntries, false);
+        
+        Method method = MapEntries.class.getDeclaredMethod("getVanityPaths", String.class);
+        method.setAccessible(true);
+        method.invoke(mapEntries, "/target/justVanityPath");   
+        
+        Field vanityCounter = MapEntries.class.getDeclaredField("vanityCounter");
+        vanityCounter.setAccessible(true);  
+        AtomicLong counter = (AtomicLong) vanityCounter.get(mapEntries);
+        assertEquals(0, counter.longValue());        
+    }
+    
+    @Test
+    //SLING-4891
+    public void test_getVanityPaths_4() throws Exception { 
+        
+        final Resource badVanityPath = mock(Resource.class, "badVanityPath");
+        when(badVanityPath.getPath()).thenReturn("/badVanityPath");
+        when(badVanityPath.getName()).thenReturn("badVanityPath");
+        when(badVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/content/mypage/en-us-{132"));
+        
+        
+        when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
+
+            public Iterator<Resource> answer(InvocationOnMock invocation) throws Throwable {
+                if (invocation.getArguments()[0].toString().contains("sling:vanityPath")) {
+                    return Collections.singleton(badVanityPath).iterator();
+                } else {
+                    return Collections.<Resource> emptySet().iterator();
+                }
+            }
+        });
+        
+        Field field1 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntries");
+        field1.setAccessible(true);  
+        field1.set(mapEntries, 0);
+        
+        Field field2 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntriesStartup");
+        field2.setAccessible(true);  
+        field2.set(mapEntries, true);
+        
+        Method method = MapEntries.class.getDeclaredMethod("getVanityPaths", String.class);
+        method.setAccessible(true);
+        method.invoke(mapEntries, "/content/mypage/en-us-{132");   
+        
+        Field vanityCounter = MapEntries.class.getDeclaredField("vanityCounter");
+        vanityCounter.setAccessible(true);  
+        AtomicLong counter = (AtomicLong) vanityCounter.get(mapEntries);
+        assertEquals(0, counter.longValue());        
+    }
+    
+    @Test
+    //SLING-4891
+    public void test_getVanityPaths_5() throws Exception { 
+        
+        final Resource justVanityPath = mock(Resource.class, "justVanityPath");
+        when(resourceResolver.getResource("/justVanityPath")).thenReturn(justVanityPath);
+        when(justVanityPath.getPath()).thenReturn("/justVanityPath");                 
+        when(justVanityPath.getName()).thenReturn("justVanityPath");
+        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));       
+        
+        when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
+
+            public Iterator<Resource> answer(InvocationOnMock invocation) throws Throwable {
+                if (invocation.getArguments()[0].toString().contains("sling:vanityPath")) {
+                    return Collections.singleton(justVanityPath).iterator();
+                } else {
+                    return Collections.<Resource> emptySet().iterator();
+                }
+            }
+        });
+        
+        Field field1 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntries");
+        field1.setAccessible(true);  
+        field1.set(mapEntries, 2);
+        
+        Field field2 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntriesStartup");
+        field2.setAccessible(true);  
+        field2.set(mapEntries, false);
+        
+        Method method = MapEntries.class.getDeclaredMethod("getVanityPaths", String.class);
+        method.setAccessible(true);
+        method.invoke(mapEntries, "/target/justVanityPath");   
+        
+        Field vanityCounter = MapEntries.class.getDeclaredField("vanityCounter");
+        vanityCounter.setAccessible(true);  
+        AtomicLong counter = (AtomicLong) vanityCounter.get(mapEntries);
+        assertEquals(2, counter.longValue());        
+        
+        final Resource justVanityPath2 = mock(Resource.class, "justVanityPath2");
+        when(resourceResolver.getResource("/justVanityPath2")).thenReturn(justVanityPath2);
+        when(justVanityPath2.getPath()).thenReturn("/justVanityPath2");                 
+        when(justVanityPath2.getName()).thenReturn("justVanityPath2");
+        when(justVanityPath2.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath","sling:vanityOrder", 100));
+        
+        when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
+
+            public Iterator<Resource> answer(InvocationOnMock invocation) throws Throwable {
+                if (invocation.getArguments()[0].toString().contains("sling:vanityPath")) {
+                    return Collections.singleton(justVanityPath).iterator();
+                } else {
+                    return Collections.<Resource> emptySet().iterator();
+                }
+            }
+        });
+        
+        method.invoke(mapEntries, "/target/justVanityPath");
+  
+        counter = (AtomicLong) vanityCounter.get(mapEntries);
+        assertEquals(2, counter.longValue());  
+    }
+    
+    @Test
+    //SLING-4891
+    public void test_loadVanityPaths() throws Exception {
+        Field field1 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntries");
+        field1.setAccessible(true);  
+        field1.set(mapEntries, 2);
+        
+        final Resource justVanityPath = mock(Resource.class, "justVanityPath");
+        when(resourceResolver.getResource("/justVanityPath")).thenReturn(justVanityPath);
+        when(justVanityPath.getPath()).thenReturn("/justVanityPath");                 
+        when(justVanityPath.getName()).thenReturn("justVanityPath");
+        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));       
+        
+        when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
+
+            public Iterator<Resource> answer(InvocationOnMock invocation) throws Throwable {
+                if (invocation.getArguments()[0].toString().contains("sling:vanityPath")) {
+                    return Collections.singleton(justVanityPath).iterator();
+                } else {
+                    return Collections.<Resource> emptySet().iterator();
+                }
+            }
+        });        
+        
+        Method method = MapEntries.class.getDeclaredMethod("loadVanityPaths", boolean.class);
+        method.setAccessible(true);
+        method.invoke(mapEntries, false);   
+        
+        Field vanityCounter = MapEntries.class.getDeclaredField("vanityCounter");
+        vanityCounter.setAccessible(true);  
+        AtomicLong counter = (AtomicLong) vanityCounter.get(mapEntries);
+        assertEquals(2, counter.longValue()); 
+    }
+    
+    @Test
+    //SLING-4891
+    public void test_loadVanityPaths_1() throws Exception {
+        
+        final Resource justVanityPath = mock(Resource.class, "justVanityPath");
+        when(resourceResolver.getResource("/justVanityPath")).thenReturn(justVanityPath);
+        when(justVanityPath.getPath()).thenReturn("/justVanityPath");                 
+        when(justVanityPath.getName()).thenReturn("justVanityPath");
+        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));       
+        
+        when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
+
+            public Iterator<Resource> answer(InvocationOnMock invocation) throws Throwable {
+                if (invocation.getArguments()[0].toString().contains("sling:vanityPath")) {
+                    return Collections.singleton(justVanityPath).iterator();
+                } else {
+                    return Collections.<Resource> emptySet().iterator();
+                }
+            }
+        });        
+        
+        Method method = MapEntries.class.getDeclaredMethod("loadVanityPaths", boolean.class);
+        method.setAccessible(true);
+        method.invoke(mapEntries, false);   
+        
+        Field vanityCounter = MapEntries.class.getDeclaredField("vanityCounter");
+        vanityCounter.setAccessible(true);  
+        AtomicLong counter = (AtomicLong) vanityCounter.get(mapEntries);
+        assertEquals(2, counter.longValue()); 
+    }
+    
+    @Test
+    //SLING-4891
+    public void test_getMapEntryList() throws Exception {
+
+        List<MapEntry> entries = mapEntries.getResolveMaps();
+        assertEquals(0, entries.size());
+
+
+        final Resource justVanityPath = mock(Resource.class,
+                "justVanityPath");
+
+        when(resourceResolver.getResource("/justVanityPath")).thenReturn(justVanityPath);
+
+        when(justVanityPath.getPath()).thenReturn("/justVanityPath");
+
+        when(justVanityPath.getName()).thenReturn("justVanityPath");
+
+        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath",
+                "/target/justVanityPath"));
+
+        when(resourceResolver.findResources(anyString(),
+                eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
+
+                    public Iterator<Resource> answer(InvocationOnMock invocation)
+                            throws Throwable {
+                        if
+                        (invocation.getArguments()[0].toString().contains("sling:vanityPath")) {
+                            return Collections.singleton(justVanityPath).iterator();
+                        } else {
+                            return Collections.<Resource> emptySet().iterator();
+                        }
+                    }
+                });
+
+        Method method =
+                MapEntries.class.getDeclaredMethod("getMapEntryList",String.class);
+        method.setAccessible(true);
+        method.invoke(mapEntries, "/target/justVanityPath");
+
+        entries = mapEntries.getResolveMaps();
+        assertEquals(2, entries.size());
+
+        Field vanityCounter =
+                MapEntries.class.getDeclaredField("vanityCounter");
+        vanityCounter.setAccessible(true);
+        AtomicLong counter = (AtomicLong) vanityCounter.get(mapEntries);
+        assertEquals(2, counter.longValue());
+
+        method.invoke(mapEntries, "/target/justVanityPath");
+
+        entries = mapEntries.getResolveMaps();
+        assertEquals(2, entries.size());
+
+        counter = (AtomicLong) vanityCounter.get(mapEntries);
+        assertEquals(2, counter.longValue());
+    }
+    
+    @Test
+    //SLING-4883
+    public void test_concutrrent_getResolveMapsIterator() throws Exception {
+        ExecutorService pool = Executors.newFixedThreadPool(10);
+        
+        final Resource justVanityPath = mock(Resource.class, "justVanityPath");
+        when(resourceResolver.getResource("/justVanityPath")).thenReturn(justVanityPath);
+        when(justVanityPath.getPath()).thenReturn("/justVanityPath");                 
+        when(justVanityPath.getName()).thenReturn("justVanityPath");
+        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
+        
+        
+        when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
+
+            public Iterator<Resource> answer(InvocationOnMock invocation) throws Throwable {
+                if (invocation.getArguments()[0].toString().contains("sling:vanityPath")) {
+                    return Collections.singleton(justVanityPath).iterator();
+                } else {
+                    return Collections.<Resource> emptySet().iterator();
+                }
+            }
+        });
+        
+        
+        Field field1 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntries");
+        field1.setAccessible(true);  
+        field1.set(mapEntries, 2);
+        
+        ArrayList<DataFuture> list = new ArrayList<DataFuture>();
+        for (int i =0;i<10;i++) {
+            list.add(createDataFuture(pool, mapEntries));
+ 
+        }
+ 
+       for (DataFuture df : list) {
+           df.future.get();           
+        }
+  
+    }
+    
+    // -------------------------- private methods ----------
+    private DataFuture createDataFuture(ExecutorService pool, final MapEntries mapEntries) {
+
+        Future<Iterator> future = pool.submit(new Callable<Iterator>() {
+            @Override
+            public Iterator call() throws Exception {
+                return mapEntries.getResolveMapsIterator("http/localhost.8080/target/justVanityPath");                     
+            }
+        });
+        return new DataFuture(future);
+    }    
+    
+    // -------------------------- inner classes ------------
+
+    private static class DataFuture {
+        public Future<Iterator> future;
+
+        public DataFuture(Future<Iterator> future) {
+            super();
+            this.future = future;
+        }
+    }    
 }

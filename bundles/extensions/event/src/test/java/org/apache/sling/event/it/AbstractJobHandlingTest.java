@@ -19,6 +19,7 @@
 package org.apache.sling.event.it;
 
 
+import static org.ops4j.pax.exam.CoreOptions.frameworkProperty;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
@@ -58,6 +59,11 @@ public abstract class AbstractJobHandlingTest {
 
     private static final String BUNDLE_JAR_SYS_PROP = "project.bundle.file";
 
+    /** The property containing the build directory. */
+    private static final String SYS_PROP_BUILD_DIR = "bundle.build.dir";
+
+    private static final String DEFAULT_BUILD_DIR = "target";
+
     protected static final int DEFAULT_TEST_TIMEOUT = 1000*60*5;
 
     @Inject
@@ -73,6 +79,7 @@ public abstract class AbstractJobHandlingTest {
 
     @Configuration
     public Option[] config() {
+        final String buildDir = System.getProperty(SYS_PROP_BUILD_DIR, DEFAULT_BUILD_DIR);
         final String bundleFileName = System.getProperty( BUNDLE_JAR_SYS_PROP );
         final File bundleFile = new File( bundleFileName );
         if ( !bundleFile.canRead() ) {
@@ -83,6 +90,7 @@ public abstract class AbstractJobHandlingTest {
         String localRepo = System.getProperty("maven.repo.local", "");
 
         return options(
+                frameworkProperty("sling.home").value(new File(buildDir + File.separatorChar + "sling_" + System.currentTimeMillis()).getAbsolutePath()),
                 when( localRepo.length() > 0 ).useOptions(
                         systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo)
                 ),
@@ -110,8 +118,8 @@ public abstract class AbstractJobHandlingTest {
                 mavenBundle("org.apache.servicemix.bundles", "org.apache.servicemix.bundles.concurrent", "1.3.4_1"),
 
                 mavenBundle("org.apache.geronimo.bundles", "commons-httpclient", "3.1_1"),
-                mavenBundle("org.apache.tika", "tika-core", "1.2"),
-                mavenBundle("org.apache.tika", "tika-bundle", "1.2"),
+                mavenBundle("org.apache.tika", "tika-core", "1.9"),
+                mavenBundle("org.apache.tika", "tika-bundle", "1.9"),
 
                 mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", "1.0.0"),
                 mavenBundle("org.apache.felix", "org.apache.felix.http.api", "2.3.0"),

@@ -38,12 +38,10 @@ import aQute.bnd.annotation.ProviderType;
 
 /**
  * The <code>AbstractSlingRepository2</code> is an abstract implementation of
- * the {@link SlingRepository} version 2.2 interface (phasing
+ * the {@link SlingRepository} version 2.3 interface (phasing
  * {@link #loginAdministrative(String)} out in favor of
  * {@link #loginService(String, String)}) which provides default support for
- * attached repositories as well as namespace mapping support by wrapping
- * sessions with namespace support (see
- * {@link #getNamespaceAwareSession(Session)}).
+ * attached repositories.
  * <p>
  * Implementations of the <code>SlingRepository</code> interface may wish to
  * extend this class to benefit from default implementations of most methods.
@@ -62,17 +60,18 @@ import aQute.bnd.annotation.ProviderType;
  * session support}.
  *
  * @see AbstractSlingRepositoryManager
- * @since API version 2.3 (bundle version 2.3)
+ * @since API version 2.4 (bundle version 2.3)
  */
 @ProviderType
 public abstract class AbstractSlingRepository2 implements SlingRepository {
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    /** The logger. */
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    // the repository manager
+    /** The repository manager. */
     private final AbstractSlingRepositoryManager manager;
 
-    // the bundle using this repository instance
+    /** The bundle using this repository instance. */
     private final Bundle usingBundle;
 
     /**
@@ -116,6 +115,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
      * This method may return {@code null} in which case the actual default
      * workspace used depends on the underlying JCR Repository implementation.
      */
+    @Override
     public final String getDefaultWorkspace() {
         return this.getSlingRepositoryManager().getDefaultWorkspace();
     }
@@ -133,7 +133,9 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
      * @return The wrapped session
      * @throws RepositoryException If an error occurrs wrapping the session
      * @throws NullPointerException If {@code session} is {@code null}
+     * @deprecated as of API version 2.4 (bundle version 2.3)
      */
+    @Deprecated
     protected final Session getNamespaceAwareSession(Session session) throws RepositoryException {
         return this.getSlingRepositoryManager().getNamespaceAwareSession(session);
     }
@@ -143,10 +145,6 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
      * <p>
      * This method is called by the {@link #loginAdministrative(String)} and
      * {@link #createServiceSession(String, String)} methods.
-     * <p>
-     * Implementations of this method must not call
-     * {@link #getNamespaceAwareSession(Session)} as this is handled by the
-     * calling method.
      *
      * @param workspace The workspace to access or {@code null} to access the
      *            {@link #getDefaultWorkspace() default workspace}
@@ -155,7 +153,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
      * @see #createServiceSession(String, String)
      * @see #loginAdministrative(String)
      */
-    protected abstract Session createAdministrativeSession(String workspace) throws RepositoryException;
+    protected abstract Session createAdministrativeSession(final String workspace) throws RepositoryException;
 
     /**
      * Creates a service-session for the service's {@code serviceUserName} by
@@ -169,9 +167,6 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
      * Implementations of this class may overwrite this method with a better
      * implementation, notably one which does not involve a temporary creation
      * of an administrative session.
-     * <p>
-     * This method must not call {@link #getNamespaceAwareSession(Session)} as
-     * this is handled by the calling method.
      *
      * @param serviceUserName The name of the user to create the session for
      * @param workspace The workspace to access or {@code null} to access the
@@ -180,7 +175,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
      * @throws RepositoryException If a general error occurs while creating the
      *             session
      */
-    protected Session createServiceSession(String serviceUserName, String workspace) throws RepositoryException {
+    protected Session createServiceSession(final String serviceUserName, final String workspace) throws RepositoryException {
         Session admin = null;
         try {
             admin = this.createAdministrativeSession(workspace);
@@ -197,8 +192,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
     /**
      * Same as calling {@code login(null, null)}.
      * <p>
-     * This method may be overwritten. Care must be taken to call
-     * {@link #getNamespaceAwareSession(Session)} before return to the caller.
+     * This method may be overwritten.
      *
      * @return the result of calling {@link #login(Credentials, String)
      *         login(null, null)}.
@@ -207,6 +201,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
      * @see #login(Credentials, String)
      * @see #getNamespaceAwareSession(Session)
      */
+    @Override
     public Session login() throws LoginException, RepositoryException {
         return this.login(null, null);
     }
@@ -214,8 +209,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
     /**
      * Same as calling {@code login(credentials, null)}.
      * <p>
-     * This method may be overwritten. Care must be taken to call
-     * {@link #getNamespaceAwareSession(Session)} before return to the caller.
+     * This method may be overwritten.
      *
      * @param credentials The {@code Credentials} to use to login.
      * @return the result of calling {@link #login(Credentials, String)
@@ -225,15 +219,15 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
      * @see #login(Credentials, String)
      * @see #getNamespaceAwareSession(Session)
      */
-    public Session login(Credentials credentials) throws LoginException, RepositoryException {
+    @Override
+    public Session login(final Credentials credentials) throws LoginException, RepositoryException {
         return this.login(credentials, null);
     }
 
     /**
      * Same as calling {@code login(null, workspace)}.
      * <p>
-     * This method may be overwritten. Care must be taken to call
-     * {@link #getNamespaceAwareSession(Session)} before return to the caller.
+     * This method may be overwritten.
      *
      * @param workspace The workspace to access or {@code null} to access the
      *            {@link #getDefaultWorkspace() default workspace}
@@ -244,26 +238,22 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
      * @see #login(Credentials, String)
      * @see #getNamespaceAwareSession(Session)
      */
-    public Session login(String workspace) throws LoginException, NoSuchWorkspaceException, RepositoryException {
+    @Override
+    public Session login(final String workspace) throws LoginException, NoSuchWorkspaceException, RepositoryException {
         return this.login(null, workspace);
     }
 
     /**
      * Logs into the repository at the given {@code workspace} with the given
-     * {@code credentials} and returns a namespace aware session by calling
-     * {@link #getNamespaceAwareSession(Session)} with the session returned from
-     * the repository..
+     * {@code credentials} and returns the session returned from
+     * the repository.
      * <p>
      * This method logs in as a guest if {@code null} credentials are provided.
      * The method may be overwritten to implement a different behaviour as
      * indicated by the JCR specification for this method to use external
-     * mechanisms to login instead of leveraging provided credentials. An
-     * implementation overwriting this method must also call
-     * {@link #getNamespaceAwareSession(Session)} before returning the session
-     * to the caller.
+     * mechanisms to login instead of leveraging provided credentials.
      * <p>
-     * This method may be overwritten. Care must be taken to call
-     * {@link #getNamespaceAwareSession(Session)} before return to the caller.
+     * This method may be overwritten.
      *
      * @param credentials The {@code Credentials} to use to login. If this is
      *            {@code null} JCR {@code GuestCredentials} are used to login.
@@ -275,8 +265,9 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
      * @throws RepositoryException If another error occurrs during login
      * @see #getNamespaceAwareSession(Session)
      */
-    public Session login(Credentials credentials, String workspace) throws LoginException, NoSuchWorkspaceException,
-            RepositoryException {
+    @Override
+    public Session login(Credentials credentials, String workspace)
+    throws LoginException, NoSuchWorkspaceException, RepositoryException {
 
         if (credentials == null) {
             credentials = new GuestCredentials();
@@ -288,16 +279,16 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
         }
 
         try {
-            log.debug("login: Logging in to workspace '" + workspace + "'");
+            logger.debug("login: Logging in to workspace '" + workspace + "'");
             final Repository repository = this.getRepository();
             if (this.getRepository() == null) {
                 throw new RepositoryException("Sling Repository not ready");
             }
 
-            Session session = repository.login(credentials, workspace);
-            return this.getNamespaceAwareSession(session);
+            final Session session = repository.login(credentials, workspace);
+            return session;
 
-        } catch (RuntimeException re) {
+        } catch (final RuntimeException re) {
             // SLING-702: Jackrabbit throws IllegalStateException if the
             // repository has already been shut down ...
             throw new RepositoryException(re.getMessage(), re);
@@ -327,8 +318,9 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
      * @throws RepositoryException If a general error occurs while creating the
      *             session
      */
-    public final Session loginService(String subServiceName, String workspace) throws LoginException,
-            RepositoryException {
+    @Override
+    public final Session loginService(final String subServiceName, final String workspace)
+    throws LoginException, RepositoryException {
         final ServiceUserMapper serviceUserMapper = this.getSlingRepositoryManager().getServiceUserMapper();
         final String userName = (serviceUserMapper != null) ? serviceUserMapper.getServiceUserID(this.usingBundle,
             subServiceName) : null;
@@ -336,8 +328,49 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
             throw new LoginException("Cannot derive user name for bundle " + usingBundle + " and sub service "
                 + subServiceName);
         }
-        return getNamespaceAwareSession(createServiceSession(userName, workspace));
+        return createServiceSession(userName, workspace);
     }
+
+    /**
+     * Default implementation of the {@link #impersonateFromService(Credentials, String, String)}
+     * method taking into account the bundle calling this method.
+     * <p/>
+     * This method uses the
+     * {@link AbstractSlingRepositoryManager#getServiceUserMapper()
+     * ServiceUserMapper} service to map the named service to a user and then
+     * calls the {@link #createServiceSession(String, String)} method actually
+     * create a session for that user. This service session is then impersonated
+     * to the subject identified by the specified {@code credentials}.
+     *
+     * @param subServiceName An optional subService identifier (may be {@code null})
+     * @param credentials    A valid non-null {@code Credentials} object
+     * @param workspaceName  The workspace to access or {@code null} to access the
+     *            {@link #getDefaultWorkspace() default workspace}
+     * @return a new {@code Session} object
+     * @throws LoginException If the current session does not have sufficient access to perform the operation.
+     * @throws RepositoryException If another error occurs.
+     * @since 2.4
+     */
+    @Override
+    public Session impersonateFromService(final String subServiceName, final Credentials credentials, final String workspaceName)
+            throws LoginException, RepositoryException {
+        final ServiceUserMapper serviceUserMapper = this.getSlingRepositoryManager().getServiceUserMapper();
+        final String userName = (serviceUserMapper != null) ? serviceUserMapper.getServiceUserID(this.usingBundle,
+                subServiceName) : null;
+        if (userName == null) {
+            throw new LoginException("Cannot derive user name for bundle " + usingBundle + " and sub service " + subServiceName);
+        }
+        Session serviceSession = null;
+        try {
+            serviceSession = createServiceSession(userName, workspaceName);
+            return serviceSession.impersonate(credentials);
+        } finally {
+            if (serviceSession != null) {
+                serviceSession.logout();
+            }
+        }
+    }
+
 
     /**
      * Login as an administrative user. This method is deprecated and its use
@@ -352,77 +385,83 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
      * @return An administrative session
      * @throws RepositoryException If the login fails or has been disabled
      */
-    public final Session loginAdministrative(String workspace) throws RepositoryException {
+    @Override
+    public final Session loginAdministrative(final String workspace) throws RepositoryException {
         if (this.getSlingRepositoryManager().isDisableLoginAdministrative()) {
-            log.error("SlingRepository.loginAdministrative is disabled. Please use SlingRepository.loginService.");
+            logger.error("SlingRepository.loginAdministrative is disabled. Please use SlingRepository.loginService.");
             throw new LoginException();
         }
 
-        log.debug("SlingRepository.loginAdministrative is deprecated. Please use SlingRepository.loginService.");
-        return getNamespaceAwareSession(createAdministrativeSession(workspace));
+        logger.debug("SlingRepository.loginAdministrative is deprecated. Please use SlingRepository.loginService.");
+        return createAdministrativeSession(workspace);
     }
 
     // Remaining Repository service methods all backed by the actual
     // repository instance. They may be overwritten, but generally are not.
 
+    @Override
     public String getDescriptor(String name) {
         Repository repo = getRepository();
         if (repo != null) {
             return repo.getDescriptor(name);
         }
 
-        log.error("getDescriptor: Repository not available");
+        logger.error("getDescriptor: Repository not available");
         return null;
     }
 
+    @Override
     public String[] getDescriptorKeys() {
         Repository repo = getRepository();
         if (repo != null) {
             return repo.getDescriptorKeys();
         }
 
-        log.error("getDescriptorKeys: Repository not available");
+        logger.error("getDescriptorKeys: Repository not available");
         return new String[0];
     }
 
+    @Override
     public Value getDescriptorValue(String key) {
         Repository repo = getRepository();
         if (repo != null) {
             return repo.getDescriptorValue(key);
         }
 
-        log.error("getDescriptorValue: Repository not available");
+        logger.error("getDescriptorValue: Repository not available");
         return null;
     }
 
+    @Override
     public Value[] getDescriptorValues(String key) {
         Repository repo = getRepository();
         if (repo != null) {
             return repo.getDescriptorValues(key);
         }
 
-        log.error("getDescriptorValues: Repository not available");
+        logger.error("getDescriptorValues: Repository not available");
         return null;
     }
 
+    @Override
     public boolean isSingleValueDescriptor(String key) {
         Repository repo = getRepository();
         if (repo != null) {
             return repo.isSingleValueDescriptor(key);
         }
 
-        log.error("isSingleValueDescriptor: Repository not available");
+        logger.error("isSingleValueDescriptor: Repository not available");
         return false;
     }
 
+    @Override
     public boolean isStandardDescriptor(String key) {
         Repository repo = getRepository();
         if (repo != null) {
             return repo.isStandardDescriptor(key);
         }
 
-        log.error("isStandardDescriptor: Repository not available");
+        logger.error("isStandardDescriptor: Repository not available");
         return false;
     }
-
 }

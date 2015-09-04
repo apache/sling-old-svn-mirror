@@ -144,7 +144,7 @@ public class Artifact extends Commentable implements Comparable {
     }
 
     @Override
-    public int compareTo(Object o) {
+    public int compareTo(final Object o) {
         if(o == null) return 1;
         if(!(o instanceof Artifact)) return 1;
         return toMvnUrl().compareTo(((Artifact)o).toMvnUrl());

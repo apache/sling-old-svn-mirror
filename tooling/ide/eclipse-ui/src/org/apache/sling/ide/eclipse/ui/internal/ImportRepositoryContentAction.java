@@ -218,9 +218,6 @@ public class ImportRepositoryContentAction {
                     }
 
                     return false;
-                } catch (SerializationException e) {
-                    throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
-                            "Failed reading current project's resources", e));
                 } catch (IOException e) {
                     throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
                             "Failed reading current project's resources", e));

@@ -30,10 +30,15 @@ import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.distribution.component.impl.DistributionComponentKind;
+import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
+import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
+import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.transport.core.DistributionTransport;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.transport.impl.AdvancedHttpDistributionTransport;
@@ -52,6 +57,12 @@ public class AdvancedRemoteDistributionPackageImporter implements DistributionPa
 
 
     private final Logger log = LoggerFactory.getLogger(getClass());
+
+    /**
+     * name of this importer.
+     */
+    @Property(label = "Name", description = "The name of the importer.")
+    public static final String NAME = DistributionComponentConstants.PN_NAME;
 
     @Property(name = "transportSecretProvider.target")
     @Reference(name = "transportSecretProvider")
@@ -92,6 +103,8 @@ public class AdvancedRemoteDistributionPackageImporter implements DistributionPa
     protected void activate(Map<String, ?> config) throws Exception {
 
         String[] endpoints = PropertiesUtil.toStringArray(config.get(ENDPOINTS), new String[0]);
+        endpoints = SettingsUtils.removeEmptyEntries(endpoints);
+
         String endpointStrategyName = PropertiesUtil.toString(config.get(ENDPOINT_STRATEGY),
                 TransportEndpointStrategyType.One.name());
         TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(endpointStrategyName);
@@ -99,19 +112,29 @@ public class AdvancedRemoteDistributionPackageImporter implements DistributionPa
 
         boolean useCustomHeaders = PropertiesUtil.toBoolean(config.get(USE_CUSTOM_HEADERS), false);
         String[] customHeaders = PropertiesUtil.toStringArray(config.get(CUSTOM_HEADERS), new String[0]);
+        customHeaders = SettingsUtils.removeEmptyEntries(customHeaders);
+
         boolean useCustomBody = PropertiesUtil.toBoolean(config.get(USE_CUSTOM_BODY), false);
         String customBody = PropertiesUtil.toString(config.get(CUSTOM_BODY), "");
+
+
+
+
+        String importerName = PropertiesUtil.toString(config.get(NAME), null);
+
+        DefaultDistributionLog distributionLog = new DefaultDistributionLog(DistributionComponentKind.IMPORTER, importerName, RemoteDistributionPackageImporter.class, DefaultDistributionLog.LogLevel.ERROR);
 
 
         List<DistributionTransport> transportHandlers = new ArrayList<DistributionTransport>();
 
         for (String endpoint : endpoints) {
             if (endpoint != null && endpoint.length() > 0) {
-                transportHandlers.add(new AdvancedHttpDistributionTransport(useCustomHeaders, customHeaders,
+                transportHandlers.add(new AdvancedHttpDistributionTransport(distributionLog, useCustomHeaders, customHeaders,
                         useCustomBody, customBody,
-                        new DistributionEndpoint(endpoint), null, -1));
+                        new DistributionEndpoint(endpoint), null, distributionTransportSecretProvider, -1));
             }
         }
+
         transportHandler = new MultipleEndpointDistributionTransport(transportHandlers,
                 transportEndpointStrategyType);
 
@@ -120,13 +143,13 @@ public class AdvancedRemoteDistributionPackageImporter implements DistributionPa
 
     public void importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) {
         try {
-            transportHandler.deliverPackage(resourceResolver, distributionPackage, distributionTransportSecretProvider.getSecret());
+            transportHandler.deliverPackage(resourceResolver, distributionPackage);
         } catch (Exception e) {
             log.error("failed delivery", e);
         }
     }
 
-    public DistributionPackage importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException {
+    public DistributionPackageInfo importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException {
         throw new DistributionPackageImportException("not supported");
     }
 

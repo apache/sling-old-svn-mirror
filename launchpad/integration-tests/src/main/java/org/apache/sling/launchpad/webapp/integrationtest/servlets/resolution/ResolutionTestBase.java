@@ -67,9 +67,7 @@ class ResolutionTestBase extends HttpTestBase {
    *  expected suffix
    */
   protected void assertServlet(String content, String expectedSuffix) throws IOException {
-    final Properties props = new Properties();
-    final InputStream is = new ByteArrayInputStream(content.getBytes());
-    props.load(is);
+    final Properties props = getTestServletProperties(content);
     assertTrue(
         "Content represents a non-empty Properties object (" + content + ")",
         props.size() > 0);
@@ -80,6 +78,13 @@ class ResolutionTestBase extends HttpTestBase {
     assertTrue(
         CLASS_PROP + " property value (" + clazz + ") ends with " + expectedSuffix,
         clazz.endsWith(expectedSuffix));
+  }
+  
+  protected Properties getTestServletProperties(String content) throws IOException {
+      final Properties props = new Properties();
+      final InputStream is = new ByteArrayInputStream(content.getBytes());
+      props.load(is);
+      return props;
   }
 
   /** Assert that content does not contain TEST_SERVLET_MARKER

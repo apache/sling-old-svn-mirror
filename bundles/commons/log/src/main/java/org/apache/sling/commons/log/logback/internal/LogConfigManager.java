@@ -74,7 +74,17 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
 
     public static final String LOG_MAX_CLALLER_DEPTH = "org.apache.sling.commons.log.maxCallerDataDepth";
 
+    public static final String PRINTER_MAX_INCLUDED_FILES = "org.apache.sling.commons.log.maxOldFileCountInDump";
+
+    public static final int PRINTER_MAX_INCLUDED_FILES_DEFAULT = 3;
+
+    public static final String PRINTER_NUM_OF_LINES = "org.apache.sling.commons.log.numOfLines";
+
+    public static final int PRINTER_NUM_OF_LINES_DEFAULT = 1000;
+
     public static final String LOG_LEVEL_DEFAULT = "INFO";
+
+    public static final String LOG_LEVEL_RESET_TO_DEFAULT = "DEFAULT";
 
     public static final int LOG_FILE_NUMBER_DEFAULT = 5;
 
@@ -127,6 +137,10 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
     private boolean packagingDataEnabled;
 
     private int maxCallerDataDepth;
+
+    private int maxOldFileCount;
+
+    private int numOfLines;
 
     /**
      * Logs a message an optional stack trace to error output. This method is
@@ -293,12 +307,17 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
 
             for (String category : config.getCategories()) {
                 ch.qos.logback.classic.Logger logger = loggerContext.getLogger(category);
-                logger.setLevel(config.getLogLevel());
-                if (appender != null) {
-                    logger.setAdditive(config.isAdditive());
-                    logger.addAppender(appender);
-                    contextUtil.addInfo("Registering appender "+appender.getName()+ "("+appender.getClass()+
-                            ") with logger "+logger.getName());
+                if (config.isResetToDefault()){
+                    logger.setLevel(null);
+                    logger.setAdditive(true); //Reset additivity
+                } else {
+                    logger.setLevel(config.getLogLevel());
+                    if (appender != null) {
+                        logger.setAdditive(config.isAdditive());
+                        logger.addAppender(appender);
+                        contextUtil.addInfo("Registering appender " + appender.getName() + "(" + appender.getClass() +
+                                ") with logger " + logger.getName());
+                    }
                 }
             }
         }
@@ -460,7 +479,7 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
      * {@link LogConfigManager#LOG_PATTERN_DEFAULT} is used.</dd>
      * <dt>{@link LogConfigManager#LOG_LEVEL}</dt>
      * <dd>The log level to use for log message limitation. The supported values
-     * are <code>trace</code>, <code>debug</code>, <code>info</code>,
+     * are <code>off</code>, <code>trace</code>, <code>debug</code>, <code>info</code>,
      * <code>warn</code> and <code>error</code>. Case does not matter. If this
      * property is missing a <code>ConfigurationException</code> is thrown and
      * this logger configuration is not used.</dd>
@@ -520,10 +539,15 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
             if (level == null) {
                 throw new ConfigurationException(LogConfigManager.LOG_LEVEL, "Value required");
             }
-            // TODO: support numeric levels !
-            final Level logLevel = Level.toLevel(level);
-            if (logLevel == null) {
-                throw new ConfigurationException(LogConfigManager.LOG_LEVEL, "Unsupported value: " + level);
+
+            final Level logLevel;
+            final boolean resetToDefault;
+            if (LOG_LEVEL_RESET_TO_DEFAULT.equalsIgnoreCase(level)){
+                resetToDefault = true;
+                logLevel = null;
+            } else {
+                logLevel = Level.toLevel(level);
+                resetToDefault = false;
             }
 
             // verify pattern
@@ -538,7 +562,8 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
             }
 
             // create or modify existing configuration object
-            final LogConfig newConfig = new LogConfig(this, pattern, categories, logLevel, fileName, additiv, pid, loggerContext);
+            final LogConfig newConfig = new LogConfig(this, pattern, categories, logLevel, fileName, additiv,
+                    pid, loggerContext, resetToDefault);
             LogConfig oldConfig = configByPid.get(pid);
             if (oldConfig != null) {
                 configByCategory.keySet().removeAll(oldConfig.getCategories());
@@ -576,6 +601,17 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
 
     public int getMaxCallerDataDepth() {
         return maxCallerDataDepth;
+    }
+
+    public int getMaxOldFileCount() {
+        return maxOldFileCount;
+    }
+
+    /**
+     * Maximum number of lines from a log files to be included in txt mode dump
+     */
+    public int getNumOfLines() {
+        return numOfLines;
     }
 
     // ---------- ManagedService interface -------------------------------------
@@ -631,6 +667,11 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
 
         maxCallerDataDepth = Util.toInteger(configuration.get(LOG_MAX_CLALLER_DEPTH),
                 ClassicConstants.DEFAULT_MAX_CALLEDER_DATA_DEPTH);
+        maxOldFileCount = Util.toInteger(configuration.get(PRINTER_MAX_INCLUDED_FILES),
+                PRINTER_MAX_INCLUDED_FILES_DEFAULT);
+        numOfLines = Util.toInteger(configuration.get(PRINTER_NUM_OF_LINES),
+                PRINTER_NUM_OF_LINES_DEFAULT);
+
     }
 
     // ---------- Internal helpers ---------------------------------------------
@@ -661,7 +702,7 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
      * Returns the <code>logFileName</code> argument converted into an absolute
      * path name. If <code>logFileName</code> is already absolute it is returned
      * unmodified. Otherwise it is made absolute by resolving it relative to the
-     * root directory set on this instance by the {@link #setRoot(String)}
+     * root directory set on this instance.
      * method.
      *
      * @throws NullPointerException if <code>logFileName</code> is

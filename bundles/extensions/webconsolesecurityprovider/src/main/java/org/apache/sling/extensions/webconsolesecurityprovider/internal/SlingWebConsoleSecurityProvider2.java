@@ -86,8 +86,9 @@ public class SlingWebConsoleSecurityProvider2
                     }
                 }
             }
-
-            this.authenticator.login(request, response);
+            if (request.getAuthType() == null) {
+                this.authenticator.login(request, response);
+            }            
         }
         return false;
     }

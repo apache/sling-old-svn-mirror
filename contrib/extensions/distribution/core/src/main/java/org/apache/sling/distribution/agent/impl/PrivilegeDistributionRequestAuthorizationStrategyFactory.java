@@ -29,11 +29,11 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.DistributionRequest;
-import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
+import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.osgi.framework.BundleContext;
 
 @Component(metatype = true,
-        label = "Sling Distribution Request Authorization - Privilege Request Authorization Strategy",
+        label = "Apache Sling Distribution Request Authorization - Privilege Request Authorization Strategy",
         description = "OSGi configuration for request based authorization strategy based on privileges",
         configurationFactory = true,
         specVersion = "1.1",
@@ -47,7 +47,7 @@ public class PrivilegeDistributionRequestAuthorizationStrategyFactory implements
      * name of this strategy.
      */
     @Property(label = "Name")
-    public static final String NAME = DistributionComponentUtils.PN_NAME;
+    public static final String NAME = DistributionComponentConstants.PN_NAME;
 
     /**
      * privilege request authorization strategy jcr privilege property

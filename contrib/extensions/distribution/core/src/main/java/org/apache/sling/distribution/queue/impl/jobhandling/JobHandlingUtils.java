@@ -18,54 +18,43 @@
  */
 package org.apache.sling.distribution.queue.impl.jobhandling;
 
-import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.distribution.DistributionRequestType;
-import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.distribution.queue.DistributionQueueEntry;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
+import org.apache.sling.distribution.queue.DistributionQueueItemState;
+import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.event.jobs.Job;
 
 public class JobHandlingUtils {
 
-    private static final String PATHS = "distribution.package.paths";
-
-    public static final String ID = "distribution.package.id";
-
-    private static final String TYPE = "distribution.package.type";
-
-    protected static final String REQUEST_TYPE = "distribution.package.request.type";
-
-    protected static final String ORIGIN = "distribution.package.origin";
+    private static final String DISTRIBUTION_PACKAGE_PREFIX = "distribution.";
+    private static final String ID = DISTRIBUTION_PACKAGE_PREFIX + "item.id";
 
     public static DistributionQueueItem getItem(final Job job) {
-        DistributionPackageInfo packageInfo = new DistributionPackageInfo();
-        packageInfo.setOrigin((URI) job.getProperty(ORIGIN));
-        packageInfo.setPaths((String[]) job.getProperty(PATHS));
-        packageInfo.setRequestType((DistributionRequestType) job.getProperty(REQUEST_TYPE));
 
-        return new DistributionQueueItem((String) job.getProperty(ID),
-                String.valueOf(job.getProperty(TYPE)), packageInfo);
+        Map<String, Object> properties = new HashMap<String, Object>();
+        for (String key: job.getPropertyNames()) {
+            if (key.startsWith(DISTRIBUTION_PACKAGE_PREFIX)) {
+                String infoKey = key.substring(DISTRIBUTION_PACKAGE_PREFIX.length());
+                properties.put(infoKey, job.getProperty(key));
+            }
+        }
+
+        String id = (String) job.getProperty(ID);
+
+        return new DistributionQueueItem(id, properties);
     }
 
-    public static Map<String, Object> createFullProperties(
-            DistributionQueueItem distributionQueueItem) {
+    public static Map<String, Object> createFullProperties(DistributionQueueItem queueItem) {
         Map<String, Object> properties = new HashMap<String, Object>();
 
-        properties.put(ID, distributionQueueItem.getId());
-        properties.put(TYPE, distributionQueueItem.getType());
+        for (String key : queueItem.keySet()) {
+           properties.put(DISTRIBUTION_PACKAGE_PREFIX + key, queueItem.get(key));
+        }
 
-        DistributionPackageInfo info = distributionQueueItem.getPackageInfo();
-        if (info.getPaths() != null) {
-            properties.put(PATHS, info.getPaths());
-        }
-        if (info.getRequestType() != null) {
-            properties.put(REQUEST_TYPE, info.getRequestType());
-        }
-        if (info.getOrigin() != null) {
-            properties.put(ORIGIN, info.getOrigin());
-        }
+        properties.put(ID, queueItem.getId());
 
         return properties;
     }
@@ -88,5 +77,28 @@ public class JobHandlingUtils {
 
         return queue.substring(idx + 1);
     }
+
+    public static DistributionQueueItemStatus getStatus(final Job job) {
+        String queueName = getQueueName(job);
+        int attempts = job.getRetryCount();
+
+        DistributionQueueItemStatus status = new DistributionQueueItemStatus(job.getCreated(),
+                attempts > 0 ? DistributionQueueItemState.ERROR: DistributionQueueItemState.QUEUED,
+                attempts, queueName);
+
+        return status;
+    }
+
+    public static DistributionQueueEntry getEntry(final Job job) {
+        DistributionQueueItem item = getItem(job);
+        DistributionQueueItemStatus itemStatus = getStatus(job);
+
+        if (item != null && itemStatus != null) {
+            return new DistributionQueueEntry(item, itemStatus);
+        }
+
+        return null;
+    }
+
 
 }

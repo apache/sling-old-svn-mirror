@@ -39,12 +39,12 @@ public class SlingExtensionResourcemergerIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addBootFeature("sling-extension-resourcemerger")
+            addSlingFeatures("sling-extension-resourcemerger")
         );
     }
 
     @Test
-    public void testOrgApacheSlingQuery() {
+    public void testOrgApacheSlingResourcemerger() {
         final Bundle bundle = findBundle("org.apache.sling.resourcemerger");
         assertNotNull(bundle);
         assertEquals(Bundle.ACTIVE, bundle.getState());

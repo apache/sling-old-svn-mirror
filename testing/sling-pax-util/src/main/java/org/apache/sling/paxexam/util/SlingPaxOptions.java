@@ -55,6 +55,7 @@ public class SlingPaxOptions {
     public static final String PROP_TELNET_PORT = "osgi.shell.telnet.port";
     public static final String PROP_HTTP_PORT = "org.osgi.service.http.port";
     public static final String DEFAULT_RUN_MODES = "jackrabbit";
+    private static String [] ignoredBundlePrefixes;
     
     private static int getAvailablePort() {
         int result = Integer.MIN_VALUE;
@@ -65,6 +66,16 @@ public class SlingPaxOptions {
         } catch(IOException ignore) {
         }
         return result;
+    }
+    
+    /** When reading bundle lists, ignore bundles which have symbolic names
+     *  starting with one of the supplied prefixes */
+    public static void setIgnoredBundles(String ... symbolicNamePrefix) {
+        if(symbolicNamePrefix == null || symbolicNamePrefix.length == 0) {
+            ignoredBundlePrefixes = new String[] {};
+        } else {
+            ignoredBundlePrefixes = symbolicNamePrefix;
+        }
     }
     
     /** Get run modes to use for our tests, as set by the sling.run.modes property */
@@ -96,6 +107,20 @@ public class SlingPaxOptions {
         );
     }
     
+    private static boolean ignore(Bundle b) {
+        boolean result = false;
+        if(ignoredBundlePrefixes != null) {
+            final String sn = b.getArtifactId();
+            for(String prefix : ignoredBundlePrefixes) {
+                if(sn.startsWith(prefix)) {
+                    result = true;
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+    
     public static CompositeOption slingBundleList(String groupId, String artifactId, String version, String type, String classifier) {
         
         final DefaultCompositeOption result = new DefaultCompositeOption();
@@ -121,12 +146,18 @@ public class SlingPaxOptions {
             tmp = dumpMvnUrlToTmpFile(paxUrl);
             final BundleList list = BundleListUtils.readBundleList(tmp);
             int counter = 0;
+            int ignored = 0;
             for(StartLevel s : list.getStartLevels()) {
                 
                 // Start level < 0 means bootstrap in our bundle lists
                 final int startLevel = s.getStartLevel() < 0 ? 1 : s.getStartLevel();
                 
                 for(Bundle b : s.getBundles()) {
+                    if(ignore(b)) {
+                        log.info("Bundle ignored due to setIgnoredBundles: {}", b);
+                        ignored++;
+                        continue;
+                    }
                     counter++;
                     
                     // TODO need better fragment detection
@@ -163,7 +194,7 @@ public class SlingPaxOptions {
                     log.info("Bundle added: {}/{}/{}", new Object [] { b.getGroupId(), b.getArtifactId(), b.getVersion()});
                 }
             }
-            log.info("Got {} bundles from {}", counter, paxUrl);
+            log.info("Got {} bundles ({} ignored) from {}", new Object[] { counter, ignored, paxUrl });
         } catch(Exception e) {
             throw new RuntimeException("Error getting bundle list " + paxUrl, e);
         } finally {

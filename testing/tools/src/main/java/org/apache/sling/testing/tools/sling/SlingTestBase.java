@@ -83,11 +83,11 @@ public class SlingTestBase implements SlingInstance {
 
 
         final String configuredUrl = systemProperties.getProperty(TEST_SERVER_URL_PROP, systemProperties.getProperty("launchpad.http.server.url"));
-        if(configuredUrl != null) {
+        if(configuredUrl != null && configuredUrl.trim().length() > 0) {
             slingTestState.setServerBaseUrl(configuredUrl);
             slingTestState.setServerStarted(true);
         } else {
-            synchronized(slingTestState) {
+            synchronized(this.slingTestState) {
                 try {
                     if(slingTestState.getJarExecutor() == null) {
                         slingTestState.setJarExecutor(new JarExecutor(systemProperties));

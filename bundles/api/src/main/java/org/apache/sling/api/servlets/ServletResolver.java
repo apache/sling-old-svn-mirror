@@ -18,6 +18,7 @@
  */
 package org.apache.sling.api.servlets;
 
+import javax.annotation.Nonnull;
 import javax.servlet.Servlet;
 
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -62,7 +63,7 @@ public interface ServletResolver {
      *             request or if no servlet could be resolved to handle the
      *             request.
      */
-    Servlet resolveServlet(SlingHttpServletRequest request);
+    @Nonnull Servlet resolveServlet(@Nonnull SlingHttpServletRequest request);
 
     /**
      * Resolves a <code>javax.servlet.Servlet</code> whose
@@ -88,9 +89,9 @@ public interface ServletResolver {
      *             while trying to find an appropriate servlet to handle the
      *             request or if no servlet could be resolved to handle the
      *             request.
-     * @since 2.1
+     * @since 2.1 (Sling API Bundle 2.1.0)
      */
-    Servlet resolveServlet(Resource resource, String scriptName);
+    @Nonnull Servlet resolveServlet(@Nonnull Resource resource, @Nonnull String scriptName);
 
     /**
      * Resolves a <code>javax.servlet.Servlet</code> whose
@@ -115,8 +116,8 @@ public interface ServletResolver {
      *             while trying to find an appropriate servlet to handle the
      *             request or if no servlet could be resolved to handle the
      *             request.
-     * @since 2.1
+     * @since 2.1 (Sling API Bundle 2.1.0)
      */
-    Servlet resolveServlet(ResourceResolver resolver, String scriptName);
+    @Nonnull Servlet resolveServlet(@Nonnull ResourceResolver resolver, @Nonnull String scriptName);
 
 }

@@ -27,10 +27,16 @@ import org.apache.sling.ide.transport.ResourceProxy;
 public class ResourceAndInfo {
     private final ResourceProxy resource;
     private final FileInfo info;
+    private final boolean onlyWhenMissing;
 
     public ResourceAndInfo(ResourceProxy resource, FileInfo info) {
+        this(resource, info, false);
+    }
+
+    public ResourceAndInfo(ResourceProxy resource, FileInfo info, boolean onlyIfMissing) {
         this.resource = resource;
         this.info = info;
+        this.onlyWhenMissing = onlyIfMissing;
     }
 
     public ResourceProxy getResource() {
@@ -39,5 +45,9 @@ public class ResourceAndInfo {
 
     public FileInfo getInfo() {
         return info;
+    }
+
+    public boolean isOnlyWhenMissing() {
+        return onlyWhenMissing;
     }
 }

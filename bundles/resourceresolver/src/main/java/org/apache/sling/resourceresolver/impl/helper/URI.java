@@ -36,17 +36,17 @@ import org.apache.sling.api.SlingException;
  * This class has the purpose of supportting of parsing a URI reference to
  * extend any specific protocols, the character encoding of the protocol to be
  * transported and the charset of the document.
- * <p>
+ * 
  * A URI is always in an "escaped" form, since escaping or unescaping a
  * completed URI might change its semantics.
- * <p>
+ * 
  * Implementers should be careful not to escape or unescape the same string more
  * than once, since unescaping an already unescaped string might lead to
  * misinterpreting a percent data character as another escaped character, or
  * vice versa in the case of escaping an already escaped string.
- * <p>
+ * 
  * In order to avoid these problems, data types used as follows:
- * <p>
+ * 
  * <blockquote>
  *
  * <pre>
@@ -56,12 +56,12 @@ import org.apache.sling.api.SlingException;
  * </pre>
  *
  * </blockquote>
- * <p>
+ * 
  * So, a URI is a sequence of characters as an array of a char type, which is
  * not always represented as a sequence of octets as an array of byte.
- * <p>
+ * 
  * URI Syntactic Components
- * <p>
+ * 
  * <blockquote>
  *
  * <pre>
@@ -76,7 +76,7 @@ import org.apache.sling.api.SlingException;
  * </pre>
  *
  * </blockquote>
- * <p>
+ * 
  * The following examples illustrate URI that are in common use.
  *
  * <pre>
@@ -96,9 +96,9 @@ import org.apache.sling.api.SlingException;
  *
  * Please, notice that there are many modifications from URL(RFC 1738) and
  * relative URL(RFC 1808).
- * <p>
+ * 
  * <b>The expressions for a URI</b>
- * <p>
+ * 
  *
  * <pre>
  * For escaped URI forms
@@ -106,12 +106,12 @@ import org.apache.sling.api.SlingException;
  *  - char[] getRawXxx() // method
  *  - String getEscapedXxx() // method
  *  - String toString() // method
- * <p>
+ * 
  * For unescaped URI forms
  *  - URI(String) // constructor
  *  - String getXXX() // method
  * </pre>
- * <p>
+ * 
  * This class is a slightly modified version of the URI class distributed with
  * Http Client 3.1. The changes involve removing dependencies to other Http
  * Client classes and the Commons Codec library. To this avail the following
@@ -171,7 +171,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * Construct a general URI from the given components.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -181,7 +181,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      * It's for absolute URI = &lt;scheme&gt;:&lt;scheme-specific-part&gt;#
      * &lt;fragment&gt;.
      *
@@ -214,7 +214,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * Construct a general URI from the given components.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -225,7 +225,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      * It's for absolute URI = &lt;scheme&gt;:&lt;path&gt;?&lt;query&gt;#&lt;
      * fragment&gt; and relative URI = &lt;path&gt;?&lt;query&gt;#&lt;fragment
      * &gt;.
@@ -374,7 +374,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * Construct a general URI with the given relative URI.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -383,11 +383,11 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      * Resolving Relative References to Absolute Form. <strong>Examples of
      * Resolving Relative URI References</strong> Within an object with a
      * well-defined base URI of
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -395,9 +395,9 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      * the relative URI would be resolved as follows: Normal Examples
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -426,7 +426,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      * Some URI schemes do not allow a hierarchical syntax matching the
      * <hier_part> syntax, and thus cannot use relative references.
      *
@@ -646,7 +646,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * BitSet for digit.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -654,7 +654,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet digit = new BitSet(256);
     // Static initializer for digit
@@ -666,7 +666,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * BitSet for alpha.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -674,7 +674,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet alpha = new BitSet(256);
     // Static initializer for alpha
@@ -689,7 +689,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * BitSet for alphanum (join of alpha &amp; digit).
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -697,7 +697,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet alphanum = new BitSet(256);
     // Static initializer for alphanum
@@ -708,7 +708,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * BitSet for hex.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -717,7 +717,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet hex = new BitSet(256);
     // Static initializer for hex
@@ -733,7 +733,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * BitSet for escaped.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -741,7 +741,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet escaped = new BitSet(256);
     // Static initializer for escaped
@@ -752,7 +752,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * BitSet for mark.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -760,7 +760,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet mark = new BitSet(256);
     // Static initializer for mark
@@ -779,7 +779,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
     /**
      * Data characters that are allowed in a URI but do not have a reserved
      * purpose are called unreserved.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -787,7 +787,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet unreserved = new BitSet(256);
     // Static initializer for unreserved
@@ -798,7 +798,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * BitSet for reserved.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -806,7 +806,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet reserved = new BitSet(256);
     // Static initializer for reserved
@@ -825,7 +825,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * BitSet for uric.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -833,7 +833,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet uric = new BitSet(256);
     // Static initializer for uric
@@ -845,7 +845,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * BitSet for fragment (alias for uric).
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -853,13 +853,13 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet fragment = uric;
 
     /**
      * BitSet for query (alias for uric).
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -867,13 +867,13 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet query = uric;
 
     /**
      * BitSet for pchar.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -881,7 +881,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet pchar = new BitSet(256);
     // Static initializer for pchar
@@ -899,7 +899,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * BitSet for param (alias for pchar).
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -907,13 +907,13 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet param = pchar;
 
     /**
      * BitSet for segment.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -921,7 +921,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet segment = new BitSet(256);
     // Static initializer for segment
@@ -933,7 +933,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * BitSet for path segments.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -941,7 +941,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet path_segments = new BitSet(256);
     // Static initializer for path_segments
@@ -952,7 +952,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * URI absolute path.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -960,7 +960,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet abs_path = new BitSet(256);
     // Static initializer for abs_path
@@ -971,7 +971,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * URI bitset for encoding typical non-slash characters.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -980,7 +980,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet uric_no_slash = new BitSet(256);
     // Static initializer for uric_no_slash
@@ -1000,7 +1000,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * URI bitset that combines uric_no_slash and uric.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1008,7 +1008,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet opaque_part = new BitSet(256);
     // Static initializer for opaque_part
@@ -1020,7 +1020,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * URI bitset that combines absolute path and opaque part.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1028,7 +1028,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet path = new BitSet(256);
     // Static initializer for path
@@ -1044,7 +1044,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * Bitset that combines digit and dot fo IPv$address.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1052,7 +1052,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet IPv4address = new BitSet(256);
     // Static initializer for IPv4address
@@ -1063,7 +1063,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * RFC 2373.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1071,7 +1071,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet IPv6address = new BitSet(256);
     // Static initializer for IPv6address reference
@@ -1083,7 +1083,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * RFC 2732, 2373.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1091,7 +1091,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet IPv6reference = new BitSet(256);
     // Static initializer for IPv6reference
@@ -1103,7 +1103,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * BitSet for toplabel.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1111,7 +1111,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet toplabel = new BitSet(256);
     // Static initializer for toplabel
@@ -1122,7 +1122,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * BitSet for domainlabel.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1130,13 +1130,13 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet domainlabel = toplabel;
 
     /**
      * BitSet for hostname.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1144,7 +1144,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet hostname = new BitSet(256);
     // Static initializer for hostname
@@ -1156,7 +1156,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * BitSet for host.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1164,7 +1164,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet host = new BitSet(256);
     // Static initializer for host
@@ -1176,7 +1176,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * BitSet for hostport.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1184,7 +1184,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet hostport = new BitSet(256);
     // Static initializer for hostport
@@ -1196,7 +1196,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * Bitset for userinfo.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1205,7 +1205,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet userinfo = new BitSet(256);
     // Static initializer for userinfo
@@ -1237,7 +1237,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * Bitset for server.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1245,7 +1245,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet server = new BitSet(256);
     // Static initializer for server
@@ -1257,7 +1257,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * BitSet for reg_name.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1265,7 +1265,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet reg_name = new BitSet(256);
     // Static initializer for reg_name
@@ -1284,7 +1284,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * BitSet for authority.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1292,7 +1292,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet authority = new BitSet(256);
     // Static initializer for authority
@@ -1303,7 +1303,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * BitSet for scheme.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1311,7 +1311,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet scheme = new BitSet(256);
     // Static initializer for scheme
@@ -1325,7 +1325,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * BitSet for rel_segment.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1333,7 +1333,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet rel_segment = new BitSet(256);
     // Static initializer for rel_segment
@@ -1351,7 +1351,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * BitSet for rel_path.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1359,7 +1359,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet rel_path = new BitSet(256);
     // Static initializer for rel_path
@@ -1370,7 +1370,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * BitSet for net_path.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1378,7 +1378,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet net_path = new BitSet(256);
     // Static initializer for net_path
@@ -1390,7 +1390,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * BitSet for hier_part.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1398,7 +1398,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet hier_part = new BitSet(256);
     // Static initializer for hier_part
@@ -1411,7 +1411,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * BitSet for relativeURI.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1419,7 +1419,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet relativeURI = new BitSet(256);
     // Static initializer for relativeURI
@@ -1433,7 +1433,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * BitSet for absoluteURI.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1441,7 +1441,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet absoluteURI = new BitSet(256);
     // Static initializer for absoluteURI
@@ -1454,7 +1454,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * BitSet for URI-reference.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1462,7 +1462,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      */
     protected static final BitSet URI_reference = new BitSet(256);
     // Static initializer for URI_reference
@@ -1742,7 +1742,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
     /**
      * Encodes URI string. This is a two mapping, one from original characters
      * to octets, and subsequently a second from octets to URI characters:
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1750,22 +1750,22 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      * An escaped octet is encoded as a character triplet, consisting of the
      * percent character "%" followed by the two hexadecimal digits representing
      * the octet code. For example, "%20" is the escaped encoding for the
      * US-ASCII space character.
-     * <p>
+     * 
      * Conversion from the local filesystem character set to UTF-8 will normally
      * involve a two step process. First convert the local character set to the
      * UCS; then convert the UCS to UTF-8. The first step in the process can be
      * performed by maintaining a mapping table that includes the local
      * character set code and the corresponding UCS code. The next step is to
      * convert the UCS character code to the UTF-8 encoding.
-     * <p>
+     * 
      * Mapping between vendor codepages can be done in a very similar manner as
      * described above.
-     * <p>
+     * 
      * The only time escape encodings can allowedly be made is when a URI is
      * being created from its component parts. The escape and validate methods
      * are internally performed within this method.
@@ -1794,7 +1794,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * Decodes URI encoded string. This is a two mapping, one from URI
      * characters to octets, and subsequently a second from octets to original
      * characters:
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1802,19 +1802,19 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      * A URI must be separated into its components before the escaped characters
      * within those components can be allowedly decoded.
-     * <p>
+     * 
      * Notice that there is a chance that URI characters that are non UTF-8 may
      * be parsed as valid UTF-8. A recent non-scientific analysis found that EUC
      * encoded Japanese words had a 2.7% false reading; SJIS had a 0.0005% false
      * reading; other encoding such as ASCII or KOI-8 have a 0% false reading.
-     * <p>
+     * 
      * The percent "%" character always has the reserved purpose of being the
      * escape indicator, it must be escaped as "%25" in order to be used as data
      * within a URI.
-     * <p>
+     * 
      * The unescape method is internally performed within this method.
      *
      * @param component the URI character sequence
@@ -1836,7 +1836,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * Decodes URI encoded string. This is a two mapping, one from URI
      * characters to octets, and subsequently a second from octets to original
      * characters:
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1844,19 +1844,19 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      * A URI must be separated into its components before the escaped characters
      * within those components can be allowedly decoded.
-     * <p>
+     * 
      * Notice that there is a chance that URI characters that are non UTF-8 may
      * be parsed as valid UTF-8. A recent non-scientific analysis found that EUC
      * encoded Japanese words had a 2.7% false reading; SJIS had a 0.0005% false
      * reading; other encoding such as ASCII or KOI-8 have a 0% false reading.
-     * <p>
+     * 
      * The percent "%" character always has the reserved purpose of being the
      * escape indicator, it must be escaped as "%25" in order to be used as data
      * within a URI.
-     * <p>
+     * 
      * The unescape method is internally performed within this method.
      *
      * @param component the URI character sequence
@@ -1916,7 +1916,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * Validate the URI characters within a specific component. The component
      * must be performed after escape encoding. Or it doesn't include escaped
      * characters.
-     * <p>
+     * 
      * It's not that much strict, generous. The strict validation might be
      * performed before being called this method.
      *
@@ -1945,10 +1945,10 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * In order to avoid any possilbity of conflict with non-ASCII characters,
      * Parse a URI reference as a <code>String</code> with the character
      * encoding of the local system or the document.
-     * <p>
+     * 
      * The following line is the regular expression for breaking-down a URI
      * reference into its components.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1957,11 +1957,11 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      * For example, matching the above expression to
      * http://jakarta.apache.org/ietf/uri/#Related results in the following
      * subexpression matches:
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -1977,7 +1977,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      *
      * @param original the original character sequence
      * @param escaped <code>true</code> if <code>original</code> is escaped
@@ -2035,9 +2035,9 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
         }
 
         /*
-         * <p><blockquote><pre>
+         * <blockquote><pre>
          * @@@@@@@@ ^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?
-         * </pre></blockquote><p>
+         * </pre></blockquote>
          */
         int at = indexFirstOf(tmp, isStartedFromPath ? "/?#" : ":/?#", from);
         if (at == -1) {
@@ -2045,9 +2045,9 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
         }
 
         /*
-         * Parse the scheme. <p><blockquote><pre> scheme = $2 = http
+         * Parse the scheme. <blockquote><pre> scheme = $2 = http
          * @ ^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?
-         * </pre></blockquote><p>
+         * </pre></blockquote>
          */
         if (at > 0 && at < length && tmp.charAt(at) == ':') {
             char[] target = tmp.substring(0, at).toLowerCase().toCharArray();
@@ -2060,10 +2060,10 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
         }
 
         /*
-         * Parse the authority component. <p><blockquote><pre> authority = $4 =
+         * Parse the authority component. <blockquote><pre> authority = $4 =
          * jakarta.apache.org
          * @@ ^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?
-         * </pre></blockquote><p>
+         * </pre></blockquote>
          */
         // Reset flags
         _is_net_path = _is_abs_path = _is_rel_path = _is_hier_part = false;
@@ -2091,9 +2091,9 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
         }
 
         /*
-         * Parse the path component. <p><blockquote><pre> path = $5 = /ietf/uri/
+         * Parse the path component. <blockquote><pre> path = $5 = /ietf/uri/
          * @@@@@@ ^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?
-         * </pre></blockquote><p>
+         * </pre></blockquote>
          */
         if (from < length) {
             // rel_path = rel_segment [ abs_path ]
@@ -2136,10 +2136,10 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
         String charset = getProtocolCharset();
 
         /*
-         * Parse the query component. <p><blockquote><pre> query = $7 =
+         * Parse the query component. <blockquote><pre> query = $7 =
          * <undefined>
          * @@@@@@@@@ ^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?
-         * </pre></blockquote><p>
+         * </pre></blockquote>
          */
         if (0 <= at && at + 1 < length && tmp.charAt(at) == '?') {
             int next = tmp.indexOf('#', at + 1);
@@ -2159,10 +2159,10 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
         }
 
         /*
-         * Parse the fragment component. <p><blockquote><pre> fragment = $9 =
+         * Parse the fragment component. <blockquote><pre> fragment = $9 =
          * Related
          * @@@@@@@@ ^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?
-         * </pre></blockquote><p>
+         * </pre></blockquote>
          */
         if (0 <= at && at + 1 <= length && tmp.charAt(at) == '#') {
             if (at + 1 == length) { // empty fragment
@@ -2556,7 +2556,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * Set the default charset of the protocol.
-     * <p>
+     * 
      * The character set used to store files SHALL remain a local decision and
      * MAY depend on the capability of local operating systems. Prior to the
      * exchange of URIs they SHOULD be converted into a ISO/IEC 10646 format and
@@ -2564,10 +2564,10 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * URIs, will still allow backward compatibility with older systems because
      * the code set positions for ASCII characters are identical to the one byte
      * sequence in UTF-8.
-     * <p>
+     * 
      * An individual URI scheme may require a single charset, define a default
      * charset, or provide a way to indicate the charset used.
-     * <p>
+     * 
      * Always all the time, the setter method is always succeeded and throws
      * <code>DefaultCharsetChanged</code> exception. So API programmer must
      * follow the following way: <code><pre>
@@ -2601,10 +2601,10 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * Get the default charset of the protocol.
-     * <p>
+     * 
      * An individual URI scheme may require a single charset, define a default
      * charset, or provide a way to indicate the charset used.
-     * <p>
+     * 
      * To work globally either requires support of a number of character sets
      * and to be able to convert between them, or the use of a single preferred
      * character set. For support of global compatibility it is STRONGLY
@@ -2633,13 +2633,13 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * Set the default charset of the document.
-     * <p>
+     * 
      * Notice that it will be possible to contain mixed characters (e.g.
      * ftp://host/KoreanNamespace/ChineseResource). To handle the Bi-directional
      * display of these character sets, the protocol charset could be simply
      * used again. Because it's not yet implemented that the insertion of BIDI
      * control characters at different points during composition is extracted.
-     * <p>
+     * 
      * Always all the time, the setter method is always succeeded and throws
      * <code>DefaultCharsetChanged</code> exception. So API programmer must
      * follow the following way: <code><pre>
@@ -2723,7 +2723,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
     /**
      * Set the authority. It can be one type of server, hostport, hostname,
      * IPv4address, IPv6reference and reg_name.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -2731,7 +2731,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      *
      * @param escapedAuthority the raw escaped authority
      * @throws URIException If {@link #parseAuthority(java.lang.String,boolean)}
@@ -2828,7 +2828,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * Get the host.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -2836,7 +2836,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      *
      * @return the host
      * @see #getAuthority
@@ -2847,7 +2847,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * Get the host.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -2855,7 +2855,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      *
      * @return the host
      * @throws URIException If {@link #decode} fails
@@ -3127,7 +3127,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * Get the raw-escaped path.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -3135,7 +3135,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      *
      * @return the raw-escaped path
      */
@@ -3145,7 +3145,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * Get the escaped path.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -3155,7 +3155,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      *
      * @return the escaped path string
      */
@@ -3166,7 +3166,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * Get the path.
-     * <p>
+     * 
      * <blockquote>
      *
      * <pre>
@@ -3174,7 +3174,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * </pre>
      *
      * </blockquote>
-     * <p>
+     * 
      *
      * @return the path string
      * @throws URIException If {@link #decode} fails.
@@ -3320,11 +3320,11 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * Set the query.
-     * <p>
+     * 
      * When a query string is not misunderstood the reserved special characters
      * ("&amp;", "=", "+", ",", and "$") within a query component, it is
      * recommended to use in encoding the whole query with this method.
-     * <p>
+     * 
      * The additional APIs for the special purpose using by the reserved special
      * characters used in each protocol are implemented in each protocol classes
      * inherited from <code>URI</code>. So refer to the same-named APIs
@@ -3429,13 +3429,13 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * Get the raw-escaped fragment.
-     * <p>
+     * 
      * The optional fragment identifier is not part of a URI, but is often used
      * in conjunction with a URI.
-     * <p>
+     * 
      * The format and interpretation of fragment identifiers is dependent on the
      * media type [RFC2046] of the retrieval result.
-     * <p>
+     * 
      * A fragment identifier is only meaningful when a URI reference is intended
      * for retrieval and the result of that retrieval is a document for which
      * the identified fragment is consistently defined.
@@ -3489,7 +3489,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * Normalize the given hier path part.
-     * <p>
+     * 
      * Algorithm taken from URI reference parser at
      * http://www.apache.org/~fielding/uri/rev-2002/issues.html.
      *
@@ -3736,7 +3736,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * Create and return a copy of this object, the URI-reference containing the
      * userinfo component. Notice that the whole URI-reference including the
      * userinfo component counld not be gotten as a <code>String</code>.
-     * <p>
+     * 
      * To copy the identical <code>URI</code> object including the userinfo
      * component, it should be used.
      *
@@ -3778,12 +3778,12 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
     /**
      * It can be gotten the URI character sequence. It's raw-escaped. For the
      * purpose of the protocol to be transported, it will be useful.
-     * <p>
+     * 
      * It is clearly unwise to use a URL that contains a password which is
      * intended to be secret. In particular, the use of a password within the
      * 'userinfo' component of a URL is strongly disrecommended except in those
      * rare cases where the 'password' parameter is intended to be public.
-     * <p>
+     * 
      * When you want to get each part of the userinfo, you need to use the
      * specific methods in the specific URL. It depends on the specific URL.
      *
@@ -3856,11 +3856,11 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
 
     /**
      * Get the escaped URI string.
-     * <p>
+     * 
      * On the document, the URI-reference form is only used without the userinfo
      * component like http://jakarta.apache.org/ by the security reason. But the
      * URI-reference form with the userinfo component could be parsed.
-     * <p>
+     * 
      * In other words, this URI and any its subclasses must not expose the
      * URI-reference expression with the userinfo component like
      * http://user:password@hostport/restricted_zone.<br>
@@ -3942,7 +3942,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
     /**
      * A mapping to determine the (somewhat arbitrarily) preferred charset for a
      * given locale. Supports all locales recognized in JDK 1.1.
-     * <p>
+     * 
      * The distribution of this class is Servlets.com. It was originally written
      * by Jason Hunter [jhunter at acm.org] and used by with permission.
      */

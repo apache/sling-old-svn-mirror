@@ -20,7 +20,7 @@
 package org.apache.sling.query.predicate;
 
 import org.apache.sling.query.api.Predicate;
-import org.apache.sling.query.api.TreeProvider;
+import org.apache.sling.query.api.internal.TreeProvider;
 
 public class ParentPredicate<T> implements Predicate<T> {
 

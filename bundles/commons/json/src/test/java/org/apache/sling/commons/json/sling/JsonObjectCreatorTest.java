@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -29,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import org.apache.sling.api.resource.Resource;
@@ -63,6 +65,7 @@ public class JsonObjectCreatorTest {
 
     private static final Object SAME = new Object();
     private static final int NCHILDREN = 3;
+    private static final String ECMA_DATE_FORMAT = "EEE MMM dd yyyy HH:mm:ss 'GMT'Z";
 
     @Before
     public void setup() {
@@ -151,11 +154,25 @@ public class JsonObjectCreatorTest {
     @Test
     public void testCalendar() throws JSONException {
         final Calendar nowCalendar = Calendar.getInstance();
-        final String ECMA_DATE_FORMAT = "EEE MMM dd yyyy HH:mm:ss 'GMT'Z";
         final String nowString = new SimpleDateFormat(ECMA_DATE_FORMAT, JsonObjectCreator.DATE_FORMAT_LOCALE).format(nowCalendar.getTime());
         assertGet(nowCalendar, nowString);
     }
 
+    @Test
+    public void testCalendarTimezones() throws JSONException {
+        final int[] offsets = { -14400000, -4200000, 14400000, 4300000 };
+        for (int offset : offsets) {
+            for (String tzId : TimeZone.getAvailableIDs(offset)) {
+                final TimeZone tz = TimeZone.getTimeZone(tzId);
+                final Calendar cal = Calendar.getInstance(tz);
+                DateFormat fmt = new SimpleDateFormat(ECMA_DATE_FORMAT, Locale.ENGLISH);
+                fmt.setTimeZone(tz);
+                final String nowString = fmt.format(cal.getTime());
+                assertGet(cal, nowString);
+            }
+        }
+    }
+    
     @Test
     public void testStream() throws JSONException {
         final byte [] bytes = "Hello there".getBytes();

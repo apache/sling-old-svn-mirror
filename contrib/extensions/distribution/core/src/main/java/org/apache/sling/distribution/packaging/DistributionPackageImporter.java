@@ -46,10 +46,10 @@ public interface DistributionPackageImporter {
      *
      * @param resourceResolver - the resource resolver used to read the package
      * @param stream           the {@link InputStream} of the package to be converted and installed
-     * @return a {@link DistributionPackage} if the stream has been successfully converted and installed
+     * @return a {@link DistributionPackageInfo} if the stream has been successfully converted and installed
      * @throws DistributionPackageImportException when the stream cannot be read as a {@link DistributionPackage} and installed
      */
-    @CheckForNull
-    DistributionPackage importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException;
+    @Nonnull
+    DistributionPackageInfo importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException;
 
 }

@@ -26,7 +26,7 @@ package org.apache.sling.api.resource;
  * , and <code>{@link ResourceResolver#clone(java.util.Map)}</code> if a resource
  * resolver cannot be created because the credential data is not valid.
  *
- * @since 2.1
+ * @since 2.1  (Sling API Bundle 2.1.0)
  */
 public class LoginException extends Exception {
 

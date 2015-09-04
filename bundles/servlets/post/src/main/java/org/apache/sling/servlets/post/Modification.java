@@ -126,6 +126,10 @@ public class Modification {
         return onChange(ModificationType.CHECKOUT, path, null);
     }
 
+    public static Modification onRestore(String path, String version) {
+        return onChange(ModificationType.RESTORE, path, version);
+    }
+
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("Modification[type=").append(type).append(", source=").append(source);

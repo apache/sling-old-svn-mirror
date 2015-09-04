@@ -28,7 +28,7 @@ public interface BindingsValuesProvider {
 
     /** The name of the multi-value service property that defines the context(s) to which 
      *  a BindingsValuesProvider applies. This service property is optional, if not set
-     *  the default value is {@link @DEFAULT_CONTEXT}  
+     *  the default value is {@link #DEFAULT_CONTEXT}
      */
     String CONTEXT = "context";
     

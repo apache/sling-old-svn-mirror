@@ -33,7 +33,7 @@
  * {@link org.apache.sling.jcr.base.NamespaceMappingSupport} abstract class
  * and said repository manager.
  */
-@Version("2.3")
+@Version("2.4")
 package org.apache.sling.jcr.base;
 
 import aQute.bnd.annotation.Version;

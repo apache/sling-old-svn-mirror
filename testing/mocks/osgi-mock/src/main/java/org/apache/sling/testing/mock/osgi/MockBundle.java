@@ -18,26 +18,36 @@
  */
 package org.apache.sling.testing.mock.osgi;
 
+import java.io.File;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.security.cert.X509Certificate;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 
+import com.google.common.collect.ImmutableMap;
+
 /**
  * Mock {@link Bundle} implementation.
  */
-class MockBundle implements Bundle {
+public final class MockBundle implements Bundle {
 
     private static volatile long bundleCounter;
 
     private final long bundleId;
     private final BundleContext bundleContext;
+    private Map<String, String> headers = ImmutableMap.<String, String>of();
+    private String symbolicName = "mock-bundle";
+    private long lastModified;
 
     /**
      * Constructor
@@ -59,8 +69,10 @@ class MockBundle implements Bundle {
 
     @Override
     public URL getEntry(final String name) {
-        // try to load resource from classpath
-        return getClass().getResource(name);
+        
+        String nameToQuery = name.startsWith("/") ? name : "/" + name;
+
+        return getClass().getResource(nameToQuery);
     }
 
     @Override
@@ -68,29 +80,102 @@ class MockBundle implements Bundle {
         return Bundle.ACTIVE;
     }
 
-    // --- unsupported operations ---
     @Override
-    public Enumeration<?> findEntries(final String path, final String filePattern, final boolean recurse) {
-        throw new UnsupportedOperationException();
+    public Dictionary<String, String> getHeaders() {
+        return MapUtil.toDictionary(headers);
     }
 
     @Override
-    public Enumeration<?> getEntryPaths(final String path) {
-        throw new UnsupportedOperationException();
+    public Dictionary<String, String> getHeaders(final String locale) {
+        // localziation not supported, always return default headers
+        return getHeaders();
+    }
+    
+    /**
+     * Set headers for mock bundle
+     * @param value Header map
+     */
+    public void setHeaders(Map<String, String> value) {
+        this.headers = value;
     }
 
     @Override
-    public Dictionary<?, ?> getHeaders() {
-        throw new UnsupportedOperationException();
+    public String getSymbolicName() {
+        return this.symbolicName;
     }
 
-    @Override
-    public Dictionary<?, ?> getHeaders(final String locale) {
-        throw new UnsupportedOperationException();
+    /**
+     * Set symbolic name for mock bundle
+     * @param value Symbolic name
+     */
+    public void setSymbolicName(String value) {
+        this.symbolicName = value;
     }
 
     @Override
     public long getLastModified() {
+        return lastModified;
+    }
+    
+    /**
+     * Set the last modified value for the mock bundle 
+     * @param lastModified last modified
+     */
+    public void setLastModified(long lastModified) {
+        this.lastModified = lastModified;
+    }
+    
+    @Override
+    public Enumeration<String> getEntryPaths(final String path) {
+        
+        String queryPath = path.startsWith("/") ? path : "/" + path;
+        
+        URL res = getClass().getResource(queryPath);
+        if ( res == null ) {
+            return null;
+        }
+        
+        Vector<String> matching = new Vector<String>();
+        
+        try {
+            File file = new File(res.toURI());
+            if ( file.isDirectory()) {
+                for ( File entry : file.listFiles() ) {
+                    String name = entry.isDirectory() ? entry.getName() + "/" : entry.getName();
+                    matching.add(relativeWithTrailingSlash(queryPath.substring(1, queryPath.length())) + name);
+                }
+            }
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Failed opening file from " + res , e);
+        } catch ( RuntimeException e) {
+            throw new RuntimeException("Failed opening file from " + res , e);
+        }
+        
+        if ( matching.isEmpty() ) {
+            return null;
+        }
+        
+        return matching.elements();
+    }
+
+    private String relativeWithTrailingSlash(String queryPath) {
+        
+        // make relative
+        if ( queryPath.startsWith("/")) {
+            queryPath = queryPath.substring(1, queryPath.length());
+        }
+        
+        // remove trailing slash
+        if ( !queryPath.isEmpty() && !queryPath.endsWith("/") ) {
+            queryPath = queryPath +"/";
+        }
+        
+        return queryPath;
+    }
+    
+    // --- unsupported operations ---
+    @Override
+    public Enumeration<URL> findEntries(final String path, final String filePattern, final boolean recurse) {
         throw new UnsupportedOperationException();
     }
 
@@ -110,17 +195,12 @@ class MockBundle implements Bundle {
     }
 
     @Override
-    public Enumeration<?> getResources(final String name) {
+    public Enumeration<URL> getResources(final String name) {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public ServiceReference[] getServicesInUse() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getSymbolicName() {
         throw new UnsupportedOperationException();
     }
 
@@ -170,12 +250,27 @@ class MockBundle implements Bundle {
     }
 
     // this is part of org.osgi 4.2.0
-    public Map getSignerCertificates(final int signersType) {
+    public Map<X509Certificate, List<X509Certificate>> getSignerCertificates(final int signersType) {
         throw new UnsupportedOperationException();
     }
 
     // this is part of org.osgi 4.2.0
     public Version getVersion() {
+        throw new UnsupportedOperationException();
+    }
+
+    // this is part of org.osgi.core 6.0.0
+    public int compareTo(Bundle o) {
+        throw new UnsupportedOperationException();
+    }
+
+    // this is part of org.osgi.core 6.0.0
+    public <A> A adapt(Class<A> type) {
+        throw new UnsupportedOperationException();
+    }
+
+    // this is part of org.osgi.core 6.0.0
+    public File getDataFile(String filename) {
         throw new UnsupportedOperationException();
     }
 

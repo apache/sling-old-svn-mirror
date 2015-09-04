@@ -41,14 +41,19 @@ public class CachedAnnouncement {
 
     private long backoffIntervalSeconds = -1;
 
-    private final long configuredHeartbeatTimeout;
-
-    private final long configuredHeartbeatInterval;
+    private final Config config;
     
     CachedAnnouncement(final Announcement announcement, final Config config) {
         this.announcement = announcement;
-        this.configuredHeartbeatTimeout = config.getHeartbeatTimeout();
-        this.configuredHeartbeatInterval = config.getHeartbeatInterval();
+        this.config = config;
+    }
+    
+    private long getConfiguredHeartbeatTimeout() {
+        return config.getHeartbeatTimeout();
+    }
+    
+    private long getConfiguredHeartbeatInterval() {
+        return config.getHeartbeatInterval();
     }
 
     public final boolean hasExpired() {
@@ -75,8 +80,8 @@ public class CachedAnnouncement {
     
     
     private final long getEffectiveHeartbeatTimeout() {
-        final long configuredGoodwill = configuredHeartbeatTimeout - configuredHeartbeatInterval;
-        return Math.max(configuredHeartbeatTimeout, backoffIntervalSeconds + configuredGoodwill);
+        final long configuredGoodwill = getConfiguredHeartbeatTimeout() - getConfiguredHeartbeatInterval();
+        return Math.max(getConfiguredHeartbeatTimeout(), backoffIntervalSeconds + configuredGoodwill);
     }
 
     /** Registers a heartbeat event, and returns the new resulting backoff interval -

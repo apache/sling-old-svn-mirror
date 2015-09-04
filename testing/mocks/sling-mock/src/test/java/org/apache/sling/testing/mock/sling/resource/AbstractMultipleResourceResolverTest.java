@@ -25,9 +25,11 @@ import static org.junit.Assert.assertNull;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.junit.Test;
+import org.osgi.framework.BundleContext;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -36,10 +38,11 @@ import com.google.common.collect.ImmutableMap;
  */
 public abstract class AbstractMultipleResourceResolverTest {
 
+    private final BundleContext bundleContext = MockOsgi.newBundleContext();
     protected abstract ResourceResolverType getResourceResolverType();
 
     protected ResourceResolverFactory newResourceResolerFactory() {
-        return MockSling.newResourceResolverFactory(getResourceResolverType());
+        return MockSling.newResourceResolverFactory(getResourceResolverType(), bundleContext);
     }
     
     @Test

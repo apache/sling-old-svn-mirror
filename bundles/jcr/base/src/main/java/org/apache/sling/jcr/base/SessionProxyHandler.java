@@ -36,7 +36,9 @@ import javax.jcr.Session;
  * This class is not really part of the API is not intended to be used
  * directly by consumers or implementors of this API. It is used internally
  * to support namespace mapping.
+ * @deprecated as of API version 2.4 (bundle version 2.3)
  */
+@Deprecated
 public class SessionProxyHandler  {
 
     /** The array of proxied interfaces. */
@@ -99,6 +101,7 @@ public class SessionProxyHandler  {
         /**
          * @see java.lang.reflect.InvocationHandler#invoke(java.lang.Object, java.lang.reflect.Method, java.lang.Object[])
          */
+        @Override
         public Object invoke(Object proxy, Method method, Object[] args)
         throws Throwable {
             if ( method.getName().equals("impersonate") && args != null && args.length == 1) {

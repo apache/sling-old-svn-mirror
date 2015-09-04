@@ -1,8 +1,25 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *	  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 /**
  * Removes the editor (toggles all displayfields/editables).
  */
 function removeEditor(row) {
     $(row).find(".loggers").toggle();
+	$(row).find(".logAdditive").toggle();
 	$(row).find(".logLevels").toggle();
 	$(row).find(".logFile").toggle();
 	$(row).find(".configureLink").toggle();
@@ -57,6 +74,22 @@ function addLogger(loggersElement, loggerName) {
 }
 
 /**
+ * Make checkbox for additive field
+ */
+function addAdditive(row) {
+	var additiveElement = $(row).find(".logAdditive");
+	var currentAdditivity = additiveElement.attr("data-currentAdditivity");
+	if(!currentAdditivity) {
+		// default additivity is false
+		currentAdditivity = "false";
+	}
+
+	var checked = currentAdditivity == "true" ? "checked" : "";
+	additiveElement.after('<input class="editElement ui-state-default" type="checkbox" name="logAdditive" value="true" '+ checked +' />')
+	additiveElement.toggle();
+}
+
+/**
  * Turns the logger elements into inputfields (with controls).
  */
 function addLoggers(row) {
@@ -103,6 +136,7 @@ function configureLogger(button) {
 	row.addClass("currentEditor");
 	// add the editables
     addLogLevelSelect(row);
+    addAdditive(row);
 	addLoggers(row);
     addLogFile(row);
     // add controls

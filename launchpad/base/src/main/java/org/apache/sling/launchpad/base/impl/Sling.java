@@ -192,6 +192,7 @@ public class Sling {
         this.logger = logger;
         this.resourceProvider = resourceProvider;
 
+        final long startedAt = System.currentTimeMillis();
         this.logger.log(Logger.LOG_INFO, "Starting Apache Sling");
 
         // read the default parameters
@@ -222,7 +223,7 @@ public class Sling {
                 init(tmpFramework);
             }
 
-            new DefaultStartupHandler(tmpFramework.getBundleContext(), logger, startupManager);
+            new DefaultStartupHandler(tmpFramework.getBundleContext(), logger, startupManager, startedAt);
 
             // finally start
             tmpFramework.start();
@@ -707,7 +708,7 @@ public class Sling {
      * object after the system bundle of the framework has been started and
      * before it is being stopped.
      */
-    protected final BundleContext getBundleContext() {
+    public final BundleContext getBundleContext() {
         return this.framework.getBundleContext();
     }
 

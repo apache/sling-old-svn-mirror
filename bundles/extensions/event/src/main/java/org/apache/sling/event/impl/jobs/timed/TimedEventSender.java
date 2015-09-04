@@ -86,7 +86,7 @@ import org.slf4j.LoggerFactory;
                  ResourceHelper.BUNDLE_EVENT_STARTED,
                  ResourceHelper.BUNDLE_EVENT_UPDATED})
 public class TimedEventSender
-    implements Job, TimedEventStatusProvider, EventHandler, TopologyEventListener {
+    implements Job, TimedEventStatusProvider, EventHandler, TopologyEventListener, Runnable {
 
     private static final String JOB_TOPIC = "topic";
 
@@ -126,12 +126,19 @@ public class TimedEventSender
 
     private final AtomicBoolean threadStarted = new AtomicBoolean(false);
 
+    /** A local queue for async handling of the topology events */
+    private final BlockingQueue<QueueItem> topologyEventQueue = new LinkedBlockingQueue<QueueItem>();
+
     /**
      * Activate this component.
      */
     @Activate
     protected void activate() {
         this.running = true;
+        final Thread thread = new Thread(this, "Apache Sling Timed Job Topology Listener Thread");
+        thread.setDaemon(true);
+
+        thread.start();
     }
 
     /**
@@ -141,6 +148,12 @@ public class TimedEventSender
     protected void deactivate() {
         this.running = false;
         this.stopScheduling();
+        try {
+            this.topologyEventQueue.put(new QueueItem());
+        } catch ( final InterruptedException ie) {
+            logger.warn("Thread got interrupted.", ie);
+            Thread.currentThread().interrupt();
+        }
     }
 
     private void stopScheduling() {
@@ -207,7 +220,7 @@ public class TimedEventSender
                     try {
                         resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
                         final Resource eventResource = resolver.getResource(path);
-                        if ( TimedEventReceiver.TIMED_EVENT_RESOURCE_TYPE.equals(eventResource.getResourceType()) ) {
+                        if ( eventResource != null && TimedEventReceiver.TIMED_EVENT_RESOURCE_TYPE.equals(eventResource.getResourceType()) ) {
                             final ReadResult result = this.readEvent(eventResource);
                             if ( result != null ) {
                                 if ( result.hasReadErrors ) {
@@ -256,9 +269,7 @@ public class TimedEventSender
 
                     event = null;
                 } else if (NotificationConstants.TOPIC_JOB_FINISHED.equals(event.getTopic())){
-                    // stopScheduling() puts this event on the queue, but the intention is unclear to me.
-                    // as the threadStarted flag ensures the background thread is only started once, we must not stop
-                    // the thread, otherwise its never started again upon topology changes.
+                    // stopScheduling() puts this event on the queue, to wake up this thread
                     event = null;
                 } else {
                     // to ensure the event is reset to null in any case, in order to take from the queue again
@@ -720,23 +731,51 @@ public class TimedEventSender
         }
     }
 
-    /**
-     * @see org.apache.sling.discovery.TopologyEventListener#handleTopologyEvent(org.apache.sling.discovery.TopologyEvent)
-     */
     @Override
     public void handleTopologyEvent(final TopologyEvent event) {
-        if ( event.getType() == Type.TOPOLOGY_CHANGING ) {
-            this.active = false;
-            this.stopScheduling();
-        } else if ( event.getType() == Type.TOPOLOGY_CHANGED || event.getType() == Type.TOPOLOGY_INIT ) {
-            final boolean previouslyActive = this.active;
-            this.active = event.getNewView().getLocalInstance().isLeader();
-            if ( this.active && !previouslyActive ) {
-                this.startScheduling();
+        final QueueItem item = new QueueItem();
+        item.event = event;
+        try {
+            this.topologyEventQueue.put(item);
+        } catch ( final InterruptedException ie) {
+            logger.warn("Thread got interrupted.", ie);
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    @Override
+    public void run() {
+        while ( this.running ) {
+            QueueItem item = null;
+            try {
+                item = this.topologyEventQueue.take();
+            } catch ( final InterruptedException ie) {
+                logger.warn("Thread got interrupted.", ie);
+                Thread.currentThread().interrupt();
+                this.running = false;
             }
-            if ( !this.active && previouslyActive ) {
-                this.stopScheduling();
+            if ( this.running && item != null && item.event != null ) {
+                if ( item.event.getType() == Type.TOPOLOGY_CHANGING ) {
+                    this.active = false;
+                    this.stopScheduling();
+                } else if ( item.event.getType() == Type.TOPOLOGY_CHANGED || item.event.getType() == Type.TOPOLOGY_INIT ) {
+                    final boolean previouslyActive = this.active;
+                    this.active = item.event.getNewView().getLocalInstance().isLeader();
+                    if ( this.active && !previouslyActive ) {
+                        this.startScheduling();
+                    }
+                    if ( !this.active && previouslyActive ) {
+                        this.stopScheduling();
+                    }
+                }
             }
         }
+    }
+
+    /**
+     * We need a holder class to be able to put something into the queue to stop it.
+     */
+    public static final class QueueItem {
+        public TopologyEvent event;
     }
 }

@@ -30,7 +30,6 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
 
 /**
@@ -41,14 +40,14 @@ public class CRUDMergingResourceProvider
     implements ModifyingResourceProvider {
 
     public CRUDMergingResourceProvider(final String mergeRootPath,
-            final MergedResourcePicker picker) {
-        super(mergeRootPath, picker, false);
+            final MergedResourcePicker picker,
+            final boolean traverseHierarchie) {
+        super(mergeRootPath, picker, false, traverseHierarchie);
     }
 
     private static final class ExtendedResourceHolder {
         public final String name;
         public final List<Resource> resources = new ArrayList<Resource>();
-        public final List<ValueMap> valueMaps = new ArrayList<ValueMap>();
         public int count;
         public String highestResourcePath;
 
@@ -64,22 +63,27 @@ public class CRUDMergingResourceProvider
         holder.count = 0;
 
         // Loop over resources
+        boolean isUnderlying = true;
         final Iterator<Resource> iter = this.picker.pickResources(resolver, relativePath).iterator();
         while ( iter.hasNext() ) {
             final Resource rsrc = iter.next();
             holder.count++;
             holder.highestResourcePath = rsrc.getPath();
-            if ( !ResourceUtil.isNonExistingResource(rsrc) ) {
+
+            final boolean hidden;
+            if (isUnderlying) {
+                isUnderlying = false;
+                hidden = false;
+            } else {
                 // check parent for hiding
+                // SLING 3521 : if parent is not readable, nothing is hidden
                 final Resource parent = rsrc.getParent();
-                if ( parent != null ) {
-                    final boolean hidden = new ParentHidingHandler(parent).isHidden(holder.name);
-                    if ( hidden ) {
-                        holder.resources.clear();
-                    } else {
-                        holder.resources.add(rsrc);
-                    }
-                }
+                hidden = (parent == null ? false : new ParentHidingHandler(parent, this.traverseHierarchie).isHidden(holder.name));
+            }
+            if (hidden) {
+                holder.resources.clear();
+            } else if (!ResourceUtil.isNonExistingResource(rsrc)) {
+                holder.resources.add(rsrc);
             }
         }
 

@@ -32,15 +32,15 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.DistributionRequest;
-import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
+import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExportException;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
-import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
+import org.apache.sling.distribution.serialization.DistributionPackageBuilderProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(label = "Sling Distribution Exporter - Agent Based Package Exporter",
+@Component(label = "Apache Sling Distribution Exporter - Agent Based Package Exporter",
         metatype = true,
         configurationFactory = true,
         specVersion = "1.1",
@@ -54,7 +54,7 @@ public class AgentDistributionPackageExporterFactory implements DistributionPack
      * name of this exporter.
      */
     @Property(label = "Name", description = "The name of the exporter.")
-    public static final String NAME = DistributionComponentUtils.PN_NAME;
+    public static final String NAME = DistributionComponentConstants.PN_NAME;
 
     @Property(label = "Queue", description = "The name of the queue from which the packages should be exported.")
     private static final String QUEUE_NAME = "queue";
@@ -64,10 +64,8 @@ public class AgentDistributionPackageExporterFactory implements DistributionPack
     private DistributionAgent agent;
 
 
-    @Property(name = "packageBuilder.target", label = "Package Builder", description = "The target reference for the DistributionPackageBuilder used to create distribution packages, " +
-            "e.g. use target=(name=...) to bind to services by name.")
-    @Reference(name = "packageBuilder")
-    private DistributionPackageBuilder packageBuilder;
+    @Reference
+    private DistributionPackageBuilderProvider packageBuilderProvider;
 
     private DistributionPackageExporter packageExporter;
 
@@ -77,7 +75,7 @@ public class AgentDistributionPackageExporterFactory implements DistributionPack
 
         String queueName = PropertiesUtil.toString(config.get(QUEUE_NAME), "");
 
-        packageExporter = new AgentDistributionPackageExporter(queueName, agent, packageBuilder);
+        packageExporter = new AgentDistributionPackageExporter(queueName, agent, packageBuilderProvider);
     }
 
     @Nonnull

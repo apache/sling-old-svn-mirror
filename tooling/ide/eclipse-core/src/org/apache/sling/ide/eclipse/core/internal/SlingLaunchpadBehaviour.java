@@ -84,22 +84,24 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
         Result<ResourceProxy> result = null;
         monitor.beginTask("Starting server", 5);
         
+        Repository repository;
+        try {
+            repository = ServerUtil.connectRepository(getServer(), monitor);
+        } catch (CoreException e) {
+            setServerState(IServer.STATE_STOPPED);
+            throw e;
+        }
+
+        monitor.worked(2); // 2/5 done
+
         try {
             if (getServer().getMode().equals(ILaunchManager.DEBUG_MODE)) {
                 debuggerConnection = new JVMDebuggerConnection();
                 success = debuggerConnection.connectInDebugMode(launch, getServer(), monitor);
 
-            } else {
+                monitor.worked(3); // 5/5 done
 
-                Repository repository;
-                try {
-                    repository = ServerUtil.connectRepository(getServer(), monitor);
-                } catch (CoreException e) {
-                    setServerState(IServer.STATE_STOPPED);
-                    throw e;
-                }
-                
-                monitor.worked(2); // 2/5 done
+            } else {
                 
                 Command<ResourceProxy> command = repository.newListChildrenNodeCommand("/");
                 result = command.execute();
@@ -366,6 +368,10 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
         Logger logger = Activator.getDefault().getPluginLogger();
 
 		Repository repository = ServerUtil.getConnectedRepository(getServer(), monitor);
+        if (repository == null) {
+            throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
+                    "Unable to find a repository for server " + getServer()));
+        }
         
         // TODO it would be more efficient to have a module -> filter mapping
         // it would be simpler to implement this in SlingContentModuleAdapter, but

@@ -18,6 +18,7 @@
  */
 package org.apache.sling.api.auth;
 
+import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -115,7 +116,7 @@ public interface Authenticator {
      *             to authenticate a request user.
      * @throws IllegalStateException If the response has already been committed.
      */
-    void login(HttpServletRequest request, HttpServletResponse response);
+    void login(@Nonnull HttpServletRequest request, @Nonnull HttpServletResponse response);
 
     /**
      * Logs out if the current request is authenticated.
@@ -132,5 +133,5 @@ public interface Authenticator {
      * @param response The object representing the response to the client.
      * @throws IllegalStateException If the response has already been committed.
      */
-    void logout(HttpServletRequest request, HttpServletResponse response);
+    void logout(@Nonnull HttpServletRequest request, @Nonnull HttpServletResponse response);
 }

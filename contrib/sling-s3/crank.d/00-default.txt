@@ -1,0 +1,5 @@
+# Set default values for our variables
+defaults port 8080
+defaults sling.home sling
+defaults log.file logs/error.log
+defaults customBlobStore false

@@ -21,8 +21,12 @@ package org.apache.sling.api.resource;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 
 /**
  * The <code>ResourceMetadata</code> interface defines the API for the
@@ -63,7 +67,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * This property is optional. If missing, it should be assumed equal to an
      * empty string.
      *
-     * @since 2.0.4
+     * @since 2.0.4 (Sling API Bundle 2.0.4)
      */
     public static final String RESOLUTION_PATH_INFO = "sling.resolutionPathInfo";
 
@@ -122,9 +126,16 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * This flag should never be manipulated by application code!
      * The value of this property has no meaning, the resource resolver
      * just checks whether this flag is set or not.
-     * @since 2.2
+     * @since 2.2 (Sling API Bundle 2.2.0)
      */
     public static final String INTERNAL_CONTINUE_RESOLVING = ":org.apache.sling.resource.internal.continue.resolving";
+
+    /**
+     * Returns a map containing parameters added to path after semicolon.
+     * For instance, map for path <code>/content/test;v='1.2.3'.html</code>
+     * will contain one entry key <code>v</code> and value <code>1.2.3</code>.
+     */
+    public static final String PARAMETER_MAP = "sling.parameterMap";
 
     private boolean isReadOnly = false;
 
@@ -143,7 +154,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * and a <code>String</code> instance. Otherwise <code>null</code> is
      * returned.
      */
-    public String getCharacterEncoding() {
+    public @CheckForNull String getCharacterEncoding() {
         Object value = get(CHARACTER_ENCODING);
         if (value instanceof String) {
             return (String) value;
@@ -167,7 +178,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * a <code>String</code> instance. Otherwise <code>null</code> is
      * returned.
      */
-    public String getContentType() {
+    public @CheckForNull String getContentType() {
         Object value = get(CONTENT_TYPE);
         if (value instanceof String) {
             return (String) value;
@@ -260,7 +271,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * and a <code>String</code> instance. Otherwise <code>null</code> is
      * returned.
      */
-    public String getResolutionPath() {
+    public @CheckForNull String getResolutionPath() {
         Object value = get(RESOLUTION_PATH);
         if (value instanceof String) {
             return (String) value;
@@ -284,7 +295,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * <code>null</code> and a <code>String</code> instance. Otherwise
      * <code>null</code> is returned.
      */
-    public String getResolutionPathInfo() {
+    public @CheckForNull String getResolutionPathInfo() {
         Object value = get(RESOLUTION_PATH_INFO);
         if (value instanceof String) {
             return (String) value;
@@ -294,9 +305,39 @@ public class ResourceMetadata extends HashMap<String, Object> {
     }
 
     /**
+     * Sets the {@link #PARAMETER_MAP} property to
+     * <code>parameterMap</code> if not <code>null</code>.
+     */
+    public void setParameterMap(Map<String, String> parameterMap) {
+        if (parameterMap != null) {
+            if (parameterMap.isEmpty()) {
+                put(PARAMETER_MAP, Collections.emptyMap());
+            } else {
+                put(PARAMETER_MAP, new LinkedHashMap<String, String>(parameterMap));
+            }
+        }
+    }
+
+    /**
+     * Returns the {@link #PARAMETER_MAP} property if not
+     * <code>null</code> and a <code>Map</code> instance. Otherwise
+     * <code>null</code> is returned.
+     */
+    @SuppressWarnings("unchecked")
+    public @CheckForNull Map<String, String> getParameterMap() {
+        Object value = get(PARAMETER_MAP);
+        if (value instanceof Map) {
+            return (Map<String, String>) value;
+        }
+
+        return null;
+    }
+
+    
+    /**
      * Make this object read-only. All method calls trying to modify this object
      * result in an exception!
-     * @since 2.3
+     * @since 2.3 (Sling API Bundle 2.4.0)
      */
     public void lock() {
         this.isReadOnly = true;
@@ -318,24 +359,24 @@ public class ResourceMetadata extends HashMap<String, Object> {
     }
 
     @Override
-    public Object put(final String key, final Object value) {
+    public Object put(@Nonnull final String key, final Object value) {
         this.checkReadOnly();
         return super.put(key, value);
     }
 
     @Override
-    public void putAll(final Map<? extends String, ? extends Object> m) {
+    public void putAll(@Nonnull final Map<? extends String, ? extends Object> m) {
         this.checkReadOnly();
         super.putAll(m);
     }
 
     @Override
-    public Object remove(final Object key) {
+    public Object remove(@Nonnull final Object key) {
         this.checkReadOnly();
         return super.remove(key);
     }
     
-    protected void internalPut(String key, Object value) {
+    protected void internalPut(@Nonnull String key, Object value) {
         super.put(key, value);
     }
     
@@ -366,19 +407,19 @@ public class ResourceMetadata extends HashMap<String, Object> {
     }
 
     @Override
-    public Set<Map.Entry<String, Object>> entrySet() {
+    public @Nonnull Set<Map.Entry<String, Object>> entrySet() {
         getLockedData();
         return lockedEntrySet != null ? lockedEntrySet : super.entrySet();
     }
 
     @Override
-    public Set<String> keySet() {
+    public @Nonnull Set<String> keySet() {
         getLockedData();
         return lockedKeySet != null ? lockedKeySet : super.keySet();
     }
 
     @Override
-    public Collection<Object> values() {
+    public @Nonnull Collection<Object> values() {
         getLockedData();
         return lockedValues != null ? lockedValues : super.values();
     }

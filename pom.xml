@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
-        <version>8</version>
+        <version>17</version>
     </parent>
 
     <groupId>org.apache.sling</groupId>
@@ -34,7 +34,7 @@
 
     <name>Apache Sling (Builder)</name>
     <description>
-        Pseudo project to build the complete Sling project
+        Pseudo project to build the complete Apache Sling project.
     </description>
 
     <inceptionYear>2007</inceptionYear>
@@ -64,8 +64,11 @@
                         <fileset>
                             <directory>${basedir}</directory>
                             <includes>
-                                <include>sling</include>
+                                <include>derby.log</include>
                             </includes>
+                        </fileset>
+                        <fileset>
+                            <directory>sling</directory>
                         </fileset>
                     </filesets>
                 </configuration>
@@ -96,7 +99,7 @@
         <module>tooling/maven/archetypes/bundle</module>
         <module>tooling/maven/archetypes/bundle-for-jcrinstall</module>
         <module>tooling/maven/archetypes/taglib</module>
-     
+
         <!-- The Sling API -->
         <module>bundles/api</module>
 
@@ -111,11 +114,13 @@
 
         <!-- The commons sub project -->
         <module>bundles/commons/classloader</module>
+        <module>bundles/commons/fsclassloader</module>
         <module>bundles/commons/compiler</module>
         <module>bundles/commons/json</module>
         <module>bundles/commons/log</module>
         <module>bundles/commons/logservice</module>
         <module>bundles/commons/mime</module>
+        <module>bundles/commons/contentdetection</module>
         <module>bundles/commons/osgi</module>
         <module>bundles/commons/scheduler</module>
         <module>bundles/commons/testing</module>
@@ -125,14 +130,13 @@
         <!-- Authentication Support -->
         <module>bundles/auth/core</module>
         <module>bundles/auth/form</module>
-        
+
         <!-- The Sling Engine -->
         <module>bundles/engine</module>
-        
+
         <!-- The JCR sub project -->
         <module>bundles/jcr/api</module>
         <module>bundles/jcr/base</module>
-        <module>bundles/jcr/classloader</module>
         <module>bundles/jcr/contentloader</module>
         <!--
         <module>bundles/jcr/jackrabbit-base</module>
@@ -142,13 +146,14 @@
         <module>bundles/jcr/jackrabbit-accessmanager</module>
         <module>bundles/jcr/jcr-wrapper</module>
         <module>bundles/jcr/resource</module>
+        <module>bundles/jcr/it-resource-versioning</module>
         <module>bundles/jcr/registration</module>
         <module>bundles/jcr/webdav</module>
         <module>bundles/jcr/davex</module>
         <module>bundles/jcr/webconsole</module>
         <module>bundles/jcr/oak-server</module>
         <module>bundles/jcr/it-jackrabbit-oak</module>
-        
+
         <!-- Servlets -->
         <module>bundles/servlets/resolver</module>
         <module>bundles/servlets/get</module>
@@ -162,12 +167,14 @@
         <module>bundles/scripting/jsp</module>
         <module>bundles/scripting/jsp-taglib</module>
         <module>bundles/scripting/jsp-jstl</module>
-        
+        <module>bundles/scripting/sightly</module>
+
         <!-- Extensions -->
         <module>bundles/extensions/adapter</module>
         <module>bundles/extensions/bundleresource</module>
         <module>bundles/extensions/dea</module>
         <module>bundles/extensions/discovery/api</module>
+        <module>bundles/extensions/discovery/commons</module>
         <module>bundles/extensions/discovery/impl</module>
         <module>bundles/extensions/discovery/support</module>
         <module>bundles/extensions/discovery/standalone</module>
@@ -183,13 +190,17 @@
         <module>bundles/extensions/healthcheck</module>
         <module>bundles/resourceaccesssecurity/core</module>
         <module>bundles/resourceaccesssecurity/it</module>
+        <module>bundles/extensions/validation</module>
         <module>bundles/extensions/models/api</module>
         <module>bundles/extensions/models/impl</module>
+        <module>bundles/extensions/models/validation-impl</module>
         <module>bundles/extensions/models/integration-tests</module>
+        <module>bundles/extensions/i18n</module>
+        <module>bundles/extensions/xss</module>
 
         <!-- Testing Support -->
         <module>testing</module>
-        
+
         <!-- Installer -->
         <module>installer/core</module>
         <module>installer/console</module>
@@ -199,14 +210,14 @@
         <module>installer/factories/deploymentpck</module>
         <module>installer/factories/subsystems</module>
         <module>installer/it</module>
-        
+
         <!-- Launchpad -->
         <module>launchpad/api</module>
         <module>launchpad/base</module>
         <module>launchpad/installer</module>
         <module>launchpad/content</module>
         <module>launchpad/builder</module>
-        
+
     </modules>
 
     <profiles>

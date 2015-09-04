@@ -31,12 +31,16 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
+import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -110,7 +114,7 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
             return;
         }
 
-        final Resource resource = request.getResource();
+        Resource resource = request.getResource();
         if (ResourceUtil.isNonExistingResource(resource)) {
             throw new ResourceNotFoundException("No data to render.");
         }
@@ -132,6 +136,16 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
         }
 
         // fall back to plain text rendering if the resource has no stream
+        if (resource.getResourceType().equals(JcrConstants.NT_LINKEDFILE)) {
+            try {
+                String actualResourcePath = resource.adaptTo(Node.class).getProperty(JcrConstants.JCR_CONTENT).getNode().getPath();
+                resource = request.getResourceResolver().getResource(actualResourcePath);
+            } catch (PathNotFoundException e) {
+                throw new ResourceNotFoundException("No data to render");
+            } catch (RepositoryException e) {
+                throw new IOException(e);
+            }
+        }
         InputStream stream = resource.adaptTo(InputStream.class);
         if (stream != null) {
 
@@ -310,7 +324,6 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
 
     /**
      * @param resource
-     * @param request
      * @param response
      */
     private void setHeaders(Resource resource,
@@ -453,7 +466,6 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
      * @param resource The resource from which to send ranges
      * @param ostream The output stream to write to
      * @param ranges Iterator of the ranges the client wanted to retrieve
-     * @param contentType Content type of the resource
      * @exception IOException if an input/output error occurs
      */
     private void copy(Resource resource, ServletOutputStream ostream,
@@ -706,6 +718,8 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
 
         /**
          * Validate range.
+         *
+         * @return {@code true} if the range is valid, {@code false} otherwise
          */
         public boolean validate() {
             if (end >= length) end = length - 1;

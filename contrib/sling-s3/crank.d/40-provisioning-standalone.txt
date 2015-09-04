@@ -1,0 +1,5 @@
+defaults crankstart.bundle.start.level 5
+bundle mvn:org.apache.felix/org.apache.felix.http.api/2.3.2
+bundle mvn:org.apache.felix/org.apache.felix.http.servlet-api/1.1.0
+bundle mvn:org.apache.felix/org.apache.felix.http.jetty/3.0.2
+

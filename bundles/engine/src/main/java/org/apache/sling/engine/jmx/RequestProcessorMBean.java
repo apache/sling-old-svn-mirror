@@ -16,9 +16,12 @@
  */
 package org.apache.sling.engine.jmx;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * This is the management interface for the SlingRequestProcessor.
  */
+@ProviderType
 public interface RequestProcessorMBean {
 
     /**
@@ -96,7 +99,7 @@ public interface RequestProcessorMBean {
      * @see #resetStatistics()
      */
     double getStandardDeviationPeakRecursionDepth();
-    
+
     /**
      * Returns the maximum servlet call count since last
      * resetting the statistics.
@@ -105,7 +108,7 @@ public interface RequestProcessorMBean {
      */
     int getMaxServletCallCount();
 
-    
+
     /**
      * Returns the minimum servlet call count since last
      * resetting the statistics.
@@ -113,7 +116,7 @@ public interface RequestProcessorMBean {
      * @see #resetStatistics()
      */
     int getMinServletCallCount();
-    
+
     /**
      * Returns the mean servlet call count since last
      * resetting the statistics.

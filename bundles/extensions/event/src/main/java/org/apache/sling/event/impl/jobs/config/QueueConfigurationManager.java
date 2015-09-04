@@ -54,7 +54,7 @@ public class QueueConfigurationManager {
     private MainQueueConfiguration mainQueueConfiguration;
 
     /** Listener - this is the job manager configuration component. */
-    private volatile ConfigurationChangeListener changeListener;
+    private volatile JobManagerConfiguration changeListener;
 
     /**
      * Add a new queue configuration.
@@ -175,7 +175,7 @@ public class QueueConfigurationManager {
      * Add a config listener.
      * @param listener
      */
-    public void addListener(final ConfigurationChangeListener listener) {
+    public void addListener(final JobManagerConfiguration listener) {
         this.changeListener = listener;
     }
 
@@ -190,9 +190,9 @@ public class QueueConfigurationManager {
      * Update the listener.
      */
     private void updateListener() {
-        final ConfigurationChangeListener l = this.changeListener;
+        final JobManagerConfiguration l = this.changeListener;
         if ( l != null ) {
-            l.configurationChanged(true);
+            l.queueConfigurationChanged();
         }
     }
 }

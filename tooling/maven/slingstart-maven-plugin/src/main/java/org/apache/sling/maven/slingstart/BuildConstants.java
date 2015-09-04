@@ -28,6 +28,8 @@ public abstract class BuildConstants {
     public static final String CONTEXT_STANDALONE = "slingstart" + ModelConstants.RUN_MODE_STANDALONE;
     public static final String CONTEXT_WEBAPP = "slingstart" + ModelConstants.RUN_MODE_WEBAPP;
 
+    // Model artifact name
+    public static final String MODEL_ARTIFACT_NAME = "slingstart.txt";
 
     // Types
 
