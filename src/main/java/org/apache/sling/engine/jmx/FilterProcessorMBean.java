@@ -33,12 +33,12 @@ public interface FilterProcessorMBean {
     long getInvocationsCount();
     
     /**
-     * Returns the mean request invocation time in milliseconds since resetting
+     * Returns the mean filter invocation time in milliseconds since resetting
      * the statistics.
      *
      * @see #resetStatistics()
      */
-    double getMeanRequestDurationMsec();
+    double getMeanFilterDurationMsec();
    
     /**
      * Resets all statistics values and restarts from zero.

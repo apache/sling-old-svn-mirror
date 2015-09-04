@@ -48,7 +48,7 @@ public class FilterProcessorMBeanImpl extends StandardMBean implements FilterPro
     }
 
     @Override
-    public double getMeanRequestDurationMsec() {
+    public double getMeanFilterDurationMsec() {
         return this.meanDuration;
     }
     
