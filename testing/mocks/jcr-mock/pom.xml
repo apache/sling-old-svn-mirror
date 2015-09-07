@@ -24,20 +24,20 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>24</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.testing.jcr-mock</artifactId>
-    <version>1.1.9-SNAPSHOT</version>
+    <version>1.1.10</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Testing JCR Mock</name>
     <description>Mock implementation of selected JCR APIs.</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/mocks/jcr-mock</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/mocks/jcr-mock</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/testing/mocks/jcr-mock</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.testing.jcr-mock-1.1.10</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.testing.jcr-mock-1.1.10</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.testing.jcr-mock-1.1.10</url>
     </scm>
 
     <dependencies>
