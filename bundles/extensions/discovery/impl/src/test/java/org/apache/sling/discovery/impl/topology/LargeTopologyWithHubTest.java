@@ -49,9 +49,9 @@ public class LargeTopologyWithHubTest {
     @BeforeClass
     public static void setup() throws Throwable {
         instances = new LinkedList<Instance>();
-        hub = TopologyTestHelper.createInstance(instances, "hub");
-        final int defaultHeartbeatTimeout = 1500;
+        final int defaultHeartbeatTimeout = 3600; // 1 hour should be enough, really
         final int heartbeatTimeout = TimeoutsProvider.getInstance().getTimeout(defaultHeartbeatTimeout);
+        hub = TopologyTestHelper.createInstance(instances, "/var/discovery/impl/hub/", "hub", heartbeatTimeout, 1000, 1);
         hub.getConfig().setHeartbeatTimeout(heartbeatTimeout);
         
         slingIds = new LinkedList<String>();
@@ -59,7 +59,8 @@ public class LargeTopologyWithHubTest {
         logger.info("setUp: using heartbeatTimeout of "+heartbeatTimeout+"sec "
                 + "(default: "+defaultHeartbeatTimeout+")");
         for(int i=0; i<TEST_SIZE; i++) {
-            Instance instance = TopologyTestHelper.createInstance(instances, "instance"+i);
+            logger.info("setUp: creating instance"+i);
+            Instance instance = TopologyTestHelper.createInstance(instances, "/var/discovery/impl/i"+i+"/", "instance"+i, heartbeatTimeout, 10, 1);
             instance.getConfig().setHeartbeatTimeout(heartbeatTimeout);
             new Connector(instance, hub);
             slingIds.add(instance.getSlingId());
