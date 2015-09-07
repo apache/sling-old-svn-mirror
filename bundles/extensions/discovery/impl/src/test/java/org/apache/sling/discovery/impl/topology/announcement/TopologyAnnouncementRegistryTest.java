@@ -55,8 +55,8 @@ public class TopologyAnnouncementRegistryTest {
                 .mockResourceResolverFactory();
         config = new Config() {
             public long getHeartbeatTimeout() {
-                // 1s for fast tests
-                return 1;
+                // 5s for tests that also run on apache jenkins
+                return 5;
             };
         };
         slingId = UUID.randomUUID().toString();
@@ -140,7 +140,7 @@ public class TopologyAnnouncementRegistryTest {
         assertTrue(registry.registerAnnouncement(ann)!=-1);
         assertEquals(1, registry.listInstances(localCluster).size());
 
-        Thread.sleep(1500);
+        Thread.sleep(5500);
         assertEquals(0, registry.listInstances(localCluster).size());
     
     }
@@ -279,7 +279,7 @@ public class TopologyAnnouncementRegistryTest {
         }
 
         
-        Thread.sleep(1500);
+        Thread.sleep(5500);
         {
             Announcement testAnn = createAnnouncement(myCluster, 0, false);
             assertEquals(1, testAnn.listInstances().size());
@@ -368,7 +368,7 @@ public class TopologyAnnouncementRegistryTest {
         assertEquals(0, registry2.listLocalIncomingAnnouncements().size());
         assertAnnouncements(registry2, myCluster, 3, 8);
         
-        Thread.sleep(1500);
+        Thread.sleep(5500);
         assertAnnouncements(registry1, myCluster, 3, 8);
         assertAnnouncements(registry2, myCluster, 3, 8);
         registry1.checkExpiredAnnouncements();
