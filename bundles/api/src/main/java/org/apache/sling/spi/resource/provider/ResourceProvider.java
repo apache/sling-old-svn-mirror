@@ -140,7 +140,7 @@ public abstract class ResourceProvider<T> {
      * are not accessible.
      * If this property is not set or set to {@link #AUTHENTICATE_NO}, no authentication
      * is required for this provider and the {@link #authenticate(Map)} is never invoked.
-     * String service property, default value is <code>{@link #AUTHENTICATE_NO}</true>.
+     * String service property, default value is <code>{@link #AUTHENTICATE_NO}</code>.
      * (value is "provider.authenticate")
      */
     public static final String PROPERTY_AUTHENTICATE = "provider.authenticate";
@@ -270,7 +270,7 @@ public abstract class ResourceProvider<T> {
      *      href="http://sling.apache.org/documentation/the-sling-engine/service-authentication.html">Service
      *      Authentication</a>
      */
-    @Nonnull T authenticate(final @Nonnull Map<String, Object> authenticationInfo)
+    @Nonnull public T authenticate(final @Nonnull Map<String, Object> authenticationInfo)
     throws LoginException {
         return null;
     }

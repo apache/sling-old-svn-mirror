@@ -1,0 +1,177 @@
+package org.apache.sling.jcr.resource.internal.helper.jcr;
+
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Map;
+
+import javax.jcr.Item;
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.version.VersionHistory;
+import javax.jcr.version.VersionManager;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.jackrabbit.JcrConstants;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.jcr.resource.internal.HelperData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class JcrItemResourceFactory {
+
+    /** Default logger */
+    private static final Logger log = LoggerFactory.getLogger(JcrItemResourceFactory.class);
+
+    private final Session session;
+
+    private final HelperData helper;
+
+    public JcrItemResourceFactory(Session session, HelperData helper) {
+        this.helper = helper;
+        this.session = session;
+    }
+
+    /**
+     * Creates a <code>Resource</code> instance for the item found at the
+     * given path. If no item exists at that path or the item does not have
+     * read-access for the session of this resolver, <code>null</code> is
+     * returned.
+     *
+     * @param resourcePath The absolute path
+     * @return The <code>Resource</code> for the item at the given path.
+     * @throws RepositoryException If an error occurrs accessingor checking the
+     *             item in the repository.
+     */
+    public JcrItemResource<?> createResource(final ResourceResolver resourceResolver,
+            final String resourcePath, final Map<String, String> parameters) throws RepositoryException {
+        final String jcrPath = helper.pathMapper.mapResourcePathToJCRPath(resourcePath);
+        if (jcrPath != null && itemExists(jcrPath)) {
+            Item item = session.getItem(jcrPath);
+            final String version;
+            if (parameters != null && parameters.containsKey("v")) {
+                version = parameters.get("v");
+                item = getHistoricItem(item, version);
+            } else {
+                version = null;
+            }
+            if (item.isNode()) {
+                log.debug(
+                    "createResource: Found JCR Node Resource at path '{}'",
+                    resourcePath);
+                final JcrNodeResource resource = new JcrNodeResource(resourceResolver, resourcePath, version, (Node) item, helper);
+                resource.getResourceMetadata().setParameterMap(parameters);
+                return resource;
+            }
+
+            log.debug(
+                "createResource: Found JCR Property Resource at path '{}'",
+                resourcePath);
+            final JcrPropertyResource resource = new JcrPropertyResource(resourceResolver, resourcePath, version,
+                (Property) item);
+            resource.getResourceMetadata().setParameterMap(parameters);
+            return resource;
+        }
+
+        log.debug("createResource: No JCR Item exists at path '{}'", jcrPath);
+        return null;
+    }
+
+    public Iterator<Resource> listChildren(final Resource parent) {
+        JcrItemResource<?> parentItemResource;
+
+        // short cut for known JCR resources
+        if (parent instanceof JcrItemResource) {
+
+            parentItemResource = (JcrItemResource<?>) parent;
+
+        } else {
+
+            // try to get the JcrItemResource for the parent path to list
+            // children
+            try {
+                parentItemResource = createResource(
+                    parent.getResourceResolver(), parent.getPath(), Collections.<String, String> emptyMap());
+            } catch (RepositoryException re) {
+                parentItemResource = null;
+            }
+
+        }
+
+        // return children if there is a parent item resource, else null
+        return (parentItemResource != null)
+                ? parentItemResource.listJcrChildren()
+                : null;
+    }
+
+    private Item getHistoricItem(Item item, String versionSpecifier) throws RepositoryException {
+        Item currentItem = item;
+        LinkedList<String> relPath = new LinkedList<String>();
+        Node version = null;
+        while (!"/".equals(currentItem.getPath())) {
+            if (isVersionable(currentItem)) {
+                version = getFrozenNode((Node) currentItem, versionSpecifier);
+                break;
+            } else {
+                relPath.addFirst(currentItem.getName());
+                currentItem = currentItem.getParent();
+            }
+        }
+        if (version != null) {
+            return getSubitem(version, StringUtils.join(relPath.iterator(), '/'));
+        }
+        return null;
+    }
+
+    private static Item getSubitem(Node node, String relPath) throws RepositoryException {
+        if (relPath.length() == 0) { // not using isEmpty() due to 1.5 compatibility
+            return node;
+        } else if (node.hasNode(relPath)) {
+            return node.getNode(relPath);
+        } else if (node.hasProperty(relPath)) {
+            return node.getProperty(relPath);
+        } else {
+            return null;
+        }
+    }
+
+    private Node getFrozenNode(Node node, String versionSpecifier) throws RepositoryException {
+        final VersionManager versionManager = session.getWorkspace().getVersionManager();
+        final VersionHistory history = versionManager.getVersionHistory(node.getPath());
+        if (history.hasVersionLabel(versionSpecifier)) {
+            return history.getVersionByLabel(versionSpecifier).getFrozenNode();
+        } else if (history.hasNode(versionSpecifier)) {
+            return history.getVersion(versionSpecifier).getFrozenNode();
+        } else {
+            return null;
+        }
+    }
+
+    private static boolean isVersionable(Item item) throws RepositoryException {
+        return item.isNode() && ((Node) item).isNodeType(JcrConstants.MIX_VERSIONABLE);
+    }
+    
+
+    /**
+     * Checks whether the item exists and this content manager's session has
+     * read access to the item. If the item does not exist, access control is
+     * ignored by this method and <code>false</code> is returned.
+     *
+     * @param path The path to the item to check
+     * @return <code>true</code> if the item exists and this content manager's
+     *         session has read access. If the item does not exist,
+     *         <code>false</code> is returned ignoring access control.
+     */
+    private boolean itemExists(final String path) {
+        try {
+            return session.itemExists(path);
+        } catch (RepositoryException re) {
+            log.debug("itemExists: Error checking for existence of {}: {}",
+                path, re.toString());
+            return false;
+        }
+    }
+}
