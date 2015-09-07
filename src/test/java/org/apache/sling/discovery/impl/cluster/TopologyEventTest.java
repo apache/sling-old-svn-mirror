@@ -20,6 +20,7 @@ package org.apache.sling.discovery.impl.cluster;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
 
 import java.util.Iterator;
 import java.util.UUID;
@@ -28,6 +29,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
+import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.discovery.impl.cluster.helpers.AssertingTopologyEventListener;
 import org.apache.sling.discovery.impl.setup.Instance;
 import org.junit.After;
@@ -284,10 +286,17 @@ public class TopologyEventTest {
             @Override
             public void handleTopologyEvent(TopologyEvent event) {
                 super.handleTopologyEvent(event);
-                // also check if the newView has isCurrent==false
-                assertFalse(event.getNewView().isCurrent());
-                // plus lets now directly ask the discovery service for getTopology and check that
-                assertFalse(instance1.getDiscoveryService().getTopology().isCurrent());
+                if (event.getType()==Type.TOPOLOGY_INIT) {
+                    // also check if the newView has isCurrent==false
+                    if (event.getNewView().isCurrent()) {
+                        fail("for TOPOLOGY_INIT: new view is expected to be not current, but it is: "+event);
+                    }
+                    // plus lets now directly ask the discovery service for getTopology and check that
+                    TopologyView topology = instance1.getDiscoveryService().getTopology();
+                    if (topology.isCurrent()) {
+                        fail("for TOPOLOGY_INIT: discovery service is expected to have a topology that is not current, but it is: "+topology);
+                    }
+                }
             }
         };
         late.addExpected(Type.TOPOLOGY_INIT);
@@ -309,6 +318,9 @@ public class TopologyEventTest {
         assertEquals(3, l2.getEvents().size());
         assertEquals(0, l1Two.getUnexpectedCount());
         assertEquals(3, l1Two.getEvents().size());
+        if (late.getErrorMsg()!=null) {
+            fail(late.getErrorMsg());
+        }
         logger.info("testNonDelayedInitEvent: end");
     }
     
