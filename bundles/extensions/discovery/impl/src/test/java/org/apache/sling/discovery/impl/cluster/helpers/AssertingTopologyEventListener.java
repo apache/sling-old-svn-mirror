@@ -38,11 +38,21 @@ public class AssertingTopologyEventListener implements TopologyEventListener {
 
     private String debugInfo = null;
     
+    private String errorMsg = null;
+    
     public AssertingTopologyEventListener() {
     }
 
     public AssertingTopologyEventListener(String debugInfo) {
         this.debugInfo = debugInfo;
+    }
+    
+    public void fail(String errorMsg) {
+        this.errorMsg = errorMsg;
+    }
+    
+    public String getErrorMsg() {
+        return errorMsg;
     }
     
     private List<TopologyEvent> events_ = new LinkedList<TopologyEvent>();
