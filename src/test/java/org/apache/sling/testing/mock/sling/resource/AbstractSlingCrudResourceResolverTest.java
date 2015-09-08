@@ -47,6 +47,7 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 /**
  * Implements simple write and read resource and values test. Sling CRUD API is
@@ -206,6 +207,19 @@ public abstract class AbstractSlingCrudResourceResolverTest {
         assertEquals(2, children.size());
         assertEquals("node11", children.get(0).getName());
         assertEquals("node12", children.get(1).getName());
+    }
+
+    @Test
+    public void testListChildren_RootNode() throws IOException {
+        Resource resource1 = resourceResolver.getResource("/");
+
+        List<Resource> children = Lists.newArrayList(resource1.listChildren());
+        assertEquals(1, children.size());
+        assertEquals(getTestRootResource().getName(), children.get(0).getName());
+
+        children = Lists.newArrayList(resource1.getChildren());
+        assertEquals(1, children.size());
+        assertEquals(getTestRootResource().getName(), children.get(0).getName());
     }
 
     @Test
