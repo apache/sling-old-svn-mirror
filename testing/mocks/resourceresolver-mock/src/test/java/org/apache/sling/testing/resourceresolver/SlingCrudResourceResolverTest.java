@@ -181,6 +181,19 @@ public class SlingCrudResourceResolverTest {
     }
 
     @Test
+    public void testListChildren_RootNode() throws IOException {
+        Resource resource1 = resourceResolver.getResource("/");
+
+        List<Resource> children = Lists.newArrayList(resource1.listChildren());
+        assertEquals(1, children.size());
+        assertEquals("test", children.get(0).getName());
+
+        children = Lists.newArrayList(resource1.getChildren());
+        assertEquals(1, children.size());
+        assertEquals("test", children.get(0).getName());
+    }
+
+    @Test
     public void testBinaryData() throws IOException {
         Resource resource1 = resourceResolver.getResource(testRoot.getPath() + "/node1");
 
