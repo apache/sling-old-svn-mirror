@@ -19,7 +19,6 @@
 package org.apache.sling.distribution.serialization.impl.vlt;
 
 import javax.annotation.Nonnull;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,7 +53,6 @@ public class FileVaultDistributionPackage extends AbstractDistributionPackage im
     public InputStream createInputStream() throws IOException {
         return new FileInputStream(pkg.getFile());
     }
-
 
     public void close() {
         pkg.close();

@@ -43,15 +43,10 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
     private final static String DELIM = "|";
     private final static String PATH_DELIM = ",";
 
-    private final String[] paths;
-
-    private final DistributionRequestType requestType;
-
-
     public SimpleDistributionPackage(DistributionRequest request, String type) {
         super(toIdString(request, type), type);
-        this.paths = request.getPaths();
-        this.requestType = request.getRequestType();
+        String[] paths = request.getPaths();
+        DistributionRequestType requestType = request.getRequestType();
 
         this.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, paths);
         this.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, requestType);
@@ -68,12 +63,10 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
 
         String[] paths = request.getPaths();
 
-        if (paths == null || paths.length == 0) {
-            // do nothing
-        } else {
+        if (paths != null && paths.length != 0) {
             for (int i = 0; i < paths.length; i++) {
                 b.append(paths[i]);
-                if (i < paths.length-1) {
+                if (i < paths.length - 1) {
                     b.append(PATH_DELIM);
                 }
             }
@@ -89,10 +82,9 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
 
         id = id.substring(PACKAGE_START.length());
 
-
         String[] parts = id.split(Pattern.quote(DELIM));
 
-        if (parts.length < 1 || parts.length > 2)  {
+        if (parts.length < 1 || parts.length > 2) {
             return null;
         }
 
@@ -104,7 +96,7 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
 
         SimpleDistributionPackage distributionPackage = null;
         if (distributionRequestType != null) {
-            String[] paths = pathsString == null ? null :  pathsString.split(PATH_DELIM);
+            String[] paths = pathsString == null ? null : pathsString.split(PATH_DELIM);
 
             DistributionRequest request = new SimpleDistributionRequest(distributionRequestType, paths);
             distributionPackage = new SimpleDistributionPackage(request, type);
@@ -120,8 +112,6 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
     }
 
 
-
-
     public void close() {
         // there's nothing to close
     }
@@ -135,7 +125,7 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
         return getId();
     }
 
-    public static SimpleDistributionPackage fromStream(InputStream stream, String type)  {
+    public static SimpleDistributionPackage fromStream(InputStream stream, String type) {
 
         try {
             int size = SimpleDistributionPackage.PACKAGE_START.getBytes("UTF-8").length;

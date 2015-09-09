@@ -19,6 +19,11 @@
 package org.apache.sling.distribution.component.impl;
 
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.agent.impl.DistributionRequestAuthorizationStrategy;
 import org.apache.sling.distribution.agent.impl.ForwardDistributionAgentFactory;
@@ -47,11 +52,6 @@ import org.apache.sling.distribution.trigger.impl.PersistedJcrEventDistributionT
 import org.apache.sling.distribution.trigger.impl.ResourceEventDistributionTriggerFactory;
 import org.apache.sling.distribution.trigger.impl.ScheduledDistributionTriggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 /**
  * Enum that represents the main distribution component kinds that can be configured for distribution.
  */
@@ -66,8 +66,6 @@ public enum DistributionComponentKind {
     PACKAGE_BUILDER("packageBuilder"),
     REQUEST_AUTHORIZATION("requestAuthorization"),
     TRIGGER("trigger");
-
-
 
 
     private static Map<DistributionComponentKind, Class> classMap = new HashMap<DistributionComponentKind, Class>();
@@ -152,7 +150,6 @@ public enum DistributionComponentKind {
         return name;
     }
 
-
     private static void registerKind(DistributionComponentKind kind, Class kindClass) {
         classMap.put(kind, kindClass);
     }
@@ -167,7 +164,6 @@ public enum DistributionComponentKind {
 
         kindMap.put(type, factoryClass);
     }
-
 
     public String getFactory(String type) {
         Class factory = factoryMap.get(this).get(type);

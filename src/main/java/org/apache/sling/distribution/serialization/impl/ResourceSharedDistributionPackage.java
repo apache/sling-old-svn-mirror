@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 
-import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -36,9 +35,8 @@ import org.slf4j.LoggerFactory;
 public class ResourceSharedDistributionPackage implements SharedDistributionPackage {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    protected static final String  REFERENCE_ROOT_NODE = "refs";
+    protected static final String REFERENCE_ROOT_NODE = "refs";
     private final Object lock;
-
 
     private final ResourceResolver resourceResolver;
     private final String packagePath;
@@ -57,11 +55,11 @@ public class ResourceSharedDistributionPackage implements SharedDistributionPack
         if (holderName.length() == 0) {
             throw new IllegalArgumentException("holder name cannot be null or empty");
         }
-        
+
         try {
             createHolderResource(holderName);
 
-            log.debug("acquired package {} for holder {}", new Object[] { packagePath, holderName } );
+            log.debug("acquired package {} for holder {}", new Object[]{packagePath, holderName});
 
         } catch (PersistenceException e) {
             log.error("cannot acquire package", e);
@@ -83,12 +81,11 @@ public class ResourceSharedDistributionPackage implements SharedDistributionPack
                 distributionPackage.delete();
             }
 
-            log.debug("released package {} from holder {} delete {}", new Object[] { packagePath, holderName, doPackageDelete } );
+            log.debug("released package {} from holder {} delete {}", new Object[]{packagePath, holderName, doPackageDelete});
         } catch (PersistenceException e) {
             log.error("cannot release package", e);
         }
     }
-
 
 
     @Nonnull
@@ -140,7 +137,7 @@ public class ResourceSharedDistributionPackage implements SharedDistributionPack
     }
 
 
-    private Resource getHolderRootResource()  {
+    private Resource getHolderRootResource() {
         Resource resource = getProxyResource();
 
         Resource holderRoot = resource.getChild(REFERENCE_ROOT_NODE);

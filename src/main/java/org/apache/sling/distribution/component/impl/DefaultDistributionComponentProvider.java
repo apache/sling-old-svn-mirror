@@ -34,14 +34,13 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
-import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
+import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 @Component
 @Property(name = "name", value = "default")
@@ -120,7 +119,7 @@ public class DefaultDistributionComponentProvider implements DistributionCompone
 
     private void bindDistributionQueueProvider(DistributionQueueProvider distributionQueueProvider, Map<String, Object> config) {
 
-       put(DistributionQueueProvider.class, distributionQueueProvider, config);
+        put(DistributionQueueProvider.class, distributionQueueProvider, config);
     }
 
     private void unbindDistributionQueueProvider(DistributionQueueProvider distributionQueueProvider, Map<String, Object> config) {
@@ -146,17 +145,17 @@ public class DefaultDistributionComponentProvider implements DistributionCompone
 
     private void unbindDistributionTransportSecretProvider(DistributionTransportSecretProvider distributionTransportSecretProvider, Map<String, Object> config) {
 
-       remove(DistributionTransportSecretProvider.class, distributionTransportSecretProvider, config);
+        remove(DistributionTransportSecretProvider.class, distributionTransportSecretProvider, config);
     }
 
     private void bindDistributionPackageImporter(DistributionPackageImporter distributionPackageImporter, Map<String, Object> config) {
 
-       put(DistributionPackageImporter.class, distributionPackageImporter, config);
+        put(DistributionPackageImporter.class, distributionPackageImporter, config);
     }
 
     private void unbindDistributionPackageImporter(DistributionPackageImporter distributionPackageImporter, Map<String, Object> config) {
 
-       remove(DistributionPackageImporter.class, distributionPackageImporter, config);
+        remove(DistributionPackageImporter.class, distributionPackageImporter, config);
     }
 
     private void bindDistributionPackageExporter(DistributionPackageExporter distributionPackageExporter, Map<String, Object> config) {
@@ -172,7 +171,7 @@ public class DefaultDistributionComponentProvider implements DistributionCompone
 
     private void bindDistributionAgent(DistributionAgent distributionAgent, Map<String, Object> config) {
 
-       put(DistributionAgent.class, distributionAgent, config);
+        put(DistributionAgent.class, distributionAgent, config);
     }
 
     private void unbindDistributionAgent(DistributionAgent distributionAgent, Map<String, Object> config) {
@@ -198,7 +197,7 @@ public class DefaultDistributionComponentProvider implements DistributionCompone
 
         String name = PropertiesUtil.toString(config.get(NAME), null);
         DistributionComponentKind kind = DistributionComponentKind.fromClass(typeClass);
-        if (name != null && kind!=null) {
+        if (name != null && kind != null) {
             componentMap.put(name, new DistributionComponent<ComponentType>(kind, name, service, config));
         }
 

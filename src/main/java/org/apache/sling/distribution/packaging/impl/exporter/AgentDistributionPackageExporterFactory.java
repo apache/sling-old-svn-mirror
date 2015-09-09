@@ -30,8 +30,8 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExportException;
@@ -80,7 +80,7 @@ public class AgentDistributionPackageExporterFactory implements DistributionPack
 
     @Nonnull
     public List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionPackageExportException {
-       return packageExporter.exportPackages(resourceResolver, distributionRequest);
+        return packageExporter.exportPackages(resourceResolver, distributionRequest);
     }
 
     public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String distributionPackageId) {

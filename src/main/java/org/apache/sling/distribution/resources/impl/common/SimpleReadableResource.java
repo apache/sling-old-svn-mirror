@@ -19,7 +19,6 @@
 
 package org.apache.sling.distribution.resources.impl.common;
 
-
 import java.lang.reflect.Array;
 import java.util.Map;
 

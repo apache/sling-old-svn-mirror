@@ -27,7 +27,6 @@ import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionResponse;
 import org.apache.sling.distribution.log.DistributionLog;
 import org.apache.sling.distribution.queue.DistributionQueue;
-import org.apache.sling.distribution.queue.DistributionQueueState;
 
 /**
  * A distribution agent is responsible for handling {@link org.apache.sling.distribution.DistributionRequest}s.

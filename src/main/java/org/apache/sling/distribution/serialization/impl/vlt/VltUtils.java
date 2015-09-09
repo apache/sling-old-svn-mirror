@@ -16,14 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.distribution.serialization.impl.vlt;
 
-
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.List;
+import java.util.NavigableMap;
+import java.util.Properties;
+import java.util.TreeMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.vault.fs.api.ImportMode;
 import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.api.WorkspaceFilter;
@@ -36,23 +44,9 @@ import org.apache.jackrabbit.vault.fs.io.ImportOptions;
 import org.apache.jackrabbit.vault.packaging.ExportOptions;
 import org.apache.jackrabbit.vault.packaging.JcrPackage;
 import org.apache.jackrabbit.vault.packaging.PackageManager;
-import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
-
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.List;
-import java.util.NavigableMap;
-import java.util.Properties;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 /**
  * Utility class for creating vlt filters and import/export options
@@ -160,7 +154,6 @@ public class VltUtils {
         }
 
 
-
         if (packageRoot == null || !packageRoot.startsWith("/")) {
             packageRoot = "/";
         }
@@ -173,15 +166,13 @@ public class VltUtils {
         ImportOptions opts = new ImportOptions();
         if (aclHandling != null) {
             opts.setAccessControlHandling(aclHandling);
-        }
-        else {
+        } else {
             // default to overwrite
             opts.setAccessControlHandling(AccessControlHandling.OVERWRITE);
         }
         if (importMode != null) {
             opts.setImportMode(importMode);
-        }
-        else {
+        } else {
             // default to update
             opts.setImportMode(ImportMode.UPDATE);
         }
@@ -193,8 +184,7 @@ public class VltUtils {
         File file = File.createTempFile("distr-vault-create-" + System.nanoTime(), ".zip", tempFolder);
 
         try {
-            VaultPackage vaultPackage = packageManager.assemble(session, options, file);
-            return vaultPackage;
+            return packageManager.assemble(session, options, file);
         } catch (RepositoryException e) {
             FileUtils.deleteQuietly(file);
             throw e;
@@ -258,7 +248,6 @@ public class VltUtils {
         return directory;
     }
 
-
     public static String findParent(String path, String nodeName) {
         path = path.endsWith("/") ? path : path + "/";
 
@@ -272,7 +261,6 @@ public class VltUtils {
 
         return path.substring(0, idx);
     }
-
 
     public static TreeMap<String, PathFilterSet> parseFilters(String[] filters) {
 
@@ -292,7 +280,7 @@ public class VltUtils {
 
                 PathFilterSet filterSet = new PathFilterSet();
 
-                for (int i=1; i < filterParts.length; i++) {
+                for (int i = 1; i < filterParts.length; i++) {
                     String filterPart = SettingsUtils.removeEmptyEntry(filterParts[i]);
                     if (filterPart == null) {
                         continue;

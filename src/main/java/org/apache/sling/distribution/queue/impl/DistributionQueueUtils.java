@@ -19,14 +19,21 @@
 
 package org.apache.sling.distribution.queue.impl;
 
-
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.distribution.queue.DistributionQueueState;
 
+/**
+ * Utility methods for queues.
+ */
 public class DistributionQueueUtils {
 
-
+    /**
+     * Calculate the {@link DistributionQueueState} of an item given its status.
+     * @param item a queue item
+     * @param status an item status
+     * @return a queue item state
+     */
     public static DistributionQueueState calculateState(DistributionQueueItem item, DistributionQueueItemStatus status) {
         if (item != null && status != null) {
 

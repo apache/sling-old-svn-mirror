@@ -19,6 +19,16 @@
 package org.apache.sling.distribution.component.impl;
 
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -29,16 +39,6 @@ import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * {@link org.apache.sling.distribution.component.impl.DistributionComponentManager} implementation based on OSGI configs.
@@ -63,7 +63,7 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
         }
 
 
-        for(Configuration configuration : configurations) {
+        for (Configuration configuration : configurations) {
             Dictionary propertiesDict = configuration.getProperties();
             Map<String, Object> properties = OsgiUtils.fromDictionary(propertiesDict);
 
@@ -150,7 +150,7 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
             allConfigurations.addAll(configurations);
         }
 
-       return allConfigurations;
+        return allConfigurations;
     }
 
 
@@ -160,8 +160,7 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
             Configuration configuration = null;
             if (configurations == null || configurations.size() == 0) {
                 configuration = configurationAdmin.createFactoryConfiguration(factoryPid);
-            }
-            else {
+            } else {
                 configuration = configurations.get(0);
             }
 

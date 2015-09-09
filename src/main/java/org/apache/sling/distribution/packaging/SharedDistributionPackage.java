@@ -28,7 +28,6 @@ import aQute.bnd.annotation.ConsumerType;
 @ConsumerType
 public interface SharedDistributionPackage extends DistributionPackage {
 
-
     /**
      * acquire a reference to this package and increase the reference count.
      */

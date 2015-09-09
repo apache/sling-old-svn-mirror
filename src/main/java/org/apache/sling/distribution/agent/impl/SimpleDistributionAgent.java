@@ -32,19 +32,18 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.distribution.DistributionRequestType;
-import org.apache.sling.distribution.agent.DistributionAgent;
-import org.apache.sling.distribution.agent.DistributionAgentException;
-
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestState;
+import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.DistributionResponse;
+import org.apache.sling.distribution.agent.DistributionAgent;
+import org.apache.sling.distribution.agent.DistributionAgentException;
 import org.apache.sling.distribution.agent.DistributionAgentState;
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.event.DistributionEventTopics;
+import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.impl.CompositeDistributionResponse;
 import org.apache.sling.distribution.impl.SimpleDistributionResponse;
-import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.log.DistributionLog;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
@@ -56,14 +55,14 @@ import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueEntry;
-import org.apache.sling.distribution.queue.DistributionQueueItemState;
-import org.apache.sling.distribution.queue.DistributionQueueState;
-import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
+import org.apache.sling.distribution.queue.DistributionQueueItemState;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.distribution.queue.DistributionQueueProcessor;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
+import org.apache.sling.distribution.queue.DistributionQueueState;
+import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.distribution.trigger.DistributionTriggerException;
@@ -245,9 +244,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
             log.error("an error happened during dispatching items to the queue(s)", e);
             distributionResponses.add(new SimpleDistributionResponse(DistributionRequestState.DROPPED, e.toString()));
         } finally {
-            if (distributionPackage != null) {
-                distributionPackage.close();
-            }
+            distributionPackage.close();
         }
 
         return distributionResponses;
@@ -295,9 +292,9 @@ public class SimpleDistributionAgent implements DistributionAgent {
         for (String queueName : getQueueNames()) {
             DistributionQueue queue = null;
             try {
-                 queue = getQueue(queueName);
+                queue = getQueue(queueName);
             } catch (DistributionAgentException e) {
-
+                log.warn("could not get queue {}", queueName);
             }
 
             if (queue != null) {
@@ -325,7 +322,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
         if (!isPassive()) {
             try {
-                queueProvider.enableQueueProcessing(new PackageQueueProcessor(), processingQueues.toArray(new String[0]));
+                queueProvider.enableQueueProcessing(new PackageQueueProcessor(), processingQueues.toArray(new String[processingQueues.size()]));
             } catch (DistributionQueueException e) {
                 log.error("cannot enable queue processing", e);
             }
@@ -398,8 +395,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
                     DistributionPackageUtils.releaseOrDelete(distributionPackage, queueName);
                     generatePackageEvent(DistributionEventTopics.AGENT_PACKAGE_DISTRIBUTED, distributionPackage);
                 } else if (importQueueStrategy != null && queueItemStatus.getAttempts() > retryAttempts) {
-                    success = true;
-                    reEnqueuePackage(agentResourceResolver, distributionPackage);
+                    success = reEnqueuePackage(distributionPackage);
                     DistributionPackageUtils.releaseOrDelete(distributionPackage, queueName);
                 }
             } else {
@@ -430,7 +426,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
         return true;
     }
 
-    private boolean reEnqueuePackage(ResourceResolver resourceResolver, DistributionPackage distributionPackage) {
+    private boolean reEnqueuePackage(DistributionPackage distributionPackage) {
 
         if (importQueueStrategy == null) {
             return false;
@@ -464,8 +460,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
                 resourceResolver.commit();
             } catch (PersistenceException e) {
                 log.error("cannot commit changes to resource resolver", e);
-            }
-            finally {
+            } finally {
                 resourceResolver.close();
             }
         }
@@ -507,8 +502,8 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
         for (String path : request.getPaths()) {
             boolean allowed = false;
-            for (String allowedRoot: allowedRoots) {
-                if(allowedRoot != null && allowedRoot.trim().length() != 0
+            for (String allowedRoot : allowedRoots) {
+                if (allowedRoot != null && allowedRoot.trim().length() != 0
                         && path.startsWith(allowedRoot)) {
                     allowed = true;
                 }
@@ -569,7 +564,6 @@ public class SimpleDistributionAgent implements DistributionAgent {
             }
         }
     }
-
 
 
     /* Convert the state of a certain item in the queue into a request state */

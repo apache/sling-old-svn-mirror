@@ -20,7 +20,6 @@ package org.apache.sling.distribution.queue.impl.simple;
 
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueEntry;
-import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

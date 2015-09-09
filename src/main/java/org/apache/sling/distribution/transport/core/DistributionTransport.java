@@ -23,8 +23,6 @@ import javax.annotation.Nonnull;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.transport.DistributionTransportSecret;
-import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 
 /**
  * A transport layer implementation to transport data between two (or eventually more) Sling instances.

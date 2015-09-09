@@ -20,7 +20,6 @@ package org.apache.sling.distribution.packaging.impl.importer;
 
 import javax.annotation.Nonnull;
 import java.io.InputStream;
-import java.util.Arrays;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.packaging.DistributionPackage;
@@ -53,7 +52,6 @@ public class LocalDistributionPackageImporter implements DistributionPackageImpo
         this.packageBuilder = packageBuilder;
     }
 
-
     public void importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageImportException {
         try {
             boolean success = packageBuilder.installPackage(resourceResolver, distributionPackage);
@@ -69,6 +67,7 @@ public class LocalDistributionPackageImporter implements DistributionPackageImpo
         }
     }
 
+    @Nonnull
     public DistributionPackageInfo importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException {
         DistributionPackage distributionPackage = null;
         try {

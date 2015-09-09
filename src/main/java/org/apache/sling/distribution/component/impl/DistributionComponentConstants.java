@@ -19,13 +19,6 @@
 package org.apache.sling.distribution.component.impl;
 
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.sling.commons.osgi.PropertiesUtil;
-
 /**
  * Constants relevant for distribution components.
  */

@@ -18,13 +18,13 @@
  */
 package org.apache.sling.distribution.packaging.impl.importer;
 
-import java.io.InputStream;
 import javax.annotation.Nonnull;
 import javax.jcr.Node;
 import javax.jcr.Session;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.Privilege;
+import java.io.InputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.JcrConstants;

@@ -18,9 +18,9 @@
  */
 package org.apache.sling.distribution.packaging.impl.importer;
 
+import javax.annotation.Nonnull;
 import java.io.InputStream;
 import java.util.Map;
-import javax.annotation.Nonnull;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -86,6 +86,7 @@ public class RepositoryDistributionPackageImporterFactory implements Distributio
 
     }
 
+    @Nonnull
     public DistributionPackageInfo importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException {
         return importer.importStream(resourceResolver, stream);
     }

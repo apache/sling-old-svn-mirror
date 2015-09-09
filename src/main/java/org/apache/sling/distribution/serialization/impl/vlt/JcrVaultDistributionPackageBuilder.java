@@ -19,24 +19,20 @@
 package org.apache.sling.distribution.serialization.impl.vlt;
 
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Properties;
-import java.util.TreeMap;
-import java.util.UUID;
-
 import javax.annotation.Nonnull;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+import java.util.TreeMap;
+import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.vault.fs.api.ImportMode;
 import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.api.WorkspaceFilter;
@@ -49,7 +45,6 @@ import org.apache.jackrabbit.vault.packaging.JcrPackageManager;
 import org.apache.jackrabbit.vault.packaging.PackageId;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
-import org.apache.jackrabbit.vault.util.JcrConstants;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
@@ -59,16 +54,16 @@ import org.apache.sling.distribution.serialization.DistributionPackageReadingExc
 import org.apache.sling.distribution.serialization.impl.AbstractDistributionPackageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 /**
  * a {@link org.apache.sling.distribution.serialization.DistributionPackageBuilder} based on Apache Jackrabbit FileVault.
  * <p/>
  * Each {@link org.apache.sling.distribution.packaging.DistributionPackage} created by {@link JcrVaultDistributionPackageBuilder} is
  * backed by a {@link org.apache.jackrabbit.vault.packaging.JcrPackage}. 
  */
-public class JcrVaultDistributionPackageBuilder  extends AbstractDistributionPackageBuilder implements
+public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPackageBuilder implements
         DistributionPackageBuilder {
     private final Logger log = LoggerFactory.getLogger(getClass());
-
 
     private static final String VERSION = "0.0.1";
     private static final String PACKAGE_GROUP = "sling/distribution";
@@ -81,7 +76,7 @@ public class JcrVaultDistributionPackageBuilder  extends AbstractDistributionPac
     private final File tempDirectory;
     private final TreeMap<String, PathFilterSet> filters;
 
-    public JcrVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots, String[] filterRules,  String tempFilesFolder, String tempPackagesNode) {
+    public JcrVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots, String[] filterRules, String tempFilesFolder, String tempPackagesNode) {
         super(type);
 
         this.packaging = packaging;
@@ -105,7 +100,7 @@ public class JcrVaultDistributionPackageBuilder  extends AbstractDistributionPac
             session = getSession(resourceResolver);
 
             String packageGroup = PACKAGE_GROUP;
-            String packageName = getType() + "_" + System.currentTimeMillis() + "_" +  UUID.randomUUID();
+            String packageName = getType() + "_" + System.currentTimeMillis() + "_" + UUID.randomUUID();
 
             WorkspaceFilter filter = VltUtils.createFilter(request, filters);
             ExportOptions opts = VltUtils.getExportOptions(filter, packageRoots, packageGroup, packageName, VERSION);
@@ -174,8 +169,7 @@ public class JcrVaultDistributionPackageBuilder  extends AbstractDistributionPac
         try {
             session = getSession(resourceResolver);
 
-            String packageName = id;
-            JcrPackage jcrPackage = openPackage(session, packageName);
+            JcrPackage jcrPackage = openPackage(session, id);
 
             return new JcrVaultDistributionPackage(getType(), jcrPackage, session);
         } catch (RepositoryException e) {
@@ -185,7 +179,6 @@ public class JcrVaultDistributionPackageBuilder  extends AbstractDistributionPac
             ungetSession(session);
         }
     }
-
 
     private JcrPackage uploadPackage(Session session, VaultPackage pack) throws IOException, RepositoryException {
         JcrPackageManager packageManager = packaging.getPackageManager(session);
@@ -206,8 +199,7 @@ public class JcrVaultDistributionPackageBuilder  extends AbstractDistributionPac
 
                 return jcrPackage;
             } else {
-                JcrPackage jcrPackage = packageManager.upload(in, true);
-                return jcrPackage;
+                return packageManager.upload(in, true);
             }
         } finally {
             IOUtils.closeQuietly(in);
@@ -223,11 +215,9 @@ public class JcrVaultDistributionPackageBuilder  extends AbstractDistributionPac
 
         if (packageRoot != null) {
             Node packageNode = packageRoot.getNode(packageId.getDownloadName());
-            JcrPackage jcrPackage = packageManager.open(packageNode);
-            return jcrPackage;
+            return packageManager.open(packageNode);
         } else {
-            JcrPackage jcrPackage = packageManager.open(packageId);
-            return jcrPackage;
+            return packageManager.open(packageId);
         }
     }
 

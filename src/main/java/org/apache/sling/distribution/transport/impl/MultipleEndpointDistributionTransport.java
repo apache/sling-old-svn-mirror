@@ -29,10 +29,8 @@ import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
-import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.transport.core.DistributionTransport;
 import org.apache.sling.distribution.transport.core.DistributionTransportException;
-import org.apache.sling.distribution.transport.DistributionTransportSecret;
 
 /**
  * {@link org.apache.sling.distribution.transport.core.DistributionTransport} supporting delivery / retrieval from multiple
@@ -42,7 +40,6 @@ public class MultipleEndpointDistributionTransport implements DistributionTransp
 
     private final Map<String, DistributionTransport> transportHelpers;
     private final TransportEndpointStrategyType endpointStrategyType;
-
 
     public MultipleEndpointDistributionTransport(Map<String, DistributionTransport> transportHelpers,
                                                  TransportEndpointStrategyType endpointStrategyType) {
@@ -60,8 +57,7 @@ public class MultipleEndpointDistributionTransport implements DistributionTransp
 
         if (endpointStrategyType.equals(TransportEndpointStrategyType.One)) {
             DistributionPackageInfo info = distributionPackage.getInfo();
-            String queueName = info == null ? null : info.getQueue();
-
+            String queueName = info.getQueue();
 
             DistributionTransport distributionTransport = getDefaultTransport();
             if (queueName != null) {
@@ -72,9 +68,8 @@ public class MultipleEndpointDistributionTransport implements DistributionTransp
                 distributionTransport.deliverPackage(resourceResolver, distributionPackage);
             }
 
-
-        } else if  (endpointStrategyType.equals(TransportEndpointStrategyType.All)) {
-            for (DistributionTransport distributionTransport: transportHelpers.values()) {
+        } else if (endpointStrategyType.equals(TransportEndpointStrategyType.All)) {
+            for (DistributionTransport distributionTransport : transportHelpers.values()) {
                 distributionTransport.deliverPackage(resourceResolver, distributionPackage);
 
             }
@@ -100,8 +95,8 @@ public class MultipleEndpointDistributionTransport implements DistributionTransp
             }
 
 
-        } else if  (endpointStrategyType.equals(TransportEndpointStrategyType.All)) {
-            for (DistributionTransport distributionTransport: transportHelpers.values()) {
+        } else if (endpointStrategyType.equals(TransportEndpointStrategyType.All)) {
+            for (DistributionTransport distributionTransport : transportHelpers.values()) {
                 Iterable<DistributionPackage> retrievedPackages = distributionTransport.retrievePackages(resourceResolver, distributionRequest);
 
                 for (DistributionPackage retrievedPackage : retrievedPackages) {
@@ -118,14 +113,12 @@ public class MultipleEndpointDistributionTransport implements DistributionTransp
         java.util.Collection<DistributionTransport> var = transportHelpers.values();
         DistributionTransport[] handlers = var.toArray(new DistributionTransport[var.size()]);
 
-        if (handlers != null && handlers.length > 0) {
+        if (handlers.length > 0) {
             return handlers[0];
         }
 
         return null;
     }
-
-
 
 
 }
