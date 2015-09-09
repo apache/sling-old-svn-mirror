@@ -67,7 +67,6 @@ public class DistributionEventDistributeDistributionTrigger implements Distribut
         properties.put(EventConstants.EVENT_TOPIC, DistributionEventTopics.AGENT_PACKAGE_DISTRIBUTED);
         log.info("handler {} will chain distribute on path '{}'", requestHandler, pathPrefix);
 
-//            properties.put(EventConstants.EVENT_FILTER, "(path=" + path + "/*)");
         if (bundleContext != null) {
             ServiceRegistration triggerPathEventRegistration = bundleContext.registerService(EventHandler.class.getName(),
                     new TriggerAgentEventListener(requestHandler, pathPrefix), properties);
@@ -87,7 +86,6 @@ public class DistributionEventDistributeDistributionTrigger implements Distribut
         }
     }
 
-
     public void disable() {
         for (Map.Entry<String, ServiceRegistration> entry : registrations.entrySet()) {
             if (entry.getValue() != null) {
@@ -96,7 +94,6 @@ public class DistributionEventDistributeDistributionTrigger implements Distribut
         }
         registrations.clear();
     }
-
 
     private class TriggerAgentEventListener implements EventHandler {
 

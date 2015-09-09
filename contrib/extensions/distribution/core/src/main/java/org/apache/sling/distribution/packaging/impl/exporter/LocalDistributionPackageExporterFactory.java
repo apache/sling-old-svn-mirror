@@ -70,7 +70,6 @@ public class LocalDistributionPackageExporterFactory implements DistributionPack
         exporter = new LocalDistributionPackageExporter(packageBuilder);
     }
 
-
     @Nonnull
     public List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionPackageExportException {
         return exporter.exportPackages(resourceResolver, distributionRequest);

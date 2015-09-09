@@ -18,6 +18,12 @@
  */
 package org.apache.sling.distribution.agent.impl;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -39,8 +45,8 @@ import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.packaging.impl.exporter.RemoteDistributionPackageExporter;
 import org.apache.sling.distribution.packaging.impl.importer.RemoteDistributionPackageImporter;
-import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
+import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.ErrorQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.MultipleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.SingleQueueDispatchingStrategy;
@@ -54,14 +60,6 @@ import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * An OSGi service factory for {@link org.apache.sling.distribution.agent.DistributionAgent}s which references already existing OSGi services.
@@ -96,13 +94,12 @@ public class SyncDistributionAgentFactory extends AbstractDistributionAgentFacto
     public static final String SERVICE_NAME = "serviceName";
 
     @Property(options = {
-            @PropertyOption(name = "debug", value = "debug"), @PropertyOption(name = "info", value = "info"),  @PropertyOption(name = "warn", value = "warn"),
+            @PropertyOption(name = "debug", value = "debug"), @PropertyOption(name = "info", value = "info"), @PropertyOption(name = "warn", value = "warn"),
             @PropertyOption(name = "error", value = "error")},
             value = "info",
             label = "Log Level", description = "The log level recorded in the transient log accessible via http."
     )
     public static final String LOG_LEVEL = AbstractDistributionAgentFactory.LOG_LEVEL;
-
 
 
     @Property(boolValue = true, label = "Queue Processing Enabled", description = "Whether or not the distribution agent should process packages in the queues.")
@@ -124,7 +121,6 @@ public class SyncDistributionAgentFactory extends AbstractDistributionAgentFacto
     @Property(cardinality = 100, label = "Importer Endpoints", description = "List of endpoints to which packages are sent (imported). " +
             "The list can be given as a map in case a queue should be configured for each endpoint, e.g. queueName=http://...")
     public static final String IMPORTER_ENDPOINTS = "packageImporter.endpoints";
-
 
 
     @Property(boolValue = false, label = "Use multiple queues", description = "Whether or not to use an individual queue for each importer endpoint. " +
@@ -239,7 +235,7 @@ public class SyncDistributionAgentFactory extends AbstractDistributionAgentFacto
             processingQueues.addAll(importerEndpointsMap.keySet());
             processingQueues.removeAll(Arrays.asList(passiveQueues));
 
-            String[] queueNames = queuesMap.toArray(new String[0]);
+            String[] queueNames = queuesMap.toArray(new String[queuesMap.size()]);
             exportQueueStrategy = new MultipleQueueDispatchingStrategy(queueNames);
             packageImporter = new RemoteDistributionPackageImporter(distributionLog, transportSecretProvider, importerEndpointsMap, TransportEndpointStrategyType.One);
         } else {
@@ -249,15 +245,15 @@ public class SyncDistributionAgentFactory extends AbstractDistributionAgentFacto
         }
 
         DistributionPackageExporter packageExporter = new RemoteDistributionPackageExporter(distributionLog, packageBuilder, transportSecretProvider, exporterEndpoints, TransportEndpointStrategyType.All, pullItems);
-        DistributionQueueProvider queueProvider =  new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
-        DistributionRequestType[] allowedRequests = new DistributionRequestType[] { DistributionRequestType.PULL };
+        DistributionQueueProvider queueProvider = new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
+        DistributionRequestType[] allowedRequests = new DistributionRequestType[]{DistributionRequestType.PULL};
 
         String retryStrategy = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(RETRY_STRATEGY), null));
         int retryAttepts = PropertiesUtil.toInteger(config.get(RETRY_ATTEMPTS), 100);
 
 
         if ("errorQueue".equals(retryStrategy)) {
-            importQueueStrategy = new ErrorQueueDispatchingStrategy(processingQueues.toArray(new String[0]));
+            importQueueStrategy = new ErrorQueueDispatchingStrategy(processingQueues.toArray(new String[processingQueues.size()]));
         }
 
 

@@ -26,7 +26,6 @@ public class DistributionResourceTypes {
     public static final String DEFAULT_SETTING_RESOURCE_TYPE = "sling/distribution/setting";
     public static final String DEFAULT_SERVICE_RESOURCE_TYPE = "sling/distribution/service";
 
-
     public static final String AGENT_RESOURCE_TYPE = "sling/distribution/service/agent";
     public static final String AGENT_LIST_RESOURCE_TYPE = "sling/distribution/service/agent/list";
     public static final String AGENT_QUEUE_RESOURCE_TYPE = "sling/distribution/service/agent/queue";
@@ -43,7 +42,4 @@ public class DistributionResourceTypes {
 
     public static final String TRIGGER_RESOURCE_TYPE = "sling/distribution/service/trigger";
     public static final String TRIGGER_LIST_RESOURCE_TYPE = "sling/distribution/service/trigger/list";
-
-
-
 }

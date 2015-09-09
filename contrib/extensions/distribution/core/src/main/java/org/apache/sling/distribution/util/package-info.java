@@ -17,8 +17,7 @@
  * under the License.
  */
 
-@Version("0.1.0")
-package org.apache.sling.distribution.util;
+@Version("0.1.0") package org.apache.sling.distribution.util;
 
 import aQute.bnd.annotation.Version;
 

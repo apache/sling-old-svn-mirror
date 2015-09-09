@@ -45,15 +45,13 @@ public class PrivilegeDistributionRequestAuthorizationStrategy implements Distri
         Session session = resourceResolver.adaptTo(Session.class);
 
         try {
-           if (DistributionRequestType.ADD.equals(distributionRequest.getRequestType())) {
-               checkPermissionForAdd(session, distributionRequest.getPaths());
-           }
-           else if (DistributionRequestType.DELETE.equals(distributionRequest.getRequestType())) {
-               checkPermissionForDelete(session, distributionRequest.getPaths());
-           }
+            if (DistributionRequestType.ADD.equals(distributionRequest.getRequestType())) {
+                checkPermissionForAdd(session, distributionRequest.getPaths());
+            } else if (DistributionRequestType.DELETE.equals(distributionRequest.getRequestType())) {
+                checkPermissionForDelete(session, distributionRequest.getPaths());
+            }
 
-        }
-        catch (RepositoryException e) {
+        } catch (RepositoryException e) {
             throw new DistributionRequestAuthorizationException("Not enough privileges");
         }
 
@@ -63,9 +61,9 @@ public class PrivilegeDistributionRequestAuthorizationStrategy implements Distri
             throws RepositoryException, DistributionRequestAuthorizationException {
         AccessControlManager acMgr = session.getAccessControlManager();
 
-        Privilege[] privileges = new Privilege[] { acMgr.privilegeFromName(jcrPrivilege), acMgr.privilegeFromName(Privilege.JCR_READ) };
+        Privilege[] privileges = new Privilege[]{acMgr.privilegeFromName(jcrPrivilege), acMgr.privilegeFromName(Privilege.JCR_READ)};
         for (String path : paths) {
-            if(!acMgr.hasPrivileges(path, privileges)) {
+            if (!acMgr.hasPrivileges(path, privileges)) {
                 throw new DistributionRequestAuthorizationException("Not enough privileges");
             }
         }
@@ -76,7 +74,7 @@ public class PrivilegeDistributionRequestAuthorizationStrategy implements Distri
             throws RepositoryException, DistributionRequestAuthorizationException {
         AccessControlManager acMgr = session.getAccessControlManager();
 
-        Privilege[] privileges = new Privilege[] { acMgr.privilegeFromName(jcrPrivilege), acMgr.privilegeFromName(Privilege.JCR_REMOVE_NODE)  };
+        Privilege[] privileges = new Privilege[]{acMgr.privilegeFromName(jcrPrivilege), acMgr.privilegeFromName(Privilege.JCR_REMOVE_NODE)};
         for (String path : paths) {
 
             String closestParentPath = getClosestParent(session, path);

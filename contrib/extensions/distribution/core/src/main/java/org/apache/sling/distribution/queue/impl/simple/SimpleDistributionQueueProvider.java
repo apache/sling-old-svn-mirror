@@ -40,12 +40,10 @@ public class SimpleDistributionQueueProvider implements DistributionQueueProvide
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-
     private final String name;
     private final Scheduler scheduler;
 
     private final Map<String, DistributionQueue> queueMap = new ConcurrentHashMap<String, DistributionQueue>();
-
 
     public SimpleDistributionQueueProvider(Scheduler scheduler, String name) {
         if (name == null || scheduler == null) {

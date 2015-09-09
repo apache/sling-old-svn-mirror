@@ -18,6 +18,9 @@
  */
 package org.apache.sling.distribution.trigger.impl;
 
+import javax.annotation.Nonnull;
+import java.util.Map;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -33,9 +36,6 @@ import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.distribution.trigger.DistributionTriggerException;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.framework.BundleContext;
-
-import javax.annotation.Nonnull;
-import java.util.Map;
 
 @Component(metatype = true,
         label = "Apache Sling Distribution Trigger - Persisted Jcr Event Triggers Factory",
@@ -70,7 +70,6 @@ public class PersistedJcrEventDistributionTriggerFactory implements Distribution
     public static final String NUGGETS_PATH = "nuggetsPath";
 
 
-
     PersistedJcrEventDistributionTrigger trigger;
 
     @Reference
@@ -87,13 +86,13 @@ public class PersistedJcrEventDistributionTriggerFactory implements Distribution
         String serviceName = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
         String nuggetsPath = PropertiesUtil.toString(config.get(NUGGETS_PATH), null);
 
-        trigger =  new PersistedJcrEventDistributionTrigger(repository, scheduler, path, serviceName, nuggetsPath);
+        trigger = new PersistedJcrEventDistributionTrigger(repository, scheduler, path, serviceName, nuggetsPath);
         trigger.enable();
     }
 
     @Deactivate
     public void deactivate() {
-       trigger.disable();
+        trigger.disable();
     }
 
     public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {

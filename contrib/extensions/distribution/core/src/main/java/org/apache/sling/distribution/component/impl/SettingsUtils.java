@@ -28,6 +28,7 @@ import java.util.TreeMap;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 
 //TODO: Consider removing it
+
 /**
  * Utility class that provides parsing from linear set of properties into a tree of properties
  */
@@ -64,10 +65,9 @@ public class SettingsUtils {
             String[] componentLines = var.toArray(new String[var.size()]);
 
             if (COMPONENT_ROOT.equals(componentName)) {
-                Map<String, String> map = PropertiesUtil.toMap(componentLines, new String [0]);
+                Map<String, String> map = PropertiesUtil.toMap(componentLines, new String[0]);
                 result.putAll(map);
-            }
-            else {
+            } else {
                 Map<String, Object> componentMap = parseLines(componentLines);
                 result.put(componentName, componentMap);
             }
@@ -127,17 +127,15 @@ public class SettingsUtils {
                 boolean isNumber = isNumber(partialKey);
 
                 if (!result.containsKey(newKey)) {
-                    result.put(newKey, isNumber? new ArrayList<Object>() : new HashMap<String, Object>());
+                    result.put(newKey, isNumber ? new ArrayList<Object>() : new HashMap<String, Object>());
                 }
 
                 Object existingObject = result.get(newKey);
                 if (existingObject instanceof Map) {
                     ((Map) existingObject).put(partialKey, value);
-                }
-                else if (existingObject instanceof List) {
+                } else if (existingObject instanceof List) {
                     ((List) existingObject).add(value);
-                }
-                else {
+                } else {
                     // skip if there is already something else in there
                 }
             } else {
@@ -153,8 +151,7 @@ public class SettingsUtils {
         try {
             Integer.parseInt(value);
             return true;
-        }
-        catch (NumberFormatException e) {
+        } catch (NumberFormatException e) {
             return false;
         }
     }
@@ -162,8 +159,8 @@ public class SettingsUtils {
 
     public static <AType> Map<String, AType> toMap(List<AType> aList, String prefix) {
         Map<String, AType> result = new TreeMap<String, AType>();
-        for (int i=0; i<aList.size(); i++) {
-            result.put(prefix+i, aList.get(i));
+        for (int i = 0; i < aList.size(); i++) {
+            result.put(prefix + i, aList.get(i));
         }
 
         return result;

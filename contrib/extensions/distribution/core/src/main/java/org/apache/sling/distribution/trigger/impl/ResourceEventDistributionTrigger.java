@@ -72,7 +72,7 @@ public class ResourceEventDistributionTrigger implements DistributionTrigger {
 
     public void disable() {
         for (ServiceRegistration serviceRegistration : registrations.values()) {
-           serviceRegistration.unregister();
+            serviceRegistration.unregister();
         }
 
         registrations.clear();

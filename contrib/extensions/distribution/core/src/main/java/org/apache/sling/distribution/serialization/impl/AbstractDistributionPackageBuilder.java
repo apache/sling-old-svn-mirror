@@ -110,7 +110,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         } else if (DistributionRequestType.TEST.equals(actionType)) {
             // do nothing for test packages
             installed = true;
-        } else if (DistributionRequestType.ADD.equals(actionType))  {
+        } else if (DistributionRequestType.ADD.equals(actionType)) {
             installed = installPackageInternal(resourceResolver, distributionPackage);
         }
 

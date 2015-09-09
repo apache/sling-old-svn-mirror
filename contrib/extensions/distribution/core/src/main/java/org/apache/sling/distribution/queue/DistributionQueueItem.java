@@ -19,16 +19,13 @@
 package org.apache.sling.distribution.queue;
 
 import javax.annotation.Nonnull;
+import java.util.Map;
 
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
-import org.apache.sling.distribution.packaging.DistributionPackageInfo;
-
-import java.util.Map;
 
 /**
  * An item in a {@link DistributionQueue}
- * <p/>
  * This is basically a proxy to {@link org.apache.sling.distribution.packaging.DistributionPackage} designed to avoid having
  * to keep the package {@link org.apache.sling.distribution.packaging.DistributionPackage#createInputStream() stream} into
  * the queues.
@@ -46,7 +43,6 @@ public class DistributionQueueItem extends ValueMapDecorator implements ValueMap
     public String getId() {
         return id;
     }
-
 
 
     @Override

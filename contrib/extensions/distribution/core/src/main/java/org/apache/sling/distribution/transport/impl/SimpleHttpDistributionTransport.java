@@ -28,10 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
@@ -45,21 +42,19 @@ import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.servlet.ServletJsonUtils;
+import org.apache.sling.distribution.transport.DistributionTransportSecret;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.transport.core.DistributionTransport;
 import org.apache.sling.distribution.transport.core.DistributionTransportException;
-import org.apache.sling.distribution.transport.DistributionTransportSecret;
 import org.apache.sling.distribution.util.RequestUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+/**
+ * default HTTP implementation of {@link DistributionTransport}
+ */
 public class SimpleHttpDistributionTransport implements DistributionTransport {
-
 
     private static final String USERNAME = "username";
     private static final String PASSWORD = "password";
-
 
     protected final DefaultDistributionLog log;
     private final DistributionEndpoint distributionEndpoint;
@@ -93,11 +88,9 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
 
                 DistributionTransportSecret secret = secretProvider.getSecret(distributionEndpoint.getUri());
 
-                log.info("delivering package {} to {} with user {}", new Object[]{
-                        distributionPackage.getId(),
+                log.info("delivering package {} to {} with user {}", distributionPackage.getId(),
                         distributionEndpoint.getUri(),
-                        secret.asCredentialsMap().get(USERNAME)
-                });
+                        secret.asCredentialsMap().get(USERNAME));
 
                 executor = authenticate(secret, executor);
 
@@ -115,11 +108,9 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
                 }
 
                 Content content = response.returnContent();
-                log.info("delivered package {} of type {} with paths {}", new Object[]{
-                        distributionPackage.getId(),
+                log.info("delivered package {} of type {} with paths {}", distributionPackage.getId(),
                         distributionPackage.getType(),
-                        Arrays.toString(distributionPackage.getInfo().getPaths()),
-                });
+                        Arrays.toString(distributionPackage.getInfo().getPaths()));
             } catch (Exception ex) {
                 throw new DistributionTransportException(ex);
             }
@@ -144,7 +135,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
             DistributionTransportSecret secret = secretProvider.getSecret(distributionEndpoint.getUri());
             executor = authenticate(secret, executor);
 
-            Request req = Request.Post(distributionURI).useExpectContinue();
+//            Request req = Request.Post(distributionURI).useExpectContinue();
 
             // TODO : add queue parameter
 

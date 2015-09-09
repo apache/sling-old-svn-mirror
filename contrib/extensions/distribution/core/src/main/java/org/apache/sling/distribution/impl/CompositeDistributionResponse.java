@@ -20,12 +20,15 @@
 package org.apache.sling.distribution.impl;
 
 
-import org.apache.sling.distribution.DistributionRequestState;
-import org.apache.sling.distribution.DistributionResponse;
-
 import javax.annotation.Nonnull;
 import java.util.List;
 
+import org.apache.sling.distribution.DistributionRequestState;
+import org.apache.sling.distribution.DistributionResponse;
+
+/**
+ * A composite {@link SimpleDistributionResponse}.
+ */
 public class CompositeDistributionResponse extends SimpleDistributionResponse {
 
     private DistributionRequestState state;
@@ -73,7 +76,6 @@ public class CompositeDistributionResponse extends SimpleDistributionResponse {
                 ", message=" + message +
                 '}';
     }
-
 
 
     /* Provide the aggregated state of two {@link org.apache.sling.distribution.DistributionRequestState}s */

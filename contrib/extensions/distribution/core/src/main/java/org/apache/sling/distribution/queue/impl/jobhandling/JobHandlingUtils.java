@@ -35,7 +35,7 @@ public class JobHandlingUtils {
     public static DistributionQueueItem getItem(final Job job) {
 
         Map<String, Object> properties = new HashMap<String, Object>();
-        for (String key: job.getPropertyNames()) {
+        for (String key : job.getPropertyNames()) {
             if (key.startsWith(DISTRIBUTION_PACKAGE_PREFIX)) {
                 String infoKey = key.substring(DISTRIBUTION_PACKAGE_PREFIX.length());
                 properties.put(infoKey, job.getProperty(key));
@@ -51,7 +51,7 @@ public class JobHandlingUtils {
         Map<String, Object> properties = new HashMap<String, Object>();
 
         for (String key : queueItem.keySet()) {
-           properties.put(DISTRIBUTION_PACKAGE_PREFIX + key, queueItem.get(key));
+            properties.put(DISTRIBUTION_PACKAGE_PREFIX + key, queueItem.get(key));
         }
 
         properties.put(ID, queueItem.getId());
@@ -83,7 +83,7 @@ public class JobHandlingUtils {
         int attempts = job.getRetryCount();
 
         DistributionQueueItemStatus status = new DistributionQueueItemStatus(job.getCreated(),
-                attempts > 0 ? DistributionQueueItemState.ERROR: DistributionQueueItemState.QUEUED,
+                attempts > 0 ? DistributionQueueItemState.ERROR : DistributionQueueItemState.QUEUED,
                 attempts, queueName);
 
         return status;

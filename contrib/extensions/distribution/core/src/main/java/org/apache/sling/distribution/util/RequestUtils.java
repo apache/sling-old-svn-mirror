@@ -23,10 +23,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.sling.distribution.SimpleDistributionRequest;
-import org.apache.sling.distribution.impl.DistributionParameter;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.SimpleDistributionRequest;
+import org.apache.sling.distribution.impl.DistributionParameter;
 
 /**
  * Utility class for HTTP / distribution request related operations.
@@ -54,7 +54,7 @@ public class RequestUtils {
         String[] paths = distributionRequest.getPaths();
 
         if (paths != null) {
-            for (String path: paths) {
+            for (String path : paths) {
                 uriBuilder.addParameter(DistributionParameter.PATH.toString(), path);
             }
         }

@@ -16,10 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.distribution.serialization.impl;
 
-
+import java.util.List;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
@@ -30,8 +29,6 @@ import org.apache.sling.distribution.component.impl.DistributionComponentProvide
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilderProvider;
 
-import java.util.List;
-
 @Component
 @Service(DistributionPackageBuilderProvider.class)
 public class DefaultDistributionPackageBuilderProvider implements DistributionPackageBuilderProvider {
@@ -41,11 +38,9 @@ public class DefaultDistributionPackageBuilderProvider implements DistributionPa
 
     public DistributionPackageBuilder getPackageBuilder(String type) {
         List<DistributionComponent> componentList = componentProvider.getComponents(DistributionComponentKind.PACKAGE_BUILDER);
-        DistributionPackageBuilder packageBuilder = filterPackageBuildersByType(componentList, type);
 
-        return packageBuilder;
+        return filterPackageBuildersByType(componentList, type);
     }
-
 
     private static DistributionPackageBuilder filterPackageBuildersByType(List<DistributionComponent> componentList, String type) {
 

@@ -55,6 +55,7 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
     private final Map<String, JcrEventDistributionTriggerListener> registeredListeners = new ConcurrentHashMap<String, JcrEventDistributionTriggerListener>();
 
     private final String path;
+
     private final String serviceUser;
 
     private final SlingRepository repository;
@@ -139,9 +140,9 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
     }
 
     private void addToList(DistributionRequest request, List<DistributionRequest> requestList) {
-        DistributionRequest lastRequest = requestList.isEmpty()? null : requestList.get(requestList.size() - 1);
+        DistributionRequest lastRequest = requestList.isEmpty() ? null : requestList.get(requestList.size() - 1);
 
-        if (lastRequest == null || lastRequest.getRequestType() == null || !lastRequest.getRequestType().equals(request.getRequestType())) {
+        if (lastRequest == null || !lastRequest.getRequestType().equals(request.getRequestType())) {
             requestList.add(request);
         } else if (hasDeepPaths(request) || hasDeepPaths(lastRequest)) {
             requestList.add(request);
@@ -149,7 +150,7 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
             Set<String> allPaths = new TreeSet<String>();
             allPaths.addAll(Arrays.asList(lastRequest.getPaths()));
             allPaths.addAll(Arrays.asList(request.getPaths()));
-            lastRequest = new SimpleDistributionRequest(lastRequest.getRequestType(), allPaths.toArray(new String[0]));
+            lastRequest = new SimpleDistributionRequest(lastRequest.getRequestType(), allPaths.toArray(new String[allPaths.size()]));
             requestList.set(requestList.size() - 1, lastRequest);
         }
     }
@@ -159,7 +160,7 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
     }
 
     public void disable() {
-        for (JcrEventDistributionTriggerListener listener: registeredListeners.values()) {
+        for (JcrEventDistributionTriggerListener listener : registeredListeners.values()) {
             Session session;
             try {
                 session = getSession();
@@ -205,7 +206,7 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
     Session getSession() throws RepositoryException {
         return cachedSession != null ? cachedSession
                 : (cachedSession = repository.loginAdministrative(null)); // TODO: change after SLING-4312
-                // : (cachedSession = repository.loginService(serviceUser, null));
+        // : (cachedSession = repository.loginService(serviceUser, null));
     }
 
 
@@ -230,7 +231,7 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
             return false;
         }
 
-        for (String path: distributionRequest.getPaths()) {
+        for (String path : distributionRequest.getPaths()) {
             if (distributionRequest.isDeep(path)) {
                 return true;
             }
@@ -251,7 +252,7 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
         }
 
         public void run() {
-            for (DistributionRequest request: requestList) {
+            for (DistributionRequest request : requestList) {
                 requestHandler.handle(request);
             }
         }

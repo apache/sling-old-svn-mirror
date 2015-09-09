@@ -48,7 +48,6 @@ public class DistributionPackageExporterServlet extends SlingAllMethodsServlet {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
 
-
     @Override
     protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
             throws ServletException, IOException {
@@ -74,7 +73,6 @@ public class DistributionPackageExporterServlet extends SlingAllMethodsServlet {
             log.error("error while exporting package", t);
         }
     }
-
 
     protected void exportOnePackage(SlingHttpServletRequest request, SlingHttpServletResponse response, boolean delete)
             throws ServletException, IOException {
@@ -124,7 +122,7 @@ public class DistributionPackageExporterServlet extends SlingAllMethodsServlet {
 
                         // everything ok
                         response.setStatus(200);
-                        log.info("exported package {} was sent (and deleted={}), bytes written {}", new Object[] { packageId, delete, bytesCopied });
+                        log.info("exported package {} was sent (and deleted={}), bytes written {}", new Object[]{packageId, delete, bytesCopied});
                     } else {
                         log.warn("fetched a null package");
                     }
@@ -142,8 +140,6 @@ public class DistributionPackageExporterServlet extends SlingAllMethodsServlet {
             log.error("error while exporting package", e);
         }
     }
-
-
 
     void deletePackage(final SlingHttpServletRequest request, final SlingHttpServletResponse response) {
         DistributionPackageExporter distributionPackageExporter = request

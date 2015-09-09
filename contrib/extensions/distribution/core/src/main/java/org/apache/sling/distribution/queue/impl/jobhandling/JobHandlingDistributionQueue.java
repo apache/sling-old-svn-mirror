@@ -81,7 +81,6 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
     }
 
 
-
     public DistributionQueueEntry getHead() {
         Job firstJob = getFirstJob();
         if (firstJob != null) {
@@ -140,7 +139,6 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
     @Nonnull
     public List<DistributionQueueEntry> getItems(int skip, int limit) {
 
-
         List<DistributionQueueEntry> items = new ArrayList<DistributionQueueEntry>();
         Collection<Job> jobs = getJobs(skip, limit);
         for (Job job : jobs) {
@@ -156,11 +154,9 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
     public DistributionQueueEntry getItem(@Nonnull String id) {
         Job job = getJob(id);
 
-
         if (job != null) {
             DistributionQueueItem item = JobHandlingUtils.getItem(job);
             DistributionQueueItemStatus status = JobHandlingUtils.getStatus(job);
-
 
             return new DistributionQueueEntry(item, status);
         }
@@ -187,6 +183,7 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
 
 
     @Override
+    @Nonnull
     public DistributionQueueStatus getStatus() {
         List<Job> jobs = getJobs(0, -1);
         Job firstJob = jobs.size() > 0 ? jobs.get(0) : null;

@@ -19,7 +19,6 @@
 
 package org.apache.sling.distribution.resources.impl.common;
 
-
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
@@ -34,6 +33,9 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 
+/**
+ * a readable {@link ResourceProvider} for distribution.
+ */
 public abstract class AbstractReadableResourceProvider implements ResourceProvider {
 
     protected static final String INTERNAL_ADAPTABLE = "internal:adaptable";
@@ -41,7 +43,6 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
     protected static final String INTERNAL_ITEMS_PROPERTIES = "internal:propertiesMap";
 
     protected static final String ITEMS = "items";
-
 
 
     protected static final String SLING_RESOURCE_TYPE = "sling:resourceType";
@@ -93,8 +94,6 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
                                Object... adapters) {
         return new SimpleReadableResource(resourceResolver, pathInfo.getResourcePath(), properties, adapters);
     }
-
-
 
 
     SimplePathInfo extractPathInfo(String path) {
@@ -164,7 +163,7 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
                     childResource = buildMainResource(resourceResolver, childPathInfo, childProperties);
 
                 } else {
-                   childResource = getResource(resourceResolver, path + "/" + childResourceName);
+                    childResource = getResource(resourceResolver, path + "/" + childResourceName);
 
                 }
                 resourceList.add(childResource);
@@ -176,6 +175,7 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
 
 
     protected abstract Map<String, Object> getResourceProperties(SimplePathInfo pathInfo);
+
     protected abstract Iterable<String> getResourceChildren(SimplePathInfo pathInfo);
 
 }

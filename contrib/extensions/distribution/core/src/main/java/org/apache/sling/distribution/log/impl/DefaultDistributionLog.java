@@ -19,13 +19,6 @@
 
 package org.apache.sling.distribution.log.impl;
 
-import org.apache.sling.distribution.component.impl.DistributionComponentKind;
-import org.apache.sling.distribution.log.DistributionLog;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.helpers.FormattingTuple;
-import org.slf4j.helpers.MessageFormatter;
-
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -33,9 +26,17 @@ import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.sling.distribution.component.impl.DistributionComponentKind;
+import org.apache.sling.distribution.log.DistributionLog;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.helpers.FormattingTuple;
+import org.slf4j.helpers.MessageFormatter;
 
+/**
+ * Default implementation of a {@link DistributionLog}
+ */
 public class DefaultDistributionLog implements DistributionLog {
-
 
     private final DistributionComponentKind kind;
     private final String name;
@@ -106,7 +107,7 @@ public class DefaultDistributionLog implements DistributionLog {
     }
 
     public void info(String fmt, Object... objects) {
-        String specificFmt =  getSpecificString(fmt);
+        String specificFmt = getSpecificString(fmt);
         logger.info(specificFmt, objects);
         internalLog(LogLevel.INFO, fmt, objects);
     }

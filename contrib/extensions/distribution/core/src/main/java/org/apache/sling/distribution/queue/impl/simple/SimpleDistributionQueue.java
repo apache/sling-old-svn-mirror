@@ -143,8 +143,7 @@ public class SimpleDistributionQueue implements DistributionQueue {
         log.info("item with id {} removed from the queue: {}", id, removed);
         if (removed) {
             return toRemove;
-        }
-        else {
+        } else {
             return null;
         }
     }

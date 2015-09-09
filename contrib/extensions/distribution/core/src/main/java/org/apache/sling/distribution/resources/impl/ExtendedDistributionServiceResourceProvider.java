@@ -19,6 +19,11 @@
 
 package org.apache.sling.distribution.resources.impl;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.agent.DistributionAgentException;
 import org.apache.sling.distribution.agent.DistributionAgentState;
@@ -36,12 +41,6 @@ import org.apache.sling.distribution.queue.DistributionQueueStatus;
 import org.apache.sling.distribution.resources.DistributionResourceTypes;
 import org.apache.sling.distribution.resources.impl.common.SimplePathInfo;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 /**
  * Extended service resource provider exposes children resources like .../agents/agentName/queues/queueName/queueItem
  */
@@ -56,23 +55,22 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
 
 
     public ExtendedDistributionServiceResourceProvider(String kind,
-                                               DistributionComponentProvider componentProvider,
-                                               String resourceRoot) {
+                                                       DistributionComponentProvider componentProvider,
+                                                       String resourceRoot) {
         super(kind, componentProvider, resourceRoot);
     }
 
 
     @Override
-    protected Map<String,Object> getChildResourceProperties(DistributionComponent component, String childResourceName) {
-        DistributionComponentKind kind =  component.getKind();
+    protected Map<String, Object> getChildResourceProperties(DistributionComponent component, String childResourceName) {
+        DistributionComponentKind kind = component.getKind();
         if (kind.equals(DistributionComponentKind.AGENT)) {
             DistributionAgent agent = (DistributionAgent) component.getService();
 
             if (agent != null && childResourceName != null) {
                 if (childResourceName.startsWith(QUEUES_PATH)) {
                     SimplePathInfo queuePathInfo = SimplePathInfo.parsePathInfo(QUEUES_PATH, childResourceName);
-                    Map<String, Object> result = getQueueProperties(agent, queuePathInfo);
-                    return result;
+                    return getQueueProperties(agent, queuePathInfo);
                 } else if (childResourceName.startsWith(LOG_PATH)) {
                     Map<String, Object> result = new HashMap<String, Object>();
                     result.put(SLING_RESOURCE_TYPE, DistributionResourceTypes.LOG_RESOURCE_TYPE);
@@ -97,7 +95,7 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
     @Override
     protected Iterable<String> getChildResourceChildren(DistributionComponent component, String childResourceName) {
 
-        DistributionComponentKind kind =  component.getKind();
+        DistributionComponentKind kind = component.getKind();
         if (kind.equals(DistributionComponentKind.AGENT)) {
             DistributionAgent agent = (DistributionAgent) component.getService();
 
@@ -115,7 +113,7 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
         return null;
     }
 
-    private Map<String,Object> getQueueProperties(DistributionAgent agent, SimplePathInfo queueInfo) {
+    private Map<String, Object> getQueueProperties(DistributionAgent agent, SimplePathInfo queueInfo) {
         if (queueInfo.isRoot()) {
             Map<String, Object> result = new HashMap<String, Object>();
 

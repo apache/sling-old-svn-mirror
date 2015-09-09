@@ -74,8 +74,7 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
         try {
             packageName = generateNameFromId(resourceResolver, distributionPackage);
 
-        }
-        catch (PersistenceException e) {
+        } catch (PersistenceException e) {
             DistributionPackageUtils.deleteSafely(distributionPackage);
             throw new DistributionPackageBuildingException(e);
         }
@@ -97,8 +96,7 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
         try {
             packageName = generateNameFromId(resourceResolver, distributionPackage);
 
-        }
-        catch (PersistenceException e) {
+        } catch (PersistenceException e) {
             DistributionPackageUtils.deleteSafely(distributionPackage);
             throw new DistributionPackageReadingException(e);
         }
@@ -128,7 +126,7 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
     }
 
     public boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageReadingException {
-        if (! (distributionPackage instanceof ResourceSharedDistributionPackage)) {
+        if (!(distributionPackage instanceof ResourceSharedDistributionPackage)) {
             return false;
         }
 
@@ -139,9 +137,9 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
     }
 
 
-    private  String generateNameFromId(ResourceResolver resourceResolver, DistributionPackage distributionPackage) throws PersistenceException {
+    private String generateNameFromId(ResourceResolver resourceResolver, DistributionPackage distributionPackage) throws PersistenceException {
 
-        String name = PACKAGE_NAME_PREFIX + "_" + System.currentTimeMillis() + "_" +  UUID.randomUUID();
+        String name = PACKAGE_NAME_PREFIX + "_" + System.currentTimeMillis() + "_" + UUID.randomUUID();
 
         Map<String, Object> properties = new HashMap<String, Object>();
         properties.put(PN_ORIGINAL_ID, distributionPackage.getId());
@@ -165,7 +163,7 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
 
         synchronized (repolock) {
             resourceResolver.create(resource, ResourceSharedDistributionPackage.REFERENCE_ROOT_NODE,
-                    Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object)"sling:Folder"));
+                    Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object) "sling:Folder"));
 
             resourceResolver.commit();
         }

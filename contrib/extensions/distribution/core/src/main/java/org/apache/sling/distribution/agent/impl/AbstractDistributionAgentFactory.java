@@ -18,10 +18,16 @@
  */
 package org.apache.sling.distribution.agent.impl;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
-import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
+import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.resources.impl.OsgiUtils;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
@@ -30,12 +36,6 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * An abstract OSGi service factory for registering {@link org.apache.sling.distribution.agent.impl.SimpleDistributionAgent}s
@@ -54,9 +54,7 @@ public abstract class AbstractDistributionAgentFactory {
     protected static final String LOG_LEVEL = "log.level";
 
 
-
     private ServiceRegistration componentReg;
-    private BundleContext savedContext;
     private Map<String, Object> savedConfig;
     private String agentName;
     private List<DistributionTrigger> triggers = new CopyOnWriteArrayList<DistributionTrigger>();
@@ -67,22 +65,18 @@ public abstract class AbstractDistributionAgentFactory {
     protected void activate(BundleContext context, Map<String, Object> config) {
         log.info("activating with config {}", OsgiUtils.osgiPropertyMapToString(config));
 
-
-        savedContext = context;
-        savedConfig = config;
-
         // inject configuration
         Dictionary<String, Object> props = new Hashtable<String, Object>();
 
         boolean enabled = PropertiesUtil.toBoolean(config.get(ENABLED), true);
         String triggersTarget = PropertiesUtil.toString(config.get(TRIGGERS_TARGET), null);
-        triggersEnabled = triggersTarget != null || triggersTarget.trim().length() > 0;
+        triggersEnabled = triggersTarget != null && triggersTarget.trim().length() > 0;
         agentName = PropertiesUtil.toString(config.get(NAME), null);
 
 
         if (enabled && agentName != null) {
 
-            for (Map.Entry<String, Object> entry: config.entrySet()) {
+            for (Map.Entry<String, Object> entry : config.entrySet()) {
                 // skip service and component related properties
                 if (entry.getKey().startsWith("service.") || entry.getKey().startsWith("component.")) {
                     continue;
@@ -106,8 +100,7 @@ public abstract class AbstractDistributionAgentFactory {
                     DefaultDistributionLog distributionLog = new DefaultDistributionLog(DistributionComponentKind.AGENT, agentName, SimpleDistributionAgent.class, level);
 
                     agent = createAgent(agentName, context, config, distributionLog);
-                }
-                catch (IllegalArgumentException e) {
+                } catch (IllegalArgumentException e) {
                     log.warn("cannot create agent", e);
                 }
 
@@ -134,7 +127,7 @@ public abstract class AbstractDistributionAgentFactory {
 
     protected void bindDistributionTrigger(DistributionTrigger distributionTrigger, Map<String, Object> config) {
         triggers.add(distributionTrigger);
-        if (agent != null  && triggersEnabled) {
+        if (agent != null && triggersEnabled) {
             agent.enableTrigger(distributionTrigger);
         }
 

@@ -16,25 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.distribution.queue;
 
+/**
+ * an entry in a {@link DistributionQueue}
+ */
 public final class DistributionQueueEntry {
-
 
     private final DistributionQueueItem item;
     private final DistributionQueueItemStatus status;
 
     public DistributionQueueEntry(DistributionQueueItem item, DistributionQueueItemStatus status) {
-
         this.item = item;
         this.status = status;
     }
 
+    /**
+     * get the status for this entry
+     *
+     * @return a {@link DistributionQueueStatus}
+     */
     public DistributionQueueItemStatus getStatus() {
         return status;
     }
 
+    /**
+     * get the queue item in this entry
+     *
+     * @return a {@link DistributionQueueItem}
+     */
     public DistributionQueueItem getItem() {
         return item;
     }
