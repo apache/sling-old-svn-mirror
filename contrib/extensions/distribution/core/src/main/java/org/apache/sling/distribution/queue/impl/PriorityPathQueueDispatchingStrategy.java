@@ -19,6 +19,7 @@
 package org.apache.sling.distribution.queue.impl;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -46,10 +47,10 @@ public class PriorityPathQueueDispatchingStrategy implements DistributionQueueDi
     private final List<String> priorityPaths;
 
     public PriorityPathQueueDispatchingStrategy(String[] priorityPaths) {
-        List<String> paths = Arrays.asList(priorityPaths);
+        List<String> paths = new ArrayList<String>(priorityPaths.length + 1);
         paths.add(DEFAULT_QUEUE_NAME);
+        paths.addAll(Arrays.asList(priorityPaths));
         this.priorityPaths = Collections.unmodifiableList(paths);
-
     }
 
     private DistributionQueue getQueue(DistributionQueueItem queueItem, DistributionQueueProvider queueProvider)
