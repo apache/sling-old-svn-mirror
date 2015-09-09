@@ -19,6 +19,7 @@
 package org.apache.sling.models.impl;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentNavigableMap;
@@ -61,8 +62,28 @@ final class AdapterImplementations {
     public void setStaticInjectAnnotationProcessorFactories(
             Collection<StaticInjectAnnotationProcessorFactory> factories) {
         this.sortedStaticInjectAnnotationProcessorFactories = factories.toArray(new StaticInjectAnnotationProcessorFactory[factories.size()]);
+        updateProcessorFactoriesInModelClasses();
     }
-
+    
+    /**
+     * Updates all {@link ModelClass} instances with updates list of static inject annotation processor factories.
+     */
+    private void updateProcessorFactoriesInModelClasses() {
+        Iterator<ModelClass<?>> items = modelClasses.values().iterator();
+        updateProcessorFactoriesInModelClasses(items);        
+        Iterator<ConcurrentNavigableMap<String,ModelClass<?>>> mapItems = adapterImplementations.values().iterator();
+        while (mapItems.hasNext()) {
+            ConcurrentNavigableMap<String,ModelClass<?>> mapItem = mapItems.next();
+            updateProcessorFactoriesInModelClasses(mapItem.values().iterator());
+        }
+    }
+    private void updateProcessorFactoriesInModelClasses(Iterator<ModelClass<?>> items) {
+        while (items.hasNext()) {
+            ModelClass<?> item = items.next();
+            item.updateProcessorFactories(sortedStaticInjectAnnotationProcessorFactories);
+        }
+    }
+    
     /**
      * Add implementation mapping for the given adapter type.
      * @param adapterType Adapter type
