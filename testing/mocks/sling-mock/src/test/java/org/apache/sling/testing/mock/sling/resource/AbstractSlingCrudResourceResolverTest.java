@@ -64,7 +64,7 @@ public abstract class AbstractSlingCrudResourceResolverTest {
     private static final Calendar CALENDAR_VALUE = Calendar.getInstance();
     private static final byte[] BINARY_VALUE = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 };
 
-    private ResourceResolver resourceResolver;
+    protected ResourceResolver resourceResolver;
     protected Resource testRoot;
     private static volatile long rootNodeCounter;
 
@@ -110,7 +110,7 @@ public abstract class AbstractSlingCrudResourceResolverTest {
      * Return a test root resource, created on demand, with a unique path
      * @throws PersistenceException
      */
-    private Resource getTestRootResource() throws PersistenceException {
+    protected Resource getTestRootResource() throws PersistenceException {
         if (this.testRoot == null) {
             Map<String, Object> props = new HashMap<String, Object>();
             props.put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
