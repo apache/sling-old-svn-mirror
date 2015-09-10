@@ -19,6 +19,9 @@ package org.apache.sling.models.spi;
 import org.apache.sling.models.factory.InvalidModelException;
 import org.apache.sling.models.factory.ValidationException;
 
+import aQute.bnd.annotation.ConsumerType;
+
+@ConsumerType
 public interface ModelValidation {
 
     /**

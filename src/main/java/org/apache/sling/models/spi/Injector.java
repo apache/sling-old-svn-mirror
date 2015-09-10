@@ -22,9 +22,12 @@ import java.lang.reflect.Type;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * Service interface for pluggable value injectors.
  */
+@ConsumerType
 public interface Injector {
 
     /**
