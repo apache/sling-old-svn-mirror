@@ -18,11 +18,14 @@ package org.apache.sling.models.spi.injectorspecific;
 
 import java.lang.reflect.AnnotatedElement;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * Factory for {@link InjectAnnotationProcessor} that is evaluated once
  * a sling model implementation class is registered.
  * Whenever possible this interface should be favored above {@link InjectAnnotationProcessorFactory2}.
  */
+@ConsumerType
 public interface StaticInjectAnnotationProcessorFactory {
 
     /**

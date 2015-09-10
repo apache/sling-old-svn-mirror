@@ -16,11 +16,14 @@
  */
 package org.apache.sling.models.spi.injectorspecific;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * Processor for injector-specific annotations.
  * @deprecated Use {@link InjectAnnotationProcessor2} instead
  */
 @Deprecated
+@ConsumerType
 public interface InjectAnnotationProcessor {
 
     /**
