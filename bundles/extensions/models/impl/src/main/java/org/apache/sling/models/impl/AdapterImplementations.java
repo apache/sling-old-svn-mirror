@@ -185,4 +185,25 @@ final class AdapterImplementations {
         return null;
     }
 
+    /**
+     * 
+     * @param adapterType the type to check
+     * @return {@code true} in case the given type is a model (may be with a different adapter class)
+     */
+    public <ModelType> boolean isModelClass(Class<ModelType> adapterType) {
+        String key = adapterType.getName();
+        
+        // lookup in cache for models without adapter classes
+        ModelClass<ModelType> modelClass = (ModelClass<ModelType>)modelClasses.get(key);
+        if (modelClass!=null) {
+            return true;
+        }
+
+        // not found? look in cache with adapter classes
+        ConcurrentNavigableMap<String,ModelClass<?>> implementations = adapterImplementations.get(key);
+        if (implementations==null || implementations.isEmpty()) {
+            return false;
+        }
+        return true;
+    }
 }
