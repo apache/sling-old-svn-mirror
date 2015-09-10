@@ -20,13 +20,13 @@ package org.apache.sling.models.factory;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.models.annotations.Model;
+import aQute.bnd.annotation.ProviderType;
 
 /**
- * The ModelFactory instantiates Sling Model classes similar to {@link 
-#adaptTo} but will throw an exception in case
+ * The ModelFactory instantiates Sling Model classes similar to #adaptTo but will throw an exception in case
  * instantiation fails for some reason.
  */
+@ProviderType
 public interface ModelFactory {
 
     /**
