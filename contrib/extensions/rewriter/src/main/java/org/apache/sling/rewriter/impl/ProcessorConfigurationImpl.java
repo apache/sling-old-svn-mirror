@@ -37,29 +37,29 @@ import org.apache.sling.rewriter.ProcessingContext;
  */
 public class ProcessorConfigurationImpl implements PipelineConfiguration {
 
-    private static final String PROPERTY_ORDER = "order";
+    static final String PROPERTY_ORDER = "order";
 
-    private static final String PROPERTY_PATHS = "paths";
+    static final String PROPERTY_PATHS = "paths";
 
-    private static final String PROPERTY_EXTENSIONS = "extensions";
+    static final String PROPERTY_EXTENSIONS = "extensions";
 
-    private static final String PROPERTY_PROCESSOR_TYPE = "processorType";
+    static final String PROPERTY_PROCESSOR_TYPE = "processorType";
 
-    private static final String PROPERTY_CONTENT_TYPES = "contentTypes";
+    static final String PROPERTY_CONTENT_TYPES = "contentTypes";
 
-    private static final String PROPERTY_RESOURCE_TYPES = "resourceTypes";
+    static final String PROPERTY_RESOURCE_TYPES = "resourceTypes";
 
-    private static final String PROPERTY_SELECTORS = "selectors";
+    static final String PROPERTY_SELECTORS = "selectors";
 
-    private static final String PROPERTY_TRANFORMERS = "transformerTypes";
+    static final String PROPERTY_TRANFORMERS = "transformerTypes";
 
-    private static final String PROPERTY_GENERATOR = "generatorType";
+    static final String PROPERTY_GENERATOR = "generatorType";
 
-    private static final String PROPERTY_SERIALIZER = "serializerType";
+    static final String PROPERTY_SERIALIZER = "serializerType";
 
-    private static final String PROPERTY_ACTIVE = "enabled";
+    static final String PROPERTY_ACTIVE = "enabled";
 
-    private static final String PROPERTY_PROCESS_ERROR = "processError";
+    static final String PROPERTY_PROCESS_ERROR = "processError";
 
 
     /** For which content types should this processor be applied. */
