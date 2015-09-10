@@ -68,8 +68,9 @@ public interface ModelFactory {
     /**
      * Checks if a given type can be instantiated though Sling Models. This checks that
      * <ul>
-     * <li>there is a class annotated with {@link Model} which adapts to the given type</li>
+     * <li>there is a class annotated with <code>Model</code> which adapts to the given type</li>
      * <li>this class is registered as Sling Model (i.e. the package is listed in the "Sling-Model-Packages" header from the bundles manifest)</li>
+     * </ul>
      * Only if both conditions are fulfilled this method will return {@code true}.
      * @param type the class to check
      * @return {@code true} in case the given type can be instantiated though Sling Models. 
