@@ -36,6 +36,7 @@ import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.common.DefaultClusterViewImpl;
 import org.apache.sling.discovery.impl.common.DefaultInstanceDescriptionImpl;
+import org.apache.sling.discovery.impl.setup.Instance;
 import org.apache.sling.discovery.impl.setup.MockFactory;
 import org.apache.sling.discovery.impl.setup.OSGiFactory;
 import org.apache.sling.discovery.impl.topology.TopologyTestHelper;
@@ -55,8 +56,8 @@ public class TopologyAnnouncementRegistryTest {
                 .mockResourceResolverFactory();
         config = new Config() {
             public long getHeartbeatTimeout() {
-                // 5s for tests that also run on apache jenkins
-                return 5;
+                // 10s for tests that also run on apache jenkins
+                return 10;
             };
         };
         slingId = UUID.randomUUID().toString();
@@ -140,7 +141,7 @@ public class TopologyAnnouncementRegistryTest {
         assertTrue(registry.registerAnnouncement(ann)!=-1);
         assertEquals(1, registry.listInstances(localCluster).size());
 
-        Thread.sleep(5500);
+        Thread.sleep(10500);
         assertEquals(0, registry.listInstances(localCluster).size());
     
     }
@@ -279,7 +280,7 @@ public class TopologyAnnouncementRegistryTest {
         }
 
         
-        Thread.sleep(5500);
+        Thread.sleep(10500);
         {
             Announcement testAnn = createAnnouncement(myCluster, 0, false);
             assertEquals(1, testAnn.listInstances().size());
@@ -357,6 +358,8 @@ public class TopologyAnnouncementRegistryTest {
         assertAnnouncements(registry3, myCluster, 4, 16);
         
         myCluster = createCluster(instance1, instance2);
+        
+        Instance.dumpRepo(resourceResolverFactory);
 
         assertEquals(2, registry1.listAnnouncementsInSameCluster(myCluster).size());
         assertEquals(1, registry1.listLocalAnnouncements().size());
@@ -368,7 +371,7 @@ public class TopologyAnnouncementRegistryTest {
         assertEquals(0, registry2.listLocalIncomingAnnouncements().size());
         assertAnnouncements(registry2, myCluster, 3, 8);
         
-        Thread.sleep(5500);
+        Thread.sleep(10500);
         assertAnnouncements(registry1, myCluster, 3, 8);
         assertAnnouncements(registry2, myCluster, 3, 8);
         registry1.checkExpiredAnnouncements();
