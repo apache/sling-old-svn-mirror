@@ -17,24 +17,30 @@
  */
 package org.apache.sling.resourceresolver.impl.helper;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.sling.api.resource.DynamicResourceProvider;
+import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.LoginException;
-import org.apache.sling.api.resource.ModifyingResourceProvider;
 import org.apache.sling.api.resource.PersistenceException;
-import org.apache.sling.api.resource.RefreshableResourceProvider;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.resource.runtime.dto.AuthType;
+import org.apache.sling.resourceresolver.impl.BasicResolveContext;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
+import org.apache.sling.spi.resource.provider.ResolveContext;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
 
 /**
  * This class keeps track of the used resource providers for a
@@ -43,17 +49,15 @@ import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
  */
 public class ResourceResolverContext {
 
-    /** A map of all used providers created by a factory. */
-    private final Map<Long, ResourceProvider> providers = new HashMap<Long, ResourceProvider>();
+    /**
+     * Context objects for all used resource providers.
+     */
+    private final Map<ResourceProvider<?>, Object> providerStates = new IdentityHashMap<ResourceProvider<?>, Object>();
 
-    /** A set of all dynamic providers (for closing them later on) */
-    private final Set<DynamicResourceProvider> dynamicProviders = new HashSet<DynamicResourceProvider>();
-
-    /** A set of all refreshable providers */
-    private final Set<RefreshableResourceProvider> refreshableProviders = new HashSet<RefreshableResourceProvider>();
-
-    /** A set of all modifying providers */
-    private final Set<ModifyingResourceProvider> modifyingProviders = new HashSet<ModifyingResourceProvider>();
+    /**
+     * All ResourceProviders to be used.
+     */
+    private final List<ResourceProviderHandler> providerHandlers;
 
     /** Is this a resource resolver for an admin? */
     private final boolean isAdmin;
@@ -75,10 +79,13 @@ public class ResourceResolverContext {
     /**
      * Create a new resource resolver context.
      */
-    public ResourceResolverContext(final boolean isAdmin, final Map<String, Object> originalAuthInfo, final ResourceAccessSecurityTracker resourceAccessSecurityTracker) {
+    public ResourceResolverContext(final boolean isAdmin, final Map<String, Object> originalAuthInfo,
+            final ResourceAccessSecurityTracker resourceAccessSecurityTracker,
+            final Collection<ResourceProviderHandler> providerHandlers) {
         this.isAdmin = isAdmin;
         this.originalAuthInfo = originalAuthInfo;
         this.resourceAccessSecurityTracker = resourceAccessSecurityTracker;
+        this.providerHandlers = new ArrayList<ResourceProviderHandler>(providerHandlers);
     }
 
     /**
@@ -96,39 +103,12 @@ public class ResourceResolverContext {
     }
 
     /**
-     * Add a new resource provider
-     * @param key      The unique key of the provider
-     * @param provider The provider.
-     */
-    public void addFactoryResourceProvider(final Long key, final ResourceProvider provider) {
-        this.providers.put(key, provider);
-        if (provider instanceof DynamicResourceProvider) {
-            this.dynamicProviders.add((DynamicResourceProvider) provider);
-        }
-        if (provider instanceof ModifyingResourceProvider) {
-            this.modifyingProviders.add((ModifyingResourceProvider) provider);
-        }
-        if (provider instanceof RefreshableResourceProvider) {
-            this.refreshableProviders.add((RefreshableResourceProvider)provider);
-        }
-    }
-
-    /**
-     * Return a resource provider for a given key
-     * @param key The unique key of a provider
-     * @return The resource provider or <code>null</code>
-     */
-    public ResourceProvider getFactoryResourceProvider(final Long key) {
-        return this.providers.get(key);
-    }
-
-    /**
      * Check all active dynamic resource providers.
      */
-    public boolean isLive() {
+    public boolean isLive(ResourceResolver resolver) {
         boolean result = true;
-        for (final DynamicResourceProvider provider : this.dynamicProviders) {
-            if (!provider.isLive()) {
+        for (final ResourceProviderHandler handler : this.providerHandlers) {
+            if (!handler.getResourceProvider().isLive((ResolveContext) getResolveContext(resolver, handler))) {
                 result = false;
                 break;
             }
@@ -136,22 +116,51 @@ public class ResourceResolverContext {
         return result;
     }
 
+    public ResolveContext<?> getResolveContext(ResourceResolver resolver, ResourceProviderHandler handler) {
+        return getResolveContext(resolver, handler, Collections.<String,String>emptyMap());
+    }
+
+    public ResolveContext<?> getResolveContext(ResourceResolver resolver, ResourceProviderHandler handler, Map<String, String> parameters) {
+        try {
+            final Object state = authenticate(handler);
+            return new BasicResolveContext(resolver, parameters, state);
+        } catch (LoginException e) {
+            throw new SlingException("Can't create resolve context", e);
+        }
+    }
+
+    private Object authenticate(ResourceProviderHandler handler) throws LoginException {
+        if (handler.getInfo().getAuthType() == AuthType.no) {
+            return null;
+        }
+
+        ResourceProvider<?> resourceProvider = handler.getResourceProvider();
+        if (providerStates.containsKey(resourceProvider)) {
+            return providerStates.get(resourceProvider);
+        } else {
+            Object state = resourceProvider.authenticate(originalAuthInfo);
+            providerStates.put(resourceProvider, state);
+            return state;
+        }
+    }
+
     /**
      * Close all dynamic resource providers.
      */
     public void close() {
         if ( this.isClosed.compareAndSet(false, true)) {
-            for (final DynamicResourceProvider provider : this.dynamicProviders) {
+            for (final Entry<ResourceProvider<?>, Object> e : providerStates.entrySet()) {
                 try {
-                    provider.close();
+                    if (e.getValue() != null) {
+                        ((ResourceProvider) e.getKey()).logout(e.getValue());
+                    }
                 } catch ( final Throwable t) {
                     // the provider might already be terminated (bundle stopped etc.)
                     // so we ignore anything from here
                 }
             }
-            this.dynamicProviders.clear();
-            this.providers.clear();
-            this.refreshableProviders.clear();
+            this.providerHandlers.clear();
+            this.providerStates.clear();
             if ( this.resourceTypeResourceResolver != null ) {
                 try {
                     this.resourceTypeResourceResolver.close();
@@ -167,28 +176,34 @@ public class ResourceResolverContext {
     /**
      * Revert all transient changes.
      */
-    public void revert(final ResourceResolver resolver) {
-        for(final ModifyingResourceProvider provider : this.modifyingProviders) {
-            provider.revert(resolver);
+    public void revert(ResourceResolver resolver) {
+        for (final ResourceProviderHandler handler : this.providerHandlers) {
+            if (handler.getInfo().getModifiable()) {
+                handler.getResourceProvider().revert((ResolveContext) getResolveContext(resolver, handler));
+            }
         }
     }
 
     /**
      * Commit all transient changes
      */
-    public void commit(final ResourceResolver resolver) throws PersistenceException {
-        for(final ModifyingResourceProvider provider : this.modifyingProviders) {
-            provider.commit(resolver);
+    public void commit(ResourceResolver resolver) throws PersistenceException {
+        for (final ResourceProviderHandler handler : this.providerHandlers) {
+            if (handler.getInfo().getModifiable()) {
+                handler.getResourceProvider().commit((ResolveContext) getResolveContext(resolver, handler));
+            }
         }
     }
 
     /**
      * Do we have changes?
      */
-    public boolean hasChanges(final ResourceResolver resolver) {
-        for(final ModifyingResourceProvider provider : this.modifyingProviders) {
-            if ( provider.hasChanges(resolver) ) {
-                return true;
+    public boolean hasChanges(ResourceResolver resolver) {
+        for (final ResourceProviderHandler handler : this.providerHandlers) {
+            if (handler.getInfo().getModifiable()) {
+                if (handler.getResourceProvider().hasChanges((ResolveContext) getResolveContext(resolver, handler))) {
+                    return true;
+                }
             }
         }
         return false;
@@ -197,9 +212,9 @@ public class ResourceResolverContext {
     /**
      * Refresh
      */
-    public void refresh() {
-        for(final RefreshableResourceProvider provider : this.refreshableProviders) {
-            provider.refresh();
+    public void refresh(ResourceResolver resolver) {
+        for (final ResourceProviderHandler handler : this.providerHandlers) {
+            handler.getResourceProvider().refresh((ResolveContext) getResolveContext(resolver, handler));
         }
     }
 
@@ -305,5 +320,22 @@ public class ResourceResolverContext {
         }
 
         return null;
+    }
+
+    public ResourceResolverContext clone(Map<String, Object> authenticationInfo) {
+        // create the merged map
+        final Map<String, Object> newAuthenticationInfo = new HashMap<String, Object>();
+        if (originalAuthInfo != null) {
+            newAuthenticationInfo.putAll(originalAuthInfo);
+        }
+        if (authenticationInfo != null) {
+            newAuthenticationInfo.putAll(authenticationInfo);
+        }
+
+        return new ResourceResolverContext(isAdmin, newAuthenticationInfo, resourceAccessSecurityTracker, providerHandlers);
+    }
+
+    public List<ResourceProviderHandler> getProviders() {
+        return providerHandlers;
     }
 }

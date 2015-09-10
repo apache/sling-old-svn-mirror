@@ -37,13 +37,12 @@ import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.References;
 import org.apache.sling.api.resource.ResourceDecorator;
-import org.apache.sling.api.resource.ResourceProvider;
-import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
 import org.apache.sling.resourceresolver.impl.tree.RootResourceProviderEntry;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.framework.Bundle;
@@ -73,8 +72,6 @@ import org.osgi.service.event.EventAdmin;
     @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation")
 })
 @References({
-    @Reference(name = "ResourceProvider", referenceInterface = ResourceProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
-    @Reference(name = "ResourceProviderFactory", referenceInterface = ResourceProviderFactory.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
     @Reference(name = "ResourceDecorator", referenceInterface = ResourceDecorator.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
 })
 public class ResourceResolverFactoryActivator implements Runnable {
@@ -265,7 +262,8 @@ public class ResourceResolverFactoryActivator implements Runnable {
     private boolean mangleNamespacePrefixes;
 
     /** The root provider entry. */
-    private final RootResourceProviderEntry rootProviderEntry = new RootResourceProviderEntry();
+    @Reference
+    RootResourceProviderEntry rootProviderEntry;
 
     /** Event admin. */
     @Reference
@@ -277,6 +275,9 @@ public class ResourceResolverFactoryActivator implements Runnable {
 
     @Reference
     ResourceAccessSecurityTracker resourceAccessSecurityTracker;
+
+    @Reference
+    private ResourceProviderTracker resourceProviderTracker;
 
     /** ComponentContext */
     private volatile ComponentContext componentContext;
@@ -315,9 +316,6 @@ public class ResourceResolverFactoryActivator implements Runnable {
 
     /** Background thread coordination. */
     private final Object coordinator = new Object();
-
-    /** Paranoid provider handling? */
-    private volatile boolean paranoidProviderHandling;
 
     /** Background thread operation */
     private enum BG_OP {
@@ -421,7 +419,6 @@ public class ResourceResolverFactoryActivator implements Runnable {
     @Activate
     protected void activate(final ComponentContext componentContext) {
         this.componentContext = componentContext;
-        this.rootProviderEntry.setEventAdmin(this.eventAdmin);
         final Dictionary<?, ?> properties = componentContext.getProperties();
 
         final BidiMap virtuals = new TreeBidiMap();
@@ -528,9 +525,6 @@ public class ResourceResolverFactoryActivator implements Runnable {
         final String[] required = PropertiesUtil.toStringArray(properties.get(PROP_REQUIRED_PROVIDERS));
         this.preconds.activate(bc, required);
 
-        this.paranoidProviderHandling = PropertiesUtil.toBoolean(properties.get(PROP_PARANOID_PROVIDER_HANDLING),
-                DEFAULT_PARANOID_PROVIDER_HANDLING);
-
         this.checkFactoryPreconditions();
 
         final Thread t = new Thread(this);
@@ -545,7 +539,6 @@ public class ResourceResolverFactoryActivator implements Runnable {
     protected void deactivate() {
         this.componentContext = null;
         this.preconds.deactivate();
-        this.rootProviderEntry.setEventAdmin(null);
         this.resourceDecoratorTracker.close();
 
         this.unregisterFactory();
@@ -631,42 +624,6 @@ public class ResourceResolverFactoryActivator implements Runnable {
     }
 
     /**
-     * Bind a resource provider.
-     */
-    protected void bindResourceProvider(final ResourceProvider provider, final Map<String, Object> props) {
-        this.rootProviderEntry.bindResourceProvider(provider, props);
-        this.preconds.bindProvider(props);
-        this.addOperation(BG_OP.CHECK);
-    }
-
-    /**
-     * Unbind a resource provider.
-     */
-    protected void unbindResourceProvider(final ResourceProvider provider, final Map<String, Object> props) {
-        this.rootProviderEntry.unbindResourceProvider(provider, props);
-        this.preconds.unbindProvider(props);
-        this.addOperation(this.paranoidProviderHandling ? BG_OP.UNREGISTER_AND_CHECK : BG_OP.CHECK);
-    }
-
-    /**
-     * Bind a resource provider factory.
-     */
-    protected void bindResourceProviderFactory(final ResourceProviderFactory provider, final Map<String, Object> props) {
-        this.rootProviderEntry.bindResourceProviderFactory(provider, props);
-        this.preconds.bindProvider(props);
-        this.addOperation(BG_OP.CHECK);
-    }
-
-    /**
-     * Unbind a resource provider factory.
-     */
-    protected void unbindResourceProviderFactory(final ResourceProviderFactory provider, final Map<String, Object> props) {
-        this.rootProviderEntry.unbindResourceProviderFactory(provider, props);
-        this.preconds.unbindProvider(props);
-        this.addOperation(BG_OP.UNREGISTER_AND_CHECK);
-    }
-
-    /**
      * Bind a resource decorator.
      */
     protected void bindResourceDecorator(final ResourceDecorator decorator, final Map<String, Object> props) {
@@ -729,5 +686,9 @@ public class ResourceResolverFactoryActivator implements Runnable {
             this.operations.add(op);
             this.coordinator.notify();
         }
+    }
+
+    public ResourceProviderTracker getResourceProviderTracker() {
+        return resourceProviderTracker;
     }
 }

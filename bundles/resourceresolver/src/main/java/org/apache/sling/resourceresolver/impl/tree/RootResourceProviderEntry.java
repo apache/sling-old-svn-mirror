@@ -18,33 +18,33 @@
  */
 package org.apache.sling.resourceresolver.impl.tree;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Dictionary;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import org.apache.sling.api.SlingConstants;
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.resource.AttributableResourceProvider;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.QueriableResourceProvider;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceProvider;
-import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.api.resource.runtime.dto.AuthType;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
-import org.apache.sling.resourceresolver.impl.helper.SortedProviderList;
-import org.osgi.service.event.Event;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
+import org.apache.sling.spi.resource.provider.JCRQueryProvider;
+import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.osgi.service.event.EventAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,36 +53,19 @@ import org.slf4j.LoggerFactory;
  * This is the root resource provider entry which keeps track of the resource
  * providers.
  */
+@Component
+@Service(RootResourceProviderEntry.class)
 public class RootResourceProviderEntry extends ResourceProviderEntry {
 
     /** Default logger */
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     /** Event admin. */
+    @Reference
     private EventAdmin eventAdmin;
 
-    /** Array of required factories. */
-    private ResourceProviderFactoryHandler[] requiredFactories = new ResourceProviderFactoryHandler[0];
-
-    /** All adaptable resource providers. */
-    private final SortedProviderList<Adaptable> adaptableProviders = new SortedProviderList<Adaptable>(Adaptable.class);
-
-    /** All queriable resource providers. */
-    private final SortedProviderList<QueriableResourceProvider> queriableProviders = new SortedProviderList<QueriableResourceProvider>(QueriableResourceProvider.class);
-
-    /** All attributable resource providers. */
-    private final SortedProviderList<AttributableResourceProvider> attributableProviders = new SortedProviderList<AttributableResourceProvider>(AttributableResourceProvider.class);
-
-    public RootResourceProviderEntry() {
-        super("/", null);
-    }
-
-    /**
-     * Set or unset the event admin.
-     */
-    public void setEventAdmin(final EventAdmin ea) {
-        this.eventAdmin = ea;
-    }
+    @Reference
+    private ResourceProviderTracker resourceProviderTracker;
 
     /**
      * Login into all required factories
@@ -90,9 +73,10 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
      */
     public void loginToRequiredFactories(final ResourceResolverContext ctx) throws LoginException {
         try {
-            final ResourceProviderFactoryHandler[] factories = this.requiredFactories;
-            for (final ResourceProviderFactoryHandler wrapper : factories) {
-                wrapper.login(ctx);
+            for (ResourceProviderHandler h : ctx.getProviders()) {
+                if (h.getInfo().getAuthType() == AuthType.required) {
+                    h.getResourceProvider().authenticate(ctx.getAuthenticationInfo());
+                }
             }
         } catch (final LoginException le) {
             // login failed, so logout if already logged in providers
@@ -105,14 +89,15 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
      * Invoke all resource providers and find an adaption
      * @see Adaptable
      */
-    public <AdapterType> AdapterType adaptTo(final ResourceResolverContext ctx, final Class<AdapterType> type) {
-        final Iterator<Adaptable> i = this.adaptableProviders.getProviders(ctx, null);
-        AdapterType result = null;
-        while ( result == null && i.hasNext() ) {
-            final Adaptable adap = i.next();
-            result = adap.adaptTo(type);
+    public <AdapterType> AdapterType adaptTo(final ResourceResolver resolver, final ResourceResolverContext ctx, final Class<AdapterType> type) {
+        for (ResourceProviderHandler h :ctx.getProviders()) {
+            ResolveContext resolveContext = ctx.getResolveContext(resolver, h);
+            AdapterType adaptee = (AdapterType) h.getResourceProvider().adaptTo(resolveContext, type);
+            if (adaptee != null) {
+                return adaptee;
+            }
         }
-        return result;
+        return null;
     }
 
     /**
@@ -121,14 +106,8 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
      */
     public Iterator<Resource> findResources(final ResourceResolverContext ctx,
                     final ResourceResolver resolver, final String query, final String language) {
-        final Iterator<QueriableResourceProvider> i = this.queriableProviders.getProviders(ctx,
-                        new SortedProviderList.Filter<QueriableResourceProvider>() {
+        final Iterator<ResourceProviderHandler> i = getQueriableProviders(ctx, resolver, language);
 
-                            public boolean select(final ProviderHandler handler, final QueriableResourceProvider provider) {
-                                return handler.supportsQueryLanguages(language);
-                            }
-
-                        });
         return new Iterator<Resource>() {
 
             private Resource nextObject = this.seek();
@@ -142,10 +121,9 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
                 if ( nextResourceIter == null || !nextResourceIter.hasNext() ) {
                     nextResourceIter = null;
                     while ( i.hasNext() && nextResourceIter == null ) {
-                        final QueriableResourceProvider adap = i.next();
-                        actProviderHandler = queriableProviders.getProviderHandler(ctx, adap);
-                        String transformedQuery = actProviderHandler.transformQuery(ctx, resolver, query, language);
-                        nextResourceIter = adap.findResources(resolver, transformedQuery, language);
+                        ResourceProviderHandler h = i.next();
+                        ResolveContext resolveContext = ctx.getResolveContext(resolver, h);
+                        nextResourceIter = h.getResourceProvider().getJCRQueryProvider().findResources(resolveContext, query, language);
                     }
                 }
                 if ( nextResourceIter != null ) {
@@ -190,20 +168,31 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
         };
     }
 
+    private Iterator<ResourceProviderHandler> getQueriableProviders(final ResourceResolverContext ctx,
+            final ResourceResolver resolver, final String language) {
+        List<ResourceProviderHandler> queriableProviderList = new ArrayList<ResourceProviderHandler>();
+        for (ResourceProviderHandler h : ctx.getProviders()) {
+            ResolveContext resolveContext = ctx.getResolveContext(resolver, h);
+            JCRQueryProvider jcrQueryProvider = h.getResourceProvider().getJCRQueryProvider();
+            if (jcrQueryProvider == null) {
+                continue;
+            }
+            String[] supported = jcrQueryProvider.getSupportedLanguages(resolveContext);
+            if (ArrayUtils.contains(supported, language)) {
+                queriableProviderList.add(h);
+            }
+        }
+        final Iterator<ResourceProviderHandler> i = queriableProviderList.iterator();
+        return i;
+    }
+
     /**
      * Invoke all queriable resource providers.
      * @see QueriableResourceProvider#queryResources(ResourceResolver, String, String)
      */
     public Iterator<Map<String, Object>> queryResources(final ResourceResolverContext ctx,
                     final ResourceResolver resolver, final String query, final String language) {
-        final Iterator<QueriableResourceProvider> i = this.queriableProviders.getProviders(ctx,
-                        new SortedProviderList.Filter<QueriableResourceProvider>() {
-
-            public boolean select(final ProviderHandler handler, final QueriableResourceProvider provider) {
-                return handler.supportsQueryLanguages(language);
-            }
-
-        });
+        final Iterator<ResourceProviderHandler> i = getQueriableProviders(ctx, resolver, language);
         return new Iterator<Map<String, Object>>() {
 
             private ValueMap nextObject = this.seek();
@@ -215,8 +204,9 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
                 if ( nextResourceIter == null || !nextResourceIter.hasNext() ) {
                     nextResourceIter = null;
                     while ( i.hasNext() && nextResourceIter == null ) {
-                        final QueriableResourceProvider adap = i.next();
-                        nextResourceIter = adap.queryResources(resolver, query, language);
+                        ResourceProviderHandler h = i.next();
+                        ResolveContext resolveContext = ctx.getResolveContext(resolver, h);
+                        nextResourceIter = h.getResourceProvider().getJCRQueryProvider().queryResources(resolveContext, query, language);
                     }
                 }
                 if ( nextResourceIter != null ) {
@@ -269,16 +259,14 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
         if ( ctx.getAuthenticationInfo() != null ) {
             names.addAll(ctx.getAuthenticationInfo().keySet());
         }
-        final Iterator<AttributableResourceProvider> i = this.attributableProviders.getProviders(ctx, null);
-        while ( i.hasNext() ) {
-            final AttributableResourceProvider adap = i.next();
-            final Collection<String> newNames = adap.getAttributeNames(resolver);
+        for (ResourceProviderHandler h : ctx.getProviders()) {
+            ResolveContext resolveContext = ctx.getResolveContext(resolver, h);
+            final Collection<String> newNames = h.getResourceProvider().getAttributeNames(resolveContext);
             if ( newNames != null ) {
                 names.addAll(newNames);
             }
         }
         names.remove(FORBIDDEN_ATTRIBUTE);
-
         return names.iterator();
     }
 
@@ -293,151 +281,15 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
                 result = ctx.getAuthenticationInfo().get(name);
             }
             if ( result == null ) {
-                final Iterator<AttributableResourceProvider> i = this.attributableProviders.getProviders(ctx, null);
-                while ( result == null && i.hasNext() ) {
-                    final AttributableResourceProvider adap = i.next();
-                    result = adap.getAttribute(resolver, name);
+                for (ResourceProviderHandler h : ctx.getProviders()) {
+                    ResolveContext resolveContext = ctx.getResolveContext(resolver, h);
+                    result = h.getResourceProvider().getAttribute(resolveContext, name);
+                    if (result != null) {
+                        break;
+                    }
                 }
             }
         }
         return result;
-    }
-
-    /**
-     * Bind a resource provider.
-     */
-    public void bindResourceProvider(final ResourceProvider provider, final Map<String, Object> props) {
-        final ResourceProviderHandler handler = new ResourceProviderHandler(provider, props);
-
-        this.bindHandler(handler);
-        this.adaptableProviders.add(handler);
-        this.queriableProviders.add(handler);
-        this.attributableProviders.add(handler);
-    }
-
-    /**
-     * Unbind a resource provider.
-     */
-    public void unbindResourceProvider(final ResourceProvider provider, final Map<String, Object> props) {
-        final ResourceProviderHandler handler = new ResourceProviderHandler(provider, props);
-
-        this.unbindHandler(handler);
-        this.adaptableProviders.remove(handler);
-        this.queriableProviders.remove(handler);
-        this.attributableProviders.remove(handler);
-    }
-
-    /**
-     * Bind a resource provider factory.
-     */
-    public void bindResourceProviderFactory(final ResourceProviderFactory factory, final Map<String, Object> props) {
-        final ResourceProviderFactoryHandler handler = new ResourceProviderFactoryHandler(factory, props);
-
-        this.bindHandler(handler);
-        this.adaptableProviders.add(handler);
-        this.queriableProviders.add(handler);
-        this.attributableProviders.add(handler);
-
-        final boolean required = PropertiesUtil.toBoolean(props.get(ResourceProviderFactory.PROPERTY_REQUIRED), false);
-        if (required) {
-            synchronized (this) {
-                final List<ResourceProviderFactoryHandler> factories = new LinkedList<ResourceProviderFactoryHandler>();
-                factories.addAll(Arrays.asList(this.requiredFactories));
-                factories.add(handler);
-                this.requiredFactories = factories.toArray(new ResourceProviderFactoryHandler[factories.size()]);
-            }
-        }
-    }
-
-    /**
-     * Unbind a resource provider factory
-     */
-    public void unbindResourceProviderFactory(final ResourceProviderFactory factory, final Map<String, Object> props) {
-        final ResourceProviderFactoryHandler handler = new ResourceProviderFactoryHandler(factory, props);
-
-        this.unbindHandler(handler);
-        this.adaptableProviders.remove(handler);
-        this.queriableProviders.remove(handler);
-        this.attributableProviders.remove(handler);
-
-        final boolean required = PropertiesUtil.toBoolean(props.get(ResourceProviderFactory.PROPERTY_REQUIRED), false);
-        if (required) {
-            synchronized (this) {
-                final List<ResourceProviderFactoryHandler> factories = new LinkedList<ResourceProviderFactoryHandler>();
-                factories.addAll(Arrays.asList(this.requiredFactories));
-                factories.remove(handler);
-                this.requiredFactories = factories.toArray(new ResourceProviderFactoryHandler[factories.size()]);
-            }
-        }
-    }
-
-    /**
-     * Bind a resource provider wrapper
-     */
-    private void bindHandler(final ProviderHandler provider) {
-        // this is just used for debug logging
-        final String debugServiceName = getDebugServiceName(provider);
-
-        logger.debug("bindResourceProvider: Binding {}", debugServiceName);
-
-        final String[] roots = provider.getRoots();
-        boolean foundRoot = false;
-        if (roots != null) {
-            final EventAdmin localEA = this.eventAdmin;
-            for (final String root : roots) {
-                foundRoot = true;
-
-                this.addResourceProvider(root, provider);
-
-                logger.debug("bindResourceProvider: {}={} ({})", new Object[] { root, provider, debugServiceName });
-                if (localEA != null) {
-                    final Dictionary<String, Object> eventProps = new Hashtable<String, Object>();
-                    eventProps.put(SlingConstants.PROPERTY_PATH, root);
-                    localEA.postEvent(new Event(SlingConstants.TOPIC_RESOURCE_PROVIDER_ADDED, eventProps));
-                }
-            }
-        }
-        if ( !foundRoot ) {
-            logger.info("Ignoring ResourceProvider(Factory) {} : no configured roots.", provider.getName());
-        }
-        logger.debug("bindResourceProvider: Bound {}, current providers={}", debugServiceName, Arrays.asList(getResourceProviders()) );
-    }
-
-    /**
-     * Unbind a resource provider wrapper
-     */
-    private void unbindHandler(final ProviderHandler provider) {
-        // this is just used for debug logging
-        final String debugServiceName = getDebugServiceName(provider);
-
-        logger.debug("unbindResourceProvider: Unbinding {}", debugServiceName);
-
-        final String[] roots = provider.getRoots();
-        if (roots != null) {
-
-            final EventAdmin localEA = this.eventAdmin;
-
-            for (final String root : roots) {
-
-                this.removeResourceProvider(root, provider);
-
-                logger.debug("unbindResourceProvider: root={} ({})", root, debugServiceName);
-                if (localEA != null) {
-                    final Dictionary<String, Object> eventProps = new Hashtable<String, Object>();
-                    eventProps.put(SlingConstants.PROPERTY_PATH, root);
-                    localEA.postEvent(new Event(SlingConstants.TOPIC_RESOURCE_PROVIDER_REMOVED, eventProps));
-                }
-            }
-        }
-
-        logger.debug("unbindResourceProvider: Unbound {}, current providers={}", debugServiceName, Arrays.asList(getResourceProviders()) );
-    }
-
-    private String getDebugServiceName(final ProviderHandler provider) {
-        if (logger.isDebugEnabled()) {
-            return provider.getName();
-        }
-
-        return null;
     }
 }

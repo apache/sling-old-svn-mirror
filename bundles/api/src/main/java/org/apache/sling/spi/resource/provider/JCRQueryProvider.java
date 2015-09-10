@@ -42,7 +42,7 @@ public interface JCRQueryProvider<T> {
     /**
      * The supported languages of the resource provider.
      */
-    String getSupportedLanguages();
+    String[] getSupportedLanguages(@Nonnull ResolveContext<T> ctx);
 
     /**
      * Searches for resources using the given query formulated in the given

@@ -37,7 +37,6 @@ import org.apache.jackrabbit.api.observation.JackrabbitEvent;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProvider;
 import org.apache.sling.jcr.resource.internal.helper.jcr.PathMapper;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;

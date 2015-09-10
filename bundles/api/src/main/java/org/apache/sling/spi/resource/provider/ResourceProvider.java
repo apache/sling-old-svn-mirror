@@ -185,6 +185,17 @@ public abstract class ResourceProvider<T> {
      */
     public static final String AUTH_ADMIN = "provider.auth.admin";
 
+    /**
+     * The resource type be set on resources returned by the
+     * {@link #listChildren(Resource)} method to enable traversing the
+     * resource
+     * tree down to a deeply nested provided resource which has no concrete
+     * parent hierarchy (value is"sling:syntheticResourceProviderResource").
+     *
+     * @see #listChildren(Resource)
+     */
+    public static final String RESOURCE_TYPE_SYNTHETIC = "sling:syntheticResourceProviderResource";
+
     /** The context for this provider. */
     private volatile ProviderContext ctx;
 

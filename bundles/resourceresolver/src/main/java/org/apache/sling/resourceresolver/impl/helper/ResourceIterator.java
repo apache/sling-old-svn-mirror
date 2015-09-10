@@ -18,23 +18,28 @@
  */
 package org.apache.sling.resourceresolver.impl.helper;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.SyntheticResource;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.tree.ProviderHandler;
 import org.apache.sling.resourceresolver.impl.tree.ResourceProviderEntry;
 import org.apache.sling.resourceresolver.impl.tree.RootResourceProviderEntry;
+import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +74,7 @@ public class ResourceIterator implements Iterator<Resource> {
      * <code>ResourceProvider</code> objects registered as nodes above the
      * {@link #parentResource} up to the root of the resource tree
      */
-    private final Iterator<ProviderHandler> providers;
+    private final Iterator<ResourceProviderHandler> providers;
 
     /**
      * The child {@link ResourceProviderEntry} registered at the node of the
@@ -78,7 +83,7 @@ public class ResourceIterator implements Iterator<Resource> {
      * location and will be set to <code>null</code> once all entries have been
      * processed.
      */
-    private Iterator<ResourceProviderEntry> baseEntryValues;
+    private Iterator<ResourceProviderHandler> baseEntryValues;
 
     /**
      * An iterator of child resources provided by the current provider entry of
@@ -137,8 +142,7 @@ public class ResourceIterator implements Iterator<Resource> {
         // gather the providers in linked set, such that we keep
         // the order of addition and make sure we only get one entry
         // for each resource provider
-        final Set<ProviderHandler> providersSet = new LinkedHashSet<ProviderHandler>();
-        final ResourceProviderEntry atPath = getResourceProviders(path, providersSet);
+        final List<ResourceProviderHandler> providersSet = rootProviderEntry.getMatchingProvider(ctx, parentResource.getPath());
 
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(" Provider Set for path {} {} ", path, Arrays
@@ -146,10 +150,21 @@ public class ResourceIterator implements Iterator<Resource> {
         }
         this.iteratorPath = path;
         providers = providersSet.iterator();
-        baseEntryValues = (atPath != null) ? atPath.values().iterator() : null;
+        baseEntryValues = getBaseEntryValues();
         delayed = new LinkedHashMap<String, Resource>();
         visited = new HashSet<String>();
         nextResource = seek();
+    }
+
+    private Iterator<ResourceProviderHandler> getBaseEntryValues() {
+        List<ResourceProviderHandler> list = new ArrayList<ResourceProviderHandler>();
+        for (ResourceProviderHandler h : resourceResolverContext.getProviders()) {
+            String path = h.getInfo().getPath();
+            if (path.startsWith(iteratorPath) && !path.substring(0, iteratorPath.length()).contains("/")) {
+                list.add(h);
+            }
+        }
+        return list.iterator();
     }
 
     @Override
@@ -178,9 +193,10 @@ public class ResourceIterator implements Iterator<Resource> {
         while (delayedIter == null) {
             while ((resources == null || !resources.hasNext())
                     && providers.hasNext()) {
-                final ProviderHandler provider = providers.next();
-                resources = provider.listChildren(this.resourceResolverContext, parentResource);
-                LOGGER.debug("     Checking Provider {} ", provider);
+                final ResourceProviderHandler h = providers.next();
+                ResolveContext ctx = resourceResolverContext.getResolveContext(parentResource.getResourceResolver(), h, parentResource.getResourceMetadata().getParameterMap());
+                resources = h.getResourceProvider().listChildren(ctx, parentResource);
+                LOGGER.debug("     Checking Provider {} ", h);
             }
 
             if (resources != null && resources.hasNext()) {
@@ -217,12 +233,12 @@ public class ResourceIterator implements Iterator<Resource> {
             } else if (baseEntryValues != null) {
 
                 while (baseEntryValues.hasNext()) {
-                    final ResourceProviderEntry rpw = baseEntryValues.next();
-                    final String resPath = iteratorPath + rpw.getPath();
+                    final ResourceProviderHandler h = baseEntryValues.next();
+                    final String resPath = h.getInfo().getPath();
                     if (!visited.contains(resPath)) {
                         final ResourceResolver rr = parentResource.getResourceResolver();
-                        final Resource res = rpw.getResourceFromProviders(this.resourceResolverContext, rr,
-                                resPath, Collections.<String,String>emptyMap());
+                        final ResolveContext resolveContext = resourceResolverContext.getResolveContext(rr, h, parentResource.getResourceMetadata().getParameterMap());
+                        final Resource res = h.getResourceProvider().getResource(resolveContext, resPath, parentResource);
                         if (res == null) {
                             if (!delayed.containsKey(resPath)) {
                                 delayed.put(
@@ -266,49 +282,4 @@ public class ResourceIterator implements Iterator<Resource> {
         }
         return res;
     }
-
-    /**
-     * Returns all resource providers which provider resources whose prefix is
-     * the given path.
-     *
-     * @param path
-     *            The prefix path to match the resource provider roots against
-     * @param providers
-     *            The set of already found resource providers to which any
-     *            additional resource providers are added.
-     * @return The ResourceProviderEntry at the node identified with the path or
-     *         <code>null</code> if there is no entry at the given location
-     */
-    private ResourceProviderEntry getResourceProviders(final String path,
-            final Set<ProviderHandler> providers) {
-
-        // collect providers along the ancestor path segements
-        final String[] elements = ResourceProviderEntry.split(path);
-        ResourceProviderEntry base = rootProviderEntry;
-        for (final String element : elements) {
-            if (base.containsKey(element)) {
-                base = base.get(element);
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Loading from {}  {} ", element,
-                            base.getResourceProviders().length);
-                }
-                for (final ProviderHandler rp : base.getResourceProviders()) {
-                    LOGGER.debug("Adding {} for {} ", rp, path);
-                    providers.add(rp);
-                }
-            } else {
-                LOGGER.debug("No container for {} ", element);
-                base = null;
-                break;
-            }
-        }
-
-        // add in providers at this node in the tree, ie the root provider
-        for (final ProviderHandler rp : rootProviderEntry.getResourceProviders()) {
-            LOGGER.debug("Loading All at {} ", path);
-            providers.add(rp);
-        }
-        return base;
-    }
-
 }

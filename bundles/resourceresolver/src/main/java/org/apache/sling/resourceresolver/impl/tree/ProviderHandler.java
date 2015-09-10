@@ -17,24 +17,16 @@
  */
 package org.apache.sling.resourceresolver.impl.tree;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Set;
 
-import org.apache.sling.api.resource.QueriableResourceProvider;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.security.AccessSecurityException;
 import org.apache.sling.api.security.ResourceAccessSecurity;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,77 +46,29 @@ import org.slf4j.LoggerFactory;
  *    service.id</li>
  * </ol>
  */
-public abstract class ProviderHandler implements Comparable<ProviderHandler> {
+public class ProviderHandler implements Comparable<ProviderHandler> {
 
     /** Default logger */
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     /** Service properties. */
-    private final Map<String, Object> properties;
+    private final ResourceProviderHandler resourceProviderHandler;
 
     /** Unique service id */
     private final Long serviceId;
+    
+    private final int ranking;
 
-    /** Configured roots. */
-    private final String[] roots;
-
-    /** Configured languages for queries. */
-    private final Set<String> queryLanguages;
-
-    /** Owns roots? */
-    private final boolean ownsRoots;
-
-    /** use ResourceAccessSecurity? */
     private final boolean useResourceAccessSecurity;
 
     /**
      * Create a new handler
      */
-    public ProviderHandler(final Map<String, Object> properties) {
-        this.properties = properties;
-        this.serviceId = (Long) properties.get(Constants.SERVICE_ID);
-        // calculate roots
-        final List<String> configuredRoots = new ArrayList<String>();
-        final String[] paths = PropertiesUtil.toStringArray(properties.get(ResourceProvider.ROOTS));
-        if ( paths != null) {
-            for(final String r : paths) {
-                if (r != null) {
-                    String path = r.trim();
-                    // cut off trailing slash
-                    if (path.endsWith("/") && path.length() > 1) {
-                        path = path.substring(0, path.length() - 1);
-                    }
-                    if ( path.length() > 0 && !configuredRoots.contains(path)) {
-                        configuredRoots.add(path);
-                    }
-                }
-            }
-        }
-        if ( configuredRoots.size() == 0 ) {
-            this.roots = null;
-        } else {
-            Collections.sort(configuredRoots);
-            this.roots = configuredRoots.toArray(new String[configuredRoots.size()]);
-        }
-        this.ownsRoots = PropertiesUtil.toBoolean(properties.get(ResourceProvider.OWNS_ROOTS), false);
-        this.useResourceAccessSecurity = PropertiesUtil.toBoolean(properties.get(ResourceProvider.USE_RESOURCE_ACCESS_SECURITY), false);
-        final Set<String> configuredLanguages = new HashSet<String>();
-        final String[] languages = PropertiesUtil.toStringArray(properties.get(QueriableResourceProvider.LANGUAGES));
-        if ( languages != null) {
-            for(final String l : languages) {
-                if (l != null) {
-                    final String language = l.trim();
-                    if ( language.length() > 0 ) {
-                        configuredLanguages.add(language);
-                    }
-                }
-            }
-        }
-        if ( configuredLanguages.size() == 0 ) {
-            this.queryLanguages = null;
-        } else {
-            this.queryLanguages = configuredLanguages;
-        }
+    public ProviderHandler(ResourceProviderHandler resourceProviderHandler) {
+        this.serviceId = (Long) resourceProviderHandler.getInfo().getServiceReference().getProperty(Constants.SERVICE_ID);
+        this.resourceProviderHandler = resourceProviderHandler;
+        this.ranking = PropertiesUtil.toInteger(resourceProviderHandler.getInfo().getServiceReference().getProperty(Constants.SERVICE_RANKING), 0);
+        this.useResourceAccessSecurity = resourceProviderHandler.getInfo().getUseResourceAccessSecurity();
     }
 
     public boolean canCreate(final ResourceResolverContext ctx, final ResourceResolver resolver, final String path) {
@@ -199,45 +143,6 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
     /**
      * applies resource access security if configured
      */
-    protected String transformQuery ( final ResourceResolverContext ctx, final ResourceResolver resolver, final String query, final String language ) {
-        final ResourceAccessSecurityTracker tracker = ctx.getResourceAccessSecurityTracker();
-
-        String returnValue = query;
-
-        if (useResourceAccessSecurity) {
-            final ResourceAccessSecurity resourceAccessSecurity = tracker
-                    .getProviderResourceAccessSecurity();
-            if (resourceAccessSecurity != null) {
-                try {
-                    returnValue = resourceAccessSecurity.transformQuery(
-                            returnValue, language, resolver);
-                } catch (AccessSecurityException e) {
-                    logger.error(
-                            "AccessSecurityException occurred while trying to transform the query {} (language {}).",
-                            new Object[] { query, language }, e);
-                }
-            }
-        }
-
-        final ResourceAccessSecurity resourceAccessSecurity = tracker
-                .getApplicationResourceAccessSecurity();
-        if (resourceAccessSecurity != null) {
-            try {
-                returnValue = resourceAccessSecurity.transformQuery(
-                        returnValue, language, resolver);
-            } catch (AccessSecurityException e) {
-                logger.error(
-                        "AccessSecurityException occurred while trying to transform the query {} (language {}).",
-                        new Object[] { query, language }, e);
-            }
-        }
-
-        return returnValue;
-    }
-
-    /**
-     * applies resource access security if configured
-     */
     protected Iterator<Resource> getReadableChildrenIterator ( final ResourceResolverContext ctx, final Iterator<Resource> childrenIterator ) {
         Iterator<Resource> returnValue = null;
         if ( childrenIterator != null ) {
@@ -280,40 +185,10 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
     }
 
     /**
-     * Return the service properties.
-     */
-    public Map<String, Object> getProperties() {
-        return this.properties;
-    }
-
-    /**
      * Return the service id.
      */
     public Long getServiceId() {
         return this.serviceId;
-    }
-
-    /**
-     * Does this provider own the roots?
-     */
-    public boolean ownsRoots() {
-        return this.ownsRoots;
-    }
-
-    /**
-     * Return a sorted array of roots for this provider. If no roots are configured,
-     * this will return <code>null</code>
-     * @return The array of roots or <code>null</code>
-     */
-    public String[] getRoots() {
-        return this.roots;
-    }
-
-    /**
-     * Check if the resource provider supports the language.
-     */
-    public boolean supportsQueryLanguages(final String language) {
-        return this.queryLanguages != null && this.queryLanguages.contains(language);
     }
 
     /**
@@ -324,15 +199,8 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
             return 0; // same service
         }
 
-        Object thisRankObj = this.getProperties().get(Constants.SERVICE_RANKING);
-        Object otherRankObj = other.getProperties().get(Constants.SERVICE_RANKING);
-
-        // If rank is not specified or not an Integer, then spec says it defaults to zero.
-        Integer thisRank = (thisRankObj instanceof Integer) ? (Integer) thisRankObj : Integer.valueOf(0);
-        Integer otherRank = (otherRankObj instanceof Integer) ? (Integer) otherRankObj : Integer.valueOf(0);
-
         // Sort by rank in ascending order.
-        int rankOrder = thisRank.compareTo(otherRank);
+        int rankOrder = Integer.valueOf(this.ranking).compareTo(other.ranking);
         if (rankOrder != 0) {
             return (rankOrder > 0) ? -1 : 1;
         }
@@ -342,19 +210,11 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
     }
 
     /**
-     * @see ResourceProvider#getResource(ResourceResolver, String)
-     */
-    public abstract Resource getResource(final ResourceResolverContext ctx, final ResourceResolver resourceResolver, final String path, final Map<String, String> parameters);
-
-    /**
-     * @see ResourceProvider#listChildren(Resource)
-     */
-    public abstract Iterator<Resource> listChildren(final ResourceResolverContext ctx, final Resource parent);
-
-    /**
      * Return the resource provider.
      */
-    public abstract ResourceProvider getResourceProvider(final ResourceResolverContext ctx);
+    public ResourceProviderHandler getResourceProviderHandler() {
+        return resourceProviderHandler;
+    }
 
     /**
      * Return a name of the resource provider/factory.

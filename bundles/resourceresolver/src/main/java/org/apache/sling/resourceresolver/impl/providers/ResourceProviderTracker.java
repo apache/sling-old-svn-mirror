@@ -217,6 +217,10 @@ public class ResourceProviderTracker {
         dto.failedProviders = failures.toArray(new ResourceProviderFailureDTO[failures.size()]);
     }
 
+    public Map<String, List<ResourceProviderHandler>> getHandlers() {
+        return handlers;
+    }
+
     private void fill(final ResourceProviderDTO d, final ResourceProviderInfo info) {
         d.authType = info.getAuthType();
         d.modifiable = info.getModifiable();

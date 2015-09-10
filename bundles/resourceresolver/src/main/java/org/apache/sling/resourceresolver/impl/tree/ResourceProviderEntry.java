@@ -38,6 +38,8 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
+import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,68 +56,9 @@ import org.slf4j.LoggerFactory;
  * <p>
  * This class is comparable to itself to help keep the child entries list sorted by their prefix.
  */
-public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> {
+public class ResourceProviderEntry {
 
     private final Logger logger = LoggerFactory.getLogger(ResourceProviderEntry.class);
-
-    // the path to resources provided by the resource provider of this
-    // entry. this path is relative to the path of the parent resource
-    // provider entry and has no trailing slash.
-    private final String path;
-
-    // the path to resources provided by the resource provider of this
-    // entry. this is the same path as the path field but with a trailing
-    // slash to be used as a prefix match resource paths to resolve
-    private final String prefix;
-
-    // the resource provider kept in this entry supporting resources at and
-    // below the path of this entry.
-    private ProviderHandler[] providers = new ProviderHandler[0];
-
-    private final FastTreeMap storageMap = new FastTreeMap();
-
-    private Collection<ResourceProviderEntry> storageMapValues = new ArrayList<ResourceProviderEntry>();
-
-    /**
-     * Creates an instance of this class with the given path relative to the
-     * parent resource provider entry, encapsulating the given ResourceProvider,
-     * and a number of initial child entries.
-     *
-     * @param path
-     *            The relative path supported by the provider
-     * @param providerList
-     *            The resource provider to encapsulate by this entry.
-     */
-    public ResourceProviderEntry(final String path, final ProviderHandler[] providerList) {
-        if (path.endsWith("/")) {
-            this.path = path.substring(0, path.length() - 1);
-            this.prefix = path;
-        } else {
-            this.path = path;
-            this.prefix = path + "/";
-        }
-        if (providerList != null) {
-            providers = new ProviderHandler[providerList.length];
-            for (int i = 0; i < providerList.length; i++) {
-                providers[i] = providerList[i];
-            }
-        }
-
-        // this will consume slightly more memory but ensures read is fast.
-        storageMap.setFast(true);
-
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    /**
-     * Returns the resource providers contained in this entry
-     */
-    public ProviderHandler[] getResourceProviders() {
-        return providers;
-    }
 
     /**
      * Returns the resource with the given path or <code>null</code> if neither
@@ -138,137 +81,6 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
         return getInternalResource(ctx, resourceResolver, path, parameters, isResolve);
     }
 
-    // ------------------ Map methods, here so that we can delegate 2 maps
-    // together
-    @SuppressWarnings("unchecked")
-    public void put(final String key, final ResourceProviderEntry value) {
-        storageMap.put(key, value);
-        // get a thread safe copy, the ArrayList constructor does a toArray
-        // which is thread safe.
-        storageMapValues = new ArrayList<ResourceProviderEntry>(storageMap.values());
-    }
-
-    public boolean containsKey(final String key) {
-        return storageMap.containsKey(key);
-    }
-
-    public ResourceProviderEntry get(final String key) {
-        return (ResourceProviderEntry) storageMap.get(key);
-    }
-
-    public Collection<ResourceProviderEntry> values() {
-        return storageMapValues;
-    }
-
-    /**
-     * @see java.lang.Comparable#compareTo(java.lang.Object)
-     */
-    @Override
-    public int compareTo(final ResourceProviderEntry o) {
-        return prefix.compareTo(o.prefix);
-    }
-
-    // ---------- internal -----------------------------------------------------
-
-    /**
-     * Adds a list of providers to this entry.
-     *
-     * No sync required as this is called by a sync method!
-     */
-    private boolean addInternalProvider(final ProviderHandler provider) {
-        final int before = providers.length;
-        final Set<ProviderHandler> set = new HashSet<ProviderHandler>();
-        set.addAll(Arrays.asList(providers));
-
-        logger.debug("Adding provider {} at {} ", provider, path);
-        set.add(provider);
-        providers = conditionalSort(set);
-        return providers.length > before;
-    }
-
-    /**
-     * Remove a provider from the list of entries.
-     *
-     * No sync required as this is called by a sync method!
-     */
-    private boolean removeInternalProvider(final ProviderHandler provider) {
-        final int before = providers.length;
-        final Set<ProviderHandler> set = new HashSet<ProviderHandler>();
-        set.addAll(Arrays.asList(providers));
-
-        logger.debug("Removing provider {} at {} ", provider, path);
-        set.remove(provider);
-        providers = conditionalSort(set);
-        return providers.length < before;
-    }
-
-	/**
-	 * Adds the given resource provider into the tree for the given prefix. This
-	 * will expand the tree of ResourceProviderEntries down the supplied prefix
-	 * and add the provider to a ResourceProviderEntry that represents the last
-	 * element of the path.
-	 *
-	 * @return <code>true</code> if the provider could be entered into the
-	 *         subtree below this entry. Otherwise <code>false</code> is
-	 *         returned.
-	 */
-    protected synchronized boolean addResourceProvider(final String prefix, final ProviderHandler provider) {
-        final String[] elements = split(prefix);
-        final List<ResourceProviderEntry> entries = new ArrayList<ResourceProviderEntry>();
-        this.populateProviderPath(entries, elements);
-
-        // add this=root to the start so if the list is empty
-        // we have a position to add, this will shift other entries
-        // down the list.
-        entries.add(0, this);
-        // the list may not be complete, so add blank entries from the current size to the end of this path.
-        for (int i = entries.size() - 1; i < elements.length; i++) {
-            final String stubPrefix = elements[i];
-            final ResourceProviderEntry rpe2 = new ResourceProviderEntry(stubPrefix, new ProviderHandler[0]);
-            entries.get(i).put(stubPrefix, rpe2);
-            entries.add(rpe2);
-        }
-        // finally add this provider to the last in the list. This might be a new entry, or an existing entry.
-        return entries.get(elements.length).addInternalProvider(provider);
-    }
-
-    /**
-     * Remove the given resource provider from the tree
-     */
-    protected synchronized boolean removeResourceProvider(final String prefix, final ProviderHandler resourceProvider) {
-        boolean result = false;
-        final String[] elements = split(prefix);
-        final List<ResourceProviderEntry> entries = new ArrayList<ResourceProviderEntry>();
-        this.populateProviderPath(entries, elements);
-
-        if(entries.size() == 0) {
-            // might be a root provider, try to remove it on this entry
-            result = this.removeInternalProvider(resourceProvider);
-        } else if (entries.size() > 0 && entries.size() == elements.length) {
-            // the last element is a perfect match;
-            result = entries.get(entries.size() - 1).removeInternalProvider(resourceProvider);
-        }
-
-        if(!result) {
-            // bad news - the provider might be an OSGi service being deactivated,
-            // so this should be taken care of.
-            logger.warn("Unable to remove {} for prefix {}, no matching entry found", resourceProvider, prefix);
-        }
-        return result;
-    }
-
-    /**
-     * Return a sorted array of handlers.
-     */
-    private ProviderHandler[] conditionalSort(final Set<ProviderHandler> set) {
-
-        final List<ProviderHandler> providerList = new ArrayList<ProviderHandler>(set);
-
-        Collections.sort(providerList);
-
-        return providerList.toArray(new ProviderHandler[providerList.size()]);
-    }
-
 	/**
 	 * Get a list of resource provider entries navigating down the tree starting
 	 * from this provider until there are no providers left in the tree. Given a
@@ -283,18 +95,14 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
 	 * @param elements
 	 *            The path already split into segments.
 	 */
-    private void populateProviderPath(final List<ResourceProviderEntry> entries, final String[] elements) {
-        ResourceProviderEntry base = this;
-        for (final String element : elements) {
-            if (element != null) {
-                if (base.containsKey(element)) {
-                    base = base.get(element);
-                    entries.add(base);
-                } else {
-                    break;
-                }
+    public List<ResourceProviderHandler> getMatchingProvider(ResourceResolverContext ctx, final String path) {
+        List<ResourceProviderHandler> handlers = new ArrayList<ResourceProviderHandler>();
+        for (final ResourceProviderHandler h : ctx.getProviders()) {
+            if (path.startsWith(h.getInfo().getPath())) {
+                handlers.add(h);
             }
         }
+        return handlers;
     }
 
     /**
@@ -317,38 +125,37 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
                 logger.debug("Not absolute {}", fullPath);
                 return null; // fullpath must be absolute
             }
-            final String[] elements = split(fullPath);
-            final List<ResourceProviderEntry> entries = new ArrayList<ResourceProviderEntry>();
-            this.populateProviderPath(entries, elements);
+            final List<ResourceProviderHandler> entries = this.getMatchingProvider(ctx, fullPath);
 
             Resource fallbackResource = null;
 
             // the path is in reverse order end first
             for (int i = entries.size() - 1; i >= 0; i--) {
-                final ProviderHandler[] rps = entries.get(i).getResourceProviders();
-                for (final ProviderHandler rp : rps) {
-
-                    boolean foundFallback = false;
-                    final Resource resource = rp.getResource(ctx, resourceResolver, fullPath, parameters);
-                    if (resource != null) {
-                        if ( resource.getResourceMetadata() != null && resource.getResourceMetadata().get(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING) != null ) {
-                            if ( logger.isDebugEnabled() ) {
-                                logger.debug("Resolved Full {} using {} from {} - continue resolving flag is set!", new Object[] { fullPath, rp, Arrays.toString(rps) });
-                            }
-                            fallbackResource = resource;
-                            fallbackResource.getResourceMetadata().remove(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING);
-                            foundFallback = true;
-                        } else {
-                            if ( logger.isDebugEnabled() ) {
-                                logger.debug("Resolved Full {} using {} from {} ", new Object[] { fullPath, rp, Arrays.toString(rps) });
-                            }
-                            return resource;
+                boolean foundFallback = false;
+                ResourceProviderHandler h = entries.get(i);
+                ResolveContext resolveContext = ctx.getResolveContext(resourceResolver, h, parameters);
+                final Resource resource = h.getResourceProvider().getResource(resolveContext, fullPath, null);
+                if (resource != null) {
+                    if (resource.getResourceMetadata() != null && resource.getResourceMetadata()
+                            .get(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING) != null) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Resolved Full {} using {} - continue resolving flag is set!",
+                                    new Object[] { fullPath, h.getInfo() });
                         }
+                        fallbackResource = resource;
+                        fallbackResource.getResourceMetadata().remove(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING);
+                        foundFallback = true;
+                    } else {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Resolved Full {} using {}",
+                                    new Object[] { fullPath, h.getInfo() });
+                        }
+                        return resource;
                     }
-                    if ( rp.ownsRoots() && !foundFallback ) {
-                        logger.debug("Resource null {} ", fullPath);
-                        return fallbackResource;
-                    }
+                }
+                if (!foundFallback) {
+                    logger.debug("Resource null {} ", fullPath);
+                    return fallbackResource;
                 }
             }
 
@@ -371,12 +178,9 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
             //              as it is important e.g. for servlet resolution
             //              to get the parent resource for resource traversal.
             if ( !isResolve ) {
-                if (entries.size() > 0 && entries.size() == elements.length) {
-                    final ResourceProviderEntry lastEntry = entries.get(entries.size() - 1);
-                    if (lastEntry.getResourceProviders().length == 0) {
-                        logger.debug("Resolved Synthetic {}", fullPath);
-                        return new SyntheticResource(resourceResolver, fullPath, ResourceProvider.RESOURCE_TYPE_SYNTHETIC);
-                    }
+                if (isIntermediatePath(ctx, fullPath)) {
+                    logger.debug("Resolved Synthetic {}", fullPath);
+                    return new SyntheticResource(resourceResolver, fullPath, ResourceProvider.RESOURCE_TYPE_SYNTHETIC);
                 }
             }
         } catch ( final SlingException se ) {
@@ -389,28 +193,36 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
         return null;
     }
 
+    private boolean isIntermediatePath(final ResourceResolverContext ctx, final String fullPath) {
+        for (ResourceProviderHandler h : ctx.getProviders()) {
+            if (h.getInfo().getPath().startsWith(fullPath)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public Resource getResourceFromProviders(final ResourceResolverContext ctx,
             final ResourceResolver resourceResolver,
             final String fullPath,
             final Map<String, String> parameters) {
         Resource fallbackResource = null;
-        final ProviderHandler[] rps = getResourceProviders();
-        for (final ProviderHandler rp : rps) {
+        for (ResourceProviderHandler h : getMatchingProvider(ctx, fullPath)) {
             boolean foundFallback = false;
-
-            final Resource resource = rp.getResource(ctx, resourceResolver, fullPath, parameters);
+            ResolveContext resolveContext = ctx.getResolveContext(resourceResolver, h, parameters);
+            final Resource resource = h.getResourceProvider().getResource(resolveContext, fullPath, null);
             if (resource != null) {
                 if ( resource.getResourceMetadata() != null && resource.getResourceMetadata().get(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING) != null ) {
-                    logger.debug("Resolved Base {} using {} - continue resolving flag is set!", fullPath, rp);
+                    logger.debug("Resolved Base {} using {} - continue resolving flag is set!", fullPath, h);
                     fallbackResource = resource;
                     fallbackResource.getResourceMetadata().remove(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING);
                     foundFallback = true;
                 } else {
-                    logger.debug("Resolved Base {} using {} ", fullPath, rp);
+                    logger.debug("Resolved Base {} using {} ", fullPath, h);
                     return resource;
                 }
             }
-            if ( rp.ownsRoots() && !foundFallback ) {
+            if ( !foundFallback ) {
                 logger.debug("Resource null {} ", fullPath);
                 return fallbackResource;
             }
@@ -421,34 +233,17 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
     private List<ProviderHandler> getModifyingProviderHandlers(final ResourceResolverContext ctx,
                                                         final ResourceResolver resourceResolver,
                                                         final String fullPath) {
-        final String[] elements = split(fullPath);
-        final List<ResourceProviderEntry> entries = new ArrayList<ResourceProviderEntry>();
-        this.populateProviderPath(entries, elements);
-
-        final List<ProviderHandler> viableProviderHandlers = new ArrayList<ProviderHandler>();
+        final List<ResourceProviderHandler> entries = this.getMatchingProvider(ctx, fullPath);
 
         // build up a list of viable ModifyingResourceProviders in order of specificity
         for (int i = entries.size() - 1; i >= 0; i--) {
-            final ProviderHandler[] rps = entries.get(i).getResourceProviders();
-            for (final ProviderHandler rp : rps) {
-                final ResourceProvider provider = rp.getResourceProvider(ctx);
-                if ( provider instanceof ModifyingResourceProvider ) {
-                    viableProviderHandlers.add(rp);
-                }
-                if ( rp.ownsRoots() ) {
-                    return viableProviderHandlers;
+            final ResourceProviderHandler h = entries.get(i);
+                if ( h.getInfo().getModifiable() ) {
+                    return Collections.singletonList(new ProviderHandler(h));
                 }
             }
-        }
 
-        // add our own ModifyingResourceProviders to the end of the list of viable providers
-        for(final ProviderHandler rp : this.providers) {
-            final ResourceProvider provider = rp.getResourceProvider(ctx);
-            if ( provider instanceof ModifyingResourceProvider) {
-                viableProviderHandlers.add(rp);
-            }
-        }
-        return viableProviderHandlers;
+        return Collections.emptyList();
     }
 
     /**
@@ -470,9 +265,10 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
         // Give all viable handlers a chance to delete the resource
         for (ProviderHandler currentProviderHandler : viableHandlers) {
             if (currentProviderHandler.canDelete(ctx, resource)) {
-                final ModifyingResourceProvider mrp = (ModifyingResourceProvider) currentProviderHandler.getResourceProvider(ctx);
-                if ( viableHandlers.size() == 1 || mrp.getResource(resourceResolver, fullPath) != null ) {
-                    mrp.delete(resourceResolver, fullPath);
+                ResourceProviderHandler h = currentProviderHandler.getResourceProviderHandler();
+                ResolveContext resolveContext = ctx.getResolveContext(resourceResolver, h);
+                if ( viableHandlers.size() == 1 || currentProviderHandler.getResourceProviderHandler().getResourceProvider().getResource(resolveContext, fullPath, null) != null ) {
+                    currentProviderHandler.getResourceProviderHandler().getResourceProvider().delete(resolveContext, resource);
                     anyProviderAttempted = true;
                 }
             }
@@ -500,9 +296,9 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
 
         for (final ProviderHandler currentProviderHandler : viableHandlers) {
             if (currentProviderHandler.canCreate(ctx, resourceResolver, fullPath)) {
-                final ModifyingResourceProvider mrp = (ModifyingResourceProvider) currentProviderHandler.getResourceProvider(ctx);
-
-                final Resource creationResultResource = mrp.create(resourceResolver, fullPath, properties);
+                ResourceProviderHandler h = currentProviderHandler.getResourceProviderHandler();
+                ResolveContext resolveContext = ctx.getResolveContext(resourceResolver, h);
+                final Resource creationResultResource = currentProviderHandler.getResourceProviderHandler().getResourceProvider().create(resolveContext, fullPath, properties);
 
                 if (creationResultResource != null) {
                     return creationResultResource;
@@ -560,18 +356,5 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
             e[j++] = new String(pn, s, end - s);
         }
         return e;
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @see java.util.AbstractMap#toString()
-     */
-    @Override
-    public String toString() {
-        return this.path;
-        // "{path:\"" + this.path +
-        // "\", providers:"+Arrays.toString(getResourceProviders())+", map:" +
-        // storageMap.toString() + "}";
     }
 }

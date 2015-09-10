@@ -37,6 +37,7 @@ import aQute.bnd.annotation.ConsumerType;
  * @since 2.2.0 (Sling API Bundle 2.2.0)
  */
 @ConsumerType
+@Deprecated
 public interface ResourceProviderFactory {
 
     /**

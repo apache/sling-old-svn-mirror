@@ -20,9 +20,9 @@ package org.apache.sling.resourceresolver.impl;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -56,6 +56,7 @@ import org.apache.sling.resourceresolver.impl.helper.StarResource;
 import org.apache.sling.resourceresolver.impl.helper.URI;
 import org.apache.sling.resourceresolver.impl.helper.URIException;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntry;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.tree.params.ParsedParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,10 +104,10 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      * The resource resolver context.
      */
     public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory,
-            final ResourceResolverContext ctx) {
+            final ResourceResolverContext context) {
         this.factory = factory;
-        this.context = ctx;
-        this.factory.register(this, ctx);
+        this.context = context;
+        this.factory.register(this, context);
     }
 
     /**
@@ -118,22 +119,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         // ensure resolver is still live
         checkClosed();
 
-        // create the merged map
-        final Map<String, Object> newAuthenticationInfo = new HashMap<String, Object>();
-        if (this.context.getAuthenticationInfo() != null) {
-            newAuthenticationInfo.putAll(this.context.getAuthenticationInfo());
-        }
-        if (authenticationInfo != null) {
-            newAuthenticationInfo.putAll(authenticationInfo);
-        }
-
-        // create new context
-        final ResourceResolverContext newContext = new ResourceResolverContext(this.context.isAdmin(),
-                newAuthenticationInfo, factory.getResourceAccessSecurityTracker());
-        this.factory.getRootProviderEntry().loginToRequiredFactories(newContext);
-
         // create a regular resource resolver
-        return new ResourceResolverImpl(this.factory, newContext);
+        return new ResourceResolverImpl(this.factory, context.clone(authenticationInfo));
     }
 
     /**
@@ -141,7 +128,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      */
     @Override
     public boolean isLive() {
-        return !this.isClosed.get() && this.context.isLive() && this.factory.isLive();
+        return !this.isClosed.get() && this.context.isLive(this) && this.factory.isLive();
     }
 
     /**
@@ -773,7 +760,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     private Session getSession() {
         if ( !this.searchedSession ) {
             this.searchedSession = true;
-            this.cachedSession = this.factory.getRootProviderEntry().adaptTo(this.context, Session.class);
+            this.cachedSession = this.factory.getRootProviderEntry().adaptTo(this, this.context, Session.class);
         }
         return this.cachedSession;
     }
@@ -791,7 +778,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         if (type == Session.class) {
             return (AdapterType) getSession();
         }
-        final AdapterType result = this.factory.getRootProviderEntry().adaptTo(this.context, type);
+        final AdapterType result = this.factory.getRootProviderEntry().adaptTo(this, this.context, type);
         if ( result != null ) {
             return result;
         }
@@ -1241,7 +1228,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      */
     @Override
     public void refresh() {
-        this.context.refresh();
+        this.context.refresh(this);
     }
 
     @Override
