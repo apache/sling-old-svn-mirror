@@ -62,7 +62,8 @@ public class SingleInstanceTest {
         discoveryLogger.setLevel(Level.DEBUG);
         logger.info("setup: creating new standalone instance");
         instance = Instance.newStandaloneInstance("/var/discovery/impl/", "standaloneInstance", true,
-                20, 3, UUID.randomUUID().toString(), true);
+                20, 999/*long enough heartbeat interval to prevent them to disturb the explicit heartbeats during the test*/, 
+                3, UUID.randomUUID().toString(), true);
         logger.info("setup: creating new standalone instance done.");
     }
 
