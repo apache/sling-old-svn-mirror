@@ -447,12 +447,12 @@ public class ClusterTest {
         logLevel = discoveryLogger.getLevel();
         discoveryLogger.setLevel(Level.DEBUG);
         
-        instance1 = Instance.newStandaloneInstance("/var/discovery/clusterA/", "instance1", true, 10 /* sec*/, MIN_EVENT_DELAY);
+        instance1 = Instance.newStandaloneInstance("/var/discovery/clusterA/", "instance1", true, 15 /* sec*/, MIN_EVENT_DELAY);
         instance2 = Instance.newClusterInstance("/var/discovery/clusterA/", "instance2", instance1,
-                false, 10 /* sec*/, MIN_EVENT_DELAY);
+                false, 15 /* sec*/, MIN_EVENT_DELAY);
         // now launch the remote instance
-        instance3 = Instance.newStandaloneInstance("/var/discovery/clusterB/", "instance3", false, 10 /* sec*/, MIN_EVENT_DELAY);
-        instance5 = Instance.newStandaloneInstance("/var/discovery/clusterC/", "instance5", false, 10 /* sec*/, MIN_EVENT_DELAY);
+        instance3 = Instance.newStandaloneInstance("/var/discovery/clusterB/", "instance3", false, 15 /* sec*/, MIN_EVENT_DELAY);
+        instance5 = Instance.newStandaloneInstance("/var/discovery/clusterC/", "instance5", false, 15 /* sec*/, MIN_EVENT_DELAY);
 
         // join the instances to form a cluster by sending out heartbeats
         runHeartbeatOnceWith(instance1, instance2, instance3, instance5);
@@ -494,13 +494,13 @@ public class ClusterTest {
                 logger.info("testDuplicateInstance3726: successfully switched all pings to instance2 after "+i+" rounds.");
                 if (i<20) {
                     logger.info("testDuplicateInstance3726: min loop cnt not yet reached: i="+i);
-                    Thread.sleep(1000); // 20x1000ms = 20sec max - (vs 10sec timeout) - should be enough for timing out
+                    Thread.sleep(1000); // 20x1000ms = 20sec max - (vs 15sec timeout) - should be enough for timing out
                     continue;
                 }
                 break;
             }
             logger.info("testDuplicateInstance3726: looping");
-            Thread.sleep(1000); // 25x1000ms = 25sec max - (vs 10sec timeout)
+            Thread.sleep(1000); // 25x1000ms = 25sec max - (vs 15sec timeout)
             
         }
         assertTrue(success);
