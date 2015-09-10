@@ -21,6 +21,7 @@ import static org.apache.sling.rewriter.impl.ProcessorConfigurationImpl.PROPERTY
 import static org.apache.sling.rewriter.impl.ProcessorConfigurationImpl.PROPERTY_PATHS;
 import static org.apache.sling.rewriter.impl.ProcessorConfigurationImpl.PROPERTY_RESOURCE_TYPES;
 import static org.apache.sling.rewriter.impl.ProcessorConfigurationImpl.PROPERTY_SELECTORS;
+import static org.apache.sling.rewriter.impl.ProcessorConfigurationImpl.PROPERTY_UNWRAP_RESOURCES;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
@@ -28,6 +29,7 @@ import static org.mockito.Mockito.when;
 import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceWrapper;
 import org.apache.sling.rewriter.ProcessingContext;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
@@ -107,6 +109,35 @@ public class ProcessorConfigurationImplTest {
         context.currentResource(context.create().resource("/content/test",
                 ImmutableMap.<String, Object>of("sling:resourceType", "type/1")));
         assertMatch(ImmutableMap.<String,Object>of(PROPERTY_RESOURCE_TYPES, new String[] {"type/1","type/2"}));
+    }
+
+    @Test
+    public void testMatchAtLeastOneResourceTypeWithResourceWrapper_UnwrapDisabled() {
+        Resource resource = context.create().resource("/content/test", ImmutableMap.<String, Object>of("sling:resourceType", "type/1"));
+        
+        // overwrite resource type via ResourceWrapper
+        Resource resourceWrapper = new ResourceWrapper(resource) {
+            @Override
+            public String getResourceType() { return "/type/override/1"; }
+        };
+        context.currentResource(resourceWrapper);
+        
+        assertNoMatch(ImmutableMap.<String,Object>of(PROPERTY_RESOURCE_TYPES, new String[] {"type/1","type/2"}));
+    }
+
+    @Test
+    public void testMatchAtLeastOneResourceTypeWithResourceWrapper_UnwrapEnabled() {
+        Resource resource = context.create().resource("/content/test", ImmutableMap.<String, Object>of("sling:resourceType", "type/1"));
+        
+        // overwrite resource type via ResourceWrapper
+        Resource resourceWrapper = new ResourceWrapper(resource) {
+            @Override
+            public String getResourceType() { return "/type/override/1"; }
+        };
+        context.currentResource(resourceWrapper);
+        
+        assertMatch(ImmutableMap.<String,Object>of(PROPERTY_RESOURCE_TYPES, new String[] {"type/1","type/2"},
+                PROPERTY_UNWRAP_RESOURCES, true));
     }
 
     @Test
