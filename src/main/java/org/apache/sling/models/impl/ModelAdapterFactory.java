@@ -225,9 +225,15 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     }
 
     @Override
+    @Deprecated
     public boolean isModelClass(@Nonnull Object adaptable, @Nonnull Class<?> requestedType) {
         ModelClass<?> type = getImplementationTypeForAdapterType(requestedType, adaptable);
         return type.hasModelAnnotation();
+    }
+
+    @Override
+    public boolean isModelClass(@Nonnull Class<?> type) {
+        return this.adapterImplementations.isModelClass(type);
     }
 
     /**
