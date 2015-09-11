@@ -20,11 +20,18 @@ package org.apache.sling.resourceresolver.impl;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.tree.RootResourceProviderEntry;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,11 +69,11 @@ public class ResourceResolverMangleNamespacesTest {
         final RootResourceProviderEntry rrpe = new RootResourceProviderEntry() {
             @Override
             @SuppressWarnings("unchecked")
-            public <AdapterType> AdapterType adaptTo(ResourceResolverContext ctx, Class<AdapterType> type) {
+            public <AdapterType> AdapterType adaptTo(ResourceResolver resolver, ResourceResolverContext ctx, Class<AdapterType> type) {
                 if(type == Session.class) {
                     return (AdapterType)activeSession;
                 }
-                return super.adaptTo(ctx, type);
+                return super.adaptTo(resolver, ctx, type);
             }
         };
 
@@ -77,7 +84,7 @@ public class ResourceResolverMangleNamespacesTest {
             }
         };
 
-        rr = new ResourceResolverImpl(fac, new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker()));
+        rr = new ResourceResolverImpl(fac, new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker(), new ArrayList<ResourceProviderHandler>()));
     }
 
     @Test

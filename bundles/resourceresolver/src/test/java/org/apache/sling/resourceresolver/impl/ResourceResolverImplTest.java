@@ -26,7 +26,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -43,6 +42,9 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
+import org.apache.sling.resourceresolver.impl.tree.RootResourceProviderEntry;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -56,13 +58,16 @@ public class ResourceResolverImplTest {
     private ResourceResolverFactoryImpl resFac;
 
     @Before public void setup() {
-        commonFactory = new CommonResourceResolverFactoryImpl(new ResourceResolverFactoryActivator());
+        ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
+        activator.resourceProviderTracker = new ResourceProviderTracker();
+        activator.rootProviderEntry = new RootResourceProviderEntry();
+        commonFactory = new CommonResourceResolverFactoryImpl(activator);
         resFac = new ResourceResolverFactoryImpl(commonFactory, /* TODO: using Bundle */ null, null);
-        resResolver = new ResourceResolverImpl(commonFactory, new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker()));
+        resResolver = new ResourceResolverImpl(commonFactory, new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker(), new ArrayList<ResourceProviderHandler>()));
     }
 
     @Test public void testClose() throws Exception {
-        final ResourceResolver rr = new ResourceResolverImpl(commonFactory, new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker()));
+        final ResourceResolver rr = new ResourceResolverImpl(commonFactory, new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker(), new ArrayList<ResourceProviderHandler>()));
         assertTrue(rr.isLive());
         rr.close();
         assertFalse(rr.isLive());
@@ -359,7 +364,7 @@ public class ResourceResolverImplTest {
                     }
 
                 },
-                new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker()));
+                new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker(), new ArrayList<ResourceProviderHandler>()));
         resolvers.add(resolver);
 
         // the resources to test
@@ -395,7 +400,7 @@ public class ResourceResolverImplTest {
                     }
 
                 },
-                new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker()));
+                new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker(), new ArrayList<ResourceProviderHandler>()));
         resolvers.add(resolver);
         final Resource r = new SyntheticResource(resolver, "/a", "a:b") {
             @Override

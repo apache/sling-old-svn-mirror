@@ -23,6 +23,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
+import org.apache.sling.resourceresolver.impl.tree.RootResourceProviderEntry;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -31,7 +33,10 @@ public class ResourceResolverFactoryTest {
     private CommonResourceResolverFactoryImpl commonFactory;
 
     @Before public void setup() {
-        commonFactory = new CommonResourceResolverFactoryImpl(new ResourceResolverFactoryActivator());
+        ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
+        activator.resourceProviderTracker = new ResourceProviderTracker();
+        activator.rootProviderEntry = new RootResourceProviderEntry();
+        commonFactory = new CommonResourceResolverFactoryImpl(activator);
     }
 
     @Test public void testSingleThreadLocal() throws Exception {

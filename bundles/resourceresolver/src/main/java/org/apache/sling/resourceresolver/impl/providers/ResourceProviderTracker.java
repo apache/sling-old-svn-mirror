@@ -217,8 +217,13 @@ public class ResourceProviderTracker {
         dto.failedProviders = failures.toArray(new ResourceProviderFailureDTO[failures.size()]);
     }
 
-    public Map<String, List<ResourceProviderHandler>> getHandlers() {
-        return handlers;
+    public List<ResourceProviderHandler> getHandlers() {
+        List<ResourceProviderHandler> list = new ArrayList<ResourceProviderHandler>();
+        for (List<ResourceProviderHandler> h : handlers.values()) {
+            list.addAll(h);
+        }
+        Collections.sort(list);
+        return list;
     }
 
     private void fill(final ResourceProviderDTO d, final ResourceProviderInfo info) {

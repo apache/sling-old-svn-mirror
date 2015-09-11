@@ -60,6 +60,6 @@ public class ResourceProviderHandler implements Comparable<ResourceProviderHandl
 
     @Override
     public int compareTo(final ResourceProviderHandler o) {
-        return this.info.compareTo(o.info);
+        return this.getInfo().compareTo(o.getInfo());
     }
 }

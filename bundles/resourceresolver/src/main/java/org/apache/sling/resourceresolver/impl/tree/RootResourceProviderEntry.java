@@ -28,9 +28,6 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.resource.AttributableResourceProvider;
 import org.apache.sling.api.resource.LoginException;
@@ -42,30 +39,14 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.resource.runtime.dto.AuthType;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
-import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
 import org.apache.sling.spi.resource.provider.JCRQueryProvider;
 import org.apache.sling.spi.resource.provider.ResolveContext;
-import org.osgi.service.event.EventAdmin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This is the root resource provider entry which keeps track of the resource
  * providers.
  */
-@Component
-@Service(RootResourceProviderEntry.class)
 public class RootResourceProviderEntry extends ResourceProviderEntry {
-
-    /** Default logger */
-    private final Logger logger = LoggerFactory.getLogger(getClass());
-
-    /** Event admin. */
-    @Reference
-    private EventAdmin eventAdmin;
-
-    @Reference
-    private ResourceProviderTracker resourceProviderTracker;
 
     /**
      * Login into all required factories

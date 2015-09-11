@@ -262,7 +262,6 @@ public class ResourceResolverFactoryActivator implements Runnable {
     private boolean mangleNamespacePrefixes;
 
     /** The root provider entry. */
-    @Reference
     RootResourceProviderEntry rootProviderEntry;
 
     /** Event admin. */
@@ -277,7 +276,7 @@ public class ResourceResolverFactoryActivator implements Runnable {
     ResourceAccessSecurityTracker resourceAccessSecurityTracker;
 
     @Reference
-    private ResourceProviderTracker resourceProviderTracker;
+    ResourceProviderTracker resourceProviderTracker;
 
     /** ComponentContext */
     private volatile ComponentContext componentContext;
@@ -418,6 +417,7 @@ public class ResourceResolverFactoryActivator implements Runnable {
      */
     @Activate
     protected void activate(final ComponentContext componentContext) {
+        this.rootProviderEntry = new RootResourceProviderEntry();
         this.componentContext = componentContext;
         final Dictionary<?, ?> properties = componentContext.getProperties();
 
@@ -523,7 +523,7 @@ public class ResourceResolverFactoryActivator implements Runnable {
 
         // check for required property
         final String[] required = PropertiesUtil.toStringArray(properties.get(PROP_REQUIRED_PROVIDERS));
-        this.preconds.activate(bc, required);
+        this.preconds.activate(bc, required, resourceProviderTracker);
 
         this.checkFactoryPreconditions();
 

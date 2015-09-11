@@ -258,11 +258,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     }
 
     private Collection<ResourceProviderHandler> getResourceProviderHandlers() {
-        List<ResourceProviderHandler> handlers = new ArrayList<ResourceProviderHandler>();
-        for (List<ResourceProviderHandler> h : activator.getResourceProviderTracker().getHandlers().values()) {
-            handlers.addAll(h);
-        }
-        return handlers;
+        return activator.resourceProviderTracker.getHandlers();
     }
 
     public MapEntries getMapEntries() {
