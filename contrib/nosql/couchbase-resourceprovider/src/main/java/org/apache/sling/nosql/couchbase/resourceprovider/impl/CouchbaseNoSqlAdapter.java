@@ -23,6 +23,7 @@ import java.util.Iterator;
 import org.apache.sling.nosql.couchbase.client.CouchbaseClient;
 import org.apache.sling.nosql.couchbase.client.CouchbaseKey;
 import org.apache.sling.nosql.generic.adapter.AbstractNoSqlAdapter;
+import org.apache.sling.nosql.generic.adapter.MultiValueMode;
 import org.apache.sling.nosql.generic.adapter.NoSqlData;
 
 import com.couchbase.client.java.Bucket;
@@ -79,7 +80,7 @@ public final class CouchbaseNoSqlAdapter extends AbstractNoSqlAdapter {
                 return null;
             }
             else {
-                return new NoSqlData(path, MapConverter.mapListToArray(data.toMap()));
+                return new NoSqlData(path, data.toMap(), MultiValueMode.LISTS);
             }
         }
     }
@@ -102,7 +103,7 @@ public final class CouchbaseNoSqlAdapter extends AbstractNoSqlAdapter {
                 JsonObject envelope = doc.content();
                 String path = envelope.getString(PN_PATH);
                 JsonObject data = envelope.getObject(PN_DATA);
-                return new NoSqlData(path, MapConverter.mapListToArray(data.toMap()));
+                return new NoSqlData(path, data.toMap(), MultiValueMode.LISTS);
             }
 
             @Override
@@ -119,7 +120,7 @@ public final class CouchbaseNoSqlAdapter extends AbstractNoSqlAdapter {
 
         JsonObject envelope = JsonObject.create();
         envelope.put(PN_PATH, data.getPath());
-        envelope.put(PN_DATA, JsonObject.from(MapConverter.mapArrayToList(data.getProperties())));
+        envelope.put(PN_DATA, JsonObject.from(data.getProperties(MultiValueMode.LISTS)));
 
         JsonDocument doc = JsonDocument.create(cacheKey, envelope);
         try {

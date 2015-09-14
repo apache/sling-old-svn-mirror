@@ -32,8 +32,21 @@ public final class NoSqlData {
     private final Map<String,Object> properties;
     
     public NoSqlData(String path, Map<String, Object> properties) {
+        this(path, properties, MultiValueMode.ARRAYS);
+    }
+
+    public NoSqlData(String path, Map<String, Object> properties, MultiValueMode multiValueMode) {
         this.path = path;
-        this.properties = properties;
+        switch (multiValueMode) {
+            case ARRAYS:
+                this.properties = properties;
+                break;
+            case LISTS:
+                this.properties = MapConverter.mapListToArray(properties);
+                break;
+            default:
+                throw new IllegalArgumentException("Multi value mode not supported: " + multiValueMode);
+        }
     }
 
     public String getPath() {
@@ -41,7 +54,18 @@ public final class NoSqlData {
     }
     
     public Map<String, Object> getProperties() {
-        return properties;
+        return getProperties(MultiValueMode.ARRAYS);
+    }
+    
+    public Map<String, Object> getProperties(MultiValueMode multiValueMode) {
+        switch (multiValueMode) {
+            case ARRAYS:
+                return properties;
+            case LISTS:
+                return MapConverter.mapArrayToList(properties);
+            default:
+                throw new IllegalArgumentException("Multi value mode not supported: " + multiValueMode);
+        }
     }
     
 }
