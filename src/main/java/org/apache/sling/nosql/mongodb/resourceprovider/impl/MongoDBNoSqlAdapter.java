@@ -99,8 +99,8 @@ public final class MongoDBNoSqlAdapter extends AbstractNoSqlAdapter {
 
     @Override
     public boolean deleteRecursive(String path) {        
-        Pattern decendantsAndSelf = Pattern.compile("^" + Pattern.quote(path) + "(/.+)?$");
-        DeleteResult result = collection.deleteMany(Filters.regex(ID_PROPERTY, decendantsAndSelf));
+        Pattern descendantsAndSelf = Pattern.compile("^" + Pattern.quote(path) + "(/.+)?$");
+        DeleteResult result = collection.deleteMany(Filters.regex(ID_PROPERTY, descendantsAndSelf));
         
         // return true if any document was deleted
         return result.getDeletedCount() > 0;
