@@ -20,6 +20,7 @@ package org.apache.sling.serviceusermapping.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -112,7 +113,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     @Activate
     @Modified
-    void configure(BundleContext bundleContext, final Map<String, Object> config) {
+    synchronized void configure(BundleContext bundleContext, final Map<String, Object> config) {
         final String[] props = PropertiesUtil.toStringArray(config.get(PROP_SERVICE2USER_MAPPING),
             PROP_SERVICE2USER_MAPPING_DEFAULT);
 
@@ -132,40 +133,43 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
         this.defaultUser = PropertiesUtil.toString(config.get(PROP_DEFAULT_USER), PROP_DEFAULT_USER_DEFAULT);
 
         RegistrationSet registrationSet = null;
-        synchronized ( this.amendments ) {
-            this.bundleContext = bundleContext;
-            registrationSet = this.updateMappings();
-        }
+        this.bundleContext = bundleContext;
+        registrationSet = this.updateMappings();
 
         this.executeServiceRegistrations(registrationSet);
     }
 
     @Deactivate
-    void deactivate() {
+    synchronized void deactivate() {
         RegistrationSet registrationSet = null;
-
-        synchronized ( this.amendments ) {
-            updateServiceRegistrations(new Mapping[0]);
-            bundleContext = null;
-        }
-
+        updateServiceRegistrations(new Mapping[0]);
+        bundleContext = null;
         this.executeServiceRegistrations(registrationSet);
+    }
+
+    private void restartAllActiveServiceUserMappedServices() {
+        RegistrationSet registrationSet = new RegistrationSet();
+        registrationSet.removed = activeRegistrations.values();
+        registrationSet.added = activeRegistrations.values();
+        executeServiceRegistrations(registrationSet);
     }
 
     /**
      * bind the serviceUserValidator
      * @param serviceUserValidator
      */
-    protected void bindServiceUserValidator(final ServiceUserValidator serviceUserValidator) {
+    protected synchronized void bindServiceUserValidator(final ServiceUserValidator serviceUserValidator) {
         validators.add(serviceUserValidator);
+        restartAllActiveServiceUserMappedServices();
     }
 
     /**
      * unbind the serviceUserValidator
      * @param serviceUserValidator
      */
-    protected void unbindServiceUserValidator(final ServiceUserValidator serviceUserValidator) {
+    protected synchronized void unbindServiceUserValidator(final ServiceUserValidator serviceUserValidator) {
         validators.remove(serviceUserValidator);
+        restartAllActiveServiceUserMappedServices();
     }
 
     /**
@@ -178,26 +182,20 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
         return isValidUser(userId, serviceName, subServiceName) ? userId : null;
     }
 
-    protected void bindAmendment(final MappingConfigAmendment amendment, final Map<String, Object> props) {
+    protected synchronized void bindAmendment(final MappingConfigAmendment amendment, final Map<String, Object> props) {
         final Long key = (Long) props.get(Constants.SERVICE_ID);
         RegistrationSet registrationSet = null;
-        synchronized ( this.amendments ) {
-            amendments.put(key, amendment);
-            registrationSet = this.updateMappings();
-        }
-
+        amendments.put(key, amendment);
+        registrationSet = this.updateMappings();
         executeServiceRegistrations(registrationSet);
     }
 
-    protected void unbindAmendment(final MappingConfigAmendment amendment, final Map<String, Object> props) {
+    protected synchronized void unbindAmendment(final MappingConfigAmendment amendment, final Map<String, Object> props) {
         final Long key = (Long) props.get(Constants.SERVICE_ID);
         RegistrationSet registrationSet = null;
-        synchronized ( this.amendments ) {
-            if ( amendments.remove(key) != null ) {
-                registrationSet = this.updateMappings();
-            }
+        if ( amendments.remove(key) != null ) {
+             registrationSet = this.updateMappings();
         }
-
         executeServiceRegistrations(registrationSet);
     }
 
@@ -369,8 +367,8 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
     }
 
     class RegistrationSet {
-        List<Registration> added = new ArrayList<Registration>();
-        List<Registration> removed = new ArrayList<Registration>();
+        Collection<Registration> added = new ArrayList<Registration>();
+        Collection<Registration> removed = new ArrayList<Registration>();
     }
 }
 
