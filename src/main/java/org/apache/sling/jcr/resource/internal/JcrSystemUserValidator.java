@@ -17,19 +17,23 @@
 package org.apache.sling.jcr.resource.internal;
 
 import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.serviceusermapping.ServiceUserValidator;
 import org.slf4j.Logger;
@@ -43,7 +47,7 @@ import org.slf4j.LoggerFactory;
  *
  * @see org.apache.jackrabbit.api.security.user.User#isSystemUser()
  */
-@Component
+@Component(label="Apache Sling JCR System User Validator", description="Enforces the usage of JCR system users for all user mappings being used in the 'Sling Service User Mapper Service'", metatype=true)
 @Service(ServiceUserValidator.class)
 public class JcrSystemUserValidator implements ServiceUserValidator {
 
@@ -54,10 +58,17 @@ public class JcrSystemUserValidator implements ServiceUserValidator {
 
     @Reference
     private volatile SlingRepository repository;
+    
+    public static final boolean PROP_ALLOW_ONLY_SYSTEM_USERS_DEFAULT = true;
+    
+    @Property(boolValue=PROP_ALLOW_ONLY_SYSTEM_USERS_DEFAULT, label="Allow only JCR System Users", description="If set to true, only user IDs bound to JCR system users are allowed in the user mappings of the 'Sling Service User Mapper Service'. Otherwise all users are allowed!")
+    public static final String PROP_ALLOW_ONLY_SYSTEM_USERS = "allow.only.system.user";
 
     private final Method isSystemUserMethod;
 
     private final Set<String> validIds = new CopyOnWriteArraySet<String>();
+    
+    private boolean allowOnlySystemUsers;
 
     public JcrSystemUserValidator() {
         Method m = null;
@@ -69,13 +80,22 @@ public class JcrSystemUserValidator implements ServiceUserValidator {
         isSystemUserMethod = m;
     }
 
+    @Activate
+    public void activate(final Map<String, Object> config) {
+        allowOnlySystemUsers = PropertiesUtil.toBoolean(config.get(PROP_ALLOW_ONLY_SYSTEM_USERS),PROP_ALLOW_ONLY_SYSTEM_USERS_DEFAULT);
+    }
+
     public boolean isValid(final String serviceUserId, final String serviceName, final String subServiceName) {
         if (serviceUserId == null) {
-            log.debug("the provided service user id is null");
+            log.debug("The provided service user id is null");
             return false;
         }
+        if (!allowOnlySystemUsers) {
+            log.debug("There is no enforcement of JCR system users, therefore service user id '{}' is valid", serviceUserId);
+            return true;
+        }
         if (validIds.contains(serviceUserId)) {
-            log.debug("the provided service user id {} has been already validated", serviceUserId);
+            log.debug("The provided service user id '{}' has been already validated and is a known JCR system user id", serviceUserId);
             return true;
         } else {
             Session administrativeSession = null;
@@ -94,17 +114,19 @@ public class JcrSystemUserValidator implements ServiceUserValidator {
                         final Authorizable authorizable = userManager.getAuthorizable(serviceUserId);
                         if (authorizable != null && !authorizable.isGroup() && (isSystemUser((User)authorizable))) {
                             validIds.add(serviceUserId);
+                            log.debug("The provided service user id {} is a known JCR system user id", serviceUserId);
                             return true;
                         }
                     }
                 } catch (final RepositoryException e) {
-                    log.debug(e.getMessage());
+                    log.warn("Could not get user information", e);
                 }
             } finally {
                 if (administrativeSession != null) {
                     administrativeSession.logout();
                 }
             }
+            log.warn("The provided service user id '{}' is not a known JCR system user id and therefore not allowed in the Sling Service User Mapper.", serviceUserId);
             return false;
         }
     }
