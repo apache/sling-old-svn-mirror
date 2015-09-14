@@ -18,8 +18,12 @@
  */
 package org.apache.sling.nosql.couchbase.resourceprovider.impl;
 
-import java.util.Iterator;
+import static com.couchbase.client.java.query.Select.select;
 
+import java.util.Iterator;
+import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.nosql.couchbase.client.CouchbaseClient;
 import org.apache.sling.nosql.couchbase.client.CouchbaseKey;
 import org.apache.sling.nosql.generic.adapter.AbstractNoSqlAdapter;
@@ -30,9 +34,11 @@ import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.DocumentAlreadyExistsException;
-import com.couchbase.client.java.view.Stale;
-import com.couchbase.client.java.view.ViewQuery;
-import com.couchbase.client.java.view.ViewRow;
+import com.couchbase.client.java.query.N1qlParams;
+import com.couchbase.client.java.query.N1qlQuery;
+import com.couchbase.client.java.query.N1qlQueryResult;
+import com.couchbase.client.java.query.N1qlQueryRow;
+import com.couchbase.client.java.query.consistency.ScanConsistency;
 
 /**
  * {@link org.apache.sling.nosql.generic.adapter.NoSqlAdapter} implementation for Couchbase.
@@ -49,16 +55,18 @@ public final class CouchbaseNoSqlAdapter extends AbstractNoSqlAdapter {
      */
     public static final String PN_DATA = "data";
 
-    private static final String VIEW_DESIGN_DOCUMENT = "resourceIndex";
-    private static final String VIEW_PARENT_PATH = "parentPath";
-    private static final String VIEW_ANCESTOR_PATH = "ancestorPath";
-
     private final CouchbaseClient couchbaseClient;
     private final String cacheKeyPrefix;
+    
+    private static final N1qlParams N1QL_PARAMS = N1qlParams.build().consistency(ScanConsistency.REQUEST_PLUS);
 
     public CouchbaseNoSqlAdapter(CouchbaseClient couchbaseClient, String cacheKeyPrefix) {
         this.couchbaseClient = couchbaseClient;
         this.cacheKeyPrefix = cacheKeyPrefix;
+        
+        // make sure primary index is present - ignore error if it is already present
+        Bucket bucket = couchbaseClient.getBucket();
+        bucket.query(N1qlQuery.simple("CREATE PRIMARY INDEX ON " + couchbaseClient.getBucketName()));
     }
 
     @Override
@@ -89,8 +97,14 @@ public final class CouchbaseNoSqlAdapter extends AbstractNoSqlAdapter {
     public Iterator<NoSqlData> getChildren(String parentPath) {
         Bucket bucket = couchbaseClient.getBucket();
         // fetch all direct children of this path
-        final Iterator<ViewRow> results = bucket.query(
-                ViewQuery.from(VIEW_DESIGN_DOCUMENT, VIEW_PARENT_PATH).key(parentPath).stale(Stale.FALSE)).rows();
+        Pattern directChildren = Pattern.compile("^" + parentPath + "/[^/]+$");
+        N1qlQuery query = N1qlQuery.simple(select("*")
+                .from(couchbaseClient.getBucketName())
+                .where("REGEXP_LIKE(`" + PN_PATH + "`, '" + directChildren.pattern() + "')"),
+                N1QL_PARAMS);
+        N1qlQueryResult queryResult = bucket.query(query);
+        handleQueryError(queryResult);
+        final Iterator<N1qlQueryRow> results = queryResult.iterator();
         return new Iterator<NoSqlData>() {
             @Override
             public boolean hasNext() {
@@ -99,8 +113,8 @@ public final class CouchbaseNoSqlAdapter extends AbstractNoSqlAdapter {
 
             @Override
             public NoSqlData next() {
-                JsonDocument doc = results.next().document();
-                JsonObject envelope = doc.content();
+                JsonObject item = results.next().value();
+                JsonObject envelope = item.getObject(couchbaseClient.getBucketName());
                 String path = envelope.getString(PN_PATH);
                 JsonObject data = envelope.getObject(PN_DATA);
                 return new NoSqlData(path, data.toMap(), MultiValueMode.LISTS);
@@ -136,16 +150,34 @@ public final class CouchbaseNoSqlAdapter extends AbstractNoSqlAdapter {
     @Override
     public boolean deleteRecursive(String path) {
         Bucket bucket = couchbaseClient.getBucket();
-        // fetch referenced item and all descendants
-        Iterator<ViewRow> results = bucket.query(
-                ViewQuery.from(VIEW_DESIGN_DOCUMENT, VIEW_ANCESTOR_PATH).key(path).stale(Stale.FALSE)).rows();
+        // fetch all descendants and self for deletion
+        Pattern descendantsAndSelf = Pattern.compile("^" + path + "(/.+)?$");
+        N1qlQuery query = N1qlQuery.simple(select("*")
+                .from(couchbaseClient.getBucketName())
+                .where("REGEXP_LIKE(`" + PN_PATH + "`, '" + descendantsAndSelf.pattern() + "')"),
+                N1QL_PARAMS);
+        N1qlQueryResult queryResult = bucket.query(query);
+        handleQueryError(queryResult);
+        final Iterator<N1qlQueryRow> results = queryResult.iterator();
         boolean deletedAny = false;
         while (results.hasNext()) {
-            ViewRow result = results.next();
-            bucket.remove(result.document());
+            JsonObject item = results.next().value();
+            JsonObject envelope = item.getObject(couchbaseClient.getBucketName());
+            String itemPath = envelope.getString(PN_PATH);
+            String itemCacheKey = CouchbaseKey.build(itemPath, cacheKeyPrefix);
+            bucket.remove(itemCacheKey);
             deletedAny = true;
         }
         return deletedAny;
+    }
+    
+    private void handleQueryError(N1qlQueryResult queryResult) {
+        if (!queryResult.parseSuccess()) {
+            throw new RuntimeException("Couchbase query parsing error: " + StringUtils.join(queryResult.errors(), "\n"));
+        }
+        if (!queryResult.finalSuccess()) {
+            throw new RuntimeException("Couchbase query error: " + StringUtils.join(queryResult.errors(), "\n"));
+        }
     }
 
 }
