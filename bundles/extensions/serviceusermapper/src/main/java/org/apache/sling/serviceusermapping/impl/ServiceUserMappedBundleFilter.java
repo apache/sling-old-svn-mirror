@@ -19,9 +19,12 @@
 
 package org.apache.sling.serviceusermapping.impl;
 
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
+
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceEvent;
@@ -30,17 +33,14 @@ import org.osgi.framework.hooks.service.EventListenerHook;
 import org.osgi.framework.hooks.service.FindHook;
 import org.osgi.framework.hooks.service.ListenerHook;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
-
-@Component
+@Component(immediate=true) // framework gets/ungets hooks each time
 @Service(value = {EventListenerHook.class, FindHook.class} )
 /**
  * The <code>ServiceUserMappingBundleFilter</code> only allows the bundle for which the service mapping is available to see it.
  */
 public class ServiceUserMappedBundleFilter implements EventListenerHook, FindHook {
 
+    @Override
     public void event(ServiceEvent serviceEvent, Map map) {
 
         ServiceReference serviceReference = serviceEvent.getServiceReference();
@@ -61,6 +61,7 @@ public class ServiceUserMappedBundleFilter implements EventListenerHook, FindHoo
         }
     }
 
+    @Override
     public void find(BundleContext bundleContext, String name, String filter, boolean allServices,
                      Collection references) {
         String bundleServiceName = ServiceUserMapperImpl.getServiceName(bundleContext.getBundle());
