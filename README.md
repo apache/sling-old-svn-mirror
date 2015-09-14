@@ -5,6 +5,8 @@ Sling ResourceProvider implementation that uses [MongoDB](https://www.mongodb.or
 
 Based on the "Apache Sling NoSQL Generic Resource Provider".
 
+All resource data is stored in one MongoDB database and one collection, using the path of the resource as "_id" property.
+
 
 Configuration on deployment
 ---------------------------
