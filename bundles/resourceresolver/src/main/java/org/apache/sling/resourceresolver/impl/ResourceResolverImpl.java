@@ -38,6 +38,7 @@ import org.apache.sling.adapter.annotations.Adaptable;
 import org.apache.sling.adapter.annotations.Adapter;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.adapter.SlingAdaptable;
+import org.apache.sling.api.resource.DynamicResourceProvider;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.PersistenceException;
@@ -155,14 +156,17 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     }
 
     /**
-     * Check if the resource resolver is already closed.
+     * Check if the resource resolver is already closed or the factory which created this resolver is no longer live.
      *
      * @throws IllegalStateException
-     *             If the resolver is already closed
+     *             If the resolver is already closed or the factory is no longer live.
      */
     private void checkClosed() {
         if (this.isClosed.get()) {
             throw new IllegalStateException("Resource resolver is already closed.");
+        }
+        if (!this.factory.isLive()) {
+            throw new IllegalStateException("Resource resolver factory which created this resolver is no longer active.");
         }
     }
 

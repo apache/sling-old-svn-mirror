@@ -84,7 +84,10 @@ import aQute.bnd.annotation.ProviderType;
  * Resource Resolver using any of the factory methods and ends with calling the
  * {@link #close()} method. It is very important to call the {@link #close()}
  * method once the resource resolver is not used any more to ensure any system
- * resources are properly cleaned up.
+ * resources are properly cleaned up. 
+ * 
+ * A Resource Resolver may also be closed implicitly if the {@link ResourceResolverFactory}
+ * which was used to create this resolver is no longer active.
  * <p>
  * To check whether a Resource Resolver can still be used, the {@link #isLive()}
  * method can be called.
@@ -542,8 +545,12 @@ public interface ResourceResolver extends Adaptable, Closeable {
      * called, the resource resolver is considered unusable and will throw
      * exceptions if still used - with the exception of this method, which
      * can be called several times with no ill effects.
+     * 
+     * A resource may also be closed implicitly in case when the {@link ResourceResolverFactory}
+     * which was used to create this resolver is no longer active.
      *
      * @since 2.1 (Sling API Bundle 2.1.0)
+     * @see ResourceResolver Resource Resolver (section lifecycle)
      */
     @Override
     void close();
