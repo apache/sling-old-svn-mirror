@@ -147,6 +147,7 @@
           <module>nosql/couchbase-client</module>
           <module>nosql/couchbase-resourceprovider</module>
           <module>nosql/mongodb-resourceprovider</module>
+          <module>nosql/launchpad</module>
 
           <module>launchpad/testing</module>
           <module>launchpad/karaf</module>
