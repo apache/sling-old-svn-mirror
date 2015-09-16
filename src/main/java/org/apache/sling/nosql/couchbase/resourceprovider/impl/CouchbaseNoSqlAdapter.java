@@ -97,7 +97,7 @@ public final class CouchbaseNoSqlAdapter extends AbstractNoSqlAdapter {
     public Iterator<NoSqlData> getChildren(String parentPath) {
         Bucket bucket = couchbaseClient.getBucket();
         // fetch all direct children of this path
-        Pattern directChildren = Pattern.compile("^" + parentPath + "/[^/]+$");
+        Pattern directChildren = Pattern.compile("^" + StringUtils.removeEnd(parentPath, "/") + "/[^/]+$");
         N1qlQuery query = N1qlQuery.simple(select("*")
                 .from(couchbaseClient.getBucketName())
                 .where("REGEXP_LIKE(`" + PN_PATH + "`, '" + directChildren.pattern() + "')"),
