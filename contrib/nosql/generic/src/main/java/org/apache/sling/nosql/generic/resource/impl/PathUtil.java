@@ -20,6 +20,8 @@ package org.apache.sling.nosql.generic.resource.impl;
 
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * Helper functions for handling paths.
  */
@@ -35,7 +37,7 @@ public final class PathUtil {
      * @return Regex pattern
      */
     public static Pattern getChildPathPattern(String parentPath) {
-        return Pattern.compile("^" + Pattern.quote(parentPath) + "/[^/]+$");
+        return Pattern.compile("^" + Pattern.quote(StringUtils.removeEnd(parentPath,  "/")) + "/[^/]+$");
     }
     
     /**

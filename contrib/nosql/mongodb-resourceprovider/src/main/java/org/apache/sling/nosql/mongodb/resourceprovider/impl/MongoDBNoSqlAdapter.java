@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.nosql.generic.adapter.AbstractNoSqlAdapter;
 import org.apache.sling.nosql.generic.adapter.MultiValueMode;
 import org.apache.sling.nosql.generic.adapter.NoSqlData;
@@ -72,7 +73,7 @@ public final class MongoDBNoSqlAdapter extends AbstractNoSqlAdapter {
     @Override
     public Iterator<NoSqlData> getChildren(String parentPath) {
         List<NoSqlData> children = new ArrayList<>();
-        Pattern directChildren = Pattern.compile("^" + Pattern.quote(parentPath) + "/[^/]+$");
+        Pattern directChildren = Pattern.compile("^" + Pattern.quote(StringUtils.removeEnd(parentPath, "/")) + "/[^/]+$");
         FindIterable<Document> result = collection.find(Filters.regex(ID_PROPERTY, directChildren));
         try (MongoCursor<Document> wrappers = result.iterator()) {
             while (wrappers.hasNext()) {
