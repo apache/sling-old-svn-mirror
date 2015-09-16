@@ -37,7 +37,6 @@ import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
-import org.apache.sling.resourceresolver.impl.tree.RootResourceProviderEntry;
 import org.apache.sling.spi.resource.provider.JCRQueryProvider;
 import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;

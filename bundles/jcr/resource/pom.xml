@@ -227,6 +227,14 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Findbugs annotations -->
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>3.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- For the Console Plugin of the JcrResourceResolverFactoryImpl -->
         <dependency>
             <groupId>javax.servlet</groupId>

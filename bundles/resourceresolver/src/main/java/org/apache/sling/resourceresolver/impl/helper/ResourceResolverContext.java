@@ -17,58 +17,22 @@
  */
 package org.apache.sling.resourceresolver.impl.helper;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.LoginException;
-import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.api.resource.runtime.dto.AuthType;
-import org.apache.sling.resourceresolver.impl.BasicResolveContext;
-import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
-import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
-import org.apache.sling.spi.resource.provider.ResolveContext;
-import org.apache.sling.spi.resource.provider.ResourceProvider;
 
 /**
- * This class keeps track of the used resource providers for a
- * resource resolver.
  * Like a resource resolver itself, this class is not thread safe.
  */
 public class ResourceResolverContext {
 
-    /**
-     * Context objects for all used resource providers.
-     */
-    private final Map<ResourceProvider<?>, Object> providerStates = new IdentityHashMap<ResourceProvider<?>, Object>();
-
-    /**
-     * All ResourceProviders to be used.
-     */
-    private final List<ResourceProviderHandler> providerHandlers;
-
     /** Is this a resource resolver for an admin? */
     private final boolean isAdmin;
-
-    /**
-     * The original authentication information - this is used for cloning and lazy logins.
-     */
-    private final Map<String, Object> originalAuthInfo;
-
-    /** service tracker for ResourceAccessSecurity service */
-    private final ResourceAccessSecurityTracker resourceAccessSecurityTracker;
 
     /** Resource type resource resolver (admin resolver) */
     private ResourceResolver resourceTypeResourceResolver;
@@ -79,88 +43,19 @@ public class ResourceResolverContext {
     /**
      * Create a new resource resolver context.
      */
-    public ResourceResolverContext(final boolean isAdmin, final Map<String, Object> originalAuthInfo,
-            final ResourceAccessSecurityTracker resourceAccessSecurityTracker,
-            final Collection<ResourceProviderHandler> providerHandlers) {
+    public ResourceResolverContext(final boolean isAdmin) {
         this.isAdmin = isAdmin;
-        this.originalAuthInfo = originalAuthInfo;
-        this.resourceAccessSecurityTracker = resourceAccessSecurityTracker;
-        this.providerHandlers = new ArrayList<ResourceProviderHandler>(providerHandlers);
     }
 
-    /**
-     * Is this an admin resource resolver.
-     */
     public boolean isAdmin() {
-        return this.isAdmin;
-    }
-
-    /**
-     * Return the authentication info.
-     */
-    public Map<String, Object> getAuthenticationInfo() {
-        return this.originalAuthInfo;
-    }
-
-    /**
-     * Check all active dynamic resource providers.
-     */
-    public boolean isLive(ResourceResolver resolver) {
-        boolean result = true;
-        for (final ResourceProviderHandler handler : this.providerHandlers) {
-            if (!handler.getResourceProvider().isLive((ResolveContext) getResolveContext(resolver, handler))) {
-                result = false;
-                break;
-            }
-        }
-        return result;
-    }
-
-    public ResolveContext<?> getResolveContext(ResourceResolver resolver, ResourceProviderHandler handler) {
-        return getResolveContext(resolver, handler, Collections.<String,String>emptyMap());
-    }
-
-    public ResolveContext<?> getResolveContext(ResourceResolver resolver, ResourceProviderHandler handler, Map<String, String> parameters) {
-        try {
-            final Object state = authenticate(handler);
-            return new BasicResolveContext(resolver, parameters, state);
-        } catch (LoginException e) {
-            throw new SlingException("Can't create resolve context", e);
-        }
-    }
-
-    private Object authenticate(ResourceProviderHandler handler) throws LoginException {
-        if (handler.getInfo().getAuthType() == AuthType.no) {
-            return null;
-        }
-
-        ResourceProvider<?> resourceProvider = handler.getResourceProvider();
-        if (providerStates.containsKey(resourceProvider)) {
-            return providerStates.get(resourceProvider);
-        } else {
-            Object state = resourceProvider.authenticate(originalAuthInfo);
-            providerStates.put(resourceProvider, state);
-            return state;
-        }
+        return isAdmin;
     }
 
     /**
      * Close all dynamic resource providers.
      */
     public void close() {
-        if ( this.isClosed.compareAndSet(false, true)) {
-            for (final Entry<ResourceProvider<?>, Object> e : providerStates.entrySet()) {
-                try {
-                    if (e.getValue() != null) {
-                        ((ResourceProvider) e.getKey()).logout(e.getValue());
-                    }
-                } catch ( final Throwable t) {
-                    // the provider might already be terminated (bundle stopped etc.)
-                    // so we ignore anything from here
-                }
-            }
-            this.providerHandlers.clear();
-            this.providerStates.clear();
+        if (this.isClosed.compareAndSet(false, true)) {
             if ( this.resourceTypeResourceResolver != null ) {
                 try {
                     this.resourceTypeResourceResolver.close();
@@ -173,58 +68,7 @@ public class ResourceResolverContext {
         }
     }
 
-    /**
-     * Revert all transient changes.
-     */
-    public void revert(ResourceResolver resolver) {
-        for (final ResourceProviderHandler handler : this.providerHandlers) {
-            if (handler.getInfo().getModifiable()) {
-                handler.getResourceProvider().revert((ResolveContext) getResolveContext(resolver, handler));
-            }
-        }
-    }
-
-    /**
-     * Commit all transient changes
-     */
-    public void commit(ResourceResolver resolver) throws PersistenceException {
-        for (final ResourceProviderHandler handler : this.providerHandlers) {
-            if (handler.getInfo().getModifiable()) {
-                handler.getResourceProvider().commit((ResolveContext) getResolveContext(resolver, handler));
-            }
-        }
-    }
-
-    /**
-     * Do we have changes?
-     */
-    public boolean hasChanges(ResourceResolver resolver) {
-        for (final ResourceProviderHandler handler : this.providerHandlers) {
-            if (handler.getInfo().getModifiable()) {
-                if (handler.getResourceProvider().hasChanges((ResolveContext) getResolveContext(resolver, handler))) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Refresh
-     */
-    public void refresh(ResourceResolver resolver) {
-        for (final ResourceProviderHandler handler : this.providerHandlers) {
-            handler.getResourceProvider().refresh((ResolveContext) getResolveContext(resolver, handler));
-        }
-    }
-
-    /**
-     * get's the ServiceTracker of the ResourceAccessSecurity service
-     */
-    public ResourceAccessSecurityTracker getResourceAccessSecurityTracker () {
-        return resourceAccessSecurityTracker;
-    }
-
+    @SuppressWarnings("deprecation")
     private ResourceResolver getResourceTypeResourceResolver(
             final ResourceResolverFactory factory,
             final ResourceResolver resolver) {
@@ -320,22 +164,5 @@ public class ResourceResolverContext {
         }
 
         return null;
-    }
-
-    public ResourceResolverContext clone(Map<String, Object> authenticationInfo) {
-        // create the merged map
-        final Map<String, Object> newAuthenticationInfo = new HashMap<String, Object>();
-        if (originalAuthInfo != null) {
-            newAuthenticationInfo.putAll(originalAuthInfo);
-        }
-        if (authenticationInfo != null) {
-            newAuthenticationInfo.putAll(authenticationInfo);
-        }
-
-        return new ResourceResolverContext(isAdmin, newAuthenticationInfo, resourceAccessSecurityTracker, providerHandlers);
-    }
-
-    public List<ResourceProviderHandler> getProviders() {
-        return providerHandlers;
     }
 }

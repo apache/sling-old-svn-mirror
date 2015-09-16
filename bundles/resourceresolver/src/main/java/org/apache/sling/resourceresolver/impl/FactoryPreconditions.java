@@ -19,13 +19,9 @@
 package org.apache.sling.resourceresolver.impl;
 
 import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.Hashtable;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
-import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;

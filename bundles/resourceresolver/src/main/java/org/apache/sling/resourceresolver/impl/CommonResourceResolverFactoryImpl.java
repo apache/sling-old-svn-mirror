@@ -21,7 +21,6 @@ package org.apache.sling.resourceresolver.impl;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -41,8 +40,6 @@ import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.apache.sling.resourceresolver.impl.mapping.MapConfigurationProvider;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
-import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
-import org.apache.sling.resourceresolver.impl.tree.RootResourceProviderEntry;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
@@ -251,14 +248,8 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         if ( !isActive.get() ) {
             throw new LoginException("ResourceResolverFactory is deactivated.");
         }
-        ResourceResolverContext context = new ResourceResolverContext(isAdmin, authenticationInfo,
-                getResourceAccessSecurityTracker(), getResourceProviderHandlers());
-        activator.rootProviderEntry.loginToRequiredFactories(context);
-        return new ResourceResolverImpl(this, context);
-    }
 
-    private Collection<ResourceProviderHandler> getResourceProviderHandlers() {
-        return activator.resourceProviderTracker.getHandlers();
+        return new ResourceResolverImpl(this, isAdmin, authenticationInfo, this.activator.resourceProviderTracker.getHandlers());
     }
 
     public MapEntries getMapEntries() {
@@ -326,10 +317,6 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     @Override
     public BidiMap getVirtualURLMap() {
         return this.activator.getVirtualURLMap();
-    }
-
-    public RootResourceProviderEntry getRootProviderEntry() {
-        return this.activator.getRootProviderEntry();
     }
 
     @Override

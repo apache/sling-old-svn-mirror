@@ -43,7 +43,6 @@ import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
-import org.apache.sling.resourceresolver.impl.tree.RootResourceProviderEntry;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -261,9 +260,6 @@ public class ResourceResolverFactoryActivator implements Runnable {
     /** whether to mangle paths with namespaces or not */
     private boolean mangleNamespacePrefixes;
 
-    /** The root provider entry. */
-    RootResourceProviderEntry rootProviderEntry;
-
     /** Event admin. */
     @Reference
     EventAdmin eventAdmin;
@@ -341,13 +337,6 @@ public class ResourceResolverFactoryActivator implements Runnable {
     }
 
     /**
-     * Getter for rootProviderEntry.
-     */
-    public RootResourceProviderEntry getRootProviderEntry() {
-        return rootProviderEntry;
-    }
-
-    /**
      * This method is called from {@link MapEntries}
      */
     public BidiMap getVirtualURLMap() {
@@ -417,7 +406,6 @@ public class ResourceResolverFactoryActivator implements Runnable {
      */
     @Activate
     protected void activate(final ComponentContext componentContext) {
-        this.rootProviderEntry = new RootResourceProviderEntry();
         this.componentContext = componentContext;
         final Dictionary<?, ?> properties = componentContext.getProperties();
 
