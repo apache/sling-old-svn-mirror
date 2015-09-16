@@ -18,22 +18,16 @@
  */
 package org.apache.sling.testing.mock.sling.oak.resource;
 
-import static org.junit.Assert.assertFalse;
-
 import java.io.IOException;
-import java.util.List;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.resource.AbstractSlingCrudResourceResolverTest;
-
-import com.google.common.collect.Lists;
 
 public class SlingCrudResourceResolverTest extends AbstractSlingCrudResourceResolverTest {
 
@@ -58,16 +52,4 @@ public class SlingCrudResourceResolverTest extends AbstractSlingCrudResourceReso
         return resolver;
     }
 
-    @Override
-    public void testListChildren_RootNode() throws IOException {
-        Resource resource1 = resourceResolver.getResource("/");
-
-        // relax test conditions to check only for none-empty because in real repository multiple test notes may be created in parallel
-        List<Resource> children = Lists.newArrayList(resource1.listChildren());
-        assertFalse(children.isEmpty());
-
-        children = Lists.newArrayList(resource1.getChildren());
-        assertFalse(children.isEmpty());
-    }
-    
 }
