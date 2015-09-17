@@ -23,7 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.nosql.generic.adapter.AbstractNoSqlAdapter;
 import org.apache.sling.nosql.generic.adapter.MultiValueMode;
 import org.apache.sling.nosql.generic.adapter.NoSqlData;
@@ -44,8 +44,9 @@ import com.mongodb.client.result.UpdateResult;
  */
 public final class MongoDBNoSqlAdapter extends AbstractNoSqlAdapter {
     
-    private static final String ID_PROPERTY = "_id";
-    private static final String DATA_PROPERTY = "_data";
+    private static final String PN_PATH = "_id";
+    private static final String PN_PARENT_PATH = "parentPath";
+    private static final String PN_DATA = "data";
     
     private final MongoCollection<Document> collection;
     
@@ -61,25 +62,24 @@ public final class MongoDBNoSqlAdapter extends AbstractNoSqlAdapter {
 
     @Override
     public NoSqlData get(String path) {
-        Document wrapper = collection.find(Filters.eq(ID_PROPERTY, path)).first();
-        if (wrapper == null) {
+        Document envelope = collection.find(Filters.eq(PN_PATH, path)).first();
+        if (envelope == null) {
             return null;
         }
         else {
-            return new NoSqlData(path, wrapper.get(DATA_PROPERTY, Document.class), MultiValueMode.LISTS);
+            return new NoSqlData(path, envelope.get(PN_DATA, Document.class), MultiValueMode.LISTS);
         }
     }
 
     @Override
     public Iterator<NoSqlData> getChildren(String parentPath) {
         List<NoSqlData> children = new ArrayList<>();
-        Pattern directChildren = Pattern.compile("^" + Pattern.quote(StringUtils.removeEnd(parentPath, "/")) + "/[^/]+$");
-        FindIterable<Document> result = collection.find(Filters.regex(ID_PROPERTY, directChildren));
-        try (MongoCursor<Document> wrappers = result.iterator()) {
-            while (wrappers.hasNext()) {
-                Document wrapper = wrappers.next();
-                String path = wrapper.get(ID_PROPERTY, String.class);
-                Document data = wrapper.get(DATA_PROPERTY, Document.class);
+        FindIterable<Document> result = collection.find(Filters.eq(PN_PARENT_PATH, parentPath));
+        try (MongoCursor<Document> envelopes = result.iterator()) {
+            while (envelopes.hasNext()) {
+                Document envelope = envelopes.next();
+                String path = envelope.get(PN_PATH, String.class);
+                Document data = envelope.get(PN_DATA, Document.class);
                 children.add(new NoSqlData(path, data, MultiValueMode.LISTS));
             }
         }
@@ -88,11 +88,17 @@ public final class MongoDBNoSqlAdapter extends AbstractNoSqlAdapter {
 
     @Override
     public boolean store(NoSqlData data) {
-        Document wrapper = new Document();
-        wrapper.put(ID_PROPERTY, data.getPath());
-        wrapper.put(DATA_PROPERTY, new Document(data.getProperties(MultiValueMode.LISTS)));
+        Document envelope = new Document();
+        envelope.put(PN_PATH, data.getPath());
+        envelope.put(PN_DATA, new Document(data.getProperties(MultiValueMode.LISTS)));
         
-        UpdateResult result = collection.replaceOne(Filters.eq(ID_PROPERTY, data.getPath()), wrapper, new UpdateOptions().upsert(true));
+        // for list-children query efficiency store parent path as well
+        String parentPath = ResourceUtil.getParent(data.getPath());
+        if (parentPath != null) {
+            envelope.put(PN_PARENT_PATH, parentPath);
+        }
+                
+        UpdateResult result = collection.replaceOne(Filters.eq(PN_PATH, data.getPath()), envelope, new UpdateOptions().upsert(true));
         
         // return true if a new entry was inserted, false if an existing was replaced
         return (result.getMatchedCount() == 0);
@@ -101,7 +107,7 @@ public final class MongoDBNoSqlAdapter extends AbstractNoSqlAdapter {
     @Override
     public boolean deleteRecursive(String path) {        
         Pattern descendantsAndSelf = Pattern.compile("^" + Pattern.quote(path) + "(/.+)?$");
-        DeleteResult result = collection.deleteMany(Filters.regex(ID_PROPERTY, descendantsAndSelf));
+        DeleteResult result = collection.deleteMany(Filters.regex(PN_PATH, descendantsAndSelf));
         
         // return true if any document was deleted
         return result.getDeletedCount() > 0;
