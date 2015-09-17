@@ -46,7 +46,11 @@ public class Service implements TestRule {
                 final BundleContext bundleContext = Activator.getBundleContext();
 
                 if (bundleContext == null) {
-                    throw new IllegalStateException("unable to obtain a bundle context");
+                    // No bundle context usually means we're running client-side
+                    // in a test that uses ServerSideTestRule. In this case, this
+                    // rule does nothing.
+                    base.evaluate();
+                    return;
                 }
 
                 final ServiceReference serviceReference = bundleContext.getServiceReference(serviceClass.getName());
