@@ -196,7 +196,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
                     }
                 });
         Iterator<Resource> allChildren = new ChainedIterator<Resource>(iterators);
-        Iterator<Resource> syntheticChildren = getSyntheticChildren(parent.getPath()).iterator();
+        Iterator<Resource> syntheticChildren = getSyntheticChildren(parent).iterator();
         Iterator<Resource> uniqueChildren = new UniqueIterator(chainedIterator(allChildren, syntheticChildren));
         return transformedIterator(uniqueChildren, new Transformer() {
             @Override
@@ -208,14 +208,21 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
         });
     }
 
-    private List<Resource> getSyntheticChildren(String parentPath) {
-        String parentPathWithSlash = parentPath + "/";
+    private List<Resource> getSyntheticChildren(Resource parent) {
+        String parentPathWithSlash = parent.getPath() + "/";
         List<Resource> children = new ArrayList<Resource>();
         for (StatefulResourceProvider p : providers) {
             String providerPath = p.getInfo().getPath();
             if (providerPath.startsWith(parentPathWithSlash)) {
-                String childPath = providerPath.substring(0, providerPath.indexOf('/', parentPathWithSlash.length()));
-                children.add(new SyntheticResource(getResourceResolver(), childPath, RESOURCE_TYPE_SYNTHETIC));
+                int slashAfterPrefix = providerPath.indexOf('/', parentPathWithSlash.length());
+                Resource child;
+                if (slashAfterPrefix == -1) {
+                    child = p.getResource(providerPath, parent, null, false);
+                } else {
+                    String childPath = providerPath.substring(0, slashAfterPrefix);
+                    child = new SyntheticResource(getResourceResolver(), childPath, RESOURCE_TYPE_SYNTHETIC);
+                }
+                children.add(child);
             }
         }
         return children;
@@ -532,7 +539,6 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
             this.input = input;
             this.visited = new ArrayList<String>();
             this.delayed = new LinkedHashMap<String, Resource>();
-            this.delayedIterator = delayed.values().iterator();
         }
 
         @Override
@@ -552,6 +558,9 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
                 }
             }
 
+            if (delayedIterator == null) {
+                delayedIterator = delayed.values().iterator();
+            }
             if (delayedIterator.hasNext()) {
                 return delayedIterator.next();
             }
