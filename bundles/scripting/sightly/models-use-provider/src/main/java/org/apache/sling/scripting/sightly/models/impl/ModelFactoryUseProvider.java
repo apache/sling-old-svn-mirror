@@ -80,6 +80,11 @@ public class ModelFactoryUseProvider implements UseProvider {
             // next use provider will be queried
             return ProviderOutcome.failure();
         }
+        if (!modelFactory.isModelClass(cls)) {
+            log.debug("{} is no Sling Model (because it lacks the according Model annotation or is not being picked up by the Bundle Listener)!");
+            // next use provider will be queried
+            return ProviderOutcome.failure();
+        }
         Bindings globalBindings = renderContext.getBindings();
         Bindings bindings = merge(globalBindings, arguments);
         Resource resource = (Resource) bindings.get(SlingBindings.RESOURCE);
@@ -90,16 +95,11 @@ public class ModelFactoryUseProvider implements UseProvider {
         if (request == null) {
             return ProviderOutcome.failure(new IllegalStateException("Could not get request from bindings"));
         }
-
+        
         // pass parameters as request attributes
         Map<String, Object> overrides = setRequestAttributes(request, arguments);
         Object obj = null;
         try {
-            if (!modelFactory.isModelClass(resource, cls)) {
-                log.debug("{} is no Sling Model (because it lacks the according Model annotation)!");
-                // next use provider will be queried
-                return ProviderOutcome.failure();
-            }
             // try to instantiate class via Sling Models (first via request, then via resource)
             if (modelFactory.canCreateFromAdaptable(request, cls)) {
                 obj = modelFactory.createModel(request, cls);
