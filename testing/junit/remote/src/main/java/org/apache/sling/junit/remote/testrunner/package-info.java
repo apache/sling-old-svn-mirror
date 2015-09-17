@@ -18,7 +18,7 @@
  */
 
 @Version("1.1.0")
-package org.apache.sling.testing.tools.sling;
+package org.apache.sling.junit.remote.testrunner;
 
 import aQute.bnd.annotation.Version;
 
