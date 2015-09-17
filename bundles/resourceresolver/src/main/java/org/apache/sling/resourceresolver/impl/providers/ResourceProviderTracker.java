@@ -88,6 +88,7 @@ public class ResourceProviderTracker {
                 return reference;
             }
         });
+        this.tracker.open();
     }
 
     @Deactivate
@@ -97,6 +98,8 @@ public class ResourceProviderTracker {
             this.tracker = null;
         }
         this.infos.clear();
+        this.handlers.clear();
+        this.invalidProviders.clear();
     }
 
     private void register(final ResourceProviderInfo info) {

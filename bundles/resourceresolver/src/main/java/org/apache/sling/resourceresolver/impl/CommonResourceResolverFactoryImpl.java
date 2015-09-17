@@ -125,6 +125,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
 
         // create a copy of the passed authentication info as we modify the map
         final Map<String, Object> authenticationInfo = new HashMap<String, Object>();
+        authenticationInfo.put(ResourceProvider.AUTH_ADMIN, Boolean.TRUE);
         if ( passedAuthenticationInfo != null ) {
             authenticationInfo.putAll(passedAuthenticationInfo);
             // make sure there is no leaking of service bundle and info props

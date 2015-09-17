@@ -21,6 +21,7 @@ package org.apache.sling.resourceresolver.impl.legacy;
 import static org.apache.sling.api.resource.QueriableResourceProvider.LANGUAGES;
 import static org.apache.sling.api.resource.ResourceProvider.ROOTS;
 import static org.apache.sling.api.resource.ResourceProvider.USE_RESOURCE_ACCESS_SECURITY;
+import static org.apache.sling.api.resource.ResourceProviderFactory.PROPERTY_REQUIRED;
 import static org.apache.sling.spi.resource.provider.ResourceProvider.PROPERTY_AUTHENTICATE;
 import static org.apache.sling.spi.resource.provider.ResourceProvider.PROPERTY_MODIFIABLE;
 import static org.apache.sling.spi.resource.provider.ResourceProvider.PROPERTY_NAME;
@@ -30,10 +31,12 @@ import static org.osgi.framework.Constants.SERVICE_RANKING;
 
 import java.util.ArrayList;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
@@ -45,6 +48,7 @@ import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.api.resource.runtime.dto.AuthType;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 @SuppressWarnings("deprecation")
@@ -54,26 +58,28 @@ import org.osgi.framework.ServiceRegistration;
         @Reference(name = "ResourceProviderFactory", referenceInterface = ResourceProviderFactory.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC) })
 public class LegacyResourceProviderWhiteboard {
 
-    private BundleContext bundleContext;
+    private Map<Object, List<ServiceRegistration>> registrations = new HashMap<Object, List<ServiceRegistration>>();
 
-    private Map<Object, List<ServiceRegistration>> registrations;
+    protected void bindResourceProvider(ServiceReference ref) {
+        BundleContext bundleContext = ref.getBundle().getBundleContext();
+        ResourceProvider provider = (ResourceProvider) bundleContext.getService(ref);
+        String[] propertyNames = ref.getPropertyKeys();
 
-    protected void activate(BundleContext bundleContext) {
-        this.bundleContext = bundleContext;
-    }
-
-    protected void bindResourceProvider(final ResourceProvider provider, final Map<String, Object> props) {
         List<ServiceRegistration> newServices = new ArrayList<ServiceRegistration>();
-        for (String path : PropertiesUtil.toStringArray(props.get(ROOTS), new String[0])) {
+        for (String path : PropertiesUtil.toStringArray(ref.getProperty(ROOTS), new String[0])) {
             Dictionary<String, Object> newProps = new Hashtable<String, Object>();
             newProps.put(PROPERTY_AUTHENTICATE, AuthType.no.toString());
             newProps.put(PROPERTY_MODIFIABLE, provider instanceof ModifyingResourceProvider);
             newProps.put(PROPERTY_NAME, provider.getClass().getName() + "-legacy");
             newProps.put(PROPERTY_ROOT, path);
-            newProps.put(PROPERTY_USE_RESOURCE_ACCESS_SECURITY, props.get(USE_RESOURCE_ACCESS_SECURITY));
-            newProps.put(SERVICE_RANKING, props.get(SERVICE_RANKING));
+            if (ArrayUtils.contains(propertyNames, USE_RESOURCE_ACCESS_SECURITY)) {
+                newProps.put(PROPERTY_USE_RESOURCE_ACCESS_SECURITY, ref.getProperty(USE_RESOURCE_ACCESS_SECURITY));
+            }
+            if (ArrayUtils.contains(propertyNames, SERVICE_RANKING)) {
+                newProps.put(SERVICE_RANKING, ref.getProperty(SERVICE_RANKING));
+            }
 
-            String[] languages = PropertiesUtil.toStringArray(props.get(LANGUAGES), new String[0]);
+            String[] languages = PropertiesUtil.toStringArray(ref.getProperty(LANGUAGES), new String[0]);
             ServiceRegistration reg = bundleContext.registerService(
                     org.apache.sling.spi.resource.provider.ResourceProvider.class.getName(),
                     new LegacyResourceProviderAdapter(provider, languages), newProps);
@@ -88,18 +94,29 @@ public class LegacyResourceProviderWhiteboard {
         }
     }
 
-    protected void bindResourceProviderFactory(final ResourceProviderFactory factory, final Map<String, Object> props) {
+    protected void bindResourceProviderFactory(ServiceReference ref) {
+        BundleContext bundleContext = ref.getBundle().getBundleContext();
+        ResourceProviderFactory factory = (ResourceProviderFactory) bundleContext.getService(ref);
+        String[] propertyNames = ref.getPropertyKeys();
+
         List<ServiceRegistration> newServices = new ArrayList<ServiceRegistration>();
-        for (String path : PropertiesUtil.toStringArray(props.get(ROOTS), new String[0])) {
+        for (String path : PropertiesUtil.toStringArray(ref.getProperty(ROOTS), new String[0])) {
             Dictionary<String, Object> newProps = new Hashtable<String, Object>();
-            newProps.put(PROPERTY_AUTHENTICATE, AuthType.no.toString());
+            if (PropertiesUtil.toBoolean(ref.getProperty(PROPERTY_REQUIRED), false)) {
+                newProps.put(PROPERTY_AUTHENTICATE, AuthType.required.toString());
+            } else {
+                newProps.put(PROPERTY_AUTHENTICATE, AuthType.lazy.toString());
+            }
             newProps.put(PROPERTY_MODIFIABLE, true);
             newProps.put(PROPERTY_NAME, factory.getClass().getName() + "-legacy");
             newProps.put(PROPERTY_ROOT, path);
-            newProps.put(PROPERTY_USE_RESOURCE_ACCESS_SECURITY, props.get(USE_RESOURCE_ACCESS_SECURITY));
-            newProps.put(SERVICE_RANKING, props.get(SERVICE_RANKING));
-
-            String[] languages = PropertiesUtil.toStringArray(props.get(LANGUAGES), new String[0]);
+            if (ArrayUtils.contains(propertyNames, USE_RESOURCE_ACCESS_SECURITY)) {
+                newProps.put(PROPERTY_USE_RESOURCE_ACCESS_SECURITY, ref.getProperty(USE_RESOURCE_ACCESS_SECURITY));
+            }
+            if (ArrayUtils.contains(propertyNames, SERVICE_RANKING)) {
+                newProps.put(SERVICE_RANKING, ref.getProperty(SERVICE_RANKING));
+            }
+            String[] languages = PropertiesUtil.toStringArray(ref.getProperty(LANGUAGES), new String[0]);
             ServiceRegistration reg = bundleContext.registerService(
                     org.apache.sling.spi.resource.provider.ResourceProvider.class.getName(),
                     new LegacyResourceProviderFactoryAdapter(factory, languages), newProps);

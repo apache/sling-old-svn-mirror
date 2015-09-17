@@ -65,6 +65,7 @@ import org.apache.sling.resourceresolver.impl.providers.stateful.CombinedResourc
 import org.apache.sling.resourceresolver.impl.providers.stateful.SecureResoureProvider;
 import org.apache.sling.resourceresolver.impl.providers.stateful.StatefulResourceProvider;
 import org.apache.sling.resourceresolver.impl.tree.params.ParsedParameters;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -144,6 +145,11 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     private StatefulResourceProvider createProvider(List<ResourceProviderHandler> handlers) throws LoginException {
         List<StatefulResourceProvider> authenticated = new ArrayList<StatefulResourceProvider>();
         for (ResourceProviderHandler h : handlers) {
+            ResourceProvider<?> rp = h.getResourceProvider();
+            if (rp == null) {
+                logger.warn("Empty resource provider for {}", h);
+                continue;
+            }
             authenticated.add(new AuthenticatedResourceProvider(h.getResourceProvider(), h.getInfo(), this, authenticationInfo));
         }
         List<StatefulResourceProvider> secured = new ArrayList<StatefulResourceProvider>();

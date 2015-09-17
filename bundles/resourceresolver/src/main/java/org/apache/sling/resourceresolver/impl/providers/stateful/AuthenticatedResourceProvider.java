@@ -107,7 +107,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     @Override
     public void logout() {
         if (authenticated) {
-            rp.logout(getContext());
+            rp.logout(getContext().getProviderState());
             authenticated = false;
             cachedContext = null;
         }

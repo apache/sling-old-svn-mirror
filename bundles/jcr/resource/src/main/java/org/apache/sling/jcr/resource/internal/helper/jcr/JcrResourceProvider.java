@@ -74,7 +74,7 @@ import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component
+@Component(immediate = true)
 @Service(value = ResourceProvider.class)
 @Properties({ @Property(name = ResourceProvider.PROPERTY_NAME, value = "JCR"),
         @Property(name = ResourceProvider.PROPERTY_ROOT, value = "/"),
@@ -459,7 +459,16 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
         }
         return false;
     }
-    
+
+    @Override
+    public void refresh(final @Nonnull ResolveContext<JcrProviderState> ctx) {
+        try {
+            ctx.getProviderState().getSession().refresh(true);
+        } catch (final RepositoryException ignore) {
+            log.warn("Unable to refresh session.", ignore);
+        }
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public @CheckForNull <AdapterType> AdapterType adaptTo(final @Nonnull ResolveContext<JcrProviderState> ctx,

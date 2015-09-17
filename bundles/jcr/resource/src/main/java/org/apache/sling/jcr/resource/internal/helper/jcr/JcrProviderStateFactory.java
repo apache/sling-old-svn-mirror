@@ -69,85 +69,89 @@ public class JcrProviderStateFactory {
         BundleContext bc = null;
         try {
             final String workspace = getWorkspace(authenticationInfo);
-            session = getSession(authenticationInfo);
-            if (session == null) {
 
-                final Object serviceBundleObject = authenticationInfo.get(ResourceProvider.AUTH_SERVICE_BUNDLE);
-                if (serviceBundleObject instanceof Bundle) {
+            if (Boolean.TRUE.equals(authenticationInfo.get(ResourceProvider.AUTH_ADMIN))) {
+                session = repository.loginAdministrative(workspace);
+            } else {
+                session = getSession(authenticationInfo);
+                if (session == null) {
 
-                    final String subServiceName = (authenticationInfo
-                            .get(ResourceResolverFactory.SUBSERVICE) instanceof String)
-                                    ? (String) authenticationInfo.get(ResourceResolverFactory.SUBSERVICE) : null;
+                    final Object serviceBundleObject = authenticationInfo.get(ResourceProvider.AUTH_SERVICE_BUNDLE);
+                    if (serviceBundleObject instanceof Bundle) {
 
-                    bc = ((Bundle) serviceBundleObject).getBundleContext();
+                        final String subServiceName = (authenticationInfo
+                                .get(ResourceResolverFactory.SUBSERVICE) instanceof String)
+                                        ? (String) authenticationInfo.get(ResourceResolverFactory.SUBSERVICE) : null;
 
-                    final SlingRepository repo = (SlingRepository) bc.getService(repositoryReference);
-                    if (repo == null) {
-                        log.warn(
-                                "getResourceProviderInternal: Cannot login service because cannot get SlingRepository on behalf of bundle {} ({})",
-                                bc.getBundle().getSymbolicName(), bc.getBundle().getBundleId());
-                        throw new LoginException(); // TODO: correct ??
+                        bc = ((Bundle) serviceBundleObject).getBundleContext();
+
+                        final SlingRepository repo = (SlingRepository) bc.getService(repositoryReference);
+                        if (repo == null) {
+                            log.warn(
+                                    "getResourceProviderInternal: Cannot login service because cannot get SlingRepository on behalf of bundle {} ({})",
+                                    bc.getBundle().getSymbolicName(), bc.getBundle().getBundleId());
+                            throw new LoginException(); // TODO: correct ??
+                        }
+
+                        try {
+                            session = repo.loginService(subServiceName, workspace);
+                        } finally {
+                            // unget the repository if the service cannot
+                            // login to it, otherwise the repository service
+                            // is let go off when the resource resolver is
+                            // closed and the session logged out
+                            if (session == null) {
+                                bc.ungetService(repositoryReference);
+                            }
+                        }
+
+                    } else {
+
+                        // requested non-admin session to any workspace (or
+                        // default)
+                        final Credentials credentials = getCredentials(authenticationInfo);
+                        session = repository.login(credentials, workspace);
+
                     }
 
+                } else if (workspace != null) {
+
+                    // session provided by map; but requested a different
+                    // workspace impersonate can only change the user not switch
+                    // the workspace as a workaround we login to the requested
+                    // workspace with admin and then switch to the provided
+                    // session's user (if required)
+                    Session tmpSession = null;
                     try {
-                        session = repo.loginService(subServiceName, workspace);
+
+                        /*
+                         * TODO: Instead of using the deprecated loginAdministrative
+                         * method, this bundle could be configured with an
+                         * appropriate user for service authentication and do:
+                         * tmpSession = repository.loginService(null, workspace);
+                         * For now, we keep loginAdministrative
+                         */
+
+                        tmpSession = repository.loginAdministrative(workspace);
+                        if (tmpSession.getUserID().equals(session.getUserID())) {
+                            session = tmpSession;
+                            tmpSession = null;
+                        } else {
+                            session = tmpSession.impersonate(new SimpleCredentials(session.getUserID(), new char[0]));
+                        }
                     } finally {
-                        // unget the repository if the service cannot
-                        // login to it, otherwise the repository service
-                        // is let go off when the resource resolver is
-                        // closed and the session logged out
-                        if (session == null) {
-                            bc.ungetService(repositoryReference);
+                        if (tmpSession != null) {
+                            tmpSession.logout();
                         }
                     }
 
                 } else {
 
-                    // requested non-admin session to any workspace (or
-                    // default)
-                    final Credentials credentials = getCredentials(authenticationInfo);
-                    session = repository.login(credentials, workspace);
-
+                    // session provided; no special workspace; just make sure
+                    // the session is not logged out when the resolver is closed
+                    logoutSession = false;
                 }
-
-            } else if (workspace != null) {
-
-                // session provided by map; but requested a different
-                // workspace impersonate can only change the user not switch
-                // the workspace as a workaround we login to the requested
-                // workspace with admin and then switch to the provided
-                // session's user (if required)
-                Session tmpSession = null;
-                try {
-
-                    /*
-                     * TODO: Instead of using the deprecated loginAdministrative
-                     * method, this bundle could be configured with an
-                     * appropriate user for service authentication and do:
-                     * tmpSession = repository.loginService(null, workspace);
-                     * For now, we keep loginAdministrative
-                     */
-
-                    tmpSession = repository.loginAdministrative(workspace);
-                    if (tmpSession.getUserID().equals(session.getUserID())) {
-                        session = tmpSession;
-                        tmpSession = null;
-                    } else {
-                        session = tmpSession.impersonate(new SimpleCredentials(session.getUserID(), new char[0]));
-                    }
-                } finally {
-                    if (tmpSession != null) {
-                        tmpSession.logout();
-                    }
-                }
-
-            } else {
-
-                // session provided; no special workspace; just make sure
-                // the session is not logged out when the resolver is closed
-                logoutSession = false;
             }
-
         } catch (final RepositoryException re) {
             throw getLoginException(re);
         }
