@@ -19,11 +19,14 @@
 package org.apache.sling.nosql.couchbase.resourceprovider.impl;
 
 import static com.couchbase.client.java.query.Select.select;
+import static com.couchbase.client.java.query.dsl.Expression.s;
+import static com.couchbase.client.java.query.dsl.Expression.x;
 
 import java.util.Iterator;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.nosql.couchbase.client.CouchbaseClient;
 import org.apache.sling.nosql.couchbase.client.CouchbaseKey;
 import org.apache.sling.nosql.generic.adapter.AbstractNoSqlAdapter;
@@ -34,6 +37,7 @@ import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.DocumentAlreadyExistsException;
+import com.couchbase.client.java.query.Index;
 import com.couchbase.client.java.query.N1qlParams;
 import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.N1qlQueryResult;
@@ -45,15 +49,9 @@ import com.couchbase.client.java.query.consistency.ScanConsistency;
  */
 public final class CouchbaseNoSqlAdapter extends AbstractNoSqlAdapter {
 
-    /**
-     * Property holding path
-     */
-    public static final String PN_PATH = "path";
-    
-    /**
-     * Property holding properties data
-     */
-    public static final String PN_DATA = "data";
+    private static final String PN_PATH = "path";
+    private static final String PN_PARENT_PATH = "parentPath";
+    private static final String PN_DATA = "data";
 
     private final CouchbaseClient couchbaseClient;
     private final String cacheKeyPrefix;
@@ -64,9 +62,9 @@ public final class CouchbaseNoSqlAdapter extends AbstractNoSqlAdapter {
         this.couchbaseClient = couchbaseClient;
         this.cacheKeyPrefix = cacheKeyPrefix;
         
-        // make sure primary index is present - ignore error if it is already present
-        Bucket bucket = couchbaseClient.getBucket();
-        bucket.query(N1qlQuery.simple("CREATE PRIMARY INDEX ON " + couchbaseClient.getBucketName()));
+        // make sure primary index and index on parentPath is present - ignore error if it is already present
+        Index.createPrimaryIndex().on(couchbaseClient.getBucketName());
+        Index.createIndex(PN_PARENT_PATH).on(couchbaseClient.getBucketName(), x(PN_PARENT_PATH));
     }
 
     @Override
@@ -97,10 +95,9 @@ public final class CouchbaseNoSqlAdapter extends AbstractNoSqlAdapter {
     public Iterator<NoSqlData> getChildren(String parentPath) {
         Bucket bucket = couchbaseClient.getBucket();
         // fetch all direct children of this path
-        Pattern directChildren = Pattern.compile("^" + StringUtils.removeEnd(parentPath, "/") + "/[^/]+$");
         N1qlQuery query = N1qlQuery.simple(select("*")
                 .from(couchbaseClient.getBucketName())
-                .where("REGEXP_LIKE(`" + PN_PATH + "`, '" + directChildren.pattern() + "')"),
+                .where(x(PN_PARENT_PATH).eq(s(parentPath))),
                 N1QL_PARAMS);
         N1qlQueryResult queryResult = bucket.query(query);
         handleQueryError(queryResult);
@@ -136,6 +133,12 @@ public final class CouchbaseNoSqlAdapter extends AbstractNoSqlAdapter {
         envelope.put(PN_PATH, data.getPath());
         envelope.put(PN_DATA, JsonObject.from(data.getProperties(MultiValueMode.LISTS)));
 
+        // for list-children query efficiency store parent path as well
+        String parentPath = ResourceUtil.getParent(data.getPath());
+        if (parentPath != null) {
+            envelope.put(PN_PARENT_PATH, parentPath);
+        }
+        
         JsonDocument doc = JsonDocument.create(cacheKey, envelope);
         try {
             bucket.insert(doc);
