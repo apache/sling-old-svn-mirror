@@ -66,7 +66,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
         this.providers = new ArrayList<StatefulResourceProvider>(providers);
         // sort descending by paths and rankings (start with longest paths and
         // higher ranks)
-        Collections.sort(providers, new Comparator<StatefulResourceProvider>() {
+        Collections.sort(this.providers, new Comparator<StatefulResourceProvider>() {
             @Override
             public int compare(StatefulResourceProvider rp1, StatefulResourceProvider rp2) {
                 return rp2.getInfo().compareTo(rp1.getInfo());
@@ -196,7 +196,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
                     }
                 });
         Iterator<Resource> allChildren = new ChainedIterator<Resource>(iterators);
-        Iterator<Resource> syntheticChildren = getSyntheticChildren(parent.getPath()).iterator(); 
+        Iterator<Resource> syntheticChildren = getSyntheticChildren(parent.getPath()).iterator();
         Iterator<Resource> uniqueChildren = new UniqueIterator(chainedIterator(allChildren, syntheticChildren));
         return transformedIterator(uniqueChildren, new Transformer() {
             @Override

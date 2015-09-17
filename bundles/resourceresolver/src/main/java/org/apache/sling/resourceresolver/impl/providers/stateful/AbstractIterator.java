@@ -29,7 +29,9 @@ public abstract class AbstractIterator<T> implements Iterator<T> {
 
     @Override
     public boolean hasNext() {
-        nextElement = seek();
+        if (nextElement == null) {
+            nextElement = seek();
+        }
         return nextElement != null;
     }
 

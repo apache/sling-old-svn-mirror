@@ -72,7 +72,7 @@ import org.slf4j.LoggerFactory;
 public class ResourceResolverImpl extends SlingAdaptable implements ResourceResolver {
 
     /** Default logger */
-    private final Logger logger = LoggerFactory.getLogger(ResourceResolverImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(ResourceResolverImpl.class);
 
     private static final Map<String, String> EMPTY_PARAMETERS = Collections.emptyMap();
 
@@ -111,24 +111,20 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
     private final Map<String, Object> authenticationInfo;
 
-    private final List<ResourceProviderHandler> handlers;
-    
     public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo, final List<ResourceProviderHandler> handlers) throws LoginException {
         this.factory = factory;
         this.authenticationInfo = authenticationInfo;
-        this.handlers = handlers;
-        this.provider = createProvider();
+        this.provider = createProvider(handlers);
         this.context = new ResourceResolverContext(isAdmin);
         this.factory.register(this, context);
     }
-
-    private StatefulResourceProvider createProvider() throws LoginException {
-        List<StatefulResourceProvider> authenticated = new ArrayList<StatefulResourceProvider>();
-        for (ResourceProviderHandler h : handlers) {
-            authenticated.add(new AuthenticatedResourceProvider(h.getResourceProvider(), h.getInfo(), this, authenticationInfo));
-        }
-        StatefulResourceProvider combined = new CombinedResourceProvider(authenticated, this);
-        return new SecureResoureProvider(combined, this.factory.getResourceAccessSecurityTracker());
+    
+    ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo, StatefulResourceProvider provider) throws LoginException {
+        this.factory = factory;
+        this.authenticationInfo = authenticationInfo;
+        this.provider = provider;
+        this.context = new ResourceResolverContext(isAdmin);
+        this.factory.register(this, context);
     }
 
     private ResourceResolverImpl(final ResourceResolverImpl resolver, final Map<String, Object> authenticationInfo) throws LoginException {
@@ -140,10 +136,21 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         if (authenticationInfo != null) {
             this.authenticationInfo.putAll(authenticationInfo);
         }
-        this.handlers = resolver.handlers;
-        this.provider = createProvider();
+        this.provider = resolver.provider.clone(authenticationInfo, this);
         this.context = new ResourceResolverContext(resolver.context.isAdmin());
         this.factory.register(this, context);
+    }
+
+    private StatefulResourceProvider createProvider(List<ResourceProviderHandler> handlers) throws LoginException {
+        List<StatefulResourceProvider> authenticated = new ArrayList<StatefulResourceProvider>();
+        for (ResourceProviderHandler h : handlers) {
+            authenticated.add(new AuthenticatedResourceProvider(h.getResourceProvider(), h.getInfo(), this, authenticationInfo));
+        }
+        List<StatefulResourceProvider> secured = new ArrayList<StatefulResourceProvider>();
+        for (StatefulResourceProvider p : authenticated) {
+            secured.add(new SecureResoureProvider(p, this.factory.getResourceAccessSecurityTracker()));
+        }
+        return new CombinedResourceProvider(secured, this);
     }
 
     /**

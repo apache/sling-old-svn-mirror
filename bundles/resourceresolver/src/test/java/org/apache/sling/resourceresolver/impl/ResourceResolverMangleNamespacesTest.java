@@ -20,19 +20,15 @@ package org.apache.sling.resourceresolver.impl;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.Map;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
-import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
-import org.apache.sling.resourceresolver.impl.tree.RootResourceProviderEntry;
+import org.apache.sling.resourceresolver.impl.providers.stateful.StatefulResourceProvider;
+import org.apache.sling.resourceresolver.impl.providers.stateful.StatefulResourceProviderWrapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -52,7 +48,7 @@ public class ResourceResolverMangleNamespacesTest {
     public static final String NS_URL = "http://example.com/namespaces/testNS";
 
     @Before
-    public void setup() throws RepositoryException {
+    public void setup() throws RepositoryException, LoginException {
         MockitoAnnotations.initMocks(this);
         activeSession = mockedSession;
 
@@ -66,25 +62,26 @@ public class ResourceResolverMangleNamespacesTest {
 
         Mockito.when(mockedSession.getNamespacePrefix(NS_PREFIX)).thenReturn(NS_URL);
 
-        final RootResourceProviderEntry rrpe = new RootResourceProviderEntry() {
+        final StatefulResourceProvider rp = new StatefulResourceProviderWrapper(null) {
             @Override
             @SuppressWarnings("unchecked")
-            public <AdapterType> AdapterType adaptTo(ResourceResolver resolver, ResourceResolverContext ctx, Class<AdapterType> type) {
+            public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
                 if(type == Session.class) {
-                    return (AdapterType)activeSession;
+                    return (AdapterType) activeSession;
                 }
-                return super.adaptTo(resolver, ctx, type);
+                return super.adaptTo(type);
             }
-        };
 
-        final CommonResourceResolverFactoryImpl fac = new CommonResourceResolverFactoryImpl(act) {
             @Override
-            public RootResourceProviderEntry getRootProviderEntry() {
-                return rrpe;
+            public Resource getResource(String path, Resource parent, Map<String, String> parameters, boolean isResolve) {
+                return null;
+                
             }
         };
 
-        rr = new ResourceResolverImpl(fac, new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker(), new ArrayList<ResourceProviderHandler>()));
+        final CommonResourceResolverFactoryImpl fac = new CommonResourceResolverFactoryImpl(act);
+
+        rr = new ResourceResolverImpl(fac, false, null, rp);
     }
 
     @Test

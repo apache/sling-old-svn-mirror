@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -30,7 +31,7 @@ import org.apache.sling.api.resource.query.QueryInstructions;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
 import org.apache.sling.spi.resource.provider.QueryResult;
 
-public abstract class StatefulResourceProviderWrapper implements StatefulResourceProvider {
+public class StatefulResourceProviderWrapper implements StatefulResourceProvider {
 
     protected final StatefulResourceProvider rp;
 
@@ -146,5 +147,11 @@ public abstract class StatefulResourceProviderWrapper implements StatefulResourc
     @Override
     public ResourceResolver getResourceResolver() {
         return rp.getResourceResolver();
+    }
+
+    @Override
+    public StatefulResourceProvider clone(Map<String, Object> authenticationInfo, ResourceResolver resolver)
+            throws LoginException {
+        return rp.clone(authenticationInfo, resolver);
     }
 }

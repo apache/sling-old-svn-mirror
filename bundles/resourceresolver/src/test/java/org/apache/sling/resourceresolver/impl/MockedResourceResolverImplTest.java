@@ -104,32 +104,31 @@ public class MockedResourceResolverImplTest {
     private ResourceResolverFactoryImpl resourceResolverFactory;
 
     @Mock
-    private ResourceProvider resourceProvider;
+    private ResourceProvider<?> resourceProvider;
 
     /**
      * deals with /etc resolution.
      */
     @Mock
-    private ResourceProvider mappingResourceProvider;
+    private ResourceProvider<?> mappingResourceProvider;
 
     /**
      * deals with /apps and /libs resolution.
      */
     @Mock
-    private ResourceProvider appsResourceProvider;
+    private ResourceProvider<?> appsResourceProvider;
     
     /**
      * QueriableResourceProviders
      */
     @Mock
-    private ResourceProvider queriableResourceProviderA;
+    private ResourceProvider<?> queriableResourceProviderA;
 
 
     public MockedResourceResolverImplTest() {
         MockitoAnnotations.initMocks(this);
     }
 
-    @SuppressWarnings("unchecked")
     @Before
     public void before() throws LoginException {
         activator = new ResourceResolverFactoryActivator();
@@ -190,7 +189,7 @@ public class MockedResourceResolverImplTest {
         resourceResolverFactory = (ResourceResolverFactoryImpl) rrf;
     }
 
-    public static ResourceProviderHandler createRPHandler(ResourceProvider rp, String pid, long ranking,
+    public static ResourceProviderHandler createRPHandler(ResourceProvider<?> rp, String pid, long ranking,
             String path) {
         ServiceReference ref = Mockito.mock(ServiceReference.class);        
         BundleContext bc = Mockito.mock(BundleContext.class);
@@ -204,8 +203,9 @@ public class MockedResourceResolverImplTest {
         return new ResourceProviderHandler(bc, info);
     }
 
+    @SuppressWarnings("unchecked")
     private Resource buildMappingResource(String path,
-            ResourceProvider provider, ResourceResolver resourceResolver) {
+            ResourceProvider<?> provider, ResourceResolver resourceResolver) {
         List<Resource> localHostAnyList = new ArrayList<Resource>();
         localHostAnyList.add(buildResource(path+"/http/example.com.80/cgi-bin", EMPTY_RESOURCE_LIST, resourceResolver, provider, "sling:internalRedirect", "/scripts" ));
         localHostAnyList.add(buildResource(path+"/http/example.com.80/gateway", EMPTY_RESOURCE_LIST, resourceResolver, provider,"sling:internalRedirect", "http://gbiv.com"));
@@ -246,7 +246,7 @@ public class MockedResourceResolverImplTest {
      * @return
      */
     private Resource buildResource(String fullpath, Iterable<Resource> children) {
-        return buildResource(fullpath, children, null, null, null);
+        return buildResource(fullpath, children, null, null, new String[0]);
     }
     
     /** Build a List of ValueMap */
@@ -267,7 +267,8 @@ public class MockedResourceResolverImplTest {
      * @param resourceResolver
      * @return
      */
-    private Resource buildResource(String fullpath, Iterable<Resource> children, ResourceResolver resourceResolver, ResourceProvider provider, String ... properties) {
+    @SuppressWarnings("unchecked")
+    private Resource buildResource(String fullpath, Iterable<Resource> children, ResourceResolver resourceResolver, ResourceProvider<?> provider, String ... properties) {
         Resource resource = Mockito.mock(Resource.class);
         Mockito.when(resource.getName()).thenReturn(getName(fullpath));
         Mockito.when(resource.getPath()).thenReturn(fullpath);
@@ -521,9 +522,11 @@ public class MockedResourceResolverImplTest {
         Assert.assertEquals(5,i);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testQueryResources() throws LoginException {
         final int n = 3;
+        @SuppressWarnings("rawtypes")
         JCRQueryProvider queryProvider = Mockito.mock(JCRQueryProvider.class);
         Mockito.when(queryProvider.getSupportedLanguages(Mockito.any(ResolveContext.class))).thenReturn(new String[] {FAKE_QUERY_LANGUAGE});
         Mockito.when(queriableResourceProviderA.getJCRQueryProvider()).thenReturn(queryProvider);

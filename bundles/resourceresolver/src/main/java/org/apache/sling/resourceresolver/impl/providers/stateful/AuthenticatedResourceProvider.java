@@ -142,7 +142,10 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     @Override
     public Collection<String> getAttributeNames() {
         Set<String> attributeNames = new LinkedHashSet<String>();
-        attributeNames.addAll(rp.getAttributeNames(getContext()));
+        Collection<String> rpAttributeNames = rp.getAttributeNames(getContext());
+        if (rpAttributeNames != null) {
+            attributeNames.addAll(rpAttributeNames);
+        }
         if (authInfo != null) {
             attributeNames.addAll(authInfo.keySet());
         }

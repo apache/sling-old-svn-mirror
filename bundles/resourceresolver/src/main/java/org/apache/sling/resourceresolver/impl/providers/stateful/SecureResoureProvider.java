@@ -27,8 +27,13 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.security.ResourceAccessSecurity;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
+import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SecureResoureProvider extends StatefulResourceProviderWrapper {
+
+    private static final Logger logger = LoggerFactory.getLogger(ResourceResolverImpl.class);
 
     private final boolean useResourceAccessSecurity;
 
@@ -36,6 +41,9 @@ public class SecureResoureProvider extends StatefulResourceProviderWrapper {
 
     public SecureResoureProvider(StatefulResourceProvider rp, ResourceAccessSecurityTracker tracker) {
         super(rp);
+        if (tracker == null) {
+            logger.warn("ResourceAccessSecurityTracker is null. Resource-level security will be disabled.");
+        }
         this.useResourceAccessSecurity = rp.getInfo().getUseResourceAccessSecurity();
         this.tracker = tracker;
     }
@@ -72,11 +80,15 @@ public class SecureResoureProvider extends StatefulResourceProviderWrapper {
     }
 
     private Iterator<Resource> wrapIterator(Iterator<Resource> iterator) {
-        return new SecureIterator(iterator);
+        if (tracker == null) {
+            return iterator;
+        } else {
+            return new SecureIterator(iterator);
+        }
     }
 
     private boolean isAllowed(SecurityTest test) {
-        if (!useResourceAccessSecurity) {
+        if (!useResourceAccessSecurity || tracker == null) {
             return true;
         }
         boolean allowed = true;

@@ -29,7 +29,6 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -80,6 +79,7 @@ public class MapEntriesTest {
     @Mock
     private EventAdmin eventAdmin;
 
+    @SuppressWarnings("deprecation")
     @Before
     public void setup() throws Exception {
         MockitoAnnotations.initMocks(this);
@@ -272,8 +272,9 @@ public class MapEntriesTest {
         
         Field field = MapEntries.class.getDeclaredField("vanityTargets");
         field.setAccessible(true);
+        @SuppressWarnings("unchecked")
         Map<String, List<String>> vanityTargets = (Map<String, List<String>>) field.get(mapEntries);
-        assertEquals(4, vanityTargets.size());        
+        assertEquals(4, vanityTargets.size());
         
     }
 
@@ -367,6 +368,7 @@ public class MapEntriesTest {
         assertEquals("/content", actualContent);
     }
     
+    @SuppressWarnings("unchecked")
     @Test
     public void test_doAddVanity() throws Exception {
         List<MapEntry> entries = mapEntries.getResolveMaps();
@@ -437,6 +439,7 @@ public class MapEntriesTest {
         assertNotNull(vanityTargets.get("/vanityPathOnJcrContent"));
     }
     
+    @SuppressWarnings("unchecked")
     @Test
     public void test_doAddVanity_1() throws Exception {
         Field field1 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntries");
@@ -512,6 +515,7 @@ public class MapEntriesTest {
     }
     
     
+    @SuppressWarnings("unchecked")
     @Test
     public void test_doUpdateVanity() throws Exception {
         Field field0 = MapEntries.class.getDeclaredField("resolveMapsMap");
@@ -589,6 +593,7 @@ public class MapEntriesTest {
         assertEquals("/target/vanityPathOnJcrContentUpdated", vanityTargets.get("/vanityPathOnJcrContent").get(0));
     }
     
+    @SuppressWarnings("unchecked")
     @Test
     public void test_doRemoveVanity() throws Exception {
         Field field0 = MapEntries.class.getDeclaredField("resolveMapsMap");
@@ -664,6 +669,7 @@ public class MapEntriesTest {
         
     }
     
+    @SuppressWarnings("unchecked")
     @Test
     public void test_doUpdateVanityOrder() throws Exception {
         Field field0 = MapEntries.class.getDeclaredField("resolveMapsMap");
@@ -817,6 +823,7 @@ public class MapEntriesTest {
         assertNull(aliasMap);
     }    
     
+    @SuppressWarnings("unchecked")
     @Test
     public void test_doAddAlias() throws Exception {
         Method method = MapEntries.class.getDeclaredMethod("doAddAlias", String.class);
@@ -883,6 +890,7 @@ public class MapEntriesTest {
         assertEquals(1, aliasMap.size()); 
     }
     
+    @SuppressWarnings("unchecked")
     @Test
     public void test_doAddAlias2() throws Exception {
         Method method = MapEntries.class.getDeclaredMethod("doAddAlias", String.class);
@@ -950,6 +958,7 @@ public class MapEntriesTest {
     }
     
     
+    @SuppressWarnings("unchecked")
     @Test
     public void test_doUpdateAlias() throws Exception {
         Method method = MapEntries.class.getDeclaredMethod("doAddAlias", String.class);
@@ -1081,6 +1090,7 @@ public class MapEntriesTest {
  
     }
     
+    @SuppressWarnings("unchecked")
     @Test
     public void test_doRemoveAlias() throws Exception {       
         Method method = MapEntries.class.getDeclaredMethod("doAddAlias", String.class);
@@ -1140,6 +1150,7 @@ public class MapEntriesTest {
         assertEquals(0, aliasMap.size()); 
     } 
 
+    @SuppressWarnings("unchecked")
     @Test
     public void test_doRemoveAlias2() throws Exception { 
         Method method = MapEntries.class.getDeclaredMethod("doAddAlias", String.class);
@@ -1208,6 +1219,7 @@ public class MapEntriesTest {
         assertEquals(0, aliasMap.size());
     }
     
+    @SuppressWarnings("unchecked")
     @Test
     public void test_doRemoveAlias3() throws Exception { 
         Method method = MapEntries.class.getDeclaredMethod("doAddAlias", String.class);
@@ -1315,6 +1327,7 @@ public class MapEntriesTest {
         assertNull(aliasMapEntry);
     }
     
+    @SuppressWarnings("unchecked")
     @Test
     public void test_doRemoveAlias4() throws Exception {       
         Method method = MapEntries.class.getDeclaredMethod("doAddAlias", String.class);
@@ -1374,6 +1387,7 @@ public class MapEntriesTest {
         assertEquals(0, aliasMap.size()); 
     } 
        
+    @SuppressWarnings("unchecked")
     @Test
     public void test_doRemoveAlias5() throws Exception { 
         Method method = MapEntries.class.getDeclaredMethod("doAddAlias", String.class);
@@ -1849,9 +1863,9 @@ public class MapEntriesTest {
     // -------------------------- private methods ----------
     private DataFuture createDataFuture(ExecutorService pool, final MapEntries mapEntries) {
 
-        Future<Iterator> future = pool.submit(new Callable<Iterator>() {
+        Future<Iterator<?>> future = pool.submit(new Callable<Iterator<?>>() {
             @Override
-            public Iterator call() throws Exception {
+            public Iterator<MapEntry> call() throws Exception {
                 return mapEntries.getResolveMapsIterator("http/localhost.8080/target/justVanityPath");                     
             }
         });
@@ -1861,9 +1875,9 @@ public class MapEntriesTest {
     // -------------------------- inner classes ------------
 
     private static class DataFuture {
-        public Future<Iterator> future;
+        public Future<Iterator<?>> future;
 
-        public DataFuture(Future<Iterator> future) {
+        public DataFuture(Future<Iterator<?>> future) {
             super();
             this.future = future;
         }
