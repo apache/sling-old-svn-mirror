@@ -28,8 +28,6 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.resourceresolver.impl.CommonResourceResolverFactoryImpl;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 import org.apache.sling.resourceresolver.impl.ResourceResolverFactoryActivator;
-import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
-import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl;
 import org.apache.sling.testing.mock.osgi.MockEventAdmin;
@@ -64,9 +62,12 @@ abstract class AbstractMockResourceResolverFactory implements ResourceResolverFa
         MockOsgi.activate(activator, resourceProviderFactoryFactoryProps);
         
         CommonResourceResolverFactoryImpl commonFactoryImpl = new CommonResourceResolverFactoryImpl(activator);
-        ResourceResolverContext context = new ResourceResolverContext(true, authenticationInfo, new ResourceAccessSecurityTracker());
-        ResourceResolverImpl resourceResolver = new ResourceResolverImpl(commonFactoryImpl, context);
-        return resourceResolver;
+        if (isAdmin) {
+            return commonFactoryImpl.getAdministrativeResourceResolver(authenticationInfo);
+        }
+        else {
+            return commonFactoryImpl.getResourceResolver(authenticationInfo);
+        }
     }
     
     /**

@@ -281,4 +281,19 @@ public abstract class AbstractSlingCrudResourceResolverTest {
         assertEquals("/apps/any/path", resource.getPath());
     }
 
+    @Test
+    public void testPendingChangesCommit() throws PersistenceException {
+        
+        // skip this test for JCR_MOCK because it does not track pending changes
+        if (getResourceResolverType()==ResourceResolverType.JCR_MOCK) {
+            return;
+        }
+        
+        resourceResolver.delete(getTestRootResource());
+        assertTrue(resourceResolver.hasChanges());
+        
+        resourceResolver.commit();
+        assertFalse(resourceResolver.hasChanges());
+    }
+
 }

@@ -20,7 +20,9 @@ package org.apache.sling.testing.mock.sling.resource;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -174,6 +176,22 @@ public abstract class AbstractJcrResourceResolverTest {
         assertNotNull(child);
         assertEquals(JcrConstants.NT_UNSTRUCTURED, parent.getResourceType());
         assertEquals("sling/resource/type", child.getResourceType());
+    }
+
+    @Test
+    public void testPendingChangesCommit() throws Exception {
+        
+        // skip this test for JCR_MOCK because it does not track pending changes
+        if (getResourceResolverType()==ResourceResolverType.JCR_MOCK) {
+            return;
+        }
+        
+        Resource testRootResource = resourceResolver.getResource(getTestRootNode().getPath());
+        resourceResolver.delete(testRootResource);
+        assertTrue(session.hasPendingChanges());
+        
+        resourceResolver.commit();
+        assertFalse(session.hasPendingChanges());
     }
 
 }
