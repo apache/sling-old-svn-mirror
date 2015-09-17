@@ -52,26 +52,34 @@ public class Service implements TestRule {
                     base.evaluate();
                     return;
                 }
-
-                final ServiceReference serviceReference = bundleContext.getServiceReference(serviceClass.getName());
-
-                if (serviceReference == null) {
-                    throw new IllegalStateException("unable to get a service reference");
+                
+                ServiceReference serviceReference = null;
+                if(serviceClass.equals(BundleContext.class)) {
+                    // Special case to provide the BundleContext to tests
+                    Service.this.service = bundleContext;
+                } else {
+                    serviceReference = bundleContext.getServiceReference(serviceClass.getName());
+    
+                    if (serviceReference == null) {
+                        throw new IllegalStateException("unable to get a service reference");
+                    }
+    
+                    final Object service = bundleContext.getService(serviceReference);
+    
+                    if (service == null) {
+                        throw new IllegalStateException("unable to get an instance of the service");
+                    }
+    
+                    Service.this.service = serviceClass.cast(service);
                 }
-
-                final Object service = bundleContext.getService(serviceReference);
-
-                if (service == null) {
-                    throw new IllegalStateException("unable to get an instance of the service");
-                }
-
-                Service.this.service = serviceClass.cast(service);
 
                 try {
                     base.evaluate();
                 } finally {
                     Service.this.service = null;
-                    bundleContext.ungetService(serviceReference);
+                    if(serviceReference != null) {
+                        bundleContext.ungetService(serviceReference);
+                    }
                 }
             }
 
