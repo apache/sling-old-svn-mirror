@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.resourceresolver.impl.tree;
+package org.apache.sling.resourceresolver.impl;
 
 import static org.apache.sling.resourceresolver.impl.MockedResourceResolverImplTest.createRPHandler;
 

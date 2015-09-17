@@ -20,15 +20,19 @@ package org.apache.sling.resourceresolver.impl;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Map;
+import java.util.Arrays;
+import java.util.Iterator;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.commons.collections.IteratorUtils;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.resourceresolver.impl.providers.stateful.StatefulResourceProvider;
-import org.apache.sling.resourceresolver.impl.providers.stateful.StatefulResourceProviderWrapper;
+import org.apache.sling.spi.resource.provider.ResolveContext;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -62,26 +66,34 @@ public class ResourceResolverMangleNamespacesTest {
 
         Mockito.when(mockedSession.getNamespacePrefix(NS_PREFIX)).thenReturn(NS_URL);
 
-        final StatefulResourceProvider rp = new StatefulResourceProviderWrapper(null) {
-            @Override
+        final ResourceProvider<?> rp = new ResourceProvider<Object>() {
+
             @SuppressWarnings("unchecked")
-            public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
-                if(type == Session.class) {
+            @Override
+            public @CheckForNull <AdapterType> AdapterType adaptTo(final  @Nonnull ResolveContext<Object> ctx,
+                    final @Nonnull Class<AdapterType> type) {
+                if (type.equals(Session.class)) {
                     return (AdapterType) activeSession;
+                } else {
+                    return null;
                 }
-                return super.adaptTo(type);
             }
 
             @Override
-            public Resource getResource(String path, Resource parent, Map<String, String> parameters, boolean isResolve) {
+            public Resource getResource(ResolveContext<Object> ctx, String path, Resource parent) {
                 return null;
-                
+            }
+
+            @SuppressWarnings("unchecked")
+            @Override
+            public Iterator<Resource> listChildren(ResolveContext<Object> ctx, Resource parent) {
+                return IteratorUtils.emptyIterator();
             }
         };
 
         final CommonResourceResolverFactoryImpl fac = new CommonResourceResolverFactoryImpl(act);
 
-        rr = new ResourceResolverImpl(fac, false, null, rp);
+        rr = new ResourceResolverImpl(fac, false, null, Arrays.asList(MockedResourceResolverImplTest.createRPHandler(rp, "rp1", 0, "/")));
     }
 
     @Test
