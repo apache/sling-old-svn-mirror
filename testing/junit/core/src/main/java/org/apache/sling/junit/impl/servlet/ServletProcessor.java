@@ -104,6 +104,18 @@ public class ServletProcessor {
         }
 
         final TestSelector selector = getTestSelector(request);
+        final List<String> testNames = getTestNames(selector, forceReload);
+        
+        // 404 if no tests found
+        if(testNames.isEmpty()) {
+            final String msg = 
+            "WARNING: no test classes found for selector " + selector
+            + ", check the requirements of the active " +
+            "TestsProvider services for how to supply tests.";
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, msg);
+            return;
+        }
+        
         final Renderer renderer = rendererSelector.getRenderer(selector);
         if(renderer == null) {
             throw new ServletException("No Renderer found for " + selector);
@@ -112,24 +124,12 @@ public class ServletProcessor {
 
         renderer.setup(response, getClass().getSimpleName());
         renderer.info("info", "Test selector: " + selector);
-
-        // Any test classes?
-        final List<String> testNames = getTestNames(selector, forceReload);
-        if(testNames.isEmpty()) {
-            renderer.info(
-                    "warning",
-                    "No test classes found for selector " + selector
-                    + ", check the requirements of the active " +
-                    "TestsProvider services for how to supply tests."
-                    );
-        } else {
-            try {
-                testsManager.listTests(testNames, renderer);
-                final String postPath = getTestExecutionPath(request, selector, renderer.getExtension());
-                renderer.link("Execute these tests", postPath, "POST");
-            } catch(Exception e) {
-                throw new ServletException(e);
-            }
+        try {
+            testsManager.listTests(testNames, renderer);
+            final String postPath = getTestExecutionPath(request, selector, renderer.getExtension());
+            renderer.link("Execute these tests", postPath, "POST");
+        } catch(Exception e) {
+            throw new ServletException(e);
         }
         renderer.cleanup();
     }
