@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-package org.apache.sling.resourceresolver.impl.tree.params;
+package org.apache.sling.resourceresolver.impl.params;
 
 import java.util.Collections;
 import java.util.Map;
