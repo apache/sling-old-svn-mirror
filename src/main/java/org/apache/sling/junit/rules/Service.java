@@ -27,6 +27,8 @@ import org.osgi.framework.ServiceReference;
 /**
  * Allows a test class to obtain a reference to an OSGi service. This rule embodies the logic to get a bundle context,
  * obtain a service reference, fetch the reference to the object and perform the proper cleanup after the test has run.
+ * 
+ * The newer OSGiService class uses generics and is more convenient to use. 
  */
 public class Service implements TestRule {
 
