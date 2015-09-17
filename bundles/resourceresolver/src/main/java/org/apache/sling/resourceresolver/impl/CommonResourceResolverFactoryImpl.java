@@ -40,6 +40,7 @@ import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.apache.sling.resourceresolver.impl.mapping.MapConfigurationProvider;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
@@ -250,7 +251,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
             throw new LoginException("ResourceResolverFactory is deactivated.");
         }
 
-        return new ResourceResolverImpl(this, isAdmin, authenticationInfo, this.activator.resourceProviderTracker.getHandlers());
+        return new ResourceResolverImpl(this, isAdmin, authenticationInfo);
     }
 
     public MapEntries getMapEntries() {
@@ -415,5 +416,9 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         public void close() {
             this.context.close();
         }
+    }
+
+    public ResourceProviderTracker getResourceProviderTracker() {
+        return activator.getResourceProviderTracker();
     }
 }

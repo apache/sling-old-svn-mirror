@@ -112,18 +112,14 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
     private final Map<String, Object> authenticationInfo;
 
-    public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo, final List<ResourceProviderHandler> handlers) throws LoginException {
+    public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo) throws LoginException {
+        this(factory, isAdmin, authenticationInfo, factory.getResourceProviderTracker().getHandlers());
+    }
+
+    ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo, final List<ResourceProviderHandler> handlers) throws LoginException {
         this.factory = factory;
         this.authenticationInfo = authenticationInfo;
         this.provider = createProvider(handlers);
-        this.context = new ResourceResolverContext(isAdmin);
-        this.factory.register(this, context);
-    }
-    
-    ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo, StatefulResourceProvider provider) throws LoginException {
-        this.factory = factory;
-        this.authenticationInfo = authenticationInfo;
-        this.provider = provider;
         this.context = new ResourceResolverContext(isAdmin);
         this.factory.register(this, context);
     }
@@ -137,7 +133,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         if (authenticationInfo != null) {
             this.authenticationInfo.putAll(authenticationInfo);
         }
-        this.provider = resolver.provider.clone(authenticationInfo, this);
+        this.provider = createProvider(factory.getResourceProviderTracker().getHandlers());
         this.context = new ResourceResolverContext(resolver.context.isAdmin());
         this.factory.register(this, context);
     }
