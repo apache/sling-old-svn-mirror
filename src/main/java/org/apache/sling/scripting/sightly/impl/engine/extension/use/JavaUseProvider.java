@@ -78,12 +78,9 @@ public class JavaUseProvider implements UseProvider {
             LOG.debug("Identifier {} does not match a Java class name pattern.", identifier);
             return ProviderOutcome.failure();
         }
-
         Bindings globalBindings = renderContext.getBindings();
-        Bindings bindings = UseProviderUtils.merge(globalBindings, arguments);
-        SlingScriptHelper sling = UseProviderUtils.getHelper(bindings);
-        Resource resource = (Resource) bindings.get(SlingBindings.RESOURCE);
-        final SlingHttpServletRequest request = (SlingHttpServletRequest) bindings.get(SlingBindings.REQUEST);
+        SlingScriptHelper sling = UseProviderUtils.getHelper(globalBindings);
+        SlingHttpServletRequest request = (SlingHttpServletRequest) globalBindings.get(SlingBindings.REQUEST);
         Map<String, Object> overrides = setRequestAttributes(request, arguments);
 
         Object result;
@@ -94,9 +91,10 @@ public class JavaUseProvider implements UseProvider {
             if (result != null) {
                 return ProviderOutcome.success(result);
             }
-            result = resource.adaptTo(cls);
+            result = request.adaptTo(cls);
             if (result == null) {
-                result = request.adaptTo(cls);
+                Resource resource = (Resource) globalBindings.get(SlingBindings.RESOURCE);
+                result = resource.adaptTo(cls);
             }
             if (result != null) {
                 return ProviderOutcome.success(result);
@@ -107,7 +105,7 @@ public class JavaUseProvider implements UseProvider {
                  */
                 result = cls.newInstance();
                 if (result instanceof Use) {
-                    ((Use) result).init(bindings);
+                    ((Use) result).init(UseProviderUtils.merge(globalBindings, arguments));
                 }
                 return ProviderOutcome.notNullOrFailure(result);
             }
@@ -119,7 +117,7 @@ public class JavaUseProvider implements UseProvider {
             Resource caller = ResourceResolution.getResourceForRequest(adminResolver, sling.getRequest());
             result = sightlyJavaCompilerService.getInstance(adminResolver, caller, identifier, true);
             if (result instanceof Use) {
-                ((Use) result).init(bindings);
+                ((Use) result).init(UseProviderUtils.merge(globalBindings, arguments));
             }
             return ProviderOutcome.success(result);
         } catch (Exception e) {
