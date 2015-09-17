@@ -40,7 +40,7 @@ public final class CouchbaseKey {
      * Builds a key for a couchbase document with the given prefix that does not
      * exceed the max. length for couchbase keys.
      * @param key Full key
-     * @param cacheKeyPrefix Prefix to add before the key
+     * @param keyPrefix Prefix to add before the key
      * @return Valid key for couchbase
      */
     public static String build(String key, String keyPrefix) {
