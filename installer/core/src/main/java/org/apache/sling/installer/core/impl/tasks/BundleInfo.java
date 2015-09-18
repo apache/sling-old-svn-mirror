@@ -71,7 +71,7 @@ public class BundleInfo {
         if (bundleSymbolicName != null) {
             // check if this is the system bundle
             if ( Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(bundleSymbolicName) ) {
-                return bundleContext.getBundle(0);
+                return bundleContext.getBundle(Constants.SYSTEM_BUNDLE_LOCATION);
             }
             final List<Bundle> matchingBundles = new ArrayList<Bundle>();
             final Bundle[] bundles = bundleContext.getBundles();
