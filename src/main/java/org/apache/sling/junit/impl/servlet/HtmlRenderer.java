@@ -143,8 +143,11 @@ public class HtmlRenderer extends RunListener implements Renderer,RendererFactor
         output.print("TEST FAILED: ");
         HtmlFilter.escape(output, failure.getTestHeader());
         output.print("</h3><div class='failureDetails'>");
+        output.print("<div>");
         HtmlFilter.escape(output, failure.toString());
-        output.println("</div></div>");
+        output.print("</div><div>Stack Trace: ");
+        HtmlFilter.escape(output, failure.getTrace());
+        output.println("</div></div></div>");
     }
 
     @Override
