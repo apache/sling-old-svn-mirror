@@ -22,7 +22,6 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 
 /**
  * Allows a test class to obtain a reference to an OSGi service. This rule embodies the logic to get a bundle context,
@@ -55,32 +54,15 @@ public class Service implements TestRule {
                     return;
                 }
                 
-                ServiceReference serviceReference = null;
-                if(serviceClass.equals(BundleContext.class)) {
-                    // Special case to provide the BundleContext to tests
-                    Service.this.service = bundleContext;
-                } else {
-                    serviceReference = bundleContext.getServiceReference(serviceClass.getName());
-    
-                    if (serviceReference == null) {
-                        throw new IllegalStateException("unable to get a service reference");
-                    }
-    
-                    final Object service = bundleContext.getService(serviceReference);
-    
-                    if (service == null) {
-                        throw new IllegalStateException("unable to get an instance of the service");
-                    }
-    
-                    Service.this.service = serviceClass.cast(service);
-                }
+                final ServiceGetter sg = new ServiceGetter(bundleContext, serviceClass, null);
+                Service.this.service = serviceClass.cast(sg.service);
 
                 try {
                     base.evaluate();
                 } finally {
                     Service.this.service = null;
-                    if(serviceReference != null) {
-                        bundleContext.ungetService(serviceReference);
+                    if(sg.serviceReference != null) {
+                        bundleContext.ungetService(sg.serviceReference);
                     }
                 }
             }
