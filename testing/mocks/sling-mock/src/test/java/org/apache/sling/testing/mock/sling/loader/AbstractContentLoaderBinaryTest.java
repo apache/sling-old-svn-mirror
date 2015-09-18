@@ -19,6 +19,7 @@
 package org.apache.sling.testing.mock.sling.loader;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 
@@ -35,6 +36,7 @@ import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -70,6 +72,18 @@ public abstract class AbstractContentLoaderBinaryTest {
         when(mimeTypeService.getMimeType("gif")).thenReturn("image/gif");
     }
 
+    @After
+    public final void tearDown() throws Exception {
+        // make sure all changes from ContentLoader are committed
+        assertFalse(resourceResolver.hasChanges());
+        // remove everything below /content
+        Resource content = resourceResolver.getResource("/content");
+        if (content != null) {
+            resourceResolver.delete(content);
+            resourceResolver.commit();
+        }
+    }
+    
     @Test
     public void testBinaryFile() throws IOException {
         contentLoader.binaryFile("/sample-image.gif", "/content/binary/sample-image.gif");

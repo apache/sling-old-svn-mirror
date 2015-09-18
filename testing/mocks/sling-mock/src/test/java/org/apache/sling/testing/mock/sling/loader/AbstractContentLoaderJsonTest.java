@@ -20,6 +20,7 @@ package org.apache.sling.testing.mock.sling.loader;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import java.util.Calendar;
@@ -37,6 +38,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -73,6 +75,18 @@ public abstract class AbstractContentLoaderJsonTest {
         contentLoader.json("/json-import-samples/content.json", "/content/sample/en");
     }
 
+    @After
+    public final void tearDown() throws Exception {
+        // make sure all changes from ContentLoader are committed
+        assertFalse(resourceResolver.hasChanges());
+        // remove everything below /content
+        Resource content = resourceResolver.getResource("/content");
+        if (content != null) {
+            resourceResolver.delete(content);
+            resourceResolver.commit();
+        }
+    }
+            
     @Test
     public void testPageResourceType() {
         Resource resource = this.resourceResolver.getResource("/content/sample/en");
