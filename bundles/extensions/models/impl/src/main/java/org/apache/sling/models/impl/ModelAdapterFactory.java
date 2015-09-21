@@ -52,6 +52,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.ReferencePolicyOption;
+import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.adapter.AdapterFactory;
@@ -92,6 +93,13 @@ import org.slf4j.LoggerFactory;
 
 @Component(metatype = true, immediate = true)
 @Service(value = ModelFactory.class)
+@References({
+    @Reference(
+        name = "injector",
+        referenceInterface = Injector.class,
+        cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
+        policy = ReferencePolicy.DYNAMIC)
+})
 @SuppressWarnings("deprecation")
 public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFactory {
 
@@ -138,9 +146,9 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     @Property(label = "Maximum Recursion Depth", description = "Maximum depth adaptation will be attempted.", intValue = DEFAULT_MAX_RECURSION_DEPTH)
     private static final String PROP_MAX_RECURSION_DEPTH = "max.recursion.depth";
 
-    @Reference(name = "injector", referenceInterface = Injector.class,
-            cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    private final @Nonnull RankedServices<Injector> injectors = new RankedServices<Injector>();
+
+    private final @Nonnull Map<String, RankedServices<Injector>> injectors = new ConcurrentHashMap<String, RankedServices<Injector>>();
+    private final @Nonnull RankedServices<Injector> sortedInjectors = new RankedServices<Injector>();
 
     @Reference(name = "injectAnnotationProcessorFactory", referenceInterface = InjectAnnotationProcessorFactory.class,
             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
@@ -408,10 +416,25 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         RuntimeException lastInjectionException = null;
         if (injectionAdaptable != null) {
             // find the right injector
-            for (Injector injector : injectors) {
-                if (source == null || source.equals(injector.getName())) {
+            if (StringUtils.isNotEmpty(source)) {
+                for (Injector injector : injectors.get(source)) {
                     if (name != null || injector instanceof AcceptsNullName) {
-                        Object value = injector.getValue(injectionAdaptable, name, element.getType(), element.getAnnotatedElement(), registry);
+                        Object value =
+                            injector.getValue(injectionAdaptable, name, element.getType(), element.getAnnotatedElement(), registry);
+                        if (value != null) {
+                            lastInjectionException = callback.inject(element, value);
+                            if (lastInjectionException == null) {
+                                wasInjectionSuccessful = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            } else {
+                for (Injector injector : sortedInjectors) {
+                    if (name != null || injector instanceof AcceptsNullName) {
+                        Object value =
+                            injector.getValue(injectionAdaptable, name, element.getType(), element.getAnnotatedElement(), registry);
                         if (value != null) {
                             lastInjectionException = callback.inject(element, value);
                             if (lastInjectionException == null) {
@@ -931,11 +954,26 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     }
 
     protected void bindInjector(final Injector injector, final Map<String, Object> props) {
-        injectors.bind(injector, props);
+        String name = injector.getName();
+        RankedServices<Injector> injectorRankedServices = injectors.get(name);
+        if (injectorRankedServices == null) {
+            injectorRankedServices = new RankedServices<Injector>();
+            injectors.put(name, injectorRankedServices);
+        }
+        injectorRankedServices.bind(injector, props);
+        sortedInjectors.bind(injector, props);
     }
 
     protected void unbindInjector(final Injector injector, final Map<String, Object> props) {
-        injectors.unbind(injector, props);
+        String name = injector.getName();
+        RankedServices<Injector> injectorRankedServices = injectors.get(name);
+        if (injectorRankedServices != null) {
+            injectorRankedServices.unbind(injector, props);
+            if (injectorRankedServices.get().size() == 0) {
+                injectors.remove(name);
+            }
+        }
+        sortedInjectors.unbind(injector, props);
     }
 
     protected void bindInjectAnnotationProcessorFactory(final InjectAnnotationProcessorFactory factory, final Map<String, Object> props) {
@@ -983,7 +1021,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     }
 
     @Nonnull Collection<Injector> getInjectors() {
-        return injectors.get();
+        return sortedInjectors.get();
     }
 
     @Nonnull Collection<InjectAnnotationProcessorFactory> getInjectAnnotationProcessorFactories() {
