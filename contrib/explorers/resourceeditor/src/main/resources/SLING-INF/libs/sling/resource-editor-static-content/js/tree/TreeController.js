@@ -71,15 +71,45 @@ org.apache.sling.reseditor.TreeController = (function() {
     	// see http://www.javascripter.net/faq/keycodes.htm
 		var del = 46;
 		var c = 67;
+		var v = 86;
+
+    	if (e.ctrlKey && c==e.which) { /*ctrl-c*/
+    		var resourcePath = this.getPathFromLi($(e.target).parents("li"));
+    		sessionStorage["resourcePath"] = resourcePath;
+    	}
+    	if (e.ctrlKey && v==e.which) { /*ctrl-v*/
+    		var from = sessionStorage["resourcePath"];
+    		var to = this.getPathFromLi($(e.target).parents("li"));
+    		this.copy(from, to);
+    	}
 		switch(e.which) {
 		    case del:
 	    		treeController.deleteNodes();
 		        break;
 		    case c:
-				this.openAddNodeDialog($(e.target).parents("li"));
+		    	if (!e.ctrlKey){
+		    		this.openAddNodeDialog($(e.target).parents("li"));
+		    	}
 		        break;
 		}
 		
+	}
+
+	TreeController.prototype.copy = function(from, to) {
+		var thisTreeController = this;
+		var dest = to+"/";
+		var data = {
+				":operation": "copy",
+				":dest": dest};
+		$.post( from, data, function( data ) {
+			  $( ".result" ).html( data );
+			}, "json")
+			.done(function() {
+				thisTreeController.mainController.redirectTo(to);
+			})
+			.fail(function(errorJson) {
+				thisTreeController.mainController.displayAlert(errorJson);
+			});;
 	}
 
 	TreeController.prototype.afterOpen = function(node) {
