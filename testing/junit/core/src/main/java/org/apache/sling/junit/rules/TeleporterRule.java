@@ -39,7 +39,7 @@ public abstract class TeleporterRule extends ExternalResource {
     
     /** Customizer is used client-side to setup the server URL and other parameters */
     public static interface Customizer {
-        void customize(TeleporterRule t);
+        void customize(TeleporterRule t, String options);
     }
 
     /** Meant to be instantiated via {@link #forClass} */
@@ -55,15 +55,19 @@ public abstract class TeleporterRule extends ExternalResource {
         return Activator.getBundleContext() != null;
     }
     
-    /** Build a TeleporterRule for the given class */
+    /** Build a TeleporterRule for the given class, with no client setup options */
     public static TeleporterRule forClass(Class <?> classUnderTest) {
         return forClass(classUnderTest, null);
     }
     
-    /** Build a TeleporterRule for the given class, optionally using a dynamically
-     *  instantiated Customizer if running on the client side.
+    /** Build a TeleporterRule for the given class, with optional clientSetupOptions.
+     * 
+     *  @param clientSetupOptions If supplied, the part of that string before the first colon
+     *  is used as the class name of a Customizer (or shorthand for that if it contains no dots). 
+     *  The rest of the string is then passed to the Customizer so that it can be used to define 
+     *  options (which server to run the test on, etc) 
      */
-    public static TeleporterRule forClass(Class <?> classUnderTest, String customizerClassName) {
+    public static TeleporterRule forClass(Class <?> classUnderTest, String clientSetupOptions) {
         TeleporterRule result = null;
         
         if(isServerSide()) {
@@ -81,14 +85,21 @@ public abstract class TeleporterRule extends ExternalResource {
             
             result.setClassUnderTest(classUnderTest);
             
-            if(customizerClassName != null) {
+            if(clientSetupOptions != null && !clientSetupOptions.isEmpty()) {
+                String customizerClassName = clientSetupOptions;
+                String customizerOptions = "";
+                final int firstColon = clientSetupOptions.indexOf(":");
+                if(firstColon > 0) {
+                    customizerClassName = clientSetupOptions.substring(0, firstColon);
+                    customizerOptions = clientSetupOptions.substring(firstColon + 1);
+                }
                 // If a short name is used, transform it using our pattern. Simplifies referring
                 // to these customizers in test code, without having to make the customizer
                 // classes accessible to this bundle
                 if(!customizerClassName.contains(".")) {
                     customizerClassName = CUSTOMIZER_PATTERN.replace("<NAME>", customizerClassName);
                 }
-                createInstance(Customizer.class, customizerClassName).customize(result);
+                createInstance(Customizer.class, customizerClassName).customize(result, customizerOptions);
             }
         }
         
