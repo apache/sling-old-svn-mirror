@@ -29,7 +29,7 @@
   <artifactId>org.apache.sling.testing.teleporter</artifactId>
   <version>0.1.1-SNAPSHOT</version>
   <packaging>jar</packaging>
-  <name>Apache Sling side Test Teleporter</name>
+  <name>Apache Sling Testing Teleporter</name>
   <description>Client-side implementation of the Teleporter mechanism for server-side tests</description>
 
   <dependencies>
