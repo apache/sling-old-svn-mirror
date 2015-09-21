@@ -16,9 +16,12 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest.resourceresolver;
 
+import java.util.UUID;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
@@ -32,7 +35,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 /** Various ResourceResolver API tests, converted to teleported tests from
- *  the previous resourceresolver-api.jsp script. 
+ *  the previous resourceresolver-api.jsp script.
  */
 public class ResourceResolverApiTest {
     private ResourceResolver resResolver;
@@ -124,5 +127,16 @@ public class ResourceResolverApiTest {
         Assert.assertFalse("Resource must not be NonExistingResource was ",
             ResourceUtil.isNonExistingResource(res2));
         Assert.assertEquals("Path must be the the root path", "/", res2.getPath());
+    }
+    
+    @Test
+    public void testDelete() throws PersistenceException {
+        final String nodeName = "node-" + UUID.randomUUID();
+        final String nodePath = "/" + nodeName;
+        resResolver.create(resResolver.getResource("/"), nodeName, null);
+        Assert.assertEquals(nodePath, resResolver.getResource(nodePath).getPath());
+        resResolver.delete(resResolver.getResource(nodePath));
+        resResolver.commit();
+        Assert.assertNull(resResolver.getResource(nodePath));
     }
 }
