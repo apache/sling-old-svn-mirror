@@ -25,9 +25,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.NavigableMap;
 import java.util.Properties;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.commons.io.FileUtils;
@@ -46,12 +49,18 @@ import org.apache.jackrabbit.vault.packaging.JcrPackage;
 import org.apache.jackrabbit.vault.packaging.PackageManager;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utility class for creating vlt filters and import/export options
  */
 public class VltUtils {
+
+    final static Logger log = LoggerFactory.getLogger(VltUtils.class);
 
     public static WorkspaceFilter createFilter(DistributionRequest distributionRequest, NavigableMap<String, PathFilterSet> filters) {
         DefaultWorkspaceFilter filter = new DefaultWorkspaceFilter();
@@ -299,5 +308,38 @@ public class VltUtils {
         }
 
         return result;
+    }
+
+    public static DistributionRequest sanitizeRequest(DistributionRequest request) {
+
+        DistributionRequestType requestType = request.getRequestType();
+
+        if (!DistributionRequestType.ADD.equals(requestType) && !DistributionRequestType.DELETE.equals(requestType)) {
+            return request;
+        }
+
+        Set<String> deepPaths = new HashSet<String>();
+        List<String> paths = new ArrayList<String>();
+
+        for (String path : request.getPaths()) {
+            if (VltUtils.findParent(path, "rep:policy") != null) {
+                if (DistributionRequestType.DELETE.equals(requestType)) {
+                    // vlt cannot properly install delete of rep:policy subnodes
+                    throw new IllegalArgumentException("cannot distribute DELETE node " + path);
+                } else if (DistributionRequestType.ADD.equals(requestType)) {
+                    String newPath = VltUtils.findParent(path, "rep:policy") + "/rep:policy";
+                    paths.add(newPath);
+                    deepPaths.add(newPath);
+                    log.debug("changed distribution path {} to deep path {}", path, newPath);
+                }
+            } else if (request.isDeep(path)) {
+                paths.add(path);
+                deepPaths.add(path);
+            } else {
+                paths.add(path);
+            }
+        }
+
+        return new SimpleDistributionRequest(requestType, paths.toArray(new String[0]), deepPaths);
     }
 }
