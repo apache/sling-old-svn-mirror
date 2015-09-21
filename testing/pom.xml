@@ -63,6 +63,7 @@
     <module>samples/sample-tests</module>
     <module>samples/failing-tests</module>
     <module>samples/integration-tests</module>
+    <module>teleporter</module>
   </modules>
 
 </project>
