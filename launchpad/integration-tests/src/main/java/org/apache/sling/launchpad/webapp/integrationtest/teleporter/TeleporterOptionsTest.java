@@ -16,6 +16,7 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest.teleporter;
 
+import static org.junit.Assert.fail;
 import java.util.UUID;
 
 import org.apache.sling.junit.rules.TeleporterRule;
@@ -42,6 +43,7 @@ public class TeleporterOptionsTest {
             // server to run the tests on, for example - here we just verify
             // that the LaunchpadCustomizer gets our options
             TeleporterRule.forClass(getClass(), "Launchpad:" + OPTIONS);
+            fail("Expecting an OptionsException");
         } catch(OptionsException oex) {
             assertEquals(OPTIONS, oex.getMessage());
         }
