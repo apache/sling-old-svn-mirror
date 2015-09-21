@@ -31,46 +31,77 @@ import org.junit.rules.ExternalResource;
 public abstract class TeleporterRule extends ExternalResource {
     protected Class<?> classUnderTest;
 
-    /** Name of the implementation class to use by default when running on the client side */ 
-    public static final String DEFAULT_CLIENT_CLASS = "org.apache.sling.testing.teleporter.client.ClientSideTeleporter";
+    /** Name of the implementation class to use when running on the client side */ 
+    public static final String CLIENT_CLASS = "org.apache.sling.testing.teleporter.client.ClientSideTeleporter";
     
+    /** Class name pattern for Customizers */ 
+    public static final String CUSTOMIZER_PATTERN = "org.apache.sling.junit.teleporter.customizers.<NAME>Customizer";
+    
+    /** Customizer is used client-side to setup the server URL and other parameters */
+    public static interface Customizer {
+        void customize(TeleporterRule t);
+    }
+
+    /** Meant to be instantiated via {@link #forClass} */
     protected TeleporterRule() {
     }
     
-    private void setClassUnderTest(Class<?> c) {
+    protected void setClassUnderTest(Class<?> c) {
         this.classUnderTest = c;
     }
+
+    /** True if running on the server-side. */
+    public static boolean isServerSide() {
+        return Activator.getBundleContext() != null;
+    }
     
-    /** Build a TeleporterRule for the given class, using the default
-     *  client class name.
-     */
+    /** Build a TeleporterRule for the given class */
     public static TeleporterRule forClass(Class <?> classUnderTest) {
         return forClass(classUnderTest, null);
     }
     
-    /** Build a TeleporterRule for the given class, optionally using
-     *  a specific client class.
+    /** Build a TeleporterRule for the given class, optionally using a dynamically
+     *  instantiated Customizer if running on the client side.
      */
-    public static TeleporterRule forClass(Class <?> classUnderTest, String clientTeleporterClassName) {
+    public static TeleporterRule forClass(Class <?> classUnderTest, String customizerClassName) {
         TeleporterRule result = null;
         
-        if(Activator.getBundleContext() != null) {
-            // We're running on the server side
+        if(isServerSide()) {
             result = new ServerSideTeleporter();
+            result.setClassUnderTest(classUnderTest);
         } else {
             // Client-side. Instantiate the class dynamically to 
             // avoid bringing its dependencies into this module when
             // it's running on the server side
-            final String clientClass = clientTeleporterClassName == null ? DEFAULT_CLIENT_CLASS : clientTeleporterClassName;
             try {
-                result = (TeleporterRule)(TeleporterRule.class.getClassLoader().loadClass(clientClass).newInstance());
+                result = createInstance(TeleporterRule.class, CLIENT_CLASS);
             } catch(Exception e) {
-                throw new RuntimeException("Unable to instantiate Teleporter client " + clientClass, e);
+                throw new RuntimeException("Unable to instantiate Teleporter client " + CLIENT_CLASS, e);
+            }
+            
+            result.setClassUnderTest(classUnderTest);
+            
+            if(customizerClassName != null) {
+                // If a short name is used, transform it using our pattern. Simplifies referring
+                // to these customizers in test code, without having to make the customizer
+                // classes accessible to this bundle
+                if(!customizerClassName.contains(".")) {
+                    customizerClassName = CUSTOMIZER_PATTERN.replace("<NAME>", customizerClassName);
+                }
+                createInstance(Customizer.class, customizerClassName).customize(result);
             }
         }
         
-        result.setClassUnderTest(classUnderTest);
         return result;
+    }
+    
+    @SuppressWarnings("unchecked")
+    protected static <T> T createInstance(Class<T> objectClass, String className) {
+        try {
+            return (T)(TeleporterRule.class.getClassLoader().loadClass(className).newInstance());
+        } catch(Exception e) {
+            throw new RuntimeException("Unable to instantiate " + className, e);
+        }
     }
     
     /** If running on the server side, get an OSGi service */
