@@ -91,10 +91,8 @@ public class MultipleInjectorTest {
         assertNotNull(obj);
         assertEquals(obj.firstAttribute, bindingsValue);
 
-        verifyNoMoreInteractions(attributesInjector);
         verify(bindingsInjector).createAnnotationProcessor(any(AnnotatedElement.class));
         verify(bindingsInjector).getValue(eq(request), eq("firstAttribute"), eq(String.class), any(AnnotatedElement.class), any(DisposalCallbackRegistry.class));
-        verifyNoMoreInteractions(bindingsInjector);
     }
 
     @Test
