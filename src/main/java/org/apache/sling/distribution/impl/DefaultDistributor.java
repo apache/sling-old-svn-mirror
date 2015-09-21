@@ -60,7 +60,7 @@ public class DefaultDistributor implements Distributor {
             return agent.execute(resourceResolver, distributionRequest);
         } catch (DistributionAgentException e) {
             log.error("cannot execute", e);
-            return new SimpleDistributionResponse(DistributionRequestState.DROPPED, "Cannot execute request");
+            return new SimpleDistributionResponse(DistributionRequestState.FAILED, "Cannot execute request");
         }
     }
 }
