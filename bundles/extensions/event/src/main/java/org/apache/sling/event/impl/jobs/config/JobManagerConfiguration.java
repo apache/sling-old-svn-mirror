@@ -516,21 +516,21 @@ public class JobManagerConfiguration implements TopologyEventListener {
             if ( local != null ) {
                 local.schedule(new Runnable() {
 
-                        @Override
-                        public void run() {
-                            if ( runMaintenanceTasks ) {
-                                if ( newCaps.isLeader() && newCaps.isActive() ) {
-                                    mt.assignUnassignedJobs();
-                                }
-                            }
-                            // start listeners
-                            if ( newCaps.isActive() ) {
-                                synchronized ( listeners ) {
-                                    notifiyListeners();
-                                }
+                    @Override
+                    public void run() {
+                        if ( runMaintenanceTasks ) {
+                            if ( newCaps.isLeader() && newCaps.isActive() ) {
+                                mt.assignUnassignedJobs();
                             }
                         }
-                    }, local.AT(new Date(System.currentTimeMillis() + this.backgroundLoadDelay * 1000)));
+                        // start listeners
+                        if ( newCaps.isActive() ) {
+                            synchronized ( listeners ) {
+                                notifiyListeners();
+                            }
+                        }
+                    }
+                }, local.AT(new Date(System.currentTimeMillis() + this.backgroundLoadDelay * 1000)));
             }
         }
         logger.debug("Job processing started");
