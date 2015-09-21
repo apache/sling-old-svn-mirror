@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.sling.junit.rules.TeleporterRule;
+import org.junit.Rule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.ops4j.pax.tinybundles.core.TinyBundle;
@@ -37,13 +38,11 @@ import org.osgi.framework.Constants;
 
 public class ClientSideTeleporter extends TeleporterRule {
 
-    // TODO All this should be configurable with Options
-    private final int testReadyTimeoutSeconds = 5;
+    private DependencyAnalyzer dependencyAnalyzer;
+    private int testReadyTimeoutSeconds = 5;
     private String baseUrl;
-    private final Set<String> dependencyAnalyzerIncludes = new HashSet<String>();
-    private final Set<String> dependencyAnalyzerExcludes = new HashSet<String>();
     private final Set<Class<?>> embeddedClasses = new HashSet<Class<?>>();
-
+    
     private InputStream buildTestBundle(Class<?> c, Collection<Class<?>> embeddedClasses, String bundleSymbolicName) {
         final TinyBundle b = TinyBundles.bundle()
             .set(Constants.BUNDLE_SYMBOLICNAME, bundleSymbolicName)
@@ -55,15 +54,36 @@ public class ClientSideTeleporter extends TeleporterRule {
         return b.build(TinyBundles.withBnd());
     }
     
-    protected void setBaseUrl(String url) {
+    public void setBaseUrl(String url) {
         baseUrl = url;
         if(baseUrl.endsWith("/")) {
             baseUrl = baseUrl.substring(0, baseUrl.length() -1);
         }
     }
+
+    @Override
+    protected void setClassUnderTest(Class<?> c) {
+        super.setClassUnderTest(c);
+        dependencyAnalyzer = DependencyAnalyzer.forClass(classUnderTest);
+    }
     
-    public void embedClass(Class<?> c) {
+    public void setTestReadyTimeoutSeconds(int tm) {
+        testReadyTimeoutSeconds = tm;
+    }
+    
+    public ClientSideTeleporter includeDependencyPrefix(String prefix) {
+        dependencyAnalyzer.include(prefix);
+        return this;
+    }
+    
+    public ClientSideTeleporter excludeDependencyPrefix(String prefix) {
+        dependencyAnalyzer.exclude(prefix);
+        return this;
+    }
+    
+    public ClientSideTeleporter embedClass(Class<?> c) {
         embeddedClasses.add(c);
+        return this;
     }
     
     private String installTestBundle(TeleporterHttpClient httpClient) throws MalformedURLException, IOException {
@@ -77,25 +97,13 @@ public class ClientSideTeleporter extends TeleporterRule {
     @Override
     public Statement apply(final Statement base, final Description description) {
         if(baseUrl == null) {
-            // TODO - need a more flexible mechanism + need to wait for Sling to be ready
-            final String propName = "launchpad.http.server.url";
-            baseUrl = System.getProperty(propName);
-            if(baseUrl == null || baseUrl.isEmpty()) {
-                fail("Missing system property " + propName);
-            }
+            fail("base URL is not set");
         }
         if(baseUrl.endsWith("/")) {
             baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
         }
         
-        final DependencyAnalyzer da = DependencyAnalyzer.forClass(classUnderTest);
-        for(String include : dependencyAnalyzerIncludes) {
-            da.include(include);
-        }
-        for(String exclude : dependencyAnalyzerExcludes) {
-            da.exclude(exclude);
-        }
-        for(Class<?> c : da.getDependencies()) {
+        for(Class<?> c : dependencyAnalyzer.getDependencies()) {
             embeddedClasses.add(c);
         }
 
