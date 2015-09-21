@@ -29,7 +29,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.sling.junit.rules.TeleporterRule;
-import org.junit.Rule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.ops4j.pax.tinybundles.core.TinyBundle;
