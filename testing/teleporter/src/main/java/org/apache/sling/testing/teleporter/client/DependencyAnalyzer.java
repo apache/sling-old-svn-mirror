@@ -33,6 +33,8 @@ class DependencyAnalyzer {
     private final Set<String> dependencyNames = new HashSet<String>();
     private final Set<String> includes = new HashSet<String>();
     private final Set<String> excludes = new HashSet<String>();
+    private final Set<Class<?>> alreadySeen = new HashSet<Class<?>>();
+    private Collection<Class<?>> dependencies;
     
     private DependencyAnalyzer(Class <?> ... classes) {
         this.classes = classes;
@@ -60,19 +62,26 @@ class DependencyAnalyzer {
     /** Get the aggregate dependencies of our classes, based on a recursive
      *  analysis that takes our include/exclude prefixes into account
      */
-    Collection<Class<?>> getDependencies() {
-        final Set<Class<?>> result = new HashSet<Class<?>>();
+    synchronized Collection<Class<?>> getDependencies() {
+        if(dependencies != null) {
+            return dependencies;
+        }
+        dependencies = new HashSet<Class<?>>();
         for(Class<?> c : classes) {
             analyze(c);
         }
         for(String dep : dependencyNames) {
-            result.add(toClass(dep));
+            dependencies.add(toClass(dep));
         }
-        return result;
+        return dependencies;
     }
     
     /** Analyze a single class, recursively */
     private void analyze(Class<?> c) {
+        if(alreadySeen.contains(c)) {
+            return;
+        }
+        alreadySeen.add(c);
         final Set<String> deps = new HashSet<String>();
         final String path = "/" + c.getName().replace('.', '/') + ".class";
         final InputStream input = getClass().getResourceAsStream(path);
