@@ -16,7 +16,11 @@
  */
 package org.apache.sling.junit.rules;
 
-/** Improved variant of the Service class that uses generics */
+/** Improved variant of the Service class that uses generics.
+ * 
+ *  The {#link TeleporterRule} also provides access to OSGi
+ *  services for server-side tests, in a more integrated way. 
+ */
 public class OSGiService <T> extends Service {
 
     private final Class<T> clazz;
