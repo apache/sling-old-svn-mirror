@@ -24,10 +24,14 @@ import java.lang.annotation.Target;
 
 /** Annotation used to inject services in test classes. Similar
  *  to the Felix @Reference annotation, but we need RetentionPolicy.RUNTIME
- *  so we cannot use that one. 
+ *  so we cannot use that one.
+ *   
+ *  @deprecated - the {#link TeleporterRule} is a much simpler way of executing
+ *      server-side tests, including OSGi service injection.
  */
 @Target( { ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
+@Deprecated
 public @interface TestReference {
     /**
      * The local name of the reference.
