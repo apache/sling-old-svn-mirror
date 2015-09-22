@@ -42,7 +42,8 @@ public class TeleporterOptionsTest {
             // The TeleporterRule options are usually meant to select which
             // server to run the tests on, for example - here we just verify
             // that the LaunchpadCustomizer gets our options
-            TeleporterRule.forClass(getClass(), "Launchpad:" + OPTIONS);
+            final TeleporterRule r = TeleporterRule.forClass(getClass(), "Launchpad:" + OPTIONS);
+            r.apply(null,  null);
             fail("Expecting an OptionsException");
         } catch(OptionsException oex) {
             assertEquals(OPTIONS, oex.getMessage());
