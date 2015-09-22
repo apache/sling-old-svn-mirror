@@ -26,11 +26,11 @@
     <relativePath/>
   </parent>
 
-  <artifactId>org.apache.sling.testing.teleporter</artifactId>
-  <version>0.1.1-SNAPSHOT</version>
+  <artifactId>org.apache.sling.junit.teleporter</artifactId>
+  <version>0.1.2-SNAPSHOT</version>
   <packaging>jar</packaging>
-  <name>Apache Sling Testing Teleporter</name>
-  <description>Client-side implementation of the Teleporter mechanism for server-side tests</description>
+  <name>Apache Sling JUnit Tests Teleporter</name>
+  <description>Client-side implementation of the Teleporter mechanism for server-side JUnit tests</description>
 
   <dependencies>
     <dependency>
