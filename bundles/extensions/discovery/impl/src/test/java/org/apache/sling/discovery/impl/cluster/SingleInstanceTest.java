@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.List;
 import java.util.Map;
@@ -36,7 +37,6 @@ import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.impl.cluster.helpers.AssertingTopologyEventListener;
 import org.apache.sling.discovery.impl.common.resource.EstablishedInstanceDescription;
-import org.apache.sling.discovery.impl.common.resource.IsolatedInstanceDescription;
 import org.apache.sling.discovery.impl.setup.Instance;
 import org.apache.sling.discovery.impl.setup.PropertyProviderImpl;
 import org.junit.After;
@@ -63,7 +63,7 @@ public class SingleInstanceTest {
         logger.info("setup: creating new standalone instance");
         instance = Instance.newStandaloneInstance("/var/discovery/impl/", "standaloneInstance", true,
                 20, 999/*long enough heartbeat interval to prevent them to disturb the explicit heartbeats during the test*/, 
-                3, UUID.randomUUID().toString(), true);
+                3, UUID.randomUUID().toString());
         logger.info("setup: creating new standalone instance done.");
     }
 
@@ -80,12 +80,20 @@ public class SingleInstanceTest {
     }
 
     @Test
-    public void testGetters() {
+    public void testGetters() throws UndefinedClusterViewException {
         logger.info("testGetters: start");
         assertNotNull(instance);
         logger.info("sling id=" + instance.getSlingId());
-        assertNotNull(instance.getClusterViewService().getClusterView());
+        try{
+            instance.getClusterViewService().getClusterView();
+            fail("should complain"); // SLING-5030
+        } catch(UndefinedClusterViewException e) {
+            // ok
+        }
 
+        instance.runHeartbeatOnce();
+        
+        assertNotNull(instance.getClusterViewService().getClusterView());
         ClusterView cv = instance.getClusterViewService().getClusterView();
         logger.info("cluster view: id=" + cv.getId());
         assertNotNull(cv.getId());
@@ -121,6 +129,7 @@ public class SingleInstanceTest {
         pp.setProperty(propertyName, propertyValue);
         instance.bindPropertyProvider(pp, propertyName);
 
+        instance.runHeartbeatOnce();
         assertEquals(propertyValue,
                 instance.getClusterViewService().getClusterView()
                         .getInstances().get(0).getProperty(propertyName));
@@ -141,6 +150,10 @@ public class SingleInstanceTest {
     @Test
     public void testInvalidProperties() throws Throwable {
         logger.info("testInvalidProperties: start");
+        
+        instance.runHeartbeatOnce();
+        instance.runHeartbeatOnce();
+        
         final String propertyValue = UUID.randomUUID().toString();
         doTestProperty(UUID.randomUUID().toString(), propertyValue, propertyValue);
 
@@ -223,9 +236,13 @@ public class SingleInstanceTest {
     @Test
     public void testBootstrap() throws Throwable {
         logger.info("testBootstrap: start");
-        ClusterView initialClusterView = instance.getClusterViewService()
-                .getClusterView();
-        assertNotNull(initialClusterView);
+        try{
+            instance.getClusterViewService().getClusterView();
+            fail("should complain");
+        } catch(UndefinedClusterViewException e) {
+            // SLING-5030 : isolated mode is gone, replaced with exception
+            // ok
+        }
 
         // SLING-3750 : with delaying the init event, we now should NOT get any events
         // before we let the view establish (which happens via heartbeats below)
@@ -234,15 +251,13 @@ public class SingleInstanceTest {
         assertEquals(0, ada.getEvents().size());
         assertEquals(0, ada.getUnexpectedCount());
 
-        // hard assumption that the class we get is an
-        // IsolatedInstanceDescription
-        // this is because we dont have any established clusterview yet - hence
-        // still entirely isolated
-        assertEquals(IsolatedInstanceDescription.class, initialClusterView
-                .getInstances().get(0).getClass());
-        assertEquals(IsolatedInstanceDescription.class, instance
-                .getClusterViewService().getClusterView().getInstances().get(0)
-                .getClass());
+        try{
+            instance.getClusterViewService().getClusterView();
+            fail("should complain");
+        } catch(UndefinedClusterViewException e) {
+            // ok
+        }
+        
         ada.addExpected(Type.TOPOLOGY_INIT);
         instance.runHeartbeatOnce();
         Thread.sleep(1000);
@@ -253,14 +268,11 @@ public class SingleInstanceTest {
         assertEquals(1, ada.getEvents().size());
         TopologyEvent initEvent = ada.getEvents().remove(0);
         assertNotNull(initEvent);
-
-        assertEquals(initialClusterView.getId(), initEvent.getNewView()
-                .getClusterViews().iterator().next().getId());
-        assertEquals(initialClusterView.getInstances().get(0).getSlingId(),
-                initEvent.getNewView().getLocalInstance().getSlingId());
+        assertNotNull(initEvent.getNewView());
+        assertNotNull(initEvent.getNewView().getClusterViews());
 
         // after the view was established though, we expect it to be a normal
-        // ResourceInstanceDescription
+        // EstablishedInstanceDescription
         assertEquals(EstablishedInstanceDescription.class, instance
                 .getClusterViewService().getClusterView().getInstances().get(0)
                 .getClass());

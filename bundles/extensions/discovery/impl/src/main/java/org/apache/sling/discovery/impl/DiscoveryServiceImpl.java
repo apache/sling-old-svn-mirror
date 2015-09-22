@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.UUID;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -57,8 +58,10 @@ import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.discovery.impl.cluster.ClusterViewService;
+import org.apache.sling.discovery.impl.cluster.UndefinedClusterViewException;
+import org.apache.sling.discovery.impl.common.DefaultClusterViewImpl;
+import org.apache.sling.discovery.impl.common.DefaultInstanceDescriptionImpl;
 import org.apache.sling.discovery.impl.common.heartbeat.HeartbeatHandler;
-import org.apache.sling.discovery.impl.common.resource.IsolatedInstanceDescription;
 import org.apache.sling.discovery.impl.common.resource.ResourceHelper;
 import org.apache.sling.discovery.impl.topology.TopologyViewImpl;
 import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistry;
@@ -230,6 +233,9 @@ public class DiscoveryServiceImpl implements DiscoveryService {
     @Reference(cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC, referenceInterface = TopologyEventListener.class)
     private TopologyEventListener[] eventListeners = new TopologyEventListener[0];
 
+    /** SLING-5030 : this map contains the event last sent to each listener to prevent duplicate CHANGING events when scheduler is broken**/
+    private Map<TopologyEventListener,TopologyEvent.Type> lastEventMap = new HashMap<TopologyEventListener, TopologyEvent.Type>();
+    
     /**
      * All property providers.
      */
@@ -281,6 +287,9 @@ public class DiscoveryServiceImpl implements DiscoveryService {
      * synchronized(lock) (which would be deadlock-prone). (introduced with SLING-4638).
      **/
     private volatile boolean delayedEventPending = false;
+    
+    /** used to continue functioning when scheduler is broken **/
+    private volatile boolean delayedEventPendingFailed = false;
 
     private ServiceRegistration mbeanRegistration;
 
@@ -308,6 +317,14 @@ public class DiscoveryServiceImpl implements DiscoveryService {
             logger.warn("registerMBean: Unable to register DiscoveryServiceImpl MBean", t);
         }
     }
+    
+    private void setOldView(TopologyViewImpl view) {
+        if (view==null) {
+            throw new IllegalArgumentException("view must not be null");
+        }
+        oldView = view;
+    }
+    
     /**
      * Activate this service
      */
@@ -324,15 +341,32 @@ public class DiscoveryServiceImpl implements DiscoveryService {
 
         slingId = settingsService.getSlingId();
 
-        oldView = (TopologyViewImpl) getTopology();
+        final String isolatedClusterId = UUID.randomUUID().toString();
+        {
+            // create a pre-voting/isolated topologyView which would be used
+            // until the first voting has finished.
+            // this way for the single-instance case the clusterId can
+            // remain the same between a getTopology() that is invoked before
+            // the first TOPOLOGY_INIT and afterwards
+            DefaultClusterViewImpl isolatedCluster = new DefaultClusterViewImpl(isolatedClusterId);
+            Map<String, String> emptyProperties = new HashMap<String, String>();
+            DefaultInstanceDescriptionImpl isolatedInstance = 
+                    new DefaultInstanceDescriptionImpl(isolatedCluster, true, true, slingId, emptyProperties);
+            Collection<InstanceDescription> col = new ArrayList<InstanceDescription>();
+            col.add(isolatedInstance);
+            final TopologyViewImpl topology = new TopologyViewImpl();
+            topology.addInstances(col);
+            topology.markOld();
+            setOldView(topology);
+        }
+        setOldView((TopologyViewImpl) getTopology());
         oldView.markOld();
 
         // make sure the first heartbeat is issued as soon as possible - which
         // is right after this service starts. since the two (discoveryservice
         // and heartbeatHandler need to know each other, the discoveryservice
         // is passed on to the heartbeatHandler in this initialize call).
-        heartbeatHandler.initialize(this,
-                clusterViewService.getIsolatedClusterViewId());
+        heartbeatHandler.initialize(this, isolatedClusterId);
 
         final TopologyEventListener[] registeredServices;
         synchronized (lock) {
@@ -350,16 +384,11 @@ public class DiscoveryServiceImpl implements DiscoveryService {
             doUpdateProperties();
 
             TopologyViewImpl newView = (TopologyViewImpl) getTopology();
-            final boolean isIsolatedView = isIsolated(newView);
-            if (config.isDelayInitEventUntilVoted() && isIsolatedView) {
+            if (!newView.isCurrent()) {
                 // SLING-3750: just issue a log.info about the delaying
                 logger.info("activate: this instance is in isolated mode and must yet finish voting before it can send out TOPOLOGY_INIT.");
                 initEventDelayed = true;
             } else {
-                if (isIsolatedView) {
-                    // SLING-3750: issue a log.info about not-delaying even though isolated
-                    logger.info("activate: this instance is in isolated mode and likely should delay TOPOLOGY_INIT - but corresponding config ('delayInitEventUntilVoted') is disabled.");
-                }
                 final TopologyEvent event = new TopologyEvent(Type.TOPOLOGY_INIT, null,
                         newView);
                 for (final TopologyEventListener da : registeredServices) {
@@ -367,7 +396,7 @@ public class DiscoveryServiceImpl implements DiscoveryService {
                 }
             }
             activated = true;
-            oldView = newView;
+            setOldView(newView);
         }
 
         URL[] topologyConnectorURLs = config.getTopologyConnectorURLs();
@@ -390,14 +419,6 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         logger.debug("DiscoveryServiceImpl activated.");
     }
 
-    private boolean isIsolated(TopologyViewImpl view) {
-        final InstanceDescription localInstance = view.getLocalInstance();
-        // 'instanceof' is not so nice here - but anything else requires 
-        // excessive changing (introducing new classes/interfaces)
-        // which is an overkill in and of itself.. thus: 'instanceof'
-        return localInstance instanceof IsolatedInstanceDescription;
-    }
-
     private void enqueueAsyncTopologyEvent(final TopologyEventListener da, final TopologyEvent event) {
         if (logger.isDebugEnabled()) {
             logger.debug("enqueueAsyncTopologyEvent: sending topologyEvent {}, to {}", event, da);
@@ -408,7 +429,13 @@ public class DiscoveryServiceImpl implements DiscoveryService {
             logger.warn("enqueueAsyncTopologyEvent: asyncEventSender is null, cannot send event ({}, {})!", da, event);
             return;
         }
+        if (lastEventMap.get(da)==event.getType() && event.getType()==Type.TOPOLOGY_CHANGING) {
+            // don't sent TOPOLOGY_CHANGING twice
+            logger.debug("enqueueAsyncTopologyEvent: listener already got TOPOLOGY_CHANGING: {}", da);
+            return;
+        }
         asyncEventSender.enqueue(da, event);
+        lastEventMap.put(da, event.getType());
         if (logger.isDebugEnabled()) {
             logger.debug("enqueueAsyncTopologyEvent: sending topologyEvent {}, to {}", event, da);
         }
@@ -651,7 +678,18 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         // create a new topology view
         final TopologyViewImpl topology = new TopologyViewImpl();
 
-        final ClusterView localClusterView = clusterViewService.getClusterView();
+        ClusterView localClusterView = null;
+        try {
+            localClusterView = clusterViewService.getClusterView();
+        } catch (UndefinedClusterViewException e) {
+            // SLING-5030 : when we're cut off from the local cluster we also
+            // treat it as being cut off from the entire topology, ie we don't
+            // update the announcements but just return
+            // the previous oldView marked as !current
+            logger.info("getTopology: undefined cluster view: "+e.getClass().getSimpleName()+": "+e);
+            oldView.markOld();
+            return oldView;
+        }
 
         final List<InstanceDescription> localInstances = localClusterView.getInstances();
         topology.addInstances(localInstances);
@@ -659,11 +697,6 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         Collection<InstanceDescription> attachedInstances = announcementRegistry
                 .listInstances(localClusterView);
         topology.addInstances(attachedInstances);
-
-        // SLING-4638: set 'current' correctly
-        if (isIsolated(topology) || delayedEventPending) {
-            topology.markOld();
-        }
 
         return topology;
     }
@@ -695,112 +728,151 @@ public class DiscoveryServiceImpl implements DiscoveryService {
             logger.debug("handlePotentialTopologyChange: ignoring early change before activate finished.");
             return;
         }
-        if (delayedEventPending) {
+        if (delayedEventPending && !delayedEventPendingFailed) {
             logger.debug("handlePotentialTopologyChange: ignoring potential change since a delayed event is pending.");
             return;
         }
-        if (oldView == null) {
-            throw new IllegalStateException("oldView must not be null");
-        }
         TopologyViewImpl newView = (TopologyViewImpl) getTopology();
-        TopologyViewImpl oldView = this.oldView;
-        
         if (initEventDelayed) {
-            if (isIsolated(newView)) {
+            // this means activate could not yet send a TOPOLOGY_INIT event
+            // (which can happen frequently) - so we have to do this now
+            // that we potentially have a valid view
+            if (!newView.isCurrent()) {
                 // we cannot proceed until we're out of the isolated mode..
                 // SLING-4535 : while this has warning character, it happens very frequently,
                 //              eg also when binding a PropertyProvider (so normal processing)
                 //              hence lowering to info for now
                 logger.info("handlePotentialTopologyChange: still in isolated mode - cannot send TOPOLOGY_INIT yet.");
-                return;
+            } else {
+                logger.info("handlePotentialTopologyChange: new view is no longer isolated sending delayed TOPOLOGY_INIT now.");
+                // SLING-4638: OK: newView is current==true as we're just coming out of initEventDelayed first time.
+                enqueueForAll(Type.TOPOLOGY_INIT, null, newView);
+                initEventDelayed = false;
             }
-            logger.info("handlePotentialTopologyChange: new view is no longer isolated sending delayed TOPOLOGY_INIT now.");
-            final TopologyEvent initEvent = new TopologyEvent(Type.TOPOLOGY_INIT, null,
-                    newView); // SLING-4638: OK: newView is current==true as we're just coming out of initEventDelayed first time.
-            for (final TopologyEventListener da : eventListeners) {
-                enqueueAsyncTopologyEvent(da, initEvent);
-            }
-            // now after having sent INIT events, we need to set oldView to what we've
-            // just sent out - which is newView. This makes sure that we don't send
-            // out any CHANGING/CHANGED event afterwards based on an 'isolated-oldView'
-            // (which would be wrong). Hence:
-            this.oldView = newView;
-            oldView = newView;
-
-            initEventDelayed = false;
+            return;
         }
 
-        Type difference = newView.compareTopology(oldView);
-        if (difference == null) {
-            // then dont send any event then
-            logger.debug("handlePotentialTopologyChange: identical views. not informing listeners");
+        TopologyViewImpl oldView = this.oldView;
+        Type difference;
+        if (!newView.isCurrent()) {
+            difference = Type.TOPOLOGY_CHANGING;
+        } else {
+            difference = newView.compareTopology(oldView);
+        }
+        if (difference == null) { // indicating: equals
+            if (delayedEventPendingFailed) {
+                // when the delayed event handling for some very odd reason could
+                // not re-spawn itself (via runAfter) - in that case we now
+                // have listeners in CHANGING state .. which we should wake up
+                enqueueForAll(Type.TOPOLOGY_CHANGED, oldView, newView);
+                delayedEventPendingFailed = false;
+                delayedEventPending = false;
+            } else {
+                // then dont send any event then
+                logger.debug("handlePotentialTopologyChange: identical views. not informing listeners");
+            }
+            return;
+        } else if (difference == Type.PROPERTIES_CHANGED) {
+            enqueueForAll(Type.PROPERTIES_CHANGED, oldView, newView);
+            return;
+        }
+        delayedEventPendingFailed = false;
+        delayedEventPending = false;
+
+        // else: TOPOLOGY_CHANGING or CHANGED
+        if (logger.isDebugEnabled()) {
+            logger.debug("handlePotentialTopologyChange: difference: {}, oldView={}, newView={}",
+                    new Object[] {difference, oldView, newView});
+        }
+
+    	// send a TOPOLOGY_CHANGING first
+        logger.info("handlePotentialTopologyChange: sending "+Type.TOPOLOGY_CHANGING+
+                " to all listeners (that have not gotten one yet) (oldView={}).", oldView);
+        oldView.markOld();
+        for (final TopologyEventListener da : eventListeners) {
+            enqueueAsyncTopologyEvent(da, new TopologyEvent(Type.TOPOLOGY_CHANGING, oldView,
+                    null));
+        }
+
+        int minEventDelay = config.getMinEventDelay();
+        if ((!newView.isCurrent()) && minEventDelay<=0) {
+            // if newView is isolated
+            // then we should not send a TOPOLOGY_CHANGED yet - but instead
+            // wait until the view gets resolved. that is achieved by
+            // going into event-delaying and retrying that way.
+            // and if minEventDelay is not configured, then auto-switch
+            // to a 1sec such minEventDelay:
+            minEventDelay=1;
+        }
+        
+        if (minEventDelay<=0) {
+            // otherwise, send the TOPOLOGY_CHANGED now
+            enqueueForAll(Type.TOPOLOGY_CHANGED, oldView, newView);
+            return;
+        }
+
+        // then delay the sending of the next event
+        logger.debug("handlePotentialTopologyChange: delaying event sending to avoid event flooding");
+
+        if (runAfter(minEventDelay /*seconds*/ , new Runnable() {
+
+            public void run() {
+                logger.debug("handlePotentialTopologyChange: acquiring synchronized(lock)...");
+                synchronized(lock) {
+                	logger.debug("handlePotentialTopologyChange: sending delayed event now");
+                	if (!activated) {
+                	    delayedEventPending = false;
+                		logger.debug("handlePotentialTopologyChange: no longer activated. not sending delayed event");
+                		return;
+                	}
+                    final TopologyViewImpl newView = (TopologyViewImpl) getTopology();
+                    // irrespective of the difference, send the latest topology
+                    // via a topology_changed event (since we already sent a changing)
+                    if (!newView.isCurrent()) {
+                        // if the newView is isolated at this stage we have sent
+                        // TOPOLOGY_CHANGING to the listeners, and they are now waiting
+                        // for TOPOLOGY_CHANGED. But we can't send them that yet..
+                        // we must do a loop via the minEventDelay mechanism and log 
+                        // accordingly
+                        if (runAfter(1/*sec*/, this)) {
+                            logger.warn("handlePotentialTopologyChange: local instance is isolated from topology. Waiting for rejoining...");
+                            return;
+                        }
+                        // otherwise we have to fall back to still sending a TOPOLOGY_CHANGED
+                        // but that's unexpected! (back to delayedEventPending=false..)
+                        delayedEventPendingFailed = true;
+                        logger.warn("handlePotentialTopologyChange: local instance is isolated from topology but failed to trigger delay-job");
+                        return;
+                    }
+
+                    enqueueForAll(Type.TOPOLOGY_CHANGED, DiscoveryServiceImpl.this.oldView, newView);
+                    delayedEventPending = false;
+                }
+            }
+        })) {
+        	delayedEventPending = true;
+            logger.debug("handlePotentialTopologyChange: delayed event triggering.");
             return;
         } else {
-            if (logger.isDebugEnabled()) {
-                logger.debug("handlePotentialTopologyChange: difference: {}, oldView={}, newView={}",
-                        new Object[] {difference, oldView, newView});
-            }
+        	logger.debug("handlePotentialTopologyChange: delaying event triggering did not work for some reason. "
+        	        + "Will be retriggered lazily via later heartbeat.");
+        	delayedEventPending = true;
+        	delayedEventPendingFailed = true;
+        	return;
         }
-
-        oldView.markOld();
-        if (difference!=Type.TOPOLOGY_CHANGED) {
-            for (final TopologyEventListener da : eventListeners) {
-                enqueueAsyncTopologyEvent(da, new TopologyEvent(difference, oldView,
-                        newView));
-            }
-        } else { // TOPOLOGY_CHANGED
-
-        	// send a TOPOLOGY_CHANGING first
-            for (final TopologyEventListener da : eventListeners) {
-                enqueueAsyncTopologyEvent(da, new TopologyEvent(Type.TOPOLOGY_CHANGING, oldView,
-                        null));
-            }
-
-        	if (config.getMinEventDelay()>0) {
-                // then delay the sending of the next event
-                logger.debug("handlePotentialTopologyChange: delaying event sending to avoid event flooding");
-
-                if (runAfter(config.getMinEventDelay() /*seconds*/ , new Runnable() {
-
-                    public void run() {
-                        synchronized(lock) {
-                        	delayedEventPending = false;
-                        	logger.debug("handlePotentialTopologyChange: sending delayed event now");
-                        	if (!activated) {
-                        		logger.debug("handlePotentialTopologyChange: no longer activated. not sending delayed event");
-                        		return;
-                        	}
-                            final TopologyViewImpl newView = (TopologyViewImpl) getTopology();
-                            // irrespective of the difference, send the latest topology
-                            // via a topology_changed event (since we already sent a changing)
-                            for (final TopologyEventListener da : eventListeners) {
-                                enqueueAsyncTopologyEvent(da, new TopologyEvent(Type.TOPOLOGY_CHANGED,
-                                        DiscoveryServiceImpl.this.oldView, newView));
-                            }
-                            DiscoveryServiceImpl.this.oldView = newView;
-                        }
-                        if (heartbeatHandler!=null) {
-                            // trigger a heartbeat 'now' to pass it on to the topology asap
-                            heartbeatHandler.triggerHeartbeat();
-                        }
-                    }
-                })) {
-                	delayedEventPending = true;
-                    logger.debug("handlePotentialTopologyChange: delaying of event triggered.");
-                    return;
-                } else {
-                	logger.debug("handlePotentialTopologyChange: delaying did not work for some reason.");
-                }
-        	}
-
-        	// otherwise, send the TOPOLOGY_CHANGED now
-            for (final TopologyEventListener da : eventListeners) {
-                enqueueAsyncTopologyEvent(da, new TopologyEvent(Type.TOPOLOGY_CHANGED, oldView,
-                        newView));
-            }
+    }
+    
+    private void enqueueForAll(Type eventType, TopologyViewImpl oldView, TopologyViewImpl newView) {
+        if (oldView!=null) {
+            oldView.markOld();
         }
-
-        this.oldView = newView;
+        logger.info("enqueueForAll: sending "+eventType+" to all listeners (oldView={}, newView={}).", oldView, newView);
+        for (final TopologyEventListener da : eventListeners) {
+            enqueueAsyncTopologyEvent(da, new TopologyEvent(eventType, oldView, newView));
+        }
+        if (eventType!=Type.TOPOLOGY_CHANGING) {
+            setOldView(newView);
+        }
         if (heartbeatHandler!=null) {
             // trigger a heartbeat 'now' to pass it on to the topology asap
             heartbeatHandler.triggerHeartbeat();

@@ -55,6 +55,7 @@ import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.discovery.impl.cluster.ClusterViewService;
+import org.apache.sling.discovery.impl.cluster.UndefinedClusterViewException;
 import org.apache.sling.discovery.impl.topology.announcement.Announcement;
 import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistry;
 import org.apache.sling.discovery.impl.topology.announcement.CachedAnnouncement;
@@ -239,16 +240,20 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         Set<ClusterView> clusters = topology.getClusterViews();
         ClusterView myCluster = topology.getLocalInstance().getClusterView();
         boolean odd = true;
-        renderCluster(pw, myCluster, myCluster, odd);
-
-        for (Iterator<ClusterView> it = clusters.iterator(); it.hasNext();) {
-            ClusterView clusterView = it.next();
-            if (clusterView.equals(myCluster)) {
-                // skip - I already rendered that
-                continue;
+        try{
+            renderCluster(pw, myCluster, myCluster, odd);
+    
+            for (Iterator<ClusterView> it = clusters.iterator(); it.hasNext();) {
+                ClusterView clusterView = it.next();
+                if (clusterView.equals(myCluster)) {
+                    // skip - I already rendered that
+                    continue;
+                }
+                odd = !odd;
+                renderCluster(pw, clusterView, myCluster, odd);
             }
-            odd = !odd;
-            renderCluster(pw, clusterView, myCluster, odd);
+        } catch(UndefinedClusterViewException e) {
+            pw.println("<tr><td>No ClusterView available at the moment, either isolated or not yet voted atm! ("+e+")</td></tr>");
         }
 
         pw.println("</tbody>");
@@ -283,8 +288,10 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
 
     /**
      * Render a particular cluster (into table rows)
+     * @throws UndefinedClusterViewException 
      */
-    private void renderCluster(final PrintWriter pw, final ClusterView renderCluster, final ClusterView localCluster, final boolean odd) {
+    private void renderCluster(final PrintWriter pw, final ClusterView renderCluster, final ClusterView localCluster, final boolean odd) 
+            throws UndefinedClusterViewException {
         final Collection<Announcement> announcements = announcementRegistry.listAnnouncementsInSameCluster(localCluster);
 
         for (Iterator<InstanceDescription> it = renderCluster.getInstances()
@@ -755,15 +762,19 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
 
         final Set<ClusterView> clusters = topology.getClusterViews();
         final ClusterView myCluster = topology.getLocalInstance().getClusterView();
-        printCluster(pw, myCluster, myCluster);
-
-        for (Iterator<ClusterView> it = clusters.iterator(); it.hasNext();) {
-            ClusterView clusterView = it.next();
-            if (clusterView.equals(myCluster)) {
-                // skip - I already rendered that
-                continue;
+        try{
+            printCluster(pw, myCluster, myCluster);
+    
+            for (Iterator<ClusterView> it = clusters.iterator(); it.hasNext();) {
+                ClusterView clusterView = it.next();
+                if (clusterView.equals(myCluster)) {
+                    // skip - I already rendered that
+                    continue;
+                }
+                printCluster(pw, clusterView, myCluster);
             }
-            printCluster(pw, clusterView, myCluster);
+        } catch (UndefinedClusterViewException e) {
+            pw.println("No ClusterView available at the moment, either isolated or not yet voted atm! ("+e+")");
         }
 
         pw.println();
@@ -876,8 +887,10 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
 
     /**
      * Render a particular cluster
+     * @throws UndefinedClusterViewException 
      */
-    private void printCluster(final PrintWriter pw, final ClusterView renderCluster, final ClusterView localCluster) {
+    private void printCluster(final PrintWriter pw, final ClusterView renderCluster, final ClusterView localCluster)
+            throws UndefinedClusterViewException {
         final Collection<Announcement> announcements = announcementRegistry.listAnnouncementsInSameCluster(localCluster);
 
         for(final InstanceDescription instanceDescription : renderCluster.getInstances() ) {

@@ -389,10 +389,8 @@ public class VotingHandler implements EventHandler {
         // 3b: move the result under /established
         final String newEstablishedViewPath = establishedViewsResource.getPath()
                 + "/" + winningVoteResource.getName();
-    	if (logger.isDebugEnabled()) {
-	        logger.debug("promote: promote to new established node "
+        logger.info("promote: promote to new established node "
 	                + newEstablishedViewPath);
-    	}
         ResourceHelper.moveResource(winningVoteResource, newEstablishedViewPath);
 
         // step 4: delete all ongoing votings...

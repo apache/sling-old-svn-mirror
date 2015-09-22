@@ -49,6 +49,7 @@ import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.cluster.ClusterViewService;
+import org.apache.sling.discovery.impl.cluster.UndefinedClusterViewException;
 import org.apache.sling.discovery.impl.topology.announcement.Announcement;
 import org.apache.sling.discovery.impl.topology.announcement.AnnouncementFilter;
 import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistry;
@@ -181,8 +182,15 @@ public class TopologyConnectorClient implements
             Announcement topologyAnnouncement = new Announcement(
                     clusterViewService.getSlingId());
             topologyAnnouncement.setServerInfo(serverInfo);
-            final ClusterView clusterView = clusterViewService
-                    .getClusterView();
+            final ClusterView clusterView;
+            try {
+                clusterView = clusterViewService
+                        .getClusterView();
+            } catch (UndefinedClusterViewException e) {
+                // SLING-5030 : then we cannot ping
+                logger.warn("ping: no clusterView available at the moment, cannot ping others now: "+e);
+                return;
+            }
             topologyAnnouncement.setLocalCluster(clusterView);
             if (force) {
                 logger.debug("ping: sending a resetBackoff");
@@ -194,7 +202,7 @@ public class TopologyConnectorClient implements
                     // filter out announcements that are of old cluster instances
                     // which I dont really have in my cluster view at the moment
                     final Iterator<InstanceDescription> it = 
-                            clusterViewService.getClusterView().getInstances().iterator();
+                            clusterView.getInstances().iterator();
                     while(it.hasNext()) {
                         final InstanceDescription instance = it.next();
                         if (instance.getSlingId().equals(receivingSlingId)) {

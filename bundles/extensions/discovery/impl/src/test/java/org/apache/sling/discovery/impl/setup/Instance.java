@@ -64,6 +64,7 @@ import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.DiscoveryServiceImpl;
 import org.apache.sling.discovery.impl.cluster.ClusterViewService;
 import org.apache.sling.discovery.impl.cluster.ClusterViewServiceImpl;
+import org.apache.sling.discovery.impl.cluster.UndefinedClusterViewException;
 import org.apache.sling.discovery.impl.cluster.voting.VotingHandler;
 import org.apache.sling.discovery.impl.common.heartbeat.HeartbeatHandler;
 import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistry;
@@ -94,7 +95,6 @@ public class Instance {
         long heartbeatInterval;
         int minEventDelay;
         List<String> whitelist;
-        private boolean delayInitEventUntilVoted;
 
         @Override
         public long getHeartbeatInterval() {
@@ -148,15 +148,6 @@ public class Instance {
             return 1;
         }
         
-        @Override
-        public boolean isDelayInitEventUntilVoted() {
-            return this.delayInitEventUntilVoted;
-        }
-        
-        public void setDelayInitEventUntilVoted(boolean delayInitEventUntilVoted) {
-            this.delayInitEventUntilVoted = delayInitEventUntilVoted;
-        }
-        
     }
 
     private final static Logger logger = LoggerFactory.getLogger(Instance.class);
@@ -187,8 +178,17 @@ public class Instance {
     private int serviceId = 999;
 
     private static Scheduler singletonScheduler = null;
+    
+    private static Scheduler scheduler = null;
+    
+    public static void setSingletonScheduler(Scheduler scheduler) throws Exception {
+        Instance.scheduler = scheduler;
+    }
 
-    private static Scheduler getSingletonScheduler() throws Exception {
+    public static Scheduler getSingletonScheduler() throws Exception {
+        if (scheduler!=null) {
+            return scheduler;
+        }
     	if (singletonScheduler!=null) {
     		return singletonScheduler;
     	}
@@ -260,7 +260,7 @@ public class Instance {
     private Instance(String debugName,
             ResourceResolverFactory resourceResolverFactory, boolean resetRepo)
             throws Exception {
-    	this("/var/discovery/impl/", debugName, resourceResolverFactory, resetRepo, 20, 20, 1, UUID.randomUUID().toString(), false);
+    	this("/var/discovery/impl/", debugName, resourceResolverFactory, resetRepo, 20, 20, 1, UUID.randomUUID().toString());
     }
     
     private class MyEventListener implements EventListener {
@@ -300,7 +300,7 @@ public class Instance {
                         properties.put("path", event.getPath());
                         org.osgi.service.event.Event osgiEvent = new org.osgi.service.event.Event(
                                 topic, properties);
-                        logger.info("onEvent: delivering event to listener: "+slingId+", stopped: "+stopped+", event: "+osgiEvent);
+                        logger.debug("onEvent: delivering event to listener: "+slingId+", stopped: "+stopped+", event: "+osgiEvent);
                         votingHandler.handleEvent(osgiEvent);
                     } catch (RepositoryException e) {
                         logger.warn("RepositoryException: " + e, e);
@@ -323,8 +323,7 @@ public class Instance {
 
     private Instance(String discoveryResourcePath, String debugName,
             ResourceResolverFactory resourceResolverFactory, boolean resetRepo,
-            final int heartbeatTimeout, final int heartbeatInterval, final int minEventDelay, String slingId,
-            boolean delayInitEventUntilVoted)
+            final int heartbeatTimeout, final int heartbeatInterval, final int minEventDelay, String slingId)
             throws Exception {
     	this.slingId = slingId;
         this.debugName = debugName;
@@ -339,7 +338,6 @@ public class Instance {
         config.setHeartbeatInterval(heartbeatInterval);
         config.setMinEventDelay(minEventDelay);
         config.addTopologyConnectorWhitelistEntry("127.0.0.1");
-        config.setDelayInitEventUntilVoted(delayInitEventUntilVoted);
 
         PrivateAccessor.setField(config, "discoveryResourcePath", discoveryResourcePath);
 
@@ -407,38 +405,31 @@ public class Instance {
     }
 
     public static Instance newStandaloneInstance(String discoveryResourcePath, String debugName,
-            boolean resetRepo, int heartbeatTimeout, int minEventDelay, String slingId, boolean delayInitEventUntilVoted) throws Exception {
-        ResourceResolverFactory resourceResolverFactory = MockFactory
-                .mockResourceResolverFactory();
-        return new Instance(discoveryResourcePath, debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, 20, minEventDelay, slingId, delayInitEventUntilVoted);
-    }
-    
-    public static Instance newStandaloneInstance(String discoveryResourcePath, String debugName,
-            boolean resetRepo, int heartbeatTimeout, int heartbeatInterval, int minEventDelay, String slingId, boolean delayInitEventUntilVoted) throws Exception {
-        ResourceResolverFactory resourceResolverFactory = MockFactory
-                .mockResourceResolverFactory();
-        return new Instance(discoveryResourcePath, debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, heartbeatInterval, minEventDelay, slingId, delayInitEventUntilVoted);
-    }
-
-    public static Instance newStandaloneInstance(String discoveryResourcePath, String debugName,
             boolean resetRepo, int heartbeatTimeout, int minEventDelay, String slingId) throws Exception {
         ResourceResolverFactory resourceResolverFactory = MockFactory
                 .mockResourceResolverFactory();
-        return new Instance(discoveryResourcePath, debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, 20, minEventDelay, slingId, false);
+        return new Instance(discoveryResourcePath, debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, 20, minEventDelay, slingId);
+    }
+    
+    public static Instance newStandaloneInstance(String discoveryResourcePath, String debugName,
+            boolean resetRepo, int heartbeatTimeout, int heartbeatInterval, int minEventDelay, String slingId) throws Exception {
+        ResourceResolverFactory resourceResolverFactory = MockFactory
+                .mockResourceResolverFactory();
+        return new Instance(discoveryResourcePath, debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, heartbeatInterval, minEventDelay, slingId);
     }
 
     public static Instance newStandaloneInstance(String discoveryResourcePath, String debugName,
             boolean resetRepo, int heartbeatTimeout, int minEventDelay) throws Exception {
         ResourceResolverFactory resourceResolverFactory = MockFactory
                 .mockResourceResolverFactory();
-        return new Instance(discoveryResourcePath, debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, 20, minEventDelay, UUID.randomUUID().toString(), false);
+        return new Instance(discoveryResourcePath, debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, 20, minEventDelay, UUID.randomUUID().toString());
     }
 
     public static Instance newStandaloneInstance(String discoveryResourcePath, String debugName,
             boolean resetRepo, int heartbeatTimeout, int heartbeatInterval, int minEventDelay) throws Exception {
         ResourceResolverFactory resourceResolverFactory = MockFactory
                 .mockResourceResolverFactory();
-        return new Instance(discoveryResourcePath, debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, heartbeatInterval, minEventDelay, UUID.randomUUID().toString(), false);
+        return new Instance(discoveryResourcePath, debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, heartbeatInterval, minEventDelay, UUID.randomUUID().toString());
     }
 
     public static Instance newStandaloneInstance(String debugName,
@@ -449,23 +440,18 @@ public class Instance {
     }
 
     public static Instance newClusterInstance(String discoveryResourcePath, String debugName, Instance other,
-            boolean resetRepo, int heartbeatTimeout, int minEventDelay, String slingId, boolean delayInitEventUntilVoted) throws Exception {
-        return new Instance(discoveryResourcePath, debugName, other.resourceResolverFactory, resetRepo, heartbeatTimeout, 20, minEventDelay, slingId, delayInitEventUntilVoted);
-    }
-
-    public static Instance newClusterInstance(String discoveryResourcePath, String debugName, Instance other,
             boolean resetRepo, int heartbeatTimeout, int minEventDelay, String slingId) throws Exception {
-        return new Instance(discoveryResourcePath, debugName, other.resourceResolverFactory, resetRepo, heartbeatTimeout, 20, minEventDelay, slingId, false);
+        return new Instance(discoveryResourcePath, debugName, other.resourceResolverFactory, resetRepo, heartbeatTimeout, 20, minEventDelay, slingId);
     }
 
     public static Instance newClusterInstance(String discoveryResourcePath, String debugName, Instance other,
             boolean resetRepo, int heartbeatTimeout, int minEventDelay) throws Exception {
-        return new Instance(discoveryResourcePath, debugName, other.resourceResolverFactory, resetRepo, heartbeatTimeout, 20, minEventDelay, UUID.randomUUID().toString(), false);
+        return new Instance(discoveryResourcePath, debugName, other.resourceResolverFactory, resetRepo, heartbeatTimeout, 20, minEventDelay, UUID.randomUUID().toString());
     }
 
     public static Instance newClusterInstance(String discoveryResourcePath, String debugName, Instance other,
             boolean resetRepo, int heartbeatTimeout, int heartbeatInterval, int minEventDelay) throws Exception {
-        return new Instance(discoveryResourcePath, debugName, other.resourceResolverFactory, resetRepo, heartbeatTimeout, heartbeatInterval, minEventDelay, UUID.randomUUID().toString(), false);
+        return new Instance(discoveryResourcePath, debugName, other.resourceResolverFactory, resetRepo, heartbeatTimeout, heartbeatInterval, minEventDelay, UUID.randomUUID().toString());
     }
 
     public static Instance newClusterInstance(String debugName, Instance other,
@@ -550,7 +536,7 @@ public class Instance {
         return connectorRegistry.registerOutgoingConnector(clusterViewService, new URL(url));
     }
 
-    public InstanceDescription getLocalInstanceDescription() {
+    public InstanceDescription getLocalInstanceDescription() throws UndefinedClusterViewException {
     	final Iterator<InstanceDescription> it = getClusterViewService().getClusterView().getInstances().iterator();
     	while(it.hasNext()) {
     		final InstanceDescription id = it.next();
@@ -695,4 +681,11 @@ public class Instance {
         return config;
     }
 
+    public HeartbeatHandler getHeartbeatHandler() {
+        return heartbeatHandler;
+    }
+    
+    public void installVotingOnHeartbeatHandler() throws NoSuchFieldException {
+        PrivateAccessor.setField(heartbeatHandler, "votingHandler", votingHandler);
+    }
 }

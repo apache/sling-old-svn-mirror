@@ -21,13 +21,11 @@ package org.apache.sling.discovery.impl.cluster;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.UUID;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.discovery.ClusterView;
@@ -36,7 +34,6 @@ import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.common.View;
 import org.apache.sling.discovery.impl.common.ViewHelper;
 import org.apache.sling.discovery.impl.common.resource.EstablishedClusterView;
-import org.apache.sling.discovery.impl.common.resource.IsolatedInstanceDescription;
 import org.apache.sling.settings.SlingSettingsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,34 +59,6 @@ public class ClusterViewServiceImpl implements ClusterViewService {
     @Reference
     private Config config;
 
-    /** the cluster view id of the isolated cluster view */
-    private String isolatedClusterViewId = UUID.randomUUID().toString();
-
-    public String getIsolatedClusterViewId() {
-        return isolatedClusterViewId;
-    }
-
-    private ClusterView getIsolatedClusterView() {
-        ResourceResolver resourceResolver = null;
-        try {
-            resourceResolver = resourceResolverFactory
-                    .getAdministrativeResourceResolver(null);
-            Resource instanceResource = resourceResolver
-                    .getResource(config.getClusterInstancesPath() + "/"
-                            + getSlingId());
-            IsolatedInstanceDescription ownInstance = new IsolatedInstanceDescription(instanceResource,
-                    isolatedClusterViewId, getSlingId());
-            return ownInstance.getClusterView();
-        } catch (LoginException e) {
-            logger.error("Could not do a login: " + e, e);
-            throw new RuntimeException("Could not do a login", e);
-        } finally {
-            if (resourceResolver != null) {
-                resourceResolver.close();
-            }
-        }
-    }
-
     public String getSlingId() {
     	if (settingsService==null) {
     		return null;
@@ -97,9 +66,8 @@ public class ClusterViewServiceImpl implements ClusterViewService {
         return settingsService.getSlingId();
     }
 
-    public boolean contains(final String slingId) {
-        List<InstanceDescription> localInstances = getClusterView()
-                .getInstances();
+    public boolean contains(final String slingId) throws UndefinedClusterViewException {
+        List<InstanceDescription> localInstances = getClusterView().getInstances();
         for (Iterator<InstanceDescription> it = localInstances.iterator(); it
                 .hasNext();) {
             InstanceDescription aLocalInstance = it.next();
@@ -111,7 +79,8 @@ public class ClusterViewServiceImpl implements ClusterViewService {
         return false;
     }
 
-    public boolean containsAny(Collection<InstanceDescription> listInstances) {
+    public boolean containsAny(Collection<InstanceDescription> listInstances) 
+            throws UndefinedClusterViewException{
         for (Iterator<InstanceDescription> it = listInstances.iterator(); it
                 .hasNext();) {
             InstanceDescription instanceDescription = it.next();
@@ -122,10 +91,10 @@ public class ClusterViewServiceImpl implements ClusterViewService {
         return false;
     }
 
-    public ClusterView getClusterView() {
+    public ClusterView getClusterView() throws UndefinedClusterViewException {
     	if (resourceResolverFactory==null) {
     		logger.warn("getClusterView: no resourceResolverFactory set at the moment.");
-    		return null;
+    		throw new UndefinedClusterViewException("no resourceResolverFactory set");
     	}
         ResourceResolver resourceResolver = null;
         try {
@@ -135,7 +104,7 @@ public class ClusterViewServiceImpl implements ClusterViewService {
             View view = ViewHelper.getEstablishedView(resourceResolver, config);
             if (view == null) {
                 logger.debug("getClusterView: no view established at the moment. isolated mode");
-                return getIsolatedClusterView();
+                throw new UndefinedClusterViewException("no established view at the moment");
             }
 
             EstablishedClusterView clusterViewImpl = new EstablishedClusterView(
@@ -155,12 +124,12 @@ public class ClusterViewServiceImpl implements ClusterViewService {
                 logger.info("getClusterView: the existing established view does not incude the local instance ("+getSlingId()+") yet! Assuming isolated mode. "
                         + "If this occurs at runtime - other than at startup - it could cause a pseudo-network-partition, see SLING-3432. "
                         + "Consider increasing heartbeatTimeout then!");
-                return getIsolatedClusterView();
+                throw new UndefinedClusterViewException("established view does not include local instance - isolated");
             }
         } catch (LoginException e) {
             logger.error(
                     "handleEvent: could not log in administratively: " + e, e);
-            return null;
+            throw new UndefinedClusterViewException("could not log in administratively: "+e);
         } finally {
             if (resourceResolver != null) {
                 resourceResolver.close();
