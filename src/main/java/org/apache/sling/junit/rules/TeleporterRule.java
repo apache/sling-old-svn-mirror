@@ -41,6 +41,7 @@ public abstract class TeleporterRule extends ExternalResource {
     public static interface Customizer {
         void customize(TeleporterRule t, String options);
     }
+    private String clientSetupOptions;
 
     /** Meant to be instantiated via {@link #forClass} */
     protected TeleporterRule() {
@@ -72,7 +73,6 @@ public abstract class TeleporterRule extends ExternalResource {
         
         if(isServerSide()) {
             result = new ServerSideTeleporter();
-            result.setClassUnderTest(classUnderTest);
         } else {
             // Client-side. Instantiate the class dynamically to 
             // avoid bringing its dependencies into this module when
@@ -82,28 +82,33 @@ public abstract class TeleporterRule extends ExternalResource {
             } catch(Exception e) {
                 throw new RuntimeException("Unable to instantiate Teleporter client " + CLIENT_CLASS, e);
             }
-            
-            result.setClassUnderTest(classUnderTest);
-            
-            if(clientSetupOptions != null && !clientSetupOptions.isEmpty()) {
-                String customizerClassName = clientSetupOptions;
-                String customizerOptions = "";
-                final int firstColon = clientSetupOptions.indexOf(":");
-                if(firstColon > 0) {
-                    customizerClassName = clientSetupOptions.substring(0, firstColon);
-                    customizerOptions = clientSetupOptions.substring(firstColon + 1);
-                }
-                // If a short name is used, transform it using our pattern. Simplifies referring
-                // to these customizers in test code, without having to make the customizer
-                // classes accessible to this bundle
-                if(!customizerClassName.contains(".")) {
-                    customizerClassName = CUSTOMIZER_PATTERN.replace("<NAME>", customizerClassName);
-                }
-                createInstance(Customizer.class, customizerClassName).customize(result, customizerOptions);
-            }
         }
         
+        result.clientSetupOptions = clientSetupOptions;
+        result.setClassUnderTest(classUnderTest);
         return result;
+    }
+
+    /** Use a Customizer, if one was defined, to customize this Rule */
+    protected void customize() {
+        // As with the client-side rule implementation, instantiate our Customizer
+        // dynamically to avoid requiring its class on the server side.
+        if(!isServerSide() && (clientSetupOptions != null) && !clientSetupOptions.isEmpty()) {
+            String customizerClassName = clientSetupOptions;
+            String customizerOptions = "";
+            final int firstColon = clientSetupOptions.indexOf(":");
+            if(firstColon > 0) {
+                customizerClassName = clientSetupOptions.substring(0, firstColon);
+                customizerOptions = clientSetupOptions.substring(firstColon + 1);
+            }
+            // If a short name is used, transform it using our pattern. Simplifies referring
+            // to these customizers in test code, without having to make the customizer
+            // classes accessible to this bundle
+            if(!customizerClassName.contains(".")) {
+                customizerClassName = CUSTOMIZER_PATTERN.replace("<NAME>", customizerClassName);
+            }
+            createInstance(Customizer.class, customizerClassName).customize(this, customizerOptions);
+        }
     }
     
     @SuppressWarnings("unchecked")
