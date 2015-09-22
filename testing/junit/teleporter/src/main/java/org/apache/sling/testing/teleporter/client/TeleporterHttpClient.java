@@ -34,25 +34,28 @@ import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 import org.junit.runners.model.MultipleFailureException;
 
-
 /** Barebones HTTP client that supports just what the teleporter needs,
- *  with no dependencies outstide of java.*. Prevents us from imposing
- *  a particular HTTP client version. 
+ *  with no dependencies outside of java.* and org.junit. Prevents us 
+ *  from imposing a particular HTTP client version. 
  */
 class TeleporterHttpClient {
     private final String CHARSET = "UTF-8";
     private final String baseUrl;
-    
-    // TODO dynamic/configurable!!
-    private final String credentials = "admin:admin";
+    private String credentials = null;
     
     TeleporterHttpClient(String baseUrl) {
         this.baseUrl = baseUrl;
     }
 
-    public void setCredentials(URLConnection c) {
-        final String basicAuth = "Basic " + new String(DatatypeConverter.printBase64Binary(credentials.getBytes()));
-        c.setRequestProperty ("Authorization", basicAuth);
+    void setCredentials(String cred) {
+        credentials = cred;
+    }
+    
+    public void setConnectionCredentials(URLConnection c) {
+        if(credentials != null && !credentials.isEmpty()) {
+            final String basicAuth = "Basic " + new String(DatatypeConverter.printBase64Binary(credentials.getBytes()));
+            c.setRequestProperty ("Authorization", basicAuth);
+        }
     }
     
     void installBundle(InputStream bundle, String bundleSymbolicName) throws MalformedURLException, IOException {
@@ -63,7 +66,7 @@ class TeleporterHttpClient {
         final HttpURLConnection c = (HttpURLConnection)new URL(url).openConnection();
         
         try {
-            setCredentials(c);
+            setConnectionCredentials(c);
             new MultipartAdapter(c, CHARSET)
             .parameter("action", "install")
             .parameter("bundlestart", "1")
@@ -85,7 +88,7 @@ class TeleporterHttpClient {
         final HttpURLConnection c = (HttpURLConnection)new URL(url).openConnection();
         
         try {
-            setCredentials(c);
+            setConnectionCredentials(c);
             new MultipartAdapter(c, CHARSET)
             .parameter("action", "uninstall")
             .close();
