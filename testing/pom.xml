@@ -52,6 +52,7 @@
     <module>junit/healthcheck</module>
     <module>junit/remote</module>
     <module>junit/performance</module>
+    <module>junit/teleporter</module>
     <module>mocks/logging-mock</module>
     <module>mocks/resourceresolver-mock</module>
     <module>mocks/jcr-mock</module>
@@ -63,7 +64,6 @@
     <module>samples/sample-tests</module>
     <module>samples/failing-tests</module>
     <module>samples/integration-tests</module>
-    <module>teleporter</module>
   </modules>
 
 </project>
