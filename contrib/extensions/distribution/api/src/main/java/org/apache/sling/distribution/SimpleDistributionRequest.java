@@ -18,6 +18,8 @@
  */
 package org.apache.sling.distribution;
 
+import aQute.bnd.annotation.ProviderType;
+
 import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -26,6 +28,7 @@ import java.util.Set;
 /**
  * A {@link SimpleDistributionRequest} is a {@link DistributionRequest} where all paths are either "deep" or "shallow".
  */
+@ProviderType
 public final class SimpleDistributionRequest implements DistributionRequest {
 
 
@@ -57,6 +60,7 @@ public final class SimpleDistributionRequest implements DistributionRequest {
      * Creates a distribution request with "shallow" paths.
      * @param requestType the request type
      * @param paths the array of paths to be distributed
+     * @param deepPaths the set of paths that are to be distributed in depth (with all their children)
      */
     public SimpleDistributionRequest(@Nonnull DistributionRequestType requestType, @Nonnull String[] paths, @Nonnull Set<String> deepPaths) {
         this.requestType = requestType;
