@@ -353,16 +353,11 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     @Override
     public Iterator<Resource> findResources(final String query, final String language) {
         List<StatefulResourceProvider> querableRP = getQuerableProviders(language);
-        @SuppressWarnings("unchecked")
-        Iterator<Iterator<Resource>> iterators = IteratorUtils.transformedIterator(querableRP.iterator(),
-                new Transformer() {
-                    @Override
-                    public Object transform(Object input) {
-                        StatefulResourceProvider rp = (StatefulResourceProvider) input;
-                        return rp.findResources(query, language);
-                    }
-                });
-        return new ChainedIterator<Resource>(iterators);
+        List<Iterator<Resource>> iterators = new ArrayList<Iterator<Resource>>(querableRP.size());
+        for (StatefulResourceProvider p : querableRP) {
+            iterators.add(p.findResources(query, language));
+        }
+        return new ChainedIterator<Resource>(iterators.iterator());
     }
 
     private List<StatefulResourceProvider> getQuerableProviders(String language) {
@@ -378,16 +373,11 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     @Override
     public Iterator<Map<String, Object>> queryResources(final String query, final String language) {
         List<StatefulResourceProvider> querableRP = getQuerableProviders(language);
-        @SuppressWarnings("unchecked")
-        Iterator<Iterator<Map<String, Object>>> iterators = IteratorUtils.transformedIterator(querableRP.iterator(),
-                new Transformer() {
-                    @Override
-                    public Object transform(Object input) {
-                        StatefulResourceProvider rp = (StatefulResourceProvider) input;
-                        return rp.queryResources(query, language);
-                    }
-                });
-        return new ChainedIterator<Map<String, Object>>(iterators);
+        List<Iterator<Map<String, Object>>> iterators = new ArrayList<Iterator<Map<String, Object>>>(querableRP.size());
+        for (StatefulResourceProvider p : querableRP) {
+            iterators.add(p.queryResources(query, language));
+        }
+        return new ChainedIterator<Map<String, Object>>(iterators.iterator());
     }
 
     @SuppressWarnings("unchecked")
