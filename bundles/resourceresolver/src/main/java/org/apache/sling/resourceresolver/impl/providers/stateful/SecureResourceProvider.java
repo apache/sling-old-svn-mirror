@@ -80,7 +80,7 @@ public class SecureResourceProvider extends StatefulResourceProviderWrapper {
     }
 
     private Iterator<Resource> wrapIterator(Iterator<Resource> iterator) {
-        if (tracker == null) {
+        if (!useResourceAccessSecurity || tracker == null) {
             return iterator;
         } else {
             return new SecureIterator(iterator);
@@ -92,8 +92,12 @@ public class SecureResourceProvider extends StatefulResourceProviderWrapper {
             return true;
         }
         boolean allowed = true;
-        allowed = allowed && test.isAllowed(tracker.getProviderResourceAccessSecurity());
-        allowed = allowed && test.isAllowed(tracker.getApplicationResourceAccessSecurity());
+        if (tracker.getProviderResourceAccessSecurity() != null) {
+            allowed = allowed && test.isAllowed(tracker.getProviderResourceAccessSecurity());
+        }
+        if (tracker.getApplicationResourceAccessSecurity() != null) {
+            allowed = allowed && test.isAllowed(tracker.getApplicationResourceAccessSecurity());
+        }
         return allowed;
     }
 
@@ -119,10 +123,10 @@ public class SecureResourceProvider extends StatefulResourceProviderWrapper {
         protected Resource seek() {
             while (iterator.hasNext()) {
                 Resource resource = iterator.next();
-                if (resource != null) {
+                if (resource != null && tracker.getProviderResourceAccessSecurity() != null) {
                     resource = tracker.getProviderResourceAccessSecurity().getReadableResource(resource);
                 }
-                if (resource != null) {
+                if (resource != null && tracker.getApplicationResourceAccessSecurity() != null) {
                     resource = tracker.getApplicationResourceAccessSecurity().getReadableResource(resource);
                 }
                 if (resource != null) {

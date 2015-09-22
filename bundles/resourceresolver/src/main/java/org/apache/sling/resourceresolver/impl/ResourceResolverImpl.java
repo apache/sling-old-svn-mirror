@@ -42,7 +42,6 @@ import org.apache.sling.adapter.annotations.Adaptable;
 import org.apache.sling.adapter.annotations.Adapter;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.adapter.SlingAdaptable;
-import org.apache.sling.api.resource.DynamicResourceProvider;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.PersistenceException;
