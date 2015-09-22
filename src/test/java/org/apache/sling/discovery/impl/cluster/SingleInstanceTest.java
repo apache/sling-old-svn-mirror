@@ -80,7 +80,7 @@ public class SingleInstanceTest {
     }
 
     @Test
-    public void testGetters() throws UndefinedClusterViewException {
+    public void testGetters() throws UndefinedClusterViewException, InterruptedException {
         logger.info("testGetters: start");
         assertNotNull(instance);
         logger.info("sling id=" + instance.getSlingId());
@@ -92,6 +92,8 @@ public class SingleInstanceTest {
         }
 
         instance.runHeartbeatOnce();
+        // wait 100ms for the vote to happen
+        Thread.sleep(100);
         
         assertNotNull(instance.getClusterViewService().getClusterView());
         ClusterView cv = instance.getClusterViewService().getClusterView();
