@@ -79,7 +79,7 @@ public class FactoryPreconditions {
         synchronized ( this ) {
             boolean canRegister = false;
             if (this.requiredProviders != null) {
-                canRegister = true;
+                canRegister = false;
                 for (ResourceProviderHandler h : this.tracker.getHandlers()) {
                     for (final RequiredProvider rp : this.requiredProviders) {
                         ServiceReference ref = h.getInfo().getServiceReference();

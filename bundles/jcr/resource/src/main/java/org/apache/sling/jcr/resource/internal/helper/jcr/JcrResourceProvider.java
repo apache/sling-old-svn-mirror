@@ -65,7 +65,6 @@ import org.apache.sling.jcr.resource.internal.NodeUtil;
 import org.apache.sling.jcr.resource.internal.OakResourceListener;
 import org.apache.sling.jcr.resource.internal.ObservationListenerSupport;
 import org.apache.sling.spi.resource.provider.JCRQueryProvider;
-import org.apache.sling.spi.resource.provider.ProviderContext;
 import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
@@ -152,10 +151,12 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
         this.optimizeForOak = PropertiesUtil.toBoolean(context.getProperties().get(PROPERTY_OPTIMIZE_FOR_OAK), DEFAULT_OPTIMIZE_FOR_OAK);
         this.root = PropertiesUtil.toString(context.getProperties().get(ResourceProvider.PROPERTY_ROOT), "/");
         this.bundleCtx = context.getBundleContext();
+        registerLegacyListener();
     }
 
     @Deactivate
     protected void deactivate() {
+        unregisterLegacyListener();
     }
 
     @SuppressWarnings("unused")
@@ -172,26 +173,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
         }
     }
 
-    @Override
-    public void activate(@Nonnull ProviderContext ctx) {
-        super.activate(ctx);
-        registerListener(ctx);
-    }
-
-    @Override
-    public void deactivate(@Nonnull ProviderContext ctx) {
-        super.deactivate(ctx);
-        unregisterListener();
-    }
-
-    @Override
-    public void update(@Nonnull ProviderContext ctx) {
-        super.update(ctx);
-        unregisterListener();
-        registerListener(ctx);
-    }
-
-    private void registerListener(@Nonnull ProviderContext ctx) {
+    private void registerLegacyListener() {
         // check for Oak
         boolean isOak = false;
         if ( optimizeForOak ) {
@@ -231,7 +213,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
         }
     }
 
-    private void unregisterListener() {
+    private void unregisterLegacyListener() {
         if ( this.listener != null ) {
             try {
                 this.listener.close();
@@ -301,7 +283,10 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     public @CheckForNull Resource getParent(final @Nonnull ResolveContext<JcrProviderState> ctx, final @Nonnull Resource child) {
         if (child instanceof JcrItemResource<?>) {
             try {
-                String version = ctx.getResolveParameters().get("v");
+                String version = null;
+                if (ctx.getResolveParameters() != null) {
+                    version = ctx.getResolveParameters().get("v");
+                }
                 if (version == null) {
                     Item item = ((JcrItemResource<?>) child).getItem();
                     if ("/".equals(item.getPath())) {

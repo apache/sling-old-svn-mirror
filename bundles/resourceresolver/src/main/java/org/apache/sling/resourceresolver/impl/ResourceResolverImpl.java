@@ -1182,7 +1182,12 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         }
         // experimental code for handling synthetic resources
         if ( ResourceUtil.isSyntheticResource(parent) ) {
-            this.create(parent.getParent(), parent.getName(), null);
+            Resource grandParent = parent.getParent();
+            if (grandParent != null) {
+                this.create(grandParent, parent.getName(), null);
+            } else {
+                throw new IllegalArgumentException("Can't create child on a synthetic root");
+            }
         }
         final Resource rsrc = this.provider.create(path, properties);
         return this.factory.getResourceDecoratorTracker().decorate(rsrc);

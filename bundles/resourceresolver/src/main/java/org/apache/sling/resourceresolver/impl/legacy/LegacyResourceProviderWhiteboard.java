@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
@@ -70,8 +71,8 @@ public class LegacyResourceProviderWhiteboard {
             Dictionary<String, Object> newProps = new Hashtable<String, Object>();
             newProps.put(PROPERTY_AUTHENTICATE, AuthType.no.toString());
             newProps.put(PROPERTY_MODIFIABLE, provider instanceof ModifyingResourceProvider);
-            newProps.put(PROPERTY_NAME, provider.getClass().getName() + "-legacy");
-            newProps.put(PROPERTY_ROOT, path);
+            newProps.put(PROPERTY_NAME, provider.getClass().getName());
+            newProps.put(PROPERTY_ROOT, normalizePath(path));
             if (ArrayUtils.contains(propertyNames, USE_RESOURCE_ACCESS_SECURITY)) {
                 newProps.put(PROPERTY_USE_RESOURCE_ACCESS_SECURITY, ref.getProperty(USE_RESOURCE_ACCESS_SECURITY));
             }
@@ -108,8 +109,8 @@ public class LegacyResourceProviderWhiteboard {
                 newProps.put(PROPERTY_AUTHENTICATE, AuthType.lazy.toString());
             }
             newProps.put(PROPERTY_MODIFIABLE, true);
-            newProps.put(PROPERTY_NAME, factory.getClass().getName() + "-legacy");
-            newProps.put(PROPERTY_ROOT, path);
+            newProps.put(PROPERTY_NAME, factory.getClass().getName());
+            newProps.put(PROPERTY_ROOT, normalizePath(path));
             if (ArrayUtils.contains(propertyNames, USE_RESOURCE_ACCESS_SECURITY)) {
                 newProps.put(PROPERTY_USE_RESOURCE_ACCESS_SECURITY, ref.getProperty(USE_RESOURCE_ACCESS_SECURITY));
             }
@@ -130,5 +131,14 @@ public class LegacyResourceProviderWhiteboard {
         for (ServiceRegistration r : registrations.remove(factory)) {
             r.unregister();
         }
+    }
+
+    private static String normalizePath(String path) {
+        String result = path;
+        result = StringUtils.removeEnd(path, "/");
+        if (result != null && !result.startsWith("/")) {
+            result = "/" + result;
+        }
+        return result;
     }
 }
