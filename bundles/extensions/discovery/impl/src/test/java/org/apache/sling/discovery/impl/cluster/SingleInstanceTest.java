@@ -130,6 +130,8 @@ public class SingleInstanceTest {
         instance.bindPropertyProvider(pp, propertyName);
 
         instance.runHeartbeatOnce();
+        // wait 100ms for the vote to happen
+        Thread.sleep(100);
         assertEquals(propertyValue,
                 instance.getClusterViewService().getClusterView()
                         .getInstances().get(0).getProperty(propertyName));
