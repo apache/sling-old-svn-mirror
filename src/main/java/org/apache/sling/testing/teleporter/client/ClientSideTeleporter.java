@@ -95,6 +95,8 @@ public class ClientSideTeleporter extends TeleporterRule {
     
     @Override
     public Statement apply(final Statement base, final Description description) {
+        customize();
+        
         if(baseUrl == null) {
             fail("base URL is not set");
         }
