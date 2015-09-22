@@ -79,7 +79,7 @@ import org.slf4j.LoggerFactory;
 @Properties({ @Property(name = ResourceProvider.PROPERTY_NAME, value = "JCR"),
         @Property(name = ResourceProvider.PROPERTY_ROOT, value = "/"),
         @Property(name = ResourceProvider.PROPERTY_MODIFIABLE, boolValue = true),
-        @Property(name = ResourceProvider.PROPERTY_AUTHENTICATE, value = ResourceProvider.AUTHENTICATE_LAZY) })
+        @Property(name = ResourceProvider.PROPERTY_AUTHENTICATE, value = ResourceProvider.AUTHENTICATE_REQUIRED) })
 public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
 
     /** Logger */
