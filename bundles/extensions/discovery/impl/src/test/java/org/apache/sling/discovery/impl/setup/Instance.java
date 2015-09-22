@@ -594,6 +594,10 @@ public class Instance {
     public void dumpRepo() throws Exception {
         dumpRepo(resourceResolverFactory);
     }
+    
+    public ResourceResolverFactory getResourceResolverFactory() {
+        return resourceResolverFactory;
+    }
 
     public static void dumpRepo(ResourceResolverFactory resourceResolverFactory) throws Exception {
         Session session = resourceResolverFactory
@@ -687,5 +691,12 @@ public class Instance {
     
     public void installVotingOnHeartbeatHandler() throws NoSuchFieldException {
         PrivateAccessor.setField(heartbeatHandler, "votingHandler", votingHandler);
+    }
+
+    public void stopVoting() {
+        if (observationListener!=null) {
+            observationListener.stop();
+            observationListener = null;
+        }
     }
 }

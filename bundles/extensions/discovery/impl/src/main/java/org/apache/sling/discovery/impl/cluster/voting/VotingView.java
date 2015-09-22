@@ -25,6 +25,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+import javax.jcr.ValueFormatException;
+
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -298,8 +302,21 @@ public class VotingView extends View {
         if (vote == null) {
             memberMap.remove("vote");
         } else {
-            memberMap.put("vote", vote);
-            memberMap.put("votedAt", Calendar.getInstance());
+            boolean shouldVote = true;
+            try {
+                if (memberMap.containsKey("vote") && ((Property)memberMap.get("vote")).getBoolean()==vote) {
+                    logger.debug("vote: already voted, with same vote ("+vote+"), not voting again");
+                    shouldVote = false;
+                }
+            } catch (ValueFormatException e) {
+                logger.warn("vote: got a ValueFormatException: "+e, e);
+            } catch (RepositoryException e) {
+                logger.warn("vote: got a RepositoryException: "+e, e);
+            }
+            if (shouldVote) {
+                memberMap.put("vote", vote);
+                memberMap.put("votedAt", Calendar.getInstance());
+            }
         }
         try {
             getResource().getResourceResolver().commit();

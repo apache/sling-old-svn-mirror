@@ -23,21 +23,32 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.Serializable;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.jcr.Property;
+
+import org.apache.sling.api.resource.ModifiableValueMap;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.discovery.impl.DiscoveryServiceImpl;
+import org.apache.sling.discovery.impl.cluster.voting.VotingHelper;
+import org.apache.sling.discovery.impl.cluster.voting.VotingView;
 import org.apache.sling.discovery.impl.setup.Instance;
 import org.junit.After;
 import org.junit.Test;
@@ -427,4 +438,83 @@ public class HeartbeatTest {
             }
         });
     }
+
+    /**
+     * SLING-5027 : test to reproduce the voting loop
+     * (and verify that it's fixed)
+     */
+    @Test
+    public void testVotingLoop() throws Throwable {
+        Instance slowMachine1 = Instance.newStandaloneInstance("/var/discovery/impl/", "slow1", true, 600 /*600sec timeout*/, 
+                999 /* 999sec interval: to disable it*/, 0, UUID.randomUUID().toString());
+        instances.add(slowMachine1);
+        SimpleTopologyEventListener slowListener1 = new SimpleTopologyEventListener("slow1");
+        slowMachine1.bindTopologyEventListener(slowListener1);
+        Instance slowMachine2 = Instance.newClusterInstance("/var/discovery/impl/", "slow2", slowMachine1, false, 600, 999, 0);
+        instances.add(slowMachine2);
+        SimpleTopologyEventListener slowListener2 = new SimpleTopologyEventListener("slow2");
+        slowMachine2.bindTopologyEventListener(slowListener2);
+        Instance fastMachine = Instance.newClusterInstance("/var/discovery/impl/", "fast", slowMachine1, false, 600, 999, 0);
+        instances.add(fastMachine);
+        SimpleTopologyEventListener fastListener = new SimpleTopologyEventListener("fast");
+        fastMachine.bindTopologyEventListener(fastListener);
+        HeartbeatHandler hhSlow1 = slowMachine1.getHeartbeatHandler();
+        HeartbeatHandler hhSlow2 = slowMachine2.getHeartbeatHandler();
+        HeartbeatHandler hhFast = fastMachine.getHeartbeatHandler();
+        
+        Thread.sleep(1000);
+        assertFalse(fastMachine.getDiscoveryService().getTopology().isCurrent());
+        assertFalse(slowMachine1.getDiscoveryService().getTopology().isCurrent());
+        assertFalse(slowMachine2.getDiscoveryService().getTopology().isCurrent());
+        assertNull(fastListener.getLastEvent());
+        assertNull(slowListener1.getLastEvent());
+        assertNull(slowListener2.getLastEvent());
+
+        // prevent the slow machine from voting
+        slowMachine1.stopVoting();
+        
+        // now let all issue a heartbeat
+        hhSlow1.issueHeartbeat();
+        hhSlow2.issueHeartbeat();
+        hhFast.issueHeartbeat();
+
+        // now let the fast one start a new voting, to which
+        // only the fast one will vote, the slow one doesn't.
+        // that will cause a voting loop
+        hhFast.checkView();
+        
+        Calendar previousVotedAt = null;
+        for(int i=0; i<5; i++) {
+            Thread.sleep(1000);
+            // now check the ongoing votings
+            ResourceResolverFactory factory = fastMachine.getResourceResolverFactory();
+            ResourceResolver resourceResolver = factory
+                    .getAdministrativeResourceResolver(null);
+            try{
+                List<VotingView> ongoingVotings = 
+                        VotingHelper.listOpenNonWinningVotings(resourceResolver, fastMachine.getConfig());
+                assertNotNull(ongoingVotings);
+                assertEquals(1, ongoingVotings.size());
+                VotingView ongoingVote = ongoingVotings.get(0);
+                assertFalse(ongoingVote.isWinning());
+                assertFalse(ongoingVote.hasVotedOrIsInitiator(slowMachine1.getSlingId()));
+                assertTrue(ongoingVote.hasVotedOrIsInitiator(slowMachine2.getSlingId()));
+                final Resource memberResource = ongoingVote.getResource().getChild("members").getChild(slowMachine2.getSlingId());
+                final ModifiableValueMap memberMap = memberResource.adaptTo(ModifiableValueMap.class);
+                Property vote = (Property) memberMap.get("vote");
+                assertEquals(Boolean.TRUE, vote.getBoolean());
+                Property votedAt = (Property) memberMap.get("votedAt");
+                if (previousVotedAt==null) {
+                    previousVotedAt = votedAt.getDate();
+                } else {
+                    assertEquals(previousVotedAt, votedAt.getDate());
+                }
+            } catch(Exception e) {
+                resourceResolver.close();
+                fail("Exception: "+e);
+            }
+        }
+        
+    }
+    
 }
