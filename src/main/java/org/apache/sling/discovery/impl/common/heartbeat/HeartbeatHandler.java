@@ -209,14 +209,20 @@ public class HeartbeatHandler implements Runnable, StartupListener {
      * a reference on us - but we cant have circular references in osgi).
      * <p>
      * The initialVotingId is used to avoid an unnecessary topologyChanged event
-     * when switching form isolated to established view but with only the local
-     * instance in the view.
+     * when starting up an instance in a 1-node cluster: the instance
+     * will wait until the first voting has been finished to send
+     * the TOPOLOGY_INIT event - BUT even before that the API method
+     * getTopology() is open - so if anyone asks for the topology
+     * BEFORE the first voting in a 1-node cluster is done, it gets
+     * a particular clusterId - that one we aim to reuse for the first
+     * voting.
      */
     public void initialize(final DiscoveryServiceImpl discoveryService,
             final String initialVotingId) {
         synchronized(lock) {
         	this.discoveryService = discoveryService;
         	this.nextVotingId = initialVotingId;
+        	logger.info("initialize: nextVotingId="+nextVotingId);
             issueHeartbeat();
         }
 
@@ -281,7 +287,7 @@ public class HeartbeatHandler implements Runnable, StartupListener {
      * and then a remote heartbeat (to all the topology connectors
      * which announce this part of the topology to others)
      */
-    private void issueHeartbeat() {
+    void issueHeartbeat() {
         if (discoveryService == null) {
             logger.error("issueHeartbeat: discoveryService is null");
         } else {
@@ -462,7 +468,7 @@ public class HeartbeatHandler implements Runnable, StartupListener {
     /** Check whether the established view matches the reality, ie matches the
      * heartbeats
      */
-    private void checkView() {
+    void checkView() {
         // check the remotes first
         if (announcementRegistry == null) {
             logger.error("announcementRegistry is null");

@@ -32,19 +32,18 @@ public interface ClusterViewService {
     /** the sling id of the local instance **/
     String getSlingId();
 
-    /** the current cluster view **/
-    ClusterView getClusterView();
-
     /**
-     * the view id of the cluster view when isolated - ie before any view is
-     * established
-     **/
-    String getIsolatedClusterViewId();
+     * the current cluster view
+     * @return the current cluster view - never returns null
+     * @throws UndefinedClusterViewException
+     */
+    ClusterView getClusterView() throws UndefinedClusterViewException;
 
     /** checks whether the cluster view contains a particular sling id **/
-    boolean contains(String slingId);
+    boolean contains(String slingId) throws UndefinedClusterViewException;
 
     /** checks whether the cluster contains any of the provided instances **/
-    boolean containsAny(Collection<InstanceDescription> listInstances);
+    boolean containsAny(Collection<InstanceDescription> listInstances) 
+            throws UndefinedClusterViewException;
 
 }

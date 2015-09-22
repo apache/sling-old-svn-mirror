@@ -50,12 +50,18 @@ public class TopologyTest {
     
     @Test
     public void testTwoNodes() throws Throwable {
-        Instance instance1 = TopologyTestHelper.createInstance(instances, "instance1");
-        Instance instance2 = TopologyTestHelper.createInstance(instances, "instance2");
+        Instance instance1 = TopologyTestHelper.createInstance(instances, "/var/discovery/impl1/", "instance1", true, 200, 20, 1);
+        Instance instance2 = TopologyTestHelper.createInstance(instances, "/var/discovery/impl2/", "instance2", false, 200, 20, 1);
         instance1.getConfig().setHeartbeatTimeout(8);
         instance1.getConfig().setHeartbeatInterval(1);
         instance2.getConfig().setHeartbeatTimeout(2);
         instance2.getConfig().setHeartbeatInterval(1);
+        
+        for(int i=0; i<5; i++) {
+            instance1.runHeartbeatOnce();
+            instance2.runHeartbeatOnce();
+            Thread.sleep(500);
+        }
         
         Set<InstanceDescription> instances1 = instance1.getDiscoveryService().getTopology().getInstances();
         Set<InstanceDescription> instances2 = instance2.getDiscoveryService().getTopology().getInstances();

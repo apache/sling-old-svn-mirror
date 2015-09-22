@@ -20,9 +20,9 @@ package org.apache.sling.discovery.impl.cluster;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
-import java.util.Iterator;
 import java.util.UUID;
 
 import org.apache.log4j.Level;
@@ -76,6 +76,7 @@ public class TopologyEventTest {
     
     /**
      * Tests the fact that the INIT event is delayed until voting has succeeded
+     * (which is the default with SLIGN-5030 and SLING-4959
      * @throws Throwable 
      */
     @Test
@@ -83,7 +84,7 @@ public class TopologyEventTest {
         logger.info("testDelayedInitEvent: start");
         instance1 = Instance.newStandaloneInstance("/var/discovery/impl/", 
                 "firstInstanceA", true, 20 /* heartbeat-timeout */, 3 /*min event delay*/,
-                UUID.randomUUID().toString(), true /*delayInitEventUntilVoted*/);
+                UUID.randomUUID().toString());
         AssertingTopologyEventListener l1 = new AssertingTopologyEventListener("instance1.l1");
         instance1.bindTopologyEventListener(l1);
         logger.info("testDelayedInitEvent: instance1 created, no events expected yet. slingId="+instance1.slingId);
@@ -114,7 +115,7 @@ public class TopologyEventTest {
         
         logger.info("testDelayedInitEvent: creating instance2");
         instance2 = Instance.newClusterInstance("/var/discovery/impl/", 
-                "secondInstanceB", instance1, false, 20, 3, UUID.randomUUID().toString(), true);
+                "secondInstanceB", instance1, false, 20, 3, UUID.randomUUID().toString());
         logger.info("testDelayedInitEvent: instance2 created with slingId="+instance2.slingId);
         AssertingTopologyEventListener l2 = new AssertingTopologyEventListener("instance2.l2");
         instance2.bindTopologyEventListener(l2);
@@ -182,146 +183,68 @@ public class TopologyEventTest {
         logger.info("testDelayedInitEvent: end");
     }
     
-    /**
-     * Tests the fact that the INIT event is NOT delayed (until voting has succeeded)
-     * when the config is set accordingly (ie: config test).
-     * @throws Throwable 
-     */
     @Test
-    public void testNonDelayedInitEvent() throws Throwable {
-        logger.info("testNonDelayedInitEvent: start");
+    public void testGetDuringDelay() throws Throwable {
         instance1 = Instance.newStandaloneInstance("/var/discovery/impl/", 
-                "firstInstanceB", true, 20 /* heartbeat-timeout */, 10 /*min event delay*/,
-                UUID.randomUUID().toString(), false /*delayInitEventUntilVoted*/);
-        AssertingTopologyEventListener l1 = new AssertingTopologyEventListener("instance1.l1") {
-            private volatile boolean firstEvent = false;
-            @Override
-            public void handleTopologyEvent(TopologyEvent event) {
-                super.handleTopologyEvent(event);
-                if (firstEvent) {
-                    // only handle the first event - that one must be INIT with isCurrent==false
-                    assertFalse(event.getNewView().isCurrent());
-                    firstEvent = false;
-                }
-            }
-        };
-        l1.addExpected(Type.TOPOLOGY_INIT);
+                "firstInstanceA", true, 20 /* heartbeat-timeout */, 6 /*min event delay*/,
+                UUID.randomUUID().toString());
+        AssertingTopologyEventListener l1 = new AssertingTopologyEventListener("instance1.l1");
+        l1.addExpected(TopologyEvent.Type.TOPOLOGY_INIT);
         instance1.bindTopologyEventListener(l1);
-
-        Thread.sleep(500); // SLING-4755: async event sending requires some minimal wait time nowadays
         
-        // when delayInitEventUntilVoted is disabled, the INIT event is sent immediately
-        assertEquals(1, l1.getEvents().size());
-        assertEquals(0, l1.getUnexpectedCount());
-        assertEquals(0, l1.getRemainingExpectedCount());
-
-        instance1.runHeartbeatOnce();
-        Thread.sleep(1000);
-        // no further event now:
-        assertEquals(1, l1.getEvents().size());
-        assertEquals(0, l1.getUnexpectedCount());
-        assertEquals(0, l1.getRemainingExpectedCount());
+        TopologyView earlyTopo = instance1.getDiscoveryService().getTopology();
+        assertNotNull(earlyTopo);
+        assertFalse(earlyTopo.isCurrent());
+        assertEquals(1, earlyTopo.getInstances().size());
         
-        instance1.runHeartbeatOnce();
-        // still no further event, only INIT
-        assertEquals(1, l1.getEvents().size());
-        assertEquals(0, l1.getRemainingExpectedCount());
-        assertEquals(0, l1.getUnexpectedCount());
-        
-        instance2 = Instance.newClusterInstance("/var/discovery/impl/", 
-                "secondInstanceB", instance1, false, 20, 10, UUID.randomUUID().toString(), false);
-        AssertingTopologyEventListener l2 = new AssertingTopologyEventListener("instance2.l2");
-        l2.addExpected(Type.TOPOLOGY_INIT);
-        instance2.bindTopologyEventListener(l2);
-        AssertingTopologyEventListener l1Two = new AssertingTopologyEventListener("instance1.l1Two");
-        l1Two.addExpected(Type.TOPOLOGY_INIT);
-        instance1.bindTopologyEventListener(l1Two);
-        
-        Thread.sleep(500); // SLING-4755: async event sending requires some minimal wait time nowadays
-
-        // just because instance2 is started doesn't kick off any events yet 
-        // since instance2 didn't send heartbeats yet
-        assertEquals(1, l1.getEvents().size()); // one event
-        assertEquals(0, l1.getRemainingExpectedCount()); // the expected one
-        assertEquals(0, l1.getUnexpectedCount());
-        assertEquals(1, l2.getEvents().size());
-        assertEquals(0, l2.getUnexpectedCount());
-        assertEquals(1, l1Two.getEvents().size());
-        assertEquals(0, l1Two.getRemainingExpectedCount()); // the expected one
-        assertEquals(0, l1Two.getUnexpectedCount());
-        
-        // one heartbeat doesn't change the history yet
-        instance1.runHeartbeatOnce();
-        instance2.runHeartbeatOnce();
-        assertEquals(1, l1.getEvents().size()); // one event
-        assertEquals(0, l1.getUnexpectedCount());
-        assertEquals(1, l2.getEvents().size());
-        assertEquals(0, l2.getUnexpectedCount());
-        assertEquals(1, l1Two.getEvents().size());
-        assertEquals(0, l1Two.getUnexpectedCount());
-        
-        // the second & third heartbeat though triggers the voting etc
-        l1.addExpected(Type.TOPOLOGY_CHANGING);
-        l1Two.addExpected(Type.TOPOLOGY_CHANGING);
-        l2.addExpected(Type.TOPOLOGY_CHANGING);
-        instance1.runHeartbeatOnce();
-        instance2.runHeartbeatOnce();
-        Thread.sleep(1500);
-        instance1.runHeartbeatOnce();
-        instance2.runHeartbeatOnce();
-        Thread.sleep(1500);
-        logger.info("testNonDelayedInitEvent: instance1: "+instance1.slingId);
-        logger.info("testNonDelayedInitEvent: instance2: "+instance2.slingId);
+        for(int i=0; i<4; i++) {
+            instance1.runHeartbeatOnce();
+            Thread.sleep(125);
+        }
+        TopologyView secondTopo = instance1.getDiscoveryService().getTopology();
+        assertEquals(1, secondTopo.getInstances().size());
+        assertEquals(instance1.getSlingId(), secondTopo.getInstances().iterator().next().getSlingId());
+        assertTrue(secondTopo.isCurrent());
         instance1.dumpRepo();
-        assertEquals(0, l1.getUnexpectedCount());
-        assertEquals(2, l1.getEvents().size());
-        assertEquals(0, l2.getUnexpectedCount());
-        assertEquals(2, l2.getEvents().size());
-        assertEquals(0, l1Two.getUnexpectedCount());
-        assertEquals(2, l1Two.getEvents().size());
-        
-        // now meanwhile - for SLING-4638 : register a listener 'late':
-        // this one should get an INIT with a newView that has isCurrent()==false
-        AssertingTopologyEventListener late = new AssertingTopologyEventListener("instance1.late") {
-            @Override
-            public void handleTopologyEvent(TopologyEvent event) {
-                super.handleTopologyEvent(event);
-                if (event.getType()==Type.TOPOLOGY_INIT) {
-                    // also check if the newView has isCurrent==false
-                    if (event.getNewView().isCurrent()) {
-                        fail("for TOPOLOGY_INIT: new view is expected to be not current, but it is: "+event);
-                    }
-                    // plus lets now directly ask the discovery service for getTopology and check that
-                    TopologyView topology = instance1.getDiscoveryService().getTopology();
-                    if (topology.isCurrent()) {
-                        fail("for TOPOLOGY_INIT: discovery service is expected to have a topology that is not current, but it is: "+topology);
-                    }
-                }
-            }
-        };
-        late.addExpected(Type.TOPOLOGY_INIT);
-        instance1.bindTopologyEventListener(late);
+        assertEquals(earlyTopo.getLocalInstance().getClusterView().getId(),
+                secondTopo.getLocalInstance().getClusterView().getId());
 
-        // wait until CHANGED is sent - which is 10 sec after CHANGING - we already waited 3 sec above, so 12sec more should be enough
-        l1.addExpected(Type.TOPOLOGY_CHANGED);
-        l1Two.addExpected(Type.TOPOLOGY_CHANGED);
-        l2.addExpected(Type.TOPOLOGY_CHANGED);
-        Thread.sleep(12000);
-        final Iterator<TopologyEvent> it = l1.getEvents().iterator();
-        while(it.hasNext()) {
-        	final TopologyEvent e = it.next();
-        	logger.info("testNonDelayedInitEvent: got event: "+e);
-        }
+        Thread.sleep(500);
+        // should have gotten the INIT, hence 0 remaining expected events
+        assertEquals(0, l1.getRemainingExpectedCount());
         assertEquals(0, l1.getUnexpectedCount());
-        assertEquals(3, l1.getEvents().size()); // one event
-        assertEquals(0, l2.getUnexpectedCount());
-        assertEquals(3, l2.getEvents().size());
-        assertEquals(0, l1Two.getUnexpectedCount());
-        assertEquals(3, l1Two.getEvents().size());
-        if (late.getErrorMsg()!=null) {
-            fail(late.getErrorMsg());
+        
+        l1.addExpected(TopologyEvent.Type.TOPOLOGY_CHANGING);
+        instance2 = Instance.newClusterInstance("/var/discovery/impl/", 
+                "secondInstanceB", instance1, false, 20, 1, UUID.randomUUID().toString());
+        AssertingTopologyEventListener l2 = new AssertingTopologyEventListener("instance2.l1");
+        l2.addExpected(TopologyEvent.Type.TOPOLOGY_INIT);
+        instance2.bindTopologyEventListener(l2);
+
+        for(int i=0; i<4; i++) {
+            instance2.runHeartbeatOnce();
+            instance1.runHeartbeatOnce();
+            Thread.sleep(750);
         }
-        logger.info("testNonDelayedInitEvent: end");
+        
+        assertEquals(0, l1.getUnexpectedCount());
+        TopologyView topo2 = instance2.getDiscoveryService().getTopology();
+        assertTrue(topo2.isCurrent());
+        assertEquals(2, topo2.getInstances().size());
+        TopologyView topo1 = instance1.getDiscoveryService().getTopology();
+        assertTrue(topo1.isCurrent());
+        assertEquals(2, topo1.getInstances().size());
+        
+        l1.addExpected(TopologyEvent.Type.TOPOLOGY_CHANGED);
+        Thread.sleep(5000);
+        assertEquals(0, l1.getRemainingExpectedCount());
+        assertEquals(0, l1.getUnexpectedCount());
+        assertEquals(0, l2.getRemainingExpectedCount());
+        assertEquals(0, l2.getUnexpectedCount());
+        assertTrue(instance2.getDiscoveryService().getTopology().isCurrent());
+        assertEquals(2, instance2.getDiscoveryService().getTopology().getInstances().size());
+        assertTrue(instance1.getDiscoveryService().getTopology().isCurrent());
+        assertEquals(2, instance1.getDiscoveryService().getTopology().getInstances().size());
     }
     
 }

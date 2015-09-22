@@ -58,7 +58,9 @@ public class VotingHelper {
         final Resource ongoingVotingsResource = resourceResolver
                 .getResource(ongoingVotingsPath);
         if (ongoingVotingsResource == null) {
-            logger.info("listOpenNonWinningVotings: no ongoing votings parent resource found"); // TOOD - is this expected?
+            // it is legal that at this stage there is no ongoingvotings node yet 
+            // for example when there was never a voting yet
+            logger.debug("listOpenNonWinningVotings: no ongoing votings parent resource found");
             return new ArrayList<VotingView>();
         }
         final Iterable<Resource> children = ongoingVotingsResource.getChildren();
@@ -150,7 +152,9 @@ public class VotingHelper {
         Resource ongoingVotingsResource = resourceResolver
                 .getResource(ongoingVotingsPath);
         if (ongoingVotingsResource == null) {
-            logger.info("getWinningVoting: no ongoing votings parent resource found"); // TOOD - is this expected?
+            // it is legal that at this stage there is no ongoingvotings node yet 
+            // for example when there was never a voting yet
+            logger.debug("getWinningVoting: no ongoing votings parent resource found");
             return null;
         }
         Iterable<Resource> children = ongoingVotingsResource.getChildren();

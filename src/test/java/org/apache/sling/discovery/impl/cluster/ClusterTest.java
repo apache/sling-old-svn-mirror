@@ -169,11 +169,19 @@ public class ClusterTest {
         assertNotNull(instance1);
         assertNotNull(instance2);
 
-        // the two instances are still isolated - so in a cluster of size 1
-        assertEquals(1, instance1.getClusterViewService().getClusterView().getInstances().size());
-        assertEquals(1, instance2.getClusterViewService().getClusterView().getInstances().size());
-        assertTrue(instance1.getLocalInstanceDescription().isLeader());
-        assertTrue(instance2.getLocalInstanceDescription().isLeader());
+        // the two instances are still isolated - hence they throw an exception
+        try{
+            instance1.getClusterViewService().getClusterView();
+            fail("should complain");
+        } catch(UndefinedClusterViewException e) {
+            // ok
+        }
+        try{
+            instance2.getClusterViewService().getClusterView();
+            fail("should complain");
+        } catch(UndefinedClusterViewException e) {
+            // ok
+        }
 
         // let the sync/voting happen
         for(int m=0; m<4; m++) {
@@ -456,7 +464,11 @@ public class ClusterTest {
 
         // join the instances to form a cluster by sending out heartbeats
         runHeartbeatOnceWith(instance1, instance2, instance3, instance5);
+        Thread.sleep(500);
         runHeartbeatOnceWith(instance1, instance2, instance3, instance5);
+        Thread.sleep(500);
+        runHeartbeatOnceWith(instance1, instance2, instance3, instance5);
+        Thread.sleep(500);
 
         assertSameTopology(new SimpleClusterView(instance1, instance2));
         assertSameTopology(new SimpleClusterView(instance3));
@@ -541,7 +553,7 @@ public class ClusterTest {
         logger.info("testDuplicateInstance3726: end");
     }
 
-    private void assertSameTopology(SimpleClusterView... clusters) {
+    private void assertSameTopology(SimpleClusterView... clusters) throws UndefinedClusterViewException {
         if (clusters==null) {
             return;
         }
@@ -590,10 +602,16 @@ public class ClusterTest {
         
         // start instance4 in a separate cluster
         instance4 = Instance.newStandaloneInstance("/var/discovery/implremote4/", "remoteInstance4", false, Integer.MAX_VALUE /* no timeout */, 1);
-        assertNotSameClusterIds(instance2, instance4);
-        assertNotSameClusterIds(instance3, instance4);
+        try{
+            instance4.getClusterViewService().getClusterView();
+            fail("should complain");
+        } catch(UndefinedClusterViewException e) {
+            // ok
+        }
         
         // instead, now start a connector from instance3 to instance2
+        instance4.runHeartbeatOnce();
+        instance4.runHeartbeatOnce();
         pingConnector(instance3, instance4);
         
         // start instance 1
@@ -674,10 +692,23 @@ public class ClusterTest {
         // now launch the remote instance
         instance3 = Instance.newStandaloneInstance("/var/discovery/implremote/", "remoteInstance", false, Integer.MAX_VALUE /* no timeout */, 1);
         assertSameClusterIds(instance1, instance2);
-        assertNotSameClusterIds(instance1, instance3);
+        try{
+            instance3.getClusterViewService().getClusterView();
+            fail("should complain");
+        } catch(UndefinedClusterViewException ue) {
+            // ok
+        }
+        assertEquals(0, instance1.getAnnouncementRegistry().listLocalAnnouncements().size());
+        assertEquals(0, instance1.getAnnouncementRegistry().listLocalIncomingAnnouncements().size());
+        assertEquals(0, instance2.getAnnouncementRegistry().listLocalAnnouncements().size());
+        assertEquals(0, instance2.getAnnouncementRegistry().listLocalIncomingAnnouncements().size());
+        assertEquals(0, instance3.getAnnouncementRegistry().listLocalAnnouncements().size());
+        assertEquals(0, instance3.getAnnouncementRegistry().listLocalIncomingAnnouncements().size());
         
         // create a topology connector from instance3 to instance1
         // -> corresponds to starting to ping
+        instance3.runHeartbeatOnce();
+        instance3.runHeartbeatOnce();
         pingConnector(instance3, instance1);
         // make asserts on the topology
         instance1.dumpRepo();
@@ -708,7 +739,7 @@ public class ClusterTest {
 		return instance1SlingId;
 	}
     
-    private void assertNotSameClusterIds(Instance... instances) {
+    private void assertNotSameClusterIds(Instance... instances) throws UndefinedClusterViewException {
     	if (instances==null) {
     		fail("must not pass empty set of instances here");
     	}
@@ -730,7 +761,7 @@ public class ClusterTest {
         }
 	}
 
-	private void assertSameClusterIds(Instance... instances) {
+	private void assertSameClusterIds(Instance... instances) throws UndefinedClusterViewException {
     	if (instances==null) {
             // then there is nothing to compare
             return;
@@ -827,7 +858,7 @@ public class ClusterTest {
 		return true;
 	}
 
-	private boolean pingConnector(final Instance from, final Instance to) {
+	private boolean pingConnector(final Instance from, final Instance to) throws UndefinedClusterViewException {
 	    final Announcement fromAnnouncement = createFromAnnouncement(from);
 	    Announcement replyAnnouncement = null;
 	    try{
@@ -835,7 +866,10 @@ public class ClusterTest {
 	    } catch(AssertionError e) {
 	        logger.warn("pingConnector: ping failed, assertionError: "+e);
 	        return false;
-	    }
+	    } catch (UndefinedClusterViewException e) {
+            logger.warn("pingConnector: ping failed, currently the cluster view is undefined: "+e);
+            return false;
+        }
         registerReplyAnnouncement(from, replyAnnouncement);
         return true;
     }
@@ -860,7 +894,8 @@ public class ClusterTest {
 //        statusDetails = null;
 	}
 
-	private Announcement ping(Instance to, final Announcement incomingTopologyAnnouncement) {
+	private Announcement ping(Instance to, final Announcement incomingTopologyAnnouncement) 
+	        throws UndefinedClusterViewException {
 		final String slingId = to.slingId;
 		final ClusterViewService clusterViewService = to.getClusterViewService();
 		final AnnouncementRegistry announcementRegistry = to.getAnnouncementRegistry();
@@ -910,7 +945,7 @@ public class ClusterTest {
         }
 	}
 
-	private Announcement createFromAnnouncement(final Instance from) {
+	private Announcement createFromAnnouncement(final Instance from) throws UndefinedClusterViewException {
 		// TODO: refactor TopologyConnectorClient to avoid duplicating code from there (ping())
 		Announcement topologyAnnouncement = new Announcement(from.slingId);
         topologyAnnouncement.setServerInfo(from.slingId);
@@ -922,7 +957,7 @@ public class ClusterTest {
                 // filter out announcements that are of old cluster instances
                 // which I dont really have in my cluster view at the moment
                 final Iterator<InstanceDescription> it = 
-                        from.getClusterViewService().getClusterView().getInstances().iterator();
+                        clusterView.getInstances().iterator();
                 while(it.hasNext()) {
                     final InstanceDescription instance = it.next();
                     if (instance.getSlingId().equals(receivingSlingId)) {
@@ -954,14 +989,18 @@ public class ClusterTest {
         assertNotNull(instance1);
         assertNotNull(instance2);
 
-        String clusterId1 = instance1.getClusterViewService()
-                .getClusterView().getId();
-        String clusterId2 = instance2.getClusterViewService()
-                .getClusterView().getId();
-        // the cluster ids must differ
-        assertNotEquals(clusterId1, clusterId2);
-        assertEquals(1, instance1.getClusterViewService().getClusterView().getInstances().size());
-        assertEquals(1, instance2.getClusterViewService().getClusterView().getInstances().size());
+        try{
+            instance1.getClusterViewService().getClusterView();
+            fail("should complain");
+        } catch(UndefinedClusterViewException e) {
+            // ok
+        }
+        try{
+            instance2.getClusterViewService().getClusterView();
+            fail("should complain");
+        } catch(UndefinedClusterViewException e) {
+            // ok
+        }
 
         // let the sync/voting happen
         instance1.runHeartbeatOnce();
@@ -980,10 +1019,6 @@ public class ClusterTest {
         // both cluster ids must be the same
         assertEquals(newClusterId1, newClusterId1);
         
-        // either instance1 or instance2 must have kept the cluster id
-        if (!newClusterId1.equals(clusterId1)) {
-        	assertEquals(newClusterId2, clusterId2);
-        }
         instance1.dumpRepo();
         assertEquals(2, instance1.getClusterViewService().getClusterView().getInstances().size());
         assertEquals(2, instance2.getClusterViewService().getClusterView().getInstances().size());
@@ -1007,8 +1042,13 @@ public class ClusterTest {
         // the cluster should now have size 1
         assertEquals(1, instance1.getClusterViewService().getClusterView().getInstances().size());
         // the instance 2 should be in isolated mode as it is no longer in the established view
-        // hence also size 1
-        assertEquals(1, instance2.getClusterViewService().getClusterView().getInstances().size());
+        // hence null
+        try{
+            instance2.getClusterViewService().getClusterView();
+            fail("should complain");
+        } catch(UndefinedClusterViewException e) {
+            // ok
+        }
 
         // but the cluster id must have remained stable
         instance1.dumpRepo();
@@ -1037,15 +1077,24 @@ public class ClusterTest {
         assertEquals(instance3.getSlingId(), instance3.getClusterViewService()
                 .getSlingId());
 
-        int numC1 = instance1.getClusterViewService().getClusterView()
-                .getInstances().size();
-        assertEquals(1, numC1);
-        int numC2 = instance2.getClusterViewService().getClusterView()
-                .getInstances().size();
-        assertEquals(1, numC2);
-        int numC3 = instance3.getClusterViewService().getClusterView()
-                .getInstances().size();
-        assertEquals(1, numC3);
+        try{
+            instance1.getClusterViewService().getClusterView();
+            fail("should complain");
+        } catch(UndefinedClusterViewException e) {
+            // ok
+        }
+        try{
+            instance2.getClusterViewService().getClusterView();
+            fail("should complain");
+        } catch(UndefinedClusterViewException e) {
+            // ok
+        }
+        try{
+            instance3.getClusterViewService().getClusterView();
+            fail("should complain");
+        } catch(UndefinedClusterViewException e) {
+            // ok
+        }
 
         instance1.dumpRepo();
 
@@ -1096,12 +1145,18 @@ public class ClusterTest {
         assertEquals(instance2.getSlingId(), instance2.getClusterViewService()
                 .getSlingId());
 
-        int numC1 = instance1.getClusterViewService().getClusterView()
-                .getInstances().size();
-        assertEquals(1, numC1);
-        int numC2 = instance2.getClusterViewService().getClusterView()
-                .getInstances().size();
-        assertEquals(1, numC2);
+        try{
+            instance1.getClusterViewService().getClusterView();
+            fail("should complain");
+        } catch(UndefinedClusterViewException e) {
+            // ok
+        }
+        try{
+            instance2.getClusterViewService().getClusterView();
+            fail("should complain");
+        } catch(UndefinedClusterViewException e) {
+            // ok
+        }
 
         instance1.runHeartbeatOnce();
         instance2.runHeartbeatOnce();
@@ -1204,19 +1259,19 @@ public class ClusterTest {
         logger.info("testPropertyProviders: end");
     }
 
-    private void assertPropertyValues() {
+    private void assertPropertyValues() throws UndefinedClusterViewException {
         assertPropertyValues(instance1.getSlingId(), property1Name,
                 property1Value);
         assertPropertyValues(instance2.getSlingId(), property2Name,
                 property2Value);
     }
 
-    private void assertPropertyValues(String slingId, String name, String value) {
+    private void assertPropertyValues(String slingId, String name, String value) throws UndefinedClusterViewException {
         assertEquals(value, getInstance(instance1, slingId).getProperty(name));
         assertEquals(value, getInstance(instance2, slingId).getProperty(name));
     }
 
-    private InstanceDescription getInstance(Instance instance, String slingId) {
+    private InstanceDescription getInstance(Instance instance, String slingId) throws UndefinedClusterViewException {
         Iterator<InstanceDescription> it = instance.getClusterViewService()
                 .getClusterView().getInstances().iterator();
         while (it.hasNext()) {
