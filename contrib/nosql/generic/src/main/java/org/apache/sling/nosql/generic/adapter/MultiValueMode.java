@@ -16,25 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Emits for each document the all parent paths - allowing to fetch children and their decendants by path.
- * Includes the path of the item itself.
+package org.apache.sling.nosql.generic.adapter;
+
+/**
+ * Mode for multi-valued field data in {@link NoSqlData properties).
  */
-function(doc, meta) {
-  
-  // handle only sling resource documents with a valid path
-  if (!(meta.id.indexOf("sling-resource:")==0 && doc.path && doc.data)) {
-    return;
-  }
-  var pathParts = doc.path.split("/");
-  if (pathParts.length < 3) {
-    return;
-  }
-  
-  while (pathParts.length >= 2) {
-    // remove last element to get parent path
-    var parentPath = pathParts.join("/");
-    emit(parentPath, null);
-    pathParts.pop();
-  }
+public enum MultiValueMode {
+
+    /**
+     * Return multi-valued field values as array (default).
+     */
+    ARRAYS,
+    
+    /**
+     * Return multi-valued field values as lists.
+     */
+    LISTS
+    
 }

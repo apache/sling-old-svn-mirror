@@ -27,9 +27,9 @@ import java.util.Map;
 
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.distribution.component.impl.DistributionComponent;
+import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.component.impl.DistributionComponentProvider;
-import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.resources.DistributionResourceTypes;
 import org.apache.sling.distribution.resources.impl.common.AbstractReadableResourceProvider;
 import org.apache.sling.distribution.resources.impl.common.SimplePathInfo;
@@ -39,13 +39,12 @@ import org.apache.sling.distribution.resources.impl.common.SimplePathInfo;
  * The main resource contains a list of service properties and can be adapted to the underlying service.
  * The accepted path is resourceRoot/{friendlyNameProperty}/childResourceName.
  */
-public class DistributionServiceResourceProvider extends AbstractReadableResourceProvider  {
+public class DistributionServiceResourceProvider extends AbstractReadableResourceProvider {
 
     private final DistributionComponentKind kind;
     private final DistributionComponentProvider componentProvider;
 
     private static final String SERVICES_RESOURCE_TYPE = DistributionResourceTypes.DEFAULT_SERVICE_RESOURCE_TYPE;
-
 
     public DistributionServiceResourceProvider(String kind,
                                                DistributionComponentProvider componentProvider,
@@ -55,14 +54,11 @@ public class DistributionServiceResourceProvider extends AbstractReadableResourc
         this.componentProvider = componentProvider;
     }
 
-
-
     @Override
     protected Map<String, Object> getResourceProperties(SimplePathInfo pathInfo) {
         if (pathInfo.isRoot()) {
             return getResourceRootProperties();
-        }
-        else if (pathInfo.isMain()) {
+        } else if (pathInfo.isMain()) {
             return getResourceProperties(pathInfo.getMainResourceName());
         } else if (pathInfo.isChild()) {
             DistributionComponent component = componentProvider.getComponent(kind, pathInfo.getMainResourceName());
@@ -88,7 +84,6 @@ public class DistributionServiceResourceProvider extends AbstractReadableResourc
 
         return null;
     }
-
 
     protected Map<String, Object> getResourceProperties(String resourceName) {
 
@@ -127,7 +122,6 @@ public class DistributionServiceResourceProvider extends AbstractReadableResourc
     }
 
 
-
     String getResourceType(DistributionComponentKind kind) {
         if (DistributionComponentKind.AGENT.equals(kind)) {
             return DistributionResourceTypes.AGENT_RESOURCE_TYPE;
@@ -156,12 +150,9 @@ public class DistributionServiceResourceProvider extends AbstractReadableResourc
         return SERVICES_RESOURCE_TYPE;
     }
 
-
-
     protected Map<String, Object> getChildResourceProperties(DistributionComponent component, String childResourceName) {
         return null;
     }
-
 
     protected Iterable<String> getChildResourceChildren(DistributionComponent component, String childResourceName) {
         return null;

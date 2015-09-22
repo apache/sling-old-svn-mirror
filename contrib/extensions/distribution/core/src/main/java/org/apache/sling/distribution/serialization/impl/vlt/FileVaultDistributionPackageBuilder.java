@@ -21,20 +21,17 @@ package org.apache.sling.distribution.serialization.impl.vlt;
 import javax.annotation.Nonnull;
 import javax.jcr.Session;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.TreeMap;
 import java.util.UUID;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.vault.fs.api.ImportMode;
 import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.api.WorkspaceFilter;
 import org.apache.jackrabbit.vault.fs.io.AccessControlHandling;
 import org.apache.jackrabbit.vault.fs.io.ImportOptions;
 import org.apache.jackrabbit.vault.packaging.ExportOptions;
-import org.apache.jackrabbit.vault.packaging.PackageException;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -70,7 +67,6 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
     private final File tempDirectory;
     private final TreeMap<String, PathFilterSet> filters;
 
-
     public FileVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots, String[] filterRules, String tempFilesFolder) {
         super(type);
         this.packaging = packaging;
@@ -94,7 +90,7 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
             session = getSession(resourceResolver);
 
             String packageGroup = "sling/distribution";
-            String packageName = getType() + "_" + System.currentTimeMillis() + "_" +  UUID.randomUUID();
+            String packageName = getType() + "_" + System.currentTimeMillis() + "_" + UUID.randomUUID();
 
             WorkspaceFilter filter = VltUtils.createFilter(request, filters);
             ExportOptions opts = VltUtils.getExportOptions(filter, packageRoots, packageGroup, packageName, VERSION);
@@ -127,7 +123,6 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
         }
     }
 
-
     @Override
     protected DistributionPackage getPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull String id) {
         DistributionPackage distributionPackage = null;
@@ -142,7 +137,6 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
         }
         return distributionPackage;
     }
-
 
     @Override
     public boolean installPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageReadingException {

@@ -16,14 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.nosql.couchbase.resourceprovider.impl;
+package org.apache.sling.nosql.generic.adapter;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Map;
 
-import org.apache.sling.nosql.couchbase.resourceprovider.impl.MapConverter;
+import org.apache.sling.nosql.generic.adapter.MapConverter;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;

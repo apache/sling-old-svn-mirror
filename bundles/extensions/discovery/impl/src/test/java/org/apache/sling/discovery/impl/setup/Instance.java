@@ -159,7 +159,7 @@ public class Instance {
         
     }
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final static Logger logger = LoggerFactory.getLogger(Instance.class);
 
     public final String slingId;
 
@@ -414,6 +414,13 @@ public class Instance {
     }
     
     public static Instance newStandaloneInstance(String discoveryResourcePath, String debugName,
+            boolean resetRepo, int heartbeatTimeout, int heartbeatInterval, int minEventDelay, String slingId, boolean delayInitEventUntilVoted) throws Exception {
+        ResourceResolverFactory resourceResolverFactory = MockFactory
+                .mockResourceResolverFactory();
+        return new Instance(discoveryResourcePath, debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, heartbeatInterval, minEventDelay, slingId, delayInitEventUntilVoted);
+    }
+
+    public static Instance newStandaloneInstance(String discoveryResourcePath, String debugName,
             boolean resetRepo, int heartbeatTimeout, int minEventDelay, String slingId) throws Exception {
         ResourceResolverFactory resourceResolverFactory = MockFactory
                 .mockResourceResolverFactory();
@@ -599,6 +606,10 @@ public class Instance {
     }
 
     public void dumpRepo() throws Exception {
+        dumpRepo(resourceResolverFactory);
+    }
+
+    public static void dumpRepo(ResourceResolverFactory resourceResolverFactory) throws Exception {
         Session session = resourceResolverFactory
                 .getAdministrativeResourceResolver(null).adaptTo(Session.class);
         logger.info("dumpRepo: ====== START =====");
@@ -611,8 +622,8 @@ public class Instance {
 
         session.logout();
     }
-
-    private void dump(Node node) throws RepositoryException {
+    
+    public static void dump(Node node) throws RepositoryException {
         if (node.getPath().equals("/jcr:system")
                 || node.getPath().equals("/rep:policy")) {
             // ignore that one

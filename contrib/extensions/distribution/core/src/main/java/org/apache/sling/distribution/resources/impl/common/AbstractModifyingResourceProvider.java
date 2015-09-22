@@ -18,7 +18,6 @@
  */
 package org.apache.sling.distribution.resources.impl.common;
 
-
 import javax.jcr.Session;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,6 +29,9 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 
+/**
+ * a modifying {@link org.apache.sling.api.resource.ResourceProvider} for distribution.
+ */
 public abstract class AbstractModifyingResourceProvider extends AbstractReadableResourceProvider
         implements ModifyingResourceProvider {
 
@@ -56,14 +58,11 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
 
         boolean added = addToChangedResources(resourceName, properties, true);
 
-
         if (!added) {
             throw new PersistenceException("Resource already exists at " + path, null, resourceName, null);
         }
 
-        Resource resource = buildMainResource(resolver, pathInfo, properties);
-
-        return resource;
+        return buildMainResource(resolver, pathInfo, properties);
     }
 
     public void delete(ResourceResolver resolver, String requestPath) throws PersistenceException {
@@ -162,7 +161,6 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
                                Object... adapters) {
         return new SimpleModifiableResource(resourceResolver, this, pathInfo.getResourcePath(), properties);
     }
-
 
 
     protected abstract void save(ResourceResolver resourceResolver,

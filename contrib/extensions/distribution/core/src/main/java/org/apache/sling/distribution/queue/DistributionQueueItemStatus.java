@@ -23,7 +23,6 @@ import java.util.Calendar;
 /**
  * the current status of a certain item in a {@link DistributionQueue}
  */
-
 public class DistributionQueueItemStatus {
 
     private final int attempts;
@@ -59,7 +58,7 @@ public class DistributionQueueItemStatus {
 
     @Override
     public String toString() {
-        return "{\"attempts\":\"" + attempts + "\",\"" +  "\",\"" + "state\":\"" + state +
+        return "{\"attempts\":\"" + attempts + "\",\"" + "\",\"" + "state\":\"" + state +
                 "\",\"" + "queueName\":\"" + queueName + "\"}";
     }
 

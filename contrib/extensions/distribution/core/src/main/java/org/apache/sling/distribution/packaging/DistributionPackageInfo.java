@@ -28,7 +28,6 @@ import java.util.Map;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.distribution.DistributionRequestType;
-import org.apache.sling.distribution.queue.DistributionQueueItem;
 
 /**
  * Additional information about a package.

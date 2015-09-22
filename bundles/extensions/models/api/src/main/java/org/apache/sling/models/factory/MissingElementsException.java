@@ -21,6 +21,8 @@ package org.apache.sling.models.factory;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Exception which is triggered whenever a Sling Model cannot be instantiated
  * due to some missing elements (i.e. required fields/methods/constructor parameters
@@ -30,6 +32,7 @@ import java.util.Collection;
  * @see ModelFactory
  *
  */
+@ProviderType
 public final class MissingElementsException extends RuntimeException {
     private static final long serialVersionUID = 7870762030809272254L;
 

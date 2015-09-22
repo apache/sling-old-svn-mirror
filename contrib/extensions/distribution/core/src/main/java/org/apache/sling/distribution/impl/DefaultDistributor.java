@@ -19,6 +19,8 @@
 
 package org.apache.sling.distribution.impl;
 
+import javax.annotation.Nonnull;
+
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -32,8 +34,6 @@ import org.apache.sling.distribution.agent.DistributionAgentException;
 import org.apache.sling.distribution.component.impl.DistributionComponentProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
 
 /**
  * Default implementation of Distributor interface that dispatches the request to available agents.

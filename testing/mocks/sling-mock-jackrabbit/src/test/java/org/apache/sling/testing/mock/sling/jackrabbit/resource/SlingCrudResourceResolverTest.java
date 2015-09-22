@@ -51,5 +51,5 @@ public class SlingCrudResourceResolverTest extends AbstractSlingCrudResourceReso
 
         return resolver;
     }
-
+    
 }

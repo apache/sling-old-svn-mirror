@@ -18,7 +18,6 @@
  */
 package org.apache.sling.distribution.packaging;
 
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.io.InputStream;
 

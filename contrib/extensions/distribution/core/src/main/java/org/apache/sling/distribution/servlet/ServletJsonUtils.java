@@ -19,14 +19,14 @@
 
 package org.apache.sling.distribution.servlet;
 
+import java.io.IOException;
+
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.distribution.DistributionResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 /**
  * Utility class for writing json data to http responses.

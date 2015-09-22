@@ -19,7 +19,9 @@
 package org.apache.sling.distribution.queue.impl;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.sling.distribution.packaging.DistributionPackage;
@@ -42,11 +44,13 @@ public class PriorityPathQueueDispatchingStrategy implements DistributionQueueDi
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final String[] priorityPaths;
+    private final List<String> priorityPaths;
 
     public PriorityPathQueueDispatchingStrategy(String[] priorityPaths) {
-        this.priorityPaths = priorityPaths;
-
+        List<String> paths = new ArrayList<String>(priorityPaths.length + 1);
+        paths.add(DEFAULT_QUEUE_NAME);
+        paths.addAll(Arrays.asList(priorityPaths));
+        this.priorityPaths = Collections.unmodifiableList(paths);
     }
 
     private DistributionQueue getQueue(DistributionQueueItem queueItem, DistributionQueueProvider queueProvider)
@@ -84,25 +88,20 @@ public class PriorityPathQueueDispatchingStrategy implements DistributionQueueDi
         DistributionQueueItem queueItem = getItem(distributionPackage);
         DistributionQueue queue = getQueue(queueItem, queueProvider);
         if (queue.add(queueItem)) {
-            return Arrays.asList(queue.getItem(queueItem.getId()).getStatus());
+            return Collections.singletonList(queue.getItem(queueItem.getId()).getStatus());
         } else {
-            return Arrays.asList(new DistributionQueueItemStatus(DistributionQueueItemState.ERROR, queue.getName()));
+            return Collections.singletonList(new DistributionQueueItemStatus(DistributionQueueItemState.ERROR, queue.getName()));
         }
     }
 
 
     @Nonnull
     public List<String> getQueueNames() {
-        List<String> paths = Arrays.asList(priorityPaths);
-        paths.add(DEFAULT_QUEUE_NAME);
-
-        return paths;
+        return priorityPaths;
     }
 
     private DistributionQueueItem getItem(DistributionPackage distributionPackage) {
-        DistributionQueueItem distributionQueueItem = DistributionPackageUtils.toQueueItem(distributionPackage);
-
-        return distributionQueueItem;
+        return DistributionPackageUtils.toQueueItem(distributionPackage);
     }
 
 

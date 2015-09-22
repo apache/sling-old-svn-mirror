@@ -18,6 +18,9 @@
  */
 package org.apache.sling.distribution.transport.impl;
 
+/**
+ * Strategy options enum for transport
+ */
 public enum TransportEndpointStrategyType {
     One,
     All

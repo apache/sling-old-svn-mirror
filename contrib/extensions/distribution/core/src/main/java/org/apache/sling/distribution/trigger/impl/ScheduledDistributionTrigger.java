@@ -19,6 +19,9 @@
 package org.apache.sling.distribution.trigger.impl;
 
 import javax.annotation.Nonnull;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
@@ -29,10 +32,6 @@ import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.distribution.trigger.DistributionTriggerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * {@link org.apache.sling.distribution.trigger.DistributionTrigger} to schedule distributions on a certain
@@ -51,7 +50,6 @@ public class ScheduledDistributionTrigger implements DistributionTrigger {
     private final Scheduler scheduler;
 
     private Set<String> registeredJobs = Collections.synchronizedSet(new HashSet<String>());
-
 
 
     public ScheduledDistributionTrigger(String distributionActionName, String path, int secondsInterval, Scheduler scheduler) {

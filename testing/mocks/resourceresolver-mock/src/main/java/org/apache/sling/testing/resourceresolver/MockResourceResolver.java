@@ -29,6 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -207,18 +208,19 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
 
     @Override
     public Iterator<Resource> listChildren(final Resource parent) {
-        final String prefixPath = parent.getPath() + "/";
+        final String pathPrefix = "/".equals(parent.getPath()) ? "" : parent.getPath();
+        final Pattern childPathMatcher = Pattern.compile("^" + Pattern.quote(pathPrefix) + "/[^/]+$");
         final Map<String, Map<String, Object>> candidates = new LinkedHashMap<String, Map<String,Object>>();
         synchronized ( this.resources ) {
             for(final Map.Entry<String, Map<String, Object>> e : this.resources.entrySet()) {
-                if (e.getKey().startsWith(prefixPath) && e.getKey().lastIndexOf('/') < prefixPath.length() ) {
+                if (childPathMatcher.matcher(e.getKey()).matches()) {
                     if ( !this.deletedResources.contains(e.getKey()) ) {
                         candidates.put(e.getKey(), e.getValue());
                     }
                 }
             }
             for(final Map.Entry<String, Map<String, Object>> e : this.temporaryResources.entrySet()) {
-                if (e.getKey().startsWith(prefixPath) && e.getKey().lastIndexOf('/') < prefixPath.length() ) {
+                if (childPathMatcher.matcher(e.getKey()).matches()) {
                     if ( !this.deletedResources.contains(e.getKey()) ) {
                         candidates.put(e.getKey(), e.getValue());
                     }
@@ -235,7 +237,6 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
     // part of Resource API 2.5.0
     public Iterable<Resource> getChildren(final Resource parent) {
         return new Iterable<Resource>() {
-
             @Override
             public Iterator<Resource> iterator() {
                 return listChildren(parent);

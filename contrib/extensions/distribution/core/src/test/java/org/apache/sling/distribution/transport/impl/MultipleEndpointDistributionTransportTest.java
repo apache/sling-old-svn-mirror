@@ -27,6 +27,7 @@ import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.transport.core.DistributionTransport;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
 import org.junit.Test;
@@ -48,6 +49,8 @@ public class MultipleEndpointDistributionTransportTest {
         List<DistributionTransport> subHandlers = new ArrayList<DistributionTransport>();
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
+        DistributionPackageInfo info = new DistributionPackageInfo("/foo");
+        when(distributionPackage.getInfo()).thenReturn(info);
         for (TransportEndpointStrategyType strategy : TransportEndpointStrategyType.values()) {
             MultipleEndpointDistributionTransport multipleEndpointDistributionTransport = new MultipleEndpointDistributionTransport(subHandlers, strategy);
             multipleEndpointDistributionTransport.deliverPackage(resourceResolver, distributionPackage);
@@ -76,6 +79,8 @@ public class MultipleEndpointDistributionTransportTest {
         subHandlers.add(second);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
+        DistributionPackageInfo info = new DistributionPackageInfo("/foo");
+        when(distributionPackage.getInfo()).thenReturn(info);
         for (TransportEndpointStrategyType strategy : TransportEndpointStrategyType.values()) {
             MultipleEndpointDistributionTransport multipleEndpointdistributionTransport = new MultipleEndpointDistributionTransport(subHandlers, strategy);
             multipleEndpointdistributionTransport.deliverPackage(resourceResolver, distributionPackage);

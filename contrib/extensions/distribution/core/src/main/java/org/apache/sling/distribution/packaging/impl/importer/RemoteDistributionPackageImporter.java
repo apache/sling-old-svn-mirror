@@ -29,14 +29,12 @@ import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
-import org.apache.sling.distribution.transport.core.DistributionTransport;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
+import org.apache.sling.distribution.transport.core.DistributionTransport;
 import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
 import org.apache.sling.distribution.transport.impl.MultipleEndpointDistributionTransport;
 import org.apache.sling.distribution.transport.impl.SimpleHttpDistributionTransport;
 import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Remote implementation of {@link org.apache.sling.distribution.packaging.DistributionPackageImporter}
@@ -45,20 +43,14 @@ public class RemoteDistributionPackageImporter implements DistributionPackageImp
 
 
     private DistributionTransport transportHandler;
-    private final DefaultDistributionLog log;
-    private DistributionTransportSecretProvider distributionTransportSecretProvider;
 
 
     public RemoteDistributionPackageImporter(DefaultDistributionLog log, DistributionTransportSecretProvider distributionTransportSecretProvider,
                                              Map<String, String> endpointsMap,
                                              TransportEndpointStrategyType transportEndpointStrategyType) {
-        this.log = log;
-        this.distributionTransportSecretProvider = distributionTransportSecretProvider;
-
         if (distributionTransportSecretProvider == null) {
             throw new IllegalArgumentException("distributionTransportSecretProvider is required");
         }
-
 
         Map<String, DistributionTransport> transportHandlers = new HashMap<String, DistributionTransport>();
 
@@ -82,6 +74,7 @@ public class RemoteDistributionPackageImporter implements DistributionPackageImp
         }
     }
 
+    @Nonnull
     public DistributionPackageInfo importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException {
         throw new DistributionPackageImportException("not supported");
     }

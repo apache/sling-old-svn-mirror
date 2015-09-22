@@ -49,7 +49,6 @@ public class DistributionConfigurationResourceProvider extends AbstractModifying
 
     private static final String SETTINGS_RESOURCE_TYPE = DistributionResourceTypes.DEFAULT_SETTING_RESOURCE_TYPE;
 
-
     private final DistributionConfigurationManager configurationManager;
 
     private final DistributionComponentKind kind;
@@ -58,7 +57,6 @@ public class DistributionConfigurationResourceProvider extends AbstractModifying
         super(resourceRoot);
         this.configurationManager = configurationManager;
         this.kind = DistributionComponentKind.fromName(kind);
-
     }
 
     @Override
@@ -85,8 +83,7 @@ public class DistributionConfigurationResourceProvider extends AbstractModifying
     protected Map<String, Object> getResourceProperties(SimplePathInfo pathInfo) {
         if (pathInfo.isRoot()) {
             return getResourceRootProperties();
-        }
-        else if (pathInfo.isMain()) {
+        } else if (pathInfo.isMain()) {
             return getResourceProperties(pathInfo.getMainResourceName());
         }
 
@@ -116,8 +113,6 @@ public class DistributionConfigurationResourceProvider extends AbstractModifying
     }
 
 
-
-
     protected Map<String, Object> getResourceProperties(String resourceName) {
 
         String componentName = getConfigName(resourceName);
@@ -137,8 +132,6 @@ public class DistributionConfigurationResourceProvider extends AbstractModifying
 
         return null;
     }
-
-
 
 
     private String getConfigName(String configName) {

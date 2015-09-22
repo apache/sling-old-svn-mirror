@@ -18,6 +18,9 @@
  */
 package org.apache.sling.distribution.trigger.impl;
 
+import javax.annotation.Nonnull;
+import java.util.Map;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -33,9 +36,6 @@ import org.apache.sling.distribution.trigger.DistributionTriggerException;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.framework.BundleContext;
 
-import javax.annotation.Nonnull;
-import java.util.Map;
-
 @Component(metatype = true,
         label = "Apache Sling Distribution Trigger - Resource Event Triggers Factory",
         configurationFactory = true,
@@ -44,7 +44,6 @@ import java.util.Map;
 )
 @Service(DistributionTrigger.class)
 public class ResourceEventDistributionTriggerFactory implements DistributionTrigger {
-
 
 
     @Property(label = "Name", description = "The name of the trigger.")

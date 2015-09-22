@@ -20,7 +20,9 @@ package org.apache.sling.testing.mock.sling.resource;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -32,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -47,6 +50,7 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 /**
  * Implements simple write and read resource and values test. Sling CRUD API is
@@ -63,7 +67,7 @@ public abstract class AbstractSlingCrudResourceResolverTest {
     private static final Calendar CALENDAR_VALUE = Calendar.getInstance();
     private static final byte[] BINARY_VALUE = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 };
 
-    private ResourceResolver resourceResolver;
+    protected ResourceResolver resourceResolver;
     protected Resource testRoot;
     private static volatile long rootNodeCounter;
 
@@ -109,17 +113,17 @@ public abstract class AbstractSlingCrudResourceResolverTest {
      * Return a test root resource, created on demand, with a unique path
      * @throws PersistenceException
      */
-    private Resource getTestRootResource() throws PersistenceException {
+    protected Resource getTestRootResource() throws PersistenceException {
         if (this.testRoot == null) {
             Map<String, Object> props = new HashMap<String, Object>();
             props.put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
             final Resource root = this.resourceResolver.getResource("/");
-            if (getResourceResolverType() == ResourceResolverType.JCR_JACKRABBIT) {
-                final Resource classRoot = this.resourceResolver.create(root, getClass().getSimpleName(), props);
-                this.testRoot = this.resourceResolver.create(classRoot, System.currentTimeMillis() + "_"
-                        + (rootNodeCounter++), props);
-            } else {
+            if (getResourceResolverType() == ResourceResolverType.JCR_MOCK
+                    || getResourceResolverType() == ResourceResolverType.RESOURCERESOLVER_MOCK) {
                 this.testRoot = this.resourceResolver.create(root, "test", props);
+            } else {
+                this.testRoot = this.resourceResolver.create(root, getClass().getSimpleName() + "_"
+                        + System.currentTimeMillis() + "_" + (rootNodeCounter++), props);
             }
         }
         return this.testRoot;
@@ -206,6 +210,28 @@ public abstract class AbstractSlingCrudResourceResolverTest {
         assertEquals(2, children.size());
         assertEquals("node11", children.get(0).getName());
         assertEquals("node12", children.get(1).getName());
+    }
+
+    @Test
+    public void testListChildren_RootNode() throws IOException {
+        Resource resource1 = resourceResolver.getResource("/");
+
+        List<Resource> children = Lists.newArrayList(resource1.listChildren());
+        assertFalse(children.isEmpty());
+        assertTrue(containsResource(children, getTestRootResource()));
+
+        children = Lists.newArrayList(resource1.getChildren());
+        assertFalse(children.isEmpty());
+        assertTrue(containsResource(children, getTestRootResource()));
+    }
+    
+    private boolean containsResource(List<Resource> children, Resource resource) {
+        for (Resource child : children) {
+            if (StringUtils.equals(child.getPath(), resource.getPath())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Test

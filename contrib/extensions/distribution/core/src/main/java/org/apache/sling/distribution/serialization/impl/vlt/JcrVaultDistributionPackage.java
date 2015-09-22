@@ -18,13 +18,11 @@
  */
 package org.apache.sling.distribution.serialization.impl.vlt;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import javax.annotation.Nonnull;
-import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import java.io.IOException;
+import java.io.InputStream;
 
 import org.apache.jackrabbit.vault.packaging.JcrPackage;
 import org.apache.sling.distribution.DistributionRequestType;
@@ -33,6 +31,7 @@ import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.serialization.impl.AbstractDistributionPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 /**
  * a JcrPackage based {@link org.apache.sling.distribution.packaging.DistributionPackage}
  */

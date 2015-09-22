@@ -18,11 +18,14 @@ package org.apache.sling.models.spi.injectorspecific;
 
 import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * Default implementation of {@link InjectAnnotationProcessor2}.
  *
  */
 @SuppressWarnings("deprecation")
+@ConsumerType
 public class AbstractInjectAnnotationProcessor2 extends AbstractInjectAnnotationProcessor implements InjectAnnotationProcessor2 {
 
     public InjectionStrategy getInjectionStrategy() {

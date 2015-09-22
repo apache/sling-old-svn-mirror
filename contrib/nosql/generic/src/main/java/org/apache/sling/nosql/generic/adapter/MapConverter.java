@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.nosql.couchbase.resourceprovider.impl;
+package org.apache.sling.nosql.generic.adapter;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
@@ -29,7 +29,7 @@ import org.apache.commons.lang3.ArrayUtils;
  * Transforms NoSqlData maps to a valid form for couchbase JSON document.
  * All arrays have to be transformed to lists.
  */
-public final class MapConverter {
+final class MapConverter {
 
     private MapConverter() {
         // static methods only

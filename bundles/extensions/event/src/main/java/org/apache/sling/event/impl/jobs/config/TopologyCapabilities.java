@@ -173,7 +173,7 @@ public class TopologyCapabilities {
      * @return {@code true} if still active.
      */
     public boolean isActive() {
-        return this.active && this.jobManagerConfiguration.isActive(); // TODO SLING-4634 && this.view.isCurrent();
+        return this.active && this.jobManagerConfiguration.isActive() && this.view.isCurrent();
     }
 
     /**

@@ -16,147 +16,163 @@
  */
 package org.apache.sling.rewriter.impl;
 
+import static org.apache.sling.rewriter.impl.ProcessorConfigurationImpl.PROPERTY_CONTENT_TYPES;
+import static org.apache.sling.rewriter.impl.ProcessorConfigurationImpl.PROPERTY_EXTENSIONS;
+import static org.apache.sling.rewriter.impl.ProcessorConfigurationImpl.PROPERTY_PATHS;
+import static org.apache.sling.rewriter.impl.ProcessorConfigurationImpl.PROPERTY_RESOURCE_TYPES;
+import static org.apache.sling.rewriter.impl.ProcessorConfigurationImpl.PROPERTY_SELECTORS;
+import static org.apache.sling.rewriter.impl.ProcessorConfigurationImpl.PROPERTY_UNWRAP_RESOURCES;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.commons.testing.sling.MockResourceResolver;
-import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
+import java.util.Map;
+
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceWrapper;
 import org.apache.sling.rewriter.ProcessingContext;
-import org.apache.sling.rewriter.ProcessorConfiguration;
+import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
-/**
- * @author diru
- */
+import com.google.common.collect.ImmutableMap;
+
+@RunWith(MockitoJUnitRunner.class)
 public class ProcessorConfigurationImplTest {
-
-    private MockSlingHttpServletRequest mockRequestWithSelector;
-    private MockSlingHttpServletRequest mockRequestWithoutSelector;
+    
+    @Rule
+    public SlingContext context = new SlingContext();
+    
+    @Mock
+    private ProcessingContext processingContext;
 
     @Before
     public void setup() {
-        this.mockRequestWithSelector = new MockSlingHttpServletRequest("/content/path", "sel1.sel2", "xml", null, null);
-        this.mockRequestWithoutSelector = new MockSlingHttpServletRequest("/content/path", null, "xml", null, null);
-        // mock the resource resolver and create also a mocked resource to prevent NPE in ResourceUtil.
-        final MockResourceResolver mockResourceResolver = new MockResourceResolver();
-        mockResourceResolver.setSearchPath("/libs");
-        this.mockRequestWithSelector.setResourceResolver(mockResourceResolver);
-        this.mockRequestWithoutSelector.setResourceResolver(mockResourceResolver);
+        when(processingContext.getContentType()).thenReturn("text/html");
+        when(processingContext.getRequest()).thenReturn(context.request());
+        when(processingContext.getResponse()).thenReturn(context.response());
+    }
+    
+    private ProcessorConfigurationImpl buildConfig(Map<String,Object> configProps) {
+        Resource configResoruce = context.create().resource("/apps/myapp/rewriter/config", configProps);
+        return new ProcessorConfigurationImpl(configResoruce);
+    }
+    
+    private void assertMatch(Map<String,Object> configProps) {
+        assertTrue(buildConfig(configProps).match(processingContext));
+    }
+
+    private void assertNoMatch(Map<String,Object> configProps) {
+        assertFalse(buildConfig(configProps).match(processingContext));
     }
 
     @Test
     public void testMatchContentTypeMismatch() {
-        this.doTestAgainstProcessingContextWithSelector(new ProcessorConfigurationImpl(new String[] {"text/html",
-            "text/plain" }, null, null, null, null), true);
+        assertNoMatch(ImmutableMap.<String,Object>of(PROPERTY_CONTENT_TYPES, new String[] {"text/xml", "text/plain"}));
     }
 
     @Test
     public void testMatchAtLeastOneContentType() {
-        this.doTestAgainstProcessingContextWithSelector(new ProcessorConfigurationImpl(new String[] {"text/html",
-                "text/xml" }, null, null, null, null));
+        assertMatch(ImmutableMap.<String,Object>of(PROPERTY_CONTENT_TYPES, new String[] {"text/html", "text/xml"}));
     }
 
     @Test
     public void testMatchAnyContentType() {
-        this.doTestAgainstProcessingContextWithSelector(new ProcessorConfigurationImpl(
-                new String[] {"text/html", "*" }, null, null, null, null));
+        assertMatch(ImmutableMap.<String,Object>of(PROPERTY_CONTENT_TYPES, new String[] {"text/xml", "*"}));
     }
 
     @Test
     public void testMatchExtensionMismatch() {
-        this.doTestAgainstProcessingContextWithSelector(new ProcessorConfigurationImpl(null, null, new String[] {
-            "html", "txt" }, null, null), true);
+        context.requestPathInfo().setExtension("html");
+        assertNoMatch(ImmutableMap.<String,Object>of(PROPERTY_EXTENSIONS, new String[] {"xml","txt"}));
     }
 
     @Test
     public void testMatchAtLeastOneExtension() {
-        this.doTestAgainstProcessingContextWithSelector(new ProcessorConfigurationImpl(null, null, new String[] {
-                "html", "xml" }, null, null));
+        context.requestPathInfo().setExtension("html");
+        assertMatch(ImmutableMap.<String,Object>of(PROPERTY_EXTENSIONS, new String[] {"xml","html"}));
     }
 
     @Test
     public void testMatchResourceTypeMismatch() {
-        this.doTestAgainstProcessingContextWithSelector(new ProcessorConfigurationImpl(null, null, null, new String[] {
-            "a/b/c" }, null), true);
+        context.currentResource(context.create().resource("/content/test",
+                ImmutableMap.<String, Object>of("sling:resourceType", "type/1")));
+        assertNoMatch(ImmutableMap.<String,Object>of(PROPERTY_RESOURCE_TYPES, new String[] {"type/2","type/3"}));
     }
 
     @Test
     public void testMatchAtLeastOneResourceType() {
-        this.doTestAgainstProcessingContextWithSelector(new ProcessorConfigurationImpl(null, null, null, new String[] {
-                "a/b/c", MockSlingHttpServletRequest.RESOURCE_TYPE }, null));
+        context.currentResource(context.create().resource("/content/test",
+                ImmutableMap.<String, Object>of("sling:resourceType", "type/1")));
+        assertMatch(ImmutableMap.<String,Object>of(PROPERTY_RESOURCE_TYPES, new String[] {"type/1","type/2"}));
+    }
+
+    @Test
+    public void testMatchAtLeastOneResourceTypeWithResourceWrapper_UnwrapDisabled() {
+        Resource resource = context.create().resource("/content/test", ImmutableMap.<String, Object>of("sling:resourceType", "type/1"));
+        
+        // overwrite resource type via ResourceWrapper
+        Resource resourceWrapper = new ResourceWrapper(resource) {
+            @Override
+            public String getResourceType() { return "/type/override/1"; }
+        };
+        context.currentResource(resourceWrapper);
+        
+        assertNoMatch(ImmutableMap.<String,Object>of(PROPERTY_RESOURCE_TYPES, new String[] {"type/1","type/2"}));
+    }
+
+    @Test
+    public void testMatchAtLeastOneResourceTypeWithResourceWrapper_UnwrapEnabled() {
+        Resource resource = context.create().resource("/content/test", ImmutableMap.<String, Object>of("sling:resourceType", "type/1"));
+        
+        // overwrite resource type via ResourceWrapper
+        Resource resourceWrapper = new ResourceWrapper(resource) {
+            @Override
+            public String getResourceType() { return "/type/override/1"; }
+        };
+        context.currentResource(resourceWrapper);
+        
+        assertMatch(ImmutableMap.<String,Object>of(PROPERTY_RESOURCE_TYPES, new String[] {"type/1","type/2"},
+                PROPERTY_UNWRAP_RESOURCES, true));
     }
 
     @Test
     public void testMatchPathMismatch() {
-        this.doTestAgainstProcessingContextWithSelector(new ProcessorConfigurationImpl(null, new String[] {"/apps",
-            "/var" }, null, null, null), true);
+        context.requestPathInfo().setResourcePath("/content/test");
+        assertNoMatch(ImmutableMap.<String,Object>of(PROPERTY_PATHS, new String[] {"/apps","/var"}));
     }
 
     @Test
     public void testMatchAtLeastOnePath() {
-        this.doTestAgainstProcessingContextWithSelector(new ProcessorConfigurationImpl(null, new String[] {"/libs",
-                "/content" }, null, null, null));
+        context.requestPathInfo().setResourcePath("/content/test");
+        assertMatch(ImmutableMap.<String,Object>of(PROPERTY_PATHS, new String[] {"/apps","/content"}));
     }
 
     @Test
     public void testMatchAnyPath() {
-        this.doTestAgainstProcessingContextWithSelector(new ProcessorConfigurationImpl(null, new String[] {"/libs",
-                "*" }, null, null, null));
+        context.requestPathInfo().setResourcePath("/content/test");
+        assertMatch(ImmutableMap.<String,Object>of(PROPERTY_PATHS, new String[] {"/apps","*"}));
     }
 
     @Test
     public void testMatchSelectorRequired() {
-        this.doTestAgainstProcessingContextWithoutSelector(new ProcessorConfigurationImpl(null, null, null, null,
-                new String[] {"sel" }), true);
+        assertNoMatch(ImmutableMap.<String,Object>of(PROPERTY_SELECTORS, new String[] {"sel"}));
     }
 
     @Test
     public void testMatchSelectorMismatch() {
-        this.doTestAgainstProcessingContextWithSelector(new ProcessorConfigurationImpl(null, null, null, null,
-            new String[] {"sel3" }), true);
+        context.requestPathInfo().setSelectorString("sel1.sel2");
+        assertNoMatch(ImmutableMap.<String,Object>of(PROPERTY_SELECTORS, new String[] {"sel3"}));
     }
 
     @Test
     public void testMatchAtLeastOneSelector() {
-        this.doTestAgainstProcessingContextWithSelector(new ProcessorConfigurationImpl(null, null, null, null,
-            new String[] {"sel1" }));
+        context.requestPathInfo().setSelectorString("sel1.sel2");
+        assertMatch(ImmutableMap.<String,Object>of(PROPERTY_SELECTORS, new String[] {"sel1"}));
     }
 
-    private void doTestAgainstProcessingContextWithSelector(ProcessorConfiguration configuration) {
-        this.doTestAgainstProcessingContextWithSelector(configuration, false);
-    }
-
-    private void doTestAgainstProcessingContextWithSelector(ProcessorConfiguration configuration, boolean negate) {
-        // setup processing context
-        ProcessingContext context = createProcessingContext(this.mockRequestWithSelector);
-        // test the given configuration
-        doTest(configuration, context, negate);
-    }
-
-    private void doTestAgainstProcessingContextWithoutSelector(ProcessorConfiguration configuration, boolean negate) {
-        // setup processing context
-        ProcessingContext context = createProcessingContext(this.mockRequestWithoutSelector);
-        // test the given configuration
-        doTest(configuration, context, negate);
-    }
-
-    private void doTest(ProcessorConfiguration configuration, ProcessingContext context, boolean negate) {
-        if (!negate) {
-            assertTrue(configuration.match(context));
-        } else {
-            assertFalse(configuration.match(context));
-        }
-    }
-
-    private ProcessingContext createProcessingContext(SlingHttpServletRequest request) {
-        final ProcessingContext context = mock(ProcessingContext.class);
-        when(context.getContentType()).thenReturn("text/xml");
-        when(context.getRequest()).thenReturn(request);
-
-        return context;
-    }
 }

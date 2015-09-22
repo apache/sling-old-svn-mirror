@@ -18,12 +18,15 @@ package org.apache.sling.models.spi.injectorspecific;
 
 import java.lang.reflect.AnnotatedElement;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * Factory for {@link InjectAnnotationProcessor} that is evaluated at runtime for each
  * sling model adaption and may depend on the adaptable. 
  * @deprecated Use {@link StaticInjectAnnotationProcessorFactory} preferably or in case of a dependency to the adaptable {@link InjectAnnotationProcessorFactory2}
  */
 @Deprecated
+@ConsumerType
 public interface InjectAnnotationProcessorFactory {
 
     /**

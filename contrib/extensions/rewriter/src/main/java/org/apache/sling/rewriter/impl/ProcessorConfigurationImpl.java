@@ -23,7 +23,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.resource.ResourceWrapper;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.rewriter.PipelineConfiguration;
 import org.apache.sling.rewriter.ProcessingComponentConfiguration;
@@ -37,29 +39,31 @@ import org.apache.sling.rewriter.ProcessingContext;
  */
 public class ProcessorConfigurationImpl implements PipelineConfiguration {
 
-    private static final String PROPERTY_ORDER = "order";
+    static final String PROPERTY_ORDER = "order";
 
-    private static final String PROPERTY_PATHS = "paths";
+    static final String PROPERTY_PATHS = "paths";
 
-    private static final String PROPERTY_EXTENSIONS = "extensions";
+    static final String PROPERTY_EXTENSIONS = "extensions";
 
-    private static final String PROPERTY_PROCESSOR_TYPE = "processorType";
+    static final String PROPERTY_PROCESSOR_TYPE = "processorType";
 
-    private static final String PROPERTY_CONTENT_TYPES = "contentTypes";
+    static final String PROPERTY_CONTENT_TYPES = "contentTypes";
 
-    private static final String PROPERTY_RESOURCE_TYPES = "resourceTypes";
+    static final String PROPERTY_RESOURCE_TYPES = "resourceTypes";
 
-    private static final String PROPERTY_SELECTORS = "selectors";
+    static final String PROPERTY_UNWRAP_RESOURCES = "unwrapResources";
 
-    private static final String PROPERTY_TRANFORMERS = "transformerTypes";
+    static final String PROPERTY_SELECTORS = "selectors";
 
-    private static final String PROPERTY_GENERATOR = "generatorType";
+    static final String PROPERTY_TRANFORMERS = "transformerTypes";
 
-    private static final String PROPERTY_SERIALIZER = "serializerType";
+    static final String PROPERTY_GENERATOR = "generatorType";
 
-    private static final String PROPERTY_ACTIVE = "enabled";
+    static final String PROPERTY_SERIALIZER = "serializerType";
 
-    private static final String PROPERTY_PROCESS_ERROR = "processError";
+    static final String PROPERTY_ACTIVE = "enabled";
+
+    static final String PROPERTY_PROCESS_ERROR = "processError";
 
 
     /** For which content types should this processor be applied. */
@@ -73,6 +77,9 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
 
     /** For which resource types should this processor be applied. */
     private final String[] resourceTypes;
+
+    /** Whether unwrapped resources should be validated as well when checking for resource types. */
+    private final boolean unwrapResources;
 
     /** For which selectors should this processor be applied. */
     private final String[] selectors;
@@ -112,6 +119,7 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
                                       String[] paths,
                                       String[] extensions,
                                       String[] resourceTypes,
+                                      boolean unwrapResources,
                                       String[] selectors,
                                       int      order,
                                       ProcessingComponentConfiguration generatorConfig,
@@ -120,6 +128,7 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
                                       boolean processErrorResponse) {
         this.contentTypes = contentTypes;
         this.resourceTypes = resourceTypes;
+        this.unwrapResources = unwrapResources;
         this.selectors = selectors;
         this.paths = paths;
         this.extensions = extensions;
@@ -143,7 +152,7 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
                                       String[] extensions,
                                       String[] resourceTypes,
                                       String[] selectors) {
-        this(contentTypes, paths, extensions, resourceTypes, selectors, 0, null, null, null, false);
+        this(contentTypes, paths, extensions, resourceTypes, false, selectors, 0, null, null, null, false);
     }
 
     /**
@@ -154,6 +163,7 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
         final ValueMap properties = ResourceUtil.getValueMap(resource);
         this.contentTypes = properties.get(PROPERTY_CONTENT_TYPES, String[].class);
         this.resourceTypes = properties.get(PROPERTY_RESOURCE_TYPES, String[].class);
+        this.unwrapResources = properties.get(PROPERTY_UNWRAP_RESOURCES, false);
         this.selectors = properties.get(PROPERTY_SELECTORS, String[].class);
         this.paths = properties.get(PROPERTY_PATHS, String[].class);
         this.extensions = properties.get(PROPERTY_EXTENSIONS, String[].class);
@@ -405,12 +415,20 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
         }
         // check resource types
         if ( this.resourceTypes != null && this.resourceTypes.length > 0 ) {
+            final ResourceResolver resourceResolver = processContext.getRequest().getResourceResolver();
             final Resource resource = processContext.getRequest().getResource();
             boolean found = false;
             int index = 0;
             while ( !found && index < this.resourceTypes.length ) {
-                if ( ResourceUtil.isA(resource, resourceTypes[index]) ) {
+                if ( resourceResolver.isResourceType(resource, resourceTypes[index]) ) {
                     found = true;
+                }
+                else if ( unwrapResources && resource instanceof ResourceWrapper ) {
+                    // accept resource as well if type was overridden and unwrapped resource has a matching type
+                    final Resource unwrappedResource = unwrap(resource);
+                    if ( resourceResolver.isResourceType(unwrappedResource, resourceTypes[index]) ) {
+                        found = true;
+                    }
                 }
                 index++;
             }
@@ -465,6 +483,20 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
         return true;
     }
 
+    /**
+     * Unwrap the resource and return the wrapped implementation.
+     * Copied from ResourceUtil.unwrap which is available in Sling API 2.7.0 and up.
+     * @param rsrc The resource to unwrap
+     * @return The unwrapped resource
+     */
+    private static Resource unwrap(final Resource rsrc) {
+        Resource result = rsrc;
+        while (result instanceof ResourceWrapper) {
+            result = ((ResourceWrapper)result).getResource();
+        }
+        return result;
+    }
+    
     /**
      * The configuration for the generator.
      */

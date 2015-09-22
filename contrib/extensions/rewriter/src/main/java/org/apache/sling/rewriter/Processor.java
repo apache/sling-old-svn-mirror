@@ -51,7 +51,7 @@ public interface Processor {
     /**
      * Clean up the processor.
      * This method should always be called after a processor run, regardless if it was successfull or failed.
-     * @param errorOcurred Indicates if an error occured during processing
+     * @param errorOccured Indicates if an error occured during processing
      */
     void finished(boolean errorOccured) throws IOException;
 }

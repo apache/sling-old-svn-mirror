@@ -146,6 +146,10 @@
           <module>nosql/generic</module>
           <module>nosql/couchbase-client</module>
           <module>nosql/couchbase-resourceprovider</module>
+          <module>nosql/mongodb-resourceprovider</module>
+          <!-- Disable NoSQL launchpad from main contrib build because it fails on jenkins (reason unclear)
+          <module>nosql/launchpad</module>
+          -->
 
           <module>launchpad/testing</module>
           <module>launchpad/karaf</module>

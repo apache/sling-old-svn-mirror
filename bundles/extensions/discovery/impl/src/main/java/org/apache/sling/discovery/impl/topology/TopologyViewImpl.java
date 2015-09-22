@@ -234,7 +234,7 @@ public class TopologyViewImpl implements TopologyView {
 
     @Override
     public String toString() {
-        return "TopologyViewImpl [current=" + current + ", instances="
-                + instances + "]";
+        return "TopologyViewImpl [current=" + current + ", super.hashCode=" + super.hashCode() +
+                ", instances=" + instances + "]";
     }
 }

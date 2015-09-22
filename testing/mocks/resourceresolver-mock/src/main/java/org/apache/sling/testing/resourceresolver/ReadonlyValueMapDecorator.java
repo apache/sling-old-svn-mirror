@@ -103,4 +103,9 @@ class ReadonlyValueMapDecorator implements ValueMap {
         return delegate;
     }
 
+    @Override
+    public String toString() {
+        return delegate.toString();
+    }
+
 }
