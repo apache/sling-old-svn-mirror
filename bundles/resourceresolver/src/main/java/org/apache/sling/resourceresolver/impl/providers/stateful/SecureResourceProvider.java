@@ -31,7 +31,7 @@ import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SecureResoureProvider extends StatefulResourceProviderWrapper {
+public class SecureResourceProvider extends StatefulResourceProviderWrapper {
 
     private static final Logger logger = LoggerFactory.getLogger(ResourceResolverImpl.class);
 
@@ -39,7 +39,7 @@ public class SecureResoureProvider extends StatefulResourceProviderWrapper {
 
     private final ResourceAccessSecurityTracker tracker;
 
-    public SecureResoureProvider(StatefulResourceProvider rp, ResourceAccessSecurityTracker tracker) {
+    public SecureResourceProvider(StatefulResourceProvider rp, ResourceAccessSecurityTracker tracker) {
         super(rp);
         if (tracker == null) {
             logger.warn("ResourceAccessSecurityTracker is null. Resource-level security will be disabled.");
@@ -104,7 +104,7 @@ public class SecureResoureProvider extends StatefulResourceProviderWrapper {
     @Override
     public StatefulResourceProvider clone(Map<String, Object> authenticationInfo, ResourceResolver resolver)
             throws LoginException {
-        return new SecureResoureProvider(rp, tracker);
+        return new SecureResourceProvider(rp, tracker);
     }
 
     private class SecureIterator extends AbstractIterator<Resource> {

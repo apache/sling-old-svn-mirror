@@ -64,7 +64,7 @@ import org.apache.sling.resourceresolver.impl.params.ParsedParameters;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.stateful.AuthenticatedResourceProvider;
 import org.apache.sling.resourceresolver.impl.providers.stateful.CombinedResourceProvider;
-import org.apache.sling.resourceresolver.impl.providers.stateful.SecureResoureProvider;
+import org.apache.sling.resourceresolver.impl.providers.stateful.SecureResourceProvider;
 import org.apache.sling.resourceresolver.impl.providers.stateful.StatefulResourceProvider;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.slf4j.Logger;
@@ -151,7 +151,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         }
         List<StatefulResourceProvider> secured = new ArrayList<StatefulResourceProvider>();
         for (StatefulResourceProvider p : authenticated) {
-            secured.add(new SecureResoureProvider(p, this.factory.getResourceAccessSecurityTracker()));
+            secured.add(new SecureResourceProvider(p, this.factory.getResourceAccessSecurityTracker()));
         }
         return new CombinedResourceProvider(secured, this);
     }
