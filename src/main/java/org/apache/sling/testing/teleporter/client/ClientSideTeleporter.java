@@ -35,11 +35,17 @@ import org.ops4j.pax.tinybundles.core.TinyBundle;
 import org.ops4j.pax.tinybundles.core.TinyBundles;
 import org.osgi.framework.Constants;
 
+/** Client-side TeleporterRule. Packages the
+ *  test to run in a test bundle, installs the bundle,
+ *  executes the test via the JUnit servlet, collects
+ *  the results and uninstalls the bundle.  
+ */
 public class ClientSideTeleporter extends TeleporterRule {
 
     private DependencyAnalyzer dependencyAnalyzer;
     private int testReadyTimeoutSeconds = 5;
     private String baseUrl;
+    private String serverCredentials;
     private final Set<Class<?>> embeddedClasses = new HashSet<Class<?>>();
     
     private InputStream buildTestBundle(Class<?> c, Collection<Class<?>> embeddedClasses, String bundleSymbolicName) {
@@ -66,20 +72,40 @@ public class ClientSideTeleporter extends TeleporterRule {
         dependencyAnalyzer = DependencyAnalyzer.forClass(classUnderTest);
     }
     
+    /** Define how long to wait for our test to be ready on the server-side,
+     *  after installing the test bundle */
     public void setTestReadyTimeoutSeconds(int tm) {
         testReadyTimeoutSeconds = tm;
     }
     
+    /** Set the credentials to use to install our test bundle on the server */
+    public void setServerCredentials(String username, String password) {
+        serverCredentials = username + ":" + password;
+    }
+    
+    /** Define a prefix for class names that can be embedded
+     *  in the test bundle if the {@link DependencyAnalyzer} thinks
+     *  they should. Overridden by {@link #excludeDependencyPrefix } if
+     *  any conflicts arise.
+     */
     public ClientSideTeleporter includeDependencyPrefix(String prefix) {
         dependencyAnalyzer.include(prefix);
         return this;
     }
     
+    /** Define a prefix for class names that should not be embedded
+     *  in the test bundle. Takes precedence over {@link #includeDependencyPrefix }.
+     */
     public ClientSideTeleporter excludeDependencyPrefix(String prefix) {
         dependencyAnalyzer.exclude(prefix);
         return this;
     }
     
+    /** Indicate that a specific class must be embedded in the test bundle. 
+     *  In theory our DependencyAnalyzer should find which classes need to be
+     *  embedded, but if that does not work this method can be used
+     *  as a workaround.  
+     */
     public ClientSideTeleporter embedClass(Class<?> c) {
         embeddedClasses.add(c);
         return this;
@@ -100,6 +126,11 @@ public class ClientSideTeleporter extends TeleporterRule {
         if(baseUrl == null) {
             fail("base URL is not set");
         }
+        
+        if(serverCredentials == null || serverCredentials.isEmpty()) {
+            fail("server credentials are not set");
+        }
+        
         if(baseUrl.endsWith("/")) {
             baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
         }
@@ -109,6 +140,8 @@ public class ClientSideTeleporter extends TeleporterRule {
         }
 
         final TeleporterHttpClient httpClient = new TeleporterHttpClient(baseUrl);
+        httpClient.setCredentials(serverCredentials);
+        
         // As this is not a ClassRule (which wouldn't map the test results correctly in an IDE)
         // we currently create and install a test bundle for every test method. It might be good
         // to optimize this, but as those test bundles are usually very small that doesn't seem
