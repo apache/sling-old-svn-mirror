@@ -21,6 +21,7 @@ import java.util.Map;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -44,6 +45,7 @@ public class RatingsServiceImpl implements RatingsService {
     /**
      * @see org.apache.sling.sample.slingshot.ratings.RatingsService#getRatingsResourcePath(org.apache.sling.api.resource.Resource)
      */
+    @Override
     public String getRatingsResourcePath(final Resource resource) {
         final String contentPath = SlingshotUtil.getContentPath(resource);
         if ( contentPath != null ) {
@@ -58,6 +60,7 @@ public class RatingsServiceImpl implements RatingsService {
     /**
      * @see org.apache.sling.sample.slingshot.ratings.RatingsService#getRating(org.apache.sling.api.resource.Resource)
      */
+    @Override
     public int getRating(final Resource resource) {
         final String fullPath = getRatingsResourcePath(resource);
         int rating = 0;
@@ -82,6 +85,7 @@ public class RatingsServiceImpl implements RatingsService {
     /**
      * @see org.apache.sling.sample.slingshot.ratings.RatingsService#getRating(org.apache.sling.api.resource.Resource, java.lang.String)
      */
+    @Override
     public int getRating(final Resource resource, final String userId) {
         final String fullPath = getRatingsResourcePath(resource);
         int rating = 0;
@@ -97,6 +101,7 @@ public class RatingsServiceImpl implements RatingsService {
     /**
      * @see org.apache.sling.sample.slingshot.ratings.RatingsService#setRating(org.apache.sling.api.resource.Resource, java.lang.String, int)
      */
+    @Override
     public void setRating(final Resource resource, final String userId, final int rating)
     throws PersistenceException {
         final String ratingsPath = getRatingsResourcePath(resource) ;
@@ -106,10 +111,17 @@ public class RatingsServiceImpl implements RatingsService {
         final Resource ratingsResource = ResourceUtil.getOrCreateResource(resource.getResourceResolver(),
                 ratingsPath, props, null, true);
 
-        props.clear();
-        props.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, RatingsUtil.RESOURCETYPE_RATING);
-        props.put(RatingsUtil.PROPERTY_RATING, rating);
-        ResourceUtil.getOrCreateResource(resource.getResourceResolver(),
-                ratingsResource.getPath() + "/" + userId, props, null, false);
+        final Resource ratingRsrc = resource.getResourceResolver().getResource(ratingsResource, userId);
+        if ( ratingRsrc == null ) {
+            props.clear();
+            props.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, RatingsUtil.RESOURCETYPE_RATING);
+            props.put(RatingsUtil.PROPERTY_RATING, rating);
+
+            resource.getResourceResolver().create(ratingsResource, userId, props);
+        } else {
+            final ModifiableValueMap mvm = ratingRsrc.adaptTo(ModifiableValueMap.class);
+            mvm.put(RatingsUtil.PROPERTY_RATING, rating);
+        }
+        resource.getResourceResolver().commit();
     }
 }

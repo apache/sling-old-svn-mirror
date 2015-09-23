@@ -37,9 +37,11 @@
         String prefix = "../";
         boolean continueProcessing = true;
         do {
-            final ValueMap parentAttr = parent.getValueMap();
-            final String parentName = parent.getName();
-            parents.add(new Object[] {prefix + parentName, ResponseUtil.escapeXml(parentAttr.get(SlingshotConstants.PROPERTY_TITLE, parentName))});
+            if ( !parent.isResourceType(SlingshotConstants.RESOURCETYPE_CONTENT) ) {
+                final ValueMap parentAttr = parent.getValueMap();
+                final String parentName = parent.getName();
+                parents.add(new Object[] {prefix + parentName, ResponseUtil.escapeXml(parentAttr.get(SlingshotConstants.PROPERTY_TITLE, parentName))});
+            }
             if ( parent.isResourceType(SlingshotConstants.RESOURCETYPE_USER) ) {
                 continueProcessing = false;
             } else {
