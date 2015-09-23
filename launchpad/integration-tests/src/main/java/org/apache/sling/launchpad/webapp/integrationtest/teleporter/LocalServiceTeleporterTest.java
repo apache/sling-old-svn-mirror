@@ -16,8 +16,14 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest.teleporter;
 
-import org.apache.sling.junit.rules.TeleporterRule;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
+
+import java.util.UUID;
+
+import org.apache.sling.junit.rules.TeleporterRule;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
@@ -26,27 +32,38 @@ import org.osgi.framework.ServiceRegistration;
 /** Test registering a service with a local interface in our teleported server-side test class. */
  public class LocalServiceTeleporterTest {
 
-    private final long value = System.currentTimeMillis(); 
+    private String value; 
+    private ServiceRegistration reg;
     
-    private final SomeService serviceImpl = new SomeService() {
-        @Override
-        public long getValue() {
-            return LocalServiceTeleporterTest.this.value;
-        }
-    };
-     
     @Rule
     public final TeleporterRule teleporter = TeleporterRule.forClass(getClass(), "Launchpad");
     
-    @Test
-    public void testLocalService() {
+    @Before
+    public void setup() {
+        value = UUID.randomUUID().toString();
         final BundleContext bc = teleporter.getService(BundleContext.class);
-        final ServiceRegistration reg = bc.registerService(SomeService.class.getName(), serviceImpl, null);
-        try {
-            final SomeService s = teleporter.getService(SomeService.class);
-            assertEquals(value, s.getValue());
-        } finally {
+        
+        final SomeService s = new SomeService() {
+            @Override
+            public String getValue() {
+                return LocalServiceTeleporterTest.this.value;
+            }
+        };
+        
+        reg = bc.registerService(SomeService.class.getName(), s, null);
+    }
+    
+    @After
+    public void cleanup() {
+        if(reg != null) {
             reg.unregister();
         }
+    }
+    
+    @Test
+    public void testLocalService() {
+        final SomeService s = teleporter.getService(SomeService.class);
+        assertNotNull("Expecting to get a SomeService instance", s);
+        assertEquals(value, s.getValue());
     }
 }
