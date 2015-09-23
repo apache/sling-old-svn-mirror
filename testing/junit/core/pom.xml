@@ -24,11 +24,11 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>24</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.junit.core</artifactId>
-    <version>1.0.11-SNAPSHOT</version>
+    <version>1.0.12</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling JUnit Core</name>
@@ -41,9 +41,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/junit/core</connection>
-        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/junit/core</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/testing/junit/core</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.junit.core-1.0.12</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.junit.core-1.0.12</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.junit.core-1.0.12</url>
     </scm>
 
     <build>
