@@ -31,7 +31,7 @@ public class HApiTypeImpl implements HApiType {
 
     public static final Logger LOG = LoggerFactory.getLogger(HApiTypeImpl.class);
 
-    private final HApiType parent;
+    private HApiType parent;
 
     private String name;
 
@@ -68,6 +68,7 @@ public class HApiTypeImpl implements HApiType {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getName() {
         return name;
     }
@@ -75,6 +76,7 @@ public class HApiTypeImpl implements HApiType {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getDescription() {
         return description;
     }
@@ -82,6 +84,7 @@ public class HApiTypeImpl implements HApiType {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getPath() {
         return path;
     }
@@ -89,6 +92,7 @@ public class HApiTypeImpl implements HApiType {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getUrl() {
         return getPath() + ".html";
     }
@@ -96,6 +100,7 @@ public class HApiTypeImpl implements HApiType {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getFqdn() {
         return fqdn;
     }
@@ -103,6 +108,7 @@ public class HApiTypeImpl implements HApiType {
     /**
      * {@inheritDoc}
      */
+    @Override
     public List<String> getParameters() {
         return parameters;
     }
@@ -110,6 +116,7 @@ public class HApiTypeImpl implements HApiType {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Map<String, HApiProperty> getProperties() {
         return properties;
     }
@@ -117,6 +124,7 @@ public class HApiTypeImpl implements HApiType {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Map<String, HApiProperty> getAllProperties() {
         Map<String, HApiProperty> allProps = new HashMap<String, HApiProperty>();
         LOG.debug("parent: {}", parent);
@@ -132,6 +140,7 @@ public class HApiTypeImpl implements HApiType {
     /**
      * {@inheritDoc}
      */
+    @Override
     public HApiType getParent() {
         return parent;
     }
@@ -139,8 +148,17 @@ public class HApiTypeImpl implements HApiType {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isAbstract() {
         return isAbstract;
     }
 
+
+    public void setParent(HApiType parent) {
+        this.parent = parent;
+    }
+
+    public void setProperties(Map<String, HApiProperty> properties) {
+        this.properties = properties;
+    }
 }
