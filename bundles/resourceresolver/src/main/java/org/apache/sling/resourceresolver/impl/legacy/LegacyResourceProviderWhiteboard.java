@@ -27,6 +27,7 @@ import static org.apache.sling.spi.resource.provider.ResourceProvider.PROPERTY_M
 import static org.apache.sling.spi.resource.provider.ResourceProvider.PROPERTY_NAME;
 import static org.apache.sling.spi.resource.provider.ResourceProvider.PROPERTY_ROOT;
 import static org.apache.sling.spi.resource.provider.ResourceProvider.PROPERTY_USE_RESOURCE_ACCESS_SECURITY;
+import static org.osgi.framework.Constants.SERVICE_PID;
 import static org.osgi.framework.Constants.SERVICE_RANKING;
 
 import java.util.ArrayList;
@@ -59,6 +60,8 @@ import org.osgi.framework.ServiceRegistration;
         @Reference(name = "ResourceProviderFactory", referenceInterface = ResourceProviderFactory.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC) })
 public class LegacyResourceProviderWhiteboard {
 
+    public static final String ORIGINAL_SERVICE_PID = "original.service.pid";
+
     private Map<Object, List<ServiceRegistration>> registrations = new HashMap<Object, List<ServiceRegistration>>();
 
     protected void bindResourceProvider(ServiceReference ref) {
@@ -73,6 +76,9 @@ public class LegacyResourceProviderWhiteboard {
             newProps.put(PROPERTY_MODIFIABLE, provider instanceof ModifyingResourceProvider);
             newProps.put(PROPERTY_NAME, provider.getClass().getName());
             newProps.put(PROPERTY_ROOT, normalizePath(path));
+            if (ArrayUtils.contains(propertyNames, SERVICE_PID)) {
+                newProps.put(ORIGINAL_SERVICE_PID, ref.getProperty(SERVICE_PID));
+            }
             if (ArrayUtils.contains(propertyNames, USE_RESOURCE_ACCESS_SECURITY)) {
                 newProps.put(PROPERTY_USE_RESOURCE_ACCESS_SECURITY, ref.getProperty(USE_RESOURCE_ACCESS_SECURITY));
             }
@@ -111,6 +117,9 @@ public class LegacyResourceProviderWhiteboard {
             newProps.put(PROPERTY_MODIFIABLE, true);
             newProps.put(PROPERTY_NAME, factory.getClass().getName());
             newProps.put(PROPERTY_ROOT, normalizePath(path));
+            if (ArrayUtils.contains(propertyNames, SERVICE_PID)) {
+                newProps.put(ORIGINAL_SERVICE_PID, ref.getProperty(SERVICE_PID));
+            }
             if (ArrayUtils.contains(propertyNames, USE_RESOURCE_ACCESS_SECURITY)) {
                 newProps.put(PROPERTY_USE_RESOURCE_ACCESS_SECURITY, ref.getProperty(USE_RESOURCE_ACCESS_SECURITY));
             }

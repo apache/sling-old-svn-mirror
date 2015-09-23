@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.apache.commons.collections.BidiMap;
 import org.apache.commons.collections.bidimap.TreeBidiMap;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
@@ -36,6 +37,8 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.References;
+import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.ResourceDecorator;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
@@ -50,7 +53,10 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
+import org.osgi.service.event.EventConstants;
+import org.osgi.service.event.EventHandler;
 
 /**
  * The <code>ResourceResolverFactoryActivator/code> keeps track of required services for the
@@ -65,15 +71,18 @@ import org.osgi.service.event.EventAdmin;
      label = "Apache Sling Resource Resolver Factory",
      description = "Configures the Resource Resolver for request URL and resource path rewriting.",
      specVersion = "1.1",
-     metatype = true)
+     metatype = true,
+     immediate = true)
 @Properties({
     @Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling Resource Resolver Factory"),
-    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation")
+    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
+    @Property(name = EventConstants.EVENT_TOPIC, value = SlingConstants.TOPIC_RESOURCE_PROVIDER_ADDED, propertyPrivate = true)
 })
 @References({
     @Reference(name = "ResourceDecorator", referenceInterface = ResourceDecorator.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
 })
-public class ResourceResolverFactoryActivator implements Runnable {
+@Service(EventHandler.class)
+public class ResourceResolverFactoryActivator implements Runnable, EventHandler {
 
     private static final class FactoryRegistration {
         /** Registration .*/
@@ -297,7 +306,6 @@ public class ResourceResolverFactoryActivator implements Runnable {
     /** vanity paths will have precedence over existing /etc/map mapping? */
     private boolean vanityPathPrecedence = DEFAULT_VANITY_PATH_PRECEDENCE;
 
-
     /** Vanity path whitelist */
     private String[] vanityPathWhiteList;
 
@@ -320,6 +328,8 @@ public class ResourceResolverFactoryActivator implements Runnable {
     }
 
     private final List<BG_OP> operations = new ArrayList<BG_OP>();
+
+    private String[] requiredResourceProviders;
 
     /**
      * Get the resource decorator tracker.
@@ -510,8 +520,8 @@ public class ResourceResolverFactoryActivator implements Runnable {
         final BundleContext bc = componentContext.getBundleContext();
 
         // check for required property
-        final String[] required = PropertiesUtil.toStringArray(properties.get(PROP_REQUIRED_PROVIDERS));
-        this.preconds.activate(bc, required, resourceProviderTracker);
+        requiredResourceProviders = PropertiesUtil.toStringArray(properties.get(PROP_REQUIRED_PROVIDERS));
+        this.preconds.activate(bc, requiredResourceProviders, resourceProviderTracker);
 
         this.checkFactoryPreconditions();
 
@@ -678,5 +688,12 @@ public class ResourceResolverFactoryActivator implements Runnable {
 
     public ResourceProviderTracker getResourceProviderTracker() {
         return resourceProviderTracker;
+    }
+
+    @Override
+    public void handleEvent(Event event) {
+        if (ArrayUtils.contains(requiredResourceProviders, event.getProperty(Constants.SERVICE_PID))) {
+            this.checkFactoryPreconditions();
+        }
     }
 }
