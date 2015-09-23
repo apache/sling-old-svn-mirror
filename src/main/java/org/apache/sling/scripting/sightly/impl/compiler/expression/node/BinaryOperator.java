@@ -198,6 +198,16 @@ public enum BinaryOperator {
        if (left == null && right == null) {
            return true;
        }
+       if ((left instanceof Enum && right instanceof String) || (left instanceof String && right instanceof Enum)) {
+           String constantName = left instanceof String ? (String) left : (String) right;
+           Enum enumObject = left instanceof Enum ? (Enum) left : (Enum) right;
+           try {
+               Enum enumComparisonObject = Enum.valueOf(enumObject.getClass(), constantName);
+               return enumComparisonObject == enumObject;
+           } catch (Exception e) {
+               return false;
+           }
+       }
        if (left == null || right == null) {
            Object notNull = (left != null) ? left : right;
            if (notNull instanceof String || notNull instanceof Boolean || notNull instanceof Number) {
