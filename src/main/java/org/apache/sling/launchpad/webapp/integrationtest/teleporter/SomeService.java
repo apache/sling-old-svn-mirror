@@ -17,5 +17,5 @@
 package org.apache.sling.launchpad.webapp.integrationtest.teleporter;
 
 public interface SomeService {
-    long getValue();
+    String getValue();
 }
