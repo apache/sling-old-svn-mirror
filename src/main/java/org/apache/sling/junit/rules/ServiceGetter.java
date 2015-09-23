@@ -17,7 +17,12 @@
 
 package org.apache.sling.junit.rules;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 
 /** Implements the logic used to get a service */
@@ -25,24 +30,36 @@ class ServiceGetter {
     final ServiceReference serviceReference;
     final Object service;
 
+    @SuppressWarnings("unchecked")
     ServiceGetter(BundleContext bundleContext, Class<?> serviceClass, String ldapFilter) {
         Object s;
-        
-        if(ldapFilter != null && !ldapFilter.isEmpty()) {
-            throw new UnsupportedOperationException("LDAP service filter is not supported so far");
-        }
         
         if (serviceClass.equals(BundleContext.class)) {
             // Special case to provide the BundleContext to tests
             s = serviceClass.cast(bundleContext);
             serviceReference = null;
         } else {
-            serviceReference = bundleContext.getServiceReference(serviceClass
-                    .getName());
-
+            if(ldapFilter != null && !ldapFilter.isEmpty()) {
+                try {
+                    final ServiceReference [] services = bundleContext.getServiceReferences(serviceClass.getName(), ldapFilter);
+                    if(services == null) {
+                        serviceReference = null;
+                    } else {
+                        // Prefer services which have a higher ranking
+                        final List<ServiceReference> sorted = Arrays.asList(services);
+                        Collections.sort(sorted);
+                        serviceReference = sorted.get(sorted.size() - 1);
+                    }
+                } catch (InvalidSyntaxException e) {
+                    throw new IllegalStateException("Invalid filter syntax:" + ldapFilter, e);
+                }
+            } else {
+                serviceReference = bundleContext.getServiceReference(serviceClass.getName());
+            }
+            
             if (serviceReference == null) {
                 throw new IllegalStateException(
-                        "unable to get a service reference");
+                        "unable to get a service reference, class=" + serviceClass.getName() + ", filter='" + ldapFilter + "'");
             }
 
             final Object service = bundleContext.getService(serviceReference);
