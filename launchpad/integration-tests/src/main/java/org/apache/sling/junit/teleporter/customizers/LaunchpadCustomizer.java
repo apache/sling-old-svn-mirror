@@ -31,7 +31,6 @@ public class LaunchpadCustomizer implements TeleporterRule.Customizer {
 
     private final static HttpTest H = new HttpTest();
     private final static int testReadyTimeout = Integer.getInteger("ClientSideTeleporter.testReadyTimeoutSeconds",12);
-    public static String PROP_OPTIONS = ("Sling.LaunchpadCustomizer.Test.Options"); 
     
     @Override
     /** Customize the client-side TeleporterRule by first waiting
