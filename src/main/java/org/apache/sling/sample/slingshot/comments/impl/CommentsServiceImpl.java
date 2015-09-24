@@ -77,7 +77,7 @@ public class CommentsServiceImpl implements CommentsService {
         final Map<String, Object> properties = new HashMap<String, Object>();
         properties.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, CommentsUtil.RESOURCETYPE_COMMENT);
         properties.put(CommentsUtil.PROPERTY_TITLE, c.getTitle());
-        properties.put(CommentsUtil.PROPERTY_TEXT, c.getTitle());
+        properties.put(CommentsUtil.PROPERTY_TEXT, c.getText());
         properties.put(CommentsUtil.PROPERTY_USER, c.getCreatedBy());
 
         // we try it five times
