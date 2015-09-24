@@ -59,6 +59,7 @@ import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.discovery.impl.cluster.ClusterViewService;
 import org.apache.sling.discovery.impl.cluster.UndefinedClusterViewException;
+import org.apache.sling.discovery.impl.cluster.UndefinedClusterViewException.Reason;
 import org.apache.sling.discovery.impl.common.DefaultClusterViewImpl;
 import org.apache.sling.discovery.impl.common.DefaultInstanceDescriptionImpl;
 import org.apache.sling.discovery.impl.common.heartbeat.HeartbeatHandler;
@@ -686,8 +687,26 @@ public class DiscoveryServiceImpl implements DiscoveryService {
             // treat it as being cut off from the entire topology, ie we don't
             // update the announcements but just return
             // the previous oldView marked as !current
-            logger.info("getTopology: undefined cluster view: "+e.getClass().getSimpleName()+": "+e);
+            logger.info("getTopology: undefined cluster view: "+e.getClass().getSimpleName()+": ["+e.getReason()+"] "+e);
             oldView.markOld();
+            if (e.getReason()==Reason.ISOLATED_FROM_TOPOLOGY) {
+                if (heartbeatHandler!=null) {
+                    // SLING-5030 part 2: when we detect being isolated we should
+                    // step at the end of the leader-election queue and 
+                    // that can be achieved by resetting the leaderElectionId
+                    // (which will in turn take effect on the next round of
+                    // voting, or also double-checked when the local instance votes)
+                    //
+                    //TODO:
+                    // Note that when the local instance doesn't notice
+                    // an 'ISOLATED_FROM_TOPOLOGY' case, then the leaderElectionId
+                    // will not be reset. Which means that it then could potentially
+                    // regain leadership.
+                    if (heartbeatHandler.resetLeaderElectionId()) {
+                        logger.info("getTopology: reset leaderElectionId to force this instance to the end of the instance order (thus incl not to remain leader)");
+                    }
+                }
+            }
             return oldView;
         }
 

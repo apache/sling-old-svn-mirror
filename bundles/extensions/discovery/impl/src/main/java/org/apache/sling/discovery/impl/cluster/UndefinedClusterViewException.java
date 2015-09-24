@@ -29,11 +29,35 @@ package org.apache.sling.discovery.impl.cluster;
  */
 public class UndefinedClusterViewException extends Exception {
 
-    public UndefinedClusterViewException() {
-        super();
+    public static enum Reason {
+        /** used when the local instance is isolated from the topology
+         * (which is noticed by an established view that does not include
+         * the local instance)
+         */
+        ISOLATED_FROM_TOPOLOGY,
+        
+        /** used when there is no established view yet
+         * (happens on a fresh installation)
+         */
+        NO_ESTABLISHED_VIEW,
+        
+        /** used when we couldn't reach the repository **/
+        REPOSITORY_EXCEPTION
     }
 
-    public UndefinedClusterViewException(String msg) {
+    private final Reason reason;
+    
+    public UndefinedClusterViewException(Reason reason) {
+        super();
+        this.reason = reason;
+    }
+
+    public UndefinedClusterViewException(Reason reason, String msg) {
         super(msg);
+        this.reason = reason;
+    }
+    
+    public Reason getReason() {
+        return reason;
     }
 }

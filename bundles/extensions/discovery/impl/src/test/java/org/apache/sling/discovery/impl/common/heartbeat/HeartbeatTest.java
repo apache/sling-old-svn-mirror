@@ -138,12 +138,14 @@ public class HeartbeatTest {
         assertEquals(1, slowMachine.getDiscoveryService().getTopology().getInstances().size());
         assertEquals(slowMachine.getSlingId(), slowMachine.getDiscoveryService().getTopology().getInstances().iterator().next().getSlingId());
         instances.add(slowMachine);
+        Thread.sleep(10); // wait 10ms to ensure 'slowMachine' has the lowerst leaderElectionId (to become leader)
         SimpleTopologyEventListener slowListener = new SimpleTopologyEventListener("slow");
         slowMachine.bindTopologyEventListener(slowListener);
         Instance fastMachine1 = Instance.newClusterInstance("/var/discovery/impl/", "fast1", slowMachine, false, 5, 1, 0);
         assertEquals(1, fastMachine1.getDiscoveryService().getTopology().getInstances().size());
         assertEquals(fastMachine1.getSlingId(), fastMachine1.getDiscoveryService().getTopology().getInstances().iterator().next().getSlingId());
         instances.add(fastMachine1);
+        Thread.sleep(10); // wait 10ms to ensure 'fastMachine1' has the 2nd lowerst leaderElectionId (to become leader during partitioning)
         SimpleTopologyEventListener fastListener1 = new SimpleTopologyEventListener("fast1");
         fastMachine1.bindTopologyEventListener(fastListener1);
         Instance fastMachine2 = Instance.newClusterInstance("/var/discovery/impl/", "fast2", slowMachine, false, 5, 1, 0);
@@ -186,18 +188,23 @@ public class HeartbeatTest {
         assertNotNull(fastListener1.getLastEvent());
         assertEquals(TopologyEvent.Type.TOPOLOGY_INIT, fastListener1.getLastEvent().getType());
         assertEquals(5, fastListener1.getLastEvent().getNewView().getInstances().size());
+        assertFalse(fastListener1.getLastEvent().getNewView().getLocalInstance().isLeader());
         assertNotNull(fastListener2.getLastEvent());
         assertEquals(TopologyEvent.Type.TOPOLOGY_INIT, fastListener2.getLastEvent().getType());
         assertEquals(5, fastListener2.getLastEvent().getNewView().getInstances().size());
+        assertFalse(fastListener2.getLastEvent().getNewView().getLocalInstance().isLeader());
         assertNotNull(fastListener3.getLastEvent());
         assertEquals(TopologyEvent.Type.TOPOLOGY_INIT, fastListener3.getLastEvent().getType());
         assertEquals(5, fastListener3.getLastEvent().getNewView().getInstances().size());
+        assertFalse(fastListener3.getLastEvent().getNewView().getLocalInstance().isLeader());
         assertNotNull(fastListener4.getLastEvent());
         assertEquals(TopologyEvent.Type.TOPOLOGY_INIT, fastListener4.getLastEvent().getType());
         assertEquals(5, fastListener4.getLastEvent().getNewView().getInstances().size());
+        assertFalse(fastListener4.getLastEvent().getNewView().getLocalInstance().isLeader());
         assertNotNull(slowListener.getLastEvent());
         assertEquals(TopologyEvent.Type.TOPOLOGY_INIT, slowListener.getLastEvent().getType());
         assertEquals(5, slowListener.getLastEvent().getNewView().getInstances().size());
+        assertTrue(slowListener.getLastEvent().getNewView().getLocalInstance().isLeader());
         
         // after 7sec the slow instance' heartbeat should have timed out
         for(int i=0; i<7; i++) {
@@ -225,6 +232,11 @@ public class HeartbeatTest {
             assertEquals(4, fastListener3.getLastEvent().getNewView().getInstances().size());
             assertEquals(TopologyEvent.Type.TOPOLOGY_CHANGED, fastListener4.getLastEvent().getType());
             assertEquals(4, fastListener4.getLastEvent().getNewView().getInstances().size());
+            
+            assertTrue(fastListener1.getLastEvent().getNewView().getLocalInstance().isLeader());
+            assertFalse(fastListener2.getLastEvent().getNewView().getLocalInstance().isLeader());
+            assertFalse(fastListener3.getLastEvent().getNewView().getLocalInstance().isLeader());
+            assertFalse(fastListener4.getLastEvent().getNewView().getLocalInstance().isLeader());
 
             // and the slow instance should be isolated
             assertFalse(slowMachine.getDiscoveryService().getTopology().isCurrent());
@@ -276,6 +288,14 @@ public class HeartbeatTest {
         assertEquals(5, fastListener4.getLastEvent().getNewView().getInstances().size());
         assertEquals(TopologyEvent.Type.TOPOLOGY_CHANGED, slowListener.getLastEvent().getType());
         assertEquals(5, slowListener.getLastEvent().getNewView().getInstances().size());
+        
+        // SLING-5030 part 2 : after rejoin-after-partitioning the slowMachine1 should again be leader
+        slowMachine.dumpRepo();
+        assertFalse(slowListener.getLastEvent().getNewView().getLocalInstance().isLeader());
+        assertTrue(fastListener1.getLastEvent().getNewView().getLocalInstance().isLeader());
+        assertFalse(fastListener2.getLastEvent().getNewView().getLocalInstance().isLeader());
+        assertFalse(fastListener3.getLastEvent().getNewView().getLocalInstance().isLeader());
+        assertFalse(fastListener4.getLastEvent().getNewView().getLocalInstance().isLeader());
     }
     
     /**

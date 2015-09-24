@@ -31,6 +31,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.impl.Config;
+import org.apache.sling.discovery.impl.cluster.UndefinedClusterViewException.Reason;
 import org.apache.sling.discovery.impl.common.View;
 import org.apache.sling.discovery.impl.common.ViewHelper;
 import org.apache.sling.discovery.impl.common.resource.EstablishedClusterView;
@@ -94,7 +95,8 @@ public class ClusterViewServiceImpl implements ClusterViewService {
     public ClusterView getClusterView() throws UndefinedClusterViewException {
     	if (resourceResolverFactory==null) {
     		logger.warn("getClusterView: no resourceResolverFactory set at the moment.");
-    		throw new UndefinedClusterViewException("no resourceResolverFactory set");
+    		throw new UndefinedClusterViewException(Reason.REPOSITORY_EXCEPTION,
+    		        "no resourceResolverFactory set");
     	}
         ResourceResolver resourceResolver = null;
         try {
@@ -104,7 +106,8 @@ public class ClusterViewServiceImpl implements ClusterViewService {
             View view = ViewHelper.getEstablishedView(resourceResolver, config);
             if (view == null) {
                 logger.debug("getClusterView: no view established at the moment. isolated mode");
-                throw new UndefinedClusterViewException("no established view at the moment");
+                throw new UndefinedClusterViewException(Reason.NO_ESTABLISHED_VIEW,
+                        "no established view at the moment");
             }
 
             EstablishedClusterView clusterViewImpl = new EstablishedClusterView(
@@ -124,12 +127,14 @@ public class ClusterViewServiceImpl implements ClusterViewService {
                 logger.info("getClusterView: the existing established view does not incude the local instance ("+getSlingId()+") yet! Assuming isolated mode. "
                         + "If this occurs at runtime - other than at startup - it could cause a pseudo-network-partition, see SLING-3432. "
                         + "Consider increasing heartbeatTimeout then!");
-                throw new UndefinedClusterViewException("established view does not include local instance - isolated");
+                throw new UndefinedClusterViewException(Reason.ISOLATED_FROM_TOPOLOGY, 
+                        "established view does not include local instance - isolated");
             }
         } catch (LoginException e) {
             logger.error(
                     "handleEvent: could not log in administratively: " + e, e);
-            throw new UndefinedClusterViewException("could not log in administratively: "+e);
+            throw new UndefinedClusterViewException(Reason.REPOSITORY_EXCEPTION,
+                    "could not log in administratively: "+e);
         } finally {
             if (resourceResolver != null) {
                 resourceResolver.close();
