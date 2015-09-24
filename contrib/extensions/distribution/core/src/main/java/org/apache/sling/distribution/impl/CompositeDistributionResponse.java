@@ -54,7 +54,7 @@ public class CompositeDistributionResponse extends SimpleDistributionResponse {
 
     @Override
     public boolean isSuccessful() {
-        return !DistributionRequestState.DROPPED.equals(state);
+        return DistributionRequestState.ACCEPTED.equals(state) || DistributionRequestState.DISTRIBUTED.equals(state);
     }
 
     @Nonnull
@@ -84,9 +84,6 @@ public class CompositeDistributionResponse extends SimpleDistributionResponse {
         switch (second) {
             case DISTRIBUTED:
                 aggregatedState = first;
-                break;
-            case DROPPED:
-                aggregatedState = DistributionRequestState.DISTRIBUTED;
                 break;
             case ACCEPTED:
                 if (first.equals(DistributionRequestState.DISTRIBUTED)) {

@@ -43,17 +43,16 @@ public enum DistributionRequestState {
     DISTRIBUTED,
 
     /**
-     * The request has been dropped and the content was not distributed from the source to target instance,
-     * because no distribution agent was found to serve it.
-     */
-    DROPPED,
-
-    /**
      * The request has been dropped and the content could not be successfully
      * distributed from the source to target instance because the request
      * execution failed during one of the phases: creation, queueing, transport, persistence.
      */
-    FAILED,
+    DROPPED,
+
+    /**
+     * The request was not executed because no distribution agent was found to serve it.
+     */
+    NOT_EXECUTED,
 
     /**
      * The request has been accepted, as a consequence the content to be distributed
