@@ -327,9 +327,11 @@ public class ClusterTest {
 
         // join the instances to form a cluster by sending out heartbeats
         runHeartbeatOnceWith(instance1, instance2, instance3, instance4, instance5);
-        Thread.sleep(250);
+        Thread.sleep(500);
         runHeartbeatOnceWith(instance1, instance2, instance3, instance4, instance5);
-        Thread.sleep(250);
+        Thread.sleep(500);
+        runHeartbeatOnceWith(instance1, instance2, instance3, instance4, instance5);
+        Thread.sleep(500);
 
         assertSameTopology(new SimpleClusterView(instance1, instance2));
         assertSameTopology(new SimpleClusterView(instance3, instance4));
@@ -340,11 +342,11 @@ public class ClusterTest {
         runHeartbeatOnceWith(instance1, instance2, instance3, instance4, instance5);
         pingConnector(instance3, instance1);
         pingConnector(instance5, instance1);
-        Thread.sleep(250);
+        Thread.sleep(500);
         runHeartbeatOnceWith(instance1, instance2, instance3, instance4, instance5);
         pingConnector(instance3, instance1);
         pingConnector(instance5, instance1);
-        Thread.sleep(250);
+        Thread.sleep(500);
         
         // make asserts on the topology
         logger.info("testConnectorSwitching4139: instance1.slingId="+instance1.slingId);
@@ -1228,6 +1230,11 @@ public class ClusterTest {
         instance2.runHeartbeatOnce();
         instance3.runHeartbeatOnce();
         logger.info("testPropertyProviders: 2nd 2s sleep");
+        Thread.sleep(2000);
+        instance1.runHeartbeatOnce();
+        instance2.runHeartbeatOnce();
+        instance3.runHeartbeatOnce();
+        logger.info("testPropertyProviders: 3rd 2s sleep");
         Thread.sleep(2000);
 
         property1Value = UUID.randomUUID().toString();
