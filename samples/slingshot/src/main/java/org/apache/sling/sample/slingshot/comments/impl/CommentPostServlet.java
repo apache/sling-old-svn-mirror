@@ -82,6 +82,12 @@ public class CommentPostServlet extends SlingAllMethodsServlet {
             c.setCreatedBy(userId);
 
             this.commentsService.addComment(reqResource, c);
+            
+
+            // send redirect at the end
+            final String path = request.getResource().getPath();
+
+            response.sendRedirect(resolver.map(request.getContextPath() + path + ".html"));            
         } catch ( final LoginException le ) {
             throw new ServletException("Unable to login", le);
         } finally {
@@ -89,11 +95,6 @@ public class CommentPostServlet extends SlingAllMethodsServlet {
                 resolver.close();
             }
         }
-
-        // send redirect at the end
-        final String path = request.getResource().getPath();
-
-        response.sendRedirect(resolver.map(request.getContextPath() + path + ".html"));
     }
 
 }
