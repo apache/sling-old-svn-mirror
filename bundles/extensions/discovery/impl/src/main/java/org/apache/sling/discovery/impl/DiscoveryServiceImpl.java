@@ -687,7 +687,7 @@ public class DiscoveryServiceImpl implements DiscoveryService {
             // treat it as being cut off from the entire topology, ie we don't
             // update the announcements but just return
             // the previous oldView marked as !current
-            logger.info("getTopology: undefined cluster view: "+e.getClass().getSimpleName()+": ["+e.getReason()+"] "+e);
+            logger.info("getTopology: undefined cluster view: "+e.getReason()+"] "+e);
             oldView.markOld();
             if (e.getReason()==Reason.ISOLATED_FROM_TOPOLOGY) {
                 if (heartbeatHandler!=null) {
