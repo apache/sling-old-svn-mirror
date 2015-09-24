@@ -38,6 +38,8 @@ import java.util.UUID;
 
 import javax.jcr.Property;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -51,6 +53,7 @@ import org.apache.sling.discovery.impl.cluster.voting.VotingHelper;
 import org.apache.sling.discovery.impl.cluster.voting.VotingView;
 import org.apache.sling.discovery.impl.setup.Instance;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
@@ -110,9 +113,20 @@ public class HeartbeatTest {
     }
     
     Set<Instance> instances = new HashSet<Instance>();
+    private Level logLevel;
+    
+    @Before
+    public void setup() throws Exception {
+        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        logLevel = discoveryLogger.getLevel();
+        discoveryLogger.setLevel(Level.DEBUG);
+    }
     
     @After
     public void tearDown() throws Exception {
+        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        discoveryLogger.setLevel(logLevel);
+
         Instance.setSingletonScheduler(null);
         Iterator<Instance> it = instances.iterator();
         while(it.hasNext()) {
