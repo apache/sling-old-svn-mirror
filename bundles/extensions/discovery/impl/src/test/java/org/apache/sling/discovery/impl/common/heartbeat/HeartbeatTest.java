@@ -133,7 +133,7 @@ public class HeartbeatTest {
     }
     
     public void doTestPartitioning(boolean scheduler) throws Throwable {
-        Instance slowMachine = Instance.newStandaloneInstance("/var/discovery/impl/", "slow", true, 5 /*5sec timeout*/, 
+        Instance slowMachine = Instance.newStandaloneInstance("/var/discovery/impl/", "slow", true, 10 /*10sec timeout*/, 
                 999 /* 999sec interval: to disable it*/, 0, UUID.randomUUID().toString());
         assertEquals(1, slowMachine.getDiscoveryService().getTopology().getInstances().size());
         assertEquals(slowMachine.getSlingId(), slowMachine.getDiscoveryService().getTopology().getInstances().iterator().next().getSlingId());
@@ -141,26 +141,26 @@ public class HeartbeatTest {
         Thread.sleep(10); // wait 10ms to ensure 'slowMachine' has the lowerst leaderElectionId (to become leader)
         SimpleTopologyEventListener slowListener = new SimpleTopologyEventListener("slow");
         slowMachine.bindTopologyEventListener(slowListener);
-        Instance fastMachine1 = Instance.newClusterInstance("/var/discovery/impl/", "fast1", slowMachine, false, 5, 1, 0);
+        Instance fastMachine1 = Instance.newClusterInstance("/var/discovery/impl/", "fast1", slowMachine, false, 10, 1, 0);
         assertEquals(1, fastMachine1.getDiscoveryService().getTopology().getInstances().size());
         assertEquals(fastMachine1.getSlingId(), fastMachine1.getDiscoveryService().getTopology().getInstances().iterator().next().getSlingId());
         instances.add(fastMachine1);
         Thread.sleep(10); // wait 10ms to ensure 'fastMachine1' has the 2nd lowerst leaderElectionId (to become leader during partitioning)
         SimpleTopologyEventListener fastListener1 = new SimpleTopologyEventListener("fast1");
         fastMachine1.bindTopologyEventListener(fastListener1);
-        Instance fastMachine2 = Instance.newClusterInstance("/var/discovery/impl/", "fast2", slowMachine, false, 5, 1, 0);
+        Instance fastMachine2 = Instance.newClusterInstance("/var/discovery/impl/", "fast2", slowMachine, false, 10, 1, 0);
         assertEquals(1, fastMachine2.getDiscoveryService().getTopology().getInstances().size());
         assertEquals(fastMachine2.getSlingId(), fastMachine2.getDiscoveryService().getTopology().getInstances().iterator().next().getSlingId());
         instances.add(fastMachine2);
         SimpleTopologyEventListener fastListener2 = new SimpleTopologyEventListener("fast2");
         fastMachine2.bindTopologyEventListener(fastListener2);
-        Instance fastMachine3 = Instance.newClusterInstance("/var/discovery/impl/", "fast3", slowMachine, false, 5, 1, 0);
+        Instance fastMachine3 = Instance.newClusterInstance("/var/discovery/impl/", "fast3", slowMachine, false, 10, 1, 0);
         assertEquals(1, fastMachine3.getDiscoveryService().getTopology().getInstances().size());
         assertEquals(fastMachine3.getSlingId(), fastMachine3.getDiscoveryService().getTopology().getInstances().iterator().next().getSlingId());
         instances.add(fastMachine3);
         SimpleTopologyEventListener fastListener3 = new SimpleTopologyEventListener("fast3");
         fastMachine3.bindTopologyEventListener(fastListener3);
-        Instance fastMachine4 = Instance.newClusterInstance("/var/discovery/impl/", "fast4", slowMachine, false, 5, 1, 0);
+        Instance fastMachine4 = Instance.newClusterInstance("/var/discovery/impl/", "fast4", slowMachine, false, 10, 1, 0);
         assertEquals(1, fastMachine4.getDiscoveryService().getTopology().getInstances().size());
         assertEquals(fastMachine4.getSlingId(), fastMachine4.getDiscoveryService().getTopology().getInstances().iterator().next().getSlingId());
         instances.add(fastMachine4);
@@ -206,8 +206,8 @@ public class HeartbeatTest {
         assertEquals(5, slowListener.getLastEvent().getNewView().getInstances().size());
         assertTrue(slowListener.getLastEvent().getNewView().getLocalInstance().isLeader());
         
-        // after 7sec the slow instance' heartbeat should have timed out
-        for(int i=0; i<7; i++) {
+        // after 12sec the slow instance' heartbeat should have timed out
+        for(int i=0; i<12; i++) {
             if (!scheduler) {
                 fastMachine1.getHeartbeatHandler().issueHeartbeat();
                 fastMachine1.getHeartbeatHandler().checkView();
@@ -252,7 +252,7 @@ public class HeartbeatTest {
             DiscoveryServiceImpl slowDisco = (DiscoveryServiceImpl) slowMachine.getDiscoveryService();
             slowDisco.updateProperties();
             // that should have triggered an async event - which takes a little moment
-            Thread.sleep(200);
+            Thread.sleep(500);
             assertEquals(TopologyEvent.Type.TOPOLOGY_CHANGING, slowListener.getLastEvent().getType());
             assertEquals(2, slowListener.getEventCount());
             TopologyView slowTopo = slowMachine.getDiscoveryService().getTopology();
@@ -261,7 +261,7 @@ public class HeartbeatTest {
             assertEquals(5, slowTopo.getInstances().size());
         }
 
-        for(int i=0; i<3; i++) {
+        for(int i=0; i<4; i++) {
             hhSlow.issueHeartbeat();
             hhSlow.checkView();
             if (!scheduler) {
