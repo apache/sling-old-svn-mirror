@@ -222,7 +222,7 @@ public class HeartbeatTest {
         }
         
         // so the fast listeners should only see 4 instances remaining
-        for(int i=0; i<5; i++) {
+        for(int i=0; i<7; i++) {
             Thread.sleep(2000);
             assertEquals(TopologyEvent.Type.TOPOLOGY_CHANGED, fastListener1.getLastEvent().getType());
             assertEquals(4, fastListener1.getLastEvent().getNewView().getInstances().size());
@@ -259,6 +259,16 @@ public class HeartbeatTest {
             assertNotNull(slowTopo);
             assertFalse(slowTopo.isCurrent());
             assertEquals(5, slowTopo.getInstances().size());
+            if (!scheduler) {
+                fastMachine1.getHeartbeatHandler().issueHeartbeat();
+                fastMachine1.getHeartbeatHandler().checkView();
+                fastMachine2.getHeartbeatHandler().issueHeartbeat();
+                fastMachine2.getHeartbeatHandler().checkView();
+                fastMachine3.getHeartbeatHandler().issueHeartbeat();
+                fastMachine3.getHeartbeatHandler().checkView();
+                fastMachine4.getHeartbeatHandler().issueHeartbeat();
+                fastMachine4.getHeartbeatHandler().checkView();
+            }
         }
 
         for(int i=0; i<4; i++) {
