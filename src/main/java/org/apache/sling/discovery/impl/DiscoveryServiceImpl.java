@@ -841,6 +841,7 @@ public class DiscoveryServiceImpl implements DiscoveryService {
                 	logger.debug("handlePotentialTopologyChange: sending delayed event now");
                 	if (!activated) {
                 	    delayedEventPending = false;
+                	    delayedEventPendingFailed = false;
                 		logger.debug("handlePotentialTopologyChange: no longer activated. not sending delayed event");
                 		return;
                 	}
@@ -866,10 +867,12 @@ public class DiscoveryServiceImpl implements DiscoveryService {
 
                     enqueueForAll(Type.TOPOLOGY_CHANGED, DiscoveryServiceImpl.this.oldView, newView);
                     delayedEventPending = false;
+                    delayedEventPendingFailed = false;
                 }
             }
         })) {
         	delayedEventPending = true;
+            delayedEventPendingFailed = false;
             logger.debug("handlePotentialTopologyChange: delayed event triggering.");
             return;
         } else {
