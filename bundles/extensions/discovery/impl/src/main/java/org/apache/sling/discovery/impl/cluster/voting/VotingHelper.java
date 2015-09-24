@@ -165,7 +165,7 @@ public class VotingHelper {
             VotingView c = new VotingView(aChild);
             if (c.isOngoingVoting(config) && c.isWinning()) {
             	if (logger.isDebugEnabled()) {
-            		logger.debug("getWinningVoting: a winning voting: " + c);
+            		logger.debug("getWinningVoting: a winning voting: " + aChild);
             	}
                 result.add(c);
             }
