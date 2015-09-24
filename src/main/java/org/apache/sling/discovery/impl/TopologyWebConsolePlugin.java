@@ -55,7 +55,6 @@ import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.discovery.impl.cluster.ClusterViewService;
-import org.apache.sling.discovery.impl.cluster.UndefinedClusterViewException;
 import org.apache.sling.discovery.impl.topology.announcement.Announcement;
 import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistry;
 import org.apache.sling.discovery.impl.topology.announcement.CachedAnnouncement;
@@ -216,7 +215,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         pw.println("<br/>");
         final String changing;
         if (!topology.isCurrent()) {
-        	changing = " <b><i>changing</i></b>";
+        	changing = " <b><i>CHANGING!</i> (the view is no longer current!)</b>";
         } else {
         	changing = "";
         }
@@ -240,20 +239,16 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         Set<ClusterView> clusters = topology.getClusterViews();
         ClusterView myCluster = topology.getLocalInstance().getClusterView();
         boolean odd = true;
-        try{
-            renderCluster(pw, myCluster, myCluster, odd);
-    
-            for (Iterator<ClusterView> it = clusters.iterator(); it.hasNext();) {
-                ClusterView clusterView = it.next();
-                if (clusterView.equals(myCluster)) {
-                    // skip - I already rendered that
-                    continue;
-                }
-                odd = !odd;
-                renderCluster(pw, clusterView, myCluster, odd);
+        renderCluster(pw, myCluster, myCluster, odd, topology.isCurrent());
+
+        for (Iterator<ClusterView> it = clusters.iterator(); it.hasNext();) {
+            ClusterView clusterView = it.next();
+            if (clusterView.equals(myCluster)) {
+                // skip - I already rendered that
+                continue;
             }
-        } catch(UndefinedClusterViewException e) {
-            pw.println("<tr><td>No ClusterView available at the moment, either isolated or not yet voted atm! ("+e+")</td></tr>");
+            odd = !odd;
+            renderCluster(pw, clusterView, myCluster, odd, topology.isCurrent());
         }
 
         pw.println("</tbody>");
@@ -288,16 +283,14 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
 
     /**
      * Render a particular cluster (into table rows)
-     * @throws UndefinedClusterViewException 
      */
-    private void renderCluster(final PrintWriter pw, final ClusterView renderCluster, final ClusterView localCluster, final boolean odd) 
-            throws UndefinedClusterViewException {
+    private void renderCluster(final PrintWriter pw, final ClusterView renderCluster, final ClusterView localCluster, final boolean odd, final boolean current) {
         final Collection<Announcement> announcements = announcementRegistry.listAnnouncementsInSameCluster(localCluster);
 
         for (Iterator<InstanceDescription> it = renderCluster.getInstances()
                 .iterator(); it.hasNext();) {
             final InstanceDescription instanceDescription = it.next();
-            final boolean inLocalCluster = clusterViewService.contains(instanceDescription.getSlingId());
+            final boolean inLocalCluster = renderCluster == localCluster;
             Announcement parentAnnouncement = null;
             for (Iterator<Announcement> it2 = announcements.iterator(); it2
                     .hasNext();) {
@@ -315,7 +308,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
 
             final String oddEven = odd ? "odd" : "even";
 
-            if (inLocalCluster || (parentAnnouncement!=null)) {
+            if (current && (inLocalCluster || (parentAnnouncement!=null))) {
                 pw.println("<tr class=\"" + oddEven + " ui-state-default\">");
             } else {
                 pw.println("<tr class=\"" + oddEven + " ui-state-error\">");
@@ -755,26 +748,22 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         }
         pw.print("Topology");
         if (!topology.isCurrent()) {
-            pw.print(" changing!");
+            pw.print(" CHANGING! (the view is no longer current!)");
         }
         pw.println();
         pw.println();
 
         final Set<ClusterView> clusters = topology.getClusterViews();
         final ClusterView myCluster = topology.getLocalInstance().getClusterView();
-        try{
-            printCluster(pw, myCluster, myCluster);
-    
-            for (Iterator<ClusterView> it = clusters.iterator(); it.hasNext();) {
-                ClusterView clusterView = it.next();
-                if (clusterView.equals(myCluster)) {
-                    // skip - I already rendered that
-                    continue;
-                }
-                printCluster(pw, clusterView, myCluster);
+        printCluster(pw, myCluster, myCluster);
+
+        for (Iterator<ClusterView> it = clusters.iterator(); it.hasNext();) {
+            ClusterView clusterView = it.next();
+            if (clusterView.equals(myCluster)) {
+                // skip - I already rendered that
+                continue;
             }
-        } catch (UndefinedClusterViewException e) {
-            pw.println("No ClusterView available at the moment, either isolated or not yet voted atm! ("+e+")");
+            printCluster(pw, clusterView, myCluster);
         }
 
         pw.println();
@@ -887,14 +876,12 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
 
     /**
      * Render a particular cluster
-     * @throws UndefinedClusterViewException 
      */
-    private void printCluster(final PrintWriter pw, final ClusterView renderCluster, final ClusterView localCluster)
-            throws UndefinedClusterViewException {
+    private void printCluster(final PrintWriter pw, final ClusterView renderCluster, final ClusterView localCluster) {
         final Collection<Announcement> announcements = announcementRegistry.listAnnouncementsInSameCluster(localCluster);
 
         for(final InstanceDescription instanceDescription : renderCluster.getInstances() ) {
-            final boolean inLocalCluster = clusterViewService.contains(instanceDescription.getSlingId());
+            final boolean inLocalCluster = renderCluster == localCluster;
             Announcement parentAnnouncement = null;
             for (Iterator<Announcement> it2 = announcements.iterator(); it2
                     .hasNext();) {
