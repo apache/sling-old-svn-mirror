@@ -295,7 +295,7 @@ public class VotingView extends View {
                 slingId);
         if (memberResource == null) {
             logger.error("vote: no memberResource found for slingId=" + slingId
-                    + ", resource=" + getResource());
+                    + ", vote=" + vote + ", resource=" + getResource());
             return;
         }
         final ModifiableValueMap memberMap = memberResource.adaptTo(ModifiableValueMap.class);
