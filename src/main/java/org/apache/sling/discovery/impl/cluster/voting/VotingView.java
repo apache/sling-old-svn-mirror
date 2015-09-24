@@ -286,7 +286,8 @@ public class VotingView extends View {
      * @param slingId the slingId which is voting
      * @param vote true for a yes-vote, false for a no-vote
      */
-    public void vote(final String slingId, final Boolean vote) {
+    public void vote(final String slingId, final Boolean vote,
+                     final String leaderElectionId) {
     	if (logger.isDebugEnabled()) {
     		logger.debug("vote: slingId=" + slingId + ", vote=" + vote);
     	}
@@ -314,8 +315,21 @@ public class VotingView extends View {
                 logger.warn("vote: got a RepositoryException: "+e, e);
             }
             if (shouldVote) {
+                logger.info("vote: slingId=" + slingId + " is voting vote=" + vote+" on "+getResource());
                 memberMap.put("vote", vote);
                 memberMap.put("votedAt", Calendar.getInstance());
+                String currentLeaderElectionId = memberMap.get("leaderElectionId", String.class);
+                if (leaderElectionId!=null &&
+                        (currentLeaderElectionId == null || !currentLeaderElectionId.equals(leaderElectionId))) {
+                    // SLING-5030 : to ensure leader-step-down after being
+                    // isolated from the cluster, the leaderElectionId must
+                    // be explicitly set upon voting.
+                    // for 99% of the cases not be necessary,
+                    // for the rejoin-after-isolation case however it is
+                    logger.info("vote: changing leaderElectionId on vote to "+leaderElectionId);
+                    memberMap.put("leaderElectionId", leaderElectionId);
+                    memberMap.put("leaderElectionIdCreatedAt", new Date());
+                }
             }
         }
         try {
