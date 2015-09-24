@@ -320,4 +320,13 @@ public class MockSlingHttpServletRequestTest {
         request.getRequestDispatcher("/path");
     }
     
+    @Test
+    public void testGetRemoteUserN() {
+        
+        assertNull(null, request.getRemoteUser());
+        
+        request.setRemoteUser("admin");
+        assertEquals("admin", request.getRemoteUser());
+    }
+    
 }

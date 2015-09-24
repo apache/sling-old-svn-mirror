@@ -96,6 +96,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
     private String contentType;
     private String characterEncoding;
     private byte[] content;
+    private String remoteUser;
     private MockRequestDispatcherFactory requestDispatcherFactory;
     
     private static final ResourceBundle EMPTY_RESOURCE_BUNDLE = new ListResourceBundle() {
@@ -605,6 +606,14 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
         this.requestDispatcherFactory = requestDispatcherFactory;
     }
 
+    @Override
+    public String getRemoteUser() {
+        return remoteUser;
+    }
+
+    public void setRemoteUser(String remoteUser) {
+        this.remoteUser = remoteUser;
+    }
 
     // --- unsupported operations ---
 
@@ -635,11 +644,6 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     @Override
     public String getPathTranslated() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getRemoteUser() {
         throw new UnsupportedOperationException();
     }
 
