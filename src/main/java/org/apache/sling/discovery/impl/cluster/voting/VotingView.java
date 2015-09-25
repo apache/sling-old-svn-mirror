@@ -271,14 +271,24 @@ public class VotingView extends View {
         final Resource memberResource = getResource().getChild("members").getChild(
                 slingId);
         if (memberResource == null) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("isInitiatedBy: slingId=" + slingId + ", memberResource null!");
+            }
             return false;
         }
         final ValueMap properties = memberResource.adaptTo(ValueMap.class);
         if (properties == null) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("isInitiatedBy: slingId=" + slingId + ", properties null!");
+            }
             return false;
         }
         final Boolean initiator = properties.get("initiator", Boolean.class);
-        return (initiator != null && initiator);
+        boolean result = initiator != null && initiator;
+        if (logger.isDebugEnabled()) {
+            logger.debug("isInitiatedBy: slingId=" + slingId + ", initiator=" + initiator + ", result=" + result);
+        }
+        return result;
     }
 
     /**
