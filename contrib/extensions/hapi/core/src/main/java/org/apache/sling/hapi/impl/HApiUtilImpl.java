@@ -46,18 +46,24 @@ public class HApiUtilImpl implements HApiUtil {
     @Property(label = "HApi Resource Type", cardinality = 0, value = DEFAULT_RESOURCE_TYPE)
     public static final String HAPI_RESOURCE_TYPE = "org.apache.sling.hapi.tools.resourcetype";
 
-
     @Property(label = "HApi Types Search Paths", cardinality=50, value = {"/libs/sling/hapi/types"})
     public static final String HAPI_PATHS = "org.apache.sling.hapi.tools.searchpaths";
 
+
+    private static final String DEFAULT_SERVER_URL = "http://localhost:8080";
+    @Property(label = "External server URL", cardinality = 0, value = DEFAULT_SERVER_URL)
+    public static final String HAPI_EXTERNAL_URL = "org.apache.sling.hapi.tools.externalurl";
+
     public static String resourceType;
     public static String[] hApiPaths;
+    public static String serverContextPath;
 
 
     @Activate
     private void activate(ComponentContext context, Map<String, Object> configuration) {
         resourceType = PropertiesUtil.toString(configuration.get(HAPI_RESOURCE_TYPE), DEFAULT_RESOURCE_TYPE);
         hApiPaths = PropertiesUtil.toStringArray(configuration.get(HAPI_PATHS));
+        serverContextPath = PropertiesUtil.toString(configuration.get(HAPI_EXTERNAL_URL), DEFAULT_SERVER_URL);
     }
 
     /**
@@ -133,7 +139,7 @@ public class HApiUtilImpl implements HApiUtil {
         for (Value p : Arrays.asList(parameterValues)) {
             parameters.add(p.getString());
         }
-        HApiTypeImpl newType = new HApiTypeImpl(name, description, path, fqdn, parameters, null, null, false);
+        HApiTypeImpl newType = new HApiTypeImpl(name, description, serverContextPath, path, fqdn, parameters, null, null, false);
         TypesCache.getInstance(this).addType(newType);
 
         try {
@@ -151,7 +157,6 @@ public class HApiUtilImpl implements HApiUtil {
             Iterator<Node> it = typeNode.getNodes();
             while (it.hasNext()) {
                 Node propNode = it.next();
-                System.out.println("Node=" + propNode);
                 String propName = propNode.getName();
                 String propDescription = propNode.hasProperty("description") ? propNode.getProperty("description").getString() : "";
 

@@ -35,6 +35,7 @@ public class MicrodataAttributeHelperImpl implements MicrodataAttributeHelper {
     private final ResourceResolver resolver;
     HApiType type;
 
+
     /**
      * Get a new microdata html attributes helper for the given HApiType object.
      * <p>Provides convenience methods to get the html attributes needed for instrumenting the markup with a Hypermedia API</p>
@@ -58,7 +59,7 @@ public class MicrodataAttributeHelperImpl implements MicrodataAttributeHelper {
      */
     public Map<String, String> itemtypeMap() {
         Map<String, String> attrMap = new AttrMap(2);
-        attrMap.put("itemtype", type.getPath() + ".html");
+        attrMap.put("itemtype", type.getUrl());
         attrMap.put("itemscope", String.valueOf(!type.getAllProperties().isEmpty()));
         
         return attrMap;
