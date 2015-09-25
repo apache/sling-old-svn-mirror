@@ -47,6 +47,7 @@
 
   <modules>
     <module>tools</module>
+    <module>hamcrest</module>
     <module>junit/core</module>
     <module>junit/scriptable</module>
     <module>junit/healthcheck</module>
