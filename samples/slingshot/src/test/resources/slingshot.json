@@ -1,0 +1,31 @@
+{
+  "jcr:primaryType": "nt:unstructured",
+  "users": {
+    "jcr:primaryType": "sling:Folder",
+    "admin": {
+      "jcr:primaryType": "nt:unstructured",
+      "sling:resourceType": "slingshot/User",
+      "content": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "slingshot/Content",
+        "hobby": {
+          "jcr:primaryType": "nt:unstructured"
+        }
+      },
+      "ugc": {
+        "jcr:primaryType": "sling:Folder",
+        "rating": {
+          "jcr:primaryType": "nt:unstructured",
+        }
+      }
+    },
+    "slingshot1": {
+      "jcr:primaryType": "nt:unstructured",
+      "sling:resourceType": "slingshot/User",
+    },
+    "slingshot2": {
+      "jcr:primaryType": "nt:unstructured",
+      "sling:resourceType": "slingshot/User",
+    }
+  }
+}
