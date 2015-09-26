@@ -61,8 +61,9 @@
     org.apache.sling/org.apache.sling.scripting.javascript/2.0.24
     org.apache.sling/org.apache.sling.scripting.jsp/2.1.7-SNAPSHOT
     org.apache.sling/org.apache.sling.scripting.jsp.taglib/2.2.5-SNAPSHOT
-    org.apache.sling/org.apache.sling.scripting.sightly/1.0.4
-    org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.10
+    org.apache.sling/org.apache.sling.scripting.sightly/1.0.5-SNAPSHOT
+    org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.11-SNAPSHOT
+    org.apache.sling/org.apache.sling.scripting.sightly.models.provider/1.0.0-SNAPSHOT
     org.apache.sling/org.apache.sling.scripting.sightly.repl/1.0.1-SNAPSHOT
     org.apache.sling/org.apache.sling.serviceusermapper/1.2.0
     org.apache.sling/org.apache.sling.servlets.get/2.1.12
