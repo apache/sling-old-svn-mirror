@@ -58,33 +58,46 @@ public final class NodeTypeDefinitionScanner {
         nodeTypeDefinitions = findeNodeTypeDefinitions();
     }
     
+    /**
+     * @return Node type definitions found in classpath as registered in OSGi bundle headers
+     */
     public List<String> getNodeTypeDefinitions() {
         return nodeTypeDefinitions;
     }
 
     /**
      * Registers node types found in classpath in JCR repository.
-     * @param Session session
+     * @param session Session
      */
     public void register(Session session) throws RepositoryException {
+      List<String> nodeTypeResources = getNodeTypeDefinitions();
+      register(session, nodeTypeResources);
+    }
+    
+    /**
+     * Registers node types found in classpath in JCR repository.
+     * @param session Session
+     * @param nodeTypeResources List of classpath resource URLs pointing to node type definitions
+     */
+    public void register(Session session, List<String> nodeTypeResources) throws RepositoryException {
       ClassLoader classLoader = getClass().getClassLoader();
       Workspace workspace = session.getWorkspace();
       NodeTypeManager nodeTypeManager = workspace.getNodeTypeManager();
       NamespaceRegistry namespaceRegistry = workspace.getNamespaceRegistry();
       ValueFactory valueFactory = session.getValueFactory();
 
-      // try registering node types multiple times because the ecact order is not known
-      List<String> nodeTypeResources = new ArrayList<String>(NodeTypeDefinitionScanner.get().getNodeTypeDefinitions());
+      // try registering node types multiple times because the eyact order is not known
       int iteration = 0;
-      while (!nodeTypeResources.isEmpty()) {
-          registerAndRemoveSucceeds(nodeTypeResources, classLoader, nodeTypeManager, namespaceRegistry, valueFactory, false);
+      List<String> remainingNodeTypeResources = new ArrayList<String>(nodeTypeResources);
+      while (!remainingNodeTypeResources.isEmpty()) {
+          registerAndRemoveSucceeds(remainingNodeTypeResources, classLoader, nodeTypeManager, namespaceRegistry, valueFactory, false);
           iteration++;
           if (iteration >= MAX_ITERATIONS) {
               break;
           }
       }
-      if (!nodeTypeResources.isEmpty()) {
-          registerAndRemoveSucceeds(nodeTypeResources, classLoader, nodeTypeManager, namespaceRegistry, valueFactory, true);
+      if (!remainingNodeTypeResources.isEmpty()) {
+          registerAndRemoveSucceeds(remainingNodeTypeResources, classLoader, nodeTypeManager, namespaceRegistry, valueFactory, true);
       }
     }
     
