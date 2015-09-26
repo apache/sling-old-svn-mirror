@@ -85,6 +85,7 @@ public abstract class AbstractContentLoaderJsonDamTest {
             resourceResolver.delete(content);
             resourceResolver.commit();
         }
+        this.resourceResolver.close();
     }
             
     @Test

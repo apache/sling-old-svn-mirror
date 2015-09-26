@@ -123,6 +123,7 @@ public abstract class AbstractSlingContextImplTest {
         OsgiServiceModel model = resolver.adaptTo(OsgiServiceModel.class);
         assertNotNull(model.getMimeTypeService());
         assertEquals("text/html", model.getMimeTypeService().getMimeType("html"));
+        resolver.close();
     }
 
     @Test

@@ -107,6 +107,7 @@ public abstract class AbstractSlingCrudResourceResolverTest {
     @After
     public final void tearDown() {
         this.testRoot = null;
+        this.resourceResolver.close();
     }
 
     /**

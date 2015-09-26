@@ -105,6 +105,7 @@ public abstract class AbstractJcrResourceResolverTest {
     @After
     public final void tearDown() {
         testRoot = null;
+        resourceResolver.close();
     }
 
     /**

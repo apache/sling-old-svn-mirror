@@ -66,7 +66,7 @@ final class ContextResourceResolverFactory {
 
             return factory;
         } catch (Throwable ex) {
-            throw new RuntimeException("Unable to initialize " + type + " resource resolver factory.", ex);
+            throw new RuntimeException("Unable to initialize " + type + " resource resolver factory: " + ex.getMessage(), ex);
         }
     }
 
