@@ -16,8 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * Sling context implementation for unit tests.
- */
-@aQute.bnd.annotation.Version("3.1")
 package org.apache.sling.testing.mock.sling.context;
+
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+
+import org.junit.Test;
+
+
+public class NodeTypeDefinitionScannerTest {
+
+    @Test
+    public void testGetNodeTypeDefinitions() throws Exception {
+        List<String> definitions = NodeTypeDefinitionScanner.get().getNodeTypeDefinitions();
+        
+        // ensure some node types from jcr.resource exist
+        assertTrue(definitions.contains("SLING-INF/nodetypes/folder.cnd"));
+        assertTrue(definitions.contains("SLING-INF/nodetypes/resource.cnd"));
+    }
+
+}

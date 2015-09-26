@@ -82,6 +82,7 @@ public abstract class AbstractContentLoaderBinaryTest {
             resourceResolver.delete(content);
             resourceResolver.commit();
         }
+        resourceResolver.close();
     }
     
     @Test

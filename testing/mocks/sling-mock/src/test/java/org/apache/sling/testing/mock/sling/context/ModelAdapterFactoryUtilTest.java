@@ -71,6 +71,7 @@ public class ModelAdapterFactoryUtilTest {
         assertNotNull(model);
         assertNotNull(model.getMimeTypeService());
         assertEquals("text/html", model.getMimeTypeService().getMimeType("html"));
+        resolver.close();
     }
 
     @Test
