@@ -44,6 +44,11 @@ import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Singleton class that fetches all node type definitions from OSGi bundle MANIFEST.MF files
+ * with "Sling-Nodetypes" definitions in the classpath.
+ * Additionally it support registering them to a JCR repository. 
+ */
 public final class NodeTypeDefinitionScanner {
     
     private static final NodeTypeDefinitionScanner SINGLETON = new NodeTypeDefinitionScanner();
@@ -101,6 +106,15 @@ public final class NodeTypeDefinitionScanner {
       }
     }
     
+    /**
+     * Register node types found in classpath in JCR repository, and remove those that succeeded to register from the list.
+     * @param nodeTypeResources List of nodetype classpath resources
+     * @param classLoader
+     * @param nodeTypeManager
+     * @param namespaceRegistry
+     * @param valueFactory
+     * @param logError if true, and error is logged if node type registration failed. Otherwise it is ignored.
+     */
     private void registerAndRemoveSucceeds(List<String> nodeTypeResources, ClassLoader classLoader,
             NodeTypeManager nodeTypeManager, NamespaceRegistry namespaceRegistry, ValueFactory valueFactory,
             boolean logError) {
@@ -127,6 +141,13 @@ public final class NodeTypeDefinitionScanner {
         }
     }
     
+    /**
+     * Find all node type definition classpath paths by searching all MANIFEST.MF files in the classpath and reading
+     * the paths from the "Sling-Nodetypes" entry.
+     * The order of the paths from each entry is preserved, but the overall order when multiple bundles define such an entry
+     * is not deterministic and may not be correct according to the dependencies between the node type definitions.
+     * @return List of node type definition class paths
+     */
     private static List<String> findeNodeTypeDefinitions() {
         List<String> nodeTypeDefinitions = new ArrayList<String>();
         try {
