@@ -18,6 +18,7 @@
  */
 package org.apache.sling.testing.mock.sling.resource;
 
+import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
 import static org.junit.Assert.assertEquals;
 
 import javax.jcr.NamespaceRegistry;
@@ -58,7 +59,7 @@ public abstract class AbstractJcrNamespaceTest {
         Resource resource = resolver.getResource("/content/foo");
         
         ValueMap props = ResourceUtil.getValueMap(resource);
-        assertEquals("fooType", props.get("sling:resourceType"));
+        assertEquals("fooType", props.get(SLING_RESOURCE_TYPE_PROPERTY));
         assertEquals("fooType", resource.getResourceType());
     }
 
@@ -72,7 +73,7 @@ public abstract class AbstractJcrNamespaceTest {
         Resource resource = resolver.getResource("/content/foo");
         
         ValueMap props = ResourceUtil.getValueMap(resource);
-        assertEquals("fooType", props.get("sling:resourceType"));
+        assertEquals("fooType", props.get(SLING_RESOURCE_TYPE_PROPERTY));
         
         // since SLING-4773 sling namespace is readly registered in the MockJcrResourceResolverAdapter, so this will still work here
         assertEquals("fooType", resource.getResourceType());
@@ -88,7 +89,7 @@ public abstract class AbstractJcrNamespaceTest {
         Resource resource = resolver.getResource("/content/foo");
         
         ValueMap props = ResourceUtil.getValueMap(resource);
-        assertEquals("fooType", props.get("sling:resourceType"));
+        assertEquals("fooType", props.get(SLING_RESOURCE_TYPE_PROPERTY));
         assertEquals("fooType", resource.getResourceType());
     }
 

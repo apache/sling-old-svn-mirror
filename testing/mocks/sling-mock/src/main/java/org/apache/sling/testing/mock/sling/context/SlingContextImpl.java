@@ -77,6 +77,7 @@ public class SlingContextImpl extends OsgiContextImpl {
     protected SlingScriptHelper slingScriptHelper;
     protected ContentLoader contentLoader;
     protected ContentBuilder contentBuilder;
+    protected UniqueRoot uniqueRoot;
 
     /**
      * @param resourceResolverType Resource resolver type
@@ -136,8 +137,9 @@ public class SlingContextImpl extends OsgiContextImpl {
      * Teardown actions after test method execution
      */
     protected void tearDown() {
-
+        
         if (this.resourceResolver != null) {
+            
             // revert potential unsaved changes in resource resolver/JCR session
             this.resourceResolver.revert();
             Session session = this.resourceResolver.adaptTo(Session.class);
@@ -148,6 +150,13 @@ public class SlingContextImpl extends OsgiContextImpl {
                     // ignore
                 }
             }
+            
+            // remove unique roots
+            if (this.uniqueRoot != null) {
+                this.uniqueRoot.cleanUp();
+            }
+            
+            // close resource resolver
             this.resourceResolver.close();
         }
 
@@ -304,6 +313,13 @@ public class SlingContextImpl extends OsgiContextImpl {
             MockSlingSettingService slingSettings = (MockSlingSettingService) bundleContext().getService(ref);
             slingSettings.setRunModes(newRunModes);
         }
+    }
+    
+    public UniqueRoot uniqueRoot() {
+        if (uniqueRoot == null) {
+            uniqueRoot = new UniqueRoot(this);
+        }
+        return uniqueRoot;
     }
 
 }
