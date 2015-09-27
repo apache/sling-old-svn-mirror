@@ -148,6 +148,7 @@ public class SlingContextImpl extends OsgiContextImpl {
                     // ignore
                 }
             }
+            this.resourceResolver.close();
         }
 
         this.componentContext = null;
