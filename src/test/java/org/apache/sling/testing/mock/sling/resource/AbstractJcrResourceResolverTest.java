@@ -18,6 +18,7 @@
  */
 package org.apache.sling.testing.mock.sling.resource;
 
+import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -162,7 +163,7 @@ public abstract class AbstractJcrResourceResolverTest {
         Resource parent = resourceResolver.getResource(getTestRootNode().getPath());
 
         Resource child = resourceResolver.create(parent, "nodeTypeResource", ImmutableMap.<String, Object> builder()
-                .put("sling:resourceType", JcrConstants.NT_UNSTRUCTURED).build());
+                .put(SLING_RESOURCE_TYPE_PROPERTY, JcrConstants.NT_UNSTRUCTURED).build());
         assertNotNull(child);
         assertEquals(JcrConstants.NT_UNSTRUCTURED, child.getResourceType());
         assertEquals(JcrConstants.NT_UNSTRUCTURED, child.adaptTo(Node.class).getPrimaryNodeType().getName());

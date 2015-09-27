@@ -16,8 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * Rule for providing easy access to Sling context in JUnit tests.
- */
-@aQute.bnd.annotation.Version("3.1")
-package org.apache.sling.testing.mock.sling.junit;
+package org.apache.sling.testing.mock.sling.rrmock.resource;
+
+import org.apache.sling.testing.mock.sling.ResourceResolverType;
+import org.apache.sling.testing.mock.sling.resource.AbstractUniqueRootTest;
+
+public class UniqueRootTest extends AbstractUniqueRootTest {
+
+    @Override
+    protected ResourceResolverType getResourceResolverType() {
+        return ResourceResolverType.RESOURCERESOLVER_MOCK;
+    }
+
+}
