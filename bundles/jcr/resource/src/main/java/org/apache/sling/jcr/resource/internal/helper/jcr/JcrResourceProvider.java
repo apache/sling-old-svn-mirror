@@ -22,7 +22,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -249,7 +248,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     @Override
     public Resource getResource(ResolveContext<JcrProviderState> ctx, String path, Resource parent) {
         try {
-            return ctx.getProviderState().getResourceFactory().createResource(ctx.getResourceResolver(), path, ctx.getResolveParameters());
+            return ctx.getProviderState().getResourceFactory().createResource(ctx.getResourceResolver(), path, parent, ctx.getResolveParameters());
         } catch (RepositoryException e) {
             throw new SlingException("Can't get resource", e);
         }
@@ -267,7 +266,8 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
             // children
             try {
                 parentItemResource = ctx.getProviderState().getResourceFactory().createResource(
-                    parent.getResourceResolver(), parent.getPath(), Collections.<String, String> emptyMap());
+                        parent.getResourceResolver(), parent.getPath(), null,
+                        parent.getResourceMetadata().getParameterMap());
             } catch (RepositoryException re) {
                 throw new SlingException("Can't list children", re);
             }

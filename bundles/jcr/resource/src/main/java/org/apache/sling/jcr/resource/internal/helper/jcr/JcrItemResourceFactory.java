@@ -18,8 +18,6 @@
  */
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 
@@ -61,68 +59,57 @@ public class JcrItemResourceFactory {
      *
      * @param resourcePath The absolute path
      * @return The <code>Resource</code> for the item at the given path.
-     * @throws RepositoryException If an error occurrs accessingor checking the
+     * @throws RepositoryException If an error occurrs accessing checking the
      *             item in the repository.
      */
-    public JcrItemResource<?> createResource(final ResourceResolver resourceResolver,
-            final String resourcePath, final Map<String, String> parameters) throws RepositoryException {
+    public JcrItemResource<?> createResource(final ResourceResolver resourceResolver, final String resourcePath,
+            final Resource parent, final Map<String, String> parameters) throws RepositoryException {
         final String jcrPath = helper.pathMapper.mapResourcePathToJCRPath(resourcePath);
-        if (jcrPath != null && itemExists(jcrPath)) {
-            Item item = session.getItem(jcrPath);
-            final String version;
-            if (parameters != null && parameters.containsKey("v")) {
-                version = parameters.get("v");
-                item = getHistoricItem(item, version);
-            } else {
-                version = null;
-            }
-            if (item.isNode()) {
-                log.debug(
-                    "createResource: Found JCR Node Resource at path '{}'",
-                    resourcePath);
-                final JcrNodeResource resource = new JcrNodeResource(resourceResolver, resourcePath, version, (Node) item, helper);
-                resource.getResourceMetadata().setParameterMap(parameters);
-                return resource;
-            }
+        if (jcrPath == null) {
+            log.debug("createResource: {} maps to an empty JCR path", resourcePath);
+            return null;
+        }
 
-            log.debug(
-                "createResource: Found JCR Property Resource at path '{}'",
-                resourcePath);
-            final JcrPropertyResource resource = new JcrPropertyResource(resourceResolver, resourcePath, version,
-                (Property) item);
+        final String version;
+        if (parameters != null && parameters.containsKey("v")) {
+            version = parameters.get("v");
+        } else {
+            version = null;
+        }
+
+        final String itemName = StringUtils.substringAfterLast(jcrPath, "/");
+        Item item = null;
+        if (parent != null) {
+            final Node parentNode = parent.adaptTo(Node.class);
+            if (parentNode != null) {
+                item = getSubitem(parentNode, itemName);
+            }
+        }
+
+        if (item == null) {
+            if (itemExists(jcrPath)) {
+                item = session.getItem(jcrPath);
+            }
+            if (version != null) {
+                item = getHistoricItem(item, version);
+            }
+        }
+
+        if (item == null) {
+            log.debug("createResource: No JCR Item exists at path '{}'", jcrPath);
+            return null;
+        } else {
+            final JcrItemResource<?> resource;
+            if (item.isNode()) {
+                log.debug("createResource: Found JCR Node Resource at path '{}'", resourcePath);
+                resource = new JcrNodeResource(resourceResolver, resourcePath, version, (Node) item, helper);
+            } else {
+                log.debug("createResource: Found JCR Property Resource at path '{}'", resourcePath);
+                resource = new JcrPropertyResource(resourceResolver, resourcePath, version, (Property) item);
+            }
             resource.getResourceMetadata().setParameterMap(parameters);
             return resource;
         }
-
-        log.debug("createResource: No JCR Item exists at path '{}'", jcrPath);
-        return null;
-    }
-
-    public Iterator<Resource> listChildren(final Resource parent) {
-        JcrItemResource<?> parentItemResource;
-
-        // short cut for known JCR resources
-        if (parent instanceof JcrItemResource) {
-
-            parentItemResource = (JcrItemResource<?>) parent;
-
-        } else {
-
-            // try to get the JcrItemResource for the parent path to list
-            // children
-            try {
-                parentItemResource = createResource(
-                    parent.getResourceResolver(), parent.getPath(), Collections.<String, String> emptyMap());
-            } catch (RepositoryException re) {
-                parentItemResource = null;
-            }
-
-        }
-
-        // return children if there is a parent item resource, else null
-        return (parentItemResource != null)
-                ? parentItemResource.listJcrChildren()
-                : null;
     }
 
     private Item getHistoricItem(Item item, String versionSpecifier) throws RepositoryException {
@@ -145,13 +132,19 @@ public class JcrItemResourceFactory {
     }
 
     private static Item getSubitem(Node node, String relPath) throws RepositoryException {
-        if (relPath.length() == 0) { // not using isEmpty() due to 1.5 compatibility
-            return node;
-        } else if (node.hasNode(relPath)) {
-            return node.getNode(relPath);
-        } else if (node.hasProperty(relPath)) {
-            return node.getProperty(relPath);
-        } else {
+        try {
+            if (relPath.length() == 0) { // not using isEmpty() due to 1.5 compatibility
+                return node;
+            } else if (node.hasNode(relPath)) {
+                return node.getNode(relPath);
+            } else if (node.hasProperty(relPath)) {
+                return node.getProperty(relPath);
+            } else {
+                return null;
+            }
+        } catch(RepositoryException e) {
+            log.debug("getSubitem: Can't get subitem {} of {}: {}",
+                    new Object[] { relPath, node.toString(), e.toString() });
             return null;
         }
     }
