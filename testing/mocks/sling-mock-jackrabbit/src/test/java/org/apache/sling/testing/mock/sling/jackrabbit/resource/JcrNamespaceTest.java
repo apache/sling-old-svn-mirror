@@ -20,10 +20,7 @@ package org.apache.sling.testing.mock.sling.jackrabbit.resource;
 
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.resource.AbstractJcrNamespaceTest;
-import org.junit.Ignore;
 
-//TEST IS DISABLED currently, it does not work with jackrabbit repository yet
-@Ignore
 public class JcrNamespaceTest extends AbstractJcrNamespaceTest {
 
     @Override
