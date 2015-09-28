@@ -21,10 +21,8 @@ package org.apache.sling.resourceresolver.impl.providers.stateful;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.security.ResourceAccessSecurity;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
@@ -103,12 +101,6 @@ public class SecureResourceProvider extends StatefulResourceProviderWrapper {
 
     private static interface SecurityTest {
         boolean isAllowed(ResourceAccessSecurity security);
-    }
-
-    @Override
-    public StatefulResourceProvider clone(Map<String, Object> authenticationInfo, ResourceResolver resolver)
-            throws LoginException {
-        return new SecureResourceProvider(rp, tracker);
     }
 
     private class SecureIterator extends AbstractIterator<Resource> {

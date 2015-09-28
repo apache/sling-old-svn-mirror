@@ -22,7 +22,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -147,11 +146,5 @@ public class StatefulResourceProviderWrapper implements StatefulResourceProvider
     @Override
     public ResourceResolver getResourceResolver() {
         return rp.getResourceResolver();
-    }
-
-    @Override
-    public StatefulResourceProvider clone(Map<String, Object> authenticationInfo, ResourceResolver resolver)
-            throws LoginException {
-        return rp.clone(authenticationInfo, resolver);
     }
 }

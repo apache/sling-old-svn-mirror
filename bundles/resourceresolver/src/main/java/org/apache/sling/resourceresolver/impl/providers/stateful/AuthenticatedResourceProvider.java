@@ -260,10 +260,4 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     public ResourceResolver getResourceResolver() {
         return resolver;
     }
-
-    @Override
-    public StatefulResourceProvider clone(Map<String, Object> authenticationInfo, ResourceResolver resolver) throws LoginException {
-        return new AuthenticatedResourceProvider(this.rp, this.info, resolver, authenticationInfo);
-    }
-
 }

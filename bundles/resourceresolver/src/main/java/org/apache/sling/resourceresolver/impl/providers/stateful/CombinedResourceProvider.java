@@ -39,7 +39,6 @@ import org.apache.commons.collections.ListUtils;
 import org.apache.commons.collections.Transformer;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.sling.api.SlingException;
-import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
@@ -439,16 +438,6 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
             }
         }
         return matching;
-    }
-
-    @Override
-    public StatefulResourceProvider clone(Map<String, Object> authenticationInfo, ResourceResolver resolver)
-            throws LoginException {
-        List<StatefulResourceProvider> list = new ArrayList<StatefulResourceProvider>();
-        for (StatefulResourceProvider p : providers) {
-            list.add(p.clone(authenticationInfo, resolver));
-        }
-        return new CombinedResourceProvider(list, resolver);
     }
 
     private class CombinedQueryResult extends QueryResult implements Iterable<Resource> {
