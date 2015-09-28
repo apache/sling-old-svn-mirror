@@ -209,7 +209,7 @@ public class CheckTopologyTask {
      * - capabilities
      */
     public void assignUnassignedJobs() {
-        if ( caps.isLeader() && caps.isActive() ) {
+        if ( caps != null && caps.isLeader() && caps.isActive() ) {
             logger.debug("Checking unassigned jobs...");
             final ResourceResolver resolver = this.configuration.createResourceResolver();
             if ( resolver != null ) {
@@ -338,14 +338,16 @@ public class CheckTopologyTask {
      */
     public void fullRun(final boolean topologyChanged,
                         final boolean configChanged) {
-        // if topology changed, reschedule assigned jobs for stopped instances
-        if ( topologyChanged ) {
-            this.reassignJobsFromStoppedInstances();
-        }
-        // check for all topics
-        this.reassignStaleJobs();
+        if ( this.caps != null ) {
+            // if topology changed, reschedule assigned jobs for stopped instances
+            if ( topologyChanged ) {
+                this.reassignJobsFromStoppedInstances();
+            }
+            // check for all topics
+            this.reassignStaleJobs();
 
-        // try to assign unassigned jobs
-        this.assignUnassignedJobs();
+            // try to assign unassigned jobs
+            this.assignUnassignedJobs();
+        }
     }
 }

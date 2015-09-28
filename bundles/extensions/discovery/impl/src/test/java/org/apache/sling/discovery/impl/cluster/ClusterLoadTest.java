@@ -1,6 +1,7 @@
 package org.apache.sling.discovery.impl.cluster;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import java.util.Iterator;
@@ -9,7 +10,6 @@ import java.util.List;
 import java.util.Random;
 
 import org.apache.sling.discovery.impl.common.resource.EstablishedInstanceDescription;
-import org.apache.sling.discovery.impl.common.resource.IsolatedInstanceDescription;
 import org.apache.sling.discovery.impl.setup.Instance;
 import org.apache.sling.discovery.impl.setup.WithholdingAppender;
 import org.apache.sling.testing.tools.retry.RetryLoop;
@@ -66,9 +66,15 @@ public class ClusterLoadTest {
     	Thread.sleep(2000);
     	// without any heartbeat action, the discovery service reports its local instance
     	// in so called 'isolated' mode - lets test for that
-        assertEquals(IsolatedInstanceDescription.class, firstInstance
-                .getClusterViewService().getClusterView().getInstances().get(0)
-                .getClass());
+//        assertEquals(IsolatedInstanceDescription.class, firstInstance
+//                .getClusterViewService().getClusterView().getInstances().get(0)
+//                .getClass());
+    	try{
+    	    firstInstance.getClusterViewService().getClusterView();
+    	    fail("should complain");
+    	} catch(UndefinedClusterViewException e) {
+    	    // SLING-5030:
+    	}
         firstInstance.startHeartbeats(1);
         Thread.sleep(4000);
         // after a heartbeat and letting it settle, the discovery service must have

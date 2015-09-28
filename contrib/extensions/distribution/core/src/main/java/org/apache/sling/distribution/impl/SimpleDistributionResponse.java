@@ -40,7 +40,7 @@ public class SimpleDistributionResponse implements DistributionResponse {
     }
 
     public boolean isSuccessful() {
-        return !DistributionRequestState.DROPPED.equals(state);
+        return DistributionRequestState.ACCEPTED.equals(state) || DistributionRequestState.DISTRIBUTED.equals(state);
     }
 
     @Nonnull

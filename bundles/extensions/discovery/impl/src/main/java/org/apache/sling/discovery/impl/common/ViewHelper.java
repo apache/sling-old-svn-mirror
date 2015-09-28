@@ -88,14 +88,17 @@ public class ViewHelper {
         final Resource establishedParent = resourceResolver
                 .getResource(config.getEstablishedViewPath());
         if (establishedParent == null) {
+            logger.debug("getEstablishedView: no established view found: {}", config.getEstablishedViewPath());
             return null;
         }
         final Iterable<Resource> children = establishedParent.getChildren();
         if (children == null) {
+            logger.debug("getEstablishedView: no children found of {}", establishedParent);
             return null;
         }
         final Iterator<Resource> it = children.iterator();
         if (!it.hasNext()) {
+            logger.debug("getEstablishedView: no it of children of {}", establishedParent);
             return null;
         }
         Resource establishedView = it.next();

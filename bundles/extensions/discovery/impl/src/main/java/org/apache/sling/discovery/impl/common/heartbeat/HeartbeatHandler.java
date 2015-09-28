@@ -126,8 +126,15 @@ public class HeartbeatHandler implements Runnable, StartupListener {
     private String nextVotingId = UUID.randomUUID().toString();
 
     /** whether or not to reset the leaderElectionId at next heartbeat time **/
-    private boolean resetLeaderElectionId = false;
+    private volatile boolean resetLeaderElectionId = false;
 
+    /** SLING-5030 : upon resetLeaderElectionId() a newLeaderElectionId is calculated 
+     * and passed on to the VotingHandler - but the actual storing under ./clusterInstances
+     * is only done on heartbeats - this field is used to temporarily store the new
+     * leaderElectionId that the next heartbeat then stores
+     */
+    private volatile String newLeaderElectionId;
+    
     /** lock object for synchronizing the run method **/
     private final Object lock = new Object();
 
@@ -209,14 +216,20 @@ public class HeartbeatHandler implements Runnable, StartupListener {
      * a reference on us - but we cant have circular references in osgi).
      * <p>
      * The initialVotingId is used to avoid an unnecessary topologyChanged event
-     * when switching form isolated to established view but with only the local
-     * instance in the view.
+     * when starting up an instance in a 1-node cluster: the instance
+     * will wait until the first voting has been finished to send
+     * the TOPOLOGY_INIT event - BUT even before that the API method
+     * getTopology() is open - so if anyone asks for the topology
+     * BEFORE the first voting in a 1-node cluster is done, it gets
+     * a particular clusterId - that one we aim to reuse for the first
+     * voting.
      */
     public void initialize(final DiscoveryServiceImpl discoveryService,
             final String initialVotingId) {
         synchronized(lock) {
         	this.discoveryService = discoveryService;
         	this.nextVotingId = initialVotingId;
+        	logger.info("initialize: nextVotingId="+nextVotingId);
             issueHeartbeat();
         }
 
@@ -272,6 +285,44 @@ public class HeartbeatHandler implements Runnable, StartupListener {
             logger.info("triggerHeartbeat: Could not trigger heartbeat: " + e);
         }
     }
+    
+    /**
+     * Hook that will cause a reset of the leaderElectionId 
+     * on next invocation of issueClusterLocalHeartbeat.
+     * @return true if the leaderElectionId was reset - false if that was not
+     * necessary as that happened earlier already and it has not propagated
+     * yet to the ./clusterInstances in the meantime
+     */
+    public boolean resetLeaderElectionId() {
+        if (resetLeaderElectionId) {
+            // then we already have a reset pending
+            // resetting twice doesn't work
+            return false;
+        }
+        resetLeaderElectionId = true;
+        ResourceResolver resourceResolver = null;
+        try{
+            resourceResolver = getResourceResolver();
+            if (resourceResolver!=null) {
+                newLeaderElectionId = newLeaderElectionId(resourceResolver);
+                if (votingHandler!=null) {
+                    logger.info("resetLeaderElectionId: set new leaderElectionId with votingHandler to: "+newLeaderElectionId);
+                    votingHandler.setLeaderElectionId(newLeaderElectionId);
+                } else {
+                    logger.info("resetLeaderElectionId: no votingHandler, new leaderElectionId would be: "+newLeaderElectionId);
+                }
+            } else {
+                logger.warn("resetLeaderElectionId: could not login, new leaderElectionId will be calculated upon next heartbeat only!");
+            }
+        } catch (LoginException e) {
+            logger.error("resetLeaderElectionid: could not login: "+e, e);
+        } finally {
+            if (resourceResolver!=null) {
+                resourceResolver.close();
+            }
+        }
+        return true;
+    }
 
     /**
      * Issue a heartbeat.
@@ -281,7 +332,7 @@ public class HeartbeatHandler implements Runnable, StartupListener {
      * and then a remote heartbeat (to all the topology connectors
      * which announce this part of the topology to others)
      */
-    private void issueHeartbeat() {
+    void issueHeartbeat() {
         if (discoveryService == null) {
             logger.error("issueHeartbeat: discoveryService is null");
         } else {
@@ -403,38 +454,16 @@ public class HeartbeatHandler implements Runnable, StartupListener {
             	        new Object[]{runtimeId, endpointsAsString, slingHomePath});
             }
             if (resetLeaderElectionId || !resourceMap.containsKey("leaderElectionId")) {
-                int maxLongLength = String.valueOf(Long.MAX_VALUE).length();
-                String currentTimeMillisStr = String.format("%0"
-                        + maxLongLength + "d", System.currentTimeMillis());
-
-                final boolean shouldInvertRepositoryDescriptor = config.shouldInvertRepositoryDescriptor();
-                String prefix = (shouldInvertRepositoryDescriptor ? "1" : "0");
-
-                String leaderElectionRepositoryDescriptor = config.getLeaderElectionRepositoryDescriptor();
-                if (leaderElectionRepositoryDescriptor!=null && leaderElectionRepositoryDescriptor.length()!=0) {
-                    // when this property is configured, check the value of the repository descriptor
-                    // and if that value is set, include it in the leader election id
-
-                    final Session session = resourceResolver.adaptTo(Session.class);
-                    if ( session != null ) {
-                        String value = session.getRepository()
-                                .getDescriptor(leaderElectionRepositoryDescriptor);
-                        if (value != null) {
-                            if (value.equalsIgnoreCase("true")) {
-                                if (!shouldInvertRepositoryDescriptor) {
-                                    prefix = "1";
-                                } else {
-                                    prefix = "0";
-                                }
-                            }
-                        }
-                    }
-                }
-                final String newLeaderElectionId = prefix + "_"
-                        + currentTimeMillisStr + "_" + slingId;
+                // the new leaderElectionId might have been 'pre set' in the field 'newLeaderElectionId'
+                // if that's the case, use that one, otherwise calculate a new one now
+                final String newLeaderElectionId = this.newLeaderElectionId!=null ? this.newLeaderElectionId : newLeaderElectionId(resourceResolver);
+                this.newLeaderElectionId = null;
                 resourceMap.put("leaderElectionId", newLeaderElectionId);
                 resourceMap.put("leaderElectionIdCreatedAt", new Date());
-                logger.debug("issueClusterLocalHeartbeat: set leaderElectionId to "+newLeaderElectionId);
+                logger.info("issueClusterLocalHeartbeat: set leaderElectionId to "+newLeaderElectionId);
+                if (votingHandler!=null) {
+                    votingHandler.setLeaderElectionId(newLeaderElectionId);
+                }
                 resetLeaderElectionId = false;
             }
             resourceResolver.commit();
@@ -459,10 +488,46 @@ public class HeartbeatHandler implements Runnable, StartupListener {
         }
     }
 
+    /**
+     * Calculate a new leaderElectionId based on the current config and system time
+     */
+    private String newLeaderElectionId(ResourceResolver resourceResolver) {
+        int maxLongLength = String.valueOf(Long.MAX_VALUE).length();
+        String currentTimeMillisStr = String.format("%0"
+                + maxLongLength + "d", System.currentTimeMillis());
+
+        final boolean shouldInvertRepositoryDescriptor = config.shouldInvertRepositoryDescriptor();
+        String prefix = (shouldInvertRepositoryDescriptor ? "1" : "0");
+
+        String leaderElectionRepositoryDescriptor = config.getLeaderElectionRepositoryDescriptor();
+        if (leaderElectionRepositoryDescriptor!=null && leaderElectionRepositoryDescriptor.length()!=0) {
+            // when this property is configured, check the value of the repository descriptor
+            // and if that value is set, include it in the leader election id
+
+            final Session session = resourceResolver.adaptTo(Session.class);
+            if ( session != null ) {
+                String value = session.getRepository()
+                        .getDescriptor(leaderElectionRepositoryDescriptor);
+                if (value != null) {
+                    if (value.equalsIgnoreCase("true")) {
+                        if (!shouldInvertRepositoryDescriptor) {
+                            prefix = "1";
+                        } else {
+                            prefix = "0";
+                        }
+                    }
+                }
+            }
+        }
+        final String newLeaderElectionId = prefix + "_"
+                + currentTimeMillisStr + "_" + slingId;
+        return newLeaderElectionId;
+    }
+
     /** Check whether the established view matches the reality, ie matches the
      * heartbeats
      */
-    private void checkView() {
+    void checkView() {
         // check the remotes first
         if (announcementRegistry == null) {
             logger.error("announcementRegistry is null");

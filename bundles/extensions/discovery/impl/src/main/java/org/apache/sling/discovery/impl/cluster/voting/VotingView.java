@@ -25,6 +25,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+import javax.jcr.ValueFormatException;
+
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -115,6 +119,7 @@ public class VotingView extends View {
             resourceResolver.create(membersResource, memberId, properties);
         }
         resourceResolver.commit();
+        logger.info("newVoting: new voting started: newViewId="+newViewId+", resource="+votingResource+", #members: "+liveInstances.size()+", members: "+liveInstances);
         return new VotingView(votingResource);
     }
 
@@ -266,14 +271,24 @@ public class VotingView extends View {
         final Resource memberResource = getResource().getChild("members").getChild(
                 slingId);
         if (memberResource == null) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("isInitiatedBy: slingId=" + slingId + ", memberResource null!");
+            }
             return false;
         }
         final ValueMap properties = memberResource.adaptTo(ValueMap.class);
         if (properties == null) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("isInitiatedBy: slingId=" + slingId + ", properties null!");
+            }
             return false;
         }
         final Boolean initiator = properties.get("initiator", Boolean.class);
-        return (initiator != null && initiator);
+        boolean result = initiator != null && initiator;
+        if (logger.isDebugEnabled()) {
+            logger.debug("isInitiatedBy: slingId=" + slingId + ", initiator=" + initiator + ", result=" + result);
+        }
+        return result;
     }
 
     /**
@@ -281,7 +296,8 @@ public class VotingView extends View {
      * @param slingId the slingId which is voting
      * @param vote true for a yes-vote, false for a no-vote
      */
-    public void vote(final String slingId, final Boolean vote) {
+    public void vote(final String slingId, final Boolean vote,
+                     final String leaderElectionId) {
     	if (logger.isDebugEnabled()) {
     		logger.debug("vote: slingId=" + slingId + ", vote=" + vote);
     	}
@@ -289,7 +305,7 @@ public class VotingView extends View {
                 slingId);
         if (memberResource == null) {
             logger.error("vote: no memberResource found for slingId=" + slingId
-                    + ", resource=" + getResource());
+                    + ", vote=" + vote + ", resource=" + getResource());
             return;
         }
         final ModifiableValueMap memberMap = memberResource.adaptTo(ModifiableValueMap.class);
@@ -297,8 +313,34 @@ public class VotingView extends View {
         if (vote == null) {
             memberMap.remove("vote");
         } else {
-            memberMap.put("vote", vote);
-            memberMap.put("votedAt", Calendar.getInstance());
+            boolean shouldVote = true;
+            try {
+                if (memberMap.containsKey("vote") && ((Property)memberMap.get("vote")).getBoolean()==vote) {
+                    logger.debug("vote: already voted, with same vote ("+vote+"), not voting again");
+                    shouldVote = false;
+                }
+            } catch (ValueFormatException e) {
+                logger.warn("vote: got a ValueFormatException: "+e, e);
+            } catch (RepositoryException e) {
+                logger.warn("vote: got a RepositoryException: "+e, e);
+            }
+            if (shouldVote) {
+                logger.info("vote: slingId=" + slingId + " is voting vote=" + vote+" on "+getResource());
+                memberMap.put("vote", vote);
+                memberMap.put("votedAt", Calendar.getInstance());
+                String currentLeaderElectionId = memberMap.get("leaderElectionId", String.class);
+                if (leaderElectionId!=null &&
+                        (currentLeaderElectionId == null || !currentLeaderElectionId.equals(leaderElectionId))) {
+                    // SLING-5030 : to ensure leader-step-down after being
+                    // isolated from the cluster, the leaderElectionId must
+                    // be explicitly set upon voting.
+                    // for 99% of the cases not be necessary,
+                    // for the rejoin-after-isolation case however it is
+                    logger.info("vote: changing leaderElectionId on vote to "+leaderElectionId);
+                    memberMap.put("leaderElectionId", leaderElectionId);
+                    memberMap.put("leaderElectionIdCreatedAt", new Date());
+                }
+            }
         }
         try {
             getResource().getResourceResolver().commit();

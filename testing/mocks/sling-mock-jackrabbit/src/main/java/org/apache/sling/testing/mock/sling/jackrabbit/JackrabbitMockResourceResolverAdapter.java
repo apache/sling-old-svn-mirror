@@ -19,10 +19,12 @@
 package org.apache.sling.testing.mock.sling.jackrabbit;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.testing.jcr.RepositoryProvider;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.testing.mock.sling.context.NodeTypeDefinitionScanner;
 import org.apache.sling.testing.mock.sling.spi.ResourceResolverTypeAdapter;
 
 /**
@@ -38,10 +40,33 @@ public class JackrabbitMockResourceResolverAdapter implements ResourceResolverTy
     @Override
     public SlingRepository newSlingRepository() {
         try {
-            return RepositoryProvider.instance().getRepository();
+            SlingRepository slingRepository =  RepositoryProvider.instance().getRepository();
+            registerJcrNodeTypes(slingRepository);
+            return slingRepository;
         } catch (RepositoryException ex) {
             throw new RuntimeException("Unable to get jackrabbit SlingRepository instance.", ex);
         }
     }
 
+    /**
+     * Registers all JCR node types found in classpath.
+     * @param slingRepository Sling repository
+     */
+    @SuppressWarnings("deprecation")
+    private static void registerJcrNodeTypes(SlingRepository slingRepository) {
+      Session session = null;
+      try {
+          session =  slingRepository.loginAdministrative(null);
+          NodeTypeDefinitionScanner.get().register(session);
+      }
+      catch (RepositoryException ex) {
+          throw new RuntimeException("Error registering JCR nodetypes: " + ex.getMessage(), ex);
+      }
+      finally {
+          if (session != null) {
+              session.logout();
+          }
+      }
+    }
+    
 }

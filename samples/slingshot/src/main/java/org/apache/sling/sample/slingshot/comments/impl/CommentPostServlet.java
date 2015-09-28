@@ -17,6 +17,8 @@
 package org.apache.sling.sample.slingshot.comments.impl;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 
@@ -33,6 +35,7 @@ import org.apache.sling.sample.slingshot.SlingshotConstants;
 import org.apache.sling.sample.slingshot.comments.Comment;
 import org.apache.sling.sample.slingshot.comments.CommentsService;
 import org.apache.sling.sample.slingshot.comments.CommentsUtil;
+import org.apache.sling.sample.slingshot.impl.InternalConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +67,12 @@ public class CommentPostServlet extends SlingAllMethodsServlet {
         // save comment
         ResourceResolver resolver = null;
         try {
-            resolver = factory.getServiceResourceResolver(null);
+            // TODO - switch to service user with Oak
+            final Map<String, Object> authInfo = new HashMap<String, Object>();
+            authInfo.put(ResourceResolverFactory.USER, InternalConstants.SERVICE_USER_NAME);
+            authInfo.put(ResourceResolverFactory.PASSWORD, InternalConstants.SERVICE_USER_NAME.toCharArray());
+            resolver = factory.getResourceResolver(authInfo);
+//          resolver = factory.getServiceResourceResolver(null);
 
             final Resource reqResource = resolver.getResource(request.getResource().getPath());
 
@@ -74,6 +82,12 @@ public class CommentPostServlet extends SlingAllMethodsServlet {
             c.setCreatedBy(userId);
 
             this.commentsService.addComment(reqResource, c);
+            
+
+            // send redirect at the end
+            final String path = request.getResource().getPath();
+
+            response.sendRedirect(resolver.map(request.getContextPath() + path + ".html"));            
         } catch ( final LoginException le ) {
             throw new ServletException("Unable to login", le);
         } finally {
@@ -81,11 +95,6 @@ public class CommentPostServlet extends SlingAllMethodsServlet {
                 resolver.close();
             }
         }
-
-        // send redirect at the end
-        final String path = request.getResource().getParent().getPath();
-
-        response.sendRedirect(request.getContextPath() + path + ".html");
     }
 
 }

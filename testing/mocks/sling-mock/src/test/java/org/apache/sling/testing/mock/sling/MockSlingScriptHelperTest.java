@@ -29,6 +29,7 @@ import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletRequest;
 import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletResponse;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
@@ -48,6 +49,11 @@ public class MockSlingScriptHelperTest {
         this.response = new MockSlingHttpServletResponse();
         this.bundleContext = MockOsgi.newBundleContext();
         this.scriptHelper = MockSling.newSlingScriptHelper(this.request, this.response, this.bundleContext);
+    }
+    
+    @After
+    public void tearDown() {
+        this.resourceResolver.close();
     }
 
     @Test

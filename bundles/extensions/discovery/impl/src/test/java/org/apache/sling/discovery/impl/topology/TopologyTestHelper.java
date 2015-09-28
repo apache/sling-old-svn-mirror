@@ -147,8 +147,8 @@ public class TopologyTestHelper {
     }
 
     public static Instance createInstance(Collection<Instance> instances, String discoveryResourcePath, String debugName,
-            int heartbeatTimeout, int heartbeatInterval, int minEventDelay) throws Exception {
-        final Instance instance = Instance.newStandaloneInstance(discoveryResourcePath, debugName, true, heartbeatTimeout, heartbeatInterval, minEventDelay);
+            boolean resetRepo, int heartbeatTimeout, int heartbeatInterval, int minEventDelay) throws Exception {
+        final Instance instance = Instance.newStandaloneInstance(discoveryResourcePath, debugName, resetRepo, heartbeatTimeout, heartbeatInterval, minEventDelay);
         instances.add(instance);
         return instance;
     }

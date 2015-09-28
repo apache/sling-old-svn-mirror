@@ -19,6 +19,6 @@
 /**
  * Couchbase Client Provider
  */
-@aQute.bnd.annotation.Version("0.5.0")
+@aQute.bnd.annotation.Version("1.0.0")
 package org.apache.sling.nosql.couchbase.client;
 

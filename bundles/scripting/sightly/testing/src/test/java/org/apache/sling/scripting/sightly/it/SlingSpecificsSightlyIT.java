@@ -52,6 +52,7 @@ public class SlingSpecificsSightlyIT {
         String url = launchpadURL + SLING_USE;
         String pageContent = client.getStringContent(url, 200);
         assertEquals("SUCCESS", HTMLExtractor.innerHTML(url, pageContent, "#reqmodel"));
+        assertEquals("SUCCESS", HTMLExtractor.innerHTML(url, pageContent, "#reqmodel-reqarg"));
         assertEquals("SUCCESS", HTMLExtractor.innerHTML(url, pageContent, "#resmodel"));
         
     }

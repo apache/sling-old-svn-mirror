@@ -22,7 +22,9 @@
         <title>Sightly Use-API - Sling implementation</title>
     </head>
     <body>
-        <div id="reqmodel" data-sly-use.reqmodel="org.apache.sling.scripting.sightly.testing.models.RequestModel">${reqmodel.title}</div>
+        <div id="reqmodel" data-sly-use.reqmodel="${'org.apache.sling.scripting.sightly.testing.models.RequestModel' @
+            argument='SUCCESS'}">${reqmodel.title}</div>
+        <div id="reqmodel-reqarg">${reqmodel.requestArgument}</div>
         <div id="resmodel" data-sly-use.resmodel="org.apache.sling.scripting.sightly.testing.models.ResourceModel">${resmodel.title}</div>
         <div id="reqadapt"
              data-sly-use.reqadapt="org.apache.sling.scripting.sightly.testing.adaptable.RequestAdapterUseObject">${reqadapt.title}</div>

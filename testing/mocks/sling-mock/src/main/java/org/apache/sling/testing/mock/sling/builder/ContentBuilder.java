@@ -71,7 +71,7 @@ public class ContentBuilder {
         try {
             return resourceResolver.create(parentResource, name, properties);
         } catch (PersistenceException ex) {
-            throw new RuntimeException("Unable to create page at " + path, ex);
+            throw new RuntimeException("Unable to create resource at " + path, ex);
         }
     }
 
@@ -93,11 +93,10 @@ public class ContentBuilder {
         String name = ResourceUtil.getName(path);
         Resource parentResource = ensureResourceExists(parentPath);
         try {
-            resource = resourceResolver.create(
-                    parentResource,
-                    name,
+            resource = resourceResolver.create(parentResource, name,
                     ImmutableMap.<String, Object> builder()
-                            .put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED).build());
+                            .put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED)
+                            .build());
             resourceResolver.commit();
             return resource;
         } catch (PersistenceException ex) {

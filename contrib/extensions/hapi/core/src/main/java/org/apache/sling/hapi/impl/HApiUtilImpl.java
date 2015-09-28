@@ -46,18 +46,24 @@ public class HApiUtilImpl implements HApiUtil {
     @Property(label = "HApi Resource Type", cardinality = 0, value = DEFAULT_RESOURCE_TYPE)
     public static final String HAPI_RESOURCE_TYPE = "org.apache.sling.hapi.tools.resourcetype";
 
-
     @Property(label = "HApi Types Search Paths", cardinality=50, value = {"/libs/sling/hapi/types"})
     public static final String HAPI_PATHS = "org.apache.sling.hapi.tools.searchpaths";
 
+
+    private static final String DEFAULT_SERVER_URL = "http://localhost:8080";
+    @Property(label = "External server URL", cardinality = 0, value = DEFAULT_SERVER_URL)
+    public static final String HAPI_EXTERNAL_URL = "org.apache.sling.hapi.tools.externalurl";
+
     public static String resourceType;
     public static String[] hApiPaths;
+    public static String serverContextPath;
 
 
     @Activate
     private void activate(ComponentContext context, Map<String, Object> configuration) {
         resourceType = PropertiesUtil.toString(configuration.get(HAPI_RESOURCE_TYPE), DEFAULT_RESOURCE_TYPE);
         hApiPaths = PropertiesUtil.toStringArray(configuration.get(HAPI_PATHS));
+        serverContextPath = PropertiesUtil.toString(configuration.get(HAPI_EXTERNAL_URL), DEFAULT_SERVER_URL);
     }
 
     /**
@@ -126,13 +132,6 @@ public class HApiUtilImpl implements HApiUtil {
         String path = typeNode.getPath();
         String fqdn = typeNode.getProperty("fqdn").getValue().getString();
 
-        // get parent if it exists
-        HApiType parent = null;
-        String parentPath = typeNode.hasProperty("extends") ? typeNode.getProperty("extends").getString() : null;
-        if (null != parentPath) {
-            parent = this.fromPath(resolver, parentPath);
-        }
-
         // get parameters
         Value[] parameterValues = typeNode.hasProperty("parameters") ? typeNode.getProperty("parameters").getValues() : new Value[]{};
         List<String> parameters = new ArrayList<String>(parameterValues.length);
@@ -140,27 +139,48 @@ public class HApiUtilImpl implements HApiUtil {
         for (Value p : Arrays.asList(parameterValues)) {
             parameters.add(p.getString());
         }
+        HApiTypeImpl newType = new HApiTypeImpl(name, description, serverContextPath, path, fqdn, parameters, null, null, false);
+        TypesCache.getInstance(this).addType(newType);
 
-        // Get properties
-        Map<String, HApiProperty> properties = new HashMap<String, HApiProperty>();
+        try {
+            // get parent if it exists
+            HApiType parent = null;
+            String parentPath = typeNode.hasProperty("extends") ? typeNode.getProperty("extends").getString() : null;
+            if (null != parentPath) {
+                parent = TypesCache.getInstance(this).getType(resolver, parentPath);
+            }
 
-        // Add the properties from this node
-        Iterator<Node> it = typeNode.getNodes();
-        while (it.hasNext()) {
-            Node propNode = it.next();
-            String propName  = propNode.getName();
-            String propDescription = propNode.hasProperty("description") ? propNode.getProperty("description").getString() : "";
+            // Get properties
+            Map<String, HApiProperty> properties = new HashMap<String, HApiProperty>();
 
-            // TODO: maybe create adapter and use adaptTo()
-            // TODO: this could be slow, the types can be instantiated externally in a service activate()
-            String type = propNode.getProperty("type").getValue().getString();
-            HApiType propType = this.fromPath(resolver, type);
-            Boolean propMultiple = propNode.hasProperty("multiple") ? propNode.getProperty("multiple").getBoolean() : false;
+            // Add the properties from this node
+            Iterator<Node> it = typeNode.getNodes();
+            while (it.hasNext()) {
+                Node propNode = it.next();
+                String propName = propNode.getName();
+                String propDescription = propNode.hasProperty("description") ? propNode.getProperty("description").getString() : "";
 
-            HApiProperty prop = new HApiPropertyImpl(propName, propDescription, propType, propMultiple);
-            properties.put(prop.getName(), prop);
+                String typePath = propNode.getProperty("type").getValue().getString();
+                HApiType propType = TypesCache.getInstance(this).getType(resolver, typePath);
+                Boolean propMultiple = propNode.hasProperty("multiple") ? propNode.getProperty("multiple").getBoolean() : false;
+
+                HApiProperty prop = new HApiPropertyImpl(propName, propDescription, propType, propMultiple);
+                properties.put(prop.getName(), prop);
+            }
+            newType.setParent(parent);
+            newType.setProperties(properties);
+
+        } catch (RuntimeException t) {
+            // Remove type from cache if it wasn't created successfully
+            TypesCache.getInstance(this).removeType(newType.getPath());
+            throw t;
+        } catch (RepositoryException e) {
+            // Remove type from cache if it wasn't created successfully
+            TypesCache.getInstance(this).removeType(newType.getPath());
+            throw e;
         }
-        return new HApiTypeImpl(name, description, path, fqdn, parameters, properties, parent, false);
+
+        return newType;
     }
 
     /**
@@ -207,6 +227,10 @@ class TypesCache {
 
     public void addType(HApiType type) {
         this.types.put(type.getPath(), type);
+    }
+
+    public void removeType(String path) {
+        this.types.remove(path);
     }
 }
 

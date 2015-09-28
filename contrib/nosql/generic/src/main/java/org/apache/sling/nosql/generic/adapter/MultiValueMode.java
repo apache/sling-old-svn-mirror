@@ -19,7 +19,7 @@
 package org.apache.sling.nosql.generic.adapter;
 
 /**
- * Mode for multi-valued field data in {@link NoSqlData properties).
+ * Mode for multi-valued field data in {@link NoSqlData} properties.
  */
 public enum MultiValueMode {
 

@@ -28,6 +28,7 @@ import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.core.impl.AbstractInstallTask;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.Constants;
 
 /**
  * Update the system bundle from a RegisteredResource.
@@ -45,7 +46,7 @@ public class SystemBundleUpdateTask extends AbstractInstallTask {
 
     @Override
     public void execute(final InstallationContext ctx) {
-        final Bundle systemBundle = this.getBundleContext().getBundle(0);
+        final Bundle systemBundle = this.getBundleContext().getBundle(Constants.SYSTEM_BUNDLE_LOCATION);
         // sanity check
         if ( systemBundle == null ) {
             this.setFinishedState(ResourceState.IGNORED);

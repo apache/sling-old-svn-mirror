@@ -22,6 +22,7 @@ import org.apache.sling.installer.core.impl.util.BundleRefresher;
 import org.apache.sling.installer.core.impl.util.PABundleRefresher;
 import org.apache.sling.installer.core.impl.util.WABundleRefresher;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.wiring.FrameworkWiring;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.startlevel.StartLevel;
@@ -83,14 +84,14 @@ public class TaskSupport {
     public BundleRefresher getBundleRefresher() {
         if ( checkedWireAdmin == null ) {
             try {
-                this.bundleContext.getBundle(0).adapt(FrameworkWiring.class);
+                this.bundleContext.getBundle(Constants.SYSTEM_BUNDLE_LOCATION).adapt(FrameworkWiring.class);
                 checkedWireAdmin = true;
             } catch (final Throwable t) {
                 checkedWireAdmin = false;
             }
         }
         if ( checkedWireAdmin.booleanValue() ) {
-            return new WABundleRefresher(this.bundleContext.getBundle(0).adapt(FrameworkWiring.class),
+            return new WABundleRefresher(this.bundleContext.getBundle(Constants.SYSTEM_BUNDLE_LOCATION).adapt(FrameworkWiring.class),
                     this.bundleContext);
         } else {
             return new PABundleRefresher((PackageAdmin) this.packageAdminTracker.getService(),

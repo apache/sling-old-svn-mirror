@@ -47,11 +47,13 @@
 
   <modules>
     <module>tools</module>
+    <module>hamcrest</module>
     <module>junit/core</module>
     <module>junit/scriptable</module>
     <module>junit/healthcheck</module>
     <module>junit/remote</module>
     <module>junit/performance</module>
+    <module>junit/teleporter</module>
     <module>mocks/logging-mock</module>
     <module>mocks/resourceresolver-mock</module>
     <module>mocks/jcr-mock</module>

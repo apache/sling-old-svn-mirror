@@ -42,6 +42,7 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.cluster.ClusterViewService;
+import org.apache.sling.discovery.impl.cluster.UndefinedClusterViewException;
 import org.apache.sling.discovery.impl.topology.announcement.Announcement;
 import org.apache.sling.discovery.impl.topology.announcement.AnnouncementFilter;
 import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistry;
@@ -322,6 +323,9 @@ public class TopologyConnectorServlet extends HttpServlet {
         } catch (JSONException e) {
             logger.error("doPost: Got a JSONException: " + e, e);
             response.sendError(500);
+        } catch (UndefinedClusterViewException e) {
+            logger.warn("doPost: no clusterView available at the moment - cannot handle connectors now: "+e);
+            response.sendError(503); // "please retry, but atm I can't help since I'm isolated"
         }
 
     }

@@ -23,18 +23,24 @@ import javax.inject.Named;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.models.annotations.Model;
+import org.apache.sling.models.annotations.Source;
 import org.apache.sling.models.annotations.Via;
 
 @Model(adaptables = SlingHttpServletRequest.class)
 public class RequestModel {
 
-    @Inject
-    @Via("resource")
-    @Named("jcr:title")
+    @Inject @Via("resource") @Named("jcr:title")
     private String title;
+
+    @Inject @Named("argument")
+    // get it from request attributes
+    private String requestArgument;
 
     public String getTitle() {
         return title != null ? title : "FAILED";
     }
 
+    public String getRequestArgument() {
+        return requestArgument != null ? requestArgument : "FAILED";
+    }
 }

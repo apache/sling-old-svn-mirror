@@ -53,7 +53,7 @@ public class DefaultDistributor implements Distributor {
         DistributionAgent agent = componentProvider.getService(DistributionAgent.class, agentName);
 
         if (agent == null) {
-            return new SimpleDistributionResponse(DistributionRequestState.DROPPED, "Agent is not available");
+            return new SimpleDistributionResponse(DistributionRequestState.NOT_EXECUTED, "Agent is not available");
         }
 
         try {

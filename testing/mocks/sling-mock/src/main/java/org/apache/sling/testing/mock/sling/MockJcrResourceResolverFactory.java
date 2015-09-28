@@ -24,20 +24,15 @@ import java.util.Map;
 
 import javax.jcr.query.Query;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.QueriableResourceProvider;
 import org.apache.sling.api.resource.ResourceProvider;
+import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
-
-import com.google.common.collect.ImmutableMap;
 
 /**
  * Mock {@link ResourceResolverFactory} implementation.
@@ -64,47 +59,16 @@ class MockJcrResourceResolverFactory extends AbstractMockResourceResolverFactory
         // use reflection to not depend on it if running with older version of org.apache.sling.jcr.resource
         registerServiceIfFoundInClasspath("org.apache.sling.jcr.resource.internal.helper.jcr.PathMapper");
 
-        // setup real sling JCR resource provider implementation for use in
-        // mocked context
+        // setup real sling JCR resource provider implementation for use in mocked context
         JcrResourceProviderFactory jcrResourceProviderFactory = new JcrResourceProviderFactory();
+        Dictionary<String, Object> resourceProviderProps = new Hashtable<String, Object>();
+        resourceProviderProps.put(ResourceProvider.ROOTS, new String[] { "/" });
+        resourceProviderProps.put(QueriableResourceProvider.LANGUAGES, new String[] { Query.XPATH, Query.SQL, Query.JCR_SQL2 });
         MockOsgi.injectServices(jcrResourceProviderFactory, bundleContext);
-        MockOsgi.activate(jcrResourceProviderFactory, bundleContext, ImmutableMap.<String, Object> of());
+        MockOsgi.activate(jcrResourceProviderFactory, bundleContext, resourceProviderProps);
+        bundleContext.registerService(ResourceProviderFactory.class.getName(), jcrResourceProviderFactory, resourceProviderProps);
 
-        ResourceProvider resourceProvider;
-        if (isAdmin) {
-            resourceProvider = jcrResourceProviderFactory.getAdministrativeResourceProvider(authenticationInfo);
-        }
-        else {
-            resourceProvider = jcrResourceProviderFactory.getResourceProvider(authenticationInfo);
-        }
-
-        // register JCR resource provider if not already registered
-        if (!isRootServiceProviderRegistered(bundleContext)) {
-            Dictionary<Object, Object> resourceProviderProps = new Hashtable<Object, Object>();
-            resourceProviderProps.put(ResourceProvider.ROOTS, new String[] { "/" });
-            resourceProviderProps.put(QueriableResourceProvider.LANGUAGES, new String[] { Query.XPATH, Query.SQL, Query.JCR_SQL2 });
-            bundleContext.registerService(ResourceProvider.class.getName(), resourceProvider, resourceProviderProps);
-        }
-        
         return super.getResourceResolverInternal(authenticationInfo, isAdmin);
-    }
-    
-    private boolean isRootServiceProviderRegistered(BundleContext bundleContext) {
-        try {
-            ServiceReference[] serviceReferences = bundleContext.getServiceReferences(ResourceProvider.class.getName(), null) ;
-            if (serviceReferences != null) {
-                for (ServiceReference serviceReference : serviceReferences) {
-                    String[] roots = PropertiesUtil.toStringArray(serviceReference.getProperty(ResourceProvider.ROOTS));
-                    if (ArrayUtils.contains(roots, "/")) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-        catch (InvalidSyntaxException ex) {
-            throw new RuntimeException(ex);
-        }
     }
     
     private void registerServiceIfFoundInClasspath(String className) {

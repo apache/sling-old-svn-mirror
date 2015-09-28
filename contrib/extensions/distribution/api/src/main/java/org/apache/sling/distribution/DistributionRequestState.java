@@ -18,6 +18,8 @@
  */
 package org.apache.sling.distribution;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * The different states a {@link org.apache.sling.distribution.DistributionRequest} can have during its lifecycle.
  * Allowed transitions of {@link org.apache.sling.distribution.DistributionRequestState} for a certain
@@ -31,6 +33,7 @@ package org.apache.sling.distribution;
  * will only results in {@code #DISTRIBUTED} or {@code #DROPPED} {@link org.apache.sling.distribution.DistributionRequestState}s
  * while requests executed asynchronously can result in any of {@code #DISTRIBUTED}, {@code #DROPPED} or {@code #ACCEPTED} states.
  */
+@ProviderType
 public enum DistributionRequestState {
 
     /**
@@ -41,10 +44,15 @@ public enum DistributionRequestState {
 
     /**
      * The request has been dropped and the content could not be successfully
-     * distributed from the source to target instance, this means the request
-     * execution failed during one of: creation, queueing, transport, persistence.
+     * distributed from the source to target instance because the request
+     * execution failed during one of the phases: creation, queueing, transport, persistence.
      */
     DROPPED,
+
+    /**
+     * The request was not executed because no distribution agent was found to serve it.
+     */
+    NOT_EXECUTED,
 
     /**
      * The request has been accepted, as a consequence the content to be distributed

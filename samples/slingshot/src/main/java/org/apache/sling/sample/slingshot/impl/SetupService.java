@@ -92,20 +92,14 @@ public class SetupService {
 
         // create default slingshot users
         for(final String principalId : USERS) {
+            // user home
             final String resourcePath = SlingshotConstants.APP_ROOT_PATH + "/users/" + principalId;
-
-            final Map<String, String> privileges = new HashMap<String, String>();
-            privileges.put(Privilege.JCR_ALL, "granted");
-
             modifyAce(session, resourcePath, principalId, Privilege.JCR_ALL, true);
 
             // ugc path
             final String ugcPath = resourcePath + "/ugc";
-            privileges.clear();
-            privileges.put(Privilege.JCR_ALL, "granted");
-
-            modifyAce(session, ugcPath, InternalConstants.SERVICE_USER_NAME,
-                    Privilege.JCR_ALL, true);
+            modifyAce(session, ugcPath,
+                    InternalConstants.SERVICE_USER_NAME, Privilege.JCR_ALL, true);
         }
     }
 
