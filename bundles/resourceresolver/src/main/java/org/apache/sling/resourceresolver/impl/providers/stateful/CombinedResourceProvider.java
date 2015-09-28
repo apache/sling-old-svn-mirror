@@ -53,6 +53,12 @@ import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * This class takes a number of {@link StatefulResourceProvider} objects and
+ * exposes it as one such object. Provider appropriate for the given operation
+ * is chosen basing on its {@link ResourceProviderInfo#getPath()} (more specific
+ * first) and service ranking.
+ */
 public class CombinedResourceProvider implements StatefulResourceProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(CombinedResourceProvider.class);
@@ -74,16 +80,25 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
         this.resolver = resolver;
     }
 
+    /**
+     * This operation is not supported for the {@link CombinedResourceProvider}.
+     */
     @Override
     public ResourceProviderInfo getInfo() {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ResourceResolver getResourceResolver() {
         return resolver;
     }
 
+    /**
+     * Logouts from all providers.
+     */
     @Override
     public void logout() {
         for (StatefulResourceProvider p : providers) {
@@ -91,6 +106,9 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
         }
     }
 
+    /**
+     * Refreshes all providers.
+     */
     @Override
     public void refresh() {
         for (StatefulResourceProvider p : providers) {
@@ -98,6 +116,9 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
         }
     }
 
+    /**
+     * Returns {@code true} if all providers are live.
+     */
     @Override
     public boolean isLive() {
         for (StatefulResourceProvider p : providers) {
@@ -108,6 +129,14 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
         return true;
     }
 
+    /**
+     * Returns parent from the most appropriate resource provider accepting the
+     * given children.
+     * 
+     * In some cases the {@link SyntheticResource} can be returned if no
+     * resource provider returns parent for this child. See
+     * {@link #getResource(String, Resource, Map, boolean)} for more details
+     */
     @Override
     public Resource getParent(Resource child) {
         String path = child.getPath();
@@ -124,6 +153,20 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
         return null;
     }
 
+    /**
+     * Returns resource from the most appropriate resource provider.
+     * <br/><br/>
+     * If there's no such provider and the path is a part of some resource
+     * provider path, then the {@link SyntheticResource} will be returned. For
+     * instance, if we have resource provider under
+     * {@code /libs/sling/servlet/default/GET.servlet} and no resource provider
+     * returns a resource for {@code /libs/sling/servlet/default}, then the
+     * {@link SyntheticResource} will be returned to provide a consistent
+     * resource tree.
+     * <br/><br/>
+     * The same behaviour occurs in {@link #getParent(Resource)} and
+     * {@link #listChildren(Resource)}.
+     */
     @Override
     public Resource getResource(String path, Resource parent, Map<String, String> parameters, boolean isResolve) {
         if (path == null || path.length() == 0 || path.charAt(0) != '/') {
@@ -183,6 +226,14 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
         return false;
     }
 
+    /**
+     * This method asks all resource providers for the children iterators,
+     * merges them, adds {@link SyntheticResource}s (see
+     * {@link #getResource(String, Resource, Map, boolean)} for more details),
+     * filters out the duplicates and returns the resulting iterator. All
+     * transformations are done lazily, during the {@link Iterator#hasNext()}
+     * invocation on the result.
+     */
     @SuppressWarnings("unchecked")
     @Override
     public Iterator<Resource> listChildren(final Resource parent) {
@@ -227,6 +278,9 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
         return children;
     }
 
+    /**
+     * Returns the union of all attribute names.
+     */
     @Override
     public Collection<String> getAttributeNames() {
         final Set<String> names = new LinkedHashSet<String>();
@@ -239,6 +293,11 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
         return names;
     }
 
+    /**
+     * Returns the first non-null result of the
+     * {@link StatefulResourceProvider#getAttribute(String)} invocation on
+     * the providers.
+     */
     @Override
     public Object getAttribute(String name) {
         for (StatefulResourceProvider p : providers) {
@@ -251,7 +310,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     }
 
     /**
-     * Create a resource. Iterate over all viable ModifyingProviderHandlers
+     * Create a resource. Iterate over all modifiable ResourceProviders
      * stopping at the first one which creates the resource and return the
      * created resource.
      *
@@ -276,7 +335,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     }
 
     /**
-     * Delete the resource. Iterate over all viable ModifyingProviderHandlers
+     * Delete the resource. Iterate over all modifiable ResourceProviders
      * giving each an opportunity to delete the resource if they are able.
      *
      * @throws NullPointerException
@@ -307,6 +366,9 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
         }
     }
 
+    /**
+     * Revert changes on all modifiable ResourceProviders.
+     */
     @Override
     public void revert() {
         for (StatefulResourceProvider p : providers) {
@@ -316,6 +378,9 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
         }
     }
 
+    /**
+     * Commit changes on all modifiable ResourceProviders.
+     */
     @Override
     public void commit() throws PersistenceException {
         for (StatefulResourceProvider p : providers) {
@@ -325,6 +390,9 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
         }
     }
 
+    /**
+     * Check if any modifiable ResourceProvider has uncommited changes.
+     */
     @Override
     public boolean hasChanges() {
         for (StatefulResourceProvider p : providers) {
@@ -335,11 +403,17 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
         return false;
     }
 
+    /**
+     * Queries all resource providers and combines the results.
+     */
     @Override
     public QueryResult find(final Query q, final QueryInstructions qi) {
         return new CombinedQueryResult(q, qi);
     }
 
+    /**
+     * Return the union of query languages supported by the providers.
+     */
     @Override
     public String[] getSupportedLanguages() {
         Set<String> supportedLanguages = new LinkedHashSet<String>();
@@ -349,6 +423,9 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
         return supportedLanguages.toArray(new String[supportedLanguages.size()]);
     }
 
+    /**
+     * Queries all resource providers and combines the results.
+     */
     @Override
     public Iterator<Resource> findResources(final String query, final String language) {
         List<StatefulResourceProvider> querableRP = getQuerableProviders(language);
@@ -369,6 +446,9 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
         return querableProviders;
     }
 
+    /**
+     * Queries all resource providers and combines the results.
+     */
     @Override
     public Iterator<Map<String, Object>> queryResources(final String query, final String language) {
         List<StatefulResourceProvider> querableRP = getQuerableProviders(language);
@@ -379,6 +459,10 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
         return new ChainedIterator<Map<String, Object>>(iterators.iterator());
     }
 
+    /**
+     * Returns the first non-null result of the adaptTo() method invoked on the
+     * providers.
+     */
     @SuppressWarnings("unchecked")
     @Override
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
@@ -391,6 +475,11 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
         return null;
     }
 
+    /**
+     * Tries to find a resource provider accepting both paths and invokes
+     * {@link StatefulResourceProvider#copy(String, String)} method on it.
+     * Returns false if there's no such provider.
+     */
     @Override
     public boolean copy(String srcAbsPath, String destAbsPath) throws PersistenceException {
         List<StatefulResourceProvider> srcProviders = getMatchingProviders(srcAbsPath);
@@ -405,6 +494,11 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
         return false;
     }
 
+    /**
+     * Tries to find a resource provider accepting both paths and invokes
+     * {@link StatefulResourceProvider#move(String, String)} method on it.
+     * Returns false if there's no such provider.
+     */
     @Override
     public boolean move(String srcAbsPath, String destAbsPath) throws PersistenceException {
         List<StatefulResourceProvider> srcProviders = getMatchingModifiableProviders(srcAbsPath);

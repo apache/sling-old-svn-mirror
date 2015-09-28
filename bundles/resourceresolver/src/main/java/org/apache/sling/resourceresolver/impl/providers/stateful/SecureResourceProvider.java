@@ -26,9 +26,14 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.security.ResourceAccessSecurity;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * This wrappers add the Sling security layer (see
+ * {@link ResourceAccessSecurity}) to the underlying {@link ResourceProvider}.
+ */
 public class SecureResourceProvider extends StatefulResourceProviderWrapper {
 
     private static final Logger logger = LoggerFactory.getLogger(ResourceResolverImpl.class);

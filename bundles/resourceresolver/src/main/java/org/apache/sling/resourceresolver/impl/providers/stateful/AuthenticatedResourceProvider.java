@@ -42,6 +42,12 @@ import org.apache.sling.spi.resource.provider.QueryResult;
 import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 
+/**
+ * This {@link StatefulResourceProvider} implementation authenticates the
+ * underlying {@link ResourceProvider}. The authentication can be done during
+ * creation of the object (for {@link AuthType#required}) or before invoking the
+ * first method (for {@link AuthType#lazy}).
+ */
 public class AuthenticatedResourceProvider implements StatefulResourceProvider {
 
     private static final String FORBIDDEN_ATTRIBUTE = ResourceResolverFactory.PASSWORD;
