@@ -856,11 +856,15 @@ public class SlingServletResolver
         this.plugin = new ServletResolverWebConsolePlugin(context.getBundleContext());
 
         try {
-            Dictionary<String, String> mbeanProps = new Hashtable<String, String>();
-            mbeanProps.put("jmx.objectname", "org.apache.sling:type=servletResolver,service=SlingServletResolverCache");
+            if (this.cacheSize > 0) {
+                Dictionary<String, String> mbeanProps = new Hashtable<String, String>();
+                mbeanProps.put("jmx.objectname",
+                        "org.apache.sling:type=servletResolver,service=SlingServletResolverCache");
 
-            ServletResolverCacheMBeanImpl mbean = new ServletResolverCacheMBeanImpl();
-            mbeanRegistration = context.getBundleContext().registerService(SlingServletResolverCacheMBean.class.getName(), mbean, mbeanProps);
+                ServletResolverCacheMBeanImpl mbean = new ServletResolverCacheMBeanImpl();
+                mbeanRegistration = context.getBundleContext()
+                        .registerService(SlingServletResolverCacheMBean.class.getName(), mbean, mbeanProps);
+            }
         } catch (Throwable t) {
             LOGGER.debug("Unable to register mbean");
         }
