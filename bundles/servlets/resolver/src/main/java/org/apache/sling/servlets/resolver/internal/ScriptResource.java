@@ -40,27 +40,24 @@ import org.apache.sling.api.resource.ResourceResolver;
  */
 public class ScriptResource extends AbstractResource {
 
-    private Resource activeResource;
+    private final ThreadLocal<Resource> activeResource = new ThreadLocal<Resource>();
 
     private final ResourceResolver sharedResourceResolver;
 
-    private WeakReference<ResourceResolver> perThreadResourceResolver;
+    private final String path;
 
     public ScriptResource(final Resource resource, final ResourceResolver sharedResourceResolver) {
-        this.perThreadResourceResolver = new WeakReference<ResourceResolver>(resource.getResourceResolver());
+        this.activeResource.set(resource);
+        this.path = resource.getPath();
         this.sharedResourceResolver = sharedResourceResolver;
-        this.activeResource = resource;
     }
 
     private Resource getActiveResource() {
-        if ( this.perThreadResourceResolver != null ) {
-            final ResourceResolver rr = this.perThreadResourceResolver.get();
-            if ( rr == null || !rr.isLive() ) {
-                this.perThreadResourceResolver = null;
-                this.activeResource = this.sharedResourceResolver.getResource(this.activeResource.getPath());
-            }
+        final Resource resource = this.activeResource.get();
+        if ( resource == null || !resource.getResourceResolver().isLive() ) {
+            this.activeResource.set(this.sharedResourceResolver.getResource(this.path));
         }
-        return this.activeResource;
+        return this.activeResource.get();
     }
 
     /**
@@ -103,7 +100,7 @@ public class ScriptResource extends AbstractResource {
      * @see org.apache.sling.api.resource.Resource#getPath()
      */
     public String getPath() {
-        return this.getActiveResource().getPath();
+        return this.path;
     }
 
     /**
