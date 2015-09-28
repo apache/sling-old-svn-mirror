@@ -61,7 +61,7 @@ import org.slf4j.LoggerFactory;
  * the resource bundle for the current request.
  */
 @SlingFilter(generateService = true,
-             order = -700, scope = { SlingFilterScope.REQUEST, SlingFilterScope.ERROR })
+             order = 700, scope = { SlingFilterScope.REQUEST, SlingFilterScope.ERROR })
 @Properties({
     @Property(name = "pattern", value="/.*"),
     @Property(name = Constants.SERVICE_DESCRIPTION, value = "Internationalization Support Filter"),
