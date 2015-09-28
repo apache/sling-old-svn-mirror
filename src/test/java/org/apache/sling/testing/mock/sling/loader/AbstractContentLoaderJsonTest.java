@@ -26,7 +26,6 @@ import static org.junit.Assert.assertNotNull;
 import java.util.Calendar;
 import java.util.TimeZone;
 
-import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -37,10 +36,13 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.testing.mock.sling.MockSling;
+import org.apache.sling.testing.mock.sling.NodeTypeDefinitionScanner;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.common.collect.ImmutableList;
 
 public abstract class AbstractContentLoaderJsonTest {
 
@@ -51,18 +53,13 @@ public abstract class AbstractContentLoaderJsonTest {
     protected ResourceResolver newResourceResolver() {
         ResourceResolver resolver = MockSling.newResourceResolver(getResourceResolverType());
 
-        if (getResourceResolverType() == ResourceResolverType.JCR_MOCK) {
-            try {
-                // dummy namespace registrations to make sure sling JCR resolver
-                // does not get mixed up with the prefixes
-                NamespaceRegistry namespaceRegistry = resolver.adaptTo(Session.class).getWorkspace()
-                        .getNamespaceRegistry();
-                namespaceRegistry.registerNamespace("sling", "http://mock/sling");
-                namespaceRegistry.registerNamespace("app", "http://mock/app");
-                namespaceRegistry.registerNamespace("dam", "http://mock/dam");
-            } catch (RepositoryException ex) {
-                throw new RuntimeException("Unable to register namespaces.", ex);
-            }
+        try {
+            NodeTypeDefinitionScanner.get().register(resolver.adaptTo(Session.class), 
+                    ImmutableList.of("SLING-INF/nodetypes/app.cnd"),
+                    getResourceResolverType().getNodeTypeMode());
+        }
+        catch (RepositoryException ex) {
+            throw new RuntimeException("Unable to register namespaces.", ex);
         }
 
         return resolver;

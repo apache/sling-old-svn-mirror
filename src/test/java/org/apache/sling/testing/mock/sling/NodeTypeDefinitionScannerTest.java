@@ -16,12 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.testing.mock.sling.context;
+package org.apache.sling.testing.mock.sling;
 
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import org.apache.sling.testing.mock.sling.NodeTypeDefinitionScanner;
 import org.junit.Test;
 
 
