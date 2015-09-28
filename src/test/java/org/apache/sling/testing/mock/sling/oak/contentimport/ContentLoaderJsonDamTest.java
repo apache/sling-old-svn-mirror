@@ -18,14 +18,6 @@
  */
 package org.apache.sling.testing.mock.sling.oak.contentimport;
 
-import java.io.IOException;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.commons.testing.jcr.RepositoryUtil;
-import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.loader.AbstractContentLoaderJsonDamTest;
 
@@ -35,24 +27,5 @@ public class ContentLoaderJsonDamTest extends AbstractContentLoaderJsonDamTest {
     protected ResourceResolverType getResourceResolverType() {
         return ResourceResolverType.JCR_OAK;
     }
-
-    @Override
-    protected ResourceResolver newResourceResolver() {
-        ResourceResolver resolver = MockSling.newResourceResolver(getResourceResolverType());
-
-        // register sling and app node types
-        try {
-            Session session = resolver.adaptTo(Session.class);
-            RepositoryUtil.registerSlingNodeTypes(session);
-            RepositoryUtil.registerNodeType(session,
-                    ContentLoaderJsonTest.class.getResourceAsStream("/SLING-INF/nodetypes/app.cnd"));
-        } catch (IOException ex) {
-            throw new RuntimeException("Unable to register sling node types.", ex);
-        } catch (RepositoryException ex) {
-            throw new RuntimeException("Unable to register sling node types.", ex);
-        }
-
-        return resolver;
-    }
-
+    
 }
