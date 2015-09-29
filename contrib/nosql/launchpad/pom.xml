@@ -86,7 +86,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.nosql.couchbase-resourceprovider</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
