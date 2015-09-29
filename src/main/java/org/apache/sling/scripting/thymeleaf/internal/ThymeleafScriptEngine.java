@@ -25,10 +25,7 @@ import java.util.Locale;
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptException;
-import javax.servlet.ServletContext;
 
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptConstants;
@@ -58,10 +55,6 @@ public final class ThymeleafScriptEngine extends AbstractSlingScriptEngine {
             throw new ScriptException("SlingScriptHelper missing from bindings");
         }
 
-        final SlingHttpServletRequest request = helper.getRequest();
-        final SlingHttpServletResponse response = helper.getResponse();
-        final ServletContext servletContext = null; // only used by Thymeleaf's ServletContextResourceResolver
-
         ResourceResolver resourceResolver = (ResourceResolver) scriptContext.getAttribute(SlingScriptConstants.ATTR_SCRIPT_RESOURCE_RESOLVER, SlingScriptConstants.SLING_SCOPE);
         if (resourceResolver == null) {
             resourceResolver = helper.getScript().getScriptResource().getResourceResolver();
@@ -71,8 +64,10 @@ public final class ThymeleafScriptEngine extends AbstractSlingScriptEngine {
         final String scriptName = helper.getScript().getScriptResource().getPath();
         final Writer writer = scriptContext.getWriter();
 
+        bindings.put(SlingScriptConstants.ATTR_SCRIPT_RESOURCE_RESOLVER, resourceResolver); // TODO #388
+
         try {
-            final IContext context = new SlingWebContext(request, response, servletContext, resourceResolver, locale, bindings);
+            final IContext context = new DefaultSlingContext(resourceResolver, locale, bindings);
             thymeleafScriptEngineFactory.getTemplateEngine().process(scriptName, context, writer);
         } catch (Exception e) {
             logger.error("Failure rendering Thymeleaf template '{}': {}", scriptName, e.getMessage());

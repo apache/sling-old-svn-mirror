@@ -16,15 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.thymeleaf;
+package org.apache.sling.scripting.thymeleaf.internal.processor;
 
-import aQute.bnd.annotation.ProviderType;
-import org.thymeleaf.PatternSpec;
-import org.thymeleaf.templatemode.ITemplateModeHandler;
+import org.thymeleaf.dialect.IProcessorDialect;
 
-@ProviderType
-public interface SlingTemplateModeHandler extends ITemplateModeHandler {
+public final class SlingResourceTypeAttributeTagProcessor extends SlingLocalVariableAttributeTagProcessor {
 
-    PatternSpec getPatternSpec();
+    public static final int ATTRIBUTE_PRECEDENCE = 99;
+
+    public static final String ATTRIBUTE_NAME = "resourceType";
+
+    public static final String NODE_PROPERTY_NAME = String.format("%s.%s", LOCAL_VARIABLE_PREFIX, ATTRIBUTE_NAME);
+
+    public SlingResourceTypeAttributeTagProcessor(final IProcessorDialect processorDialect, final String dialectPrefix) {
+        super(processorDialect, dialectPrefix, ATTRIBUTE_NAME, ATTRIBUTE_PRECEDENCE);
+    }
+
+    @Override
+    protected String getLocalVariableName() {
+        return NODE_PROPERTY_NAME;
+    }
 
 }

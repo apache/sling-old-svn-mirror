@@ -16,19 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.thymeleaf.internal.dom;
+package org.apache.sling.scripting.thymeleaf.internal;
 
-import org.thymeleaf.dom.Node;
+import java.util.Locale;
+import java.util.Map;
 
-public final class NodeUtil {
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.scripting.thymeleaf.SlingContext;
+import org.thymeleaf.context.AbstractContext;
 
-    public static <T> T getNodeProperty(final Node node, final String name, final Class<T> clazz) {
-        final Object nodeProperty = node.getNodeProperty(name);
-        try {
-            return clazz.cast(nodeProperty);
-        } catch (ClassCastException e) {
-            return null;
-        }
+public final class DefaultSlingContext extends AbstractContext implements SlingContext {
+
+    private final ResourceResolver resourceResolver;
+
+    public DefaultSlingContext(final ResourceResolver resourceResolver, final Locale locale, final Map<String, Object> variables) {
+        super(locale, variables);
+        this.resourceResolver = resourceResolver;
+    }
+
+    @Override
+    public ResourceResolver getResourceResolver() {
+        return resourceResolver;
     }
 
 }

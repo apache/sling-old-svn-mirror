@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.thymeleaf.internal.processor.attr;
+package org.apache.sling.scripting.thymeleaf.internal.processor;
 
 import java.io.IOException;
 
@@ -30,51 +30,46 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.scripting.core.servlet.CaptureResponseWrapper;
-import org.apache.sling.scripting.thymeleaf.internal.SlingWebContext;
-import org.apache.sling.scripting.thymeleaf.internal.dom.NodeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.thymeleaf.Arguments;
-import org.thymeleaf.Configuration;
-import org.thymeleaf.context.IContext;
-import org.thymeleaf.dom.Element;
-import org.thymeleaf.dom.Macro;
-import org.thymeleaf.processor.ProcessorResult;
-import org.thymeleaf.processor.attr.AbstractAttrProcessor;
+import org.thymeleaf.IEngineConfiguration;
+import org.thymeleaf.context.ITemplateProcessingContext;
+import org.thymeleaf.context.IVariablesMap;
+import org.thymeleaf.context.IWebVariablesMap;
+import org.thymeleaf.dialect.IProcessorDialect;
+import org.thymeleaf.engine.AttributeName;
+import org.thymeleaf.model.IProcessableElementTag;
+import org.thymeleaf.processor.element.IElementTagStructureHandler;
 import org.thymeleaf.standard.expression.IStandardExpression;
 import org.thymeleaf.standard.expression.IStandardExpressionParser;
 import org.thymeleaf.standard.expression.StandardExpressions;
 
-public class SlingIncludeAttrProcessor extends AbstractAttrProcessor {
+public class SlingIncludeAttributeTagProcessor extends SlingHtmlAttributeTagProcessor {
 
-    public static final int ATTR_PRECEDENCE = 100;
+    public static final int ATTRIBUTE_PRECEDENCE = 100;
 
-    public static final String ATTR_NAME = "include";
+    public static final String ATTRIBUTE_NAME = "include";
 
-    private final Logger logger = LoggerFactory.getLogger(SlingIncludeAttrProcessor.class);
+    private final Logger logger = LoggerFactory.getLogger(SlingIncludeAttributeTagProcessor.class);
 
-    public SlingIncludeAttrProcessor() {
-        super(ATTR_NAME);
+    public SlingIncludeAttributeTagProcessor(final IProcessorDialect processorDialect, final String dialectPrefix) {
+        super(processorDialect, dialectPrefix, ATTRIBUTE_NAME, ATTRIBUTE_PRECEDENCE, true);
     }
 
     @Override
-    public int getPrecedence() {
-        return ATTR_PRECEDENCE;
-    }
+    protected void doProcess(final ITemplateProcessingContext processingContext, final IProcessableElementTag tag, final AttributeName attributeName, final String attributeValue, final String tagTemplateName, final int tagLine, final int tagCol, final IElementTagStructureHandler elementTagStructureHandler) {
+        // final IContext context = arguments.getTemplateProcessingParameters().getContext();
+        // if (context instanceof SlingWebContext) {
+        try {
+            final IWebVariablesMap webVariablesMap = (IWebVariablesMap) processingContext.getVariables();
+            final SlingHttpServletRequest slingHttpServletRequest = (SlingHttpServletRequest) webVariablesMap.getRequest();
+            final SlingHttpServletResponse slingHttpServletResponse = (SlingHttpServletResponse) webVariablesMap.getResponse();
 
-    @Override
-    protected ProcessorResult processAttribute(final Arguments arguments, final Element element, final String attributeName) {
-        final IContext context = arguments.getTemplateProcessingParameters().getContext();
-        if (context instanceof SlingWebContext) {
-            final SlingWebContext slingWebContext = (SlingWebContext) context;
-            final SlingHttpServletRequest slingHttpServletRequest = slingWebContext.getHttpServletRequest();
-            final SlingHttpServletResponse slingHttpServletResponse = slingWebContext.getHttpServletResponse();
-            // resource or path to include
-            final Configuration configuration = arguments.getConfiguration();
-            final String attributeValue = element.getAttributeValue(attributeName);
-            final IStandardExpressionParser parser = StandardExpressions.getExpressionParser(configuration);
-            final IStandardExpression expression = parser.parseExpression(configuration, arguments, attributeValue);
-            final Object include = expression.execute(configuration, arguments);
+            final IEngineConfiguration configuration = processingContext.getConfiguration();
+            final IStandardExpressionParser expressionParser = StandardExpressions.getExpressionParser(configuration);
+            final IStandardExpression expression = expressionParser.parseExpression(processingContext, attributeValue);
+            final Object include = expression.execute(processingContext);
+
             String path = null;
             if (include instanceof String) {
                 path = (String) include;
@@ -84,30 +79,29 @@ public class SlingIncludeAttrProcessor extends AbstractAttrProcessor {
                 resource = (Resource) include;
             }
             // request dispatcher options
-            final RequestDispatcherOptions requestDispatcherOptions = prepareRequestDispatcherOptions(element);
+            final RequestDispatcherOptions requestDispatcherOptions = prepareRequestDispatcherOptions(webVariablesMap);
             // dispatch
             final String content = dispatch(resource, path, slingHttpServletRequest, slingHttpServletResponse, requestDispatcherOptions);
             // cleanup
-            element.removeAttribute(attributeName);
-            element.clearChildren();
+            tag.getAttributes().removeAttribute(attributeName);
+            // element.clearChildren();
             // add output
-            final Macro macro = new Macro(content);
-            element.addChild(macro);
-            final Boolean unwrap = NodeUtil.getNodeProperty(element, SlingUnwrapAttrProcessor.NODE_PROPERTY_NAME, Boolean.class);
+            final Boolean unwrap = (Boolean) webVariablesMap.getVariable(SlingUnwrapAttributeTagProcessor.NODE_PROPERTY_NAME);
             if (unwrap != null && unwrap) {
-                element.getParent().extractChild(element);
+                elementTagStructureHandler.replaceWith(content, false);
+            } else {
+                elementTagStructureHandler.setBody(content, false);
             }
-        } else {
-            throw new RuntimeException("Context is not an instance of SlingWebContext, unable to process include attribute");
+        } catch (Exception e) {
+            throw new RuntimeException("unable to process include attribute", e);
         }
-        return ProcessorResult.OK;
     }
 
-    protected RequestDispatcherOptions prepareRequestDispatcherOptions(final Element element) {
-        final String resourceType = NodeUtil.getNodeProperty(element, SlingResourceTypeAttrProcessor.NODE_PROPERTY_NAME, String.class);
-        final String replaceSelectors = NodeUtil.getNodeProperty(element, SlingReplaceSelectorsAttrProcessor.NODE_PROPERTY_NAME, String.class);
-        final String addSelectors = NodeUtil.getNodeProperty(element, SlingAddSelectorsAttrProcessor.NODE_PROPERTY_NAME, String.class);
-        final String replaceSuffix = NodeUtil.getNodeProperty(element, SlingReplaceSuffixAttrProcessor.NODE_PROPERTY_NAME, String.class);
+    protected RequestDispatcherOptions prepareRequestDispatcherOptions(final IVariablesMap variablesMap) {
+        final String resourceType = (String) variablesMap.getVariable(SlingResourceTypeAttributeTagProcessor.NODE_PROPERTY_NAME);
+        final String replaceSelectors = (String) variablesMap.getVariable(SlingReplaceSelectorsAttributeTagProcessor.NODE_PROPERTY_NAME);
+        final String addSelectors = (String) variablesMap.getVariable(SlingAddSelectorsAttributeProcessor.NODE_PROPERTY_NAME);
+        final String replaceSuffix = (String) variablesMap.getVariable(SlingReplaceSuffixAttributeTagProcessor.NODE_PROPERTY_NAME);
         final RequestDispatcherOptions options = new RequestDispatcherOptions();
         options.setForceResourceType(resourceType);
         options.setReplaceSelectors(replaceSelectors);
@@ -117,14 +111,13 @@ public class SlingIncludeAttrProcessor extends AbstractAttrProcessor {
     }
 
     /**
-     * @see "org.apache.sling.scripting.jsp.taglib.IncludeTagHandler"
-     *
      * @param resource the resource to include
      * @param path the path to include
      * @param slingHttpServletRequest the current request
      * @param slingHttpServletResponse the current response
      * @param requestDispatcherOptions the options for the request dispatcher
      * @return the character response from the include call to request dispatcher
+     * @see "org.apache.sling.scripting.jsp.taglib.IncludeTagHandler"
      */
     protected String dispatch(Resource resource, String path, final SlingHttpServletRequest slingHttpServletRequest, final SlingHttpServletResponse slingHttpServletResponse, final RequestDispatcherOptions requestDispatcherOptions) {
 
