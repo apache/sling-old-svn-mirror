@@ -199,6 +199,16 @@ public class SettingsUtils {
         return result.toArray(new String[0]);
     }
 
+    public static String[] removeEmptyEntries(String[] array, String[] defaultArray) {
+        String[] result = removeEmptyEntries(array);
+        if (result == null) {
+            return defaultArray;
+        } else {
+            return result;
+        }
+    }
+
+
 
     public static String removeEmptyEntry(String entry) {
         if (entry == null) {

@@ -208,7 +208,7 @@ public class SyncDistributionAgentFactory extends AbstractDistributionAgentFacto
         boolean queueProcessingEnabled = PropertiesUtil.toBoolean(config.get(QUEUE_PROCESSING_ENABLED), true);
 
         String[] passiveQueues = PropertiesUtil.toStringArray(config.get(PASSIVE_QUEUES), new String[0]);
-        passiveQueues = SettingsUtils.removeEmptyEntries(passiveQueues);
+        passiveQueues = SettingsUtils.removeEmptyEntries(passiveQueues, new String[0]);
 
         Object exporterEndpointsValue = config.get(EXPORTER_ENDPOINTS);
         Object importerEndpointsValue = config.get(IMPORTER_ENDPOINTS);
