@@ -143,6 +143,12 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
                 }
                 continue;
             }
+
+            if ( context.filter() != null 
+                    && context.filter(). filter(child.getPath()) == FilterResult.DENY ) {
+                getLogger().trace("Not deleting node at {0} since it is not included in the filter", child.getPath());
+                continue;
+            }
             
             getLogger()
                     .trace("Deleting node {0} as it is no longer present in the local checkout", child.getPath());
