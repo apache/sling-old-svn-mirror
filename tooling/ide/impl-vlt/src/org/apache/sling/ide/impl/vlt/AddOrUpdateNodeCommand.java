@@ -55,7 +55,9 @@ import javax.jcr.nodetype.PropertyDefinition;
 
 import org.apache.jackrabbit.vault.util.JcrConstants;
 import org.apache.jackrabbit.vault.util.Text;
+import org.apache.sling.ide.filter.FilterResult;
 import org.apache.sling.ide.log.Logger;
+import org.apache.sling.ide.transport.CommandContext;
 import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.Repository.CommandExecutionFlag;
 import org.apache.sling.ide.transport.ResourceProxy;
@@ -65,12 +67,14 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
     private ResourceProxy resource;
     private FileInfo fileInfo;
+    private CommandContext context;
 
-    public AddOrUpdateNodeCommand(Repository jcrRepo, Credentials credentials, FileInfo fileInfo,
-            ResourceProxy resource, Logger logger, CommandExecutionFlag... flags) {
+    public AddOrUpdateNodeCommand(Repository jcrRepo, Credentials credentials, CommandContext context,
+            FileInfo fileInfo, ResourceProxy resource, Logger logger, CommandExecutionFlag... flags) {
 
         super(jcrRepo, credentials, resource.getPath(), logger, flags);
-
+        
+        this.context = context;
         this.fileInfo = fileInfo;
         this.resource = resource;
     }
@@ -139,7 +143,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
                 }
                 continue;
             }
-
+            
             getLogger()
                     .trace("Deleting node {0} as it is no longer present in the local checkout", child.getPath());
             child.remove();
