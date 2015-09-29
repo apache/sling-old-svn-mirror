@@ -18,7 +18,6 @@
  */
 package org.apache.sling.servlets.resolver.internal;
 
-import java.lang.ref.WeakReference;
 import java.util.Iterator;
 
 import javax.servlet.Servlet;
@@ -27,6 +26,8 @@ import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.scripting.SlingScript;
 
 /**
  * ScriptResource is a resource wrapper of a resource fetched by a
@@ -40,32 +41,37 @@ import org.apache.sling.api.resource.ResourceResolver;
  */
 public class ScriptResource extends AbstractResource {
 
-    private Resource activeResource;
+    private volatile Resource sharedResource;
 
     private final ResourceResolver sharedResourceResolver;
 
-    private WeakReference<ResourceResolver> perThreadResourceResolver;
+    private final ThreadLocal<ResourceResolver> perThreadResourceResolver;
 
-    public ScriptResource(final Resource resource, final ResourceResolver sharedResourceResolver) {
-        this.perThreadResourceResolver = new WeakReference<ResourceResolver>(resource.getResourceResolver());
+    private final String path;
+
+    public ScriptResource(final Resource resource,
+            final ThreadLocal<ResourceResolver> perThreadScriptResolver,
+            final ResourceResolver sharedResourceResolver) {
+        this.path = resource.getPath();
         this.sharedResourceResolver = sharedResourceResolver;
-        this.activeResource = resource;
+        this.perThreadResourceResolver = perThreadScriptResolver;
     }
 
     private Resource getActiveResource() {
-        if ( this.perThreadResourceResolver != null ) {
-            final ResourceResolver rr = this.perThreadResourceResolver.get();
-            if ( rr == null || !rr.isLive() ) {
-                this.perThreadResourceResolver = null;
-                this.activeResource = this.sharedResourceResolver.getResource(this.activeResource.getPath());
-            }
+        ResourceResolver perThreadResolver = this.perThreadResourceResolver.get();
+        if ( perThreadResolver != null && perThreadResolver.isLive() ) {
+            return perThreadResolver.getResource(this.path);
         }
-        return this.activeResource;
+        if ( this.sharedResource == null ) {
+            this.sharedResource = this.sharedResourceResolver.getResource(this.path);
+        }
+        return this.sharedResource;
     }
 
     /**
      * @see org.apache.sling.api.resource.Resource#getResourceType()
      */
+    @Override
     public String getResourceType() {
         return this.getActiveResource().getResourceType();
     }
@@ -73,6 +79,7 @@ public class ScriptResource extends AbstractResource {
     /**
      * @see org.apache.sling.api.resource.Resource#getResourceSuperType()
      */
+    @Override
     public String getResourceSuperType() {
         return this.getActiveResource().getResourceSuperType();
     }
@@ -80,6 +87,7 @@ public class ScriptResource extends AbstractResource {
     /**
      * @see org.apache.sling.api.resource.Resource#getResourceResolver()
      */
+    @Override
     public ResourceResolver getResourceResolver() {
         return this.getActiveResource().getResourceResolver();
     }
@@ -95,6 +103,11 @@ public class ScriptResource extends AbstractResource {
             if ( s != null ) {
                 return (AdapterType)s;
             }
+        } else if ( type == SlingScript.class ) {
+            final SlingScript s = (SlingScript)super.adaptTo(type);
+            if ( s != null ) {
+                return (AdapterType)s;
+            }
         }
         return this.getActiveResource().adaptTo(type);
     }
@@ -102,13 +115,15 @@ public class ScriptResource extends AbstractResource {
     /**
      * @see org.apache.sling.api.resource.Resource#getPath()
      */
+    @Override
     public String getPath() {
-        return this.getActiveResource().getPath();
+        return this.path;
     }
 
     /**
      * @see org.apache.sling.api.resource.Resource#getResourceMetadata()
      */
+    @Override
     public ResourceMetadata getResourceMetadata() {
         return this.getActiveResource().getResourceMetadata();
     }
@@ -118,7 +133,7 @@ public class ScriptResource extends AbstractResource {
      */
     @Override
     public String getName() {
-        return this.getActiveResource().getName();
+        return ResourceUtil.getName(this.path);
     }
 
     /**
