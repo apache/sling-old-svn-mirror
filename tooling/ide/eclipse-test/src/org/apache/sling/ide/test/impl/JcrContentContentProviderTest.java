@@ -31,6 +31,7 @@ import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.Path;
 import org.hamcrest.CoreMatchers;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -165,6 +166,46 @@ public class JcrContentContentProviderTest {
         JcrNode contentNode = (JcrNode) children[0];
         Object[] children2 = contentProvider.getChildren(contentNode);
         assertChildrenHavePaths(children2, "/content/child1.txt", "/content/child2.txt");
+    }
+    
+    @Test
+    @Ignore("SLING-4998")
+    public void listChildrenOnNtFolderIncludedUnderJcrContentNode() throws Exception  {
+        
+        // create faceted project
+        IProject contentProject = projectRule.getProject();
+
+        ProjectAdapter project = new ProjectAdapter(contentProject);
+        project.addNatures("org.eclipse.wst.common.project.facet.core.nature");
+
+        // install content facet
+        project.installFacet("sling.content", "1.0");
+
+        // create .content.xml structure
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/.content.xml"), 
+                getClass().getResourceAsStream("nt-unstructured-with-folder-child.xml")); // TODO - rename xml file
+        
+        project.ensureDirectoryExists(Path.fromPortableString("jcr_root/content/_jcr_content/first-folder/second-folder"));
+
+        // instantiate the content provider
+        JcrContentContentProvider contentProvider = new JcrContentContentProvider();
+
+        // directly create the root node
+        SyncDir syncDirNode = new SyncDir((IFolder) contentProject.findMember("jcr_root"));
+
+        // test children of '/'
+        Object[] children = contentProvider.getChildren(syncDirNode);
+        assertChildrenHavePaths(children, "/content");
+
+        // test children of '/content'
+        JcrNode contentNode = (JcrNode) children[0];
+        Object[] children2 = contentProvider.getChildren(contentNode);
+        assertChildrenHavePaths(children2, "/content/jcr:content");
+
+        // test children of '/content/first-child'
+        JcrNode folderNode = (JcrNode) children2[0];
+        Object[] children3 = contentProvider.getChildren(folderNode);
+        assertChildrenHavePaths(children3, "/content/jcr:content/first-folder"); 
     }
 
     private void assertChildrenHavePaths(Object[] children, String... paths) {
