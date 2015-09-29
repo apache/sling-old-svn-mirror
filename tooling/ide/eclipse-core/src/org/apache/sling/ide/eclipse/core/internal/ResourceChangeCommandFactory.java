@@ -259,8 +259,7 @@ public class ResourceChangeCommandFactory {
         String repositoryPath = resourceProxy != null ? resourceProxy.getPath() : getRepositoryPathForDeletedResource(
                 resource, contentSyncRoot);
 
-        FilterResult filterResult = filter.filter(ProjectUtil.getSyncDirectoryFile(resource.getProject()),
-                repositoryPath);
+        FilterResult filterResult = filter.filter(repositoryPath);
 
         Activator.getDefault().getPluginLogger().trace("Filter result for {0} for {1}", repositoryPath, filterResult);
 

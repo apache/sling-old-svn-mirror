@@ -1107,7 +1107,7 @@ public class JcrNode implements IAdaptable {
                 Activator.getDefault().getPluginLogger().error("No filter.xml found for "+project);
                 return true;
             } else {
-                final FilterResult result = filter.filter(ProjectUtil.getSyncDirectoryFile(project), relativeFilePath);
+                final FilterResult result = filter.filter(relativeFilePath);
                 return result==FilterResult.ALLOW;
             }
         } catch (CoreException e) {
