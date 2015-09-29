@@ -122,7 +122,7 @@ public class UniqueRoot {
      */
     protected final void deleteResources(Resource... resources) {
         for (Resource resource : resources) {
-            if (resource != null) {
+            if (resource != null && context.resourceResolver.getResource(resource.getPath()) != null) {
                 try {
                     context.resourceResolver().delete(resource);
                 }
