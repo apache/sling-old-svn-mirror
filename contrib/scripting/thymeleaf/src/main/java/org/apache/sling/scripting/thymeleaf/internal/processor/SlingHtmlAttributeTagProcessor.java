@@ -16,28 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.thymeleaf.internal.processor.attr;
+package org.apache.sling.scripting.thymeleaf.internal.processor;
 
-public final class SlingReplaceSelectorsAttrProcessor extends SlingNodePropertyAttrProcessor {
+import org.thymeleaf.dialect.IProcessorDialect;
+import org.thymeleaf.processor.element.AbstractAttributeTagProcessor;
+import org.thymeleaf.templatemode.TemplateMode;
 
-    public static final int ATTR_PRECEDENCE = 99;
+public abstract class SlingHtmlAttributeTagProcessor extends AbstractAttributeTagProcessor {
 
-    public static final String ATTR_NAME = "replaceSelectors";
-
-    public static final String NODE_PROPERTY_NAME = String.format("%s.%s", PREFIX, ATTR_NAME);
-
-    public SlingReplaceSelectorsAttrProcessor() {
-        super(ATTR_NAME);
-    }
-
-    @Override
-    public int getPrecedence() {
-        return ATTR_PRECEDENCE;
-    }
-
-    @Override
-    protected String getNodePropertyName() {
-        return NODE_PROPERTY_NAME;
+    public SlingHtmlAttributeTagProcessor(final IProcessorDialect processorDialect, final String dialectPrefix, final String attributeName, final int precedence, final boolean removeAttribute) {
+        super(processorDialect, TemplateMode.HTML, dialectPrefix, null, false, attributeName, false, precedence, removeAttribute);
     }
 
 }

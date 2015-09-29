@@ -25,14 +25,14 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.scripting.thymeleaf.internal.processor.attr.SlingAddSelectorsAttrProcessor;
-import org.apache.sling.scripting.thymeleaf.internal.processor.attr.SlingIncludeAttrProcessor;
-import org.apache.sling.scripting.thymeleaf.internal.processor.attr.SlingReplaceSelectorsAttrProcessor;
-import org.apache.sling.scripting.thymeleaf.internal.processor.attr.SlingReplaceSuffixAttrProcessor;
-import org.apache.sling.scripting.thymeleaf.internal.processor.attr.SlingResourceTypeAttrProcessor;
-import org.apache.sling.scripting.thymeleaf.internal.processor.attr.SlingUnwrapAttrProcessor;
+import org.apache.sling.scripting.thymeleaf.internal.processor.SlingAddSelectorsAttributeProcessor;
+import org.apache.sling.scripting.thymeleaf.internal.processor.SlingIncludeAttributeTagProcessor;
+import org.apache.sling.scripting.thymeleaf.internal.processor.SlingReplaceSelectorsAttributeTagProcessor;
+import org.apache.sling.scripting.thymeleaf.internal.processor.SlingReplaceSuffixAttributeTagProcessor;
+import org.apache.sling.scripting.thymeleaf.internal.processor.SlingResourceTypeAttributeTagProcessor;
+import org.apache.sling.scripting.thymeleaf.internal.processor.SlingUnwrapAttributeTagProcessor;
 import org.osgi.framework.Constants;
-import org.thymeleaf.dialect.AbstractDialect;
+import org.thymeleaf.dialect.AbstractProcessorDialect;
 import org.thymeleaf.processor.IProcessor;
 
 @Component(
@@ -40,27 +40,34 @@ import org.thymeleaf.processor.IProcessor;
 )
 @Service
 @Properties({
-    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
-    @Property(name = Constants.SERVICE_DESCRIPTION, value = "Sling dialect for Sling Scripting Thymeleaf")
+    @Property(
+        name = Constants.SERVICE_VENDOR,
+        value = "The Apache Software Foundation"
+    ),
+    @Property(
+        name = Constants.SERVICE_DESCRIPTION,
+        value = "Sling dialect for Sling Scripting Thymeleaf"
+    )
 })
-public final class SlingDialect extends AbstractDialect {
+public final class SlingDialect extends AbstractProcessorDialect {
+
+    public static final String NAME = "Sling";
 
     public static final String PREFIX = "sling";
 
-    @Override
-    public String getPrefix() {
-        return PREFIX;
+    public SlingDialect() {
+        super(NAME, PREFIX, 0);
     }
 
     @Override
-    public Set<IProcessor> getProcessors() {
+    public Set<IProcessor> getProcessors(final String prefix) {
         final Set<IProcessor> processors = new HashSet<IProcessor>();
-        processors.add(new SlingAddSelectorsAttrProcessor());
-        processors.add(new SlingIncludeAttrProcessor());
-        processors.add(new SlingReplaceSelectorsAttrProcessor());
-        processors.add(new SlingReplaceSuffixAttrProcessor());
-        processors.add(new SlingResourceTypeAttrProcessor());
-        processors.add(new SlingUnwrapAttrProcessor());
+        processors.add(new SlingAddSelectorsAttributeProcessor(this, prefix));
+        processors.add(new SlingIncludeAttributeTagProcessor(this, prefix));
+        processors.add(new SlingReplaceSelectorsAttributeTagProcessor(this, prefix));
+        processors.add(new SlingReplaceSuffixAttributeTagProcessor(this, prefix));
+        processors.add(new SlingResourceTypeAttributeTagProcessor(this, prefix));
+        processors.add(new SlingUnwrapAttributeTagProcessor(this, prefix));
         return processors;
     }
 

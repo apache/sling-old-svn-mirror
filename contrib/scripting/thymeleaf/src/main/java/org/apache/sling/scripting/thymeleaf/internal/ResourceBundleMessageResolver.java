@@ -37,8 +37,7 @@ import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.thymeleaf.Arguments;
-import org.thymeleaf.context.IContext;
+import org.thymeleaf.context.ITemplateProcessingContext;
 import org.thymeleaf.messageresolver.IMessageResolver;
 import org.thymeleaf.messageresolver.MessageResolution;
 
@@ -105,19 +104,14 @@ public class ResourceBundleMessageResolver implements IMessageResolver {
     }
 
     @Override
-    public MessageResolution resolveMessage(final Arguments arguments, final String key, final Object[] messageParameters) {
-        logger.debug("arguments: {}, key: {}, message parameters: {}", arguments, key, messageParameters);
-        final IContext context = arguments.getContext();
-        final Locale locale = context.getLocale();
+    public MessageResolution resolveMessage(final ITemplateProcessingContext processingContext, final String key, final Object[] messageParameters) {
+        logger.debug("processingContext: {}, key: {}, message parameters: {}", processingContext, key, messageParameters);
+        final Locale locale = processingContext.getLocale();
         final ResourceBundle resourceBundle = resourceBundleProvider.getResourceBundle(locale);
         final String string = resourceBundle.getString(key);
         final MessageFormat messageFormat = new MessageFormat(string, locale);
         final String message = messageFormat.format((messageParameters != null ? messageParameters : EMPTY_MESSAGE_PARAMETERS));
         return new MessageResolution(message);
-    }
-
-    @Override
-    public void initialize() {
     }
 
 }

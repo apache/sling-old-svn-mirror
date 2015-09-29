@@ -42,6 +42,7 @@ import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.Thymeleaf;
 import org.thymeleaf.dialect.IDialect;
 import org.thymeleaf.messageresolver.IMessageResolver;
 import org.thymeleaf.standard.StandardDialect;
@@ -137,13 +138,13 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
     }
 
     protected synchronized void bindDialects(final IDialect dialect) {
-        logger.debug("binding a dialect for prefix '{}'", dialect.getPrefix());
+        logger.debug("binding dialect '{}'", dialect.getName());
         dialects.add(dialect);
         configureTemplateEngine();
     }
 
     protected synchronized void unbindDialects(final IDialect dialect) {
-        logger.debug("unbinding a dialect for prefix '{}'", dialect.getPrefix());
+        logger.debug("unbinding dialect '{}'", dialect.getName());
         dialects.remove(dialect);
         configureTemplateEngine();
     }
@@ -164,9 +165,7 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
     // the configuration of the Thymeleaf TemplateEngine is static and we need to recreate on modification
     private synchronized void configureTemplateEngine() {
         logger.info("configure template engine");
-        if (templateEngine == null || templateEngine.isInitialized()) {
-            templateEngine = new TemplateEngine();
-        }
+        final TemplateEngine templateEngine = new TemplateEngine();
         if (templateResolvers.size() > 0) {
             templateEngine.setTemplateResolvers(templateResolvers);
         }
@@ -178,6 +177,10 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
             final IDialect standardDialect = new StandardDialect();
             templateEngine.addDialect(standardDialect);
         }
+        // TODO
+        // final ICacheManager cacheManager = null;
+        // templateEngine.setCacheManager(cacheManager);
+        this.templateEngine = templateEngine;
     }
 
     @Override
@@ -187,7 +190,7 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
 
     @Override
     public String getLanguageVersion() {
-        return "2.1"; // TODO get version from Thymeleaf
+        return Thymeleaf.VERSION;
     }
 
     @Override

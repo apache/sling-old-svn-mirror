@@ -16,27 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.thymeleaf.internal.processor.attr;
+package org.apache.sling.scripting.thymeleaf.internal.processor;
 
-public final class SlingAddSelectorsAttrProcessor extends SlingNodePropertyAttrProcessor {
+import org.thymeleaf.dialect.IProcessorDialect;
 
-    public static final int ATTR_PRECEDENCE = 99;
+public final class SlingReplaceSuffixAttributeTagProcessor extends SlingLocalVariableAttributeTagProcessor {
 
-    public static final String ATTR_NAME = "addSelectors";
+    public static final int ATTRIBUTE_PRECEDENCE = 99;
 
-    public static final String NODE_PROPERTY_NAME = String.format("%s.%s", PREFIX, ATTR_NAME);
+    public static final String ATTRIBUTE_NAME = "replaceSuffix";
 
-    public SlingAddSelectorsAttrProcessor() {
-        super(ATTR_NAME);
+    public static final String NODE_PROPERTY_NAME = String.format("%s.%s", LOCAL_VARIABLE_PREFIX, ATTRIBUTE_NAME);
+
+    public SlingReplaceSuffixAttributeTagProcessor(final IProcessorDialect processorDialect, final String dialectPrefix) {
+        super(processorDialect, dialectPrefix, ATTRIBUTE_NAME, ATTRIBUTE_PRECEDENCE);
     }
 
     @Override
-    public int getPrecedence() {
-        return ATTR_PRECEDENCE;
-    }
-
-    @Override
-    protected String getNodePropertyName() {
+    protected String getLocalVariableName() {
         return NODE_PROPERTY_NAME;
     }
 
