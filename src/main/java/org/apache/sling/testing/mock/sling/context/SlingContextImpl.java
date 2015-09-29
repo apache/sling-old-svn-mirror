@@ -167,6 +167,7 @@ public class SlingContextImpl extends OsgiContextImpl {
         this.slingScriptHelper = null;
         this.contentLoader = null;
         this.contentBuilder = null;
+        this.uniqueRoot = null;
 
         MockSling.clearAdapterManagerBundleContext();
         
@@ -315,6 +316,10 @@ public class SlingContextImpl extends OsgiContextImpl {
         }
     }
     
+    /**
+     * Create unique root paths for unit tests (and clean them up after the test run automatically).
+     * @return Unique root path helper
+     */
     public UniqueRoot uniqueRoot() {
         if (uniqueRoot == null) {
             uniqueRoot = new UniqueRoot(this);
