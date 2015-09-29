@@ -16,7 +16,6 @@
  */
 package org.apache.sling.ide.impl.resource.filer;
 
-import java.io.File;
 import java.util.List;
 
 import org.apache.sling.ide.filter.Filter;
@@ -31,7 +30,7 @@ public class SimpleFilter implements Filter {
     }
 
     @Override
-    public FilterResult filter(File contentSyncRoot, String relativeFilePath) {
+    public FilterResult filter(String relativeFilePath) {
         if (relativeFilePath.isEmpty() || relativeFilePath.charAt(0) != '/') {
             relativeFilePath = '/' + relativeFilePath;
         }

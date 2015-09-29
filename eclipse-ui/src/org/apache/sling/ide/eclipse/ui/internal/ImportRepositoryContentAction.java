@@ -206,7 +206,7 @@ public class ImportRepositoryContentAction {
 
                     String repositoryPath = rai.getResource().getPath();
 
-                    FilterResult filterResult = filter.filter(contentSyncRoot, repositoryPath);
+                    FilterResult filterResult = filter.filter(repositoryPath);
 
                     if (ignoredResources.isIgnored(repositoryPath)) {
                         return false;
@@ -350,7 +350,7 @@ public class ImportRepositoryContentAction {
             }
 
             if (filter != null) {
-                FilterResult filterResult = filter.filter(contentSyncRoot, child.getPath());
+                FilterResult filterResult = filter.filter(child.getPath());
                 if (filterResult == FilterResult.DENY) {
                     continue;
                 }
