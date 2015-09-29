@@ -32,6 +32,7 @@ import org.apache.sling.ide.util.PathUtil;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.Path;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -43,17 +44,23 @@ public class JcrContentContentProviderTest {
     @Rule
     public DisableDebugStatusHandlers disableDebugHandlers = new DisableDebugStatusHandlers();
 
-    @Test
-    public void listChildrenInNestedStructure() throws Exception {
+    private IProject contentProject;
+    private ProjectAdapter project;
+    
+    @Before
+    public void prepareProject() throws Exception {
+        
+        contentProject = projectRule.getProject();
 
-        // create faceted project
-        IProject contentProject = projectRule.getProject();
-
-        ProjectAdapter project = new ProjectAdapter(contentProject);
+        project = new ProjectAdapter(contentProject);
         project.addNatures("org.eclipse.wst.common.project.facet.core.nature");
 
         // install content facet
         project.installFacet("sling.content", "1.0");
+    }
+
+    @Test
+    public void listChildrenInNestedStructure() throws Exception {
 
         // create .content.xml structure
         InputStream contentXml = getClass().getResourceAsStream("content-nested-structure.xml");
@@ -71,15 +78,6 @@ public class JcrContentContentProviderTest {
     @Test
     public void listChildrenWithNestedContentXmlInEscapedDir() throws Exception {
 
-        // create faceted project
-        IProject contentProject = projectRule.getProject();
-
-        ProjectAdapter project = new ProjectAdapter(contentProject);
-        project.addNatures("org.eclipse.wst.common.project.facet.core.nature");
-
-        // install content facet
-        project.installFacet("sling.content", "1.0");
-
         // create .content.xml structure
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/.content.xml"), getClass()
                 .getResourceAsStream("sling-folder-nodetype.xml"));
@@ -96,14 +94,6 @@ public class JcrContentContentProviderTest {
 
     @Test
     public void listChildrenWhenContentXmlIsBroken() throws Exception {
-        // create faceted project
-        IProject contentProject = projectRule.getProject();
-
-        ProjectAdapter project = new ProjectAdapter(contentProject);
-        project.addNatures("org.eclipse.wst.common.project.facet.core.nature");
-
-        // install content facet
-        project.installFacet("sling.content", "1.0");
 
         // create .content.xml structure
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/.content.xml"), new ByteArrayInputStream(
@@ -124,15 +114,6 @@ public class JcrContentContentProviderTest {
     
     @Test
     public void listChildrenOnNtFolderIncludedUnderJcrContentNode() throws Exception  {
-        
-        // create faceted project
-        IProject contentProject = projectRule.getProject();
-
-        ProjectAdapter project = new ProjectAdapter(contentProject);
-        project.addNatures("org.eclipse.wst.common.project.facet.core.nature");
-
-        // install content facet
-        project.installFacet("sling.content", "1.0");
 
         // create .content.xml structure
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/.content.xml"), 
