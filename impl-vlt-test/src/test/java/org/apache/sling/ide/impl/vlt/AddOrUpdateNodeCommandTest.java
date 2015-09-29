@@ -43,12 +43,22 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.jackrabbit.commons.cnd.ParseException;
 import org.apache.jackrabbit.core.TransientRepository;
+import org.apache.sling.ide.filter.Filter;
+import org.apache.sling.ide.filter.FilterResult;
 import org.apache.sling.ide.log.Logger;
+import org.apache.sling.ide.transport.CommandContext;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.junit.Ignore;
 import org.junit.Test;
 
 public class AddOrUpdateNodeCommandTest {
+    
+    private static final CommandContext DEFAULT_CONTEXT = new CommandContext(new Filter() {
+        @Override
+        public FilterResult filter(String repositoryPath) {
+            return FilterResult.ALLOW;
+        }
+    });
 
     private static final String PROP_NAME = "jcr:title";
 
@@ -80,7 +90,7 @@ public class AddOrUpdateNodeCommandTest {
                     resource.addProperty(PROP_NAME, newPropertyValues);
                 }
 
-                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), null, resource, logger);
+                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), DEFAULT_CONTEXT, null, resource, logger);
                 cmd.execute().get();
 
                 session().refresh(false);
@@ -146,7 +156,7 @@ public class AddOrUpdateNodeCommandTest {
                 ResourceProxy resource = newResource("/content", "sling:Folder");
                 resource.getProperties().put("newProperty", "some/value");
 
-                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), null, resource, logger);
+                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), DEFAULT_CONTEXT, null, resource, logger);
                 cmd.execute().get();
 
                 session().refresh(false);
@@ -171,7 +181,7 @@ public class AddOrUpdateNodeCommandTest {
 
                 ResourceProxy resource = newResource("/content", "nt:folder");
 
-                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), null, resource, logger);
+                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), DEFAULT_CONTEXT, null, resource, logger);
                 cmd.execute().get();
 
                 session().refresh(false);
@@ -198,7 +208,7 @@ public class AddOrUpdateNodeCommandTest {
                 ResourceProxy resource = newResource("/content", "custom");
                 resource.getProperties().put("attribute", "some value");
 
-                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), null, resource, logger);
+                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), DEFAULT_CONTEXT, null, resource, logger);
                 cmd.execute().get();
 
                 session().refresh(false);
@@ -230,7 +240,7 @@ public class AddOrUpdateNodeCommandTest {
 
                 ResourceProxy resource = newResource("/content", "nt:unstructured");
 
-                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), null, resource, logger,
+                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), DEFAULT_CONTEXT, null, resource, logger,
                         CREATE_ONLY_WHEN_MISSING);
                 cmd.execute().get();
 
@@ -252,7 +262,7 @@ public class AddOrUpdateNodeCommandTest {
             public Void call() throws Exception {
                 ResourceProxy resource = newResource("/content", "nt:unstructured");
 
-                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), null, resource, logger,
+                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), DEFAULT_CONTEXT, null, resource, logger,
                         CREATE_ONLY_WHEN_MISSING);
                 cmd.execute().get();
 
@@ -274,7 +284,7 @@ public class AddOrUpdateNodeCommandTest {
             public Void call() throws Exception {
                 ResourceProxy resource = new ResourceProxy("/content");
 
-                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), null, resource, logger,
+                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), DEFAULT_CONTEXT, null, resource, logger,
                         CREATE_ONLY_WHEN_MISSING);
                 cmd.execute().get();
 
@@ -301,7 +311,7 @@ public class AddOrUpdateNodeCommandTest {
                 ResourceProxy resource = newResource("/content", "nt:folder");
                 resource.addProperty("jcr:mixinTypes", "mix:lastModified");
 
-                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), null, resource, logger);
+                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), DEFAULT_CONTEXT, null, resource, logger);
                 cmd.execute().get();
                 cmd.execute().get(); // second time since mixins are processed after properties so we need two
                                      // executions to
@@ -334,7 +344,7 @@ public class AddOrUpdateNodeCommandTest {
                 resource.addProperty("jcr:mixinTypes", "mix:lastModified");
                 resource.addProperty("jcr:lastModifiedBy", "admin2");
 
-                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), null, resource, logger);
+                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), DEFAULT_CONTEXT, null, resource, logger);
                 cmd.execute().get();
                 cmd.execute().get(); // second time since mixins are processed after properties so we need two
                                      // executions to
