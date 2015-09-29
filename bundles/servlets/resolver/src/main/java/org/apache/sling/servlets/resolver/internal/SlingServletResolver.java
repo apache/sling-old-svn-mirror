@@ -341,7 +341,7 @@ public class SlingServletResolver
         // return a resource wrapper to make sure the implementation
         // switches from the per thread resource resolver to the shared once
         // the per thread resource resolver is closed
-        return new ScriptResource(scriptResource, this.sharedScriptResolver).adaptTo(Servlet.class);
+        return new ScriptResource(scriptResource, perThreadScriptResolver, this.sharedScriptResolver).adaptTo(Servlet.class);
     }
 
     // ---------- ScriptResolver interface ------------------------------------
