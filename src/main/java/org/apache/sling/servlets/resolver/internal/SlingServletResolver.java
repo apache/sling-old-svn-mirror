@@ -620,11 +620,7 @@ public class SlingServletResolver
      * @param request The request used to give to any <code>OptingServlet</code>
      *            for them to decide on whether they are willing to handle the
      *            request
-     * @param resource The <code>Resource</code> for which to find a script.
-     *            This need not be the same as
-     *            <code>request.getResource()</code> in case of error handling
-     *            where the resource may not have been assigned to the request
-     *            yet.
+     * @param resolver The <code>ResourceResolver</code> used for resolving the servlets.
      * @return a servlet for handling the request or <code>null</code> if no
      *         such servlet willing to handle the request could be found.
      */
