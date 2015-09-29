@@ -220,6 +220,47 @@ public class AddOrUpdateNodeCommandTest {
             }
         });
     }
+    
+    @Test
+    public void nodeNotPresentButOutsideOfFilterIsNotRemoved() throws Exception {
+
+        final CommandContext context = new CommandContext(new Filter() {
+            
+            @Override
+            public FilterResult filter(String repositoryPath) {
+                if ( repositoryPath.equals("/content/not-included-child")) {
+                    return FilterResult.DENY;
+                }
+                
+                return FilterResult.ALLOW;
+            }
+        });
+        
+        doWithTransientRepository(new CallableWithSession() {
+            @Override
+            public Void call() throws Exception {
+                Node content = session().getRootNode().addNode("content", "nt:unstructured");
+                content.addNode("included-child");
+                content.addNode("not-included-child");
+                
+                session().save();
+
+                ResourceProxy resource = newResource("/content", "nt:unstructured");
+                resource.addChild(newResource("/content/included-child", "nt:unstructured"));
+
+                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), context, null, resource, logger);
+                cmd.execute().get();
+
+                session().refresh(false);
+
+                content = session().getRootNode().getNode("content");
+                content.getNode("included-child");
+                content.getNode("not-included-child");
+                return null;
+            }
+        });
+        
+    }
 
     private ResourceProxy newResource(String path, String primaryType) {
 
