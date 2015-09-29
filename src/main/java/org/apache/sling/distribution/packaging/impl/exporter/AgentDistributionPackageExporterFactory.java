@@ -74,8 +74,10 @@ public class AgentDistributionPackageExporterFactory implements DistributionPack
     public void activate(Map<String, Object> config) throws Exception {
 
         String queueName = PropertiesUtil.toString(config.get(QUEUE_NAME), "");
+        String name = PropertiesUtil.toString(config.get(NAME), "");
 
-        packageExporter = new AgentDistributionPackageExporter(queueName, agent, packageBuilderProvider);
+
+        packageExporter = new AgentDistributionPackageExporter(queueName, agent, packageBuilderProvider, name);
     }
 
     @Nonnull

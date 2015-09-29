@@ -138,9 +138,9 @@ public final class DistributionPackageInfo extends ValueMapDecorator implements 
     @Override
     public String toString() {
         return "DistributionPackageInfo{" +
-                "origin=" + getOrigin() +
-                ", requestType=" + getRequestType() +
+                " requestType=" + getRequestType() +
                 ", paths=" + Arrays.toString(getPaths()) +
+                ", origin=" + getOrigin() +
                 '}';
     }
 }
