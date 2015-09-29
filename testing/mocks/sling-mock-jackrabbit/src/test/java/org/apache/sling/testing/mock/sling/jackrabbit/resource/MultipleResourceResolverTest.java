@@ -18,46 +18,14 @@
  */
 package org.apache.sling.testing.mock.sling.jackrabbit.resource;
 
-import java.io.IOException;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-
-import org.apache.sling.api.resource.LoginException;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.commons.testing.jcr.RepositoryUtil;
-import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.resource.AbstractMultipleResourceResolverTest;
-import org.junit.Ignore;
 
-//TEST IS DISABLED currently, it does not work with jackrabbit repository yet
-@Ignore
 public class MultipleResourceResolverTest extends AbstractMultipleResourceResolverTest {
 
     @Override
     protected ResourceResolverType getResourceResolverType() {
         return ResourceResolverType.JCR_JACKRABBIT;
-    }
-
-    @Override
-    protected ResourceResolverFactory newResourceResolerFactory() {
-        ResourceResolverFactory factory = MockSling.newResourceResolverFactory(getResourceResolverType());
-
-        // register sling node types
-        try {
-            ResourceResolver resolver = factory.getResourceResolver(null);
-            RepositoryUtil.registerSlingNodeTypes(resolver.adaptTo(Session.class));
-        } catch (LoginException ex) {
-            throw new RuntimeException("Unable to register sling node types.", ex);
-        } catch (IOException ex) {
-            throw new RuntimeException("Unable to register sling node types.", ex);
-        } catch (RepositoryException ex) {
-            throw new RuntimeException("Unable to register sling node types.", ex);
-        }
-
-        return factory;
     }
 
 }

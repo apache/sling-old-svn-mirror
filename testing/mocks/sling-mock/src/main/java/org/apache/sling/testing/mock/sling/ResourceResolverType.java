@@ -37,7 +37,7 @@ public enum ResourceResolverType {
      * <li>This resource resolver type is very fast.</li>
      * </ul>
      */
-    RESOURCERESOLVER_MOCK(RRMockMockResourceResolverAdapter.class.getName(), null),
+    RESOURCERESOLVER_MOCK(RRMockMockResourceResolverAdapter.class.getName(), null, NodeTypeMode.NOT_SUPPORTED),
 
     /**
      * Uses a simple JCR "in-memory" mock as underlying repository.
@@ -51,7 +51,7 @@ public enum ResourceResolverType {
      * <li>This resource resolver type is quite fast.</li>
      * </ul>
      */
-    JCR_MOCK(MockJcrResourceResolverAdapter.class.getName(), null),
+    JCR_MOCK(MockJcrResourceResolverAdapter.class.getName(), null, NodeTypeMode.NAMESPACES_ONLY),
 
     /**
      * Uses a real JCR Jackrabbit repository.
@@ -65,7 +65,7 @@ public enum ResourceResolverType {
      * </ul>
      */
     JCR_JACKRABBIT("org.apache.sling.testing.mock.sling.jackrabbit.JackrabbitMockResourceResolverAdapter",
-            "org.apache.sling:org.apache.sling.testing.sling-mock-jackrabbit"),
+            "org.apache.sling:org.apache.sling.testing.sling-mock-jackrabbit", NodeTypeMode.NODETYPES_REQUIRED),
 
     /**
      * Uses a real JCR Jackrabbit Oak repository.
@@ -79,7 +79,7 @@ public enum ResourceResolverType {
      * </ul>
      */
     JCR_OAK("org.apache.sling.testing.mock.sling.oak.OakMockResourceResolverAdapter",
-            "org.apache.sling:org.apache.sling.testing.sling-mock-jackrabbit-oak"),
+            "org.apache.sling:org.apache.sling.testing.sling-mock-jackrabbit-oak", NodeTypeMode.NODETYPES_REQUIRED),
             
     /**
      * Provides resource resolver environment without any ResourceProvider.
@@ -89,16 +89,20 @@ public enum ResourceResolverType {
      * <li>The performance of this resource resolver type depends on the resource provider registered.</li>
      * </ul>
      */
-    NONE(MockNoneResourceResolverAdapter.class.getName(), null);
+    NONE(MockNoneResourceResolverAdapter.class.getName(), null, NodeTypeMode.NOT_SUPPORTED);
 
             
 
     private final String resourceResolverTypeAdapterClass;
     private final String artifactCoordinates;
+    private final NodeTypeMode nodeTypeMode;
+    
 
-    private ResourceResolverType(final String resourceResolverTypeAdapterClass, final String artifactCoordinates) {
+    private ResourceResolverType(final String resourceResolverTypeAdapterClass, final String artifactCoordinates,
+            final NodeTypeMode nodeTypeMode) {
         this.resourceResolverTypeAdapterClass = resourceResolverTypeAdapterClass;
         this.artifactCoordinates = artifactCoordinates;
+        this.nodeTypeMode = nodeTypeMode;
     }
 
     String getResourceResolverTypeAdapterClass() {
@@ -107,6 +111,13 @@ public enum ResourceResolverType {
 
     String getArtifactCoordinates() {
         return this.artifactCoordinates;
+    }
+
+    /**
+     * @return How JCR namespaces and node types have to be handled.
+     */
+    public NodeTypeMode getNodeTypeMode() {
+        return nodeTypeMode;
     }
 
 }

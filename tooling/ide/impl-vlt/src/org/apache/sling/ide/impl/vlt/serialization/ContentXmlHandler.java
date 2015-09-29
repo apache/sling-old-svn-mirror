@@ -17,10 +17,12 @@
 package org.apache.sling.ide.impl.vlt.serialization;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Deque;
 import java.util.EnumSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
 
 import org.apache.jackrabbit.util.ISO8601;
@@ -233,7 +235,7 @@ public class ContentXmlHandler extends DefaultHandler {
                 }
 
                 String rawValues = rawValue.substring(1, rawValue.length() - 1);
-                values = rawValues.split(",");
+                values = splitValues(rawValues);
                 explicitMultiValue = true;
             } else {
                 values = new String[] { rawValue };
@@ -257,6 +259,34 @@ public class ContentXmlHandler extends DefaultHandler {
             }
 
             throw new IllegalArgumentException("Unknown typeHint value '" + rawHint + "'");
+        }
+
+        private static String[] splitValues(String rawValues) {
+            
+            List<String> values = new ArrayList<String>();
+            String[] firstPass = rawValues.split(",");
+            for ( int i = 0 ; i < firstPass.length; i++) {
+                
+                String val = firstPass[i];
+                
+                boolean trailingSlash = val.endsWith("\\");
+                boolean moreEntries = i < firstPass.length;
+                
+                // special case where the comma is escaped, so this means that
+                // two values should be joined
+                if ( trailingSlash && moreEntries ) {
+                    // re-establish the value, e.g. first\,second becomes a single first,second entry
+                    values.add(val.substring(0, val.length() - 1) + "," + firstPass[i+1]);
+                    // manually advance the iteration couter since we consumed the next entry
+                    i++;
+                    continue;
+                }
+              
+                values.add(val);
+            }
+            
+            return values.toArray(new String[values.size()]);
+            
         }
 
         private static void unescape(String[] values) {

@@ -203,7 +203,7 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
         boolean queueProcessingEnabled = PropertiesUtil.toBoolean(config.get(QUEUE_PROCESSING_ENABLED), true);
 
         String[] passiveQueues = PropertiesUtil.toStringArray(config.get(PASSIVE_QUEUES), new String[0]);
-        passiveQueues = SettingsUtils.removeEmptyEntries(passiveQueues);
+        passiveQueues = SettingsUtils.removeEmptyEntries(passiveQueues, new String[0]);
 
 
         DistributionPackageExporter packageExporter = new LocalDistributionPackageExporter(packageBuilder);

@@ -16,16 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.testing.mock.sling.oak.resource;
+package org.apache.sling.testing.mock.sling;
 
-import org.apache.sling.testing.mock.sling.ResourceResolverType;
-import org.apache.sling.testing.mock.sling.resource.AbstractJcrNamespaceTest;
+/**
+ * How to handle node types for different {@link ResourceResolverType} types.
+ */
+public enum NodeTypeMode {
 
-public class JcrNamespaceTest extends AbstractJcrNamespaceTest {
-
-    @Override
-    protected ResourceResolverType getResourceResolverType() {
-        return ResourceResolverType.JCR_OAK;
-    }
-
+    /**
+     * Neither registration of namespaces or node types required (no underlying JCR).
+     */
+    NOT_SUPPORTED,
+    
+    /**
+     * Namespaces have to be registered, but nodetypes are not supported.
+     */
+    NAMESPACES_ONLY,
+    
+    /**
+     * Nodetypes including namespaces have to be registered.
+     */
+    NODETYPES_REQUIRED
+    
 }

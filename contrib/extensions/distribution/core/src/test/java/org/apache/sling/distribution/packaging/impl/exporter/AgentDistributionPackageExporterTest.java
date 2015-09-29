@@ -39,7 +39,7 @@ public class AgentDistributionPackageExporterTest {
     @Test
     public void testTestExport() throws Exception {
         AgentDistributionPackageExporter distributionPackageExporter = new AgentDistributionPackageExporter(null,
-                mock(DistributionAgent.class), mock(DistributionPackageBuilderProvider.class));
+                mock(DistributionAgent.class), mock(DistributionPackageBuilderProvider.class), null);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.TEST, null);
         List<DistributionPackage> distributionPackages = distributionPackageExporter.exportPackages(resourceResolver, distributionRequest);

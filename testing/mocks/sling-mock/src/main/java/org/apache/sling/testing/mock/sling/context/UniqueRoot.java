@@ -33,8 +33,8 @@ import com.google.common.collect.ImmutableMap;
 
 /**
  * Manages unique root paths in JCR repository.
- * This is important for resource resolver types like JCR_JACKRABBIT and JCR_OAK 
- * where the repository is not cleand for each test run. This class provides
+ * This is important for resource resolver types like JCR_JACKRABBIT  
+ * where the repository is not cleaned for each test run. This class provides
  * unique root paths for each run, and cleans them up when done.
  */
 public class UniqueRoot {
@@ -122,7 +122,7 @@ public class UniqueRoot {
      */
     protected final void deleteResources(Resource... resources) {
         for (Resource resource : resources) {
-            if (resource != null) {
+            if (resource != null && context.resourceResolver.getResource(resource.getPath()) != null) {
                 try {
                     context.resourceResolver().delete(resource);
                 }
