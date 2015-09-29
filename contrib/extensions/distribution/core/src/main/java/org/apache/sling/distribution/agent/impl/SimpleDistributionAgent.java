@@ -229,7 +229,6 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
     private Collection<SimpleDistributionResponse> scheduleImportPackage(DistributionPackage distributionPackage) {
         Collection<SimpleDistributionResponse> distributionResponses = new LinkedList<SimpleDistributionResponse>();
-        log.debug("scheduling distribution of package {} {}", distributionPackage.getId(), distributionPackage);
 
         // dispatch the distribution package to the queue distribution handler
         try {
@@ -246,6 +245,9 @@ public class SimpleDistributionAgent implements DistributionAgent {
         } finally {
             distributionPackage.close();
         }
+
+        log.info("scheduled package {} with info {}", distributionPackage.getId(), distributionPackage.getInfo());
+
 
         return distributionResponses;
     }
@@ -337,6 +339,8 @@ public class SimpleDistributionAgent implements DistributionAgent {
         }
 
         try {
+            log.info("enabling trigger {}", trigger);
+
             trigger.register(agentBasedRequestHandler);
         } catch (DistributionTriggerException e) {
             log.error("could not register handler from trigger {} {}", trigger, e);
@@ -350,6 +354,8 @@ public class SimpleDistributionAgent implements DistributionAgent {
         }
 
         try {
+            log.info("disabling trigger {}", trigger);
+
             trigger.unregister(agentBasedRequestHandler);
         } catch (DistributionTriggerException e) {
             log.error("could not unregister handler from trigger {} {}", trigger, e);
@@ -398,6 +404,8 @@ public class SimpleDistributionAgent implements DistributionAgent {
                     success = reEnqueuePackage(distributionPackage);
                     DistributionPackageUtils.releaseOrDelete(distributionPackage, queueName);
                 }
+
+                log.info("processed package {} with info {} from queue {}", distributionPackage.getId(), distributionPackage.getInfo(), queueName);
             } else {
                 success = true; // return success if package does not exist in order to clear the queue.
                 log.error("distribution package with id {} does not exist. the package will be skipped.", queueItem.getId());
@@ -422,7 +430,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
             return false;
         }
 
-        log.info("distribution package {} was delivered", distributionPackage.getId());
+        log.debug("distribution package {} was delivered", distributionPackage.getId());
         return true;
     }
 

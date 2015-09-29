@@ -51,7 +51,10 @@ public class JobHandlingUtils {
         Map<String, Object> properties = new HashMap<String, Object>();
 
         for (String key : queueItem.keySet()) {
-            properties.put(DISTRIBUTION_PACKAGE_PREFIX + key, queueItem.get(key));
+            Object value = queueItem.get(key);
+            if (value != null) {
+                properties.put(DISTRIBUTION_PACKAGE_PREFIX + key, queueItem.get(key));
+            }
         }
 
         properties.put(ID, queueItem.getId());
