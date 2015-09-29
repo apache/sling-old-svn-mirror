@@ -58,21 +58,26 @@ import org.slf4j.LoggerFactory;
  * In case any of those preconditions are not fulfilled the other registered {@link UseProvider}s will be queried.
  * </p>
  */
-@Component
+@Component(
+    metatype = true,
+    label = "Apache Sling Scripting Sightly Sling Models Use Provider",
+    description = "The Sling Models Use Provider is responsible for instantiating Sling Models to be used with Sightly's Use-API."
+)
 @Service
 @Properties({
     @Property(
         name = Constants.SERVICE_RANKING,
         label = "Service Ranking",
         description =
-            "The Service Ranking value acts as the priority with which this Use Provider is queried to return an Use-object. A" +
-                "higher value represents a higher priority.",
+            "The Service Ranking value acts as the priority with which this Use Provider is queried to return an Use-object. A higher " +
+                "value represents a higher priority.",
         /**
          * Must have a higher priority than {@link org.apache.sling.scripting.sightly.impl.engine.extension.use.JavaUseProvider} but lower
          * than {@link org.apache.sling.scripting.sightly.impl.engine.extension.use.RenderUnitProvider} to kick in before the
          * JavaUseProvider but after the RenderUnitProvider.
          */
-        intValue = 95
+        intValue = 95,
+        propertyPrivate = false
     )
 })
 public class SlingModelsUseProvider implements UseProvider {
