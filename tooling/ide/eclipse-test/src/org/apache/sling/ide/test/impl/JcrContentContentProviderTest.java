@@ -31,7 +31,6 @@ import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.Path;
 import org.hamcrest.CoreMatchers;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -169,7 +168,6 @@ public class JcrContentContentProviderTest {
     }
     
     @Test
-    @Ignore("SLING-4998")
     public void listChildrenOnNtFolderIncludedUnderJcrContentNode() throws Exception  {
         
         // create faceted project
