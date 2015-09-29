@@ -28,6 +28,7 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
+import org.apache.sling.distribution.log.DistributionLog;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.resources.impl.OsgiUtils;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
@@ -88,6 +89,7 @@ public abstract class AbstractDistributionAgentFactory {
 
             if (componentReg == null) {
 
+                DefaultDistributionLog distributionLog = null;
                 try {
 
                     String logLevel = PropertiesUtil.toString(config.get(LOG_LEVEL), DefaultDistributionLog.LogLevel.INFO.name());
@@ -97,11 +99,14 @@ public abstract class AbstractDistributionAgentFactory {
                     }
 
 
-                    DefaultDistributionLog distributionLog = new DefaultDistributionLog(DistributionComponentKind.AGENT, agentName, SimpleDistributionAgent.class, level);
+                    distributionLog = new DefaultDistributionLog(DistributionComponentKind.AGENT, agentName, SimpleDistributionAgent.class, level);
 
                     agent = createAgent(agentName, context, config, distributionLog);
-                } catch (IllegalArgumentException e) {
-                    log.warn("cannot create agent", e);
+                } catch (Throwable t) {
+                    if (distributionLog != null) {
+                        distributionLog.error("Cannot create agent", t);
+                    }
+                    log.error("Cannot create agent", t);
                 }
 
 
