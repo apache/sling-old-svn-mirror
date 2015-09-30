@@ -398,8 +398,8 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
                         if (knownArchetypes.getItemCount() == 0) {
                             setErrorMessage("No suitable archetypes found. Please make sure that the proper maven repositories are configured and indexes are up to date.");
                         } else {
-                            setErrorMessage(null);
                             knownArchetypes.select(0);
+                            updateStatus(null);
                         }
 
                     }
