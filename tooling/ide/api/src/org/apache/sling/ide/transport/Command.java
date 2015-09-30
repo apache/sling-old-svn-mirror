@@ -27,7 +27,7 @@ public interface Command<T> {
      *
      */
     enum Kind {
-        DELETE, ADD_OR_UPDATE
+        DELETE, ADD_OR_UPDATE, REORDER_CHILDREN;
     }
 
 	Result<T> execute();
