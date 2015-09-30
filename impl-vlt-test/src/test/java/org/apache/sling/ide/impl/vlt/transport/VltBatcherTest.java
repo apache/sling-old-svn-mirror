@@ -27,8 +27,10 @@ import java.util.List;
 import javax.jcr.Credentials;
 import javax.jcr.Repository;
 
+import org.apache.sling.ide.impl.vlt.AddOrUpdateNodeCommand;
 import org.apache.sling.ide.impl.vlt.DeleteNodeCommand;
 import org.apache.sling.ide.transport.Command;
+import org.apache.sling.ide.transport.ResourceProxy;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
@@ -95,5 +97,38 @@ public class VltBatcherTest {
         batcher.add(new DeleteNodeCommand(mockRepo, credentials, "/content/branch", null));
         batcher.get();
         assertThat(batcher.get(), hasSize(0));
+    }
+    
+    @Test
+    public void identicalAddOrUpdatesAreCompacted() {
+        
+        AddOrUpdateNodeCommand first = new AddOrUpdateNodeCommand(mockRepo, credentials, null, null, new ResourceProxy("/content"), null);
+        AddOrUpdateNodeCommand second = new AddOrUpdateNodeCommand(mockRepo, credentials, null, null, new ResourceProxy("/content"), null);
+        
+        batcher.add(first);
+        batcher.add(second);
+        
+        List<Command<?>> batched = batcher.get();
+        
+        assertThat(batched, hasSize(1));
+        Command<?> command = batched.get(0);
+        assertThat(command, instanceOf(AddOrUpdateNodeCommand.class));
+        assertThat(command.getPath(), equalTo("/content"));
+        
+    }
+
+    @Test
+    public void unrelatedAddOrUpdatesAreNotCompacted() {
+        AddOrUpdateNodeCommand first = new AddOrUpdateNodeCommand(mockRepo, credentials, null, null, new ResourceProxy("/content/a"), null);
+        AddOrUpdateNodeCommand second = new AddOrUpdateNodeCommand(mockRepo, credentials, null, null, new ResourceProxy("/content/b"), null);
+        
+        batcher.add(first);
+        batcher.add(second);
+        
+        List<Command<?>> batched = batcher.get();
+        
+        assertThat(batched, hasSize(2));
+        assertThat(batched.get(0), Matchers.<Command<?>> sameInstance(first));
+        assertThat(batched.get(1), Matchers.<Command<?>> sameInstance(second));
     }
 }

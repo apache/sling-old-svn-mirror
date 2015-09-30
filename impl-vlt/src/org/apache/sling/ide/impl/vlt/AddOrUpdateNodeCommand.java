@@ -507,4 +507,8 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         return values;
     }
 
+    @Override
+    public Kind getKind() {
+        return Kind.ADD_OR_UPDATE;
+    }
 }
