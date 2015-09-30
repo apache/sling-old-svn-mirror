@@ -51,9 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Allows to dynamically add a health check that returns WARN or CRITICAL for certain tags for testing purposes. Uses an MBean to add/remove the DynamicTestingHealthCheck dynamically. */
-@Component(
-        metatype = false,
-        immediate = true)
+@Component
 public class JmxAdjustableStatusForTesting {
     private static final Logger LOG = LoggerFactory.getLogger(JmxAdjustableStatusForTesting.class);
 
@@ -99,7 +97,7 @@ public class JmxAdjustableStatusForTesting {
         Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(HealthCheck.NAME, "JMX-adjustable Testing Check");
         props.put(HealthCheck.TAGS, tags);
-        
+
         healthCheckRegistration = bundleContext.registerService(HealthCheck.class.getName(), healthCheck, props);
 
     }

@@ -38,6 +38,7 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.Result.Status;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionOptions;
@@ -80,7 +81,8 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         }
     }
     
-    static final Param PARAM_TAGS = new Param("tags", "Comma-separated list of health checks tags to select");
+    static final Param PARAM_TAGS = new Param("tags",
+            "Comma-separated list of health checks tags to select - can also be specified via path, e.g. /system/health/tag1,tag2.json");
     static final Param PARAM_FORMAT = new Param("format", "Output format, html|json|jsonp|txt - an extension in the URL overrides this");
     static final Param PARAM_HTTP_STATUS = new Param("httpStatus", "Specify HTTP result code, for example"
             + " CRITICAL:503 (status 503 if result >= CRITICAL)"
@@ -115,10 +117,16 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     private static final String CACHE_CONTROL_VALUE = "no-cache";
 
     private static final String SERVLET_PATH_DEFAULT = "/system/health";
+    
     public static final String PROPERTY_SERVLET_PATH = "servletPath";
     @Property(name = PROPERTY_SERVLET_PATH, label = "Path",
             description = "Servlet path (defaults to " + SERVLET_PATH_DEFAULT + " in order to not be accessible via Apache/Internet)", value = SERVLET_PATH_DEFAULT)
     private String servletPath;
+
+    public static final String PROPERTY_DISABLED = "disabled";
+    @Property(name = PROPERTY_DISABLED, label = "Disabled",
+            description = "Allows to disable the servlet if required for security reasons", boolValue = false)
+    private boolean disabled;
 
     @Reference
     private HttpService httpService;
@@ -137,18 +145,30 @@ public class HealthCheckExecutorServlet extends HttpServlet {
 
     @Activate
     protected final void activate(final ComponentContext context) {
+        final Dictionary<?, ?> properties = context.getProperties();
+        this.servletPath = (String) properties.get(PROPERTY_SERVLET_PATH);
+        this.disabled = PropertiesUtil.toBoolean(properties.get(PROPERTY_DISABLED), false);
+
+        if (disabled) {
+            LOG.info("Health Check Servlet is disabled by configuration");
+            return;
+        }
+
         try {
-            final Dictionary<?, ?> properties = context.getProperties();
-            this.servletPath = (String) properties.get(PROPERTY_SERVLET_PATH);
             LOG.debug("Registering {} to path {}", getClass().getSimpleName(), this.servletPath);
             this.httpService.registerServlet(this.servletPath, this, null, null);
         } catch (Exception e) {
-            LOG.error("Could not register health check servlet: "+e, e);
+            LOG.error("Could not register health check servlet: " + e, e);
         }
+
     }
 
     @Deactivate
     public void deactivate(final ComponentContext componentContext) {
+        if (disabled) {
+            return;
+        }
+
         try {
             LOG.debug("Unregistering path {}", this.servletPath);
             this.httpService.unregister(this.servletPath);
@@ -160,7 +180,12 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     @Override
     protected void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
 
-        final String[] tags = StringUtils.defaultIfEmpty(request.getParameter(PARAM_TAGS.name), "").split("[, ;]+");
+        String tagsStr = StringUtils.defaultIfEmpty(StringUtils.substringBeforeLast(request.getPathInfo(), "."), "").replace("/", "");
+        if (StringUtils.isBlank(tagsStr)) {
+            // if not provided via path use parameter or default
+            tagsStr = StringUtils.defaultIfEmpty(request.getParameter(PARAM_TAGS.name), "");
+        }
+        final String[] tags = tagsStr.split("[, ;]+");
 
         String format = StringUtils.substringAfterLast(request.getPathInfo(), ".");
         if (StringUtils.isBlank(format)) {
