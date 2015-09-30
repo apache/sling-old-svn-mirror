@@ -18,10 +18,10 @@ package org.apache.sling.ide.impl.vlt.transport;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 
 import org.apache.sling.ide.transport.Batcher;
 import org.apache.sling.ide.transport.Command;
-import org.apache.sling.ide.transport.Command.Kind;
 import org.apache.sling.ide.util.PathUtil;
 
 public class VltBatcher implements Batcher {
@@ -36,18 +36,23 @@ public class VltBatcher implements Batcher {
     @Override
     public List<Command<?>> get() {
 
-        LinkedCommands deletes = new LinkedCommands();
+        LinkedCommands batched = new LinkedCommands();
         List<Command<?>> result = new ArrayList<Command<?>>();
         
         for ( Command<?> cmd : queue) {
-            if ( cmd.getKind() == Kind.DELETE ) {
-                deletes.addLinked(cmd);        
-            } else {
+            boolean accepted = batched.addLinked(cmd);
+            if ( !accepted) {
                 result.add(cmd);
             }
         }
         
-        result.addAll(0, deletes.getLinkHeads());
+        result.addAll(0, batched.getUpdates());
+        result.addAll(0, batched.getDeletes());
+        
+        // Expected order is:
+        // - delete
+        // - add-or-update
+        // - everything else, in the order it was specified
         
         queue.clear();
         
@@ -56,41 +61,70 @@ public class VltBatcher implements Batcher {
     
     private static class LinkedCommands {
         
-        private List<CommandWrapper> wrappers = new ArrayList<CommandWrapper>();
+        private List<Command<?>> deletes = new ArrayList<Command<?>>();
+        private List<Command<?>> updates = new ArrayList<Command<?>>();
         
-        public void addLinked(Command<?> cmd) {
+        public boolean addLinked(Command<?> newCmd) {
             
-            String path = cmd.getPath();
-            for ( CommandWrapper wrapper : wrappers ) {
-                if ( PathUtil.isAncestor(wrapper.main.getPath(), path ) ) {
+            if ( newCmd.getKind() == null ) {
+                return false;
+            }
+            
+            switch ( newCmd.getKind() ) {
+                case DELETE:
+                    processDelete(newCmd);
+                    return true;
+                    
+                case ADD_OR_UPDATE:
+                    processAddOrUpdate(newCmd);
+                    return true;
+                
+                default:
+                    return false;
+            
+            }
+        }
+
+        private void processDelete(Command<?> newCmd) {
+            String path = newCmd.getPath();
+            for ( ListIterator<Command<?>> iterator = deletes.listIterator(); iterator.hasNext(); ) {
+                
+                // if we already have an ancestor deleted, skip this one
+                Command<?> oldCmd = iterator.next();
+                if ( PathUtil.isAncestor(oldCmd.getPath(), path ) ) {
                     return;
                 }
                 
-                if ( PathUtil.isAncestor(path, wrapper.main.getPath())) {
-                    wrapper.main = cmd;
+                // if we are delete an ancestor of another resource which gets deleted, replace it
+                if ( PathUtil.isAncestor(path, oldCmd.getPath())) {
+                    iterator.set(newCmd);
                     return;
                 }
             }
             
-            wrappers.add(new CommandWrapper(cmd));
+            // no matching deletions, add it as-is
+            deletes.add(newCmd);
         }
         
-        public List<Command<?>> getLinkHeads() {
-            List<Command<?>> heads = new ArrayList<Command<?>>(wrappers.size());
-            for ( CommandWrapper wrapper : wrappers ) {
-                heads.add(wrapper.main);
+        private void processAddOrUpdate(Command<?> newCmd) {
+            String path = newCmd.getPath();
+            for (Command<?> oldCmd : updates) {
+                // if we already have an add-or-update for this path, skip it    
+                if ( path.equals(oldCmd.getPath()) ) {
+                    return;
+                }
             }
             
-            return heads;
+            // no adds or updates, add it as-is
+            updates.add(newCmd);            
         }
-    }
-    
-    private static class CommandWrapper {
         
-        public Command<?> main;
+        public List<Command<?>> getDeletes() {
+            return deletes;
+        }
         
-        private CommandWrapper(Command<?> main) {
-            this.main = main;
+        public List<Command<?>> getUpdates() {
+            return updates;
         }
     }
 }
