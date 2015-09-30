@@ -14,16 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.impl.vlt.transport;
+package org.apache.sling.ide.transport.impl;
 
 import org.apache.sling.ide.transport.Batcher;
 import org.apache.sling.ide.transport.BatcherFactory;
 
-public class VltBatcherFactory implements BatcherFactory {
+public class DefaultBatcherFactory implements BatcherFactory {
 
     @Override
     public Batcher createBatcher() {
-        return new VltBatcher();
+        return new DefaultBatcher();
     }
 
 }

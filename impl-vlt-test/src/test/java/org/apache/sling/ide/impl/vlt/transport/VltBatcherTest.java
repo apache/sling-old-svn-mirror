@@ -31,6 +31,7 @@ import org.apache.sling.ide.impl.vlt.AddOrUpdateNodeCommand;
 import org.apache.sling.ide.impl.vlt.DeleteNodeCommand;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.ResourceProxy;
+import org.apache.sling.ide.transport.impl.DefaultBatcher;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,13 +40,13 @@ public class VltBatcherTest {
 
     private Repository mockRepo;
     private Credentials credentials;
-    private VltBatcher batcher;
+    private DefaultBatcher batcher;
 
     @Before
     public void prepare() {
         mockRepo = createMock(Repository.class); 
         credentials = createMock(Credentials.class);
-        batcher = new VltBatcher();
+        batcher = new DefaultBatcher();
     }
     
     @Test

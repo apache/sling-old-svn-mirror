@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.impl.vlt.transport;
+package org.apache.sling.ide.transport.impl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +24,7 @@ import org.apache.sling.ide.transport.Batcher;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.util.PathUtil;
 
-public class VltBatcher implements Batcher {
+public class DefaultBatcher implements Batcher {
     
     private List<Command<?>> queue = new ArrayList<Command<?>>();
     
