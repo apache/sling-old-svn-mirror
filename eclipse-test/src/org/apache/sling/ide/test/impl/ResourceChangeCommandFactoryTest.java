@@ -85,7 +85,7 @@ public class ResourceChangeCommandFactoryTest {
         assertThat("command.resource.properties", command.getResourceProxy().getProperties(),
                 equalTo(singletonMap("jcr:primaryType", (Object) "nt:folder")));
         assertThat("command.fileinfo", command.getFileInfo(), nullValue());
-        assertThat("command.kind", command.getKind(), equalTo(SpyCommand.Kind.ADD_OR_UPDATE));
+        assertThat("command.kind", command.getSpyKind(), equalTo(SpyCommand.Kind.ADD_OR_UPDATE));
     }
 
     @Test
@@ -107,7 +107,7 @@ public class ResourceChangeCommandFactoryTest {
         assertThat("command.resource.path", command.getResourceProxy().getPath(), equalTo("/content/test-root/nested"));
         assertThat("command.resource.properties", command.getResourceProxy().getProperties(), equalTo(props));
         assertThat("command.fileinfo", command.getFileInfo(), nullValue());
-        assertThat("command.kind", command.getKind(), equalTo(SpyCommand.Kind.ADD_OR_UPDATE));
+        assertThat("command.kind", command.getSpyKind(), equalTo(SpyCommand.Kind.ADD_OR_UPDATE));
     }
 
     @Test

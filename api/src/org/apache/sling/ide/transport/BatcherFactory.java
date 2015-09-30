@@ -16,28 +16,12 @@
  */
 package org.apache.sling.ide.transport;
 
-import java.util.Set;
+public interface BatcherFactory {
 
-import org.apache.sling.ide.transport.Repository.CommandExecutionFlag;
-
-public interface Command<T> {
-    
     /**
-     * Defines the major kinds of commands
-     *
+     * Creates a new Batcher instance
+     * 
+     * @return a new {@link Batcher} instance
      */
-    enum Kind {
-        DELETE
-    }
-
-	Result<T> execute();
-
-    String getPath();
-
-    Set<CommandExecutionFlag> getFlags();
-    
-    /**
-     * @return the kind, possibly <code>null</code>
-     */
-    Kind getKind();
+    Batcher createBatcher();
 }

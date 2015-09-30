@@ -41,4 +41,8 @@ public class DeleteNodeCommand extends JcrCommand<Void> {
         return null;
     }
 
+    @Override
+    public Kind getKind() {
+        return Kind.DELETE;
+    }
 }

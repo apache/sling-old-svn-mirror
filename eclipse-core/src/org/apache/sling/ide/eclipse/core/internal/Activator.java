@@ -26,6 +26,8 @@ import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.osgi.OsgiClientFactory;
 import org.apache.sling.ide.serialization.SerializationManager;
+import org.apache.sling.ide.transport.Batcher;
+import org.apache.sling.ide.transport.BatcherFactory;
 import org.apache.sling.ide.transport.CommandExecutionProperties;
 import org.apache.sling.ide.transport.RepositoryFactory;
 import org.eclipse.core.runtime.Plugin;
@@ -59,6 +61,7 @@ public class Activator extends Plugin {
     private ServiceTracker<OsgiClientFactory, OsgiClientFactory> osgiClientFactory;
     private ServiceTracker<EmbeddedArtifactLocator, EmbeddedArtifactLocator> artifactLocator;
     private ServiceTracker<?, ?> tracer;
+    private ServiceTracker<BatcherFactory, BatcherFactory> batcherFactoryLocator;
 
     private ServiceRegistration<?> tracerRegistration;
 
@@ -95,6 +98,9 @@ public class Activator extends Plugin {
         ServiceReference<Object> reference = (ServiceReference<Object>) tracerRegistration.getReference();
         tracer = new ServiceTracker<Object, Object>(context, reference, null);
         tracer.open();
+        
+        batcherFactoryLocator = new ServiceTracker<BatcherFactory, BatcherFactory>(context, BatcherFactory.class, null);
+        batcherFactoryLocator.open();
 	}
 
 	/*
@@ -111,6 +117,7 @@ public class Activator extends Plugin {
         osgiClientFactory.close();
         artifactLocator.close();
         tracer.close();
+        batcherFactoryLocator.close();
 
         plugin = null;
 		super.stop(context);
@@ -149,6 +156,10 @@ public class Activator extends Plugin {
 
     public Logger getPluginLogger() {
         return (Logger) ServiceUtil.getNotNull(tracer);
+    }
+    
+    public BatcherFactory getBatcherFactory() {
+        return (BatcherFactory) ServiceUtil.getNotNull(batcherFactoryLocator);
     }
     
     /**

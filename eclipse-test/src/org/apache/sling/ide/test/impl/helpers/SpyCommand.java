@@ -76,8 +76,13 @@ public class SpyCommand<T> implements Command<T> {
     public ResourceProxy getResourceProxy() {
         return resourceProxy;
     }
+    
+    @Override
+    public Command.Kind getKind() {
+        return null;
+    }
 
-    public SpyCommand.Kind getKind() {
+    public SpyCommand.Kind getSpyKind() {
         return kind;
     }
 }

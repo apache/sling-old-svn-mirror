@@ -56,4 +56,15 @@ public class PathUtil {
         return path.substring(0, path.lastIndexOf('/'));
 
     }
+    
+    public static boolean isAncestor(String ancestor, String child) {
+        
+        while ( (child = getParent(child)) != null ) {
+            if ( child.equals(ancestor)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
 }
