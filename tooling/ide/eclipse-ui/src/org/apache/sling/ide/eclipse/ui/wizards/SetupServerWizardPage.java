@@ -217,6 +217,13 @@ public class SetupServerWizardPage extends WizardPage {
         setPageComplete(false);
 		
 		setControl(container);
+		
+		// allow the selection to proceed in case we have a preselected server
+        if (useExistingServer.getSelection()) {
+            if (existingServerCombo.getErrorMessage(SKIP_SERVER_STARTED) == null) {
+                updateStatus(null);
+            }
+        }
 	}
 
     private Label newLabel(Composite container, String text) {
