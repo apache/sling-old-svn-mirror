@@ -14,30 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.transport;
+package org.apache.sling.ide.impl.vlt.transport;
 
-import java.util.Set;
+import org.apache.sling.ide.transport.Batcher;
+import org.apache.sling.ide.transport.BatcherFactory;
 
-import org.apache.sling.ide.transport.Repository.CommandExecutionFlag;
+public class VltBatcherFactory implements BatcherFactory {
 
-public interface Command<T> {
-    
-    /**
-     * Defines the major kinds of commands
-     *
-     */
-    enum Kind {
-        DELETE
+    @Override
+    public Batcher createBatcher() {
+        return new VltBatcher();
     }
 
-	Result<T> execute();
-
-    String getPath();
-
-    Set<CommandExecutionFlag> getFlags();
-    
-    /**
-     * @return the kind, possibly <code>null</code>
-     */
-    Kind getKind();
 }

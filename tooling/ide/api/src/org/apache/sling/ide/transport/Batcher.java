@@ -16,28 +16,36 @@
  */
 package org.apache.sling.ide.transport;
 
-import java.util.Set;
+import java.util.List;
 
-import org.apache.sling.ide.transport.Repository.CommandExecutionFlag;
-
-public interface Command<T> {
+/**
+ * The <tt>Batcher</tt> potentially optimises the way multiple commands are executed
+ *
+ * <p>Some potential optimisations:
+ * 
+ * <ol>
+ *   <li>Filter out duplicate commands</li>
+ *   <li>Compact multiple delete commands into a large one with the same semantics</li>
+ * </ol>
+ * 
+ * </p>
+ */
+public interface Batcher {
     
     /**
-     * Defines the major kinds of commands
-     *
+     * Adds a command to the current processing session
+     * 
+     * @param command the command, must not be <code>null</code>
      */
-    enum Kind {
-        DELETE
-    }
-
-	Result<T> execute();
-
-    String getPath();
-
-    Set<CommandExecutionFlag> getFlags();
+    void add(Command<?> command);
     
     /**
-     * @return the kind, possibly <code>null</code>
+     * Returns a list of optimised commands, based on the commands added so far
+     * 
+     * <p>Once the list is returned, the added commands are removed and will not be
+     * returned by subsequent invocations of this method.</p>
+     * 
+     * @return the list of potentially optimised commands
      */
-    Kind getKind();
+    List<Command<?>> get();
 }
