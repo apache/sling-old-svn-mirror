@@ -46,12 +46,14 @@ public class DefaultBatcher implements Batcher {
             }
         }
         
+        result.addAll(0, batched.getReorders());
         result.addAll(0, batched.getUpdates());
         result.addAll(0, batched.getDeletes());
         
         // Expected order is:
         // - delete
         // - add-or-update
+        // - reorder
         // - everything else, in the order it was specified
         
         queue.clear();
@@ -63,6 +65,7 @@ public class DefaultBatcher implements Batcher {
         
         private List<Command<?>> deletes = new ArrayList<Command<?>>();
         private List<Command<?>> updates = new ArrayList<Command<?>>();
+        private List<Command<?>> reorders = new ArrayList<Command<?>>();
         
         public boolean addLinked(Command<?> newCmd) {
             
@@ -76,9 +79,13 @@ public class DefaultBatcher implements Batcher {
                     return true;
                     
                 case ADD_OR_UPDATE:
-                    processAddOrUpdate(newCmd);
+                    processWithPathEqualityCheck(newCmd, updates);
                     return true;
-                
+                    
+                case REORDER_CHILDREN:
+                    processWithPathEqualityCheck(newCmd, reorders);
+                    return true;
+                    
                 default:
                     return false;
             
@@ -106,9 +113,9 @@ public class DefaultBatcher implements Batcher {
             deletes.add(newCmd);
         }
         
-        private void processAddOrUpdate(Command<?> newCmd) {
+        private void processWithPathEqualityCheck(Command<?> newCmd, List<Command<?>> oldCmds) {
             String path = newCmd.getPath();
-            for (Command<?> oldCmd : updates) {
+            for (Command<?> oldCmd : oldCmds) {
                 // if we already have an add-or-update for this path, skip it    
                 if ( path.equals(oldCmd.getPath()) ) {
                     return;
@@ -116,7 +123,7 @@ public class DefaultBatcher implements Batcher {
             }
             
             // no adds or updates, add it as-is
-            updates.add(newCmd);            
+            oldCmds.add(newCmd);
         }
         
         public List<Command<?>> getDeletes() {
@@ -125,6 +132,10 @@ public class DefaultBatcher implements Batcher {
         
         public List<Command<?>> getUpdates() {
             return updates;
+        }
+        
+        public List<Command<?>> getReorders() {
+            return reorders;
         }
     }
 }

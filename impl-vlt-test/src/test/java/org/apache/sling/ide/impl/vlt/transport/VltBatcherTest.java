@@ -132,4 +132,39 @@ public class VltBatcherTest {
         assertThat(batched.get(0), Matchers.<Command<?>> sameInstance(first));
         assertThat(batched.get(1), Matchers.<Command<?>> sameInstance(second));
     }
+
+
+    @Test
+    public void identicalsReorderingsAreCompacted() {
+        
+        ReorderChildNodesCommand first = new ReorderChildNodesCommand(mockRepo, credentials, new ResourceProxy("/content"), null);
+        ReorderChildNodesCommand second = new ReorderChildNodesCommand(mockRepo, credentials,new ResourceProxy("/content"), null);
+        
+        batcher.add(first);
+        batcher.add(second);
+        
+        List<Command<?>> batched = batcher.get();
+        
+        assertThat(batched, hasSize(1));
+        Command<?> command = batched.get(0);
+        assertThat(command, instanceOf(ReorderChildNodesCommand.class));
+        assertThat(command.getPath(), equalTo("/content"));
+    }
+    
+    @Test
+    public void unrelatedReorderingsAreNotCompacted() {
+        
+        ReorderChildNodesCommand first = new ReorderChildNodesCommand(mockRepo, credentials, new ResourceProxy("/content/a"), null);
+        ReorderChildNodesCommand second = new ReorderChildNodesCommand(mockRepo, credentials,new ResourceProxy("/content/b"), null);
+        
+        batcher.add(first);
+        batcher.add(second);
+        
+        List<Command<?>> batched = batcher.get();
+        
+        assertThat(batched, hasSize(2));
+        assertThat(batched.get(0), Matchers.<Command<?>> sameInstance(first));
+        assertThat(batched.get(1), Matchers.<Command<?>> sameInstance(second));
+    }
+    
 }
