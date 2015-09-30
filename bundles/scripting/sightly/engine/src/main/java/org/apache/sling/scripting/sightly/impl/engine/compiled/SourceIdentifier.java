@@ -19,6 +19,9 @@
 
 package org.apache.sling.scripting.sightly.impl.engine.compiled;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
@@ -29,6 +32,59 @@ import org.apache.sling.scripting.sightly.impl.engine.SightlyEngineConfiguration
  * Identifies a Java source file in a JCR repository.
  */
 public class SourceIdentifier {
+
+    private static final Set<String> reservedKeywords = new HashSet<String>(){{
+        add("abstract");
+        add("assert");
+        add("boolean");
+        add("break");
+        add("byte");
+        add("case");
+        add("catch");
+        add("char");
+        add("class");
+        add("const");
+        add("continue");
+        add("default");
+        add("do");
+        add("double");
+        add("else");
+        add("enum");
+        add("extends");
+        add("final");
+        add("finally");
+        add("float");
+        add("for");
+        add("goto");
+        add("if");
+        add("implements");
+        add("import");
+        add("instanceof");
+        add("int");
+        add("interface");
+        add("long");
+        add("native");
+        add("new");
+        add("package");
+        add("private");
+        add("protected");
+        add("public");
+        add("return");
+        add("short");
+        add("static");
+        add("strictfp");
+        add("super");
+        add("switch");
+        add("synchronized");
+        add("this");
+        add("throw");
+        add("throws");
+        add("transient");
+        add("try");
+        add("void");
+        add("volatile");
+        add("while");
+    }};
 
     private final String className;
     private final Resource resource;
@@ -88,10 +144,21 @@ public class SourceIdentifier {
     }
 
     private String buildPackageName(Resource resource) {
-        return ResourceUtil.getParent(resource.getPath())
-                .replaceAll("/", ".")
-                .substring(1)
-                .replaceAll("-", "_");
+        String packageName = ResourceUtil.getParent(resource.getPath()).replaceAll("/", ".").substring(1).replaceAll("-", "_");
+        String[] packageNameElements = packageName.split("\\.");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < packageNameElements.length; i++) {
+            String subPackage = packageNameElements[i];
+            if (reservedKeywords.contains(subPackage)) {
+                sb.append(subPackage).append("_");
+            } else {
+                sb.append(subPackage);
+            }
+            if (i != packageNameElements.length - 1) {
+                sb.append(".");
+            }
+        }
+        return sb.toString();
     }
 
     private String getExtension(String scriptName) {
