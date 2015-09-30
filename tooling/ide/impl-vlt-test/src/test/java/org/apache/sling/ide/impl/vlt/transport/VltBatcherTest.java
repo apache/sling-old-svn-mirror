@@ -29,6 +29,8 @@ import javax.jcr.Repository;
 
 import org.apache.sling.ide.impl.vlt.AddOrUpdateNodeCommand;
 import org.apache.sling.ide.impl.vlt.DeleteNodeCommand;
+import org.apache.sling.ide.impl.vlt.GetNodeContentCommand;
+import org.apache.sling.ide.impl.vlt.ReorderChildNodesCommand;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.transport.impl.DefaultBatcher;
@@ -80,9 +82,12 @@ public class VltBatcherTest {
     @Test
     public void unrelatedDeletesAreNotCompacted() {
         
-        DeleteNodeCommand first = new DeleteNodeCommand(mockRepo, credentials, "/content/branch", null);
-        DeleteNodeCommand second = new DeleteNodeCommand(mockRepo, credentials, "/content/sub", null);
-        
+        assertCommandsAreNotCompacted(new DeleteNodeCommand(mockRepo, credentials, "/content/branch", null), 
+                new DeleteNodeCommand(mockRepo, credentials, "/content/sub", null));
+    }
+    
+    public void assertCommandsAreNotCompacted(Command<?> first, Command<?> second) {
+
         batcher.add(first);
         batcher.add(second);
         
@@ -91,6 +96,7 @@ public class VltBatcherTest {
         assertThat(batched, hasSize(2));
         assertThat(batched.get(0), Matchers.<Command<?>> sameInstance(first));
         assertThat(batched.get(1), Matchers.<Command<?>> sameInstance(second));
+
     }
     
     @Test
@@ -120,19 +126,10 @@ public class VltBatcherTest {
 
     @Test
     public void unrelatedAddOrUpdatesAreNotCompacted() {
-        AddOrUpdateNodeCommand first = new AddOrUpdateNodeCommand(mockRepo, credentials, null, null, new ResourceProxy("/content/a"), null);
-        AddOrUpdateNodeCommand second = new AddOrUpdateNodeCommand(mockRepo, credentials, null, null, new ResourceProxy("/content/b"), null);
         
-        batcher.add(first);
-        batcher.add(second);
-        
-        List<Command<?>> batched = batcher.get();
-        
-        assertThat(batched, hasSize(2));
-        assertThat(batched.get(0), Matchers.<Command<?>> sameInstance(first));
-        assertThat(batched.get(1), Matchers.<Command<?>> sameInstance(second));
+        assertCommandsAreNotCompacted(new AddOrUpdateNodeCommand(mockRepo, credentials, null, null, new ResourceProxy("/content/a"), null), 
+                new AddOrUpdateNodeCommand(mockRepo, credentials, null, null, new ResourceProxy("/content/b"), null));
     }
-
 
     @Test
     public void identicalsReorderingsAreCompacted() {
@@ -154,17 +151,14 @@ public class VltBatcherTest {
     @Test
     public void unrelatedReorderingsAreNotCompacted() {
         
-        ReorderChildNodesCommand first = new ReorderChildNodesCommand(mockRepo, credentials, new ResourceProxy("/content/a"), null);
-        ReorderChildNodesCommand second = new ReorderChildNodesCommand(mockRepo, credentials,new ResourceProxy("/content/b"), null);
-        
-        batcher.add(first);
-        batcher.add(second);
-        
-        List<Command<?>> batched = batcher.get();
-        
-        assertThat(batched, hasSize(2));
-        assertThat(batched.get(0), Matchers.<Command<?>> sameInstance(first));
-        assertThat(batched.get(1), Matchers.<Command<?>> sameInstance(second));
+        assertCommandsAreNotCompacted(new ReorderChildNodesCommand(mockRepo, credentials, new ResourceProxy("/content/a"), null), 
+                new ReorderChildNodesCommand(mockRepo, credentials,new ResourceProxy("/content/b"), null));
     }
     
+    @Test
+    public void unhandledCommandIsReturnedAsIs() {
+        
+        assertCommandsAreNotCompacted(new GetNodeContentCommand(mockRepo, credentials, "/content", null), 
+                new GetNodeContentCommand(mockRepo, credentials, "/content", null));
+    }
 }
