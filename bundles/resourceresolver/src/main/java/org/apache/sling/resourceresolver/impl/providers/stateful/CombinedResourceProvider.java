@@ -227,7 +227,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     }
 
     /**
-     * This method asks all resource providers for the children iterators,
+     * This method asks all matching resource providers for the children iterators,
      * merges them, adds {@link SyntheticResource}s (see
      * {@link #getResource(String, Resource, Map, boolean)} for more details),
      * filters out the duplicates and returns the resulting iterator. All
@@ -237,12 +237,16 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     @SuppressWarnings("unchecked")
     @Override
     public Iterator<Resource> listChildren(final Resource parent) {
-        Iterator<Iterator<Resource>> iterators = transformedIterator(providers.iterator(),
+        Iterator<Iterator<Resource>> iterators = transformedIterator(getMatchingProviders(parent.getPath()).iterator(),
                 new Transformer() {
                     @Override
                     public Object transform(Object input) {
                         StatefulResourceProvider rp = (StatefulResourceProvider) input;
-                        return rp.listChildren(parent);
+                        Iterator<Resource> it = rp.listChildren(parent);
+                        if (it == null) {
+                            it = IteratorUtils.emptyIterator();
+                        }
+                        return it;
                     }
                 });
         Iterator<Resource> allChildren = new ChainedIterator<Resource>(iterators);
