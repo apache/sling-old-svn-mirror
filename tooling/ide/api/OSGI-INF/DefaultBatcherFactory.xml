@@ -16,7 +16,7 @@
     and limitations under the License.
 -->
 <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" immediate="false">
-   <implementation class="org.apache.sling.ide.impl.vlt.transport.VltBatcherFactory"/>
+   <implementation class="org.apache.sling.ide.transport.impl.DefaultBatcherFactory"/>
    <service>
       <provide interface="org.apache.sling.ide.transport.BatcherFactory"/>
    </service>
