@@ -38,7 +38,10 @@ import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
-public class VltBatcherTest {
+// TODO - this is not well-placed here, but in api-test we don't have access
+// to a set of useful commands and I feel disclined to start a parallel
+// set of stub commands just for that
+public class DefaultBatcherTest {
 
     private Repository mockRepo;
     private Credentials credentials;
