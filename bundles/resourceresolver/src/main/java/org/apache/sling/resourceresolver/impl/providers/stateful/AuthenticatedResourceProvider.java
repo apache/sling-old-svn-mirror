@@ -266,4 +266,9 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     public ResourceResolver getResourceResolver() {
         return resolver;
     }
+
+    @Override
+    public String getPath() {
+        return info.getPath();
+    }
 }

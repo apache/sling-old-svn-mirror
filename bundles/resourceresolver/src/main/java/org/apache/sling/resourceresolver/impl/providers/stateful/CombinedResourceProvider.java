@@ -26,12 +26,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.collections.IteratorUtils;
@@ -48,6 +48,8 @@ import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.resource.query.Query;
 import org.apache.sling.api.resource.query.QueryInstructions;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
+import org.apache.sling.resourceresolver.impl.providers.tree.Node;
+import org.apache.sling.resourceresolver.impl.providers.tree.PathTree;
 import org.apache.sling.spi.resource.provider.QueryResult;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.slf4j.Logger;
@@ -63,20 +65,15 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(CombinedResourceProvider.class);
 
-    private final List<StatefulResourceProvider> providers;
+    private final List<StatefulResourceProvider> allProviders;
+
+    private final PathTree<StatefulResourceProvider> tree;
 
     private final ResourceResolver resolver;
 
     public CombinedResourceProvider(List<StatefulResourceProvider> providers, ResourceResolver resolver) {
-        this.providers = new ArrayList<StatefulResourceProvider>(providers);
-        // sort descending by paths and rankings (start with longest paths and
-        // higher ranks)
-        Collections.sort(this.providers, new Comparator<StatefulResourceProvider>() {
-            @Override
-            public int compare(StatefulResourceProvider rp1, StatefulResourceProvider rp2) {
-                return rp2.getInfo().compareTo(rp1.getInfo());
-            }
-        });
+        this.allProviders = new ArrayList<StatefulResourceProvider>(providers);
+        this.tree = new PathTree<StatefulResourceProvider>(allProviders);
         this.resolver = resolver;
     }
 
@@ -101,7 +98,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
      */
     @Override
     public void logout() {
-        for (StatefulResourceProvider p : providers) {
+        for (StatefulResourceProvider p : allProviders) {
             p.logout();
         }
     }
@@ -111,7 +108,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
      */
     @Override
     public void refresh() {
-        for (StatefulResourceProvider p : providers) {
+        for (StatefulResourceProvider p : allProviders) {
             p.refresh();
         }
     }
@@ -121,7 +118,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
      */
     @Override
     public boolean isLive() {
-        for (StatefulResourceProvider p : providers) {
+        for (StatefulResourceProvider p : allProviders) {
             if (!p.isLive()) {
                 return false;
             }
@@ -218,12 +215,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     }
 
     private boolean isIntermediatePath(final String fullPath) {
-        for (StatefulResourceProvider p : providers) {
-            if (p.getInfo().getPath().startsWith(fullPath)) {
-                return true;
-            }
-        }
-        return false;
+        return tree.getNode(fullPath) != null;
     }
 
     /**
@@ -263,19 +255,22 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     }
 
     private List<Resource> getSyntheticChildren(Resource parent) {
-        String parentPathWithSlash = parent.getPath() + "/";
+        Node<StatefulResourceProvider> node = tree.getNode(parent.getPath());
+        if (node == null) {
+            return Collections.emptyList();
+        }
         List<Resource> children = new ArrayList<Resource>();
-        for (StatefulResourceProvider p : providers) {
-            String providerPath = p.getInfo().getPath();
-            if (providerPath.startsWith(parentPathWithSlash)) {
-                int slashAfterPrefix = providerPath.indexOf('/', parentPathWithSlash.length());
-                Resource child;
-                if (slashAfterPrefix == -1) {
-                    child = p.getResource(providerPath, parent, null, false);
-                } else {
-                    String childPath = providerPath.substring(0, slashAfterPrefix);
-                    child = new SyntheticResource(getResourceResolver(), childPath, RESOURCE_TYPE_SYNTHETIC);
-                }
+        for (Entry<String, Node<StatefulResourceProvider>> entry : node.getChildren().entrySet()) {
+            final String name = entry.getKey();
+            final StatefulResourceProvider provider = entry.getValue().getValue();
+            final String childPath = new StringBuilder(parent.getPath()).append('/').append(name).toString();
+            final Resource child;
+            if (provider == null) {
+                child = new SyntheticResource(getResourceResolver(), childPath, RESOURCE_TYPE_SYNTHETIC);
+            } else { 
+                child = provider.getResource(childPath, parent, null, false);
+            }
+            if (child != null) {
                 children.add(child);
             }
         }
@@ -288,7 +283,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     @Override
     public Collection<String> getAttributeNames() {
         final Set<String> names = new LinkedHashSet<String>();
-        for (StatefulResourceProvider p : providers) {
+        for (StatefulResourceProvider p : allProviders) {
             Collection<String> newNames = p.getAttributeNames();
             if (newNames != null) {
                 names.addAll(newNames);
@@ -304,7 +299,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
      */
     @Override
     public Object getAttribute(String name) {
-        for (StatefulResourceProvider p : providers) {
+        for (StatefulResourceProvider p : allProviders) {
             Object attribute = p.getAttribute(name);
             if (attribute != null) {
                 return attribute;
@@ -375,7 +370,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
      */
     @Override
     public void revert() {
-        for (StatefulResourceProvider p : providers) {
+        for (StatefulResourceProvider p : allProviders) {
             if (p.getInfo().getModifiable()) {
                 p.revert();
             }
@@ -387,7 +382,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
      */
     @Override
     public void commit() throws PersistenceException {
-        for (StatefulResourceProvider p : providers) {
+        for (StatefulResourceProvider p : allProviders) {
             if (p.getInfo().getModifiable()) {
                 p.commit();
             }
@@ -399,7 +394,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
      */
     @Override
     public boolean hasChanges() {
-        for (StatefulResourceProvider p : providers) {
+        for (StatefulResourceProvider p : allProviders) {
             if (p.getInfo().getModifiable() && p.hasChanges()) {
                 return true;
             }
@@ -421,7 +416,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     @Override
     public String[] getSupportedLanguages() {
         Set<String> supportedLanguages = new LinkedHashSet<String>();
-        for (StatefulResourceProvider p : providers) {
+        for (StatefulResourceProvider p : allProviders) {
             supportedLanguages.addAll(Arrays.asList(p.getSupportedLanguages()));
         }
         return supportedLanguages.toArray(new String[supportedLanguages.size()]);
@@ -442,7 +437,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
 
     private List<StatefulResourceProvider> getQuerableProviders(String language) {
         List<StatefulResourceProvider> querableProviders = new ArrayList<StatefulResourceProvider>();
-        for (StatefulResourceProvider p : providers) {
+        for (StatefulResourceProvider p : allProviders) {
             if (ArrayUtils.contains(p.getSupportedLanguages(), language)) {
                 querableProviders.add(p);
             }
@@ -470,7 +465,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     @SuppressWarnings("unchecked")
     @Override
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
-        for (StatefulResourceProvider p : providers) {
+        for (StatefulResourceProvider p : allProviders) {
             final Object adaptee = p.adaptTo(type);
             if (adaptee != null) {
                 return (AdapterType) adaptee;
@@ -518,12 +513,8 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     }
 
     private List<StatefulResourceProvider> getMatchingProviders(String path) {
-        List<StatefulResourceProvider> matching = new ArrayList<StatefulResourceProvider>();
-        for (StatefulResourceProvider p : providers) {
-            if (path.startsWith(p.getInfo().getPath())) {
-                matching.add(p);
-            }
-        }
+        List<StatefulResourceProvider> matching = tree.getMatchingNodes(path);
+        Collections.reverse(matching);
         return matching;
     }
 
@@ -557,7 +548,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
         @Override
         public Iterator<Resource> iterator() {
             @SuppressWarnings("unchecked")
-            Iterator<Iterator<Resource>> iterators = IteratorUtils.transformedIterator(providers.iterator(),
+            Iterator<Iterator<Resource>> iterators = IteratorUtils.transformedIterator(allProviders.iterator(),
                     new Transformer() {
                         @Override
                         public Object transform(Object input) {
@@ -643,5 +634,10 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
             }
             return null;
         }
+    }
+
+    @Override
+    public String getPath() {
+        return "/";
     }
 }

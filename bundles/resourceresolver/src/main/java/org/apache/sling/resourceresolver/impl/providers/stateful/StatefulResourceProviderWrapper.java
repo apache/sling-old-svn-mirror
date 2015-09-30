@@ -147,4 +147,9 @@ public class StatefulResourceProviderWrapper implements StatefulResourceProvider
     public ResourceResolver getResourceResolver() {
         return rp.getResourceResolver();
     }
+
+    @Override
+    public String getPath() {
+        return rp.getPath();
+    }
 }
