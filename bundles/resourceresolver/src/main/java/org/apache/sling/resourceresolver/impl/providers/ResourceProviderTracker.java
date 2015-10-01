@@ -144,31 +144,31 @@ public class ResourceProviderTracker {
     private void unregister(final ResourceProviderInfo info) {
         if ( info.isValid() ) {
             logger.debug("Unregistering resource provider {}", info);
-            final List<ResourceProviderHandler> matchingHandlers = this.handlers.get(info.getPath());
-            if ( matchingHandlers != null ) {
-                boolean activate = false;
-                if ( matchingHandlers.get(0).getInfo() == info ) {
-                    activate = true;
-                    this.deactivate(matchingHandlers.get(0));
-                }
-                boolean removed = removeHandlerByInfo(info, matchingHandlers);
-                if ( removed ) {
-                    if ( matchingHandlers.isEmpty() ) {
-                        this.handlers.remove(info.getPath());
-                    } else {
-                        while ( activate ) {
-                            if ( !this.activate(matchingHandlers.get(0)) ) {
+            synchronized (this.handlers) {
+                final List<ResourceProviderHandler> matchingHandlers = this.handlers.get(info.getPath());
+                if ( matchingHandlers != null ) {
+                    boolean doActivateNext = false;
+                    if ( matchingHandlers.get(0).getInfo() == info ) {
+                        doActivateNext = true;
+                        this.deactivate(matchingHandlers.get(0));
+                    }
+                    if (removeHandlerByInfo(info, matchingHandlers)) {
+                        while (doActivateNext && !matchingHandlers.isEmpty()) {
+                            if (this.activate(matchingHandlers.get(0))) {
+                                doActivateNext = false;
+                            } else {
                                 matchingHandlers.remove(0);
-                                activate = !this.handlers.isEmpty();
-                                if ( !activate ) {
-                                    this.handlers.remove(info.getPath());
-                                }
                             }
                         }
                     }
+                    if (matchingHandlers.isEmpty()) {
+                        this.handlers.remove(info.getPath());
+                    }
                 }
             }
-
+            synchronized(this) {
+                tree = null;
+            }
         } else {
             logger.debug("Unregistering invalid resource provider {}", info);
             synchronized ( this.invalidProviders ) {
