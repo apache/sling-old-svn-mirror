@@ -18,7 +18,15 @@
  */
 package org.apache.sling.testing.mock.sling.oak;
 
+import static java.util.Collections.singleton;
+import static org.apache.jackrabbit.oak.plugins.index.IndexConstants.INDEX_DEFINITIONS_NAME;
+import static org.apache.jackrabbit.oak.plugins.index.IndexUtils.createIndexDefinition;
+
+import javax.jcr.Repository;
+
 import org.apache.jackrabbit.oak.jcr.Jcr;
+import org.apache.jackrabbit.oak.spi.lifecycle.RepositoryInitializer;
+import org.apache.jackrabbit.oak.spi.state.NodeBuilder;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.testing.mock.sling.spi.ResourceResolverTypeAdapter;
@@ -35,7 +43,44 @@ public class OakMockResourceResolverAdapter implements ResourceResolverTypeAdapt
 
     @Override
     public SlingRepository newSlingRepository() {
-        return new RepositoryWrapper(new Jcr().createRepository());
+        Repository repository = new Jcr()
+        .with(new ExtraSlingContent())
+        .createRepository();
+        return new RepositoryWrapper(repository);
+    }
+
+    /**
+     * Adds some default indexes useful for by sling resource-jcr mapping.
+     * This is only a small subset of what is defined by default in the org.apache.sling.jcr.oak.server bundle.
+     */
+    private static final class ExtraSlingContent implements RepositoryInitializer {
+
+        @Override
+        public void initialize(NodeBuilder root) {
+            if (root.hasChildNode(INDEX_DEFINITIONS_NAME)) {
+                NodeBuilder index = root.child(INDEX_DEFINITIONS_NAME);
+
+                // jcr:
+                property(index, "jcrLanguage", "jcr:language");
+                property(index, "jcrLockOwner", "jcr:lockOwner");
+
+                // sling:
+                property(index, "slingAlias", "sling:alias");
+                property(index, "slingResource", "sling:resource");
+                property(index, "slingResourceType", "sling:resourceType");
+                property(index, "slingVanityPath", "sling:vanityPath");
+            }
+        }
+
+        /**
+         * A convenience method to create a non-unique property index.
+         */
+        private static void property(NodeBuilder index, String indexName, String propertyName) {
+            if (!index.hasChildNode(indexName)) {
+                createIndexDefinition(index, indexName, true, false, singleton(propertyName), null);
+            }
+        }
+
     }
 
 }
