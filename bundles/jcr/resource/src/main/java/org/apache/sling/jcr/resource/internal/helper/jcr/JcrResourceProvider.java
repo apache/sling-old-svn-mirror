@@ -30,6 +30,7 @@ import java.util.concurrent.Executor;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import javax.jcr.AccessDeniedException;
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.Repository;
@@ -133,6 +134,8 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
 
     private BundleContext bundleCtx;
 
+    private JcrProviderStateFactory stateFactory;
+
     @Activate
     protected void activate(final ComponentContext context) throws RepositoryException {
         SlingRepository repository = (SlingRepository) context.locateService(REPOSITORY_REFERNENCE_NAME,
@@ -151,6 +154,9 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
         this.root = PropertiesUtil.toString(context.getProperties().get(ResourceProvider.PROPERTY_ROOT), "/");
         this.bundleCtx = context.getBundleContext();
         registerLegacyListener();
+        
+        HelperData helperData = new HelperData(dynamicClassLoaderManager.getDynamicClassLoader(), pathMapper);
+        this.stateFactory = new JcrProviderStateFactory(repositoryReference, repository, helperData);
     }
 
     @Deactivate
@@ -230,9 +236,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     @Override
     @Nonnull public JcrProviderState authenticate(final @Nonnull Map<String, Object> authenticationInfo)
     throws LoginException {
-        HelperData helperData = new HelperData(dynamicClassLoaderManager.getDynamicClassLoader(), pathMapper);
-        JcrProviderStateFactory factory = new JcrProviderStateFactory(repositoryReference, repository, helperData);
-        return factory.createProviderState(authenticationInfo);
+        return stateFactory.createProviderState(authenticationInfo);
     }
 
     @Override
