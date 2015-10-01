@@ -35,6 +35,7 @@ import org.apache.sling.api.resource.runtime.dto.FailureReason;
 import org.apache.sling.api.resource.runtime.dto.ResourceProviderDTO;
 import org.apache.sling.api.resource.runtime.dto.ResourceProviderFailureDTO;
 import org.apache.sling.api.resource.runtime.dto.RuntimeDTO;
+import org.apache.sling.resourceresolver.impl.providers.tree.PathTree;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -63,6 +64,8 @@ public class ResourceProviderTracker {
 
     @Reference
     private EventAdmin eventAdmin;
+
+    private volatile PathTree<ResourceProviderHandler> tree;
 
     @Activate
     protected void activate(final BundleContext bundleContext) {
@@ -132,6 +135,9 @@ public class ResourceProviderTracker {
                        }
                    }
                }
+           }
+           synchronized(this) {
+               tree = null;
            }
         } else {
             logger.debug("Ignoring invalid resource provider {}", info);
@@ -249,6 +255,19 @@ public class ResourceProviderTracker {
         }
         Collections.sort(list);
         return list;
+    }
+
+    public PathTree<ResourceProviderHandler> getTree() {
+        PathTree<ResourceProviderHandler> result = tree;
+        if (result == null) {
+            synchronized(this) {
+                if (tree == null) {
+                    tree = new PathTree<ResourceProviderHandler>(getHandlers());
+                }
+                result = tree;
+            }
+        }
+        return result;
     }
 
     private void fill(final ResourceProviderDTO d, final ResourceProviderInfo info) {

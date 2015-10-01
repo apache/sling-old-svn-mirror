@@ -23,13 +23,14 @@ import java.util.Hashtable;
 
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.resourceresolver.impl.legacy.LegacyResourceProviderWhiteboard;
+import org.apache.sling.resourceresolver.impl.providers.tree.Pathable;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 
-public class ResourceProviderHandler implements Comparable<ResourceProviderHandler> {
+public class ResourceProviderHandler implements Comparable<ResourceProviderHandler>, Pathable {
 
     private final ResourceProviderInfo info;
 
@@ -87,5 +88,10 @@ public class ResourceProviderHandler implements Comparable<ResourceProviderHandl
     @Override
     public int compareTo(final ResourceProviderHandler o) {
         return this.getInfo().compareTo(o.getInfo());
+    }
+
+    @Override
+    public String getPath() {
+        return this.getInfo().getPath();
     }
 }
