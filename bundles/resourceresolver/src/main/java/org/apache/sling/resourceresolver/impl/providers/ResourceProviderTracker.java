@@ -253,7 +253,6 @@ public class ResourceProviderTracker {
                 list.add(h.get(0));
             }
         }
-        Collections.sort(list);
         return list;
     }
 
