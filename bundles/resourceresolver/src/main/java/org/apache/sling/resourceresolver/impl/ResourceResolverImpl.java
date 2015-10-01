@@ -20,7 +20,6 @@ package org.apache.sling.resourceresolver.impl;
 
 import static org.apache.commons.lang.StringUtils.defaultString;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -61,11 +60,10 @@ import org.apache.sling.resourceresolver.impl.helper.URIException;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntry;
 import org.apache.sling.resourceresolver.impl.params.ParsedParameters;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
-import org.apache.sling.resourceresolver.impl.providers.stateful.AuthenticatedResourceProvider;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.resourceresolver.impl.providers.stateful.CombinedResourceProvider;
-import org.apache.sling.resourceresolver.impl.providers.stateful.SecureResourceProvider;
+import org.apache.sling.resourceresolver.impl.providers.stateful.ResourceProviderAuthenticator;
 import org.apache.sling.resourceresolver.impl.providers.stateful.StatefulResourceProvider;
-import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -113,13 +111,17 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     private final Map<String, Object> authenticationInfo;
 
     public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo) throws LoginException {
-        this(factory, isAdmin, authenticationInfo, factory.getResourceProviderTracker().getHandlers());
+        this(factory, isAdmin, authenticationInfo, factory.getResourceProviderTracker().getResourceProviderStorage());
     }
 
     ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo, final List<ResourceProviderHandler> handlers) throws LoginException {
+        this(factory, isAdmin, authenticationInfo, new ResourceProviderStorage(handlers));
+    }
+
+    ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo, final ResourceProviderStorage storage) throws LoginException {
         this.factory = factory;
         this.authenticationInfo = authenticationInfo;
-        this.provider = createProvider(handlers);
+        this.provider = createProvider(storage);
         this.context = new ResourceResolverContext(isAdmin);
         this.factory.register(this, context);
     }
@@ -133,26 +135,14 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         if (authenticationInfo != null) {
             this.authenticationInfo.putAll(authenticationInfo);
         }
-        this.provider = createProvider(factory.getResourceProviderTracker().getHandlers());
+        this.provider = createProvider(factory.getResourceProviderTracker().getResourceProviderStorage());
         this.context = new ResourceResolverContext(resolver.context.isAdmin());
         this.factory.register(this, context);
     }
 
-    private StatefulResourceProvider createProvider(List<ResourceProviderHandler> handlers) throws LoginException {
-        List<StatefulResourceProvider> authenticated = new ArrayList<StatefulResourceProvider>();
-        for (ResourceProviderHandler h : handlers) {
-            ResourceProvider<?> rp = h.getResourceProvider();
-            if (rp == null) {
-                logger.warn("Empty resource provider for {}", h);
-                continue;
-            }
-            authenticated.add(new AuthenticatedResourceProvider(h.getResourceProvider(), h.getInfo(), this, authenticationInfo));
-        }
-        List<StatefulResourceProvider> secured = new ArrayList<StatefulResourceProvider>();
-        for (StatefulResourceProvider p : authenticated) {
-            secured.add(new SecureResourceProvider(p, this.factory.getResourceAccessSecurityTracker()));
-        }
-        return new CombinedResourceProvider(secured, this);
+    private StatefulResourceProvider createProvider(ResourceProviderStorage storage) throws LoginException {
+        final ResourceProviderAuthenticator authenticator = new ResourceProviderAuthenticator(this, authenticationInfo, this.factory.getResourceAccessSecurityTracker(), storage);
+        return new CombinedResourceProvider(storage.getTree(), this, authenticator);
     }
 
     /**

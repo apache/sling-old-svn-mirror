@@ -47,6 +47,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.resource.query.Query;
 import org.apache.sling.api.resource.query.QueryInstructions;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
 import org.apache.sling.resourceresolver.impl.providers.tree.Node;
 import org.apache.sling.resourceresolver.impl.providers.tree.PathTree;
@@ -65,16 +66,16 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(CombinedResourceProvider.class);
 
-    private final List<StatefulResourceProvider> allProviders;
-
-    private final PathTree<StatefulResourceProvider> tree;
+    private final PathTree<ResourceProviderHandler> tree;
 
     private final ResourceResolver resolver;
 
-    public CombinedResourceProvider(List<StatefulResourceProvider> providers, ResourceResolver resolver) {
-        this.allProviders = new ArrayList<StatefulResourceProvider>(providers);
-        this.tree = new PathTree<StatefulResourceProvider>(allProviders);
+    private final ResourceProviderAuthenticator authenticator;
+
+    public CombinedResourceProvider(PathTree<ResourceProviderHandler> tree, ResourceResolver resolver, ResourceProviderAuthenticator authenticator) {
+        this.tree = tree;
         this.resolver = resolver;
+        this.authenticator = authenticator;
     }
 
     /**
@@ -98,7 +99,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
      */
     @Override
     public void logout() {
-        for (StatefulResourceProvider p : allProviders) {
+        for (StatefulResourceProvider p : authenticator.getAllUsedAuthenticated()) {
             p.logout();
         }
     }
@@ -108,7 +109,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
      */
     @Override
     public void refresh() {
-        for (StatefulResourceProvider p : allProviders) {
+        for (StatefulResourceProvider p : authenticator.getAll()) {
             p.refresh();
         }
     }
@@ -118,7 +119,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
      */
     @Override
     public boolean isLive() {
-        for (StatefulResourceProvider p : allProviders) {
+        for (StatefulResourceProvider p : authenticator.getAll()) {
             if (!p.isLive()) {
                 return false;
             }
@@ -255,20 +256,20 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     }
 
     private List<Resource> getSyntheticChildren(Resource parent) {
-        Node<StatefulResourceProvider> node = tree.getNode(parent.getPath());
+        Node<ResourceProviderHandler> node = tree.getNode(parent.getPath());
         if (node == null) {
             return Collections.emptyList();
         }
         List<Resource> children = new ArrayList<Resource>();
-        for (Entry<String, Node<StatefulResourceProvider>> entry : node.getChildren().entrySet()) {
+        for (Entry<String, Node<ResourceProviderHandler>> entry : node.getChildren().entrySet()) {
             final String name = entry.getKey();
-            final StatefulResourceProvider provider = entry.getValue().getValue();
+            final ResourceProviderHandler handler = entry.getValue().getValue();
             final String childPath = new StringBuilder(parent.getPath()).append('/').append(name).toString();
             final Resource child;
-            if (provider == null) {
+            if (handler == null) {
                 child = new SyntheticResource(getResourceResolver(), childPath, RESOURCE_TYPE_SYNTHETIC);
             } else { 
-                child = provider.getResource(childPath, parent, null, false);
+                child = authenticator.getStateful(handler).getResource(childPath, parent, null, false);
             }
             if (child != null) {
                 children.add(child);
@@ -283,7 +284,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     @Override
     public Collection<String> getAttributeNames() {
         final Set<String> names = new LinkedHashSet<String>();
-        for (StatefulResourceProvider p : allProviders) {
+        for (StatefulResourceProvider p : authenticator.getAll()) {
             Collection<String> newNames = p.getAttributeNames();
             if (newNames != null) {
                 names.addAll(newNames);
@@ -299,7 +300,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
      */
     @Override
     public Object getAttribute(String name) {
-        for (StatefulResourceProvider p : allProviders) {
+        for (StatefulResourceProvider p : authenticator.getAll()) {
             Object attribute = p.getAttribute(name);
             if (attribute != null) {
                 return attribute;
@@ -370,7 +371,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
      */
     @Override
     public void revert() {
-        for (StatefulResourceProvider p : allProviders) {
+        for (StatefulResourceProvider p : authenticator.getAllUsedModifiable()) {
             if (p.getInfo().getModifiable()) {
                 p.revert();
             }
@@ -382,7 +383,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
      */
     @Override
     public void commit() throws PersistenceException {
-        for (StatefulResourceProvider p : allProviders) {
+        for (StatefulResourceProvider p : authenticator.getAllUsedModifiable()) {
             if (p.getInfo().getModifiable()) {
                 p.commit();
             }
@@ -394,7 +395,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
      */
     @Override
     public boolean hasChanges() {
-        for (StatefulResourceProvider p : allProviders) {
+        for (StatefulResourceProvider p : authenticator.getAllUsedModifiable()) {
             if (p.getInfo().getModifiable() && p.hasChanges()) {
                 return true;
             }
@@ -416,7 +417,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     @Override
     public String[] getSupportedLanguages() {
         Set<String> supportedLanguages = new LinkedHashSet<String>();
-        for (StatefulResourceProvider p : allProviders) {
+        for (StatefulResourceProvider p : authenticator.getAll()) {
             supportedLanguages.addAll(Arrays.asList(p.getSupportedLanguages()));
         }
         return supportedLanguages.toArray(new String[supportedLanguages.size()]);
@@ -437,7 +438,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
 
     private List<StatefulResourceProvider> getQuerableProviders(String language) {
         List<StatefulResourceProvider> querableProviders = new ArrayList<StatefulResourceProvider>();
-        for (StatefulResourceProvider p : allProviders) {
+        for (StatefulResourceProvider p : authenticator.getAll()) {
             if (ArrayUtils.contains(p.getSupportedLanguages(), language)) {
                 querableProviders.add(p);
             }
@@ -465,7 +466,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     @SuppressWarnings("unchecked")
     @Override
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
-        for (StatefulResourceProvider p : allProviders) {
+        for (StatefulResourceProvider p : authenticator.getAll()) {
             final Object adaptee = p.adaptTo(type);
             if (adaptee != null) {
                 return (AdapterType) adaptee;
@@ -513,7 +514,10 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     }
 
     private List<StatefulResourceProvider> getMatchingProviders(String path) {
-        List<StatefulResourceProvider> matching = tree.getMatchingNodes(path);
+        List<StatefulResourceProvider> matching = new ArrayList<StatefulResourceProvider>();
+        for (ResourceProviderHandler h : tree.getMatchingNodes(path)) {
+            matching.add(authenticator.getStateful(h));
+        }
         Collections.reverse(matching);
         return matching;
     }
@@ -548,7 +552,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
         @Override
         public Iterator<Resource> iterator() {
             @SuppressWarnings("unchecked")
-            Iterator<Iterator<Resource>> iterators = IteratorUtils.transformedIterator(allProviders.iterator(),
+            Iterator<Iterator<Resource>> iterators = IteratorUtils.transformedIterator(authenticator.getAll().iterator(),
                     new Transformer() {
                         @Override
                         public Object transform(Object input) {

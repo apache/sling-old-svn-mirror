@@ -44,6 +44,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
 import org.apache.sling.spi.resource.provider.JCRQueryProvider;
 import org.apache.sling.spi.resource.provider.ResolveContext;
@@ -142,8 +143,6 @@ public class MockedResourceResolverImplTest {
         activator.resourceAccessSecurityTracker = new ResourceAccessSecurityTracker();
         activator.resourceProviderTracker = resourceProviderTracker;
 
-        Mockito.when(resourceProviderTracker.getHandlers()).thenReturn(handlers);
-        
         handlers.add(createRPHandler(resourceProvider, "org.apache.sling.resourceresolver.impl.DummyTestProvider", 10L, "/single"));
 
         // setup mapping resources at /etc/map to exercise vanity etc.
@@ -155,6 +154,8 @@ public class MockedResourceResolverImplTest {
         handlers.add(createRPHandler(appsResourceProvider, "org.apache.sling.resourceresolver.impl.AppsProvider", 12L, "/libs"));
         handlers.add(createRPHandler(appsResourceProvider, "org.apache.sling.resourceresolver.impl.AppsProvider", 13L, "/apps"));
         handlers.add(createRPHandler(queriableResourceProviderA, "org.apache.sling.resourceresolver.impl.QueriableResourceProviderA", 14L, "/searchA"));
+
+        Mockito.when(resourceProviderTracker.getResourceProviderStorage()).thenReturn(new ResourceProviderStorage(handlers));
 
         // activate the components.
         activator.activate(componentContext);

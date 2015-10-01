@@ -45,6 +45,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
 import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
@@ -78,7 +79,7 @@ public class ResourceResolverImplTest {
 
         List<ResourceProviderHandler> handlers = asList(createRPHandler(rp, "rp1", 0, "/"));
         resourceProviderTracker = Mockito.mock(ResourceProviderTracker.class);
-        Mockito.when(resourceProviderTracker.getHandlers()).thenReturn(handlers);
+        Mockito.when(resourceProviderTracker.getResourceProviderStorage()).thenReturn(new ResourceProviderStorage(handlers));
         ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
         activator.resourceProviderTracker = resourceProviderTracker;
         commonFactory = new CommonResourceResolverFactoryImpl(activator);
@@ -88,7 +89,7 @@ public class ResourceResolverImplTest {
 
     @SuppressWarnings("deprecation")
     @Test public void testClose() throws Exception {
-        final ResourceResolver rr = new ResourceResolverImpl(commonFactory, false, null, resourceProviderTracker.getHandlers());
+        final ResourceResolver rr = new ResourceResolverImpl(commonFactory, false, null, resourceProviderTracker.getResourceProviderStorage());
         assertTrue(rr.isLive());
         rr.close();
         assertFalse(rr.isLive());
@@ -440,7 +441,7 @@ public class ResourceResolverImplTest {
         private final Map<String, Resource> resources = new HashMap<String, Resource>();
 
         public PathBasedResourceResolverImpl(CommonResourceResolverFactoryImpl factory, ResourceProviderTracker resourceProviderTracker) throws LoginException {
-            super(factory, false, null, resourceProviderTracker.getHandlers());
+            super(factory, false, null, resourceProviderTracker.getResourceProviderStorage().getAll());
         }
 
         public void setResource(final String path, final Resource r) {

@@ -35,7 +35,6 @@ import org.apache.sling.api.resource.runtime.dto.FailureReason;
 import org.apache.sling.api.resource.runtime.dto.ResourceProviderDTO;
 import org.apache.sling.api.resource.runtime.dto.ResourceProviderFailureDTO;
 import org.apache.sling.api.resource.runtime.dto.RuntimeDTO;
-import org.apache.sling.resourceresolver.impl.providers.tree.PathTree;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -65,7 +64,7 @@ public class ResourceProviderTracker {
     @Reference
     private EventAdmin eventAdmin;
 
-    private volatile PathTree<ResourceProviderHandler> tree;
+    private volatile ResourceProviderStorage storage;
 
     @Activate
     protected void activate(final BundleContext bundleContext) {
@@ -137,7 +136,7 @@ public class ResourceProviderTracker {
                }
            }
            synchronized(this) {
-               tree = null;
+               storage = null;
            }
         } else {
             logger.debug("Ignoring invalid resource provider {}", info);
@@ -173,7 +172,7 @@ public class ResourceProviderTracker {
                 }
             }
             synchronized(this) {
-                tree = null;
+                storage = null;
             }
         } else {
             logger.debug("Unregistering invalid resource provider {}", info);
@@ -246,24 +245,27 @@ public class ResourceProviderTracker {
         dto.failedProviders = failures.toArray(new ResourceProviderFailureDTO[failures.size()]);
     }
 
-    public List<ResourceProviderHandler> getHandlers() {
-        List<ResourceProviderHandler> list = new ArrayList<ResourceProviderHandler>();
+    private List<ResourceProviderHandler> getHandlers() {
+        List<ResourceProviderHandler> result = new ArrayList<ResourceProviderHandler>();
         synchronized (this.handlers) {
-            for (List<ResourceProviderHandler> h : handlers.values()) {
-                list.add(h.get(0));
+            for (List<ResourceProviderHandler> list : handlers.values()) {
+                ResourceProviderHandler h  = list.get(0);
+                if (h != null) {
+                    result.add(h);
+                }
             }
         }
-        return list;
+        return result;
     }
 
-    public PathTree<ResourceProviderHandler> getTree() {
-        PathTree<ResourceProviderHandler> result = tree;
+    public ResourceProviderStorage getResourceProviderStorage() {
+        ResourceProviderStorage result = storage;
         if (result == null) {
             synchronized(this) {
-                if (tree == null) {
-                    tree = new PathTree<ResourceProviderHandler>(getHandlers());
+                if (storage == null) {
+                    storage = new ResourceProviderStorage(getHandlers());
                 }
-                result = tree;
+                result = storage;
             }
         }
         return result;
