@@ -18,19 +18,24 @@
  */
 package org.apache.sling.testing.mock.sling.junit;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
 
 import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
+
+import com.google.common.base.Function;
 
 @RunWith(MockitoJUnitRunner.class)
 public class SlingContextTest {
@@ -51,6 +56,24 @@ public class SlingContextTest {
     @Test
     public void testRequest() {
         assertNotNull(context.request());
+    }
+
+    @Test
+    public void testRegisterAdapter() {
+        
+        // prepare some adapter factories
+        context.registerAdapter(ResourceResolver.class, Integer.class, 5);
+        context.registerAdapter(ResourceResolver.class, String.class, new Function<ResourceResolver,String>() {
+            @Override
+            public String apply(ResourceResolver input) {
+                return ">" + input.toString();
+            }
+        });
+        
+        // test adaption
+        assertEquals(Integer.valueOf(5), context.resourceResolver().adaptTo(Integer.class));
+        assertEquals(">" + context.resourceResolver().toString(), context.resourceResolver().adaptTo(String.class));
+        assertNull(context.resourceResolver().adaptTo(Double.class));
     }
 
 }
