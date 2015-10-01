@@ -242,8 +242,10 @@ public class ResourceProviderTracker {
 
     public List<ResourceProviderHandler> getHandlers() {
         List<ResourceProviderHandler> list = new ArrayList<ResourceProviderHandler>();
-        for (List<ResourceProviderHandler> h : handlers.values()) {
-            list.add(h.get(0));
+        synchronized (this.handlers) {
+            for (List<ResourceProviderHandler> h : handlers.values()) {
+                list.add(h.get(0));
+            }
         }
         Collections.sort(list);
         return list;
