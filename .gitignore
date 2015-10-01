@@ -18,3 +18,4 @@ bundles/jcr/contentloader/jackrabbit
 testing/mocks/sling-mock-oak/dependency-reduced-pom.xml
 contrib/extensions/distribution/it/sling
 contrib/explorers/resourceeditor/node
+launchpad/docker/*.jar
