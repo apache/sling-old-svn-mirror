@@ -30,7 +30,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.runtime.dto.AuthType;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
-import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,25 +49,21 @@ public class ResourceProviderAuthenticator {
     private final Map<String, Object> authInfo;
 
     private final ResourceAccessSecurityTracker securityTracker;
-    
-    private final ResourceProviderStorage resourceProviderStorage;
 
     boolean allProvidersAuthenticated;
 
     public ResourceProviderAuthenticator(ResourceResolver resolver, Map<String, Object> authInfo,
-            ResourceAccessSecurityTracker securityTracker, ResourceProviderStorage resourceProviderStorage) throws LoginException {
+            ResourceAccessSecurityTracker securityTracker) throws LoginException {
         this.stateful = new IdentityHashMap<ResourceProviderHandler, StatefulResourceProvider>();
         this.authenticated = new ArrayList<StatefulResourceProvider>();
         this.authenticatedModifiable = new ArrayList<StatefulResourceProvider>();
         this.resolver = resolver;
         this.authInfo = authInfo;
         this.securityTracker = securityTracker;
-        this.resourceProviderStorage = resourceProviderStorage;
-        authenticateRequired();
     }
 
-    private void authenticateRequired() throws LoginException {
-        for (ResourceProviderHandler h : resourceProviderStorage.getAuthRequired()) {
+    public void authenticateAll(List<ResourceProviderHandler> handlers) throws LoginException {
+        for (ResourceProviderHandler h : handlers) {
             authenticate(h);
         }
     }
@@ -107,16 +102,12 @@ public class ResourceProviderAuthenticator {
         return authenticatedModifiable;
     }
 
-    public Collection<StatefulResourceProvider> getAll() {
-        if (!allProvidersAuthenticated) {
-            for (ResourceProviderHandler h : resourceProviderStorage.getAll()) {
-                if (!stateful.containsKey(h)) {
-                    getStateful(h);
-                }
-            }
-            allProvidersAuthenticated = true;
+    public Collection<StatefulResourceProvider> getAll(List<ResourceProviderHandler> handlers) {
+        List<StatefulResourceProvider> result = new ArrayList<StatefulResourceProvider>(handlers.size());
+        for (ResourceProviderHandler h : handlers) {
+            result.add(getStateful(h));
         }
-        return stateful.values();
+        return result;
     }
 
     private StatefulResourceProvider createStateful(ResourceProviderHandler handler) throws LoginException {

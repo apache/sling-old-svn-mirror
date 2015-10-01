@@ -202,6 +202,10 @@ public class MockedResourceResolverImplTest {
         Mockito.when(ref.getProperty(Mockito.eq(Constants.SERVICE_RANKING))).thenReturn(ranking);
         Mockito.when(ref.getProperty(Mockito.eq(ResourceProvider.PROPERTY_ROOT))).thenReturn(path);
         Mockito.when(ref.getProperty(Mockito.eq(ResourceProvider.PROPERTY_MODIFIABLE))).thenReturn(true);
+        Mockito.when(ref.getProperty(Mockito.eq(ResourceProvider.PROPERTY_SUPPORTS_JCR_QUERY))).thenReturn(true);
+        Mockito.when(ref.getProperty(Mockito.eq(ResourceProvider.PROPERTY_ATTRIBUTABLE))).thenReturn(true);
+        Mockito.when(ref.getProperty(Mockito.eq(ResourceProvider.PROPERTY_ADAPTABLE))).thenReturn(true);
+
         ResourceProviderInfo info = new ResourceProviderInfo(ref);
         return new ResourceProviderHandler(bc, info, new EventAdmin() {
             @Override

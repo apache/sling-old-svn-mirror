@@ -78,7 +78,13 @@ import org.slf4j.LoggerFactory;
 @Properties({ @Property(name = ResourceProvider.PROPERTY_NAME, value = "JCR"),
         @Property(name = ResourceProvider.PROPERTY_ROOT, value = "/"),
         @Property(name = ResourceProvider.PROPERTY_MODIFIABLE, boolValue = true),
-        @Property(name = ResourceProvider.PROPERTY_AUTHENTICATE, value = ResourceProvider.AUTHENTICATE_REQUIRED) })
+        @Property(name = ResourceProvider.PROPERTY_ADAPTABLE, boolValue = true),
+        @Property(name = ResourceProvider.PROPERTY_AUTHENTICATE, value = ResourceProvider.AUTHENTICATE_REQUIRED),
+        @Property(name = ResourceProvider.PROPERTY_ATTRIBUTABLE, boolValue = true),
+        @Property(name = ResourceProvider.PROPERTY_REFRESHABLE, boolValue = true),
+        @Property(name = ResourceProvider.PROPERTY_SUPPORTS_JCR_QUERY, boolValue = true),
+        @Property(name = ResourceProvider.PROPERTY_SUPPORTS_NATIVE_QUERY, boolValue = false)
+})
 public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
 
     /** Logger */

@@ -441,7 +441,7 @@ public class ResourceResolverImplTest {
         private final Map<String, Resource> resources = new HashMap<String, Resource>();
 
         public PathBasedResourceResolverImpl(CommonResourceResolverFactoryImpl factory, ResourceProviderTracker resourceProviderTracker) throws LoginException {
-            super(factory, false, null, resourceProviderTracker.getResourceProviderStorage().getAll());
+            super(factory, false, null, resourceProviderTracker.getResourceProviderStorage());
         }
 
         public void setResource(final String path, final Resource r) {
