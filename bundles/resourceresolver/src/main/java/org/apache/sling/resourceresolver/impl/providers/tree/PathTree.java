@@ -22,6 +22,7 @@ import static org.apache.commons.lang.StringUtils.split;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 public class PathTree<T extends Pathable> {
@@ -58,14 +59,16 @@ public class PathTree<T extends Pathable> {
         }
 
         Node<T> node = root;
-        for (String segment : split(path.substring(1), '/')) {
-            if (node.hasChild(segment)) {
-                node = node.getChild(segment);
+        Iterator<String> it = new PathSegmentIterator(path, 1);
+        while (it.hasNext()) {
+            String segment = it.next();
+            node = node.getChild(segment);
+            if (node == null) {
+                break;
+            } else {
                 if (node.getValue() != null) {
                     values.add(node.getValue());
                 }
-            } else {
-                break;
             }
         }
         return values;
@@ -76,10 +79,11 @@ public class PathTree<T extends Pathable> {
             return null;
         }
         Node<T> node = root;
-        for (String segment : split(path.substring(1), '/')) {
-            if (node.hasChild(segment)) {
-                node = node.getChild(segment);
-            } else {
+        Iterator<String> it = new PathSegmentIterator(path, 1);
+        while (it.hasNext()) {
+            String segment = it.next();
+            node = node.getChild(segment);
+            if (node == null) {
                 return null;
             }
         }
