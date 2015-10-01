@@ -336,8 +336,10 @@ public class SlingContextImpl extends OsgiContextImpl {
      * @param adaptableClass Class to adapt from
      * @param adapterClass Class to adapt to
      * @param adapter Object which is always returned for this adaption.
+     * @param <T1> Adaptable type
+     * @param <T2> Adapter type
      */
-    public <T1, T2> void registerAdapter(final Class<T1> adaptableClass, final Class<T2> adapterClass,
+    public final <T1, T2> void registerAdapter(final Class<T1> adaptableClass, final Class<T2> adapterClass,
             final T2 adapter) {
         registerAdapter(adaptableClass, adapterClass, new Function<T1, T2>() {
             @Override
@@ -353,8 +355,10 @@ public class SlingContextImpl extends OsgiContextImpl {
      * @param adaptableClass Class to adapt from
      * @param adapterClass Class to adapt to
      * @param adaptHandler Function to handle the adaption
+     * @param <T1> Adaptable type
+     * @param <T2> Adapter type
      */
-    public <T1, T2> void registerAdapter(final Class<T1> adaptableClass, final Class<T2> adapterClass,
+    public final <T1, T2> void registerAdapter(final Class<T1> adaptableClass, final Class<T2> adapterClass,
             final Function<T1,T2> adaptHandler) {
         AdapterFactory adapterFactory = new AdapterFactory() {
             @SuppressWarnings("unchecked")
@@ -368,7 +372,7 @@ public class SlingContextImpl extends OsgiContextImpl {
                     adaptableClass.getName()
                 })
                 .put(AdapterFactory.ADAPTER_CLASSES, new String[] {
-                        adapterClass.getName()
+                    adapterClass.getName()
                 })
                 .build());
     }
