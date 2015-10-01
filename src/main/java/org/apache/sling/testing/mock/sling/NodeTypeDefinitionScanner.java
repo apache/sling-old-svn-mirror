@@ -85,6 +85,8 @@ public final class NodeTypeDefinitionScanner {
     /**
      * Registers node types found in classpath in JCR repository.
      * @param session Session
+     * @param nodeTypeMode Node type mode
+     * @throws RepositoryException Repository exception
      */
     public void register(Session session, NodeTypeMode nodeTypeMode) throws RepositoryException {
       List<String> nodeTypeResources = getNodeTypeDefinitions();
@@ -95,6 +97,8 @@ public final class NodeTypeDefinitionScanner {
      * Registers node types found in classpath in JCR repository.
      * @param session Session
      * @param nodeTypeResources List of classpath resource URLs pointing to node type definitions
+     * @param nodeTypeMode Node type mode
+     * @throws RepositoryException Repository exception
      */
     public void register(Session session, List<String> nodeTypeResources, NodeTypeMode nodeTypeMode) throws RepositoryException {
       switch (nodeTypeMode) {

@@ -67,6 +67,7 @@ public final class MockSling {
     /**
      * Creates new sling resource resolver factory instance.
      * @param type Type of underlying repository.
+     * @param bundleContext Bundle context
      * @return Resource resolver factory instance
      */
     public static ResourceResolverFactory newResourceResolverFactory(final ResourceResolverType type,
