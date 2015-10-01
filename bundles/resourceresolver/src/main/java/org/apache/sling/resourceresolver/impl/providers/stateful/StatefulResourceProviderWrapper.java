@@ -27,7 +27,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.query.Query;
 import org.apache.sling.api.resource.query.QueryInstructions;
-import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
 import org.apache.sling.spi.resource.provider.QueryResult;
 
 public class StatefulResourceProviderWrapper implements StatefulResourceProvider {
@@ -36,11 +35,6 @@ public class StatefulResourceProviderWrapper implements StatefulResourceProvider
 
     public StatefulResourceProviderWrapper(StatefulResourceProvider rp) {
         this.rp = rp;
-    }
-
-    @Override
-    public ResourceProviderInfo getInfo() {
-        return rp.getInfo();
     }
 
     @Override
@@ -146,10 +140,5 @@ public class StatefulResourceProviderWrapper implements StatefulResourceProvider
     @Override
     public ResourceResolver getResourceResolver() {
         return rp.getResourceResolver();
-    }
-
-    @Override
-    public String getPath() {
-        return rp.getPath();
     }
 }

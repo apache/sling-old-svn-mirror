@@ -38,8 +38,6 @@ public class SecureResourceProvider extends StatefulResourceProviderWrapper {
 
     private static final Logger logger = LoggerFactory.getLogger(ResourceResolverImpl.class);
 
-    private final boolean useResourceAccessSecurity;
-
     private final ResourceAccessSecurityTracker tracker;
 
     public SecureResourceProvider(StatefulResourceProvider rp, ResourceAccessSecurityTracker tracker) {
@@ -47,7 +45,6 @@ public class SecureResourceProvider extends StatefulResourceProviderWrapper {
         if (tracker == null) {
             logger.warn("ResourceAccessSecurityTracker is null. Resource-level security will be disabled.");
         }
-        this.useResourceAccessSecurity = rp.getInfo().getUseResourceAccessSecurity();
         this.tracker = tracker;
     }
 
@@ -83,7 +80,7 @@ public class SecureResourceProvider extends StatefulResourceProviderWrapper {
     }
 
     private Iterator<Resource> wrapIterator(Iterator<Resource> iterator) {
-        if (!useResourceAccessSecurity || tracker == null) {
+        if (tracker == null) {
             return iterator;
         } else {
             return new SecureIterator(iterator);
@@ -91,7 +88,7 @@ public class SecureResourceProvider extends StatefulResourceProviderWrapper {
     }
 
     private boolean isAllowed(SecurityTest test) {
-        if (!useResourceAccessSecurity || tracker == null) {
+        if (tracker == null) {
             return true;
         }
         boolean allowed = true;

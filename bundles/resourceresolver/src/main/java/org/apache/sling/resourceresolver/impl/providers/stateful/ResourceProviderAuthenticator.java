@@ -77,6 +77,9 @@ public class ResourceProviderAuthenticator {
         StatefulResourceProvider rp = stateful.get(handler);
         if (rp == null) {
             rp = createStateful(handler);
+            if (rp == null) {
+                return null;
+            }
             stateful.put(handler, rp);
             if (handler.getInfo().getAuthType() != AuthType.no) {
                 authenticated.add(rp);
@@ -94,10 +97,6 @@ public class ResourceProviderAuthenticator {
         } catch (LoginException e) {
             throw new SlingException("Can't authenticate provider", e);
         }
-    }
-
-    public Collection<StatefulResourceProvider> getAllUsed() {
-        return stateful.values();
     }
 
     public Collection<StatefulResourceProvider> getAllUsedAuthenticated() {

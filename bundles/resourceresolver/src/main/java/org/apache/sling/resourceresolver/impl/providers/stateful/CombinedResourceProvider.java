@@ -79,14 +79,6 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     }
 
     /**
-     * This operation is not supported for the {@link CombinedResourceProvider}.
-     */
-    @Override
-    public ResourceProviderInfo getInfo() {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
@@ -180,10 +172,10 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
                     break;
                 }
                 if (isContinueResolving(resource)) {
-                    logger.debug("Resolved Full {} using {} - continue resolving flag is set!", path, p.getInfo());
+                    logger.debug("Resolved Full {} using {} - continue resolving flag is set!", path, p);
                     fallbackResource = resource;
                 } else {
-                    logger.debug("Resolved Full {} using {}", path, p.getInfo());
+                    logger.debug("Resolved Full {} using {}", path, p);
                     return resource;
                 }
             }
@@ -372,9 +364,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     @Override
     public void revert() {
         for (StatefulResourceProvider p : authenticator.getAllUsedModifiable()) {
-            if (p.getInfo().getModifiable()) {
-                p.revert();
-            }
+            p.revert();
         }
     }
 
@@ -384,9 +374,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     @Override
     public void commit() throws PersistenceException {
         for (StatefulResourceProvider p : authenticator.getAllUsedModifiable()) {
-            if (p.getInfo().getModifiable()) {
-                p.commit();
-            }
+            p.commit();
         }
     }
 
@@ -396,7 +384,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     @Override
     public boolean hasChanges() {
         for (StatefulResourceProvider p : authenticator.getAllUsedModifiable()) {
-            if (p.getInfo().getModifiable() && p.hasChanges()) {
+            if (p.hasChanges()) {
                 return true;
             }
         }
@@ -523,13 +511,13 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     }
 
     private List<StatefulResourceProvider> getMatchingModifiableProviders(String path) {
-        List<StatefulResourceProvider> matching = getMatchingProviders(path);
-        Iterator<StatefulResourceProvider> it = matching.iterator();
-        while (it.hasNext()) {
-            if (!it.next().getInfo().getModifiable()) {
-                it.remove();
+        List<StatefulResourceProvider> matching = new ArrayList<StatefulResourceProvider>();
+        for (ResourceProviderHandler h : tree.getMatchingNodes(path)) {
+            if (h.getInfo().getModifiable()) {
+                matching.add(authenticator.getStateful(h));
             }
         }
+        Collections.reverse(matching);
         return matching;
     }
 
@@ -638,10 +626,5 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
             }
             return null;
         }
-    }
-
-    @Override
-    public String getPath() {
-        return "/";
     }
 }

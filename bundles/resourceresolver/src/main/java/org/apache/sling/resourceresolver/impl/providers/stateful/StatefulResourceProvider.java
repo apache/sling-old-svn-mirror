@@ -31,8 +31,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.query.Query;
 import org.apache.sling.api.resource.query.QueryInstructions;
 import org.apache.sling.api.resource.query.QueryManager;
-import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
-import org.apache.sling.resourceresolver.impl.providers.tree.Pathable;
 import org.apache.sling.spi.resource.provider.JCRQueryProvider;
 import org.apache.sling.spi.resource.provider.QueryResult;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
@@ -43,12 +41,7 @@ import org.apache.sling.spi.resource.provider.ResourceProvider;
  * avoid passing authentication state with every call to any resource provider
  * method.
  */
-public interface StatefulResourceProvider extends Pathable {
-
-    /**
-     * Returns the resource provider metadata.
-     */
-    ResourceProviderInfo getInfo();
+public interface StatefulResourceProvider {
 
     /**
      * Returns the resource resolver associated to this {@link StatefulResourceProvider}.
