@@ -292,7 +292,12 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
                     if ("/".equals(item.getPath())) {
                         return null;
                     }
-                    Node parentNode = item.getParent();
+                    Node parentNode;
+                    try {
+                        parentNode = item.getParent();
+                    } catch(AccessDeniedException e) {
+                        return null;
+                    }
                     String parentPath = pathMapper.mapJCRPathToResourcePath(parentNode.getPath());
                     return new JcrNodeResource(ctx.getResourceResolver(), parentPath, version, parentNode,
                             ctx.getProviderState().getHelperData());
