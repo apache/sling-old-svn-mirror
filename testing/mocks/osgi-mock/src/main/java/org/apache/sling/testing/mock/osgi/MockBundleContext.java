@@ -290,6 +290,20 @@ class MockBundleContext implements BundleContext {
         // no mock implementation, simulate that no property is found and return null
         return null;
     }
+    
+    /**
+     * Deactivates all bundles registered in this mocked bundle context.
+     */
+    public void shutdown() {
+        for (MockServiceRegistration serviceRegistration : ImmutableList.copyOf(registeredServices)) {
+            try {
+                MockOsgi.deactivate(serviceRegistration.getService(), this, serviceRegistration.getProperties());
+            }
+            catch (NoScrMetadataException ex) {
+                // ignore, no deactivate method is available then
+            }
+        }
+    }
 
     // --- unsupported operations ---
     @Override
