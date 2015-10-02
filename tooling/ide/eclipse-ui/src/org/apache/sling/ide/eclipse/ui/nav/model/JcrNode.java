@@ -150,7 +150,7 @@ public class JcrNode implements IAdaptable {
 	
 	@Override
 	public String toString() {
-		return "JcrNode[dom:"+domElement+", file:"+resource+", jcrPath:"+getJcrPath()+"]";
+		return getClass().getSimpleName() + "[dom:"+domElement+", file:"+resource+", jcrPath:"+getJcrPath()+"]";
 	}
 	
 	@Override
@@ -425,7 +425,7 @@ public class JcrNode implements IAdaptable {
 	public Image getImage() {
 		boolean plainFolder = resource!=null && (resource instanceof IFolder);
 		String primaryType = getProperty("jcr:primaryType").getValueAsString();
-		boolean typeFolder = primaryType!=null && ((primaryType.equals("nt:folder") || primaryType.equals("sling:Folder")));
+		boolean typeFolder = probablyFolderType(primaryType);
 		boolean typeFile = primaryType!=null && ((primaryType.equals("nt:file") || primaryType.equals("nt:resource") || primaryType.equals("sling:File")));
 		typeFile |= (resource!=null && primaryType==null);
 		boolean typeUnstructured = primaryType!=null && ((primaryType.equals("nt:unstructured")));
@@ -461,6 +461,11 @@ public class JcrNode implements IAdaptable {
 		}
 		
 	}
+
+    private boolean probablyFolderType(String primaryType) {
+        return primaryType != null && 
+                (primaryType.equals("nt:folder") || primaryType.equals("sling:Folder"));
+    }
 
 	private ImageDescriptor getImageDescriptor(String filename, String jcrMimeType) {
 		final String modifiedFilename;
@@ -975,7 +980,7 @@ public class JcrNode implements IAdaptable {
     private SerializationKind getFallbackSerializationKind(String nodeType) {
         if (nodeType.equals("nt:file")) {
             return SerializationKind.FILE;
-        } else if (nodeType.equals("nt:folder") || nodeType.equals("sling:Folder")) {
+        } else if (probablyFolderType(nodeType)) {
             return SerializationKind.FOLDER;
         } else {
             return SerializationKind.METADATA_PARTIAL;
@@ -1102,7 +1107,7 @@ public class JcrNode implements IAdaptable {
                 Activator.getDefault().getPluginLogger().error("No filter.xml found for "+project);
                 return true;
             } else {
-                final FilterResult result = filter.filter(ProjectUtil.getSyncDirectoryFile(project), relativeFilePath);
+                final FilterResult result = filter.filter(relativeFilePath);
                 return result==FilterResult.ALLOW;
             }
         } catch (CoreException e) {

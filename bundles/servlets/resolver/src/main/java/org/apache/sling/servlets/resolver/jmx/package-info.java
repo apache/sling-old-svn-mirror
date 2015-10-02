@@ -16,19 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.thymeleaf.internal.dom;
 
-import org.thymeleaf.dom.Node;
+@Version("2.3.6")
+package org.apache.sling.servlets.resolver.jmx;
 
-public final class NodeUtil {
+import aQute.bnd.annotation.Version;
 
-    public static <T> T getNodeProperty(final Node node, final String name, final Class<T> clazz) {
-        final Object nodeProperty = node.getNodeProperty(name);
-        try {
-            return clazz.cast(nodeProperty);
-        } catch (ClassCastException e) {
-            return null;
-        }
-    }
-
-}

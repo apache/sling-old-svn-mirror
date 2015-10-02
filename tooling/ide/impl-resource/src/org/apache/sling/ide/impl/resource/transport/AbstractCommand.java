@@ -72,5 +72,10 @@ public abstract class AbstractCommand<T> implements Command<T> {
         // TODO - this is not supported
         return Collections.emptySet();
     }
+    
+    @Override
+    public Kind getKind() {
+        return null;
+    }
 
 }

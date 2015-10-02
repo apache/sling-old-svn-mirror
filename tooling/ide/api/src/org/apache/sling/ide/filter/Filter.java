@@ -16,16 +16,14 @@
  */
 package org.apache.sling.ide.filter;
 
-import java.io.File;
-
 public interface Filter {
 
     /**
      * Returns the result of filtering, i.e. whether a resource should be included in synchronization calls with the
      * repository
+     * @param repositoryPath a path in repository format
      * 
-     * @param path a path in repository format
      * @return the filter result, never <code>null</code>
      */
-    FilterResult filter(File contentSyncRoot, String path);
+    FilterResult filter(String repositoryPath);
 }

@@ -65,5 +65,31 @@ public class PathUtilTest {
 
         PathUtil.getParent(null);
     }
+    
+    @Test
+    public void isAncestor_root() {
+        
+        assertThat(PathUtil.isAncestor("/", "/content"), equalTo(true));
+        assertThat(PathUtil.isAncestor("/", "/content/child"), equalTo(true));
+    }
+    
+    @Test
+    public void isAncestor_same() {
+        assertThat(PathUtil.isAncestor("/", "/"), equalTo(false));
+        assertThat(PathUtil.isAncestor("/content", "/content"), equalTo(false));
+    }
+
+    @Test
+    public void isAncestor_oneLevelBelow() {
+        
+        assertThat(PathUtil.isAncestor("/content", "/content/child"), equalTo(true));
+        assertThat(PathUtil.isAncestor("/content/child", "/content/child/grand-child"), equalTo(true));
+    }
+
+    @Test
+    public void isAncestor_moreLevelsBelow() {
+        
+        assertThat(PathUtil.isAncestor("/content", "/content/child/granchild"), equalTo(true));
+    }
 
 }

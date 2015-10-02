@@ -42,10 +42,10 @@
     org.apache.sling/org.apache.sling.commons.fsclassloader/1.0.2
     org.apache.sling/org.apache.sling.discovery.api/1.0.2
     org.apache.sling/org.apache.sling.discovery.support/1.0.0
-    org.apache.sling/org.apache.sling.discovery.impl/1.1.6
+    org.apache.sling/org.apache.sling.discovery.impl/1.1.8
     org.apache.sling/org.apache.sling.engine/2.4.3-SNAPSHOT
     org.apache.sling/org.apache.sling.event/3.7.4
-    org.apache.sling/org.apache.sling.event.dea/1.0.2
+    org.apache.sling/org.apache.sling.event.dea/1.0.4
     org.apache.sling/org.apache.sling.fsresource/1.1.4
     org.apache.sling/org.apache.sling.i18n/2.4.4
     org.apache.sling/org.apache.sling.installer.console/1.0.0

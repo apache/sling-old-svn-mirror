@@ -83,5 +83,10 @@ public class TracingCommand<T> implements Command<T> {
     public Set<CommandExecutionFlag> getFlags() {
         return command.getFlags();
     }
+    
+    @Override
+    public Kind getKind() {
+        return command.getKind();
+    }
 
 }

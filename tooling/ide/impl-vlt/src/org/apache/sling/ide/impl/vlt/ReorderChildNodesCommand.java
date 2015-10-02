@@ -164,5 +164,9 @@ public class ReorderChildNodesCommand extends JcrCommand<Void> {
 
         getLogger().trace(out.toString());
     }
-
+    
+    @Override
+    public Kind getKind() {
+        return Kind.REORDER_CHILDREN;
+    }
 }

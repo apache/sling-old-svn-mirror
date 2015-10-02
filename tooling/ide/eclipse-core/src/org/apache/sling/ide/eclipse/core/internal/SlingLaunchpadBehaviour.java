@@ -34,6 +34,7 @@ import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.osgi.OsgiClient;
 import org.apache.sling.ide.osgi.OsgiClientException;
 import org.apache.sling.ide.serialization.SerializationException;
+import org.apache.sling.ide.transport.Batcher;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryInfo;
@@ -373,6 +374,8 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                     "Unable to find a repository for server " + getServer()));
         }
         
+        Batcher batcher = Activator.getDefault().getBatcherFactory().createBatcher();
+        
         // TODO it would be more efficient to have a module -> filter mapping
         // it would be simpler to implement this in SlingContentModuleAdapter, but
         // the behaviour for resources being filtered out is deletion, and that
@@ -418,13 +421,13 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
 
                             if (command != null) {
                                 ensureParentIsPublished(resourceDelta.getModuleResource(), repository, allResources,
-                                        handledPaths);
+                                        handledPaths, batcher);
                                 addedOrUpdatedResources.add(resourceDelta.getModuleResource());
                             }
-                            execute(command);
+                            enqueue(batcher, command);
                             break;
                         case IModuleResourceDelta.REMOVED:
-                            execute(removeFileCommand(repository, resourceDelta.getModuleResource()));
+                            enqueue(batcher, removeFileCommand(repository, resourceDelta.getModuleResource()));
                             break;
                     }
                 }
@@ -434,7 +437,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
             case ServerBehaviourDelegate.NO_CHANGE: // TODO is this correct ?
                 for (IModuleResource resource : getResources(module)) {
                     Command<?> command = addFileCommand(repository, resource);
-                    execute(command);
+                    enqueue(batcher, command);
                     if (command != null) {
                         addedOrUpdatedResources.add(resource);
                     }
@@ -442,22 +445,35 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                 break;
             case ServerBehaviourDelegate.REMOVED:
                 for (IModuleResource resource : getResources(module)) {
-                    execute(removeFileCommand(repository, resource));
+                    enqueue(batcher, removeFileCommand(repository, resource));
                 }
                 break;
         }
 
         // reorder the child nodes at the end, when all create/update/deletes have been processed
         for (IModuleResource resource : addedOrUpdatedResources) {
-            execute(reorderChildNodesCommand(repository, resource));
+            enqueue(batcher, reorderChildNodesCommand(repository, resource));
         }
 
+        execute(batcher);
 
         // set state to published
         super.publishModule(kind, deltaKind, module, monitor);
         setModulePublishState(module, IServer.PUBLISH_STATE_NONE);
 //        setServerPublishState(IServer.PUBLISH_STATE_NONE);
 	}
+
+    private void execute(Batcher batcher) throws CoreException {
+        for ( Command<?> command : batcher.get()) {
+            Result<?> result = command.execute();
+    
+            if (!result.isSuccess()) {
+                // TODO - proper error logging
+                throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, "Failed publishing path="
+                        + command.getPath() + ", result=" + result.toString()));
+            }
+        }
+    }
 
     /**
      * Ensures that the parent of this resource has been published to the repository
@@ -472,12 +488,13 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
      * @param allResources all of the module's resources
      * @param handledPaths the paths that have been handled already in this publish operation, but possibly not
      *            registered as published
+     * @param batcher 
      * @throws IOException
      * @throws SerializationException
      * @throws CoreException
      */
     private void ensureParentIsPublished(IModuleResource moduleResource, Repository repository,
-            IModuleResource[] allResources, Set<IPath> handledPaths)
+            IModuleResource[] allResources, Set<IPath> handledPaths, Batcher batcher)
             throws CoreException, SerializationException, IOException {
 
         Logger logger = Activator.getDefault().getPluginLogger();
@@ -503,9 +520,9 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
         for (IModuleResource maybeParent : allResources) {
             if (maybeParent.getModuleRelativePath().equals(parentPath)) {
                 // handle the parent's parent first, if needed
-                ensureParentIsPublished(maybeParent, repository, allResources, handledPaths);
+                ensureParentIsPublished(maybeParent, repository, allResources, handledPaths, batcher);
                 // create this resource
-                execute(addFileCommand(repository, maybeParent));
+                enqueue(batcher, addFileCommand(repository, maybeParent));
                 handledPaths.add(maybeParent.getModuleRelativePath());
                 logger.trace("Ensured that resource at path {0} is published", parentPath);
                 return;
@@ -517,18 +534,12 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
 
     }
 
-    private void execute(Command<?> command) throws CoreException {
+    private void enqueue(Batcher batcher, Command<?> command)  {
         if (command == null) {
             return;
         }
-        Result<?> result = command.execute();
-
-        if (!result.isSuccess()) {
-            // TODO - proper error logging
-            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, "Failed publishing path="
-                    + command.getPath() + ", result=" + result.toString()));
-        }
-
+        
+        batcher.add(command);
     }
 
     private Command<?> addFileCommand(Repository repository, IModuleResource resource) throws CoreException,

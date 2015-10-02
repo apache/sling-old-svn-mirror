@@ -6,8 +6,7 @@ scripting engine for [_Thymeleaf_](http://www.thymeleaf.org) templates
 Features
 --------
 
-* out of the box support for _legacy_ HTML5 through embedded _NekoHTML_
-* runtime configurable `TemplateModeHandler`s for _XML_, _VALIDXML_, _XHTML_, _VALIDXHTML_, _HTML5_ and _LEGACYHTML5_
+* simple non-caching `TemplateResolver` supporting `PatternSpec` configurations for all template modes (`HTML`, `XML`, `TEXT`, `JAVASCRIPT`, `CSS`) 
 * `ResourceResolver` backed by Sling's `ResourceResolver`
 * `MessageResolver` backed by `ResourceBundleProvider` from `org.apache.sling.i18n`
 * `SlingDialect`
@@ -20,8 +19,6 @@ For running Sling Scripting Thymeleaf with Sling's Launchpad some dependencies n
     mvn:org.apache.sling/org.apache.sling.i18n/2.2.10
     mvn:org.javassist/javassist/3.18.2-GA
     mvn:commons-io/commons-io/2.4
-    mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xerces/2.11.0_1
-    mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xmlresolver/1.2_5
 
 There is a feature for Karaf:
 
@@ -33,3 +30,4 @@ relevant Thymeleaf issues
 
 * [Create OSGi bundle](https://github.com/thymeleaf/thymeleaf/issues/32)
 * [Remove initialize() steps in extension points](https://github.com/thymeleaf/thymeleaf/issues/54)
+* [keep (custom) IContext accessible](https://github.com/thymeleaf/thymeleaf/issues/388)

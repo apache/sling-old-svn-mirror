@@ -39,6 +39,7 @@ import org.apache.sling.ide.serialization.SerializationKind;
 import org.apache.sling.ide.serialization.SerializationKindManager;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.Command;
+import org.apache.sling.ide.transport.CommandContext;
 import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryException;
@@ -91,13 +92,15 @@ public class ResourceChangeCommandFactory {
         if (rai == null) {
             return null;
         }
+        
+        CommandContext context = new CommandContext(ProjectUtil.loadFilter(resource.getProject()));
 
         if (rai.isOnlyWhenMissing()) {
-            return repository.newAddOrUpdateNodeCommand(rai.getInfo(), rai.getResource(),
+            return repository.newAddOrUpdateNodeCommand(context, rai.getInfo(), rai.getResource(),
                     Repository.CommandExecutionFlag.CREATE_ONLY_WHEN_MISSING);
         }
 
-        return repository.newAddOrUpdateNodeCommand(rai.getInfo(), rai.getResource());
+        return repository.newAddOrUpdateNodeCommand(context, rai.getInfo(), rai.getResource());
     }
 
     /**
@@ -259,8 +262,7 @@ public class ResourceChangeCommandFactory {
         String repositoryPath = resourceProxy != null ? resourceProxy.getPath() : getRepositoryPathForDeletedResource(
                 resource, contentSyncRoot);
 
-        FilterResult filterResult = filter.filter(ProjectUtil.getSyncDirectoryFile(resource.getProject()),
-                repositoryPath);
+        FilterResult filterResult = filter.filter(repositoryPath);
 
         Activator.getDefault().getPluginLogger().trace("Filter result for {0} for {1}", repositoryPath, filterResult);
 
@@ -557,7 +559,7 @@ public class ResourceChangeCommandFactory {
                     .trace("Found covering resource data ( repository path = {0} ) for resource at {1},  skipping deletion and performing an update instead",
                             coveringParentData.getPath(), resource.getFullPath());
             FileInfo info = createFileInfo(resource);
-            return repository.newAddOrUpdateNodeCommand(info, coveringParentData);
+            return repository.newAddOrUpdateNodeCommand(new CommandContext(filter), info, coveringParentData);
         }
         
         return repository.newDeleteNodeCommand(serializationManager.getRepositoryPath(resourceLocation));

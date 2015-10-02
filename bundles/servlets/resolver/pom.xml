@@ -24,12 +24,12 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>24</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.servlets.resolver</artifactId>
     <packaging>bundle</packaging>
-    <version>2.3.7-SNAPSHOT</version>
+    <version>2.3.9-SNAPSHOT</version>
 
     <name>Apache Sling Servlet Resolver</name>
     <description>

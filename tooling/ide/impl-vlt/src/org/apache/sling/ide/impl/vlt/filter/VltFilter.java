@@ -16,7 +16,6 @@
  */
 package org.apache.sling.ide.impl.vlt.filter;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -43,7 +42,7 @@ public class VltFilter implements Filter {
     }
 
     @Override
-    public FilterResult filter(File contentSyncRoot, String relativeFilePath) {
+    public FilterResult filter(String relativeFilePath) {
 
         if (relativeFilePath.length() > 0 && relativeFilePath.charAt(0) != '/') {
             relativeFilePath = '/' + relativeFilePath;

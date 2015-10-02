@@ -26,6 +26,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.eclipse.core.internal.Activator;
+import org.apache.sling.ide.serialization.SerializationManager;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -160,6 +161,9 @@ public class GenericJcrRootFile extends JcrNode {
 	}
 
     public void pickResources(List<IResource> membersList) {
+        
+        final SerializationManager serializationManager = Activator.getDefault().getSerializationManager();
+
         for (Iterator<IResource> it = membersList.iterator(); it.hasNext();) {
             final IResource resource = it.next();
 			final String resName = resource.getName();
@@ -171,7 +175,7 @@ public class GenericJcrRootFile extends JcrNode {
 			}
 			while(it2.hasNext()) {
                 JcrNode aChild = it2.next();
-				if (resName.equals(aChild.getName())) {
+				if (resName.equals(serializationManager.getOsPath(aChild.getName()))) {
 					// then pick this one
 					it.remove();
 					aChild.setResource(resource);

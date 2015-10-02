@@ -16,28 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.thymeleaf.internal.processor.attr;
+package org.apache.sling.scripting.thymeleaf.internal;
 
-public final class SlingUnwrapAttrProcessor extends SlingNodePropertyAttrProcessor {
+import java.util.Locale;
+import java.util.Map;
 
-    public static final int ATTR_PRECEDENCE = 99;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.scripting.thymeleaf.SlingContext;
+import org.thymeleaf.context.AbstractContext;
 
-    public static final String ATTR_NAME = "unwrap";
+public final class DefaultSlingContext extends AbstractContext implements SlingContext {
 
-    public static final String NODE_PROPERTY_NAME = String.format("%s.%s", PREFIX, ATTR_NAME);
+    private final ResourceResolver resourceResolver;
 
-    public SlingUnwrapAttrProcessor() {
-        super(ATTR_NAME);
+    public DefaultSlingContext(final ResourceResolver resourceResolver, final Locale locale, final Map<String, Object> variables) {
+        super(locale, variables);
+        this.resourceResolver = resourceResolver;
     }
 
     @Override
-    public int getPrecedence() {
-        return ATTR_PRECEDENCE;
-    }
-
-    @Override
-    protected String getNodePropertyName() {
-        return NODE_PROPERTY_NAME;
+    public ResourceResolver getResourceResolver() {
+        return resourceResolver;
     }
 
 }

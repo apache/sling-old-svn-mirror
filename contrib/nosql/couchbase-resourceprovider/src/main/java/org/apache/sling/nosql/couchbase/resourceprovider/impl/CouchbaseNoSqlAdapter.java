@@ -37,7 +37,6 @@ import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.DocumentAlreadyExistsException;
-import com.couchbase.client.java.query.Index;
 import com.couchbase.client.java.query.N1qlParams;
 import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.N1qlQueryResult;
@@ -63,8 +62,9 @@ public final class CouchbaseNoSqlAdapter extends AbstractNoSqlAdapter {
         this.cacheKeyPrefix = cacheKeyPrefix;
         
         // make sure primary index and index on parentPath is present - ignore error if it is already present
-        Index.createPrimaryIndex().on(couchbaseClient.getBucketName());
-        Index.createIndex(PN_PARENT_PATH).on(couchbaseClient.getBucketName(), x(PN_PARENT_PATH));
+        Bucket bucket = couchbaseClient.getBucket();
+        bucket.query(N1qlQuery.simple("CREATE PRIMARY INDEX ON `" + couchbaseClient.getBucketName() + "`"));
+        bucket.query(N1qlQuery.simple("CREATE INDEX " + PN_PARENT_PATH + " ON `" + couchbaseClient.getBucketName() + "`(" + PN_PARENT_PATH + ")"));
     }
 
     @Override
