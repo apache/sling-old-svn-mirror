@@ -18,12 +18,31 @@
  */
 package org.apache.sling.testing.mock.sling;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
+
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.query.Query;
 
+import org.apache.sling.api.resource.QueriableResourceProvider;
+import org.apache.sling.api.resource.ResourceProvider;
+import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory;
+import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
+import org.apache.sling.resourceresolver.impl.ResourceResolverFactoryActivator;
+import org.apache.sling.serviceusermapping.ServiceUserMapper;
+import org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl;
+import org.apache.sling.testing.mock.osgi.MockEventAdmin;
+import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.event.EventAdmin;
+
+import sun.util.BuddhistCalendar;
 
 /**
  * Initializes Sling Resource Resolver factories with JCR-resource mapping.
@@ -41,15 +60,118 @@ class ResourceResolverFactoryInitializer {
      */
     public static ResourceResolverFactory setUp(SlingRepository slingRepository, 
             BundleContext bundleContext, NodeTypeMode nodeTypeMode) {
-        ResourceResolverFactory factory;
-        if (slingRepository == null) {
-            factory = new MockNoneResourceResolverFactory(bundleContext);
-        }
-        else {
+        
+        if (slingRepository != null) {
+            // register JCR node types found in classpath
             registerJcrNodeTypes(slingRepository, nodeTypeMode);
-            factory = new MockJcrResourceResolverFactory(slingRepository, bundleContext);
+            
+            // register sling repository as OSGi service
+            bundleContext.registerService(SlingRepository.class.getName(), slingRepository, null);
+            
+            // initialize JCR resource provider factory
+            ensureJcrResourceProviderFactoryDependencies(bundleContext);
+            initializeJcrResourceProviderFactory(bundleContext);
         }
-        return factory;
+        
+        // initialize resource resolver factory activator
+        ensureResourceResolverFactoryActivatorDependencies(bundleContext);
+        initializeResourceResolverFactoryActivator(bundleContext);
+
+        ServiceReference factoryRef = bundleContext.getServiceReference(ResourceResolverFactory.class.getName());
+        if (factoryRef == null) {
+            throw new IllegalStateException("Unable to get ResourceResolverFactory.");
+        }
+        return (ResourceResolverFactory)bundleContext.getService(factoryRef);
+    }
+    
+    /**
+     * Ensure dependencies for JcrResourceProviderFactory are present.
+     * @param bundleContext Bundle context
+     */
+    private static void ensureJcrResourceProviderFactoryDependencies(BundleContext bundleContext) {
+        // setup PathMapper which is a mandatory service for JcrProviderFactory (since org.apache.sling.jcr.resource 2.5.4)
+        // use reflection to not depend on it if running with older version of org.apache.sling.jcr.resource
+        registerServiceIfFoundInClasspath(bundleContext, "org.apache.sling.jcr.resource.internal.helper.jcr.PathMapper");
+    }
+ 
+    /**
+     * Initialize JCR resource provider factory.
+     * @param bundleContext Bundle context
+     */
+    @SuppressWarnings("deprecation")
+    private static void initializeJcrResourceProviderFactory(BundleContext bundleContext) {
+        Dictionary<String, Object> config = new Hashtable<String, Object>();
+        config.put(ResourceProvider.ROOTS, new String[] { "/" });
+        config.put(QueriableResourceProvider.LANGUAGES, new String[] { Query.XPATH, Query.SQL, Query.JCR_SQL2 });
+
+        JcrResourceProviderFactory factory = new JcrResourceProviderFactory();
+        MockOsgi.injectServices(factory, bundleContext);
+        MockOsgi.activate(factory, bundleContext, config);
+        bundleContext.registerService(ResourceProviderFactory.class.getName(), factory, config);
+    }
+    
+    /**
+     * Ensure dependencies for ResourceResolverFactoryActivator are present.
+     * @param bundleContext Bundle context
+     */
+    private static void ensureResourceResolverFactoryActivatorDependencies(BundleContext bundleContext) {
+        registerServiceIfNotPresent(bundleContext, ServiceUserMapper.class, new ServiceUserMapperImpl());
+        registerServiceIfNotPresent(bundleContext, ResourceAccessSecurityTracker.class, new ResourceAccessSecurityTracker());
+        registerServiceIfNotPresent(bundleContext, EventAdmin.class, new MockEventAdmin());
+    }
+ 
+    /**
+     * Initialize resource resolver factory activator.
+     * @param bundleContext Bundle context
+     */
+    private static void initializeResourceResolverFactoryActivator(BundleContext bundleContext) {
+        Dictionary<String, Object> config = new Hashtable<String, Object>();
+        config.put(Constants.SERVICE_VENDOR, "sling-mock");
+        config.put(Constants.SERVICE_DESCRIPTION, "sling-mock");
+        config.put("resource.resolver.manglenamespaces", true);
+        config.put("resource.resolver.searchpath", new String[] { "/apps", "/libs" });
+        config.put("resource.resolver.required.providers", new String[0]);
+
+        ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
+        MockOsgi.injectServices(activator, bundleContext);
+        MockOsgi.activate(activator, bundleContext, config);
+        bundleContext.registerService(ResourceResolverFactoryActivator.class.getName(), activator, config);
+    }
+    
+    /**
+     * Registers a service if the service class is found in classpath,
+     * and if no service with this class is already registered.
+     * @param className Service class name
+     */
+    private static void registerServiceIfNotPresent(BundleContext bundleContext, Class<?> serviceClass, Object instance) {
+        if (bundleContext.getServiceReference(serviceClass.getName()) == null) {
+            Dictionary<String,Object> properties = new Hashtable<String, Object>();
+            MockOsgi.injectServices(instance, bundleContext);
+            MockOsgi.activate(instance, bundleContext, properties);
+            bundleContext.registerService(serviceClass.getName(), instance, properties);
+        }
+    }
+    
+    /**
+     * Registers a service if the service class is found in classpath,
+     * and if no service with this class is already registered.
+     * @param className Service class name
+     */
+    private static void registerServiceIfFoundInClasspath(BundleContext bundleContext, String className) {
+        try {
+            Class<?> serviceClass = Class.forName(className);
+            Object instance = serviceClass.newInstance();
+            registerServiceIfNotPresent(bundleContext, serviceClass, instance);
+        }
+        catch (ClassNotFoundException ex) {
+            // skip service registration
+        }
+        catch (InstantiationException e) {
+            // skip service registration
+        }
+        catch (IllegalAccessException e) {
+            // skip service registration
+        }
     }
     
     /**
