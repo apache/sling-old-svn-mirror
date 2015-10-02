@@ -163,7 +163,8 @@ public class SlingContextImpl extends OsgiContextImpl {
             this.resourceResolver.close();
         }
 
-        this.componentContext = null;
+        MockSling.clearAdapterManagerBundleContext();
+        
         this.resourceResolver = null;
         this.request = null;
         this.response = null;
@@ -171,8 +172,6 @@ public class SlingContextImpl extends OsgiContextImpl {
         this.contentLoader = null;
         this.contentBuilder = null;
         this.uniqueRoot = null;
-
-        MockSling.clearAdapterManagerBundleContext();
         
         super.tearDown();
     }
