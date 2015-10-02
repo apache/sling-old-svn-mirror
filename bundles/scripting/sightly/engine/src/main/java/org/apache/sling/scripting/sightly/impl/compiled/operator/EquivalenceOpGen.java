@@ -44,12 +44,10 @@ public class EquivalenceOpGen implements BinaryOpGen {
     @Override
     public void generate(JavaSource source, ExpressionTranslator visitor, TypedNode left, TypedNode right) {
         Type type = OpHelper.sameType(left, right);
-        if (type != null && OpHelper.isNumericType(type) || type == Type.BOOLEAN) {
+        if (type != null && OpHelper.isNumericType(type) || type == Type.BOOLEAN || type == Type.UNKNOWN) {
             generateEqualsOperator(source, visitor, left.getNode(), right.getNode());
         } else if (type != Type.UNKNOWN) {
             generateEqualsMethod(source, visitor, left, right);
-        } else {
-            generateCheckedEquals(source, visitor, left, right);
         }
     }
 
@@ -61,6 +59,7 @@ public class EquivalenceOpGen implements BinaryOpGen {
         source.equality().nullLiteral();
         source.conditionalBranchSep();
         generateEqualsMethod(source, visitor, leftNode, rightNode);
+        source.endExpression();
     }
 
     private void generateEqualsMethod(JavaSource source, SideEffectVisitor visitor, TypedNode leftNode, TypedNode rightNode) {

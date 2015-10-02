@@ -26,7 +26,7 @@ import org.apache.sling.scripting.sightly.impl.compiler.ris.Command;
 import org.apache.sling.scripting.sightly.impl.compiler.ris.CommandVisitor;
 
 /**
- * Commands that delimitate a procedure
+ * Commands that delimit a procedure
  */
 public class Procedure {
 
