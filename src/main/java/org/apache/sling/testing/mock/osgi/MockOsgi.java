@@ -258,4 +258,11 @@ public final class MockOsgi {
         return OsgiServiceUtil.modified(target, bundleContext, mergedProperties);
     }
     
+    /**
+     * Deactivates all bundles registered in the mocked bundle context.
+     */
+    public static void shutdown(BundleContext bundleContext) {
+        ((MockBundleContext)bundleContext).shutdown();
+    }
+    
 }
