@@ -364,7 +364,7 @@ public class RenderUtils {
 
     private static final Set<Class<?>> primitiveClasses = primitiveClasses();
 
-    private static boolean isPrimitive(Object obj) {
+    public static boolean isPrimitive(Object obj) {
         return primitiveClasses.contains(obj.getClass());
     }
 
