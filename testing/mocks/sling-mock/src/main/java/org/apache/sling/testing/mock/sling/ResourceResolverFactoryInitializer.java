@@ -42,8 +42,6 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.event.EventAdmin;
 
-import sun.util.BuddhistCalendar;
-
 /**
  * Initializes Sling Resource Resolver factories with JCR-resource mapping.
  */

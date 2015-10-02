@@ -87,7 +87,7 @@ public class MockSlingHttpServletRequestTest {
 
     @Test
     public void testDefaultResourceResolver() {
-        assertNotNull(new MockSlingHttpServletRequest().getResourceResolver());
+        assertNotNull(new MockSlingHttpServletRequest(bundleContext).getResourceResolver());
     }
 
     @Test
