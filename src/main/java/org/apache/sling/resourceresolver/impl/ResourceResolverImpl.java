@@ -100,6 +100,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /** Resource resolver context. */
     private final ResourceResolverContext context;
 
+    private Exception closedResolverException;
+
     /**
      * The resource resolver context.
      */
@@ -150,6 +152,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      */
     @Override
     public void close() {
+        closedResolverException = new Exception("Stack Trace");
         if ( this.isClosed.compareAndSet(false, true)) {
             this.factory.unregister(this, this.context);
         }
@@ -163,6 +166,9 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      */
     private void checkClosed() {
         if (this.isClosed.get()) {
+            if (closedResolverException != null) {
+                logger.error("The ResourceResolver has already been closed.", closedResolverException);
+            }
             throw new IllegalStateException("Resource resolver is already closed.");
         }
         if (!this.factory.isLive()) {
