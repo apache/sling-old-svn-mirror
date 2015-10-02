@@ -295,7 +295,7 @@ class MockBundleContext implements BundleContext {
      * Deactivates all bundles registered in this mocked bundle context.
      */
     public void shutdown() {
-        for (MockServiceRegistration serviceRegistration : ImmutableList.copyOf(registeredServices)) {
+        for (MockServiceRegistration serviceRegistration : ImmutableList.copyOf(registeredServices).reverse()) {
             try {
                 MockOsgi.deactivate(serviceRegistration.getService(), this, serviceRegistration.getProperties());
             }
