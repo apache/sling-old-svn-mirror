@@ -36,12 +36,10 @@ import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.settings.SlingSettingsService;
-import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.apache.sling.testing.mock.sling.loader.ContentLoader;
 import org.apache.sling.testing.mock.sling.services.MockMimeTypeService;
-import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletRequest;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -112,11 +110,9 @@ public abstract class AbstractSlingContextImplTest {
     public void testSlingModelsOsgiService() {
         context.registerService(new MockMimeTypeService());
 
-        ResourceResolver resolver = MockSling.newResourceResolver();
-        OsgiServiceModel model = resolver.adaptTo(OsgiServiceModel.class);
+        OsgiServiceModel model = context.resourceResolver().adaptTo(OsgiServiceModel.class);
         assertNotNull(model.getMimeTypeService());
         assertEquals("text/html", model.getMimeTypeService().getMimeType("html"));
-        resolver.close();
     }
 
     @Test
@@ -127,9 +123,8 @@ public abstract class AbstractSlingContextImplTest {
 
     @Test
     public void testAdaptToInterface() {
-        MockSlingHttpServletRequest request = new MockSlingHttpServletRequest();
-        request.setAttribute("prop1", "myValue");
-        ServiceInterface model = request.adaptTo(ServiceInterface.class);
+        context.request().setAttribute("prop1", "myValue");
+        ServiceInterface model = context.request().adaptTo(ServiceInterface.class);
         assertNotNull(model);
         assertEquals("myValue", model.getPropValue());
     }
