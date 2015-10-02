@@ -38,34 +38,27 @@ import org.apache.sling.models.annotations.Model;
 import org.apache.sling.settings.SlingSettingsService;
 import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
+import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.apache.sling.testing.mock.sling.loader.ContentLoader;
 import org.apache.sling.testing.mock.sling.services.MockMimeTypeService;
 import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletRequest;
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 public abstract class AbstractSlingContextImplTest {
 
-    private SlingContextImpl context;
+    @Rule
+    public SlingContext context = new SlingContext(getResourceResolverType());
 
     @Before
     public void setUp() throws Exception {
-        this.context = new SlingContextImpl();
-        this.context.setResourceResolverType(getResourceResolverType());
-        this.context.setUp();
-
         context.addModelsForPackage("org.apache.sling.testing.mock.sling.context");
         
         ContentLoader contentLoader = this.context.load();
         contentLoader.json("/json-import-samples/content.json", "/content/sample/en");
     }
 
-    @After
-    public void tearDown() throws Exception {
-        this.context.tearDown();
-    }
-    
     protected abstract ResourceResolverType getResourceResolverType();
     
     @Test

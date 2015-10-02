@@ -54,6 +54,7 @@ public class MockSlingScriptHelperTest {
     @After
     public void tearDown() {
         this.resourceResolver.close();
+        MockOsgi.shutdown(this.bundleContext);
     }
 
     @Test

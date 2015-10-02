@@ -21,6 +21,7 @@ package org.apache.sling.testing.mock.sling;
 import static org.junit.Assert.assertNotNull;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.testing.mock.jcr.MockJcr;
@@ -38,9 +39,17 @@ public class MockSlingRepositoryTest {
 
     @SuppressWarnings("deprecation")
     @Test
-    public void testLogin() throws RepositoryException {
-        assertNotNull(this.repository.loginAdministrative(MockJcr.DEFAULT_WORKSPACE));
-        assertNotNull(this.repository.loginService("test", MockJcr.DEFAULT_WORKSPACE));
+    public void testLoginAdministrative() throws RepositoryException {
+        Session session = this.repository.loginAdministrative(MockJcr.DEFAULT_WORKSPACE);
+        assertNotNull(session);
+        session.logout();
+    }
+
+    @Test
+    public void testLoginService() throws RepositoryException {
+        Session session = this.repository.loginService("test", MockJcr.DEFAULT_WORKSPACE);
+        assertNotNull(session);
+        session.logout();
     }
 
 }

@@ -25,7 +25,6 @@ import org.junit.Test;
 
 public class SlingContextDefaultRRTypeTest {
 
-    // Run all unit tests for each resource resolver types listed here
     @Rule
     public SlingContext context = new SlingContext();
 
