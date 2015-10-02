@@ -19,5 +19,5 @@
 /**
  * Sling Mock Jackrabbit Oak-based Resource Resolver
  */
-@aQute.bnd.annotation.Version("0.1")
+@aQute.bnd.annotation.Version("1.0")
 package org.apache.sling.testing.mock.sling.oak;

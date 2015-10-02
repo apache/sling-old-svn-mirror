@@ -18,6 +18,9 @@
  */
 package org.apache.sling.testing.mock.sling.oak;
 
+import java.lang.reflect.Field;
+import java.util.concurrent.ExecutorService;
+
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
 import javax.jcr.NoSuchWorkspaceException;
@@ -27,25 +30,66 @@ import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import javax.jcr.Value;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Service;
+import org.apache.jackrabbit.api.JackrabbitRepository;
+import org.apache.jackrabbit.oak.Oak;
+import org.apache.jackrabbit.oak.jcr.Jcr;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.osgi.service.component.ComponentContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public final class RepositoryWrapper implements SlingRepository {
+@Component
+@Service(SlingRepository.class)
+public final class OakMockSlingRepository implements SlingRepository {
 
     private static final String ADMIN_NAME = "admin";
     private static final String ADMIN_PASSWORD = "admin";
 
-    protected final Repository wrapped;
-
-    public RepositoryWrapper(Repository r) {
-        wrapped = r;
+    private Oak oak;
+    private Repository repository;
+    
+    private static final Logger log = LoggerFactory.getLogger(OakMockSlingRepository.class);
+    
+    @Activate
+    protected void activate(ComponentContext componentContext) {
+        this.oak = new Oak();
+        Jcr jcr = new Jcr(oak).with(new ExtraSlingContent());
+        this.repository = jcr.createRepository();
     }
 
+    @Deactivate
+    protected void deactivate(ComponentContext componentContext) {
+        // shutdown OAK JCR repository
+        ((JackrabbitRepository)repository).shutdown();
+        
+        // shutdown further OAK executor services via reflection
+        shutdownExecutorService("executor");
+        shutdownExecutorService("scheduledExecutor");
+    }
+    
+    private void shutdownExecutorService(String fieldName) {
+        try {
+            Field executorField = Oak.class.getDeclaredField(fieldName); 
+            executorField.setAccessible(true);
+            ExecutorService executor = (ExecutorService)executorField.get(this.oak);
+            executor.shutdownNow();
+        }
+        catch (ReflectiveOperationException ex) {
+            log.error("Memory leak: Unable to shutdown executor service from field '" + fieldName + "' in " + this.oak, ex);
+        }
+    }
+
+
     public String getDescriptor(String key) {
-        return wrapped.getDescriptor(key);
+        return repository.getDescriptor(key);
     }
 
     public String[] getDescriptorKeys() {
-        return wrapped.getDescriptorKeys();
+        return repository.getDescriptorKeys();
     }
 
     public String getDefaultWorkspace() {
@@ -53,22 +97,22 @@ public final class RepositoryWrapper implements SlingRepository {
     }
 
     public Session login() throws LoginException, RepositoryException {
-        return wrapped.login();
+        return repository.login();
     }
 
     public Session login(Credentials credentials, String workspaceName) 
             throws LoginException, NoSuchWorkspaceException, RepositoryException {
-        return wrapped.login(credentials, (workspaceName == null ? getDefaultWorkspace() : workspaceName));
+        return repository.login(credentials, (workspaceName == null ? getDefaultWorkspace() : workspaceName));
     }
 
     public Session login(Credentials credentials) 
             throws LoginException, RepositoryException {
-        return wrapped.login(credentials);
+        return repository.login(credentials);
     }
 
     public Session login(String workspaceName) 
             throws LoginException, NoSuchWorkspaceException, RepositoryException {
-        return wrapped.login((workspaceName == null ? getDefaultWorkspace() : workspaceName));
+        return repository.login((workspaceName == null ? getDefaultWorkspace() : workspaceName));
     }
 
     public Session loginAdministrative(String workspaceName) 
@@ -84,19 +128,19 @@ public final class RepositoryWrapper implements SlingRepository {
     }
     
     public Value getDescriptorValue(String key) {
-        return wrapped.getDescriptorValue(key);
+        return repository.getDescriptorValue(key);
     }
 
     public Value[] getDescriptorValues(String key) {
-        return wrapped.getDescriptorValues(key);
+        return repository.getDescriptorValues(key);
     }
 
     public boolean isSingleValueDescriptor(String key) {
-        return wrapped.isSingleValueDescriptor(key);
+        return repository.isSingleValueDescriptor(key);
     }
 
     public boolean isStandardDescriptor(String key) {
-        return wrapped.isStandardDescriptor(key);
+        return repository.isStandardDescriptor(key);
     }
 
 }
