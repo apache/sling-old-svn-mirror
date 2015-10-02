@@ -26,18 +26,25 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.testing.mock.jcr.MockJcr;
+import org.osgi.service.component.ComponentContext;
 
 /**
  * Mock {@link SlingRepository} implementation.
  */
-class MockJcrSlingRepository implements SlingRepository {
+@Component
+@Service(SlingRepository.class)
+public final class MockJcrSlingRepository implements SlingRepository {
 
-    private final Repository delegate;
-
-    public MockJcrSlingRepository(final Repository delegate) {
-        this.delegate = delegate;
+    private Repository repository;
+    
+    @Activate
+    protected void activate(ComponentContext componentContext) {
+        repository = MockJcr.newRepository();
     }
 
     @Override
@@ -59,54 +66,54 @@ class MockJcrSlingRepository implements SlingRepository {
     // delegated methods
     @Override
     public String[] getDescriptorKeys() {
-        return this.delegate.getDescriptorKeys();
+        return this.repository.getDescriptorKeys();
     }
 
     @Override
     public boolean isStandardDescriptor(final String key) {
-        return this.delegate.isStandardDescriptor(key);
+        return this.repository.isStandardDescriptor(key);
     }
 
     @Override
     public boolean isSingleValueDescriptor(final String key) {
-        return this.delegate.isSingleValueDescriptor(key);
+        return this.repository.isSingleValueDescriptor(key);
     }
 
     @Override
     public Value getDescriptorValue(final String key) {
-        return this.delegate.getDescriptorValue(key);
+        return this.repository.getDescriptorValue(key);
     }
 
     @Override
     public Value[] getDescriptorValues(final String key) {
-        return this.delegate.getDescriptorValues(key);
+        return this.repository.getDescriptorValues(key);
     }
 
     @Override
     public String getDescriptor(final String key) {
-        return this.delegate.getDescriptor(key);
+        return this.repository.getDescriptor(key);
     }
 
     @Override
     public Session login(final Credentials credentials, final String workspaceName) throws LoginException,
             NoSuchWorkspaceException, RepositoryException {
-        return this.delegate.login(credentials, workspaceName);
+        return this.repository.login(credentials, workspaceName);
     }
 
     @Override
     public Session login(final Credentials credentials) throws LoginException, RepositoryException {
-        return this.delegate.login(credentials);
+        return this.repository.login(credentials);
     }
 
     @Override
     public Session login(final String workspaceName) throws LoginException, NoSuchWorkspaceException,
             RepositoryException {
-        return this.delegate.login(workspaceName);
+        return this.repository.login(workspaceName);
     }
 
     @Override
     public Session login() throws LoginException, RepositoryException {
-        return this.delegate.login();
+        return this.repository.login();
     }
 
 }

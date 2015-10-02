@@ -60,11 +60,11 @@ class ResourceResolverFactoryInitializer {
             BundleContext bundleContext, NodeTypeMode nodeTypeMode) {
         
         if (slingRepository != null) {
+            // register sling repository as OSGi service
+            registerServiceIfNotPresent(bundleContext, SlingRepository.class, slingRepository);
+            
             // register JCR node types found in classpath
             registerJcrNodeTypes(slingRepository, nodeTypeMode);
-            
-            // register sling repository as OSGi service
-            bundleContext.registerService(SlingRepository.class.getName(), slingRepository, null);
             
             // initialize JCR resource provider factory
             ensureJcrResourceProviderFactoryDependencies(bundleContext);

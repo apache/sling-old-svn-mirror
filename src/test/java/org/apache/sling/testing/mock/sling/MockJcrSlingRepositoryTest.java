@@ -25,18 +25,23 @@ import javax.jcr.Session;
 
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.testing.mock.jcr.MockJcr;
+import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class MockJcrSlingRepositoryTest {
 
+    @Rule
+    public OsgiContext context = new OsgiContext();
+    
     private SlingRepository repository;
 
     @Before
     public void setUp() {
-        this.repository = new MockJcrSlingRepository(MockJcr.newRepository());
+        this.repository = context.registerInjectActivateService(new MockJcrSlingRepository());
     }
-
+    
     @SuppressWarnings("deprecation")
     @Test
     public void testLoginAdministrative() throws RepositoryException {
