@@ -42,11 +42,11 @@ public class SourceIdentifierTest {
 
     @Test
     public void testGetPackageName() throws Exception {
-        assertEquals("apps.blah.static_.foo", sourceIdentifier.getPackageName());
+        assertEquals("apps.blah._static.foo", sourceIdentifier.getPackageName());
     }
 
     @Test
     public void testGetFullyQualifiedName() throws Exception {
-        assertEquals("apps.blah.static_.foo.SightlyJava_foo", sourceIdentifier.getFullyQualifiedName());
+        assertEquals("apps.blah._static.foo.SightlyJava_foo", sourceIdentifier.getFullyQualifiedName());
     }
 }
