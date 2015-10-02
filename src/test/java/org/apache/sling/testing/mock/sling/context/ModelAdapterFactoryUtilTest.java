@@ -32,7 +32,6 @@ import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.apache.sling.testing.mock.sling.services.MockMimeTypeService;
 import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletRequest;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -46,11 +45,6 @@ public class ModelAdapterFactoryUtilTest {
     public void setUp() throws Exception {
         // scan for @Model classes
         context.addModelsForPackage("org.apache.sling.testing.mock.sling.context");
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        MockSling.clearAdapterManagerBundleContext();
     }
 
     @Test

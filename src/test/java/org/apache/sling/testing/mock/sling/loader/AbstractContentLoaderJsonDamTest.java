@@ -32,29 +32,33 @@ import javax.jcr.Session;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.NodeTypeDefinitionScanner;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
+import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 
 public abstract class AbstractContentLoaderJsonDamTest {
 
-    private ResourceResolver resourceResolver;
+    @Rule
+    public SlingContext context = new SlingContext(getResourceResolverType());
 
     protected abstract ResourceResolverType getResourceResolverType();
 
-    protected ResourceResolver newResourceResolver() {
-        ResourceResolver resolver = MockSling.newResourceResolver(getResourceResolverType());
+    private String path;
+    
+    @Before
+    public void setUp() {
+        path = context.uniqueRoot().content() + "/dam";
 
         try {
-            NodeTypeDefinitionScanner.get().register(resolver.adaptTo(Session.class), 
+            NodeTypeDefinitionScanner.get().register(context.resourceResolver().adaptTo(Session.class), 
                     ImmutableList.of("SLING-INF/nodetypes/app.cnd"),
                     getResourceResolverType().getNodeTypeMode());
         }
@@ -62,33 +66,19 @@ public abstract class AbstractContentLoaderJsonDamTest {
             throw new RuntimeException("Unable to register namespaces.", ex);
         }
 
-        return resolver;
-    }
-
-    @Before
-    public final void setUp() {
-        this.resourceResolver = newResourceResolver();
-        ContentLoader contentLoader = new ContentLoader(this.resourceResolver);
-        contentLoader.json("/json-import-samples/dam.json", "/content/dam/sample");
+        context.load().json("/json-import-samples/dam.json", path + "/sample");
     }
 
     @After
     public final void tearDown() throws Exception {
         // make sure all changes from ContentLoader are committed
-        assertFalse(resourceResolver.hasChanges());
-        // remove everything below /content
-        Resource content = resourceResolver.getResource("/content");
-        if (content != null) {
-            resourceResolver.delete(content);
-            resourceResolver.commit();
-        }
-        this.resourceResolver.close();
+        assertFalse(context.resourceResolver().hasChanges());
     }
             
     @Test
     public void testDamAssetMetadata() throws IOException {
-        Resource assetMetadata = this.resourceResolver
-                .getResource("/content/dam/sample/portraits/scott_reynolds.jpg/jcr:content/metadata");
+        Resource assetMetadata = context.resourceResolver()
+                .getResource(path + "/sample/portraits/scott_reynolds.jpg/jcr:content/metadata");
         ValueMap props = ResourceUtil.getValueMap(assetMetadata);
 
         assertEquals("Canon\u0000", props.get("tiff:Make", String.class));
@@ -100,8 +90,8 @@ public abstract class AbstractContentLoaderJsonDamTest {
                 "properties:orientation/landscape" }, props.get("app:tags", String[].class));
 
         // validate that a binary data node is present, but empty
-        Resource binaryMetadata = this.resourceResolver
-                .getResource("/content/dam/sample/portraits/scott_reynolds.jpg/jcr:content/renditions/original/jcr:content");
+        Resource binaryMetadata = context.resourceResolver()
+                .getResource(path + "/sample/portraits/scott_reynolds.jpg/jcr:content/renditions/original/jcr:content");
         ValueMap binaryProps = ResourceUtil.getValueMap(binaryMetadata);
         InputStream is = binaryProps.get(JcrConstants.JCR_DATA, InputStream.class);
         assertNotNull(is);
