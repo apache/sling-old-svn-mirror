@@ -25,6 +25,7 @@ import org.osgi.framework.BundleContext;
  * Uses real Sling ResourceResolverFactory in simulated OSGi environment.
  * Resource Resolver factory has no ResourceProvider registered; you have to registere one yourself to do anything useful with it. 
  */
+@Deprecated
 class MockNoneResourceResolverFactory extends AbstractMockResourceResolverFactory {
 
     public MockNoneResourceResolverFactory(BundleContext bundleContext) {

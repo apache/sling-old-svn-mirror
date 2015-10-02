@@ -28,13 +28,13 @@ import org.apache.sling.testing.mock.jcr.MockJcr;
 import org.junit.Before;
 import org.junit.Test;
 
-public class MockSlingRepositoryTest {
+public class MockJcrSlingRepositoryTest {
 
     private SlingRepository repository;
 
     @Before
     public void setUp() {
-        this.repository = new MockSlingRepository(MockJcr.newRepository());
+        this.repository = new MockJcrSlingRepository(MockJcr.newRepository());
     }
 
     @SuppressWarnings("deprecation")

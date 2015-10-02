@@ -39,6 +39,7 @@ import org.osgi.framework.BundleContext;
  * Uses real Sling ResourceResolverFactory in simulated OSGi environment
  * with a mocked JCR repository implementation underneath.
  */
+@Deprecated
 class MockJcrResourceResolverFactory extends AbstractMockResourceResolverFactory {
 
     private final SlingRepository slingRepository;
@@ -48,7 +49,6 @@ class MockJcrResourceResolverFactory extends AbstractMockResourceResolverFactory
         this.slingRepository = repository;
     }
 
-    @SuppressWarnings("deprecation")
     protected ResourceResolver getResourceResolverInternal(Map<String, Object> authenticationInfo, boolean isAdmin) throws LoginException {
         // setup mocked JCR environment
         if (bundleContext.getServiceReference(SlingRepository.class.getName()) == null) {

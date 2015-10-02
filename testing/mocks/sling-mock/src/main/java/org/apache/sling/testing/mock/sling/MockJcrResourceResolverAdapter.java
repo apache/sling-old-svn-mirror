@@ -38,7 +38,7 @@ class MockJcrResourceResolverAdapter implements ResourceResolverTypeAdapter {
     @Override
     public SlingRepository newSlingRepository() {
         Repository repository = MockJcr.newRepository();
-        return new MockSlingRepository(repository);
+        return new MockJcrSlingRepository(repository);
     }
 
 }

@@ -18,9 +18,6 @@
  */
 package org.apache.sling.testing.mock.sling;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.adapter.SlingAdaptable;
@@ -76,38 +73,11 @@ public final class MockSling {
         ResourceResolverFactory factory = adapter.newResourceResolverFactory();
         if (factory == null) {
             SlingRepository repository = adapter.newSlingRepository();
-            if (repository == null) {
-                factory = new MockNoneResourceResolverFactory(bundleContext);
-            }
-            else {
-                registerJcrNodeTypes(repository, type);
-                factory = new MockJcrResourceResolverFactory(repository, bundleContext);
-            }
+            factory = ResourceResolverFactoryInitializer.setUp(repository, bundleContext, type.getNodeTypeMode());
         }
         return factory;
     }
 
-    /**
-     * Registers all JCR node types found in classpath.
-     * @param slingRepository Sling repository
-     */
-    @SuppressWarnings("deprecation")
-    private static void registerJcrNodeTypes(final SlingRepository slingRepository, final ResourceResolverType type) {
-      Session session = null;
-      try {
-          session =  slingRepository.loginAdministrative(null);
-          NodeTypeDefinitionScanner.get().register(session, type.getNodeTypeMode());
-      }
-      catch (RepositoryException ex) {
-          throw new RuntimeException("Error registering JCR nodetypes: " + ex.getMessage(), ex);
-      }
-      finally {
-          if (session != null) {
-              session.logout();
-          }
-      }
-    }
-    
     private static ResourceResolverTypeAdapter getResourceResolverTypeAdapter(final ResourceResolverType type) {
         try {
             Class clazz = Class.forName(type.getResourceResolverTypeAdapterClass());

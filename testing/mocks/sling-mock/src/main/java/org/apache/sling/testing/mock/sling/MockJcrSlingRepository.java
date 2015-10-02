@@ -32,11 +32,11 @@ import org.apache.sling.testing.mock.jcr.MockJcr;
 /**
  * Mock {@link SlingRepository} implementation.
  */
-class MockSlingRepository implements SlingRepository {
+class MockJcrSlingRepository implements SlingRepository {
 
     private final Repository delegate;
 
-    public MockSlingRepository(final Repository delegate) {
+    public MockJcrSlingRepository(final Repository delegate) {
         this.delegate = delegate;
     }
 
