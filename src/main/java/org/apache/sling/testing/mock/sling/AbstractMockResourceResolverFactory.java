@@ -40,6 +40,7 @@ import org.osgi.service.event.EventAdmin;
  * Mock {@link ResourceResolverFactory} implementation.
  * Uses real Sling ResourceResolverFactory in simulated OSGi environment. 
  */
+@Deprecated
 abstract class AbstractMockResourceResolverFactory implements ResourceResolverFactory {
 
     protected final BundleContext bundleContext;
