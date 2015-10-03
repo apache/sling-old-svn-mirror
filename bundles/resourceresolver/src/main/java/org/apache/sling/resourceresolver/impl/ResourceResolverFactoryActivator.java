@@ -243,6 +243,14 @@ public class ResourceResolverFactoryActivator implements Runnable {
                           + "for memory leaks caused by objects hold from that resource provider.")
     private static final String PROP_PARANOID_PROVIDER_HANDLING = "resource.resolver.providerhandling.paranoid";
 
+    private static final boolean DEFAULT_LOG_RESOURCE_RESOLVER_CLOSING = false;
+    @Property(boolValue = DEFAULT_LOG_RESOURCE_RESOLVER_CLOSING,
+              label = "Log resource resolver closing",
+              description = "When enabled CRUD operations with a closed resource resolver will log a stack trace " +
+                  "with the point where the used resolver was closed. It's advisable to not enable this feature on " +
+                  "production systems.")
+    private static final String PROP_LOG_RESOURCE_RESOLVER_CLOSING = "resource.resolver.log.closing";
+
     /** Tracker for the resource decorators. */
     private final ResourceDecoratorTracker resourceDecoratorTracker = new ResourceDecoratorTracker();
 
@@ -300,6 +308,9 @@ public class ResourceResolverFactoryActivator implements Runnable {
 
     /** vanity paths will have precedence over existing /etc/map mapping? */
     private boolean vanityPathPrecedence = DEFAULT_VANITY_PATH_PRECEDENCE;
+
+    /** log the place where a resource resolver is closed */
+    private boolean logResourceResolverClosing = DEFAULT_LOG_RESOURCE_RESOLVER_CLOSING;
 
 
     /** Vanity path whitelist */
@@ -413,6 +424,10 @@ public class ResourceResolverFactoryActivator implements Runnable {
         return this.vanityBloomFilterMaxBytes;
     }
 
+    public boolean shouldLogResourceResolverClosing() {
+        return logResourceResolverClosing;
+    }
+
     // ---------- SCR Integration ---------------------------------------------
 
     /**
@@ -521,6 +536,8 @@ public class ResourceResolverFactoryActivator implements Runnable {
         this.vanityBloomFilterMaxBytes = PropertiesUtil.toInteger(properties.get(PROP_VANITY_BLOOM_FILTER_MAX_BYTES), DEFAULT_VANITY_BLOOM_FILTER_MAX_BYTES);
 
         this.vanityPathPrecedence = PropertiesUtil.toBoolean(properties.get(PROP_VANITY_PATH_PRECEDENCE), DEFAULT_VANITY_PATH_PRECEDENCE);
+        this.logResourceResolverClosing = PropertiesUtil.toBoolean(properties.get(PROP_LOG_RESOURCE_RESOLVER_CLOSING),
+            DEFAULT_LOG_RESOURCE_RESOLVER_CLOSING);
 
         final BundleContext bc = componentContext.getBundleContext();
 

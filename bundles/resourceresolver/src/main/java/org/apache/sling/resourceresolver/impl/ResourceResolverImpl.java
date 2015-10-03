@@ -100,7 +100,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /** Resource resolver context. */
     private final ResourceResolverContext context;
 
-    private Exception closedResolverException;
+    private volatile Exception closedResolverException;
 
     /**
      * The resource resolver context.
@@ -152,7 +152,9 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      */
     @Override
     public void close() {
-        closedResolverException = new Exception("Stack Trace");
+        if (factory.shouldLogResourceResolverClosing()) {
+            closedResolverException = new Exception("Stack Trace");
+        }
         if ( this.isClosed.compareAndSet(false, true)) {
             this.factory.unregister(this, this.context);
         }
