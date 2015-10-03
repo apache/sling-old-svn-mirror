@@ -112,9 +112,6 @@ public class SlingContextImpl extends OsgiContextImpl {
      */
     protected void registerDefaultServices() {
 
-        // resource resolver factory
-        registerService(ResourceResolverFactory.class, this.resourceResolverFactory);
-        
         // adapter factories
         registerInjectActivateService(new ModelAdapterFactory());
 
