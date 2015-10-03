@@ -113,7 +113,10 @@ class ResourceResolverFactoryInitializer {
      * @param bundleContext Bundle context
      */
     private static void ensureResourceResolverFactoryActivatorDependencies(BundleContext bundleContext) {
-        registerServiceIfNotPresent(bundleContext, ServiceUserMapper.class, new ServiceUserMapperImpl());
+        Dictionary<String, Object> config = new Hashtable<String, Object>();
+        config.put("user.mapping", bundleContext.getBundle().getSymbolicName() + "=admin");
+        registerServiceIfNotPresent(bundleContext, ServiceUserMapper.class, new ServiceUserMapperImpl(), config);
+        
         registerServiceIfNotPresent(bundleContext, ResourceAccessSecurityTracker.class, new ResourceAccessSecurityTracker());
         registerServiceIfNotPresent(bundleContext, EventAdmin.class, new MockEventAdmin());
     }
@@ -140,13 +143,27 @@ class ResourceResolverFactoryInitializer {
      * Registers a service if the service class is found in classpath,
      * and if no service with this class is already registered.
      * @param className Service class name
+     * @param serviceClass Service class
+     * @param instance Service instance
      */
-    private static void registerServiceIfNotPresent(BundleContext bundleContext, Class<?> serviceClass, Object instance) {
+    private static void registerServiceIfNotPresent(BundleContext bundleContext, Class<?> serviceClass, 
+            Object instance) {
+        registerServiceIfNotPresent(bundleContext, serviceClass, instance, new Hashtable<String, Object>());
+    }
+    /**
+     * Registers a service if the service class is found in classpath,
+     * and if no service with this class is already registered.
+     * @param className Service class name
+     * @param serviceClass Service class
+     * @param instance Service instance
+     * @param config OSGi config
+     */
+    private static void registerServiceIfNotPresent(BundleContext bundleContext, Class<?> serviceClass, 
+            Object instance, Dictionary<String, Object> config) {
         if (bundleContext.getServiceReference(serviceClass.getName()) == null) {
-            Dictionary<String,Object> properties = new Hashtable<String, Object>();
             MockOsgi.injectServices(instance, bundleContext);
-            MockOsgi.activate(instance, bundleContext, properties);
-            bundleContext.registerService(serviceClass.getName(), instance, properties);
+            MockOsgi.activate(instance, bundleContext, config);
+            bundleContext.registerService(serviceClass.getName(), instance, config);
         }
     }
     
