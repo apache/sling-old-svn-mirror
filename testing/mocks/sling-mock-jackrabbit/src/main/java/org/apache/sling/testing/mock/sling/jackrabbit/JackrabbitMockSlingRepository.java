@@ -58,7 +58,8 @@ public final class JackrabbitMockSlingRepository implements SlingRepository {
     }
 
     public Session loginService(String subServiceName, String workspace) throws LoginException, RepositoryException {
-        return delegate.loginService(subServiceName, workspace);
+        // fallback to loginAdministrative
+        return loginAdministrative(workspace);
     }
 
     public String[] getDescriptorKeys() {
