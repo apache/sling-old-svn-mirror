@@ -99,7 +99,7 @@ public class OsgiServiceUtilTest {
         assertEquals(1, reference3Configs.size());
         assertEquals(200, reference3Configs.get(0).get(Constants.SERVICE_RANKING));
 
-        assertTrue(MockOsgi.deactivate(service3));
+        assertTrue(MockOsgi.deactivate(service3, bundleContext));
         assertNull(service3.getComponentContext());
     }
 
@@ -128,7 +128,7 @@ public class OsgiServiceUtilTest {
         Service4 service4 = new Service4();
 
         assertTrue(MockOsgi.injectServices(service4, bundleContext));
-        assertFalse(MockOsgi.activate(service4));
+        assertFalse(MockOsgi.activate(service4, bundleContext));
 
         assertSame(service1, service4.getReference1());
     }
@@ -140,12 +140,12 @@ public class OsgiServiceUtilTest {
 
     @Test(expected=NoScrMetadataException.class)
     public void testActivateNoMetadata() {
-        MockOsgi.activate(new Object());
+        MockOsgi.activate(new Object(), bundleContext);
     }
 
     @Test(expected=NoScrMetadataException.class)
     public void testDeactivateNoMetadata() {
-        MockOsgi.deactivate(new Object());
+        MockOsgi.deactivate(new Object(), bundleContext);
     }
 
     @Test(expected=NoScrMetadataException.class)
