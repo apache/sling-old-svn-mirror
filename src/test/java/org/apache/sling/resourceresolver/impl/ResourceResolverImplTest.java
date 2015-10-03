@@ -46,6 +46,7 @@ import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.mockito.internal.util.reflection.Whitebox;
 
 public class ResourceResolverImplTest {
 
@@ -63,6 +64,118 @@ public class ResourceResolverImplTest {
 
     @Test public void testClose() throws Exception {
         final ResourceResolver rr = new ResourceResolverImpl(commonFactory, new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker()));
+        assertTrue(rr.isLive());
+        rr.close();
+        assertFalse(rr.isLive());
+        // close is always allowed to be called
+        rr.close();
+        assertFalse(rr.isLive());
+        // now check all public method - they should all throw!
+        try {
+            rr.adaptTo(Session.class);
+            fail();
+        } catch (final IllegalStateException ise) {
+            // expected
+        }
+        try {
+            rr.clone(null);
+            fail();
+        } catch (final IllegalStateException ise) {
+            // expected
+        }
+        try {
+            rr.findResources("a", "b");
+            fail();
+        } catch (final IllegalStateException ise) {
+            // expected
+        }
+        try {
+            rr.getAttribute("a");
+            fail();
+        } catch (final IllegalStateException ise) {
+            // expected
+        }
+        try {
+            rr.getAttributeNames();
+            fail();
+        } catch (final IllegalStateException ise) {
+            // expected
+        }
+        try {
+            rr.getResource(null);
+            fail();
+        } catch (final IllegalStateException ise) {
+            // expected
+        }
+        try {
+            rr.getResource(null, "/a");
+            fail();
+        } catch (final IllegalStateException ise) {
+            // expected
+        }
+        try {
+            rr.getSearchPath();
+            fail();
+        } catch (final IllegalStateException ise) {
+            // expected
+        }
+        try {
+            rr.getUserID();
+            fail();
+        } catch (final IllegalStateException ise) {
+            // expected
+        }
+        try {
+            rr.listChildren(null);
+            fail();
+        } catch (final IllegalStateException ise) {
+            // expected
+        }
+        try {
+            rr.map("/somepath");
+            fail();
+        } catch (final IllegalStateException ise) {
+            // expected
+        }
+        try {
+            rr.map(null, "/somepath");
+            fail();
+        } catch (final IllegalStateException ise) {
+            // expected
+        }
+        try {
+            rr.queryResources("a", "b");
+            fail();
+        } catch (final IllegalStateException ise) {
+            // expected
+        }
+        try {
+            rr.resolve((HttpServletRequest)null);
+            fail();
+        } catch (final IllegalStateException ise) {
+            // expected
+        }
+        try {
+            rr.resolve("/path");
+            fail();
+        } catch (final IllegalStateException ise) {
+            // expected
+        }
+        try {
+            rr.resolve(null, "/path");
+            fail();
+        } catch (final IllegalStateException ise) {
+            // expected
+        }
+    }
+
+    @Test
+    public void testCloseWithStackTraceLogging() throws Exception {
+        ResourceResolverFactoryActivator rrfa = Mockito.spy(new ResourceResolverFactoryActivator());
+        Whitebox.setInternalState(rrfa, "logResourceResolverClosing", true);
+        CommonResourceResolverFactoryImpl crrfi = new CommonResourceResolverFactoryImpl(rrfa);
+        final ResourceResolver rr = new ResourceResolverImpl(crrfi, new ResourceResolverContext(false, null, new
+            ResourceAccessSecurityTracker()));
         assertTrue(rr.isLive());
         rr.close();
         assertFalse(rr.isLive());
