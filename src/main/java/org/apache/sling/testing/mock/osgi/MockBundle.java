@@ -51,6 +51,7 @@ public final class MockBundle implements Bundle {
 
     /**
      * Constructor
+     * @param bundleContext Bundle context
      */
     public MockBundle(BundleContext bundleContext) {
         this.bundleId = ++bundleCounter;
