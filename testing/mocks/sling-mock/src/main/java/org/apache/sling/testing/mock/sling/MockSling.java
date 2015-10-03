@@ -159,6 +159,7 @@ public final class MockSling {
     /**
      * Creates new sling resource resolver instance.
      * @param type Type of underlying repository.
+     * @param bundleContext Bundle context
      * @return Resource resolver instance
      */
     public static ResourceResolver newResourceResolver(final ResourceResolverType type, BundleContext bundleContext) {
@@ -173,6 +174,7 @@ public final class MockSling {
     /**
      * Creates new sling resource resolver instance using
      * {@link #DEFAULT_RESOURCERESOLVER_TYPE}.
+     * @param bundleContext Bundle context
      * @return Resource resolver instance
      */
     public static ResourceResolver newResourceResolver(BundleContext bundleContext) {
@@ -207,6 +209,7 @@ public final class MockSling {
     /**
      * Creates a new sling script helper instance using
      * {@link #DEFAULT_RESOURCERESOLVER_TYPE} for the resource resolver.
+     * @param bundleContext Bundle context
      * @return Sling script helper instance
      */
     public static SlingScriptHelper newSlingScriptHelper(BundleContext bundleContext) {

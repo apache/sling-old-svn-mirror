@@ -152,7 +152,7 @@ public final class MockOsgi {
      * @param target Service instance.
      * @param properties Properties
      * @return true if activation method was called. False if no activate method is defined.
-     * @deprecated Please use {@link #activate(Object, BundleContext, Dictionary))}
+     * @deprecated Please use {@link #activate(Object, BundleContext, Dictionary)}
      *   and shutdown the bundle context after usage.
      */
     @Deprecated
@@ -167,7 +167,7 @@ public final class MockOsgi {
      * @param target Service instance.
      * @param properties Properties
      * @return true if activation method was called. False if no activate method is defined.
-     * @deprecated Please use {@link #activate(Object, BundleContext, Map)))}
+     * @deprecated Please use {@link #activate(Object, BundleContext, Map)}
      *   and shutdown the bundle context after usage.
      */
     @Deprecated
@@ -226,7 +226,7 @@ public final class MockOsgi {
      * @param target Service instance.
      * @param properties Properties
      * @return true if deactivation method was called. False if no deactivate method is defined.
-     * @deprecated Please use {@link #deactivate(Object, BundleContext, Dictionary))}
+     * @deprecated Please use {@link #deactivate(Object, BundleContext, Dictionary)}
      *   and shutdown the bundle context after usage.
      */
     @Deprecated
@@ -241,7 +241,7 @@ public final class MockOsgi {
      * @param target Service instance.
      * @param properties Properties
      * @return true if deactivation method was called. False if no deactivate method is defined.
-     * @deprecated Please use {@link #deactivate(Object, BundleContext, Map)))}
+     * @deprecated Please use {@link #deactivate(Object, BundleContext, Map)}
      *   and shutdown the bundle context after usage.
      */
     @Deprecated
@@ -298,6 +298,7 @@ public final class MockOsgi {
     
     /**
      * Deactivates all bundles registered in the mocked bundle context.
+     * @param bundleContext Bundle context
      */
     public static void shutdown(BundleContext bundleContext) {
         ((MockBundleContext)bundleContext).shutdown();
