@@ -24,20 +24,20 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>25</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.testing.sling-mock-jackrabbit</artifactId>
-    <version>0.1.3-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>bundle</packaging>
   
     <name>Apache Sling Testing Sling Mock Jackrabbit-based Resource Resolver</name>
     <description>Implements a resource resolver type for Jackrabbit that can be used in unit tests based on Sling Mocks.</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/mocks/sling-mock-jackrabbit</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/mocks/sling-mock-jackrabbit</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/testing/mocks/sling-mock-jackrabbit</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.testing.sling-mock-jackrabbit-1.0.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.testing.sling-mock-jackrabbit-1.0.0</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.testing.sling-mock-jackrabbit-1.0.0</url>
     </scm>
 
     <dependencies>
