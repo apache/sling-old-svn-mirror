@@ -78,8 +78,8 @@ public final class OakMockSlingRepository implements SlingRepository {
             ExecutorService executor = (ExecutorService)executorField.get(this.oak);
             executor.shutdownNow();
         }
-        catch (ReflectiveOperationException ex) {
-            log.error("Memory leak: Unable to shutdown executor service from field '" + fieldName + "' in " + this.oak, ex);
+        catch (Throwable ex) {
+            log.error("Potential Memory leak: Unable to shutdown executor service from field '" + fieldName + "' in " + this.oak, ex);
         }
     }
 
