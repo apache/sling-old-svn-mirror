@@ -22,11 +22,15 @@ import org.apache.sling.api.resource.runtime.dto.AuthType;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.ServiceReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Information about a registered resource provider
  */
 public class ResourceProviderInfo implements Comparable<ResourceProviderInfo> {
+
+    private static final Logger logger = LoggerFactory.getLogger(ResourceProviderInfo.class);
 
     private final ServiceReference ref;
 
@@ -60,7 +64,7 @@ public class ResourceProviderInfo implements Comparable<ResourceProviderInfo> {
         try {
             aType = AuthType.valueOf(authType);
         } catch ( final IllegalArgumentException iae) {
-            // ignore
+            logger.error("Illegal auth type {} for resource provider {}", authType, name);
         }
         this.authType = aType;
         this.modifiable = PropertiesUtil.toBoolean(ref.getProperty(ResourceProvider.PROPERTY_MODIFIABLE), false);
