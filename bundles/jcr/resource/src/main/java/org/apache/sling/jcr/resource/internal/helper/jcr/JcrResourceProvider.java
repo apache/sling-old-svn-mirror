@@ -313,7 +313,8 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
                             ctx.getProviderState().getHelperData());
                 }
             } catch (RepositoryException e) {
-                throw new SlingException("Can't get parent", e);
+                log.warn("Can't get parent for {}", child, e);
+                return null;
             }
         }
         return super.getParent(ctx, child);
