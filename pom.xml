@@ -84,6 +84,7 @@
         <module>parent</module>
 
         <!-- Tooling Support -->
+        <module>tooling/support/install</module>
         <module>tooling/support/provisioning-model</module>
         <!-- The Maven Plugins and Archeyptes-->
         <module>tooling/maven/adapter-annotations</module>
