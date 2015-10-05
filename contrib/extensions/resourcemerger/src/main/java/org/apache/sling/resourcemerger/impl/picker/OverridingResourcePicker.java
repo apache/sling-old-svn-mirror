@@ -51,7 +51,9 @@ public class OverridingResourcePicker implements MergedResourcePicker {
 
     public static final String DEFAULT_ROOT = "/mnt/override";
 
-    public List<Resource> pickResources(ResourceResolver resolver, String relativePath) {
+    public List<Resource> pickResources(ResourceResolver resolver, String relativePath, Resource relatedResource) {
+        // TODO this method can be optimised by leveraging relatedResource (similar to MergingResourcePicker)
+
         String absPath = "/" + relativePath;
         final List<Resource> resources = new ArrayList<Resource>();
         final Set<String> roots = new HashSet<String>();
@@ -94,6 +96,11 @@ public class OverridingResourcePicker implements MergedResourcePicker {
         Collections.reverse(resources);
 
         return resources;
+    }
+
+    @Override
+    public List<Resource> pickResources(ResourceResolver resolver, String relativePath) {
+        return pickResources(resolver, relativePath, null);
     }
 
     private void findInheritanceRoot(final Resource target, final InheritanceRootInfo info) {

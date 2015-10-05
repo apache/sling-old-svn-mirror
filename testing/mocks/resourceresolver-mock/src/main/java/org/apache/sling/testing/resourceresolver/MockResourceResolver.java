@@ -405,4 +405,23 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public Resource getParent(Resource child) {
+        final String parentPath = ResourceUtil.getParent(child.getPath());
+        if (parentPath == null) {
+            return null;
+        }
+        return this.getResource(parentPath);
+    }
+
+    @Override
+    public void copy(String srcAbsPath, String destAbsPath) throws PersistenceException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void move(String srcAbsPath, String destAbsPath) throws PersistenceException {
+        throw new UnsupportedOperationException();
+    }
+
 }
