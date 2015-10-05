@@ -135,8 +135,10 @@ public class EmbeddedArchetypeInstaller {
 
                 try {
                     IOUtils.copy(in, fos);
+                    // the below code uses the fileExtension as a type. Most of the time this is correct
+                    // and should be fine for our usage
                     Artifact jarArtifact = new DefaultArtifact(groupId, artifactId, version, "", fileExtension, "",
-                            new DefaultArtifactHandler());
+                            new DefaultArtifactHandler(fileExtension));
                     dai.install(tmpFile, jarArtifact, maven.getLocalRepository());
                 } finally {
                     IOUtils.closeQuietly(in);
