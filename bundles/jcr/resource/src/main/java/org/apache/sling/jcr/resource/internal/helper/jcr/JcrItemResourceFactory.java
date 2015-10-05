@@ -82,10 +82,15 @@ public class JcrItemResourceFactory {
             parentNode = parent.adaptTo(Node.class);
         }
 
-        final String itemName = StringUtils.substringAfterLast(jcrPath, "/");
         Item item = null;
-        if (parentNode != null && resourcePath.startsWith(parent.getPath())) {
-            item = getSubitem(parentNode, itemName);
+        if (parentNode != null && jcrPath.startsWith(parentNode.getPath())) {
+            String parentJcrPath = parentNode.getPath();
+            if (jcrPath.equals(parentJcrPath)) {
+                item = parentNode;
+            } else {
+                final String subPath = jcrPath.substring(parentJcrPath.length() + 1);
+                item = getSubitem(parentNode, subPath);
+            }
         } else if (itemExists(jcrPath)) {
             item = session.getItem(jcrPath);
         }
