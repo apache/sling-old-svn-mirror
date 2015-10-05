@@ -627,7 +627,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     @Override
     public Resource getResource(String path) {
         checkClosed();
-        final Resource result = this.getResourceInternal(path);
+        final Resource result = this.getResourceInternal(null, path);
         return result;
     }
 
@@ -644,7 +644,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             absolutePath = appendToPath(base.getPath(), absolutePath);
         }
 
-        final Resource result = getResourceInternal(absolutePath);
+        final Resource result = getResourceInternal(base, absolutePath);
         return result;
     }
 
@@ -659,13 +659,13 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     private static String appendToPath(final String pathWithParameters, final String segmentToAppend) {
         final ParsedParameters parsed = new ParsedParameters(pathWithParameters);
         if (parsed.getParametersString() == null) {
-            return String.format("%s/%s", parsed.getRawPath(), segmentToAppend);
+            return new StringBuilder(parsed.getRawPath()).append('/').append(segmentToAppend).toString();
         } else {
-            return String.format("%s/%s%s", parsed.getRawPath(), segmentToAppend, parsed.getParametersString());
+            return new StringBuilder(parsed.getRawPath()).append('/').append(segmentToAppend).append(parsed.getParametersString()).toString();
         }
     }
 
-    private Resource getResourceInternal(String path) {
+    private Resource getResourceInternal(Resource parent, String path) {
 
         Resource result = null;
         if ( path != null ) {
@@ -673,7 +673,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             if (path.startsWith("/")) {
                 ParsedParameters parsedPath = new ParsedParameters(path);
                 path = ResourceUtil.normalize(parsedPath.getRawPath());
-                result = (path != null) ? getAbsoluteResourceInternal(path, parsedPath.getParameters(), false) : null;
+                result = (path != null) ? getAbsoluteResourceInternal(parent, path, parsedPath.getParameters(), false) : null;
                 if (result != null) {
                     result = this.factory.getResourceDecoratorTracker().decorate(result);
                 }
@@ -884,7 +884,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             final ResourcePathIterator it = new ResourcePathIterator(absPath);
             while (it.hasNext() && resource == null) {
                 curPath = it.next();
-                resource = getAbsoluteResourceInternal(curPath, parameters, true);
+                resource = getAbsoluteResourceInternal(null, curPath, parameters, true);
             }
         } catch (final Exception ex) {
             throw new SlingException("Problem trying " + curPath + " for request path " + absPath, ex);
@@ -906,7 +906,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
             // no direct resource found, so we have to drill down into the
             // resource tree to find a match
-            resource = getAbsoluteResourceInternal("/", parameters, true);
+            resource = getAbsoluteResourceInternal(null, "/", parameters, true);
             final StringBuilder resolutionPath = new StringBuilder();
             final StringTokenizer tokener = new StringTokenizer(absPath, "/");
             while (resource != null && tokener.hasMoreTokens()) {
@@ -966,7 +966,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         } else {
             path = parent.getPath() + '/' + childName;
         }
-        Resource child = getAbsoluteResourceInternal( ResourceUtil.normalize(path), EMPTY_PARAMETERS, true );
+        Resource child = getAbsoluteResourceInternal(parent, ResourceUtil.normalize(path), EMPTY_PARAMETERS, true );
         if (child != null) {
             final String alias = ResourceResolverContext.getProperty(child, PROP_REDIRECT_INTERNAL);
             if (alias != null) {
@@ -994,7 +994,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
                     } else {
                         aliasPath = parent.getPath() + '/' + aliasName;
                     }
-                    final Resource aliasedChild = getAbsoluteResourceInternal( ResourceUtil.normalize(aliasPath), EMPTY_PARAMETERS, true );
+                    final Resource aliasedChild = getAbsoluteResourceInternal(parent, ResourceUtil.normalize(aliasPath), EMPTY_PARAMETERS, true );
                     logger.debug("getChildInternal: Found Resource {} with alias {} to use", aliasedChild, childName);
                     return aliasedChild;
                 }
@@ -1010,7 +1010,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
                         for (final String alias : aliases) {
                             if (childName.equals(alias)) {
                                 logger.debug("getChildInternal: Found Resource {} with alias {} to use", child, childName);
-                                final Resource aliasedChild = getAbsoluteResourceInternal( ResourceUtil.normalize(child.getPath()) , EMPTY_PARAMETERS, true);
+                                final Resource aliasedChild = getAbsoluteResourceInternal(parent, ResourceUtil.normalize(child.getPath()) , EMPTY_PARAMETERS, true);
                                 return aliasedChild;
                             }
                         }
@@ -1027,9 +1027,15 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * Creates a resource with the given path if existing
      */
-    private Resource getAbsoluteResourceInternal(final String path, final Map<String, String> parameters, final boolean isResolve) {
+    private Resource getAbsoluteResourceInternal(final Resource parent, final String path, final Map<String, String> parameters, final boolean isResolve) {
+        final Resource parentToUse;
+        if (parent != null && path.startsWith(parent.getPath())) {
+            parentToUse = parent;
+        } else {
+            parentToUse = null;
+        }
 
-        final Resource resource = this.provider.getResource(path, null, parameters, isResolve);
+        final Resource resource = this.provider.getResource(path, parentToUse, parameters, isResolve);
         if (resource != null) {
             resource.getResourceMetadata().setResolutionPath(path);
             resource.getResourceMetadata().setParameterMap(parameters);
