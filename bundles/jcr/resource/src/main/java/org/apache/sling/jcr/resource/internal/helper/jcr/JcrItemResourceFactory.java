@@ -79,7 +79,7 @@ public class JcrItemResourceFactory {
 
         final String itemName = StringUtils.substringAfterLast(jcrPath, "/");
         Item item = null;
-        if (parent != null) {
+        if (parent != null && resourcePath.startsWith(parent.getPath())) {
             final Node parentNode = parent.adaptTo(Node.class);
             if (parentNode != null) {
                 item = getSubitem(parentNode, itemName);
