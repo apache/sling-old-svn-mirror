@@ -21,10 +21,8 @@ package org.apache.sling.jcr.contentloader.internal;
 import junitx.util.PrivateAccessor;
 import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 import org.apache.sling.testing.mock.osgi.MockBundle;
-import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -62,20 +60,8 @@ public class ContentLoaderServiceTest {
         RepositoryUtil.registerSlingNodeTypes(session);
 
         // register the content loader service
-        underTest = new ContentLoaderService();
-        MockOsgi.injectServices(underTest, context.bundleContext());
-        MockOsgi.activate(underTest);
+        underTest = context.registerInjectActivateService(new ContentLoaderService());
         contentLoader = (BundleContentLoader) PrivateAccessor.getField(underTest, "bundleContentLoader");
-    }
-
-    @After
-    public void cleanup() throws RepositoryException {
-        if(session != null) {
-            session.save();
-            session.logout();
-            session = null;
-        }
-        MockOsgi.deactivate(underTest);
     }
 
     //-------ContentLoaderService#bundleChanged(BundleEvent)-------//
