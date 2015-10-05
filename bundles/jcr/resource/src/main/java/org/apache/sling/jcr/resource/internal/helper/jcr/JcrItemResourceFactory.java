@@ -77,22 +77,21 @@ public class JcrItemResourceFactory {
             version = null;
         }
 
-        final String itemName = StringUtils.substringAfterLast(jcrPath, "/");
-        Item item = null;
-        if (parent != null && resourcePath.startsWith(parent.getPath())) {
-            final Node parentNode = parent.adaptTo(Node.class);
-            if (parentNode != null) {
-                item = getSubitem(parentNode, itemName);
-            }
+        Node parentNode = null;
+        if (parent != null) {
+            parentNode = parent.adaptTo(Node.class);
         }
 
-        if (item == null) {
-            if (itemExists(jcrPath)) {
-                item = session.getItem(jcrPath);
-            }
-            if (version != null) {
-                item = getHistoricItem(item, version);
-            }
+        final String itemName = StringUtils.substringAfterLast(jcrPath, "/");
+        Item item = null;
+        if (parentNode != null && resourcePath.startsWith(parent.getPath())) {
+            item = getSubitem(parentNode, itemName);
+        } else if (itemExists(jcrPath)) {
+            item = session.getItem(jcrPath);
+        }
+
+        if (item != null && version != null) {
+            item = getHistoricItem(item, version);
         }
 
         if (item == null) {
