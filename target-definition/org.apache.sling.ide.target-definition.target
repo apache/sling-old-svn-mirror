@@ -15,23 +15,11 @@
     See the License for the specific language governing permissions
     and limitations under the License.
 -->
-<?pde version="3.8"?><target name="Sling IDE Tools" sequenceNumber="43">
+<?pde version="3.8"?><target name="Sling IDE Tools" sequenceNumber="44">
 <locations>
 <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
 <unit id="org.sonatype.tycho.m2e.feature.feature.group" version="0.6.0.201207302152"/>
 <repository location="http://repo1.maven.org/maven2/.m2e/connectors/m2eclipse-tycho/0.6.0/N/0.6.0.201207302152/"/>
-</location>
-<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
-<unit id="org.eclipse.jst.web_ui.feature.feature.group" version="3.5.2.v201311051900-7F7GFVuC27Svmclpwjkc0enMD7nrQ9V2nvprn2h2"/>
-<unit id="org.eclipse.wst.web_ui.feature.feature.group" version="3.5.2.v201401062113-7O7QG3wEMkBS3Graz0gRCYqCz-PVayJqBmOpb93L"/>
-<unit id="org.eclipse.jst.enterprise_ui.feature.feature.group" version="3.5.2.v201311051900-7b7KIawFSK2WQyUFC2y01XXyUmRm"/>
-<unit id="org.eclipse.jst.server_adapters.feature.feature.group" version="3.2.201.v20130123_1813-20A87w31241234a2924"/>
-<unit id="org.eclipse.jst.server_ui.feature.feature.group" version="3.4.1.v20130412_1040-7A77FHs9xFcDcCFLZBFIOHFGAFC6"/>
-<unit id="org.eclipse.wst.xml_ui.feature.feature.group" version="3.5.2.v201401062113-7H7IFizDxumVu0K6bjdPjXRkoz0FiUYMnSyT9PL"/>
-<unit id="org.eclipse.m2e.feature.feature.group" version="1.4.0.20130601-0317"/>
-<unit id="org.eclipse.wst.server_adapters.feature.feature.group" version="3.2.300.v20130502_0936-7L3FD9CcNBGWBgJUl7NCO"/>
-<unit id="org.eclipse.platform.feature.group" version="4.3.2.v20140221-1852"/>
-<repository location="http://download.eclipse.org/releases/kepler"/>
 </location>
 <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
 <unit id="org.junit" version="4.11.0.v201303080030"/>
@@ -42,6 +30,18 @@
 <unit id="org.apache.commons.collections" version="3.2.0.v2013030210310"/>
 <unit id="org.slf4j.api" version="1.7.2.v20121108-1250"/>
 <repository location="http://download.eclipse.org/tools/orbit/downloads/drops/R20140114142710/repository/"/>
+</location>
+<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.m2e.feature.feature.group" version="1.5.1.20150109-1820"/>
+<unit id="org.eclipse.wst.server_adapters.feature.feature.group" version="3.2.401.v201410241731"/>
+<unit id="org.eclipse.jst.server_ui.feature.feature.group" version="3.4.101.v201410241731"/>
+<unit id="org.eclipse.wst.xml_ui.feature.feature.group" version="3.6.3.v201501292352"/>
+<unit id="org.eclipse.jst.web_ui.feature.feature.group" version="3.6.3.v201502041526"/>
+<unit id="org.eclipse.platform.feature.group" version="4.4.2.v20150204-1700"/>
+<unit id="org.eclipse.wst.web_ui.feature.feature.group" version="3.6.3.v201501312139"/>
+<unit id="org.eclipse.jst.server_adapters.feature.feature.group" version="3.2.301.v201410241731"/>
+<unit id="org.eclipse.jst.enterprise_ui.feature.feature.group" version="3.6.3.v201501281502"/>
+<repository location="http://download.eclipse.org/releases/luna"/>
 </location>
 </locations>
 </target>
