@@ -126,12 +126,8 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                     ISlingLaunchpadServer launchpadServer = (ISlingLaunchpadServer) getServer().loadAdapter(SlingLaunchpadServer.class,
                             monitor);
                     if (remoteVersion == null || remoteVersion.compareTo(embeddedVersion) < 0) {
-                        InputStream contents = null;
-                        try {
-                            contents = supportBundle.openInputStream();
+                        try ( InputStream contents = supportBundle.openInputStream() ){
                             client.installBundle(contents, supportBundle.getName());
-                        } finally {
-                            IOUtils.closeQuietly(contents);
                         }
                         remoteVersion = embeddedVersion;
 
@@ -381,9 +377,9 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
         // the behaviour for resources being filtered out is deletion, and that
         // would be an incorrect ( or at least suprising ) behaviour at development time
 
-        List<IModuleResource> addedOrUpdatedResources = new ArrayList<IModuleResource>();
+        List<IModuleResource> addedOrUpdatedResources = new ArrayList<>();
         IModuleResource[] allResources = getResources(module);
-        Set<IPath> handledPaths = new HashSet<IPath>();
+        Set<IPath> handledPaths = new HashSet<>();
 
         switch (deltaKind) {
             case ServerBehaviourDelegate.CHANGED:

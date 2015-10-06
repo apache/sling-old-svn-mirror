@@ -122,8 +122,7 @@ public class SlingConsoleEventListener implements EventHandler {
 
     private void logEvent(Event event, MessageConsole console) {
 
-        MessageConsoleStream messageStream = console.newMessageStream();
-        try {
+        try (MessageConsoleStream messageStream = console.newMessageStream()) {
 
             Long start = (Long) event.getProperty(CommandExecutionProperties.TIMESTAMP_START);
             Long end = (Long) event.getProperty(CommandExecutionProperties.TIMESTAMP_END);
@@ -148,8 +147,6 @@ public class SlingConsoleEventListener implements EventHandler {
             }
         } catch (IOException e) {
             Activator.getDefault().getPluginLogger().warn("Failed writing to the console", e);
-        } finally {
-            IOUtils.closeQuietly(messageStream);
         }
     }
 

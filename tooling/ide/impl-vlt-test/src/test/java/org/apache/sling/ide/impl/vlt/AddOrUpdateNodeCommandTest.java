@@ -428,15 +428,11 @@ public class AddOrUpdateNodeCommandTest {
     private void importNodeTypeDefinitions(Session session, String cndFile) throws InvalidNodeTypeDefinitionException,
             NodeTypeExistsException, UnsupportedRepositoryOperationException, ParseException, RepositoryException,
             IOException {
-        InputStream cndInput = null;
-        try {
-            cndInput = getClass().getResourceAsStream(cndFile);
+        try ( InputStream cndInput = getClass().getResourceAsStream(cndFile) ) {
             if (cndInput == null) {
                 throw new IllegalArgumentException("Unable to read classpath resource " + cndFile);
             }
             CndImporter.registerNodeTypes(new InputStreamReader(cndInput), session);
-        } finally {
-            IOUtils.closeQuietly(cndInput);
         }
     }
 

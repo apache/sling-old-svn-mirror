@@ -181,15 +181,12 @@ public abstract class ProjectUtil {
         IFile filterFile = ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(filterPath);
         Filter filter = null;
         if (filterFile != null && filterFile.exists()) {
-            InputStream contents = filterFile.getContents();
-            try {
+            try ( InputStream contents = filterFile.getContents() ) {
                 filter = filterLocator.loadFilter(contents);
             } catch (IOException e) {
                 throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
                         "Failed loading filter file for project " + project.getName()
                                 + " from location " + filterFile, e));
-            } finally {
-                IOUtils.closeQuietly(contents);
             }
         }
         return filter;

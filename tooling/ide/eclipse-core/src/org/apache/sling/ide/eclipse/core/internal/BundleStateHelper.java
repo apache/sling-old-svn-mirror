@@ -91,8 +91,6 @@ public class BundleStateHelper {
 	
 	private static Object doRecalcDecorationState(IServer server, IProject project) {
 
-        InputStream input = null;
-
         try {
         	if (!ProjectHelper.isBundleProject(project)) {
         		return EMPTY_STATE;
@@ -129,17 +127,15 @@ public class BundleStateHelper {
 				return " ["+resultCode+"]";
 			}
 
-            input = method.getResponseBodyAsStream();
-
-            JSONObject result = new JSONObject(new JSONTokener(new InputStreamReader(input)));
-            JSONArray dataArray = (JSONArray) result.get("data");
-            JSONObject firstElement = (JSONObject) dataArray.get(0);
-            return " ["+firstElement.get("state")+"]";
+            try ( InputStream input = method.getResponseBodyAsStream(); ) {
+                JSONObject result = new JSONObject(new JSONTokener(new InputStreamReader(input)));
+                JSONArray dataArray = (JSONArray) result.get("data");
+                JSONObject firstElement = (JSONObject) dataArray.get(0);
+                return " ["+firstElement.get("state")+"]";
+            }
 		} catch (Exception e) {
 			e.printStackTrace();
 			return e.getMessage();
-        } finally {
-            IOUtils.closeQuietly(input);
 		}
 	}
 

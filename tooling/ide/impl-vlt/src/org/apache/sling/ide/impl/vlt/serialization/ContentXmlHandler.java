@@ -37,7 +37,7 @@ public class ContentXmlHandler extends DefaultHandler {
 
     private static final String JCR_ROOT = "jcr:root";
     private final ResourceProxy root;
-    private final Deque<ResourceProxy> queue = new LinkedList<ResourceProxy>();
+    private final Deque<ResourceProxy> queue = new LinkedList<>();
 
     public ContentXmlHandler(String rootResourcePath) {
         root = new ResourceProxy(rootResourcePath);
@@ -263,7 +263,7 @@ public class ContentXmlHandler extends DefaultHandler {
 
         private static String[] splitValues(String rawValues) {
             
-            List<String> values = new ArrayList<String>();
+            List<String> values = new ArrayList<>();
             String[] firstPass = rawValues.split(",");
             for ( int i = 0 ; i < firstPass.length; i++) {
                 

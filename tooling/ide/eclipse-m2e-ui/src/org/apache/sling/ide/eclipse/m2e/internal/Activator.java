@@ -48,10 +48,10 @@ public class Activator extends Plugin {
 
         INSTANCE = this;
 
-        artifactLocator = new ServiceTracker<EmbeddedArtifactLocator, EmbeddedArtifactLocator>(context, EmbeddedArtifactLocator.class, null);
+        artifactLocator = new ServiceTracker<>(context, EmbeddedArtifactLocator.class, null);
         artifactLocator.open();
 
-        osgiClientFactory = new ServiceTracker<OsgiClientFactory, OsgiClientFactory>(context, OsgiClientFactory.class,
+        osgiClientFactory = new ServiceTracker<>(context, OsgiClientFactory.class,
                 null);
         osgiClientFactory.open();
 
@@ -59,7 +59,7 @@ public class Activator extends Plugin {
 
         // ugh
         ServiceReference<Object> reference = (ServiceReference<Object>) tracerRegistration.getReference();
-        tracer = new ServiceTracker<Object, Object>(context, reference, null);
+        tracer = new ServiceTracker<>(context, reference, null);
         tracer.open();
     }
 

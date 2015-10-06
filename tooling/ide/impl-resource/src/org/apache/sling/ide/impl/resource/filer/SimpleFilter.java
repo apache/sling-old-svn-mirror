@@ -34,22 +34,17 @@ public class SimpleFilter implements Filter {
         if (relativeFilePath.isEmpty() || relativeFilePath.charAt(0) != '/') {
             relativeFilePath = '/' + relativeFilePath;
         }
-        System.out.println("SimpleFilter.filter(" + relativeFilePath + ")");
 
         if (includedPathPrefixes.isEmpty()) {
-            System.out.println(" -- no path prefixes -> " + FilterResult.ALLOW);
             return FilterResult.ALLOW;
         }
 
         for (String includePath : includedPathPrefixes) {
-            System.out.println(" -- checking with " + includePath);
             if (relativeFilePath.startsWith(includePath)) {
-                System.out.println(" --- found match -> " + FilterResult.ALLOW);
                 return FilterResult.ALLOW;
             }
         }
 
-        System.out.println(" -- no match " + FilterResult.DENY);
         return FilterResult.DENY;
     }
 }

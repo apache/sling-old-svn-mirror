@@ -53,7 +53,7 @@ public class Activator extends Plugin {
 
         // ugh
         ServiceReference<Object> reference = (ServiceReference<Object>) tracerRegistration.getReference();
-        tracer = new ServiceTracker<Object, Object>(context, reference, null);
+        tracer = new ServiceTracker<>(context, reference, null);
         tracer.open();
 	}
 

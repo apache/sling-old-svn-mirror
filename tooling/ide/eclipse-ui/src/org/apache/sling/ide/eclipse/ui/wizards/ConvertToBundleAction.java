@@ -62,19 +62,17 @@ public class ConvertToBundleAction implements IObjectActionDelegate {
 	 */
 	public void run(IAction action) {
 		if (fSelection instanceof IStructuredSelection) {
-			List<IProject> applicableProjects = new LinkedList<IProject>();
+			List<IProject> applicableProjects = new LinkedList<>();
 			IProject[] allProjects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
-			for (int i = 0; i < allProjects.length; i++) {
-				IProject p = allProjects[i];
-                if (p.isOpen() && ProjectHelper.isPotentialBundleProject(p)) {
+			for (IProject p : allProjects) {
+				if (p.isOpen() && ProjectHelper.isPotentialBundleProject(p)) {
 					applicableProjects.add(p);
 				}
 			}
 			Object[] elems = ((IStructuredSelection) fSelection).toArray();
-			List<IProject> initialSelection = new ArrayList<IProject>(elems.length);
+			List<IProject> initialSelection = new ArrayList<>(elems.length);
 
-			for (int i = 0; i < elems.length; i++) {
-				Object elem = elems[i];
+			for (Object elem : elems) {
 				IProject project = null;
 
 				if (elem instanceof IFile) {
@@ -115,10 +113,8 @@ public class ConvertToBundleAction implements IObjectActionDelegate {
 				public void run(IProgressMonitor monitor) throws InvocationTargetException,
 						InterruptedException {
 					try {
-						for (Iterator<IProject> it = selectedProjects.iterator(); it
-								.hasNext();) {
-							IProject project = it.next();
-							ConfigurationHelper.convertToBundleProject(project);
+						for (IProject project : selectedProjects) {
+						    ConfigurationHelper.convertToBundleProject(project);
 						}
 					} catch (CoreException e) {
 						e.printStackTrace();

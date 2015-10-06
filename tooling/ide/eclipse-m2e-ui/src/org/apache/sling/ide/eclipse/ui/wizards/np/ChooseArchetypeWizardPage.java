@@ -103,7 +103,7 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
     
     private static final String LOADING_PLEASE_WAIT = "loading, please wait...";
     private Combo knownArchetypes;
-	private Map<String, Archetype> archetypesMap = new TreeMap<String, Archetype>(ARTIFACT_KEY_COMPARATOR);
+	private Map<String, Archetype> archetypesMap = new TreeMap<>(ARTIFACT_KEY_COMPARATOR);
 	private Button useDefaultWorkspaceLocationButton;
 	private Label locationLabel;
 	private Combo locationCombo;
@@ -345,7 +345,7 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
 
             Collection<ArchetypeCatalogFactory> archetypeCatalogs = manager.getArchetypeCatalogs();
             monitor.worked(2);
-            ArrayList<Archetype> candidates = new ArrayList<Archetype>();
+            ArrayList<Archetype> candidates = new ArrayList<>();
             for (ArchetypeCatalogFactory catalogFactory : archetypeCatalogs) {
                 try {
                     ArchetypeCatalog catalog = catalogFactory.getArchetypeCatalog();

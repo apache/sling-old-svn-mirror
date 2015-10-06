@@ -67,7 +67,7 @@ public class ChildrenNameMatcher extends TypeSafeMatcher<Node> {
 
     private List<String> childrenNames(NodeIterator nodes) throws RepositoryException {
 
-        List<String> names = new ArrayList<String>();
+        List<String> names = new ArrayList<>();
         while (nodes.hasNext()) {
             names.add(nodes.nextNode().getName());
         }

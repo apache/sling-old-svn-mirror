@@ -19,7 +19,6 @@ package org.apache.sling.ide.eclipse.core;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.sling.ide.eclipse.core.internal.Activator;
@@ -60,11 +59,7 @@ public abstract class ServerUtil {
             try {
                 RepositoryInfo repositoryInfo = getRepositoryInfo(server, new NullProgressMonitor());
                 return repository.getRepository(repositoryInfo, true);
-            } catch (URISyntaxException e) {
-                throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
-            } catch (RuntimeException e) {
-                throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
-            } catch (RepositoryException e) {
+            } catch (URISyntaxException | RuntimeException | RepositoryException e) {
                 throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
             }
         } catch (CoreException e) {
@@ -107,7 +102,7 @@ public abstract class ServerUtil {
             // is what we need to create a RepositoryInfo
             return null;
         }
-        Set<IServer> result = new HashSet<IServer>();
+        Set<IServer> result = new HashSet<>();
         IServer defaultServer = ServerCore.getDefaultServer(module);
         if (defaultServer!=null) {
             result.add(defaultServer);
@@ -139,11 +134,7 @@ public abstract class ServerUtil {
         try {
             RepositoryInfo repositoryInfo = getRepositoryInfo(server, monitor);
             return repository.getRepository(repositoryInfo, false);
-        } catch (URISyntaxException e) {
-            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
-        } catch (RuntimeException e) {
-            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
-        } catch (RepositoryException e) {
+        } catch (RuntimeException | URISyntaxException | RepositoryException e) {
             throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
         }
     }
@@ -153,11 +144,7 @@ public abstract class ServerUtil {
         try {
             RepositoryInfo repositoryInfo = getRepositoryInfo(server, monitor);
             return repository.connectRepository(repositoryInfo);
-        } catch (URISyntaxException e) {
-            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
-        } catch (RuntimeException e) {
-            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
-        } catch (RepositoryException e) {
+        } catch (RuntimeException | URISyntaxException | RepositoryException e) {
             throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
         }
     }
@@ -167,9 +154,7 @@ public abstract class ServerUtil {
         try {
             RepositoryInfo repositoryInfo = getRepositoryInfo(server, monitor);
             repository.disconnectRepository(repositoryInfo);
-        } catch (URISyntaxException e) {
-            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
-        } catch (RuntimeException e) {
+        } catch (RuntimeException | URISyntaxException e) {
             throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
         }
     }
@@ -207,14 +192,13 @@ public abstract class ServerUtil {
             if (monitorOrNull==null) {
                 monitorOrNull = new NullProgressMonitor();
             }
-            for (Iterator it = servers.iterator(); it.hasNext();) {
-                IServer aServer = (IServer) it.next();
-                if (aServer!=null) {
-                    int autoPublishSetting = aServer.getAttribute(PROP_AUTO_PUBLISH_SETTING, AUTO_PUBLISH_RESOURCE);
-                    int autoPublishTime = aServer.getAttribute(PROP_AUTO_PUBLISH_TIME, 15);
+            for (IServer server : servers) {
+                if (server!=null) {
+                    int autoPublishSetting = server.getAttribute(PROP_AUTO_PUBLISH_SETTING, AUTO_PUBLISH_RESOURCE);
+                    int autoPublishTime = server.getAttribute(PROP_AUTO_PUBLISH_TIME, 15);
                     if (autoPublishSetting==AUTO_PUBLISH_RESOURCE) {
                         //TODO: ignoring the autoPublishTime - SLING-3587
-                        aServer.publish(IServer.PUBLISH_INCREMENTAL, monitorOrNull);
+                        server.publish(IServer.PUBLISH_INCREMENTAL, monitorOrNull);
                     }
                 }
             }

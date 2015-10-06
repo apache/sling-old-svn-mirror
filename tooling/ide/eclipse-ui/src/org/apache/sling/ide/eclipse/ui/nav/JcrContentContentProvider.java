@@ -58,7 +58,7 @@ public class JcrContentContentProvider implements ITreeContentProvider, IPipelin
 	        return;
 	    }
 		try {
-            final Set<IProject> toBeRefreshed = new HashSet<IProject>();
+            final Set<IProject> toBeRefreshed = new HashSet<>();
 			event.getDelta().accept(new IResourceDeltaVisitor() {
 				
 				@Override
@@ -243,7 +243,7 @@ public class JcrContentContentProvider implements ITreeContentProvider, IPipelin
 		if (aParent instanceof IProject) {
 			IProject project = (IProject)aParent;
 			if (ProjectHelper.isContentProject(project)) {
-				for (Iterator it = theCurrentChildren.iterator(); it
+				for (Iterator<?> it = theCurrentChildren.iterator(); it
 						.hasNext();) {
 					Object aChild = (Object) it.next();
 					if (aChild instanceof IPackageFragmentRoot) {

@@ -109,9 +109,7 @@ public class LinkHelper implements ILinkHelper {
 			return;
 		}
 		final IFile selectedFile = (IFile)resource;
-		final IEditorReference[] editorReferences = aPage.getEditorReferences();
-		for (int i = 0; i < editorReferences.length; i++) {
-			final IEditorReference reference = editorReferences[i];
+		for (final IEditorReference reference : aPage.getEditorReferences()) {
 			if (reference==null) {
 				continue;
 			}
