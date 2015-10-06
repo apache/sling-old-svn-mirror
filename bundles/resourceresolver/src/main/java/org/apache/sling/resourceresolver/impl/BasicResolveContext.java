@@ -24,20 +24,20 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 
-public class BasicResolveContext implements ResolveContext<Object> {
+public class BasicResolveContext<T> implements ResolveContext<T> {
 
     private final ResourceResolver resourceResolver;
 
     private final Map<String, String> resolveParameters;
 
-    private final Object providerState;
+    private final T providerState;
 
     private final ResolveContext<?> parentResolveContext;
 
     private final ResourceProvider<?> parentResourceProvider;
 
     public BasicResolveContext(ResourceResolver resourceResolver, Map<String, String> resolveParameters,
-            Object providerState, ResolveContext<?> parentResolveContext, ResourceProvider<?> parentResourceProvider) {
+            T providerState, ResolveContext<?> parentResolveContext, ResourceProvider<?> parentResourceProvider) {
         this.resourceResolver = resourceResolver;
         this.resolveParameters = resolveParameters;
         this.providerState = providerState;
@@ -45,7 +45,7 @@ public class BasicResolveContext implements ResolveContext<Object> {
         this.parentResourceProvider = parentResourceProvider;
     }
 
-    public BasicResolveContext(ResourceResolver resourceResolver, Map<String, String> resolveParameters, Object providerState) {
+    public BasicResolveContext(ResourceResolver resourceResolver, Map<String, String> resolveParameters, T providerState) {
         this(resourceResolver, resolveParameters, providerState, null, null);
     }
 
@@ -60,7 +60,7 @@ public class BasicResolveContext implements ResolveContext<Object> {
     }
 
     @Override
-    public Object getProviderState() {
+    public T getProviderState() {
         return providerState;
     }
 

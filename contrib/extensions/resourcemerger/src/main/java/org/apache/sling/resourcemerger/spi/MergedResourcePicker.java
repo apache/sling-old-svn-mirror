@@ -59,13 +59,21 @@ public interface MergedResourcePicker {
     String TRAVERSE_PARENT = "merge.traverseParent";
 
     /**
+     * @see #pickResources(ResourceResolver, String, Resource)
+     * @deprecated
+     */
+    List<Resource> pickResources(ResourceResolver resolver, String relativePath);
+
+    /**
      * Method invoked by the MergingResourceProvider to identify the resources to be merged for a given
      * relative path. The resources returned may be either resources returned from the ResourceResolver
      * directory or an instance of NonExistingResource.
      *
      * @param resolver the ResourceResolver
      * @param relativePath the path relative to the merge root
+     * @param relatedResource an optional resource which is related to the given path (parent or child)
      * @return a List of Resource objects
      */
-    List<Resource> pickResources(ResourceResolver resolver, String relativePath);
+    List<Resource> pickResources(ResourceResolver resolver, String relativePath, Resource relatedResource);
+
 }
