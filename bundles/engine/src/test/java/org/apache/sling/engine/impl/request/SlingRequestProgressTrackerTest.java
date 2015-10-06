@@ -18,6 +18,8 @@ package org.apache.sling.engine.impl.request;
 
 import static org.junit.Assert.assertEquals;
 
+import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.Iterator;
 
 import org.junit.Test;
@@ -65,6 +67,37 @@ public class SlingRequestProgressTrackerTest {
     private String substringAfter(String string, char ch) {
         final int pos = string.indexOf(ch);
         return string.substring(pos);
+    }
+
+    @Test
+    public void testFastFormat() {
+        FormatTest[] tests = {
+                new FormatTest("{0}", 1),
+                new FormatTest("{0}{0}", 1, 2),
+                new FormatTest("a{0}b{1}c", 1, 2),
+                new FormatTest("a{0}b{1}c{2}d", 1, 2, 3),
+                new FormatTest("a{0}bb{1}ccc{2}dddd", 1, 2, 3),
+                new FormatTest("c{1}b{0}a", 1, 2),
+                new FormatTest("a{0}b", new int[] {1,2,3}),
+                new FormatTest("a{0}b", (Object) new Integer[] {1,2,3}),
+                new FormatTest("a{0}b", Arrays.asList(1,2,3)),
+                new FormatTest("{0,number,#.##}", 1.2345),
+                new FormatTest("'{0}'", 1)
+        };
+        for (FormatTest test : tests) {
+            String expected = MessageFormat.format(test.pattern, test.args);
+            String actual = SlingRequestProgressTracker.fastFormat(test.pattern, test.args);
+            assertEquals(expected, actual);
+        }
+    }
+
+    private static class FormatTest {
+        String pattern;
+        Object[] args;
+        public FormatTest(String pattern, Object... args) {
+            this.pattern = pattern;
+            this.args = args;
+        }
     }
 
 }

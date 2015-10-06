@@ -210,7 +210,7 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
 
     /** Creates an entry with the given entry tag and message */
     public void log(String format, Object... args) {
-        String message = MessageFormat.format(format, args);
+        String message = fastFormat(format, args);
         entries.add(new TrackingEntry(LOG_PREFIX + message));
     }
 
@@ -250,7 +250,7 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
      */
     public void logTimer(String name, String format, Object... args) {
         if (namedTimerEntries.containsKey(name)) {
-            logTimerInternal(name, MessageFormat.format(format, args), namedTimerEntries.get(name));
+            logTimerInternal(name, fastFormat(format, args), namedTimerEntries.get(name));
         }
     }
 
@@ -315,4 +315,37 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
             return message;
         }
     }
+
+    /**
+     * Fast MessageFormat implementation which assumes that most formats do not contain format types, styles and
+     * escaping and that format elements are in order. If one of the assumption fails, it falls back to MessageFormat.
+     */
+    static String fastFormat(String pattern, Object... arguments) {
+        if (arguments == null || arguments.length == 0) {
+            return pattern;
+        } else {
+            if (pattern.indexOf('\'') != -1) {
+                // Escaping is not supported, fall back
+                return MessageFormat.format(pattern, arguments);
+            } else {
+                StringBuilder message = new StringBuilder();
+                int previousEnd = 0;
+                for (int i = 0; i < arguments.length; i++) {
+                    String placeholder = '{' + String.valueOf(i) + '}';
+                    int placeholderIndex = pattern.indexOf(placeholder, previousEnd);
+                    if (placeholderIndex != -1) {
+                        message.append(pattern.substring(previousEnd, placeholderIndex));
+                        message.append(arguments[i]);
+                        previousEnd = placeholderIndex + placeholder.length();
+                    } else {
+                        // Type, style and random is not supported, fall back
+                        return MessageFormat.format(pattern, arguments);
+                    }
+                }
+                message.append(pattern.substring(previousEnd, pattern.length()));
+                return message.toString();
+            }
+        }
+    }
+
 }
