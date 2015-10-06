@@ -25,7 +25,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.eclipse.ui.console.SlingConsoleFactory;
 import org.apache.sling.ide.eclipse.ui.internal.Activator;
 import org.apache.sling.ide.transport.CommandExecutionProperties;
