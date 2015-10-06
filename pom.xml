@@ -56,6 +56,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Export-Package>!*</Export-Package>
                         <Import-Package>
                           org.apache.jackrabbit.test;resolution:=optional,
                           com.mongodb;resolution:=optional,
@@ -67,10 +68,6 @@
                         
                         <!-- TODO embedding shouldn't be needed but avoids classloading issues -->
                         <Embed-Dependency>oak-jcr</Embed-Dependency>
-                        
-                        <Private-Package>
-                            org.apache.sling.oak.server.*
-                        </Private-Package>
                     </instructions>
                 </configuration>                
             </plugin>
