@@ -51,7 +51,7 @@ class UpdateContentCommand extends AbstractCommand<Void> {
     public Result<Void> execute() {
         PostMethod post = new PostMethod(getPath());
     	try{
-            List<Part> parts = new ArrayList<Part>();
+            List<Part> parts = new ArrayList<>();
             for (Map.Entry<String, Object> property : properties.entrySet()) {
                 if (ProtectedNodes.exists(property.getKey())) {
                     continue;

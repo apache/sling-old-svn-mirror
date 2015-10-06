@@ -27,7 +27,7 @@ import org.osgi.service.event.EventAdmin;
 public class TracingCommand<T> implements Command<T> {
 
     public static <T> TracingCommand<T> wrap(Command<T> command, EventAdmin eventAdmin) {
-        return new TracingCommand<T>(command, eventAdmin);
+        return new TracingCommand<>(command, eventAdmin);
     }
 
     private final Command<T> command;
@@ -46,7 +46,7 @@ public class TracingCommand<T> implements Command<T> {
         long end = System.currentTimeMillis();
 
         if (eventAdmin != null) {
-            Map<String, Object> props = new HashMap<String, Object>();
+            Map<String, Object> props = new HashMap<>();
             props.put(CommandExecutionProperties.RESULT_TEXT, result.toString());
             props.put(CommandExecutionProperties.RESULT_STATUS, result.isSuccess());
             try {

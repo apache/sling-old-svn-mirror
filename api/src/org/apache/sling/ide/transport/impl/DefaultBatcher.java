@@ -26,7 +26,7 @@ import org.apache.sling.ide.util.PathUtil;
 
 public class DefaultBatcher implements Batcher {
     
-    private List<Command<?>> queue = new ArrayList<Command<?>>();
+    private List<Command<?>> queue = new ArrayList<>();
     
     @Override
     public void add(Command<?> command) {
@@ -37,7 +37,7 @@ public class DefaultBatcher implements Batcher {
     public List<Command<?>> get() {
 
         LinkedCommands batched = new LinkedCommands();
-        List<Command<?>> result = new ArrayList<Command<?>>();
+        List<Command<?>> result = new ArrayList<>();
         
         for ( Command<?> cmd : queue) {
             boolean accepted = batched.addLinked(cmd);
@@ -63,9 +63,9 @@ public class DefaultBatcher implements Batcher {
     
     private static class LinkedCommands {
         
-        private List<Command<?>> deletes = new ArrayList<Command<?>>();
-        private List<Command<?>> updates = new ArrayList<Command<?>>();
-        private List<Command<?>> reorders = new ArrayList<Command<?>>();
+        private List<Command<?>> deletes = new ArrayList<>();
+        private List<Command<?>> updates = new ArrayList<>();
+        private List<Command<?>> reorders = new ArrayList<>();
         
         public boolean addLinked(Command<?> newCmd) {
             

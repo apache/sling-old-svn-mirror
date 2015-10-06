@@ -41,7 +41,7 @@ public class SpyRepository implements Repository {
     public Command<Void> newAddOrUpdateNodeCommand(CommandContext context, FileInfo fileInfo, ResourceProxy resourceProxy,
             CommandExecutionFlag... flags) {
 
-        return new SpyCommand<Void>(resourceProxy, fileInfo, null, SpyCommand.Kind.ADD_OR_UPDATE, flags);
+        return new SpyCommand<>(resourceProxy, fileInfo, null, SpyCommand.Kind.ADD_OR_UPDATE, flags);
     }
 
     @Override

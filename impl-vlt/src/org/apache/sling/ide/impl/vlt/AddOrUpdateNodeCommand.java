@@ -125,8 +125,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
             return;
         }
         
-        Map<String, ResourceProxy> resourceChildrenPaths = new HashMap<String, ResourceProxy>(
-                resourceChildren.size());
+        Map<String, ResourceProxy> resourceChildrenPaths = new HashMap<>(resourceChildren.size());
         for (ResourceProxy child : resourceChildren) {
             resourceChildrenPaths.put(child.getPath(), child);
         }
@@ -184,7 +183,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
             updateFileLikeNodeTypes(node);
         }
 
-        Set<String> propertiesToRemove = new HashSet<String>();
+        Set<String> propertiesToRemove = new HashSet<>();
         PropertyIterator properties = node.getProperties();
         while (properties.hasNext()) {
             Property property = properties.nextProperty();
@@ -330,7 +329,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
     private void updateMixins(Node node, Object mixinValue) throws RepositoryException {
 
-        List<String> newMixins = new ArrayList<String>();
+        List<String> newMixins = new ArrayList<>();
 
         if (mixinValue instanceof String) {
             newMixins.add((String) mixinValue);
@@ -338,14 +337,14 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
             newMixins.addAll(Arrays.asList((String[]) mixinValue));
         }
 
-        List<String> oldMixins = new ArrayList<String>();
+        List<String> oldMixins = new ArrayList<>();
         for (NodeType mixinNT : node.getMixinNodeTypes()) {
             oldMixins.add(mixinNT.getName());
         }
 
-        List<String> mixinsToAdd = new ArrayList<String>(newMixins);
+        List<String> mixinsToAdd = new ArrayList<>(newMixins);
         mixinsToAdd.removeAll(oldMixins);
-        List<String> mixinsToRemove = new ArrayList<String>(oldMixins);
+        List<String> mixinsToRemove = new ArrayList<>(oldMixins);
         mixinsToRemove.removeAll(newMixins);
 
         for (String mixinToAdd : mixinsToAdd) {
@@ -384,20 +383,13 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
         getLogger().trace("Updating {0} property on node at {1} ", JCR_DATA, contentNode.getPath());
 
-        FileInputStream inputStream = new FileInputStream(file);
-        try {
+        
+        try (FileInputStream inputStream = new FileInputStream(file)) {
             Binary binary = node.getSession().getValueFactory().createBinary(inputStream);
             contentNode.setProperty(JCR_DATA, binary);
             // TODO: might have to be done differently since the client and server's clocks can differ
             // and the last_modified should maybe be taken from the server's time..
             contentNode.setProperty(JCR_LASTMODIFIED, Calendar.getInstance());
-
-        } finally {
-            try {
-                inputStream.close();
-            } catch (IOException e) {
-                // don't care
-            }
         }
     }
 

@@ -40,7 +40,7 @@ public class RepositoryImpl implements Repository {
     }
 
     private <T> Command<T> wrap(AbstractCommand<T> command) {
-        return new TracingCommand<T>(command, eventAdmin);
+        return new TracingCommand<>(command, eventAdmin);
     }
 
 	@Override

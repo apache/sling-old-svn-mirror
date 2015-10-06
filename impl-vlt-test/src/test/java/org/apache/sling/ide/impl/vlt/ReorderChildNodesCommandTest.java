@@ -101,7 +101,7 @@ public class ReorderChildNodesCommandTest {
 
             session.refresh(false);
 
-            finalOrder = new ArrayList<String>();
+            finalOrder = new ArrayList<>();
 
             NodeIterator nodes = session.getNode("/content").getNodes();
             while (nodes.hasNext()) {

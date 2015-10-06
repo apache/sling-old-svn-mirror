@@ -41,7 +41,7 @@ public class PluginLoggerRegistrar {
      */
     public static ServiceRegistration<?> register(Plugin plugin) {
 
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        Dictionary<String, Object> props = new Hashtable<>();
         props.put(DebugOptions.LISTENER_SYMBOLICNAME, plugin.getBundle().getSymbolicName());
         BundleContext ctx = plugin.getBundle().getBundleContext();
         return ctx.registerService(new String[] { DebugOptionsListener.class.getName(), Logger.class.getName() },

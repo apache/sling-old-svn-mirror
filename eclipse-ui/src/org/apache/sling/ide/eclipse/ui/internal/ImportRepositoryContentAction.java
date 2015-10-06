@@ -98,7 +98,7 @@ public class ImportRepositoryContentAction {
         this.project = project;
         this.serializationManager = serializationManager;
         this.ignoredResources = new IgnoredResources();
-        this.currentResources = new HashSet<IResource>();
+        this.currentResources = new HashSet<>();
     }
 
     public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException,
@@ -261,7 +261,7 @@ public class ImportRepositoryContentAction {
         SerializationData serializationData = builder.buildSerializationData(contentSyncRoot, resource);
         logger.trace("For resource at path {0} got serialization data {1}", resource.getPath(), serializationData);
 
-        final List<ResourceProxy> resourceChildren = new LinkedList<ResourceProxy>(resource.getChildren());
+        final List<ResourceProxy> resourceChildren = new LinkedList<>(resource.getChildren());
 		if (serializationData != null) {
 
             IPath serializationFolderPath = contentSyncRootDir.getProjectRelativePath().append(
@@ -388,15 +388,13 @@ public class ImportRepositoryContentAction {
 
             logger.trace("Found ignore file at {0}", vltIgnore.getFullPath());
 
-            InputStream contents = ((IFile) vltIgnore).getContents();
-            try {
+            
+            try (InputStream contents = ((IFile) vltIgnore).getContents()) {
                 List<String> ignoreLines = IOUtils.readLines(contents);
                 for (String ignoreLine : ignoreLines) {
                     logger.trace("Registering ignore rule {0}:{1}", path, ignoreLine);
                     ignoredResources.registerRegExpIgnoreRule(path, ignoreLine);
                 }
-            } finally {
-                IOUtils.closeQuietly(contents);
             }
         }
     }

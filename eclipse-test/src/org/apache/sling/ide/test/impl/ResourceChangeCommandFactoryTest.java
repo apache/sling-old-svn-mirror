@@ -99,7 +99,7 @@ public class ResourceChangeCommandFactoryTest {
         SpyCommand<?> command = (SpyCommand<?>) factory.newCommandForAddedOrUpdated(spyRepo,
                 contentProject.findMember("jcr_root/content/test-root/nested"));
 
-        Map<String, Object> props = new HashMap<String, Object>();
+        Map<String, Object> props = new HashMap<>();
         props.put("jcr:primaryType", "sling:Folder");
         props.put("jcr:title", "Some Folder");
 

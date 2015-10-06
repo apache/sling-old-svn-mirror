@@ -51,7 +51,7 @@ public abstract class SelectionUtils {
 		if (project == null) {
 			return Collections.emptyList();
 		}
-		List<IServer> servers = new ArrayList<IServer>();
+		List<IServer> servers = new ArrayList<>();
 
         IModule[] modules = ServerUtil.getModules(project);
 
