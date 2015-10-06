@@ -78,6 +78,7 @@ public class SlingRequestProgressTrackerTest {
                 new FormatTest("a{0}b{1}c{2}d", 1, 2, 3),
                 new FormatTest("a{0}bb{1}ccc{2}dddd", 1, 2, 3),
                 new FormatTest("c{1}b{0}a", 1, 2),
+                new FormatTest("c{1}b{0}a{1}c", 1, 2),
                 new FormatTest("a{0}b", new int[] {1,2,3}),
                 new FormatTest("a{0}b", (Object) new Integer[] {1,2,3}),
                 new FormatTest("a{0}b", Arrays.asList(1,2,3)),

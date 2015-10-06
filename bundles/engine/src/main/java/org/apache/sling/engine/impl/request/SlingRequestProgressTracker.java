@@ -332,14 +332,14 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
                 int previousEnd = 0;
                 for (int i = 0; i < arguments.length; i++) {
                     String placeholder = '{' + String.valueOf(i) + '}';
-                    int placeholderIndex = pattern.indexOf(placeholder, previousEnd);
-                    if (placeholderIndex != -1) {
+                    int placeholderIndex = pattern.indexOf(placeholder);
+                    if (placeholderIndex < previousEnd) { // -1 or before previous placeholder
+                        // Type, style and random order are not supported, fall back
+                        return MessageFormat.format(pattern, arguments);
+                    } else {
                         message.append(pattern.substring(previousEnd, placeholderIndex));
                         message.append(arguments[i]);
                         previousEnd = placeholderIndex + placeholder.length();
-                    } else {
-                        // Type, style and random is not supported, fall back
-                        return MessageFormat.format(pattern, arguments);
                     }
                 }
                 message.append(pattern.substring(previousEnd, pattern.length()));
