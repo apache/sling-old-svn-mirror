@@ -174,26 +174,6 @@ public class UpdateUserTest {
 	}
 
 	/**
-	 * Test for SLING-2069
-	 * @throws IOException
-	 */
-	@Test 
-    @Category(JackrabbitOnly.class) // TODO: fails on Oak
-	public void testChangeUserPasswordAsUserAdminMemberWithoutOldPwd() throws IOException {
-		testUserId = H.createTestUser();
-		H.addUserToUserAdminGroup(testUserId);
-		
-        String postUrl = HttpTest.HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".changePassword.html";
-
-		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair("newPwd", "testNewPwd"));
-		postParams.add(new NameValuePair("newPwdConfirm", "testNewPwd"));
-		
-		Credentials creds = new UsernamePasswordCredentials(testUserId, "testPwd");
-		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
-	}
-
-	/**
 	 * Test for SLING-2072
 	 * @throws IOException
 	 */
