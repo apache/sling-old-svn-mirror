@@ -21,9 +21,8 @@ import static org.apache.sling.ide.eclipse.ui.internal.SlingLaunchpadCombo.Valid
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.artifacts.EmbeddedArtifact;
+import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.SlingLaunchpadConfigurationDefaults;
 import org.apache.sling.ide.eclipse.ui.internal.Activator;

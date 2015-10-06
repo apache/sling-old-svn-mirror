@@ -19,7 +19,6 @@ package org.apache.sling.ide.impl.vlt;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 

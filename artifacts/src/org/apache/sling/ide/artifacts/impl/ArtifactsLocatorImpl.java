@@ -18,8 +18,8 @@ package org.apache.sling.ide.artifacts.impl;
 
 import java.net.URL;
 
-import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.artifacts.EmbeddedArtifact;
+import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
 

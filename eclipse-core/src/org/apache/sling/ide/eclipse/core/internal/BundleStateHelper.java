@@ -26,7 +26,6 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;

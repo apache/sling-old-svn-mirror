@@ -22,9 +22,9 @@ import java.util.Set;
 
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.FileInfo;
+import org.apache.sling.ide.transport.Repository.CommandExecutionFlag;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.transport.Result;
-import org.apache.sling.ide.transport.Repository.CommandExecutionFlag;
 
 /**
  * The <tt>SpyCommand</tt> records the arguments passed to it and can be used to verify that the invocation is made with

@@ -18,7 +18,6 @@ package org.apache.sling.ide.eclipse.ui.actions;
 
 import org.apache.sling.ide.eclipse.ui.nav.model.JcrNode;
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.dnd.Clipboard;
