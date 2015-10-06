@@ -125,8 +125,8 @@ public class ClusterViewServiceImpl implements ClusterViewService {
                 return clusterViewImpl;
             } else {
                 logger.info("getClusterView: the local instance ("+getSlingId()+") is currently not included in the existing established view! "
-                        + "This is normal at startup, but indicates a pseudo-network-partitioning (SLING-3432) at other times, "
-                        + "in which case increasing the heartbeatTimeout can help, but more importantly the repository-delays/network/clocks must be analyzed. "
+                        + "This is normal at startup. At other times is pseudo-network-partitioning is an indicator for repository/network-delays or clocks-out-of-sync (SLING-3432). "
+                        + "(increasing the heartbeatTimeout can help as a workaround too) "
                         + "The local instance will stay in TOPOLOGY_CHANGING or pre _INIT mode until a new vote was successful.");
                 throw new UndefinedClusterViewException(Reason.ISOLATED_FROM_TOPOLOGY, 
                         "established view does not include local instance - isolated");

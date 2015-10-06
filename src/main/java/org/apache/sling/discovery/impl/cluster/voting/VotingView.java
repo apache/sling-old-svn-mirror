@@ -311,6 +311,7 @@ public class VotingView extends View {
         final ModifiableValueMap memberMap = memberResource.adaptTo(ModifiableValueMap.class);
 
         if (vote == null) {
+            logger.trace("vote: removing vote (vote==null)");
             memberMap.remove("vote");
         } else {
             boolean shouldVote = true;
