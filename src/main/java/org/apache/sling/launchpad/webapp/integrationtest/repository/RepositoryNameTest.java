@@ -19,20 +19,14 @@ package org.apache.sling.launchpad.webapp.integrationtest.repository;
 import static org.junit.Assert.assertEquals;
 
 import org.apache.sling.commons.testing.integration.HttpTest;
-import org.apache.sling.commons.testing.junit.categories.JackrabbitOnly;
 import org.apache.sling.launchpad.webapp.integrationtest.util.RepositoryTestUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
-/** Verify the repository name when running on Jackrabbit.
- *  Checking that this test class was executed is a good
- *  way of verifying which repository implementation was
- *  used to run the integration tests.
+/** Verify the repository name when running on Oak.
  */
-@Category(JackrabbitOnly.class)
-public class JackrabbitRepositoryNameTest {
+public class RepositoryNameTest {
 
     private final HttpTest H = new HttpTest();
     
@@ -47,8 +41,8 @@ public class JackrabbitRepositoryNameTest {
     }
     
     @Test
-    public void checkJackrabbitName() throws Exception {
+    public void checkOakName() throws Exception {
         RepositoryTestUtil.logDescriptors(H,  "jcr.repository.name", "jcr.repository.version");
-        assertEquals("Jackrabbit", RepositoryTestUtil.getDescriptor(H, "jcr.repository.name"));
+        assertEquals("Apache Jackrabbit Oak", RepositoryTestUtil.getDescriptor(H, "jcr.repository.name"));
     }
 }
