@@ -22,11 +22,11 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>25</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.auth.form</artifactId>
-    <version>1.0.7-SNAPSHOT</version>
+    <version>1.0.8</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Form Based Authentication Handler</name>
@@ -43,9 +43,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/auth/form</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/auth/form</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/auth/form</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.auth.form-1.0.8</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.auth.form-1.0.8</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.auth.form-1.0.8</url>
     </scm>
 
     <build>
