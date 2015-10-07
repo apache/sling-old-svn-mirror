@@ -226,7 +226,6 @@
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/FiltersTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/resolution/WarSelectorServletTest.*</exclude>
               </excludes>
-              <excludedGroups>org.apache.sling.commons.testing.junit.categories.JackrabbitOnly</excludedGroups>
             </configuration>
           </plugin>
         </plugins>

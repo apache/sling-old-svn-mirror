@@ -137,7 +137,6 @@
                     <excludes>
                         <exclude>${failsafe.exclude}</exclude>
                     </excludes>
-                    <excludedGroups>org.apache.sling.commons.testing.junit.categories.JackrabbitOnly</excludedGroups>
                     <systemPropertyVariables>
                         <launchpad.http.server.url>http://${test.host}:${http.port}/</launchpad.http.server.url>
                         <launchpad.webdav.server.url>http://${test.host}:${http.port}/${webdav.workspace.path}</launchpad.webdav.server.url>
