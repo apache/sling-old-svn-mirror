@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 
 import java.text.MessageFormat;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Iterator;
 
 import org.junit.Test;
@@ -72,22 +74,42 @@ public class SlingRequestProgressTrackerTest {
     @Test
     public void testFastFormat() {
         FormatTest[] tests = {
+                // Data types
                 new FormatTest("{0}", 1),
+                new FormatTest("{0}", Integer.MAX_VALUE),
+                new FormatTest("{0}", Long.MAX_VALUE),
+                new FormatTest("{0}", Math.PI),
+                new FormatTest("{0}", 123456.123456),
+                new FormatTest("{0}", Float.MAX_VALUE),
+                new FormatTest("{0}", new Date()),
+                new FormatTest("{0}", Calendar.getInstance()),
+                new FormatTest("{0}", true),
+                new FormatTest("{0}", false),
+                new FormatTest("{0}", new int[] {1,2,3}),
+                new FormatTest("{0}", (Object) new Integer[] {1,2,3}),
+                new FormatTest("{0}", Arrays.asList(1,2,3)),
+                new FormatTest("{0}", "text"),
+
+                // Patterns
                 new FormatTest("{0}{0}", 1, 2),
                 new FormatTest("a{0}b{1}c", 1, 2),
                 new FormatTest("a{0}b{1}c{2}d", 1, 2, 3),
-                new FormatTest("a{0}bb{1}ccc{2}dddd", 1, 2, 3),
+                new FormatTest("a{0}bb{1}ccc{2}dddd", 10, 20, 30),
                 new FormatTest("c{1}b{0}a", 1, 2),
                 new FormatTest("c{1}b{0}a{1}c", 1, 2),
-                new FormatTest("a{0}b", new int[] {1,2,3}),
-                new FormatTest("a{0}b", (Object) new Integer[] {1,2,3}),
-                new FormatTest("a{0}b", Arrays.asList(1,2,3)),
+
+                // Type/style
+                new FormatTest("c{0,number,#.##}b{0}a{1}c", 1, 2),
                 new FormatTest("{0,number,#.##}", 1.2345),
+
+                // Escaping
                 new FormatTest("'{0}'", 1)
         };
+
+        SlingRequestProgressTracker progressTracker = new SlingRequestProgressTracker();
         for (FormatTest test : tests) {
             String expected = MessageFormat.format(test.pattern, test.args);
-            String actual = SlingRequestProgressTracker.fastFormat(test.pattern, test.args);
+            String actual = progressTracker.fastFormat(test.pattern, test.args);
             assertEquals(expected, actual);
         }
     }

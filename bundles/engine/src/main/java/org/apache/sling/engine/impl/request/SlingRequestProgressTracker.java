@@ -19,8 +19,11 @@
 package org.apache.sling.engine.impl.request;
 
 import java.io.PrintWriter;
+import java.text.DateFormat;
 import java.text.MessageFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -128,6 +131,10 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
      * start of the respective timer.
      */
     private final Map<String, Long> namedTimerEntries = new HashMap<String, Long>();
+
+    // Reusable formats for fastFormat(). Cannot be static because these classes are not thread safe.
+    private NumberFormat numberFormat;
+    private DateFormat dateFormat;
 
     /**
      * Creates a new request progress tracker.
@@ -316,11 +323,25 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
         }
     }
 
+    private NumberFormat getNumberFormat() {
+        if (numberFormat == null) {
+            numberFormat = NumberFormat.getNumberInstance();
+        }
+        return numberFormat;
+    }
+
+    private DateFormat getDateFormat() {
+        if (dateFormat == null) {
+            dateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT);
+        }
+        return dateFormat;
+    }
+
     /**
      * Fast MessageFormat implementation which assumes that most formats do not contain format types, styles and
      * escaping and that format elements are in order. If one of the assumption fails, it falls back to MessageFormat.
      */
-    static String fastFormat(String pattern, Object... arguments) {
+    String fastFormat(String pattern, Object... arguments) {
         if (arguments == null || arguments.length == 0) {
             return pattern;
         } else {
@@ -331,15 +352,26 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
                 StringBuilder message = new StringBuilder();
                 int previousEnd = 0;
                 for (int i = 0; i < arguments.length; i++) {
-                    String placeholder = '{' + String.valueOf(i) + '}';
+                    String placeholder = '{' + String.valueOf(i);
                     int placeholderIndex = pattern.indexOf(placeholder);
-                    if (placeholderIndex < previousEnd) { // -1 or before previous placeholder
+                    // -1 or before previous placeholder || format element with type/style
+                    if (placeholderIndex < previousEnd
+                            || pattern.charAt(placeholderIndex + placeholder.length()) != '}') {
                         // Type, style and random order are not supported, fall back
                         return MessageFormat.format(pattern, arguments);
                     } else {
+                        // Format argument if necessary
+                        Object argument = arguments[i];
+                        if (argument instanceof Number) {
+                            argument = getNumberFormat().format(argument);
+                        } else if (argument instanceof Date) {
+                            argument = getDateFormat().format(argument);
+                        }
+
+                        // Append previous part of the string and formatted argument
                         message.append(pattern.substring(previousEnd, placeholderIndex));
-                        message.append(arguments[i]);
-                        previousEnd = placeholderIndex + placeholder.length();
+                        message.append(argument);
+                        previousEnd = placeholderIndex + placeholder.length() + 1;
                     }
                 }
                 message.append(pattern.substring(previousEnd, pattern.length()));
