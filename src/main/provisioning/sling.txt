@@ -28,7 +28,7 @@
     org.apache.geronimo.bundles/commons-httpclient/3.1_1
     org.apache.httpcomponents/httpcore-osgi/4.4
     org.apache.httpcomponents/httpclient-osgi/4.4
-    org.apache.sling/org.apache.sling.adapter/2.1.4
+    org.apache.sling/org.apache.sling.adapter/2.1.5-SNAPSHOT
     org.apache.sling/org.apache.sling.api/2.9.0
     org.apache.sling/org.apache.sling.auth.core/1.3.10
     org.apache.sling/org.apache.sling.auth.form/1.0.7-SNAPSHOT
@@ -86,7 +86,7 @@
     org.apache.felix/org.apache.felix.webconsole.plugins.packageadmin/1.0.0
     org.apache.felix/org.apache.felix.webconsole.plugins.event/1.1.2
     org.apache.felix/org.apache.felix.webconsole.plugins.memoryusage/1.0.6
-    org.apache.sling/org.apache.sling.commons.json/2.0.10
+    org.apache.sling/org.apache.sling.commons.json/2.0.11-SNAPSHOT
     org.apache.felix/org.apache.felix.bundlerepository/1.6.4
     org.apache.sling/org.apache.sling.extensions.threaddump/0.2.2
     org.apache.sling/org.apache.sling.jcr.webconsole/1.0.2
