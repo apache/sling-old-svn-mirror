@@ -33,11 +33,9 @@ import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTest;
-import org.apache.sling.commons.testing.junit.categories.JackrabbitOnly;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /**
  * Tests for the 'updateAuthorizable' and 'changePassword' Sling Post 
