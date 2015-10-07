@@ -275,7 +275,7 @@
       jaas.configProviderName=FelixJaasProvider
     </config>
     <config name="org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService">
-      localIndexDir=sling/oak/repository/index
+      localIndexDir=sling/repository/index
     </config>
     <config name="org.apache.jackrabbit.oak.security.authentication.AuthenticationConfigurationImpl">
       org.apache.jackrabbit.oak.authentication.configSpiName=FelixJaasProvider
@@ -303,7 +303,7 @@
   <feature name="sling-launchpad-oak-tar" version="${project.version}">
     <config name="org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService">
       name=Default\ NodeStore
-      repository.home=sling/oak/repository
+      repository.home=sling/repository
     </config>
     <feature version="${project.version}">sling-launchpad-oak</feature>
   </feature>
