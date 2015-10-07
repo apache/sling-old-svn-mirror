@@ -337,8 +337,9 @@ public class JcrPropertyMap
             return cachedValued;
         }
 
+        final String key;
         try {
-            final String key = escapeKeyName(name);
+            key = escapeKeyName(name);
             if (node.hasProperty(key)) {
                 final Property prop = node.getProperty(key);
                 return cacheProperty(prop);
@@ -351,7 +352,7 @@ public class JcrPropertyMap
             // for compatibility with older versions we use the (wrong) ISO9075 path
             // encoding
             final String oldKey = ISO9075.encodePath(name);
-            if (node.hasProperty(oldKey)) {
+            if (!oldKey.equals(key) && node.hasProperty(oldKey)) {
                 final Property prop = node.getProperty(oldKey);
                 return cacheProperty(prop);
             }
