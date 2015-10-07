@@ -173,6 +173,8 @@
                         <exclude>jackrabbit/**</exclude>
                         <exclude>sling/**</exclude>
                         <exclude>derby.log</exclude>
+                        <!-- remove when parent 26 is released -->
+                        <exclude>hs_err_*.log</exclude>
                     </excludes>
                 </configuration>
             </plugin>
