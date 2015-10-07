@@ -313,7 +313,7 @@
       db=sling
     </config>
     <feature version="${project.version}">sling-launchpad-oak</feature>
-    <bundle>mvn:org.mongodb/mongo-java-driver/2.13.1</bundle>
+    <bundle>mvn:org.mongodb/mongo-java-driver/2.13.3</bundle>
   </feature>
   <!-- Apache Sling Scripting -->
   <feature name="sling-scripting" version="${project.version}">
