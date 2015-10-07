@@ -26,7 +26,6 @@
 # and cannot be changed after the first startup
 [settings]
     sling.run.mode.install.options=oak|oak_tar,oak_mongo
-    repository.home=${sling.home}/repository
 
 [artifacts]
     org.slf4j/slf4j-api/1.7.6
