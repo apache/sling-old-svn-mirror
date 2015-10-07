@@ -313,6 +313,8 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                         <exclude>DEPENDENCIES</exclude>
                         <!-- .rej files from svn/patch -->
                         <exclude>**/*.rej</exclude>
+                        <!-- Exclude Java crash log files -->
+                        <exclude>hs_err_*.log</exclude>
                     </excludes>
                 </configuration>
                 <executions>
