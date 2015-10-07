@@ -180,12 +180,8 @@ public class ResourceWrapper implements Resource {
      */
     @Override
     public String toString() {
-        final String className;
-        if (getClass().getSimpleName().length() == 0) {
-            className = getClass().getName();
-        } else {
-            className = getClass().getSimpleName();
-        }
+        final String simpleName = getClass().getSimpleName();
+        final String className = (simpleName.length() > 0) ? simpleName : getClass().getName();
         return className + ", type=" + getResourceType()
             + ", path=" + getPath() + ", resource=[" + getResource() + "]";
     }
