@@ -34,7 +34,7 @@
     org.apache.jackrabbit/oak-blob/${oak.version}
 
 [artifacts startLevel=15 runModes=oak_mongo]
-    org.mongodb/mongo-java-driver/2.13.0
+    org.mongodb/mongo-java-driver/2.13.3
 
 # start the Oak server instance after all components have been configured
 # and started to avoid restarting that component ( see SLING-4556 )
