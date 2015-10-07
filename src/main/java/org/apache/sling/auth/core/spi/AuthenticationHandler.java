@@ -119,6 +119,7 @@ public interface AuthenticationHandler {
     static enum FAILURE_REASON_CODES {
         INVALID_LOGIN,
         PASSWORD_EXPIRED,
+        PASSWORD_EXPIRED_AND_NEW_PASSWORD_IN_HISTORY,
         UNKNOWN;
 
         @Override

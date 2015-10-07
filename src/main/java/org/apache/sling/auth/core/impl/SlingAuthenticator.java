@@ -28,6 +28,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.jcr.SimpleCredentials;
 import javax.security.auth.login.CredentialExpiredException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletRequestEvent;
@@ -464,7 +465,7 @@ public class SlingAuthenticator implements Authenticator,
         try {
             postProcess(authInfo, request, response);
         } catch (LoginException e) {
-            handleLoginFailure(request, response, authInfo.getUser(), e);
+            handleLoginFailure(request, response, authInfo, e);
             return false;
         }
 
@@ -818,7 +819,7 @@ public class SlingAuthenticator implements Authenticator,
             // now find a way to get credentials unless the feedback handler
             // has committed a response to the client already
             if (!response.isCommitted()) {
-                return handleLoginFailure(request, response, authInfo.getUser(), re);
+                return handleLoginFailure(request, response, authInfo, re);
             }
 
         }
@@ -871,7 +872,7 @@ public class SlingAuthenticator implements Authenticator,
             } catch (LoginException re) {
 
                 // cannot login > fail login, do not try to authenticate
-                handleLoginFailure(request, response, "anonymous user", re);
+                handleLoginFailure(request, response, new AuthenticationInfo(null, "anonymous user"), re);
                 return false;
 
             }
@@ -928,9 +929,10 @@ public class SlingAuthenticator implements Authenticator,
     }
 
     private boolean handleLoginFailure(final HttpServletRequest request,
-            final HttpServletResponse response, final String user,
+            final HttpServletResponse response, final AuthenticationInfo authInfo,
             final Exception reason) {
 
+        String user = authInfo.getUser();
         boolean processRequest = false;
         if (reason.getClass().getName().contains("TooManySessionsException")) {
 
@@ -959,10 +961,19 @@ public class SlingAuthenticator implements Authenticator,
                 if (reason.getCause() instanceof CredentialExpiredException) {
                     // force failure attribute to be set so handlers can
                     // react to this special circumstance
-                    request.setAttribute(AuthenticationHandler.FAILURE_REASON_CODE,
-                            AuthenticationHandler.FAILURE_REASON_CODES.PASSWORD_EXPIRED);
-                    ensureAttribute(request, AuthenticationHandler.FAILURE_REASON,
-                            "Password expired");
+
+                    AuthenticationHandler.FAILURE_REASON_CODES code = AuthenticationHandler.FAILURE_REASON_CODES.PASSWORD_EXPIRED;
+                    String message = "Password expired";
+
+                    Object creds = authInfo.get("user.jcr.credentials");
+                    if (creds instanceof SimpleCredentials && ((SimpleCredentials) creds).getAttribute("PasswordHistoryException") != null) {
+                        code = AuthenticationHandler.FAILURE_REASON_CODES.PASSWORD_EXPIRED_AND_NEW_PASSWORD_IN_HISTORY;
+                        message = "Password expired and new password found in password history";
+                    }
+
+                    request.setAttribute(AuthenticationHandler.FAILURE_REASON_CODE, code);
+                    ensureAttribute(request, AuthenticationHandler.FAILURE_REASON, message);
+
                 } else {
                     // preset a reason for the login failure (if not done already)
                     request.setAttribute(AuthenticationHandler.FAILURE_REASON_CODE,
