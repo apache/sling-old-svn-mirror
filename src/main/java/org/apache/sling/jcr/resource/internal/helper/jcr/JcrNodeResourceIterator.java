@@ -145,7 +145,7 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
         if (parentPath == null) {
             path = node.getPath();
         } else {
-            path = String.format("%s/%s", "/".equals(parentPath) ? "" : parentPath, node.getName());
+            path = "/".equals(parentPath) ? '/' + node.getName() : parentPath + '/' + node.getName();
         }
         return helper.pathMapper.mapJCRPathToResourcePath(path);
     }
