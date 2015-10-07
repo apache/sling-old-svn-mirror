@@ -27,6 +27,9 @@ import org.apache.commons.io.IOUtils;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.util.Validator;
@@ -35,35 +38,26 @@ import org.codehaus.plexus.util.DirectoryScanner;
 /**
  * Plugin to validate resources:
  * - validate json files
- *
- * @goal validate
- * @phase process-resources
  */
+@Mojo(name = "validate", defaultPhase = LifecyclePhase.PROCESS_RESOURCES)
 public class ValidationMojo extends AbstractMojo {
 
     /**
      * The Maven project.
-     *
-     * @parameter expression="${project}"
-     * @required
-     * @readonly
      */
+    @Parameter( defaultValue = "${project}", readonly = true )
     private MavenProject project;
 
     /**
      * Whether to skip the validation
-     *
-     * @parameter expression="${sling.validation.skip}" default-value="false"
-     * @required
      */
+    @Parameter(property = "sling.validation.skip", defaultValue = "false", required = true)
     private boolean skip;
 
     /**
      * Whether to skip the json validation
-     *
-     * @parameter expression="${sling.validation.skipJson}" default-value="false"
-     * @required
      */
+    @Parameter(property = "sling.validation.skipJson", defaultValue = "false", required = true)
     private boolean skipJson;
 
     /**

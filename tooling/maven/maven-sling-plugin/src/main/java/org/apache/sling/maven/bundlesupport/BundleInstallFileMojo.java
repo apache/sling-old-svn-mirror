@@ -29,108 +29,87 @@ import org.apache.maven.artifact.repository.layout.ArtifactRepositoryLayout;
 import org.apache.maven.artifact.resolver.AbstractArtifactResolutionException;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.StringUtils;
 
 /**
  * Install an OSGi bundle to a running Sling instance.
- *
- * @goal install-file
- * @description install an OSGi bundle jar to a running Sling instance
- * @requiresProject false
  */
+@Mojo(name = "install-file", requiresProject = false)
 public class BundleInstallFileMojo extends AbstractBundleInstallMojo {
 
     /**
      * The name of the generated JAR file.
-     *
-     * @parameter expression="${sling.file}"
      */
+    @Parameter(property="sling.file")
     private String bundleFileName;
 
     /**
      * The groupId of the artifact to install
-     * @parameter expression="${sling.groupId}"
      */
+    @Parameter(property="sling.groupId")
     private String groupId;
 
     /**
      * The artifactId of the artifact to install
-     * @parameter expression="${sling.artifactId}"
      */
+    @Parameter(property="sling.artifactId")
     private String artifactId;
 
     /**
      * The version of the artifact to install
-     * @parameter expression="${sling.version}"
      */
+    @Parameter(property="sling.version")
     private String version;
 
     /**
      * The packaging of the artifact to install
-     * @parameter expression="${sling.packaging}" default-value="jar"
      */
+    @Parameter(property="sling.packaging", defaultValue="jar")
     private String packaging = "jar";
 
     /**
      * The classifier of the artifact to install
-     * @parameter expression="${sling.classifier}"
      */
+    @Parameter(property="sling.classifier")
     private String classifier;
 
     /**
      * A string of the form groupId:artifactId:version[:packaging[:classifier]].
-     * @parameter expression="${sling.artifact}"
      */
+    @Parameter(property="sling.artifact")
     private String artifact;
 
-    /**
-     *
-     * @parameter expression="${project.remoteArtifactRepositories}"
-     * @required
-     * @readonly
-     */
+    @Parameter(property="project.remoteArtifactRepositories", required = true, readonly = true)
     private List pomRemoteRepositories;
 
     /**
      * The id of the repository from which we'll download the artifact
-     * @parameter expression="${sling.repoId}" default-value="temp"
      */
+    @Parameter(property = "sling.repoId", defaultValue = "temp")
     private String repositoryId = "temp";
 
     /**
      * The url of the repository from which we'll download the artifact
-     * @parameter expression="${sling.repoUrl}"
      */
+    @Parameter(property = "sling.repoUrl")
     private String repositoryUrl;
 
-    /**
-     * @component
-     * @readonly
-     */
+    @Component
     private ArtifactFactory artifactFactory;
 
-    /**
-     * @component
-     * @readonly
-     */
+    @Component
     private ArtifactResolver artifactResolver;
 
-    /**
-     * @component
-     * @readonly
-     */
+    @Component
     private ArtifactRepositoryFactory artifactRepositoryFactory;
 
-    /**
-     * @component roleHint="default"
-     */
+    @Component(hint="default")
     private ArtifactRepositoryLayout repositoryLayout;
 
-    /**
-     *
-     * @parameter expression="${localRepository}"
-     * @readonly
-     */
+    @Parameter(property="localRepository", readonly = true)
     private ArtifactRepository localRepository;
 
     @Override

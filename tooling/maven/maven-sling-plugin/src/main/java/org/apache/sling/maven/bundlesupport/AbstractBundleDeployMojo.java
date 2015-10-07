@@ -39,16 +39,15 @@ import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Parameter;
 
 abstract class AbstractBundleDeployMojo extends AbstractBundlePostMojo {
 
     /**
      * The URL to the OSGi Bundle repository to which the bundle is posted, e.g.
      * <code>http://obr.sample.com</code>
-     * 
-     * @parameter expression="${obr}"
-     * @required
      */
+    @Parameter(required = true, property="obr")
     private String obr;
 
     /**

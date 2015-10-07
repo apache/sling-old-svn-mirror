@@ -45,6 +45,7 @@ import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
@@ -65,11 +66,8 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
 
     /**
      * The URL of the running Sling instance.
-     *
-     * @parameter expression="${sling.url}"
-     *            default-value="http://localhost:8080/system/console"
-     * @required
      */
+    @Parameter(property="sling.url", defaultValue="http://localhost:8080/system/console", required = true)
     protected String slingUrl;
 
     /**
@@ -79,86 +77,65 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
      * POM (eg. <code>sling.url=http://localhost:8080</code> and
      * <code>sling.urlSuffix=/project/specific/path</code>). This is typically used
      * in conjunction with a HTTP PUT (<code>sling.usePut=true</code>).
-     *
-     * @parameter expression="${sling.urlSuffix}"
      */
+    @Parameter(property="sling.urlSuffix")
     protected String slingUrlSuffix;
 
     /**
      * If a simple HTTP PUT should be used instead of the standard POST to the
      * felix console. In the <code>uninstall</code> goal, a HTTP DELETE will be
      * used.
-     *
-     * @parameter expression="${sling.usePut}" default-value="false"
-     * @required
      */
+    @Parameter(property="sling.usePut", defaultValue = "false", required = true)
     protected boolean usePut;
 
     /**
      * The content type / mime type used for the HTTP PUT (if
      * <code>sling.usePut=true</code>).
-     *
-     * @parameter expression="${sling.mimeType}"
-     *            default-value="application/java-archive"
-     * @required
      */
+    @Parameter(property="sling.mimeType", defaultValue = "application/java-archive", required = true)
     protected String mimeType;
 
     /**
      * The user name to authenticate at the running Sling instance.
-     *
-     * @parameter expression="${sling.user}" default-value="admin"
-     * @required
      */
+    @Parameter(property="sling.user", defaultValue = "admin", required = true)
     private String user;
 
     /**
      * The password to authenticate at the running Sling instance.
-     *
-     * @parameter expression="${sling.password}" default-value="admin"
-     * @required
      */
+    @Parameter(property="sling.password", defaultValue = "admin", required = true)
     private String password;
 
     /**
      * The startlevel for the uploaded bundle
-     *
-     * @parameter expression="${sling.bundle.startlevel}" default-value="20"
-     * @required
      */
+    @Parameter(property="sling.bundle.startlevel", defaultValue = "20", required = true)
     private String bundleStartLevel;
 
     /**
      * Whether to start the uploaded bundle or not
-     *
-     * @parameter expression="${sling.bundle.start}" default-value="true"
-     * @required
      */
+    @Parameter(property="sling.bundle.start", defaultValue = "true", required = true)
     private boolean bundleStart;
 
     /**
      * Whether to refresh the packages after installing the uploaded bundle
-     *
-     * @parameter expression="${sling.refreshPackages}" default-value="true"
-     * @required
      */
+    @Parameter(property="sling.refreshPackages", defaultValue = "true", required = true)
     private boolean refreshPackages;
 
     /**
      * Whether to add the mapping for the fs provider
-     *
-     * @parameter expression="${sling.mountByFS}" default-value="false"
-     * @required
      */
+    @Parameter(property="sling.mountByFS", defaultValue = "false", required = true)
     private boolean mountByFS;
 
     /**
      * The Maven project.
-     *
-     * @parameter expression="${project}"
-     * @required
-     * @readonly
      */
+    @Parameter(defaultValue = "${project}", required = true, readonly = true)
     protected MavenProject project;
 
     public AbstractBundleInstallMojo() {
