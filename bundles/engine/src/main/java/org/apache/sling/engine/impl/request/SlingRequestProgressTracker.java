@@ -19,11 +19,7 @@
 package org.apache.sling.engine.impl.request;
 
 import java.io.PrintWriter;
-import java.text.DateFormat;
-import java.text.MessageFormat;
-import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -132,9 +128,7 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
      */
     private final Map<String, Long> namedTimerEntries = new HashMap<String, Long>();
 
-    // Reusable formats for fastFormat(). Cannot be static because these classes are not thread safe.
-    private NumberFormat numberFormat;
-    private DateFormat dateFormat;
+    private final FastMessageFormat messageFormat = new FastMessageFormat();
 
     /**
      * Creates a new request progress tracker.
@@ -217,7 +211,7 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
 
     /** Creates an entry with the given entry tag and message */
     public void log(String format, Object... args) {
-        String message = fastFormat(format, args);
+        String message = messageFormat.format(format, args);
         entries.add(new TrackingEntry(LOG_PREFIX + message));
     }
 
@@ -257,7 +251,7 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
      */
     public void logTimer(String name, String format, Object... args) {
         if (namedTimerEntries.containsKey(name)) {
-            logTimerInternal(name, fastFormat(format, args), namedTimerEntries.get(name));
+            logTimerInternal(name, messageFormat.format(format, args), namedTimerEntries.get(name));
         }
     }
 
@@ -322,62 +316,4 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
             return message;
         }
     }
-
-    private NumberFormat getNumberFormat() {
-        if (numberFormat == null) {
-            numberFormat = NumberFormat.getNumberInstance();
-        }
-        return numberFormat;
-    }
-
-    private DateFormat getDateFormat() {
-        if (dateFormat == null) {
-            dateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT);
-        }
-        return dateFormat;
-    }
-
-    /**
-     * Fast MessageFormat implementation which assumes that most formats do not contain format types, styles and
-     * escaping and that format elements are in order. If one of the assumption fails, it falls back to MessageFormat.
-     */
-    String fastFormat(String pattern, Object... arguments) {
-        if (arguments == null || arguments.length == 0) {
-            return pattern;
-        } else {
-            if (pattern.indexOf('\'') != -1) {
-                // Escaping is not supported, fall back
-                return MessageFormat.format(pattern, arguments);
-            } else {
-                StringBuilder message = new StringBuilder();
-                int previousEnd = 0;
-                for (int i = 0; i < arguments.length; i++) {
-                    String placeholder = '{' + String.valueOf(i);
-                    int placeholderIndex = pattern.indexOf(placeholder);
-                    // -1 or before previous placeholder || format element with type/style
-                    if (placeholderIndex < previousEnd
-                            || pattern.charAt(placeholderIndex + placeholder.length()) != '}') {
-                        // Type, style and random order are not supported, fall back
-                        return MessageFormat.format(pattern, arguments);
-                    } else {
-                        // Format argument if necessary
-                        Object argument = arguments[i];
-                        if (argument instanceof Number) {
-                            argument = getNumberFormat().format(argument);
-                        } else if (argument instanceof Date) {
-                            argument = getDateFormat().format(argument);
-                        }
-
-                        // Append previous part of the string and formatted argument
-                        message.append(pattern.substring(previousEnd, placeholderIndex));
-                        message.append(argument);
-                        previousEnd = placeholderIndex + placeholder.length() + 1;
-                    }
-                }
-                message.append(pattern.substring(previousEnd, pattern.length()));
-                return message.toString();
-            }
-        }
-    }
-
 }
