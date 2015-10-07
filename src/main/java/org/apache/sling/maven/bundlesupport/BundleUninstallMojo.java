@@ -27,21 +27,19 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * Uninstall an OSGi bundle from a running Sling instance.
- *
- * @goal uninstall
- * @description uninstall an OSGi bundle from a running Sling instance
  */
+@Mojo(name = "uninstall")
 public class BundleUninstallMojo extends AbstractBundleInstallMojo {
 
     /**
      * The name of the generated JAR file.
-     *
-     * @parameter expression="${sling.file}" default-value="${project.build.directory}/${project.build.finalName}.jar"
-     * @required
      */
+    @Parameter(property = "sling.file", defaultValue = "${project.build.directory}/${project.build.finalName}.jar")
     private String bundleFileName;
 
     @Override
