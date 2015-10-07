@@ -19,27 +19,23 @@ package org.apache.sling.maven.projectsupport;
 import java.util.Map;
 
 import org.apache.felix.framework.Logger;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.sling.launchpad.api.LaunchpadContentProvider;
 import org.apache.sling.launchpad.base.impl.Sling;
 import org.osgi.framework.BundleException;
 
 /**
  * Start a Launchpad application.
- *
- * @goal start
- * @requiresDependencyResolution test
- *
  */
+@Mojo( name = "start", requiresDependencyResolution = ResolutionScope.TEST)
 public class StartMojo extends AbstractLaunchpadStartingMojo {
 
-    /**
-     * @parameter expression="${sling.control.port}" default-value="63000"
-     */
+    @Parameter( property = "sling.control.port", defaultValue = "63000")
     private int controlPort;
 
-    /**
-     * @parameter expression="${sling.control.host}"
-     */
+    @Parameter(property = "sling.control.host")
     private String controlHost;
 
     /**

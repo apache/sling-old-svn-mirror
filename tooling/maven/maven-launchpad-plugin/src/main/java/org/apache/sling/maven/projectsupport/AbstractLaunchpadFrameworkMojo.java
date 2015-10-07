@@ -23,6 +23,7 @@ import java.util.TreeSet;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.StartLevel;
@@ -37,23 +38,20 @@ public abstract class AbstractLaunchpadFrameworkMojo extends AbstractUsingBundle
     /**
      * The name of the directory within the output directory into which the base
      * JAR should be installed.
-     *
-     * @parameter default-value="resources"
      */
+    @Parameter(defaultValue = "resources")
     protected String baseDestination;
 
     /**
      * The directory which contains the start-level bundle directories.
-     *
-     * @parameter default-value="bundles"
      */
+    @Parameter(defaultValue = "bundles")
     private String bundlesDirectory;
 
     /**
      * The directory which contains the bootstrap bundle directories.
-     *
-     * @parameter
      */
+    @Parameter
     private String bootDirectory;
 
     protected String getPathForArtifact(final int startLevel, final String artifactName, final String runModes) {
