@@ -32,6 +32,7 @@ import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.FileRequestEntity;
@@ -88,7 +89,13 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
      */
     @Parameter(property="sling.usePut", defaultValue = "false", required = true)
     protected boolean usePut;
-
+    
+    /**
+     * The jcr:primaryType to be used when creating intermediate paths for HTTP PUT deployment
+     */
+    @Parameter(property = "sling.deploy.intermediatePathPrimaryType" , defaultValue = "sling:Folder")
+    protected String intermediatePathPrimaryType;
+    
     /**
      * The content type / mime type used for the HTTP PUT (if
      * <code>sling.usePut=true</code>).
@@ -137,7 +144,7 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
      */
     @Parameter(defaultValue = "${project}", required = true, readonly = true)
     protected MavenProject project;
-
+    
     public AbstractBundleInstallMojo() {
         super();
     }
@@ -281,15 +288,26 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
 
     protected void put(String targetURL, File file) throws MojoExecutionException {
 
-        PutMethod filePut = new PutMethod(getPutURL(targetURL, file.getName()));
-
+        boolean success = false;
+        int status;
+        
         try {
-            filePut.setRequestEntity(new FileRequestEntity(file, mimeType));
-
-            int status = getHttpClient().executeMethod(filePut);
+            status = performPut(targetURL, file);
             if (status >= 200 && status < 300) {
-                getLog().info("Bundle installed");
-            } else {
+                success = true;
+            } else if ( status == HttpStatus.SC_CONFLICT) {
+                
+                getLog().debug("Bundle not installed due missing parent folders. Attempting to create parent structure.");
+                createIntermediaryPaths(targetURL);
+                
+                getLog().debug("Re-attempting bundle install after creating parent folders.");
+                status = performPut(targetURL, file);
+                if (status >= 200 && status < 300) {
+                    success = true;
+                }
+            }
+            
+            if ( !success ) {
                 String msg = "Installation failed, cause: "
                     + HttpStatus.getStatusText(status);
                 if (failOnError) {
@@ -301,9 +319,53 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
         } catch (Exception ex) {
             throw new MojoExecutionException("Installation on " + targetURL
                 + " failed, cause: " + ex.getMessage(), ex);
+        }
+    }
+    
+    private int performPut(String targetURL, File file) throws HttpException, IOException {
+        
+        PutMethod filePut = new PutMethod(getPutURL(targetURL, file.getName()));
+        try {
+            filePut.setRequestEntity(new FileRequestEntity(file, mimeType));
+            return getHttpClient().executeMethod(filePut);
         } finally {
             filePut.releaseConnection();
         }
+    }
+
+    private void createIntermediaryPaths(String targetURL) throws HttpException, IOException, MojoExecutionException {
+        
+        for ( String intermediatePath : IntermediatePathsExtractor.extractIntermediatePaths(targetURL)) {
+            getLog().debug("Creating intermediate path at " + intermediatePath);
+            
+            // verify if the path exists by calling the JSON servlet
+            // this should always return a 200 OK status if it exists or a 4040 otherwise
+            GetMethod get = new GetMethod(intermediatePath + ".json");
+            try {
+                int result = getHttpClient().executeMethod(get);
+                if ( result == HttpStatus.SC_OK ) {
+                    getLog().debug("Path at " + intermediatePath + " already exists");
+                    continue;
+                }
+            } finally {
+                get.releaseConnection();
+            }
+            
+            // create the path if it does not exist
+            PostMethod post = new PostMethod(intermediatePath);
+            try {
+                post.addParameter(new NameValuePair("jcr:primaryType", intermediatePathPrimaryType)); 
+                int result = getHttpClient().executeMethod(post);
+                if ( result != HttpStatus.SC_CREATED && result != HttpStatus.SC_OK) {
+                    throw new MojoExecutionException("Failed creating intermediate path at " + intermediatePath + "."
+                            + " Reason: " + HttpStatus.getStatusText(result));
+                }
+                getLog().info("Created intermediate path at " + intermediatePath + " as a " + intermediatePathPrimaryType);
+            } finally {
+                post.releaseConnection();
+            }
+        }
+
     }
 
     /**
