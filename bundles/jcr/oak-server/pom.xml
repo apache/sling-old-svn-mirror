@@ -36,6 +36,12 @@
         This bundle provides a SlingRepository based on Apache Oak.
     </description>
 
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/oak-server</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/oak-server</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/jcr/oak-server</url>
+    </scm>
+
     <properties>
         <!-- 
             WARNING make sure oak.version and sling.oak.server.version 
