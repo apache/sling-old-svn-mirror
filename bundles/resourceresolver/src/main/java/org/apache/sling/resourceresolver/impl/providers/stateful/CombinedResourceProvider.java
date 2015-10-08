@@ -501,17 +501,19 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     }
 
     private List<StatefulResourceProvider> getMatchingProviders(String path) {
-        List<StatefulResourceProvider> matching = new ArrayList<StatefulResourceProvider>();
-        for (ResourceProviderHandler h : storage.getTree().getMatchingNodes(path)) {
-            matching.add(authenticator.getStateful(h));
+        List<ResourceProviderHandler> handlers = storage.getTree().getMatchingNodes(path);
+        StatefulResourceProvider[] matching = new StatefulResourceProvider[handlers.size()];
+        int i = matching.length - 1;
+        for (ResourceProviderHandler h : handlers) {
+            matching[i--] = authenticator.getStateful(h); // reverse order
         }
-        Collections.reverse(matching);
-        return matching;
+        return Arrays.asList(matching);
     }
 
     private List<StatefulResourceProvider> getMatchingModifiableProviders(String path) {
-        List<StatefulResourceProvider> matching = new ArrayList<StatefulResourceProvider>();
-        for (ResourceProviderHandler h : storage.getTree().getMatchingNodes(path)) {
+        List<ResourceProviderHandler> handlers = storage.getTree().getMatchingNodes(path);
+        List<StatefulResourceProvider> matching = new ArrayList<StatefulResourceProvider>(handlers.size());
+        for (ResourceProviderHandler h : handlers) {
             if (h.getInfo().getModifiable()) {
                 matching.add(authenticator.getStateful(h));
             }
