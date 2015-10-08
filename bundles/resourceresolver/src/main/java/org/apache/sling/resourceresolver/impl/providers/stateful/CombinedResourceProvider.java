@@ -471,7 +471,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     @Override
     public boolean copy(String srcAbsPath, String destAbsPath) throws PersistenceException {
         List<StatefulResourceProvider> srcProviders = getMatchingProviders(srcAbsPath);
-        List<StatefulResourceProvider> dstProviders = getMatchingModifiableProviders(srcAbsPath);
+        List<StatefulResourceProvider> dstProviders = getMatchingModifiableProviders(destAbsPath);
         @SuppressWarnings("unchecked")
         List<StatefulResourceProvider> intersection = ListUtils.intersection(srcProviders, dstProviders);
         for (StatefulResourceProvider p : intersection) {
@@ -490,7 +490,7 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     @Override
     public boolean move(String srcAbsPath, String destAbsPath) throws PersistenceException {
         List<StatefulResourceProvider> srcProviders = getMatchingModifiableProviders(srcAbsPath);
-        List<StatefulResourceProvider> dstProviders = getMatchingModifiableProviders(srcAbsPath);
+        List<StatefulResourceProvider> dstProviders = getMatchingModifiableProviders(destAbsPath);
         @SuppressWarnings("unchecked")
         List<StatefulResourceProvider> intersection = ListUtils.intersection(srcProviders, dstProviders);
         for (StatefulResourceProvider p : intersection) {
