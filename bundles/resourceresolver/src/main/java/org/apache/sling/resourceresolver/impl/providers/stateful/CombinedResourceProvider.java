@@ -222,22 +222,21 @@ public class CombinedResourceProvider implements StatefulResourceProvider {
     @SuppressWarnings("unchecked")
     @Override
     public Iterator<Resource> listChildren(final Resource parent) {
-        Iterator<Iterator<Resource>> iterators = transformedIterator(getMatchingProviders(parent.getPath()).iterator(),
-                new Transformer() {
-                    @Override
-                    public Object transform(Object input) {
-                        StatefulResourceProvider rp = (StatefulResourceProvider) input;
-                        Iterator<Resource> it = rp.listChildren(parent);
-                        if (it == null) {
-                            it = IteratorUtils.emptyIterator();
-                        }
-                        return it;
-                    }
-                });
-        Iterator<Resource> allChildren = new ChainedIterator<Resource>(iterators);
+        Iterator<Resource> realChildren = null;
+        for (StatefulResourceProvider p : getMatchingProviders(parent.getPath())) {
+            realChildren = p.listChildren(parent);
+            if (realChildren != null) {
+                break;
+            }
+        }
         Iterator<Resource> syntheticChildren = getSyntheticChildren(parent).iterator();
-        Iterator<Resource> uniqueChildren = new UniqueIterator(chainedIterator(allChildren, syntheticChildren));
-        return transformedIterator(uniqueChildren, new Transformer() {
+        Iterator<Resource> allChildren;
+        if (realChildren == null) {
+            allChildren = syntheticChildren;
+        } else {
+            allChildren = new UniqueIterator(chainedIterator(realChildren, syntheticChildren));
+        } 
+        return transformedIterator(allChildren, new Transformer() {
             @Override
             public Object transform(Object input) {
                 Resource resource = (Resource) input;
