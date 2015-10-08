@@ -54,7 +54,6 @@ import org.slf4j.LoggerFactory;
  * </ol>
  * </p>
  * <p>
- * <p>
  * In case any of those preconditions are not fulfilled the other registered {@link UseProvider}s will be queried.
  * </p>
  */
