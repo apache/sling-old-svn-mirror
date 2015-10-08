@@ -26,14 +26,14 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>25</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <!-- ======================================================================= -->
     <!-- P R O J E C T                                                           -->
     <!-- ======================================================================= -->
     <artifactId>org.apache.sling.scripting.sightly.testing-content</artifactId>
-    <version>1.0.5-SNAPSHOT</version>
+    <version>1.0.6</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Scripting Sightly Integration Tests Content</name>
@@ -45,9 +45,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/testing-content</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/testing-content</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/scripting/sightly/testing-content</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.sightly.testing-content-1.0.6</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.sightly.testing-content-1.0.6</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.scripting.sightly.testing-content-1.0.6</url>
     </scm>
 
 
