@@ -22,21 +22,21 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>25</version>
-        <relativePath/>
+        <relativePath />
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>org.apache.sling.scripting.sightly.repl</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.2</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Scripting Sightly Read-Eval-Print Loop Environment</name>
     <description>REPL for Apache Sling Scripting Sightly engine</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/repl</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/repl</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/scripting/sightly/repl</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.sightly.repl-1.0.2</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.sightly.repl-1.0.2</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.scripting.sightly.repl-1.0.2</url>
     </scm>
 
     <build>
