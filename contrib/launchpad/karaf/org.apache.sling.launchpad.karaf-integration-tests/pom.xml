@@ -211,6 +211,12 @@
                 </goals>
               </execution>
             </executions>
+            <configuration>
+              <excludes>
+                <!-- SLING-5122, SLING-5123 -->
+                <exclude>**/SlingAuthXing*.*</exclude>
+              </excludes>
+            </configuration>
           </plugin>
         </plugins>
       </build>

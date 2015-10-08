@@ -413,20 +413,24 @@
     <feature version="${project.version}">sling-auth-form</feature>
     <feature version="${project.version}">sling-auth-openid</feature>
   </feature>
+  <!-- SLING-5122
   <feature name="sling-auth-xing-login" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.auth.xing.login/0.0.2</bundle>
-    <!-- dependencies -->
+    <!- dependencies ->
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-jcr</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.auth.xing.api/0.0.2</bundle>
   </feature>
+  -->
+  <!-- SLING-5123
   <feature name="sling-auth-xing-oauth" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.auth.xing.oauth/0.0.2</bundle>
-    <!-- dependencies -->
+    <!- dependencies ->
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-jcr</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.auth.xing.api/0.0.2</bundle>
   </feature>
+  -->
   <!-- Apache Sling Extensions (contrib) -->
   <feature name="sling-extension-distribution" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.distribution.api/0.1.0</bundle>
