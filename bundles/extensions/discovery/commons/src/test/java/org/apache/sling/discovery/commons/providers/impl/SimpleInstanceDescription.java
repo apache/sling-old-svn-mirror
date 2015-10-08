@@ -30,7 +30,7 @@ public class SimpleInstanceDescription implements InstanceDescription {
     private final boolean isLeader;
     private final boolean isLocal;
     private final String slingId;
-    private final Map<String, String> properties;
+    private Map<String, String> properties;
 
     public SimpleInstanceDescription(boolean isLeader, boolean isLocal, String slingId,
             Map<String, String> properties) {
@@ -65,7 +65,9 @@ public class SimpleInstanceDescription implements InstanceDescription {
         if (isLocal!=other.isLocal) {
             return false;
         }
-        return true;
+        Map<String, String> myProperties = getProperties();
+        Map<String, String> otherProperties = other.getProperties();
+        return (myProperties.equals(otherProperties));
     }
 
     public void setClusterView(ClusterView clusterView) {
@@ -103,6 +105,13 @@ public class SimpleInstanceDescription implements InstanceDescription {
             return new HashMap<String, String>();
         }
         return new HashMap<String,String>(properties);
+    }
+
+    public void setProperty(String key, String value) {
+        if (properties==null) {
+            properties = new HashMap<String, String>();
+        }
+        properties.put(key, value);
     }
 
 }

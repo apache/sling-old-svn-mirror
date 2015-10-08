@@ -30,6 +30,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
+import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.commons.providers.BaseTopologyView;
 import org.apache.sling.discovery.commons.providers.EventFactory;
@@ -216,6 +217,29 @@ public class TestViewStateManager {
         mgr.handleNewView(view);
         assertEvents(listener, EventFactory.newInitEvent(view));
         randomEventLoop(defaultRandom, listener);
+    }
+
+    @Test
+    public void testPropertiesChanged() throws Exception {
+        final Listener listener = new Listener();
+        mgr.handleActivated();
+        mgr.bind(listener);
+        mgr.handleChanging();
+        SimpleTopologyView oldView = new SimpleTopologyView().addInstance();
+        SimpleInstanceDescription localInstance = 
+                (SimpleInstanceDescription) oldView.getLocalInstance();
+        localInstance.setProperty("foo", "bar1");
+        mgr.handleNewView(oldView);
+        TopologyEvent initEvent = EventFactory.newInitEvent(oldView.clone());
+        assertEvents(listener, initEvent);
+        SimpleTopologyView newView = oldView.clone();
+        oldView.setNotCurrent();
+        localInstance = (SimpleInstanceDescription) newView.getLocalInstance();
+        localInstance.setProperty("foo", "bar2");
+        mgr.handleNewView(newView);
+        Thread.sleep(2000);
+        TopologyEvent propertiesChangedEvent = EventFactory.newPropertiesChangedEvent(oldView.clone(), newView.clone());
+        assertEvents(listener, propertiesChangedEvent);
     }
 
     @Test
@@ -464,9 +488,10 @@ public class TestViewStateManager {
         serviceSemaphore.release(1);
         Thread.sleep(1000);
         assertEvents(listener, EventFactory.newInitEvent(view1));
+        final SimpleTopologyView view2 = view1.clone();
         mgr.handleChanging();
         assertEvents(listener, EventFactory.newChangingEvent(view1));
-        final SimpleTopologyView view2 = SimpleTopologyView.clone(view1).removeInstance(slingId2);
+        view2.removeInstance(slingId2);
         async(new Runnable() {
 
             public void run() {

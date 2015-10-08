@@ -163,7 +163,7 @@ public class SimpleTopologyView extends BaseTopologyView {
         final boolean isLeader = artefact.isLeader();
         final boolean isLocal = artefact.isLocal();
         SimpleClusterView cluster = (SimpleClusterView) artefact.getClusterView();
-        final SimpleInstanceDescription instance = new SimpleInstanceDescription(isLeader, isLocal, slingId, null);
+        final SimpleInstanceDescription instance = new SimpleInstanceDescription(isLeader, isLocal, slingId, artefact.getProperties());
         instance.setClusterView(cluster);
         cluster.addInstanceDescription(instance);
         instances.add(instance);
@@ -200,6 +200,9 @@ public class SimpleTopologyView extends BaseTopologyView {
             }
             clone.setClusterView(cluster);
             result.addInstance(clone);
+        }
+        if (!view.isCurrent()) {
+            result.setNotCurrent();
         }
         return result;
     }
