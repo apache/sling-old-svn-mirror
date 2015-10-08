@@ -54,6 +54,7 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -308,7 +309,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
                     } catch(AccessDeniedException e) {
                         return null;
                     }
-                    String parentPath = pathMapper.mapJCRPathToResourcePath(parentNode.getPath());
+                    String parentPath = ResourceUtil.getParent(child.getPath());
                     return new JcrNodeResource(ctx.getResourceResolver(), parentPath, version, parentNode,
                             ctx.getProviderState().getHelperData());
                 }
