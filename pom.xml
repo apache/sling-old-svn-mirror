@@ -33,7 +33,7 @@
     <!-- P R O J E C T                                                           -->
     <!-- ======================================================================= -->
     <artifactId>org.apache.sling.scripting.sightly.models.provider</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Scripting Sightly Models Use Provider</name>
@@ -43,9 +43,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.sightly.models.provider-1.0.0</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.sightly.models.provider-1.0.0</developerConnection>
-        <url>http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.sightly.models.provider-1.0.0</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/models-use-provider</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/models-use-provider</developerConnection>
+        <url>http://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/models-use-provider</url>
     </scm>
 
     <!-- ======================================================================= -->
