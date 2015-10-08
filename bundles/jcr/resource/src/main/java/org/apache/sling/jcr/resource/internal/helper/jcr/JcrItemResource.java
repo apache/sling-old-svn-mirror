@@ -82,10 +82,15 @@ abstract class JcrItemResource<T extends Item> // this should be package private
     public String getPath() {
         if (version == null) {
             return path;
-        } else if (version.contains(".")) {
-            return String.format("%s;v='%s'", path, version);
         } else {
-            return String.format("%s;v=%s", path, version);
+            StringBuilder pathWithVersion = new StringBuilder(path);
+            pathWithVersion.append(";v=");
+            if (version.contains(".")) {
+                pathWithVersion.append('\'').append(version).append('\'');
+            } else {
+                pathWithVersion.append(version);
+            }
+            return pathWithVersion.toString();
         }
     }
 
