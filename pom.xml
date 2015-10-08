@@ -24,12 +24,12 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>25</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.scripting.sightly.testing</artifactId>
     <packaging>slingstart</packaging>
-    <version>1.0.5-SNAPSHOT</version>
+    <version>1.0.6</version>
 
     <name>Apache Sling Scripting Sightly Integration Tests</name>
     <description>This project runs the integration tests for validating the Apache Sling Scripting Sightly implementation
@@ -37,9 +37,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/testing</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/testing</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/scripting/sightly/testing</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.sightly.testing-1.0.6</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.sightly.testing-1.0.6</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.scripting.sightly.testing-1.0.6</url>
     </scm>
 
     <properties>
@@ -47,16 +47,16 @@
         <HttpTestBase.readyTimeoutSeconds>62</HttpTestBase.readyTimeoutSeconds>
 
         <!-- path suffix for HTTP access to Sling -->
-        <http.base.path/>
+        <http.base.path />
 
         <!-- path suffix for WebDAV access to the repository -->
-        <webdav.workspace.path/>
+        <webdav.workspace.path />
 
         <!-- hostname for integration tests -->
         <test.host>localhost</test.host>
 
         <!-- optionally exclude some integration tests  -->
-        <failsafe.exclude/>
+        <failsafe.exclude />
 
         <!--
             Set this to true to stop mvn once the integration test Jetty instance is
@@ -70,7 +70,7 @@
 
         otherwise you can provide your own debug settings
         -->
-        <debug.options/>
+        <debug.options />
 
         <slf4j.version>1.7.7</slf4j.version>
         <logback.version>1.1.2</logback.version>
