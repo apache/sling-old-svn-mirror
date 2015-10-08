@@ -63,7 +63,18 @@ public class REPLJavaSourceCodeServlet extends SlingSafeMethodsServlet {
     @Override
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) throws ServletException, IOException {
         response.setContentType("text/plain");
-        response.getWriter().write(getClassSourceCode());
+        String sourceCode = getClassSourceCode();
+        if (sourceCode.length() == 0) {
+            StringBuilder configurationLink = new StringBuilder();
+            configurationLink.append(request.getScheme()).append("://").append(request.getServerName());
+            if (request.getServerPort() != 80) {
+                configurationLink.append(":").append(request.getServerPort());
+            }
+            configurationLink.append(request.getContextPath()).append("/system/console/configMgr/org.apache.sling.scripting.sightly.impl.engine.SightlyEngineConfiguration");
+            response.getWriter().write("/**\n * Please enable development mode at\n * " + configurationLink.toString() + "\n */");
+        } else {
+            response.getWriter().write(getClassSourceCode());
+        }
     }
 
     private String getClassSourceCode() {
@@ -74,7 +85,6 @@ public class REPLJavaSourceCodeServlet extends SlingSafeMethodsServlet {
                     return IOUtils.toString(new FileInputStream(classFile), "UTF-8");
                 } catch (IOException e) {
                     LOGGER.error("Unable to read file " + classFile.getAbsolutePath(), e);
-                    return "";
                 }
             }
         }
