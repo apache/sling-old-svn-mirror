@@ -31,7 +31,7 @@ fi
 
 pushd $DIR
 
-for jarfile in `find .  -name \*.jar -o -name \*.zip -exec basename {} \;` ; do
+for jarfile in `find .  -name \*.jar -o -name \*.zip` ; do
     if [ ! -f $jarfile.md5 ] ; then
         md5sum $jarfile | awk '{print $1}' > $jarfile.md5
     fi
