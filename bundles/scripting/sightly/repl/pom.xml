@@ -50,6 +50,16 @@
                         <excludes combine.children="append">
                             <exclude>src/main/resources/SLING-INF/**/*.json</exclude>
                             <exclude>src/main/resources/SLING-INF/**/*.svg</exclude>
+                            <exclude>src/main/resources/SLING-INF/etc/clientlibs/repl/ace.js</exclude>
+                            <exclude>src/main/resources/SLING-INF/etc/clientlibs/repl/mode-html.js</exclude>
+                            <exclude>src/main/resources/SLING-INF/etc/clientlibs/repl/mode-javascript.js</exclude>
+                            <exclude>src/main/resources/SLING-INF/etc/clientlibs/repl/mode-java.js</exclude>
+                            <exclude>src/main/resources/SLING-INF/etc/clientlibs/repl/bootstrap-theme.min.css</exclude>
+                            <exclude>src/main/resources/SLING-INF/etc/clientlibs/repl/bootstrap.min.css</exclude>
+                            <exclude>src/main/resources/SLING-INF/etc/clientlibs/repl/bootstrap.min.js</exclude>
+                            <exclude>src/main/resources/SLING-INF/etc/clientlibs/repl/html5shiv.js</exclude>
+                            <exclude>src/main/resources/SLING-INF/etc/clientlibs/repl/jquery.min.js</exclude>
+                            <exclude>src/main/resources/SLING-INF/etc/clientlibs/repl/respond.min.js</exclude>
                         </excludes>
                     </configuration>
                 </plugin>
