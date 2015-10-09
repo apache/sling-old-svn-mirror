@@ -61,7 +61,7 @@ public class RatingPostServletTest {
         assertThat(response.getStatus(), Matchers.equalTo(SC_OK));
         String output = response.getOutputAsString();
         
-        assertThat(output, equalTo("{  \"rating\" : 0}\n"));
+        assertThat(output, equalTo("{  \"rating\" : 0}"));
         
     }
 
