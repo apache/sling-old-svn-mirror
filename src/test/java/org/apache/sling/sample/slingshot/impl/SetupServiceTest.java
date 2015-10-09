@@ -27,23 +27,15 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
-import java.io.IOException;
-
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.sample.slingshot.SlingshotConstants;
-import org.apache.sling.sample.slingshot.impl.InternalConstants;
-import org.apache.sling.sample.slingshot.impl.SetupService;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.osgi.service.cm.Configuration;
@@ -52,17 +44,10 @@ import org.osgi.service.cm.ConfigurationAdmin;
 public class SetupServiceTest {
     
     @Rule
-    public SlingContext context = new SlingContext(ResourceResolverType.JCR_JACKRABBIT);
-    
-    @Before
-    public void cleanupIfNeeded() throws IOException {
-        FileUtils.deleteDirectory(new File("target/repository"));
-    }
+    public SlingContext context = new SlingContext(ResourceResolverType.JCR_OAK);
     
     @Test
     public void setup() throws Exception{
-        
-        RepositoryUtil.registerSlingNodeTypes(context.resourceResolver().adaptTo(Session.class));
         
         // create expected content structure
         context.load().json("/slingshot.json", SlingshotConstants.APP_ROOT_PATH);
