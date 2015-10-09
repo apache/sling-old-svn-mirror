@@ -95,7 +95,7 @@ public class RatingPostServlet extends SlingAllMethodsServlet {
         pw.print("{ ");
         pw.print(" \"rating\" : ");
         pw.print(String.valueOf(ratingsService.getRating(request.getResource())));
-        pw.println("}");
+        pw.print("}");
     }
 
 }
