@@ -53,6 +53,9 @@
 		<module>eclipse-m2e-ui</module>
 		<module>eclipse-m2e-test</module>
 		<module>m2e-feature</module>
+		<module>eclipse-sightly-core</module>
+		<module>eclipse-sightly-ui</module>
+		<module>sightly-feature</module>
 		<module>p2update</module>
 	</modules>
 
