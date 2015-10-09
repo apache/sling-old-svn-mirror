@@ -148,8 +148,4 @@ public abstract class KarafTestSupport {
         );
     }
 
-    protected Option withDerby() {
-        return mavenBundle().groupId("org.apache.derby").artifactId("derby").versionAsInProject();
-    }
-
 }
