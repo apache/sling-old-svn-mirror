@@ -39,7 +39,7 @@
 # start the Oak server instance after all components have been configured
 # and started to avoid restarting that component ( see SLING-4556 )
 [artifacts startLevel=16 runModes=oak]
-    org.apache.sling/org.apache.sling.jcr.oak.server/0.0.2-SNAPSHOT
+    org.apache.sling/org.apache.sling.jcr.oak.server/1.0.0
 
 [configurations runModes=oak]
   org.apache.felix.jaas.Configuration.factory-GuestLoginModule
