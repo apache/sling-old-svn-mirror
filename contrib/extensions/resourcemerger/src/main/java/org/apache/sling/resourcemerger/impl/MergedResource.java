@@ -177,7 +177,6 @@ public class MergedResource extends AbstractResource {
 
     @Override
     public String toString() {
-        return "MergedResource [path=" + this.path +
-               ", resources=" + this.metadata.get(MergedResourceConstants.METADATA_RESOURCES) + "]";
+        return "MergedResource [path=" + this.path + "]";
     }
 }
