@@ -22,7 +22,7 @@
   <feature name="sling" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.api/2.9.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.auth.core/1.3.10</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.engine/2.4.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.engine/2.4.4</bundle>
     <!-- org.apache.sling.resourceresolver requires jcr -->
     <bundle>mvn:org.apache.sling/org.apache.sling.resourceresolver/1.2.6</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.serviceusermapper/1.2.0</bundle>
@@ -31,7 +31,7 @@
     <bundle>mvn:org.apache.sling/org.apache.sling.commons.classloader/1.3.2</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.commons.compiler/2.2.0</bundle>
     <!-- org.apache.sling.commons.json requires jcr -->
-    <bundle>mvn:org.apache.sling/org.apache.sling.commons.json/2.0.10</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.commons.json/2.0.12</bundle>
     <!-- (not using org.apache.sling.commons.log) -->
     <!-- (not using org.apache.sling.commons.logservice) -->
     <bundle>mvn:org.apache.sling/org.apache.sling.commons.mime/2.1.8</bundle>
@@ -60,7 +60,7 @@
   </feature>
   <!-- Apache Sling Auth -->
   <feature name="sling-auth-form" version="${project.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.auth.form/1.0.6</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.auth.form/1.0.8</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
   </feature>
@@ -78,7 +78,7 @@
   </feature>
   <!-- Apache Sling Extensions -->
   <feature name="sling-extension-adapter" version="${project.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.adapter/2.1.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.adapter/2.1.6</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
   </feature>
@@ -162,7 +162,7 @@
     <feature version="${project.version}">sling</feature>
   </feature>
   <feature name="sling-extension-xss" version="${project.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.xss/1.0.4</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.xss/1.0.6</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
     <bundle>mvn:org.apache.geronimo.bundles/commons-httpclient/3.1_2</bundle>
@@ -197,7 +197,7 @@
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.registration/1.0.2</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.resource/2.5.6</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.webconsole/1.0.2</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.webdav/2.3.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.webdav/2.3.2</bundle>
     <!-- dependencies -->
     <feature>webconsole</feature>
     <feature version="${project.version}">sling</feature>
@@ -213,14 +213,14 @@
   <!-- Apache Sling JCR Jackrabbit Security -->
   <feature name="sling-jcr-jackrabbit-security" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.jackrabbit.accessmanager/2.1.2</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.jackrabbit.usermanager/2.2.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.jackrabbit.usermanager/2.2.4</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling-jcr</feature>
     <feature version="${project.version}">sling-servlets</feature>
   </feature>
   <!-- Apache Sling JCR Oak -->
   <feature name="sling-jcr-oak" version="${project.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.oak.server/0.0.2-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.oak.server/1.0.0</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling-jcr</feature>
     <feature version="${project.version}">oak-sling</feature>
@@ -305,7 +305,7 @@
     <bundle>mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
   </feature>
   <feature name="sling-scripting-javascript" version="${project.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.javascript/2.0.24</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.javascript/2.0.26</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling-scripting</feature>
     <feature version="${project.version}">sling-jcr</feature>
@@ -317,7 +317,7 @@
     <feature version="${project.version}">sling-scripting</feature>
   </feature>
   <feature name="sling-scripting-sightly" version="${project.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly/1.0.4</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly/1.0.6</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.10</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
@@ -378,8 +378,8 @@
   </feature>
   <!-- Apache Tika -->
   <feature name="tika-sling" version="${project.version}">
-    <bundle>mvn:org.apache.tika/tika-core/1.9</bundle>
-    <bundle>mvn:org.apache.tika/tika-bundle/1.9</bundle>
+    <bundle>mvn:org.apache.tika/tika-core/1.10</bundle>
+    <bundle>mvn:org.apache.tika/tika-bundle/1.10</bundle>
   </feature>
   <!-- Apache Sling Auth (contrib) -->
   <feature name="sling-auth-openid" version="${project.version}">
