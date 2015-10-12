@@ -28,19 +28,16 @@ import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.InstanceFilter;
 import org.apache.sling.discovery.TopologyEvent.Type;
-import org.apache.sling.discovery.TopologyView;
+import org.apache.sling.discovery.commons.providers.BaseTopologyView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of the topology view
  */
-public class TopologyViewImpl implements TopologyView {
+public class TopologyViewImpl extends BaseTopologyView {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
-    /** Whether or not this topology is considered 'current' / ie currently valid **/
-    private volatile boolean current = true;
 
     /** the instances that are part of this topology **/
     private final Set<InstanceDescription> instances = new HashSet<InstanceDescription>();
@@ -116,7 +113,7 @@ public class TopologyViewImpl implements TopologyView {
             return false;
         }
         TopologyViewImpl other = (TopologyViewImpl) obj;
-        if (this.current != other.current) {
+        if (this.isCurrent() != other.isCurrent()) {
             return false;
         }
         Type diff = compareTopology(other);
@@ -132,20 +129,6 @@ public class TopologyViewImpl implements TopologyView {
             code += instance.hashCode();
         }
         return code;
-    }
-
-    /**
-     * @see org.apache.sling.discovery.TopologyView#isCurrent()
-     */
-    public boolean isCurrent() {
-        return current;
-    }
-
-    /**
-     * Mark this topology as old
-     */
-    public void markOld() {
-        this.current = false;
     }
 
     /**
@@ -234,7 +217,12 @@ public class TopologyViewImpl implements TopologyView {
 
     @Override
     public String toString() {
-        return "TopologyViewImpl [current=" + current + ", super.hashCode=" + super.hashCode() +
-                ", instances=" + instances + "]";
+        return "TopologyViewImpl [current=" + isCurrent() + ", num=" + instances.size() + ", instances="
+                + instances + "]";
+    }
+
+    @Override
+    public String getLocalClusterSyncTokenId() {
+        throw new IllegalStateException("no syncToken applicable");
     }
 }

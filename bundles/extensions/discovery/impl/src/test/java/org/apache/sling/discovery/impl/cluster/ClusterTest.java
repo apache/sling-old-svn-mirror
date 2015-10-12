@@ -97,7 +97,7 @@ public class ClusterTest {
     public void setup() throws Exception {
         final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
         logLevel = discoveryLogger.getLevel();
-        discoveryLogger.setLevel(Level.DEBUG);
+        discoveryLogger.setLevel(Level.TRACE);
         logger.debug("here we are");
         instance1 = Instance.newStandaloneInstance("firstInstance", true);
         instance2 = Instance.newClusterInstance("secondInstance", instance1,
@@ -1355,12 +1355,15 @@ public class ClusterTest {
         // let the instance1 become alone, instance2 is idle
         instance1.getConfig().setHeartbeatTimeout(2);
         instance2.getConfig().setHeartbeatTimeout(2);
+        logger.info("testLongRunningListener : letting instance2 remain silent from now on");
         instance1.runHeartbeatOnce();
         Thread.sleep(1500);
         instance1.runHeartbeatOnce();
         Thread.sleep(1500);
         instance1.runHeartbeatOnce();
         Thread.sleep(1500);
+        instance1.runHeartbeatOnce();
+        logger.info("testLongRunningListener : instance 2 should now be considered dead");
 //        instance1.dumpRepo();
         
         LongRunningListener longRunningListener1 = new LongRunningListener();
@@ -1368,11 +1371,14 @@ public class ClusterTest {
         fastListener2.addExpected(Type.TOPOLOGY_INIT);
         longRunningListener1.assertNoFail();
         assertEquals(1, fastListener2.getRemainingExpectedCount());
+        logger.info("testLongRunningListener : binding longRunningListener1 ...");
         instance1.bindTopologyEventListener(longRunningListener1);
+        logger.info("testLongRunningListener : binding fastListener2 ...");
         instance1.bindTopologyEventListener(fastListener2);
-        Thread.sleep(500); // SLING-4755: async event sending requires some minimal wait time nowadays
-        assertTrue(longRunningListener1.initReceived);
+        logger.info("testLongRunningListener : waiting a bit for longRunningListener1 to receive the TOPOLOGY_INIT event");
+        Thread.sleep(2500); // SLING-4755: async event sending requires some minimal wait time nowadays
         assertEquals(0, fastListener2.getRemainingExpectedCount());
+        assertTrue(longRunningListener1.initReceived);
         
         // after INIT, now do an actual change where listener1 will do a long-running handling
         fastListener2.addExpected(Type.TOPOLOGY_CHANGING);
