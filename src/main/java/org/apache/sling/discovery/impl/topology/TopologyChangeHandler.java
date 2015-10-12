@@ -131,7 +131,7 @@ public class TopologyChangeHandler implements EventHandler {
 
     /** Inform the DiscoveryServiceImpl that the topology (might) have changed **/
     private void handleTopologyChanged() {
-        discoveryService.handleTopologyChanged();
+        discoveryService.handlePotentialTopologyChange();
     }
 
 }
