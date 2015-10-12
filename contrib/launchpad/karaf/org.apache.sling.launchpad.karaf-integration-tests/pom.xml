@@ -143,13 +143,13 @@
     <dependency>
       <groupId>de.flapdoodle.embed</groupId>
       <artifactId>de.flapdoodle.embed.mongo</artifactId>
-      <version>1.47.2</version>
+      <version>1.50.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>de.flapdoodle.embed</groupId>
       <artifactId>de.flapdoodle.embed.process</artifactId>
-      <version>1.41.1</version>
+      <version>1.50.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
