@@ -1,24 +1,32 @@
-Apache Sling Launchpad Dockerfile
+Apache Sling Launchpad - Docker integration
 
-The Launchpad Dockerfile directory allows building a Dockerfile based on
-a previously existing launchpad jar file.
+The Launchpad Docker integration project is a helper aimed to make it
+simple to build an 'official' Sling docker image.
 
-Getting Started
-===============
+The Dockerfile expects a org.apache.sling.launchpad.jar file present in the
+root directory.
 
-Building the Docker Image required an installation of Docker
-(https://www.docker.com/) . It has been tested on version 1.8.2, but it
-is expected that older versions will work.
+Building a Docker image
+---------------------------------------------
 
-To build an image, first copy a launchpad jar file and rename it to
-org.apache.sling.launchpad.jar. Then run the docker command
-  
-    sudo docker build -t sling .
+$ sudo docker build -t sling .
 
-When running the Docker image it is possible to customise the JVM
-parameters, as well as the options passed to Sling, for instance:
+Running a standalone Sling instance
+---------------------------------------------
 
-   sudo docker run -e SLING_OPTS='-Dsling.run.modes=oak' \
-      -e JAVA_OPTS='-Xmx256m' -P -v /data/sling:/opt/sling/sling \
-      -d --name sling-8-testing sling
+To launch a docker instance named 'my-sling-container' bound to 
+port 8080 on the local machine, and with the /opt/sling/sling volume
+mounted at /srv/docker/sling in the local machine, execute:
 
+$ sudo docker run -ti -p 8080:8080 -v /srv/docker/sling:/opt/sling/sling \
+    --name my-sling-container sling
+
+
+Running a Sling instance connected to MongoDB
+---------------------------------------------
+
+There is a docker-compose-mongodb.yml file supplied which shows how to run
+the Sling launchpad in a docker container linked to a mongo one. To launch
+both containers, execute:
+
+$ sudo docker-compose -f docker-compose-mongo.yml up
