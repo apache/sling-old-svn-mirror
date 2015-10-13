@@ -31,7 +31,6 @@ import org.apache.sling.ide.transport.CommandExecutionProperties;
 import org.apache.sling.ide.transport.RepositoryFactory;
 import org.eclipse.core.runtime.Plugin;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -59,10 +58,10 @@ public class Activator extends Plugin {
     private ServiceTracker<FilterLocator, FilterLocator> filterLocator;
     private ServiceTracker<OsgiClientFactory, OsgiClientFactory> osgiClientFactory;
     private ServiceTracker<EmbeddedArtifactLocator, EmbeddedArtifactLocator> artifactLocator;
-    private ServiceTracker<?, ?> tracer;
+    private ServiceTracker<Logger, Logger> tracer;
     private ServiceTracker<BatcherFactory, BatcherFactory> batcherFactoryLocator;
 
-    private ServiceRegistration<?> tracerRegistration;
+    private ServiceRegistration<Logger> tracerRegistration;
 
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
@@ -90,9 +89,7 @@ public class Activator extends Plugin {
         artifactLocator = new ServiceTracker<>(context, EmbeddedArtifactLocator.class, null);
         artifactLocator.open();
 
-        // ugh
-        ServiceReference<Object> reference = (ServiceReference<Object>) tracerRegistration.getReference();
-        tracer = new ServiceTracker<>(context, reference, null);
+        tracer = new ServiceTracker<>(context, tracerRegistration.getReference(), null);
         tracer.open();
         
         batcherFactoryLocator = new ServiceTracker<>(context, BatcherFactory.class, null);
