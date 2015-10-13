@@ -18,8 +18,16 @@
  * under the License.
  ******************************************************************************/
 
-import org.apache.http.*;
-import org.apache.http.client.utils.URIUtils;
+import static org.hamcrest.core.StringContains.containsString;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
+
+import org.apache.http.Header;
+import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestHandler;
@@ -28,88 +36,71 @@ import org.apache.sling.hapi.client.Document;
 import org.apache.sling.hapi.client.microdata.MicrodataHtmlClient;
 import org.hamcrest.core.StringContains;
 import org.junit.Assert;
-import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
-import util.TestBase;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
+import util.HttpServerRule;
 
-import static org.hamcrest.core.StringContains.containsString;
-
-public class GetPostTest extends TestBase {
-    public static final String GET_URL = "/test";
-    public static final String GET_AUTH_URL = "/testauth";
-    public static final String OK_RESPONSE = "TEST_OK";
-    public static final String FAIL_RESPONSE = "TEST_FAIL";
-    public static final String USER = "admin";
+public class GetPostTest {
+    private static final String GET_URL = "/test";
+    private static final String GET_AUTH_URL = "/testauth";
+    private static final String OK_RESPONSE = "TEST_OK";
+    private static final String USER = "admin";
     private static final String PASSWORD = "admin";
     private static final String AUTH_STRING = "Basic YWRtaW46YWRtaW4=";
     private static final String REDIRECT_URL = "/test_redirect";
 
+    @ClassRule
+    public static final HttpServerRule httpServer = new HttpServerRule() {
 
-    private static HttpHost host;
-    private static URI uri;
-
-    @BeforeClass
-    public static void setUp() throws Exception {
-        setupServer();
-    }
-
-    public static void setupServer() throws Exception {
-        TestBase.setUp();
-        serverBootstrap.registerHandler(GET_URL, new HttpRequestHandler() {
-            @Override
-            public void handle(HttpRequest httpRequest, HttpResponse httpResponse, HttpContext httpContext)
-                    throws HttpException, IOException {
-                httpResponse.setEntity(new StringEntity(OK_RESPONSE));
-            }
-        }).registerHandler(GET_AUTH_URL, new HttpRequestHandler() {
-            @Override
-            public void handle(HttpRequest httpRequest, HttpResponse httpResponse, HttpContext httpContext)
-                    throws HttpException, IOException {
-                Header[] headers = httpRequest.getHeaders("Authorization");
-                if (null == headers || headers.length == 0 || !headers[0].getValue().equals(AUTH_STRING)) {
-                    httpResponse.setStatusCode(401);
-                    httpResponse.setHeader("WWW-Authenticate",  "Basic realm=\"TEST\"");
-                } else {
+        @Override
+        protected void registerHandlers() {
+            serverBootstrap.registerHandler(GET_URL, new HttpRequestHandler() {
+                @Override
+                public void handle(HttpRequest httpRequest, HttpResponse httpResponse, HttpContext httpContext)
+                        throws HttpException, IOException {
                     httpResponse.setEntity(new StringEntity(OK_RESPONSE));
                 }
-            }
-        }).registerHandler(REDIRECT_URL, new HttpRequestHandler() {
-            @Override
-            public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
-                response.setStatusCode(307);
-                response.setHeader("Location", GET_URL);
-            }
-        });
-
-        // start server
-        host = TestBase.start();
-        uri = URIUtils.rewriteURI(new URI("/"), host);
-    }
-
+            }).registerHandler(GET_AUTH_URL, new HttpRequestHandler() {
+                @Override
+                public void handle(HttpRequest httpRequest, HttpResponse httpResponse, HttpContext httpContext)
+                        throws HttpException, IOException {
+                    Header[] headers = httpRequest.getHeaders("Authorization");
+                    if (null == headers || headers.length == 0 || !headers[0].getValue().equals(AUTH_STRING)) {
+                        httpResponse.setStatusCode(401);
+                        httpResponse.setHeader("WWW-Authenticate",  "Basic realm=\"TEST\"");
+                    } else {
+                        httpResponse.setEntity(new StringEntity(OK_RESPONSE));
+                    }
+                }
+            }).registerHandler(REDIRECT_URL, new HttpRequestHandler() {
+                @Override
+                public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
+                    response.setStatusCode(307);
+                    response.setHeader("Location", GET_URL);
+                }
+            });
+        }
+    };
+    
     @Test
     public void testValidGet() throws ClientException, URISyntaxException {
-        MicrodataHtmlClient client = new MicrodataHtmlClient(uri.toString());
+        MicrodataHtmlClient client = new MicrodataHtmlClient(httpServer.getURI().toString());
         Document doc = client.get(GET_URL);
         Assert.assertThat("GET request failed", doc.toString(), new StringContains(OK_RESPONSE));
     }
 
     @Test
     public void testValidAuthGet() throws ClientException, URISyntaxException {
-        MicrodataHtmlClient client = new MicrodataHtmlClient(uri.toString(), USER, PASSWORD);
+        MicrodataHtmlClient client = new MicrodataHtmlClient(httpServer.getURI().toString(), USER, PASSWORD);
         Document doc = client.get(GET_AUTH_URL);
         Assert.assertThat("GET request failed with basic auth", doc.toString(), containsString(OK_RESPONSE));
     }
 
     @Test
     public void testRedirect() throws ClientException, URISyntaxException, UnsupportedEncodingException {
-        MicrodataHtmlClient client = new MicrodataHtmlClient(uri.toString(), USER, PASSWORD);
+        MicrodataHtmlClient client = new MicrodataHtmlClient(httpServer.getURI().toString());
         Document doc = client.post(REDIRECT_URL, new StringEntity("test"));
         Assert.assertThat("POST request failed to redirect", doc.toString(), containsString(OK_RESPONSE));
     }
-
 }
