@@ -21,7 +21,6 @@
 import org.apache.http.*;
 import org.apache.http.client.utils.URIUtils;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.localserver.LocalServerTestBase;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestHandler;
 import org.apache.sling.hapi.client.ClientException;
@@ -29,8 +28,9 @@ import org.apache.sling.hapi.client.Document;
 import org.apache.sling.hapi.client.microdata.MicrodataHtmlClient;
 import org.hamcrest.core.StringContains;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import util.TestBase;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -39,7 +39,7 @@ import java.net.URISyntaxException;
 
 import static org.hamcrest.core.StringContains.containsString;
 
-public class GetPostTest extends LocalServerTestBase {
+public class GetPostTest extends TestBase {
     public static final String GET_URL = "/test";
     public static final String GET_AUTH_URL = "/testauth";
     public static final String OK_RESPONSE = "TEST_OK";
@@ -50,13 +50,17 @@ public class GetPostTest extends LocalServerTestBase {
     private static final String REDIRECT_URL = "/test_redirect";
 
 
-    private HttpHost host;
-    private URI uri;
+    private static HttpHost host;
+    private static URI uri;
 
-    @Before
-    public void setup() throws Exception {
-        super.setUp();
-        this.serverBootstrap.registerHandler(GET_URL, new HttpRequestHandler() {
+    @BeforeClass
+    public static void setUp() throws Exception {
+        setupServer();
+    }
+
+    public static void setupServer() throws Exception {
+        TestBase.setUp();
+        serverBootstrap.registerHandler(GET_URL, new HttpRequestHandler() {
             @Override
             public void handle(HttpRequest httpRequest, HttpResponse httpResponse, HttpContext httpContext)
                     throws HttpException, IOException {
@@ -83,8 +87,8 @@ public class GetPostTest extends LocalServerTestBase {
         });
 
         // start server
-        this.host = this.start();
-        this.uri = URIUtils.rewriteURI(new URI("/"), host);
+        host = TestBase.start();
+        uri = URIUtils.rewriteURI(new URI("/"), host);
     }
 
     @Test
