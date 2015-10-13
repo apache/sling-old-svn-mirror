@@ -17,90 +17,87 @@
  * under the License.
  ******************************************************************************/
 
+package org.apache.sling.hapi.client.test;
+
 import static org.hamcrest.core.IsEqual.equalTo;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestHandler;
 import org.apache.sling.hapi.client.ClientException;
 import org.apache.sling.hapi.client.Document;
 import org.apache.sling.hapi.client.Items;
 import org.apache.sling.hapi.client.microdata.MicrodataHtmlClient;
+import org.apache.sling.hapi.client.test.util.HttpServerRule;
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import util.HttpServerRule;
-
-public class ItemsTest {
-    private static final String GET_URL = "/test";
-    private static final String GET_LINKS_URL = "/testlinks";
+public class FormTest {
+    private static final String GET_URL = "/test1";
+    private static final String POST_URL = "/testpost1";
+    private static final String OK_RESPONSE = "TEST_OK";
+    private static final String FAIL_RESPONSE = "TEST_FAIL";
 
     @ClassRule
     public static final HttpServerRule httpServer = new HttpServerRule() {
+
         @Override
-        protected void registerHandlers() throws IOException {
-            final String html = IOUtils.toString(ItemsTest.class.getResourceAsStream("items.html"), "UTF-8");
-            final String htmlLinks = IOUtils.toString(ItemsTest.class.getResourceAsStream("items_links.html"), "UTF-8");
+        protected void registerHandlers() {
             serverBootstrap.registerHandler(GET_URL, new HttpRequestHandler() {
                 @Override
                 public void handle(HttpRequest httpRequest, HttpResponse httpResponse, HttpContext httpContext)
                         throws HttpException, IOException {
+                    final String html = IOUtils.toString(ItemsTest.class.getResourceAsStream("/items_forms.html"), "UTF-8"); 
                     HttpEntity entity = new StringEntity(html, "UTF-8");
                     httpResponse.setEntity(entity);
                 }
-            }).registerHandler(GET_LINKS_URL, new HttpRequestHandler() {
+            }).registerHandler(POST_URL, new HttpRequestHandler() {
                 @Override
                 public void handle(HttpRequest httpRequest, HttpResponse httpResponse, HttpContext httpContext)
                         throws HttpException, IOException {
-                    HttpEntity entity = new StringEntity(htmlLinks, "UTF-8");
-                    httpResponse.setEntity(entity);
+                    if (!httpRequest.getRequestLine().getMethod().equals("POST")) {
+                        httpResponse.setEntity(new StringEntity(FAIL_RESPONSE));
+                    } else {
+                        httpResponse.setEntity(new StringEntity(OK_RESPONSE));
+                    }
+                    httpResponse.setStatusCode(302);
+                    httpResponse.setHeader("Location", GET_URL);
                 }
             });
         }
     };
     
     @Test
-    public void testItems() throws ClientException, URISyntaxException {
+    public void testForm() throws ClientException, URISyntaxException {
         MicrodataHtmlClient client = new MicrodataHtmlClient(httpServer.getURI().toString());
         Document doc = client.enter(GET_URL);
         Items items = doc.items();
-        Assert.assertThat(items.length(), equalTo(2));
-        for (int i=0; i<2; i++) {
-            Assert.assertThat(items.at(i).prop("name").text(), equalTo("Avatar" + i));
-            Assert.assertThat(items.at(i).prop("genre").text(), equalTo("Science fiction" + i));
-            Assert.assertThat(items.at(i).prop("rank").number(), equalTo(i));
-            Assert.assertThat(items.at(i).prop("director").prop("name").text(), equalTo("James Cameron" + i));
-            Assert.assertThat(items.at(i).prop("director").prop("birthDate").text(), equalTo("August 16, 1954 - " + i));
-        }
-    }
-
-    @Test
-    public void testItemsLinks() throws ClientException, URISyntaxException {
-        MicrodataHtmlClient client = new MicrodataHtmlClient(httpServer.getURI().toString());
-        Document doc = client.enter(GET_LINKS_URL);
-        Items items = doc.items();
         Assert.assertThat(items.length(), equalTo(1));
-        Assert.assertThat(items.prop("name").text(), equalTo("Avatar"));
-        Assert.assertThat(items.prop("genre").text(), equalTo("Science fiction"));
-        Assert.assertThat(items.prop("rank").number(), equalTo(2));
-        Assert.assertThat(items.prop("director").prop("name").text(), equalTo("James Cameron"));
-        Assert.assertThat(items.prop("director").prop("birthDate").text(), equalTo("August 16, 1954"));
+        Items form = doc.form("test");
+        Assert.assertThat(form.length(), equalTo(2));
 
-        Assert.assertThat(doc.link("test").length(), equalTo(2));
-        Assert.assertThat(doc.items().link("test").length(), equalTo(1));
-        Assert.assertThat(doc.items().prop("director").link("test").length(), equalTo(1));
+        List<NameValuePair> data = new ArrayList<NameValuePair>();
+        data.add(new BasicNameValuePair("f1", "val1"));
 
-        Items otherMovies = doc.link("test").follow().items();
-        Assert.assertThat(otherMovies.length(), equalTo(2));
+        // url encode enctype
+        Document doc2 = form.at(0).submit(data);
+        Assert.assertThat(doc2.items().length(), equalTo(1));
 
+        // the multipart enctype
+        Document doc3 = form.at(1).submit(data);
+        Assert.assertThat(doc3.items().length(), equalTo(1));
     }
 }
