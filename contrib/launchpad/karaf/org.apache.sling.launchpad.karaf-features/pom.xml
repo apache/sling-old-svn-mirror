@@ -35,6 +35,11 @@
   <name>Apache Sling Launchpad Karaf - Features</name>
   <description>Apache Sling Features for provisioning with Apache Karaf</description>
 
+  <properties>
+    <org.apache.jackrabbit.version>2.11.1</org.apache.jackrabbit.version>
+    <org.apache.jackrabbit.oak.version>1.4-SNAPSHOT</org.apache.jackrabbit.oak.version>
+  </properties>
+
   <build>
     <plugins>
       <plugin>
