@@ -17,12 +17,12 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>25</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.launchpad</artifactId>
     <packaging>slingstart</packaging>
-    <version>8-SNAPSHOT</version>
+    <version>8</version>
 
     <name>Apache Sling Launchpad Application Builder</name>
     <description>
@@ -30,9 +30,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/launchpad/builder</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/launchpad/builder</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/launchpad/builder</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.launchpad-8</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.launchpad-8</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.launchpad-8</url>
     </scm>
 
     <properties>
