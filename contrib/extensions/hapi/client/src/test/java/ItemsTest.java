@@ -17,9 +17,16 @@
  * under the License.
  ******************************************************************************/
 
+import static org.hamcrest.core.IsEqual.equalTo;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
+
 import org.apache.commons.io.IOUtils;
-import org.apache.http.*;
-import org.apache.http.client.utils.URIUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestHandler;
@@ -28,62 +35,42 @@ import org.apache.sling.hapi.client.Document;
 import org.apache.sling.hapi.client.Items;
 import org.apache.sling.hapi.client.microdata.MicrodataHtmlClient;
 import org.junit.Assert;
-import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
-import util.TestBase;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
+import util.HttpServerRule;
 
-import static org.hamcrest.core.IsEqual.equalTo;
+public class ItemsTest {
+    private static final String GET_URL = "/test";
+    private static final String GET_LINKS_URL = "/testlinks";
 
-
-public class ItemsTest extends TestBase {
-    public static final String GET_URL = "/test";
-    public static final String GET_LINKS_URL = "/testlinks";
-    public static final String OK_RESPONSE = "TEST_OK";
-    public static final String FAIL_RESPONSE = "TEST_FAIL";
-
-    public static String html;
-    public static String htmlLinks;
-
-    private static HttpHost host;
-    private static URI uri;
-
-    @BeforeClass
-    public static void setUp() throws Exception {
-        ItemsTest.html = IOUtils.toString(ItemsTest.class.getResourceAsStream("items.html"), "UTF-8");
-        ItemsTest.htmlLinks = IOUtils.toString(ItemsTest.class.getResourceAsStream("items_links.html"), "UTF-8");
-        setupServer();
-    }
-
-    public static void setupServer() throws Exception {
-        TestBase.setUp();
-        serverBootstrap.registerHandler(GET_URL, new HttpRequestHandler() {
-            @Override
-            public void handle(HttpRequest httpRequest, HttpResponse httpResponse, HttpContext httpContext)
-                    throws HttpException, IOException {
-                HttpEntity entity = new StringEntity(html, "UTF-8");
-                httpResponse.setEntity(entity);
-            }
-        }).registerHandler(GET_LINKS_URL, new HttpRequestHandler() {
-            @Override
-            public void handle(HttpRequest httpRequest, HttpResponse httpResponse, HttpContext httpContext)
-                    throws HttpException, IOException {
-                HttpEntity entity = new StringEntity(htmlLinks, "UTF-8");
-                httpResponse.setEntity(entity);
-            }
-        });
-
-        // start server
-        host = TestBase.start();
-        uri = URIUtils.rewriteURI(new URI("/"), host);
-    }
-
+    @ClassRule
+    public static final HttpServerRule httpServer = new HttpServerRule() {
+        @Override
+        protected void registerHandlers() throws IOException {
+            final String html = IOUtils.toString(ItemsTest.class.getResourceAsStream("items.html"), "UTF-8");
+            final String htmlLinks = IOUtils.toString(ItemsTest.class.getResourceAsStream("items_links.html"), "UTF-8");
+            serverBootstrap.registerHandler(GET_URL, new HttpRequestHandler() {
+                @Override
+                public void handle(HttpRequest httpRequest, HttpResponse httpResponse, HttpContext httpContext)
+                        throws HttpException, IOException {
+                    HttpEntity entity = new StringEntity(html, "UTF-8");
+                    httpResponse.setEntity(entity);
+                }
+            }).registerHandler(GET_LINKS_URL, new HttpRequestHandler() {
+                @Override
+                public void handle(HttpRequest httpRequest, HttpResponse httpResponse, HttpContext httpContext)
+                        throws HttpException, IOException {
+                    HttpEntity entity = new StringEntity(htmlLinks, "UTF-8");
+                    httpResponse.setEntity(entity);
+                }
+            });
+        }
+    };
+    
     @Test
     public void testItems() throws ClientException, URISyntaxException {
-        MicrodataHtmlClient client = new MicrodataHtmlClient(uri.toString());
+        MicrodataHtmlClient client = new MicrodataHtmlClient(httpServer.getURI().toString());
         Document doc = client.enter(GET_URL);
         Items items = doc.items();
         Assert.assertThat(items.length(), equalTo(2));
@@ -98,7 +85,7 @@ public class ItemsTest extends TestBase {
 
     @Test
     public void testItemsLinks() throws ClientException, URISyntaxException {
-        MicrodataHtmlClient client = new MicrodataHtmlClient(uri.toString());
+        MicrodataHtmlClient client = new MicrodataHtmlClient(httpServer.getURI().toString());
         Document doc = client.enter(GET_LINKS_URL);
         Items items = doc.items();
         Assert.assertThat(items.length(), equalTo(1));
@@ -116,5 +103,4 @@ public class ItemsTest extends TestBase {
         Assert.assertThat(otherMovies.length(), equalTo(2));
 
     }
-
 }

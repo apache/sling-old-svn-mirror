@@ -17,9 +17,19 @@
  * under the License.
  ******************************************************************************/
 
+import static org.hamcrest.core.IsEqual.equalTo;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.io.IOUtils;
-import org.apache.http.*;
-import org.apache.http.client.utils.URIUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HttpContext;
@@ -29,67 +39,49 @@ import org.apache.sling.hapi.client.Document;
 import org.apache.sling.hapi.client.Items;
 import org.apache.sling.hapi.client.microdata.MicrodataHtmlClient;
 import org.junit.Assert;
-import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
-import util.TestBase;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
+import util.HttpServerRule;
 
-import static org.hamcrest.core.IsEqual.equalTo;
+public class FormTest {
+    private static final String GET_URL = "/test1";
+    private static final String POST_URL = "/testpost1";
+    private static final String OK_RESPONSE = "TEST_OK";
+    private static final String FAIL_RESPONSE = "TEST_FAIL";
 
+    @ClassRule
+    public static final HttpServerRule httpServer = new HttpServerRule() {
 
-public class FormTest extends TestBase {
-    public static final String GET_URL = "/test1";
-    public static final String POST_URL = "/testpost1";
-    public static final String OK_RESPONSE = "TEST_OK";
-    public static final String FAIL_RESPONSE = "TEST_FAIL";
-
-    public static String html;
-
-    private static HttpHost host;
-    private static URI uri;
-
-    @BeforeClass
-    public static void setUp() throws Exception {
-        FormTest.html = IOUtils.toString(ItemsTest.class.getResourceAsStream("items_forms.html"), "UTF-8");
-        setupServer();
-    }
-
-    public static void setupServer() throws Exception {
-        TestBase.setUp();
-        serverBootstrap.registerHandler(GET_URL, new HttpRequestHandler() {
-            @Override
-            public void handle(HttpRequest httpRequest, HttpResponse httpResponse, HttpContext httpContext)
-                    throws HttpException, IOException {
-                HttpEntity entity = new StringEntity(html, "UTF-8");
-                httpResponse.setEntity(entity);
-            }
-        }).registerHandler(POST_URL, new HttpRequestHandler() {
-            @Override
-            public void handle(HttpRequest httpRequest, HttpResponse httpResponse, HttpContext httpContext)
-                    throws HttpException, IOException {
-                if (!httpRequest.getRequestLine().getMethod().equals("POST")) {
-                    httpResponse.setEntity(new StringEntity(FAIL_RESPONSE));
-                } else {
-                    httpResponse.setEntity(new StringEntity(OK_RESPONSE));
+        @Override
+        protected void registerHandlers() {
+            serverBootstrap.registerHandler(GET_URL, new HttpRequestHandler() {
+                @Override
+                public void handle(HttpRequest httpRequest, HttpResponse httpResponse, HttpContext httpContext)
+                        throws HttpException, IOException {
+                    final String html = IOUtils.toString(ItemsTest.class.getResourceAsStream("items_forms.html"), "UTF-8"); 
+                    HttpEntity entity = new StringEntity(html, "UTF-8");
+                    httpResponse.setEntity(entity);
                 }
-                httpResponse.setStatusCode(302);
-                httpResponse.setHeader("Location", GET_URL);
-            }
-        });
-
-        // start server
-        host = TestBase.start();
-        uri = URIUtils.rewriteURI(new URI("/"), host);
-    }
-
+            }).registerHandler(POST_URL, new HttpRequestHandler() {
+                @Override
+                public void handle(HttpRequest httpRequest, HttpResponse httpResponse, HttpContext httpContext)
+                        throws HttpException, IOException {
+                    if (!httpRequest.getRequestLine().getMethod().equals("POST")) {
+                        httpResponse.setEntity(new StringEntity(FAIL_RESPONSE));
+                    } else {
+                        httpResponse.setEntity(new StringEntity(OK_RESPONSE));
+                    }
+                    httpResponse.setStatusCode(302);
+                    httpResponse.setHeader("Location", GET_URL);
+                }
+            });
+        }
+    };
+    
     @Test
     public void testForm() throws ClientException, URISyntaxException {
-        MicrodataHtmlClient client = new MicrodataHtmlClient(uri.toString());
+        MicrodataHtmlClient client = new MicrodataHtmlClient(httpServer.getURI().toString());
         Document doc = client.enter(GET_URL);
         Items items = doc.items();
         Assert.assertThat(items.length(), equalTo(1));
@@ -106,8 +98,5 @@ public class FormTest extends TestBase {
         // the multipart enctype
         Document doc3 = form.at(1).submit(data);
         Assert.assertThat(doc3.items().length(), equalTo(1));
-
-
-
     }
 }
