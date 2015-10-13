@@ -18,6 +18,8 @@
  * under the License.
  ******************************************************************************/
 
+package org.apache.sling.hapi.client.test;
+
 import static org.hamcrest.core.StringContains.containsString;
 
 import java.io.IOException;
@@ -34,12 +36,11 @@ import org.apache.http.protocol.HttpRequestHandler;
 import org.apache.sling.hapi.client.ClientException;
 import org.apache.sling.hapi.client.Document;
 import org.apache.sling.hapi.client.microdata.MicrodataHtmlClient;
+import org.apache.sling.hapi.client.test.util.HttpServerRule;
 import org.hamcrest.core.StringContains;
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import util.HttpServerRule;
 
 public class GetPostTest {
     private static final String GET_URL = "/test";
