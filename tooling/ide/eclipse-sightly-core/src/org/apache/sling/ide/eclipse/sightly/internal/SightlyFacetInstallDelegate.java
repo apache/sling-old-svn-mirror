@@ -16,6 +16,7 @@
  */
 package org.apache.sling.ide.eclipse.sightly.internal;
 
+import org.apache.sling.ide.log.Logger;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -42,6 +43,8 @@ public class SightlyFacetInstallDelegate implements IDelegate {
     @Override
     public void execute(IProject project, IProjectFacetVersion version, Object config, IProgressMonitor monitor)
             throws CoreException {
+        
+        Logger logger = Activator.getDefault().getLogger();
 
         Validator[] validators = ValManager.getDefault().getValidators(project);
         ValidatorMutable[] mutis = new ValidatorMutable[validators.length];
@@ -54,9 +57,14 @@ public class SightlyFacetInstallDelegate implements IDelegate {
         for ( ValidatorMutable validator : mutis ) {
             if ( HTML_VALIDATOR_ID.equals(validator.getId()) ) {
                 if ( validator.isManualValidation() || validator.isBuildValidation() ) {
+                    
                     validator.setBuildValidation(false);
                     validator.setManualValidation(false);
                     changed = true;
+                    
+                    logger.trace("Disabled {0} for project {1}", validator, project.getName());
+                    
+                    break;
                 }
             }
         }
