@@ -71,7 +71,7 @@ public class HttpServerRule extends ExternalResource {
         registerHandlers();
         server = serverBootstrap.create();
         server.start();
-        host = new HttpHost("localhost", server.getLocalPort(), protocolScheme.name());
+        host = new HttpHost("127.0.0.1", server.getLocalPort(), protocolScheme.name());
         uri = URIUtils.rewriteURI(new URI("/"), host);
     }
     
