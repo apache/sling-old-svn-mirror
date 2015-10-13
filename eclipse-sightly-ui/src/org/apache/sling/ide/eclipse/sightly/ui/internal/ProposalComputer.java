@@ -16,7 +16,7 @@
  */
 package org.apache.sling.ide.eclipse.sightly.ui.internal;
 
-import org.apache.sling.ide.eclipse.sightly.FacetHelper;
+import org.apache.sling.ide.eclipse.sightly.SightlyFacetHelper;
 import org.apache.sling.ide.eclipse.sightly.model.Attribute;
 import org.apache.sling.ide.eclipse.sightly.model.ModelElements;
 import org.apache.sling.ide.eclipse.sightly.model.ProposalDescription;
@@ -84,7 +84,7 @@ public class ProposalComputer extends DefaultXMLCompletionProposalComputer {
         
         IFile file = getFile(element.getModel());
 
-        return FacetHelper.hasSightlyFacet(file.getProject());
+        return SightlyFacetHelper.hasSightlyFacet(file.getProject());
     }
     
     public static final IFile getFile(IStructuredModel model) {
