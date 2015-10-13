@@ -100,8 +100,8 @@
     org.apache.felix/org.apache.felix.http.sslfilter/1.0.4
     org.apache.felix/org.apache.felix.scr/2.0.2
     org.apache.felix/org.apache.felix.metatype/1.1.2
-    org.apache.tika/tika-core/1.6
-    org.apache.tika/tika-bundle/1.6
+    org.apache.tika/tika-core/1.10
+    org.apache.tika/tika-bundle/1.10
 
 [artifacts startLevel=15]
     commons-io/commons-io/2.4
