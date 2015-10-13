@@ -78,14 +78,15 @@ public class JcrItemResourceFactory {
         }
 
         Node parentNode = null;
+        String parentResourcePath = null;
         if (parent != null) {
             parentNode = parent.adaptTo(Node.class);
+            parentResourcePath = parent.getPath();
         }
 
         Item item = null;
-        if (parentNode != null && jcrPath.startsWith(parentNode.getPath())) {
-            final String parentJcrPath = parentNode.getPath();
-            String subPath = jcrPath.substring(parentJcrPath.length());
+        if (parentNode != null && resourcePath.startsWith(parentResourcePath)) {
+            String subPath = resourcePath.substring(parentResourcePath.length());
             if (!subPath.isEmpty() && subPath.charAt(0) == '/') {
                 subPath = subPath.substring(1);
             }
