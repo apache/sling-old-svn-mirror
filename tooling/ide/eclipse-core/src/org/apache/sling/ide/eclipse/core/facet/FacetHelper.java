@@ -14,34 +14,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.eclipse.sightly;
+package org.apache.sling.ide.eclipse.core.facet;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.wst.common.project.facet.core.IFacetedProject;
 import org.eclipse.wst.common.project.facet.core.IProjectFacet;
 import org.eclipse.wst.common.project.facet.core.ProjectFacetsManager;
 
-public class FacetHelper {
+/**
+ * Groups common utility methods related to project facets
+ */
+public abstract class FacetHelper {
 
-
-    private static final String SIGHTLY_FACET = "sightly";
-
-    public static boolean hasSightlyFacet(IProject project) {
+    private FacetHelper() {
         
-        return containsFacet(project, SIGHTLY_FACET);
     }
     
-    // TODO - copied from eclipse-core/.../ProjectHelper
-    private static boolean containsFacet(IProject project, String facetId) {
-        // deleted modules can trigger a publish call without having an attached project
+    /**
+     * Checks if the specified project has the specified facet
+     * 
+     * @param project the project, may be <code>null</code>
+     * @param facetId the facet to check for
+     * @return true if the specified <tt>project</tt> has the specified <tt>facetId</tt>
+     */
+    public static boolean containsFacet(IProject project, String facetId) {
+
         if (project == null) {
             return false;
         }
+        
         IFacetedProject facetedProject = (IFacetedProject) project.getAdapter(IFacetedProject.class);
         if (facetedProject==null ) {
             return false;
         }
+        
         IProjectFacet facet = ProjectFacetsManager.getProjectFacet(facetId);
         return facetedProject.hasProjectFacet(facet);
-    }
+    }    
 }

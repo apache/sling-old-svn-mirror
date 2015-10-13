@@ -23,7 +23,8 @@ Import-Package: org.eclipse.jface.resource,
  org.eclipse.wst.validation.internal.model,
  org.eclipse.wst.validation.internal.provisional.core,
  org.eclipse.wst.xml.core.internal.provisional.document,
- org.eclipse.wst.xml.core.internal.regions
+ org.eclipse.wst.xml.core.internal.regions,
+ org.apache.sling.ide.eclipse.core.facet
 Export-Package: org.apache.sling.ide.eclipse.sightly,
  org.apache.sling.ide.eclipse.sightly.model,
  org.apache.sling.ide.eclipse.sightly.validation

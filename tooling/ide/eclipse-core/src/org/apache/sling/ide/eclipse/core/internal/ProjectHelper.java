@@ -22,6 +22,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.sling.ide.eclipse.core.facet.FacetHelper;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -33,9 +34,6 @@ import org.eclipse.jdt.core.IJavaModel;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.wst.common.project.facet.core.IFacetedProject;
-import org.eclipse.wst.common.project.facet.core.IProjectFacet;
-import org.eclipse.wst.common.project.facet.core.ProjectFacetsManager;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -135,26 +133,13 @@ public class ProjectHelper {
 	}
 	
 	public static boolean isBundleProject(IProject project) {
-		return containsFacet(project, SlingBundleModuleFactory.SLING_BUNDLE_FACET_ID);
+		return FacetHelper.containsFacet(project, SlingBundleModuleFactory.SLING_BUNDLE_FACET_ID);
 	}
 
 	public static boolean isContentProject(IProject project) {
-		return containsFacet(project, SlingContentModuleFactory.SLING_CONTENT_FACET_ID);
+		return FacetHelper.containsFacet(project, SlingContentModuleFactory.SLING_CONTENT_FACET_ID);
 	}
 
-	private static boolean containsFacet(IProject project, String facetId) {
-        // deleted modules can trigger a publish call without having an attached project
-        if (project == null) {
-            return false;
-        }
-		IFacetedProject facetedProject = (IFacetedProject) project.getAdapter(IFacetedProject.class);
-		if (facetedProject==null ) {
-			return false;
-		}
-		IProjectFacet facet = ProjectFacetsManager.getProjectFacet(facetId);
-		return facetedProject.hasProjectFacet(facet);
-	}
-	
 	public static IJavaProject asJavaProject(IProject project) {
 		return JavaCore.create(project);
 	}

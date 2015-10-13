@@ -16,7 +16,7 @@
  */
 package org.apache.sling.ide.eclipse.sightly.internal;
 
-import org.apache.sling.ide.eclipse.sightly.FacetHelper;
+import org.apache.sling.ide.eclipse.sightly.SightlyFacetHelper;
 import org.apache.sling.ide.eclipse.sightly.validation.ValidatorReporter;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.wst.html.core.internal.validation.HTMLValidationReporter;
@@ -30,7 +30,7 @@ public class Validator extends HTMLValidator {
     @Override
     protected HTMLValidationReporter getReporter(IReporter reporter, IFile file, IDOMModel model) {
         
-        if ( FacetHelper.hasSightlyFacet(file.getProject() )) {
+        if ( SightlyFacetHelper.hasSightlyFacet(file.getProject() )) {
             return new ValidatorReporter(this, reporter, file, model);
         }
         
