@@ -86,7 +86,10 @@ public class JcrItemResourceFactory {
 
         Item item = null;
         if (parentNode != null && resourcePath.startsWith(parentResourcePath)) {
-            String subPath = resourcePath.substring(parentResourcePath.length() + 1);
+            String subPath = resourcePath.substring(parentResourcePath.length());
+            if (!subPath.isEmpty() && subPath.charAt(0) == '/') {
+                subPath = subPath.substring(1);
+            }
             item = getSubitem(parentNode, subPath);
         } else if (itemExists(jcrPath)) {
             item = session.getItem(jcrPath);
