@@ -25,7 +25,6 @@ import org.apache.sling.ide.osgi.OsgiClientFactory;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -40,9 +39,9 @@ public class Activator extends AbstractUIPlugin {
     private ServiceTracker<EventAdmin, EventAdmin> eventAdmin;
     private ServiceTracker<EmbeddedArtifactLocator, EmbeddedArtifactLocator> artifactLocator;
     private ServiceTracker<OsgiClientFactory, OsgiClientFactory> osgiClientFactory;
-    private ServiceTracker<Object, Object> tracer;
+    private ServiceTracker<Logger, Logger> tracer;
 
-    private ServiceRegistration<?> tracerRegistration;
+    private ServiceRegistration<Logger> tracerRegistration;
 
     public static Activator getDefault() {
 
@@ -72,9 +71,7 @@ public class Activator extends AbstractUIPlugin {
                 null);
         osgiClientFactory.open();
 
-        // ugh
-        ServiceReference<Object> reference = (ServiceReference<Object>) tracerRegistration.getReference();
-        tracer = new ServiceTracker<>(context, reference, null);
+        tracer = new ServiceTracker<>(context, tracerRegistration.getReference(), null);
         tracer.open();
 
         INSTANCE = this;
