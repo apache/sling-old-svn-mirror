@@ -14,23 +14,19 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.tooling.lc;
+package org.apache.sling.tooling.lc.jira;
 
-public class Main {
+import java.util.List;
 
-    public static void main(String[] args) throws Exception {
-        
-        // 0. read CLI arguments
-        String firstVersion = "7";
-        String secondVersion = "8";
-        if ( args.length == 2) {
-            firstVersion = args[0];
-            secondVersion = args[1];
-        }
-        
-        LaunchpadComparer comparer = new LaunchpadComparer(firstVersion, secondVersion);
-        comparer.run();
-        
+public class Response {
 
+    private final List<Issue> issues;
+
+    public Response(List<Issue> issues) {
+        this.issues = issues;
+    }
+
+    public List<Issue> getIssues() {
+        return issues;
     }
 }

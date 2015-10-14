@@ -14,23 +14,28 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.tooling.lc;
+package org.apache.sling.tooling.lc.aether;
 
-public class Main {
+public class VersionChange {
+    
+    private String from;
+    private String to;
 
-    public static void main(String[] args) throws Exception {
-        
-        // 0. read CLI arguments
-        String firstVersion = "7";
-        String secondVersion = "8";
-        if ( args.length == 2) {
-            firstVersion = args[0];
-            secondVersion = args[1];
-        }
-        
-        LaunchpadComparer comparer = new LaunchpadComparer(firstVersion, secondVersion);
-        comparer.run();
-        
-
+    public VersionChange(String from, String to) {
+        this.from = from;
+        this.to = to;
+    }
+    
+    public String getFrom() {
+        return from;
+    }
+    
+    public String getTo() {
+        return to;
+    }
+    
+    @Override
+    public String toString() {
+        return "VersionChange [" +from + " -> " + to +"]";
     }
 }

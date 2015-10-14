@@ -14,12 +14,12 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.tooling.lc;
+package org.apache.sling.tooling.lc.aether;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-class Artifacts {
+public class Artifacts {
 
     private static final Pattern VERSION_NUMBER = Pattern.compile("^(\\d+)(-SNAPSHOT)?");
     

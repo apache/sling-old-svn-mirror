@@ -14,7 +14,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.tooling.lc;
+package org.apache.sling.tooling.lc.aether;
 
 import java.io.File;
 import java.util.Arrays;
@@ -36,7 +36,7 @@ import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transport.file.FileTransporterFactory;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
 
-class AetherSetup {
+public class AetherSetup {
     
     private final List<RemoteRepository> repos = Arrays.asList(
         new RemoteRepository.Builder("central", "default", "http://central.maven.org/maven2/").build(),

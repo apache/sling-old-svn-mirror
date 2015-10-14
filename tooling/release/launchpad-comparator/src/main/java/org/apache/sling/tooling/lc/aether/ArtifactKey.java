@@ -14,14 +14,14 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.tooling.lc;
+package org.apache.sling.tooling.lc.aether;
 
 import java.util.Objects;
 
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
 import org.apache.sling.provisioning.model.Artifact;
 
-class ArtifactKey implements Comparable<ArtifactKey> {
+public class ArtifactKey implements Comparable<ArtifactKey> {
     
     private String groupId;
     private String artifactId;
