@@ -224,4 +224,40 @@ public class SettingsUtils {
 
         return entry;
     }
+
+    public static Map<String, String> removeEmptyEntries(Map<String, String> map) {
+        if (map == null) {
+            return null;
+        }
+
+        Map<String, String> result = new HashMap<String, String>();
+        for(Map.Entry<String, String> entry : map.entrySet()) {
+            String key = removeEmptyEntry(entry.getKey());
+            String value = removeEmptyEntry(entry.getValue());
+
+            if (key != null && value!= null) {
+                result.put(key, value);
+            }
+        }
+
+        if (result.size() == 0) {
+            return null;
+        }
+
+       return result;
+    }
+
+
+    public static Map<String, String> expandUriMap(Map<String, String> map, Map<String, String> aliases) {
+        Map<String, String> result = new TreeMap<String, String>(map);
+
+        for (Map.Entry<String, String> aliasEntry : aliases.entrySet()) {
+            if (aliasEntry.getValue() != null && map.containsKey(aliasEntry.getValue())) {
+                result.put(aliasEntry.getKey(), map.get(aliasEntry.getValue()));
+            }
+
+        }
+
+        return result;
+    }
 }
