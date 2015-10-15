@@ -27,6 +27,7 @@ import javax.jcr.Session;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -112,7 +113,7 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
             jcrPackage = uploadPackage(session, vaultPackage);
 
             return new JcrVaultDistributionPackage(getType(), jcrPackage, session);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             VltUtils.deletePackage(jcrPackage);
             throw new DistributionPackageBuildingException(e);
         } finally {
@@ -134,7 +135,7 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
             jcrPackage = uploadPackage(session, vaultPackage);
 
             return new JcrVaultDistributionPackage(getType(), jcrPackage, session);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             VltUtils.deletePackage(jcrPackage);
             throw new DistributionPackageReadingException(e);
         } finally {
@@ -187,9 +188,17 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
         PackageId packageId = getPackageId(pack);
 
         InputStream in = FileUtils.openInputStream(pack.getFile());
+
+
+
         try {
             if (packageRoot != null) {
-                JcrPackage jcrPackage = packageManager.create(packageRoot, packageId.getDownloadName());
+                String packageName = packageId.getDownloadName();
+                if (packageRoot.hasNode(packageName)) {
+                    packageRoot.getNode(packageName).remove();
+                }
+
+                JcrPackage jcrPackage = packageManager.create(packageRoot, packageName);
                 Property data = jcrPackage.getData();
                 data.setValue(in);
                 JcrPackageDefinition def = jcrPackage.getDefinition();
