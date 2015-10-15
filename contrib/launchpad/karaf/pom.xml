@@ -60,6 +60,7 @@
         <configuration>
           <excludes combine.children="append">
             <exclude>**/target/</exclude>
+            <exclude>**/*.iml</exclude>
           </excludes>
         </configuration>
       </plugin>
