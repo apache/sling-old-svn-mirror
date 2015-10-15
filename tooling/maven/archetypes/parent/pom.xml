@@ -45,13 +45,13 @@
         <jettyplugin.version>6.1.23</jettyplugin.version>
         
         <!-- various properties which influence generated archetypes -->
-        <archetype.java.version>6</archetype.java.version>
+        <archetype.java.version>7</archetype.java.version>
         
         <!-- dependency versions to use in generated archetypes -->
-        <junit.version>3.8.1</junit.version>
+        <junit.version>4.12</junit.version>
         <scrannotations.version>1.9.12</scrannotations.version>
-        <slingapi.version>2.2.0</slingapi.version>
-        <slf4japi.version>1.5.10</slf4japi.version>
+        <slingapi.version>2.9.0</slingapi.version>
+        <slf4japi.version>1.7.6</slf4japi.version>
         
         <!-- define archetype tooling version in a central place -->
         <archetype.version>2.2</archetype.version>
