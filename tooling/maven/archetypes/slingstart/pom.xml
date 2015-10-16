@@ -16,19 +16,19 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling-archetype-parent</artifactId>
-        <relativePath/>
+        <relativePath />
         <version>4</version>
     </parent>
     <artifactId>sling-slingstart-archetype</artifactId>
-    <version>0.9.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>maven-archetype</packaging>
     <name>Sling Slingstart Archetype</name>
     <description>Maven archetype for a Sling Slingstart application</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/maven/archetypes/slingstart</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/maven/archetypes/slingstart</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/maven/archetypes/slingstart</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/sling-slingstart-archetype-1.0.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/sling-slingstart-archetype-1.0.0</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/sling-slingstart-archetype-1.0.0</url>
     </scm>
 
     <build>
