@@ -30,7 +30,7 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>sling-builder</artifactId>
     <packaging>pom</packaging>
-    <version>7-SNAPSHOT</version>
+    <version>9-SNAPSHOT</version>
 
     <name>Apache Sling (Builder)</name>
     <description>
