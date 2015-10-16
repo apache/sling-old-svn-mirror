@@ -17,7 +17,7 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling-archetype-parent</artifactId>
         <relativePath/>
-        <version>4-SNAPSHOT</version>
+        <version>5-SNAPSHOT</version>
     </parent>
     <artifactId>sling-launchpad-standalone-archetype</artifactId>
     <version>1.0.1-SNAPSHOT</version>
