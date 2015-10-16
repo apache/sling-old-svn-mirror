@@ -40,7 +40,7 @@
    org.apache.sling/org.apache.sling.launchpad.api/1.1.0
   
   # The launchpad itself
-  org.apache.sling/org.apache.sling.launchpad/8-SNAPSHOT/txt/slingfeature
+  org.apache.sling/org.apache.sling.launchpad/8/txt/slingfeature
   
   # Sling integration tests support
   # TODO problem with the test-service bundles with 2 run modes

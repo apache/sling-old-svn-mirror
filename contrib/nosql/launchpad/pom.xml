@@ -51,7 +51,7 @@
             <artifactId>org.apache.sling.launchpad</artifactId>
             <type>slingfeature</type>
             <classifier>slingfeature</classifier>
-            <version>8-SNAPSHOT</version>
+            <version>8</version>
             <scope>provided</scope>
         </dependency>
     
