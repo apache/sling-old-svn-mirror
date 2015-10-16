@@ -18,6 +18,6 @@
 #
 [feature name=model]
 [artifacts]
-  org.apache.sling/org.apache.sling.launchpad/8-SNAPSHOT/slingstart
+  org.apache.sling/org.apache.sling.launchpad/8/slingstart
   org.apache.felix/org.apache.felix.shell/1.4.3
   org.apache.felix/org.apache.felix.shell.remote/1.1.2
