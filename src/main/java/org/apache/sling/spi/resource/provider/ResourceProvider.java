@@ -140,7 +140,7 @@ public abstract class ResourceProvider<T> {
      * are not accessible.
      * If this property is not set or set to {@link #AUTHENTICATE_NO}, no authentication
      * is required for this provider and the {@link #authenticate(Map)} is never invoked.
-     * String service property, default value is <code>{@link #AUTHENTICATE_NO}</true>.
+     * String service property, default value is <code>{@link #AUTHENTICATE_NO}</code>.
      * (value is "provider.authenticate")
      */
     public static final String PROPERTY_AUTHENTICATE = "provider.authenticate";
@@ -160,6 +160,24 @@ public abstract class ResourceProvider<T> {
      * (value is "provider.modifiable")
      */
     public static final String PROPERTY_MODIFIABLE = "provider.modifiable";
+
+    /**
+     * If this flag is set to {@code true}, the resource resolver will use this provider
+     * for the adaptTo() operation.
+     */
+    public static final String PROPERTY_ADAPTABLE = "provider.adaptable";
+
+    /**
+     * If this flag is set to {@code true}, the resource resolver will call {@link #refresh(ResolveContext)}
+     * when it's refreshed itself.
+     */
+    public static final String PROPERTY_REFRESHABLE = "provider.refreshable";
+
+    /**
+     * If this flag is set to {@code true}, the resource resolver will try to get the attribute
+     * names and the attribute values from this provider.
+     */
+    public static final String PROPERTY_ATTRIBUTABLE = "provider.attributable";
 
     /**
      * The authentication information property referring to the bundle
@@ -184,6 +202,17 @@ public abstract class ResourceProvider<T> {
      * resolver is created through {@link ResourceResolverFactory#getAdministrativeResourceResolver(Map)}.
      */
     public static final String AUTH_ADMIN = "provider.auth.admin";
+
+    /**
+     * The resource type be set on resources returned by the
+     * {@link #listChildren(Resource)} method to enable traversing the
+     * resource
+     * tree down to a deeply nested provided resource which has no concrete
+     * parent hierarchy (value is"sling:syntheticResourceProviderResource").
+     *
+     * @see #listChildren(Resource)
+     */
+    public static final String RESOURCE_TYPE_SYNTHETIC = "sling:syntheticResourceProviderResource";
 
     /** The context for this provider. */
     private volatile ProviderContext ctx;
@@ -270,7 +299,7 @@ public abstract class ResourceProvider<T> {
      *      href="http://sling.apache.org/documentation/the-sling-engine/service-authentication.html">Service
      *      Authentication</a>
      */
-    @Nonnull T authenticate(final @Nonnull Map<String, Object> authenticationInfo)
+    @Nonnull public T authenticate(final @Nonnull Map<String, Object> authenticationInfo)
     throws LoginException {
         return null;
     }
