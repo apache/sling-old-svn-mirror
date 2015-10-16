@@ -22,8 +22,8 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling-archetype-parent</artifactId>
-        <version>3</version>
         <relativePath/>
+        <version>4-SNAPSHOT</version>
     </parent>
 
     <artifactId>sling-initial-content-archetype</artifactId>
