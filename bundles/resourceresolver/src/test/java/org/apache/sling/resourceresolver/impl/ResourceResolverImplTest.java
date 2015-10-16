@@ -80,7 +80,8 @@ public class ResourceResolverImplTest {
 
         List<ResourceProviderHandler> handlers = asList(createRPHandler(rp, "rp1", 0, "/"));
         resourceProviderTracker = Mockito.mock(ResourceProviderTracker.class);
-        Mockito.when(resourceProviderTracker.getResourceProviderStorage()).thenReturn(new ResourceProviderStorage(handlers));
+        ResourceProviderStorage storage = new ResourceProviderStorage(handlers);
+        Mockito.when(resourceProviderTracker.getResourceProviderStorage()).thenReturn(storage);
         ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
         activator.resourceProviderTracker = resourceProviderTracker;
         commonFactory = new CommonResourceResolverFactoryImpl(activator);

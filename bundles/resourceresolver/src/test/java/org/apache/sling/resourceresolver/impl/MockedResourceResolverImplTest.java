@@ -100,6 +100,10 @@ public class MockedResourceResolverImplTest {
     @Mock
     private ResourceProviderTracker resourceProviderTracker;
 
+    @SuppressWarnings("rawtypes")
+    @Mock
+    private JCRQueryProvider queryProvider;
+
     private Map<String, Object> services = new HashMap<String, Object>();
 
     private Map<String, Object> serviceProperties = new HashMap<String, Object>();
@@ -132,6 +136,7 @@ public class MockedResourceResolverImplTest {
         MockitoAnnotations.initMocks(this);
     }
 
+    @SuppressWarnings("unchecked")
     @Before
     public void before() throws LoginException {
         activator = new ResourceResolverFactoryActivator();
@@ -154,8 +159,11 @@ public class MockedResourceResolverImplTest {
         handlers.add(createRPHandler(appsResourceProvider, "org.apache.sling.resourceresolver.impl.AppsProvider", 12L, "/libs"));
         handlers.add(createRPHandler(appsResourceProvider, "org.apache.sling.resourceresolver.impl.AppsProvider", 13L, "/apps"));
         handlers.add(createRPHandler(queriableResourceProviderA, "org.apache.sling.resourceresolver.impl.QueriableResourceProviderA", 14L, "/searchA"));
+        Mockito.when(queriableResourceProviderA.getJCRQueryProvider()).thenReturn(queryProvider);
 
-        Mockito.when(resourceProviderTracker.getResourceProviderStorage()).thenReturn(new ResourceProviderStorage(handlers));
+        ResourceProviderStorage storage = new ResourceProviderStorage(handlers);
+
+        Mockito.when(resourceProviderTracker.getResourceProviderStorage()).thenReturn(storage);
 
         // activate the components.
         activator.activate(componentContext);
@@ -539,10 +547,8 @@ public class MockedResourceResolverImplTest {
     @Test
     public void testQueryResources() throws LoginException {
         final int n = 3;
-        @SuppressWarnings("rawtypes")
-        JCRQueryProvider queryProvider = Mockito.mock(JCRQueryProvider.class);
-        Mockito.when(queryProvider.getSupportedLanguages(Mockito.any(ResolveContext.class))).thenReturn(new String[] {FAKE_QUERY_LANGUAGE});
-        Mockito.when(queriableResourceProviderA.getJCRQueryProvider()).thenReturn(queryProvider);
+        String[] languages = new String[] {FAKE_QUERY_LANGUAGE};
+        Mockito.when(queryProvider.getSupportedLanguages(Mockito.any(ResolveContext.class))).thenReturn(languages);
         Mockito.when(queryProvider.queryResources(Mockito.any(ResolveContext.class), Mockito.any(String.class), Mockito.any(String.class)))
         .thenReturn(buildValueMapCollection(n, "A_").iterator());
 
