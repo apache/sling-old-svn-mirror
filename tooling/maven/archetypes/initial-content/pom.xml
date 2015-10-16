@@ -27,16 +27,16 @@
     </parent>
 
     <artifactId>sling-initial-content-archetype</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.4</version>
     <packaging>maven-archetype</packaging>
 
     <name>Sling Initial Content Archetype</name>
     <description>Maven archetype for initial content</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/maven/archetypes/initial-content</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/maven/archetypes/initial-content</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/maven/archetypes/initial-content</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/sling-initial-content-archetype-1.0.4</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/sling-initial-content-archetype-1.0.4</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/sling-initial-content-archetype-1.0.4</url>
     </scm>
 
     <build>
