@@ -27,7 +27,7 @@
 
     <artifactId>sling-archetype-parent</artifactId>
     <packaging>pom</packaging>
-    <version>4</version>
+    <version>5-SNAPSHOT</version>
 
     <name>Apache Sling Archetype Parent</name>
     <description>The parent project for Apache Sling archetypes.</description>
@@ -58,9 +58,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/sling-archetype-parent-4</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/sling-archetype-parent-4</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/sling-archetype-parent-4</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/maven/archetypes/parent</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/maven/archetypes/parent</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/maven/archetypes/parent</url>
     </scm>
     
     <build>
