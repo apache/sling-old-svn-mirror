@@ -93,6 +93,7 @@
         <module>tooling/maven/maven-sling-plugin</module>
         <module>tooling/maven/maven-launchpad-plugin</module>
         <module>tooling/maven/slingstart-maven-plugin</module>
+        <module>tooling/maven/archetypes/parent</module>
         <module>tooling/maven/archetypes/launchpad-standalone</module>
         <module>tooling/maven/archetypes/launchpad-webapp</module>
         <module>tooling/maven/archetypes/slingstart</module>
