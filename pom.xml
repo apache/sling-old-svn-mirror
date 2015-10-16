@@ -17,7 +17,7 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling-archetype-parent</artifactId>
         <relativePath/>
-        <version>4-SNAPSHOT</version>
+        <version>4</version>
     </parent>
     <artifactId>sling-slingstart-archetype</artifactId>
     <version>0.9.0-SNAPSHOT</version>
