@@ -25,6 +25,7 @@ import java.util.Map;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -73,7 +74,11 @@ public class LegacyResourceProviderFactoryAdapter extends ResourceProvider<Legac
 
     @Override
     public @CheckForNull JCRQueryProvider<LegacyResourceProviderAdapter> getJCRQueryProvider() {
-        return new JCRQueryProviderAdapter(languages);
+        if (ArrayUtils.isEmpty(languages)) {
+            return super.getJCRQueryProvider();
+        } else {
+            return new JCRQueryProviderAdapter(languages);
+        }
     }
 
     @Override

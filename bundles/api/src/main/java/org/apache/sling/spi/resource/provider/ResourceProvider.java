@@ -180,18 +180,6 @@ public abstract class ResourceProvider<T> {
     public static final String PROPERTY_ATTRIBUTABLE = "provider.attributable";
 
     /**
-     * If this flag is set to {@code true}, the resource resolver will use this provider
-     * for JCR-style queries.
-     */
-    public static final String PROPERTY_SUPPORTS_JCR_QUERY = "provider.jcr.query";
-
-    /**
-     * If this flag is set to {@code true}, the resource resolver will use this provider
-     * for Sling-style queries.
-     */
-    public static final String PROPERTY_SUPPORTS_NATIVE_QUERY = "provider.native.query";
-
-    /**
      * The authentication information property referring to the bundle
      * providing a service for which a resource provider is to be retrieved. If
      * this property is provided, the

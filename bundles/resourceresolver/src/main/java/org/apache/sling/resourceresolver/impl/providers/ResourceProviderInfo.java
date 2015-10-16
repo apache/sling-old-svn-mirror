@@ -50,10 +50,6 @@ public class ResourceProviderInfo implements Comparable<ResourceProviderInfo> {
 
     private final boolean attributable;
 
-    private final boolean supportsJcrQuery;
-
-    private final boolean supportsNativeQuery;
-
     public ResourceProviderInfo(final ServiceReference ref) {
         this.ref = ref;
         this.path = PropertiesUtil.toString(ref.getProperty(ResourceProvider.PROPERTY_ROOT), "");
@@ -71,8 +67,6 @@ public class ResourceProviderInfo implements Comparable<ResourceProviderInfo> {
         this.adaptable = PropertiesUtil.toBoolean(ref.getProperty(ResourceProvider.PROPERTY_ADAPTABLE), false);
         this.refreshable = PropertiesUtil.toBoolean(ref.getProperty(ResourceProvider.PROPERTY_REFRESHABLE), false);
         this.attributable = PropertiesUtil.toBoolean(ref.getProperty(ResourceProvider.PROPERTY_ATTRIBUTABLE), false);
-        this.supportsJcrQuery = PropertiesUtil.toBoolean(ref.getProperty(ResourceProvider.PROPERTY_SUPPORTS_JCR_QUERY), false);
-        this.supportsNativeQuery = PropertiesUtil.toBoolean(ref.getProperty(ResourceProvider.PROPERTY_SUPPORTS_NATIVE_QUERY), false);
     }
 
     public boolean isValid() {
@@ -127,14 +121,6 @@ public class ResourceProviderInfo implements Comparable<ResourceProviderInfo> {
 
     public boolean isAttributable() {
         return attributable;
-    }
-
-    public boolean isSupportsJcrQuery() {
-        return supportsJcrQuery;
-    }
-
-    public boolean isSupportsNativeQuery() {
-        return supportsNativeQuery;
     }
 
     public String getName() {

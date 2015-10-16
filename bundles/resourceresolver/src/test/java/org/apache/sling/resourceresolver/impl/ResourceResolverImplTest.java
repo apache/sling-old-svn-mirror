@@ -201,8 +201,7 @@ public class ResourceResolverImplTest {
         ResourceResolverFactoryActivator rrfa = Mockito.spy(new ResourceResolverFactoryActivator());
         Whitebox.setInternalState(rrfa, "logResourceResolverClosing", true);
         CommonResourceResolverFactoryImpl crrfi = new CommonResourceResolverFactoryImpl(rrfa);
-        final ResourceResolver rr = new ResourceResolverImpl(crrfi, new ResourceResolverContext(false, null, new
-            ResourceAccessSecurityTracker()));
+        final ResourceResolver rr = new ResourceResolverImpl(crrfi, false, null, resourceProviderTracker.getResourceProviderStorage());
         assertTrue(rr.isLive());
         rr.close();
         assertFalse(rr.isLive());

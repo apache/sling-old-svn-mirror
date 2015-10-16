@@ -29,8 +29,6 @@ import static org.apache.sling.spi.resource.provider.ResourceProvider.PROPERTY_M
 import static org.apache.sling.spi.resource.provider.ResourceProvider.PROPERTY_NAME;
 import static org.apache.sling.spi.resource.provider.ResourceProvider.PROPERTY_REFRESHABLE;
 import static org.apache.sling.spi.resource.provider.ResourceProvider.PROPERTY_ROOT;
-import static org.apache.sling.spi.resource.provider.ResourceProvider.PROPERTY_SUPPORTS_JCR_QUERY;
-import static org.apache.sling.spi.resource.provider.ResourceProvider.PROPERTY_SUPPORTS_NATIVE_QUERY;
 import static org.apache.sling.spi.resource.provider.ResourceProvider.PROPERTY_USE_RESOURCE_ACCESS_SECURITY;
 import static org.osgi.framework.Constants.SERVICE_PID;
 import static org.osgi.framework.Constants.SERVICE_RANKING;
@@ -52,7 +50,6 @@ import org.apache.felix.scr.annotations.References;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.resource.AttributableResourceProvider;
 import org.apache.sling.api.resource.ModifyingResourceProvider;
-import org.apache.sling.api.resource.QueriableResourceProvider;
 import org.apache.sling.api.resource.RefreshableResourceProvider;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceProviderFactory;
@@ -86,8 +83,6 @@ public class LegacyResourceProviderWhiteboard {
             newProps.put(PROPERTY_ADAPTABLE, provider instanceof Adaptable);
             newProps.put(PROPERTY_ATTRIBUTABLE, provider instanceof AttributableResourceProvider);
             newProps.put(PROPERTY_REFRESHABLE, provider instanceof RefreshableResourceProvider);
-            newProps.put(PROPERTY_SUPPORTS_JCR_QUERY, provider instanceof QueriableResourceProvider);
-            newProps.put(PROPERTY_SUPPORTS_NATIVE_QUERY, false);
             newProps.put(PROPERTY_NAME, provider.getClass().getName());
             newProps.put(PROPERTY_ROOT, normalizePath(path));
             if (ArrayUtils.contains(propertyNames, SERVICE_PID)) {
@@ -132,8 +127,6 @@ public class LegacyResourceProviderWhiteboard {
             newProps.put(PROPERTY_ADAPTABLE, true);
             newProps.put(PROPERTY_ATTRIBUTABLE, true);
             newProps.put(PROPERTY_REFRESHABLE, true);
-            newProps.put(PROPERTY_SUPPORTS_JCR_QUERY, true);
-            newProps.put(PROPERTY_SUPPORTS_NATIVE_QUERY, false);
             newProps.put(PROPERTY_NAME, factory.getClass().getName());
             newProps.put(PROPERTY_ROOT, normalizePath(path));
             if (ArrayUtils.contains(propertyNames, SERVICE_PID)) {

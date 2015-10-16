@@ -83,8 +83,6 @@ import org.slf4j.LoggerFactory;
         @Property(name = ResourceProvider.PROPERTY_AUTHENTICATE, value = ResourceProvider.AUTHENTICATE_REQUIRED),
         @Property(name = ResourceProvider.PROPERTY_ATTRIBUTABLE, boolValue = true),
         @Property(name = ResourceProvider.PROPERTY_REFRESHABLE, boolValue = true),
-        @Property(name = ResourceProvider.PROPERTY_SUPPORTS_JCR_QUERY, boolValue = true),
-        @Property(name = ResourceProvider.PROPERTY_SUPPORTS_NATIVE_QUERY, boolValue = false)
 })
 public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
 
