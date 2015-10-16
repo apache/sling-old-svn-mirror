@@ -164,7 +164,7 @@ public class JsonItemWriter {
             // (colon is not allowed as a JCR property name)
             // in the name, and the value should be the size of the binary data
             w.key(":" + p.getName());
-            if (!p.getDefinition().isMultiple()) {
+            if (!p.isMultiple()) {
                 w.value(p.getLength());
             } else {
                 final long[] sizes = p.getLengths();
@@ -178,7 +178,7 @@ public class JsonItemWriter {
         }
         w.key(p.getName());
 
-        if (!p.getDefinition().isMultiple()) {
+        if (!p.isMultiple()) {
             dumpValue(w, p.getValue());
         } else {
             w.array();
