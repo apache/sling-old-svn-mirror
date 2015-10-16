@@ -21,12 +21,12 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
-        <relativePath/>
+        <version>25</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.auth.form</artifactId>
-    <version>1.0.7-SNAPSHOT</version>
+    <version>1.0.9-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Form Based Authentication Handler</name>

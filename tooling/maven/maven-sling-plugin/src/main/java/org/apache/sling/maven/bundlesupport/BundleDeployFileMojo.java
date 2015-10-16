@@ -21,24 +21,22 @@ package org.apache.sling.maven.bundlesupport;
 import java.io.File;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * Deploy a JAR representing an OSGi Bundle. This method posts the bundle built
  * by maven to an OSGi Bundle Repository accepting the bundle. The plugin uses
  * a </em>multipart/format-data</em> POST request to just post the file to
  * the URL configured in the <code>obr</code> property. 
- *
- * @goal deploy-file
- * @requiresProject false
- * @description deploy an OSGi bundle jar to the Day OBR
  */
+@Mojo(name="deploy-file", requiresProject= false)
 public class BundleDeployFileMojo extends AbstractBundleDeployMojo {
 
     /**
      * The name of the generated JAR file.
-     *
-     * @parameter expression="${sling.file}"
      */
+    @Parameter(property="sling.file")
     private String bundleFileName;
     
     @Override

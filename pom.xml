@@ -84,6 +84,7 @@
         <module>parent</module>
 
         <!-- Tooling Support -->
+        <module>tooling/support/install</module>
         <module>tooling/support/provisioning-model</module>
         <!-- The Maven Plugins and Archeyptes-->
         <module>tooling/maven/adapter-annotations</module>
@@ -94,6 +95,7 @@
         <module>tooling/maven/slingstart-maven-plugin</module>
         <module>tooling/maven/archetypes/launchpad-standalone</module>
         <module>tooling/maven/archetypes/launchpad-webapp</module>
+        <module>tooling/maven/archetypes/slingstart</module>
         <module>tooling/maven/archetypes/initial-content</module>
         <module>tooling/maven/archetypes/servlet</module>
         <module>tooling/maven/archetypes/bundle</module>

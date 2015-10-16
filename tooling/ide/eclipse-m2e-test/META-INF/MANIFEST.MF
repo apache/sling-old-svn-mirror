@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Sling IDE Tools: Eclipse M2Eclipse-based tests
 Bundle-SymbolicName: org.apache.sling.ide.eclipse-m2e-test
-Bundle-Version: 1.0.7.qualifier
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-Version: 1.0.9.qualifier
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Require-Bundle: org.junit
 Fragment-Host: org.apache.sling.ide.eclipse-m2e-ui

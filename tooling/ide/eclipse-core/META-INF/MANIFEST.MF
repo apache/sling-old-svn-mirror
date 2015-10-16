@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.apache.sling.ide.eclipse-core;singleton:=true
-Bundle-Version: 1.0.7.qualifier
+Bundle-Version: 1.0.9.qualifier
 Bundle-Activator: org.apache.sling.ide.eclipse.core.internal.Activator
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.equinox.ds;bundle-version="1.2.1",
@@ -10,7 +10,7 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ui,
  org.eclipse.jdt.debug
 Bundle-ActivationPolicy: lazy
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ClassPath: .
 Import-Package: org.apache.commons.httpclient;version="3.1.0",
  org.apache.commons.httpclient.auth;version="3.1.0",
@@ -46,5 +46,5 @@ Import-Package: org.apache.commons.httpclient;version="3.1.0",
 Export-Package: org.apache.sling.ide.eclipse.core,org.apache.sling.ide
  .eclipse.core.debug,org.apache.sling.ide.eclipse.core.internal,org.ap
  ache.sling.ide.eclipse.core.progress,org.apache.sling.ide.eclipse.int
- ernal.validation;x-friends:="org.apache.sling.ide.eclipse-test"
+ ernal.validation;x-friends:="org.apache.sling.ide.eclipse-test",org.apache.sling.ide.eclipse.core.facet
 Service-Component: OSGI-INF/TraceCommandExecutionEventsHandler.xml

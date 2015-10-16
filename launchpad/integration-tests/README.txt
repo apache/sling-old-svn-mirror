@@ -25,10 +25,6 @@ on host xyzzy, port 1234, with the Sling main servlet mounted under /foo:
     -Dwebdav.workspace.path=foo \
     -Dtest=**/integrationtest/**/*Test.java
 
-JUnit OakOnly and JackrabbitOnly categories are used to select some tests
-which are specific to one of these implementations. By default, OakOnly tests
-are excluded, to switch to them use -Dsling.run.modes=oak
-
 To run the tests against the same instance that is used in the full build,
 start an instance by running
 

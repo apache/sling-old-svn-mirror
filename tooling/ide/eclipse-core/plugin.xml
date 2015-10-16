@@ -239,4 +239,10 @@
 			</exclude>
 		</validator>
  	</extension>
+ 	
+ 	<!-- Store project preferences in the filesystem -->
+ 	<extension id="org.apache.sling.ide.preferences" point="org.eclipse.core.runtime.preferences">
+ 		<scope name="project" class="org.eclipse.core.internal.resources.ProjectPreferences">
+ 		</scope>
+ 	</extension>
 </plugin>    

@@ -280,6 +280,7 @@ public class HeartbeatHandler implements Runnable, StartupListener {
             // use 'fireJobAt' here, instead of 'fireJob' to make sure the job can always be triggered
             // 'fireJob' checks for a job from the same job-class to already exist
             // 'fireJobAt' though allows to pass a name for the job - which can be made unique, thus does not conflict/already-exist
+            logger.info("triggerHeartbeat: firing job to trigger heartbeat");
             scheduler.fireJobAt(NAME+UUID.randomUUID(), this, null, new Date(System.currentTimeMillis()-1000 /* make sure it gets triggered immediately*/));
         } catch (Exception e) {
             logger.info("triggerHeartbeat: Could not trigger heartbeat: " + e);
@@ -396,6 +397,7 @@ public class HeartbeatHandler implements Runnable, StartupListener {
             				// sling instance accessing the same repository (ie in the same cluster)
             				// using the same sling.id - hence writing to the same
             				// resource
+            			    discoveryService.handleTopologyChanging();
             				logger.error("issueClusterLocalHeartbeat: SLING-2892: Detected unexpected, concurrent update of: "+
             						myClusterNodePath+" 'lastHeartbeat'. If not done manually, " +
             						"this likely indicates that there is more than 1 instance running in this cluster" +
@@ -415,6 +417,7 @@ public class HeartbeatHandler implements Runnable, StartupListener {
             	    // someone deleted the resource property
             	    firstHeartbeatWritten = -1;
             	} else if (!runtimeId.equals(readRuntimeId)) {
+            	    discoveryService.handleTopologyChanging();
                     final String slingHomePath = slingSettingsService==null ? "n/a" : slingSettingsService.getSlingHomePath();
                     final String endpointsAsString = getEndpointsAsString();
                     final String readEndpoints = resourceMap.get(PROPERTY_ID_ENDPOINTS, String.class);
@@ -575,6 +578,11 @@ public class HeartbeatHandler implements Runnable, StartupListener {
         if (winningVoting != null || (numOpenNonWinningVotes > 0)) {
             // then there are votings pending and I shall wait for them to
             // settle
+            
+            // but first: make sure we sent the TOPOLOGY_CHANGING
+            logger.info("doCheckView: there are pending votings, marking topology as changing...");
+            discoveryService.handleTopologyChanging();
+            
         	if (logger.isDebugEnabled()) {
 	            logger.debug("doCheckView: "
 	                    + numOpenNonWinningVotes
@@ -595,6 +603,11 @@ public class HeartbeatHandler implements Runnable, StartupListener {
             logger.debug("doCheckView: no pending nor winning votes. view is fine. we're all happy.");
             return;
         }
+        
+        // immediately send a TOPOLOGY_CHANGING - could already be sent, but just to be sure
+        logger.info("doCheckView: no matching established view, marking topology as changing");
+        discoveryService.handleTopologyChanging();
+        
     	if (logger.isDebugEnabled()) {
 	        logger.debug("doCheckView: no pending nor winning votes. But: view does not match established or no established yet. Initiating a new voting");
 	        Iterator<String> it = liveInstances.iterator();

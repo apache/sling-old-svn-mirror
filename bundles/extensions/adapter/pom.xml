@@ -23,13 +23,13 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
-        <relativePath/>
+        <version>25</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.adapter</artifactId>
     <packaging>bundle</packaging>
-    <version>2.1.5-SNAPSHOT</version>
+    <version>2.1.7-SNAPSHOT</version>
 
     <name>Apache Sling Adapter Manager Implementation</name>
     <description>

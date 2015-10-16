@@ -18,7 +18,6 @@ package org.apache.sling.ide.eclipse.ui.nav.model;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -36,8 +35,8 @@ import org.eclipse.core.resources.IFolder;
  */
 public class SyncDirManager {
 
-    private static Map<IFolder,SyncDir> syncDirs = new HashMap<IFolder,SyncDir>();
-    private static List<UpdateHandler> handlers = new LinkedList<UpdateHandler>();
+    private static Map<IFolder,SyncDir> syncDirs = new HashMap<>();
+    private static List<UpdateHandler> handlers = new LinkedList<>();
     
     public static void registerNewSyncDir(SyncDir syncDir) {
         syncDirs.put(syncDir.getFolder(), syncDir);
@@ -47,10 +46,9 @@ public class SyncDirManager {
     public static void syncDirChanged(SyncDir syncDir) {
         List<UpdateHandler> handlersCopy;
         synchronized(handlers) {
-            handlersCopy = new ArrayList<UpdateHandler>(handlers);
+            handlersCopy = new ArrayList<>(handlers);
         }
-        for (Iterator it = handlersCopy.iterator(); it.hasNext();) {
-            UpdateHandler updateHandler = (UpdateHandler) it.next();
+        for (UpdateHandler updateHandler : handlersCopy) {
             updateHandler.syncDirUpdated(syncDir);
         }
     }

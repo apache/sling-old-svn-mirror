@@ -73,13 +73,21 @@ class PathParser {
             return;
         }
 
+        // indexOf shortcut for the most common case
+        final int di = path.indexOf('.');
+        final int si = path.indexOf(';');
+        if (di == -1 && si == -1) {
+            return;
+        }
+
         final char[] chars = path.toCharArray();
         final ParametersParser parametersParser = new ParametersParser();
 
         ParserState state = ParserState.INIT;
         int paramsStart = -1, paramsEnd = -1;
 
-        for (int i = 0; i <= chars.length; i++) {
+        int i = (di != -1) ? ((si != -1) ? Math.min(di, si) : di) : si;
+        for (; i <= chars.length; i++) {
             final char c;
             if (i == chars.length) {
                 c = 0;

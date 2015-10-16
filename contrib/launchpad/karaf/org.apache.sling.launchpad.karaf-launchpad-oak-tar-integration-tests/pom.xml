@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>24</version>
+    <version>25</version>
     <relativePath/>
   </parent>
 
@@ -58,7 +58,7 @@
       <groupId>org.apache.karaf</groupId>
       <artifactId>apache-karaf</artifactId>
       <type>tar.gz</type>
-      <version>4.0.1</version>
+      <version>4.0.2</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -226,7 +226,6 @@
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/FiltersTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/resolution/WarSelectorServletTest.*</exclude>
               </excludes>
-              <excludedGroups>org.apache.sling.commons.testing.junit.categories.JackrabbitOnly</excludedGroups>
             </configuration>
           </plugin>
         </plugins>

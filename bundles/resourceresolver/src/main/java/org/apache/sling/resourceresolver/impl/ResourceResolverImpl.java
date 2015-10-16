@@ -110,6 +110,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
     private final Map<String, Object> authenticationInfo;
 
+    private volatile Exception closedResolverException;
+
     public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo) throws LoginException {
         this(factory, isAdmin, authenticationInfo, factory.getResourceProviderTracker().getResourceProviderStorage());
     }
@@ -172,6 +174,9 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      */
     @Override
     public void close() {
+        if (factory.shouldLogResourceResolverClosing()) {
+            closedResolverException = new Exception("Stack Trace");
+        }
         if ( this.isClosed.compareAndSet(false, true)) {
             this.factory.unregister(this, this.context);
             provider.logout();
@@ -187,6 +192,9 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      */
     private void checkClosed() {
         if (this.isClosed.get()) {
+            if (closedResolverException != null) {
+                logger.error("The ResourceResolver has already been closed.", closedResolverException);
+            }
             throw new IllegalStateException("Resource resolver is already closed.");
         }
         if (!this.factory.isLive()) {

@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
+        <version>25</version>
         <relativePath/>
     </parent>
 
@@ -137,7 +137,6 @@
                     <excludes>
                         <exclude>${failsafe.exclude}</exclude>
                     </excludes>
-                    <excludedGroups>${sling.it.excludedGroups}</excludedGroups>
                     <systemPropertyVariables>
                         <launchpad.http.server.url>http://${test.host}:${http.port}/</launchpad.http.server.url>
                         <launchpad.webdav.server.url>http://${test.host}:${http.port}/${webdav.workspace.path}</launchpad.webdav.server.url>
@@ -149,31 +148,6 @@
     </build>
 
     <profiles>
-        <profile>
-            <id>jackrabbit</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-                <property>
-                    <name>sling.run.modes</name>
-                    <value>!oak</value>
-                </property>
-            </activation>
-            <properties>
-                <sling.it.excludedGroups>org.apache.sling.commons.testing.junit.categories.OakOnly</sling.it.excludedGroups>
-            </properties>
-        </profile>
-        <profile>
-            <id>oak</id>
-            <activation>
-                <property>
-                    <name>sling.run.modes</name>
-                    <value>oak</value>
-                </property>
-            </activation>
-            <properties>
-                <sling.it.excludedGroups>org.apache.sling.commons.testing.junit.categories.JackrabbitOnly</sling.it.excludedGroups>
-            </properties>
-        </profile>
         <profile>
             <id>port-java6</id>
             <activation>

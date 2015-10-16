@@ -18,11 +18,8 @@
  */
 package org.apache.sling.testing.mock.sling;
 
-import javax.jcr.Repository;
-
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.testing.mock.jcr.MockJcr;
 import org.apache.sling.testing.mock.sling.spi.ResourceResolverTypeAdapter;
 
 /**
@@ -37,8 +34,7 @@ class MockJcrResourceResolverAdapter implements ResourceResolverTypeAdapter {
 
     @Override
     public SlingRepository newSlingRepository() {
-        Repository repository = MockJcr.newRepository();
-        return new MockSlingRepository(repository);
+        return new MockJcrSlingRepository();
     }
 
 }

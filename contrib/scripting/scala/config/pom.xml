@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
+        <version>25</version>
     </parent>
 
     <artifactId>org.apache.sling.scripting.scala.config</artifactId>

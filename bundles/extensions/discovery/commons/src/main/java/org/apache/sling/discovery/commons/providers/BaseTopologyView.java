@@ -49,4 +49,37 @@ public abstract class BaseTopologyView implements TopologyView {
         current = false;
     }
 
+    /**
+     * Returns the id that shall be used in the syncToken
+     * by the ConsistencyService.
+     * <p>
+     * The clusterSyncId uniquely identifies each change
+     * of the local cluster for all participating instances. 
+     * That means, all participating instances know of the 
+     * clusterSyncId and it is the same for all instances.
+     * Whenever an instance joins/leaves the cluster, this
+     * clusterSyncId must change. 
+     * <p>
+     * Since this method returns the *local* clusterSyncId,
+     * it doesn't care if a remote cluster experienced
+     * changes - it must only change when the local cluster changes.
+     * However, it *can* change when a remote cluster changes too.
+     * So the requirement is just that it changes *at least* when
+     * the local cluster changes - but implementations
+     * can opt to regard this rather as a TopologyView-ID too
+     * (ie an ID that identifies a particular incarnation
+     * of the TopologyView for all participating instances
+     * in the whole topology).
+     * <p>
+     * This id can further safely be used by the ConsistencyService
+     * to identify a syncToken that it writes and that all
+     * other instances in the lcoal cluster wait for, before
+     * sending a TOPOLOGY_CHANGED event.
+     * <p>
+     * Note that this is obviously not to be confused
+     * with the ClusterView.getId() which is stable throughout
+     * the lifetime of a cluster.
+     */
+    public abstract String getLocalClusterSyncTokenId();
+
 }

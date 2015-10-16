@@ -18,14 +18,14 @@
 package org.apache.sling.maven.bundlesupport;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * Install an OSGi bundle to a running Sling instance.
- *
- * @goal install
- * @phase install
- * @description install an OSGi bundle jar to a running Sling instance
  */
+@Mojo(name = "install", defaultPhase = LifecyclePhase.INSTALL)
 public class BundleInstallMojo extends AbstractBundleInstallMojo {
 
     /**
@@ -33,18 +33,14 @@ public class BundleInstallMojo extends AbstractBundleInstallMojo {
      * project to be executed. This property may be set by the
      * <code>sling.install.skip</code> comparable to the <code>maven.test.skip</code>
      * property to prevent running the unit tests.
-     * 
-     * @parameter expression="${sling.install.skip}" default-value="false"
-     * @required
      */
+    @Parameter(property = "sling.install.skip", defaultValue = "false", required = true)
     private boolean skip;
     
     /**
      * The name of the generated JAR file.
-     *
-     * @parameter expression="${sling.file}" default-value="${project.build.directory}/${project.build.finalName}.jar"
-     * @required
      */
+    @Parameter(property = "sling.file", defaultValue = "${project.build.directory}/${project.build.finalName}.jar", required = true)
     private String bundleFileName;
 
     @Override

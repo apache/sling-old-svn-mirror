@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>24</version>
+    <version>25</version>
     <relativePath/>
   </parent>
 
@@ -42,10 +42,29 @@
 
   <modules>
     <module>org.apache.sling.launchpad.karaf</module>
+    <!--
+    <module>org.apache.sling.launchpad.karaf-distribution</module>
+    -->
     <module>org.apache.sling.launchpad.karaf-features</module>
     <module>org.apache.sling.launchpad.karaf-integration-tests</module>
-    <module>org.apache.sling.launchpad.karaf-launchpad-jackrabbit-derby-integration-tests</module>
+    <!--
     <module>org.apache.sling.launchpad.karaf-launchpad-oak-tar-integration-tests</module>
+    -->
   </modules>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <configuration>
+          <excludes combine.children="append">
+            <exclude>**/target/</exclude>
+            <exclude>**/*.iml</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>

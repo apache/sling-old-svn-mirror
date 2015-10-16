@@ -21,13 +21,13 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
-        <relativePath/>
+        <version>25</version>
+        <relativePath />
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>org.apache.sling.scripting.sightly.repl</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Scripting Sightly Read-Eval-Print Loop Environment</name>
@@ -50,6 +50,16 @@
                         <excludes combine.children="append">
                             <exclude>src/main/resources/SLING-INF/**/*.json</exclude>
                             <exclude>src/main/resources/SLING-INF/**/*.svg</exclude>
+                            <exclude>src/main/resources/SLING-INF/etc/clientlibs/repl/ace.js</exclude>
+                            <exclude>src/main/resources/SLING-INF/etc/clientlibs/repl/mode-html.js</exclude>
+                            <exclude>src/main/resources/SLING-INF/etc/clientlibs/repl/mode-javascript.js</exclude>
+                            <exclude>src/main/resources/SLING-INF/etc/clientlibs/repl/mode-java.js</exclude>
+                            <exclude>src/main/resources/SLING-INF/etc/clientlibs/repl/bootstrap-theme.min.css</exclude>
+                            <exclude>src/main/resources/SLING-INF/etc/clientlibs/repl/bootstrap.min.css</exclude>
+                            <exclude>src/main/resources/SLING-INF/etc/clientlibs/repl/bootstrap.min.js</exclude>
+                            <exclude>src/main/resources/SLING-INF/etc/clientlibs/repl/html5shiv.js</exclude>
+                            <exclude>src/main/resources/SLING-INF/etc/clientlibs/repl/jquery.min.js</exclude>
+                            <exclude>src/main/resources/SLING-INF/etc/clientlibs/repl/respond.min.js</exclude>
                         </excludes>
                     </configuration>
                 </plugin>

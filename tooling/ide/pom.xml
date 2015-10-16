@@ -26,7 +26,7 @@
     </parent>
 	<groupId>org.apache.sling.ide</groupId>
 	<artifactId>reactor</artifactId>
-	<version>1.0.7-SNAPSHOT</version>
+	<version>1.0.9-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Sling IDE Tools: Reactor</name>
     <url>http://sling.apache.org</url>
@@ -53,6 +53,9 @@
 		<module>eclipse-m2e-ui</module>
 		<module>eclipse-m2e-test</module>
 		<module>m2e-feature</module>
+		<module>eclipse-sightly-core</module>
+		<module>eclipse-sightly-ui</module>
+		<module>sightly-feature</module>
 		<module>p2update</module>
 	</modules>
 
@@ -143,8 +146,8 @@
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>3.1</version>
                     <configuration>
-                      <source>1.6</source>
-                      <target>1.6</target>
+                      <source>1.7</source>
+                      <target>1.7</target>
                     </configuration>
                 </plugin>
                 <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->

@@ -26,13 +26,11 @@ import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.osgi.OsgiClientFactory;
 import org.apache.sling.ide.serialization.SerializationManager;
-import org.apache.sling.ide.transport.Batcher;
 import org.apache.sling.ide.transport.BatcherFactory;
 import org.apache.sling.ide.transport.CommandExecutionProperties;
 import org.apache.sling.ide.transport.RepositoryFactory;
 import org.eclipse.core.runtime.Plugin;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -60,10 +58,10 @@ public class Activator extends Plugin {
     private ServiceTracker<FilterLocator, FilterLocator> filterLocator;
     private ServiceTracker<OsgiClientFactory, OsgiClientFactory> osgiClientFactory;
     private ServiceTracker<EmbeddedArtifactLocator, EmbeddedArtifactLocator> artifactLocator;
-    private ServiceTracker<?, ?> tracer;
+    private ServiceTracker<Logger, Logger> tracer;
     private ServiceTracker<BatcherFactory, BatcherFactory> batcherFactoryLocator;
 
-    private ServiceRegistration<?> tracerRegistration;
+    private ServiceRegistration<Logger> tracerRegistration;
 
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
@@ -71,35 +69,30 @@ public class Activator extends Plugin {
 
         tracerRegistration = PluginLoggerRegistrar.register(this);
 
-        eventAdmin = new ServiceTracker<EventAdmin, EventAdmin>(context, EventAdmin.class,
-                null);
+        eventAdmin = new ServiceTracker<>(context, EventAdmin.class, null);
         eventAdmin.open();
 
-        repositoryFactory = new ServiceTracker<RepositoryFactory, RepositoryFactory>(context, RepositoryFactory.class,
+        repositoryFactory = new ServiceTracker<>(context, RepositoryFactory.class,
                 null);
         repositoryFactory.open();
 
-        serializationManager = new ServiceTracker<SerializationManager, SerializationManager>(context,
-                SerializationManager.class, null);
+        serializationManager = new ServiceTracker<>(context, SerializationManager.class, null);
         serializationManager.open();
 
-        filterLocator = new ServiceTracker<FilterLocator, FilterLocator>(context, FilterLocator.class, null);
+        filterLocator = new ServiceTracker<>(context, FilterLocator.class, null);
         filterLocator.open();
 
-        osgiClientFactory = new ServiceTracker<OsgiClientFactory, OsgiClientFactory>(context, OsgiClientFactory.class,
+        osgiClientFactory = new ServiceTracker<>(context, OsgiClientFactory.class,
                 null);
         osgiClientFactory.open();
 
-        artifactLocator = new ServiceTracker<EmbeddedArtifactLocator, EmbeddedArtifactLocator>(context,
-                EmbeddedArtifactLocator.class, null);
+        artifactLocator = new ServiceTracker<>(context, EmbeddedArtifactLocator.class, null);
         artifactLocator.open();
 
-        // ugh
-        ServiceReference<Object> reference = (ServiceReference<Object>) tracerRegistration.getReference();
-        tracer = new ServiceTracker<Object, Object>(context, reference, null);
+        tracer = new ServiceTracker<>(context, tracerRegistration.getReference(), null);
         tracer.open();
         
-        batcherFactoryLocator = new ServiceTracker<BatcherFactory, BatcherFactory>(context, BatcherFactory.class, null);
+        batcherFactoryLocator = new ServiceTracker<>(context, BatcherFactory.class, null);
         batcherFactoryLocator.open();
 	}
 
@@ -167,7 +160,7 @@ public class Activator extends Plugin {
      */
     @Deprecated
     public void issueConsoleLog(String actionType, String path, String message) {
-        Map<String, Object> props = new HashMap<String, Object>();
+        Map<String, Object> props = new HashMap<>();
         props.put(CommandExecutionProperties.RESULT_TEXT, message);
         props.put(CommandExecutionProperties.ACTION_TYPE, actionType);
         props.put(CommandExecutionProperties.ACTION_TARGET, path);

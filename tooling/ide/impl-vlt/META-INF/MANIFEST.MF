@@ -1,9 +1,9 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.apache.sling.ide.impl-vlt;singleton:=true
-Bundle-Version: 1.0.7.qualifier
+Bundle-Version: 1.0.9.qualifier
 Bundle-ActivationPolicy: lazy
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Require-Bundle: org.eclipse.equinox.ds;bundle-version="1.2.1",
  org.eclipse.osgi.services;bundle-version="3.2.100"
 Import-Package: javax.jcr,

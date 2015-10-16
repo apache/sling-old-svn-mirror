@@ -19,7 +19,6 @@
 package org.apache.sling.engine.impl.request;
 
 import java.io.PrintWriter;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -129,6 +128,8 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
      */
     private final Map<String, Long> namedTimerEntries = new HashMap<String, Long>();
 
+    private final FastMessageFormat messageFormat = new FastMessageFormat();
+
     /**
      * Creates a new request progress tracker.
      */
@@ -210,7 +211,7 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
 
     /** Creates an entry with the given entry tag and message */
     public void log(String format, Object... args) {
-        String message = MessageFormat.format(format, args);
+        String message = messageFormat.format(format, args);
         entries.add(new TrackingEntry(LOG_PREFIX + message));
     }
 
@@ -250,7 +251,7 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
      */
     public void logTimer(String name, String format, Object... args) {
         if (namedTimerEntries.containsKey(name)) {
-            logTimerInternal(name, MessageFormat.format(format, args), namedTimerEntries.get(name));
+            logTimerInternal(name, messageFormat.format(format, args), namedTimerEntries.get(name));
         }
     }
 

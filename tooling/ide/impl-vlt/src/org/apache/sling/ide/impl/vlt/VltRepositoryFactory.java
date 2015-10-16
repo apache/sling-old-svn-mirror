@@ -33,7 +33,7 @@ public class VltRepositoryFactory implements RepositoryFactory {
 
     private EventAdmin eventAdmin;
 
-    private Map<String,VltRepository> repositoryMap = new HashMap<String,VltRepository>();
+    private Map<String,VltRepository> repositoryMap = new HashMap<>();
 
     @Override
     public Repository getRepository(RepositoryInfo repositoryInfo,

@@ -39,7 +39,6 @@ import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeExistsException;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.jackrabbit.commons.cnd.ParseException;
 import org.apache.jackrabbit.core.TransientRepository;
@@ -428,15 +427,11 @@ public class AddOrUpdateNodeCommandTest {
     private void importNodeTypeDefinitions(Session session, String cndFile) throws InvalidNodeTypeDefinitionException,
             NodeTypeExistsException, UnsupportedRepositoryOperationException, ParseException, RepositoryException,
             IOException {
-        InputStream cndInput = null;
-        try {
-            cndInput = getClass().getResourceAsStream(cndFile);
+        try ( InputStream cndInput = getClass().getResourceAsStream(cndFile) ) {
             if (cndInput == null) {
                 throw new IllegalArgumentException("Unable to read classpath resource " + cndFile);
             }
             CndImporter.registerNodeTypes(new InputStreamReader(cndInput), session);
-        } finally {
-            IOUtils.closeQuietly(cndInput);
         }
     }
 

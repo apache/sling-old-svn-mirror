@@ -71,7 +71,7 @@ public class JVMDebuggerConnection {
 		            "debug port not configured"));
 		}
 		
-		Map<String, String> connectMap = new HashMap<String, String>();
+		Map<String, String> connectMap = new HashMap<>();
 		connectMap.put("hostname", iServer.getHost());
 		connectMap.put("port", String.valueOf(debugPort));
 		
@@ -87,7 +87,7 @@ public class JVMDebuggerConnection {
 				.setSourcePathComputer(DebugPlugin.getDefault().getLaunchManager()
 						.getSourcePathComputer(
 								"org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer")); //$NON-NLS-1$
-		List<ISourceContainer> l = new LinkedList<ISourceContainer>();
+		List<ISourceContainer> l = new LinkedList<>();
 		IJavaProject[] javaProjects = ProjectHelper.getAllJavaProjects();
 		if (javaProjects!=null) {
 			for (int i = 0; i < javaProjects.length; i++) {

@@ -138,16 +138,6 @@ public class TopologyEventTest {
         assertEquals(0, l1Two.getRemainingExpectedCount()); // the expected one
         assertEquals(0, l1Two.getUnexpectedCount());
         
-        // one heartbeat doesn't change the history yet
-        logger.info("testDelayedInitEvent: an additional heartbeat shouldn't trigger any event for now");
-        instance1.runHeartbeatOnce();
-        instance2.runHeartbeatOnce();
-        assertEquals(1, l1.getEvents().size()); // one event
-        assertEquals(0, l1.getUnexpectedCount());
-        assertEquals(0, l2.getEvents().size());
-        assertEquals(0, l2.getUnexpectedCount());
-        assertEquals(1, l1Two.getEvents().size());
-        assertEquals(0, l1Two.getUnexpectedCount());
         
         // the second & third heartbeat though triggers the voting etc
         logger.info("testDelayedInitEvent: two more heartbeats should trigger events");
@@ -155,6 +145,9 @@ public class TopologyEventTest {
         l1Two.addExpected(Type.TOPOLOGY_CHANGING);
         Thread.sleep(500);
         l2.addExpected(Type.TOPOLOGY_INIT);
+        instance1.runHeartbeatOnce();
+        instance2.runHeartbeatOnce();
+        Thread.sleep(500);
         instance1.runHeartbeatOnce();
         instance2.runHeartbeatOnce();
         Thread.sleep(500);

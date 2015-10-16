@@ -32,29 +32,33 @@ import javax.jcr.Session;
 
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.NodeTypeDefinitionScanner;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
+import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 
 public abstract class AbstractContentLoaderJsonTest {
 
-    private ResourceResolver resourceResolver;
+    @Rule
+    public SlingContext context = new SlingContext(getResourceResolverType());
 
     protected abstract ResourceResolverType getResourceResolverType();
+    
+    private String path;
 
-    protected ResourceResolver newResourceResolver() {
-        ResourceResolver resolver = MockSling.newResourceResolver(getResourceResolverType());
+    @Before
+    public void setUp() {
+        path = context.uniqueRoot().content();
 
         try {
-            NodeTypeDefinitionScanner.get().register(resolver.adaptTo(Session.class), 
+            NodeTypeDefinitionScanner.get().register(context.resourceResolver().adaptTo(Session.class), 
                     ImmutableList.of("SLING-INF/nodetypes/app.cnd"),
                     getResourceResolverType().getNodeTypeMode());
         }
@@ -62,56 +66,42 @@ public abstract class AbstractContentLoaderJsonTest {
             throw new RuntimeException("Unable to register namespaces.", ex);
         }
 
-        return resolver;
-    }
-
-    @Before
-    public final void setUp() {
-        this.resourceResolver = newResourceResolver();
-        ContentLoader contentLoader = new ContentLoader(this.resourceResolver);
-        contentLoader.json("/json-import-samples/content.json", "/content/sample/en");
+        context.load().json("/json-import-samples/content.json", path + "/sample/en");
     }
 
     @After
     public final void tearDown() throws Exception {
         // make sure all changes from ContentLoader are committed
-        assertFalse(resourceResolver.hasChanges());
-        // remove everything below /content
-        Resource content = resourceResolver.getResource("/content");
-        if (content != null) {
-            resourceResolver.delete(content);
-            resourceResolver.commit();
-        }
-        this.resourceResolver.close();
+        assertFalse(context.resourceResolver().hasChanges());
     }
             
     @Test
     public void testPageResourceType() {
-        Resource resource = this.resourceResolver.getResource("/content/sample/en");
+        Resource resource = context.resourceResolver().getResource(path + "/sample/en");
         assertEquals("app:Page", resource.getResourceType());
     }
 
     @Test
     public void testPageJcrPrimaryType() throws RepositoryException {
-        Resource resource = this.resourceResolver.getResource("/content/sample/en");
+        Resource resource = context.resourceResolver().getResource(path + "/sample/en");
         assertPrimaryNodeType(resource, "app:Page");
     }
 
     @Test
     public void testPageContentResourceType() {
-        Resource resource = this.resourceResolver.getResource("/content/sample/en/toolbar/profiles/jcr:content");
+        Resource resource = context.resourceResolver().getResource(path + "/sample/en/toolbar/profiles/jcr:content");
         assertEquals("sample/components/contentpage", resource.getResourceType());
     }
 
     @Test
     public void testPageContentJcrPrimaryType() throws RepositoryException {
-        Resource resource = this.resourceResolver.getResource("/content/sample/en/toolbar/profiles/jcr:content");
+        Resource resource = context.resourceResolver().getResource(path + "/sample/en/toolbar/profiles/jcr:content");
         assertPrimaryNodeType(resource, "app:PageContent");
     }
 
     @Test
     public void testPageContentProperties() {
-        Resource resource = this.resourceResolver.getResource("/content/sample/en/toolbar/profiles/jcr:content");
+        Resource resource = context.resourceResolver().getResource(path + "/sample/en/toolbar/profiles/jcr:content");
         ValueMap props = ResourceUtil.getValueMap(resource);
         assertEquals(true, props.get("hideInNav", Boolean.class));
 
@@ -126,19 +116,19 @@ public abstract class AbstractContentLoaderJsonTest {
 
     @Test
     public void testContentResourceType() {
-        Resource resource = this.resourceResolver.getResource("/content/sample/en/jcr:content/header");
+        Resource resource = context.resourceResolver().getResource(path + "/sample/en/jcr:content/header");
         assertEquals("sample/components/header", resource.getResourceType());
     }
 
     @Test
     public void testContentJcrPrimaryType() throws RepositoryException {
-        Resource resource = this.resourceResolver.getResource("/content/sample/en/jcr:content/header");
+        Resource resource = context.resourceResolver().getResource(path + "/sample/en/jcr:content/header");
         assertPrimaryNodeType(resource, JcrConstants.NT_UNSTRUCTURED);
     }
 
     @Test
     public void testContentProperties() {
-        Resource resource = this.resourceResolver.getResource("/content/sample/en/jcr:content/header");
+        Resource resource = context.resourceResolver().getResource(path + "/sample/en/jcr:content/header");
         ValueMap props = ResourceUtil.getValueMap(resource);
         assertEquals("/content/dam/sample/header.png", props.get("imageReference", String.class));
     }
@@ -155,7 +145,7 @@ public abstract class AbstractContentLoaderJsonTest {
 
     @Test
     public void testCalendarEcmaFormat() {
-        Resource resource = this.resourceResolver.getResource("/content/sample/en/jcr:content");
+        Resource resource = context.resourceResolver().getResource(path + "/sample/en/jcr:content");
         ValueMap props = ResourceUtil.getValueMap(resource);
 
         Calendar calendar = props.get("app:lastModified", Calendar.class);
@@ -174,7 +164,7 @@ public abstract class AbstractContentLoaderJsonTest {
     
     @Test
     public void testCalendarISO8601Format() {
-        Resource resource = this.resourceResolver.getResource("/content/sample/en/jcr:content");
+        Resource resource = context.resourceResolver().getResource(path + "/sample/en/jcr:content");
         ValueMap props = ResourceUtil.getValueMap(resource);
 
         Calendar calendar = props.get("dateISO8601String", Calendar.class);
@@ -193,7 +183,7 @@ public abstract class AbstractContentLoaderJsonTest {
     
     @Test
     public void testUTF8Chars() {
-        Resource resource = this.resourceResolver.getResource("/content/sample/en/jcr:content");
+        Resource resource = context.resourceResolver().getResource(path + "/sample/en/jcr:content");
         ValueMap props = ResourceUtil.getValueMap(resource);
         
         assertEquals("äöüß€", props.get("utf8Property"));

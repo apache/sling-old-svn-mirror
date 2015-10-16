@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
+        <version>25</version>
         <relativePath />
     </parent>
 
@@ -124,6 +124,12 @@
 			<groupId>org.apache.sling</groupId>
 			<artifactId>org.apache.sling.discovery.api</artifactId>
 			<version>1.0.0</version>
+            <scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.sling</groupId>
+			<artifactId>org.apache.sling.discovery.commons</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
             <scope>provided</scope>
 		</dependency>
 		<dependency>

@@ -129,7 +129,10 @@ public final class MockOsgi {
      * Simulate activation of service instance. Invokes the @Activate annotated method.
      * @param target Service instance.
      * @return true if activation method was called. False if no activate method is defined.
+     * @deprecated Please use {@link #activate(Object, BundleContext)}
+     *   and shutdown the bundle context after usage.
      */
+    @Deprecated
     public static boolean activate(Object target) {
         return MockOsgi.activate(target, (Dictionary<String, Object>)null);
     }
@@ -137,9 +140,22 @@ public final class MockOsgi {
     /**
      * Simulate activation of service instance. Invokes the @Activate annotated method.
      * @param target Service instance.
-     * @param properties Properties
+     * @param bundleContext Bundle context
      * @return true if activation method was called. False if no activate method is defined.
      */
+    public static boolean activate(Object target, BundleContext bundleContext) {
+        return MockOsgi.activate(target, bundleContext, (Dictionary<String, Object>)null);
+    }
+
+    /**
+     * Simulate activation of service instance. Invokes the @Activate annotated method.
+     * @param target Service instance.
+     * @param properties Properties
+     * @return true if activation method was called. False if no activate method is defined.
+     * @deprecated Please use {@link #activate(Object, BundleContext, Dictionary)}
+     *   and shutdown the bundle context after usage.
+     */
+    @Deprecated
     public static boolean activate(Object target, Dictionary<String, Object> properties) {
         Dictionary<String, Object> mergedProperties = propertiesMergeWithOsgiMetadata(target, properties);
         ComponentContext componentContext = newComponentContext(mergedProperties);
@@ -151,7 +167,10 @@ public final class MockOsgi {
      * @param target Service instance.
      * @param properties Properties
      * @return true if activation method was called. False if no activate method is defined.
+     * @deprecated Please use {@link #activate(Object, BundleContext, Map)}
+     *   and shutdown the bundle context after usage.
      */
+    @Deprecated
     public static boolean activate(Object target, Map<String, Object> properties) {
         return activate(target, toDictionary(properties));
     }
@@ -184,7 +203,10 @@ public final class MockOsgi {
      * Simulate deactivation of service instance. Invokes the @Deactivate annotated method.
      * @param target Service instance.
      * @return true if deactivation method was called. False if no deactivate method is defined.
+     * @deprecated Please use {@link #deactivate(Object, BundleContext)}
+     *   and shutdown the bundle context after usage.
      */
+    @Deprecated
     public static boolean deactivate(Object target) {
         return MockOsgi.deactivate(target, (Dictionary<String, Object>)null);
     }
@@ -192,9 +214,22 @@ public final class MockOsgi {
     /**
      * Simulate deactivation of service instance. Invokes the @Deactivate annotated method.
      * @param target Service instance.
-     * @param properties Properties
+     * @param bundleContext Bundle context.
      * @return true if deactivation method was called. False if no deactivate method is defined.
      */
+    public static boolean deactivate(Object target, BundleContext bundleContext) {
+        return MockOsgi.deactivate(target, bundleContext, (Dictionary<String, Object>)null);
+    }
+
+    /**
+     * Simulate deactivation of service instance. Invokes the @Deactivate annotated method.
+     * @param target Service instance.
+     * @param properties Properties
+     * @return true if deactivation method was called. False if no deactivate method is defined.
+     * @deprecated Please use {@link #deactivate(Object, BundleContext, Dictionary)}
+     *   and shutdown the bundle context after usage.
+     */
+    @Deprecated
     public static boolean deactivate(Object target, Dictionary<String, Object> properties) {
         Dictionary<String, Object> mergedProperties = propertiesMergeWithOsgiMetadata(target, properties);
         ComponentContext componentContext = newComponentContext(mergedProperties);
@@ -206,7 +241,10 @@ public final class MockOsgi {
      * @param target Service instance.
      * @param properties Properties
      * @return true if deactivation method was called. False if no deactivate method is defined.
+     * @deprecated Please use {@link #deactivate(Object, BundleContext, Map)}
+     *   and shutdown the bundle context after usage.
      */
+    @Deprecated
     public static boolean deactivate(Object target, Map<String, Object> properties) {
         return deactivate(target, toDictionary(properties));
     }
@@ -256,6 +294,14 @@ public final class MockOsgi {
     public static boolean modified(Object target, BundleContext bundleContext, Map<String, Object> properties) {
         Map<String, Object> mergedProperties = propertiesMergeWithOsgiMetadata(target, properties);
         return OsgiServiceUtil.modified(target, bundleContext, mergedProperties);
+    }
+    
+    /**
+     * Deactivates all bundles registered in the mocked bundle context.
+     * @param bundleContext Bundle context
+     */
+    public static void shutdown(BundleContext bundleContext) {
+        ((MockBundleContext)bundleContext).shutdown();
     }
     
 }

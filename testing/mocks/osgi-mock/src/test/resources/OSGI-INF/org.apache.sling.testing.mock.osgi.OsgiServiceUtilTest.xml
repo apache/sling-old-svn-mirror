@@ -55,4 +55,11 @@
     </service>
     <property name="service.pid" value="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$Service5"/>
   </scr:component>
+  <scr:component name="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$ServiceFactory1">
+    <implementation class="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$ServiceFactory1"/>
+    <service servicefactory="true">
+      <provide interface="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$ServiceFactory1"/>
+    </service>
+    <property name="service.pid" value="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$ServiceFactory1"/>
+  </scr:component>
 </components>

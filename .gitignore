@@ -12,10 +12,12 @@ coverage.ec
 coverage/
 .DS_Store
 .idea/
+bundles/commons/contentdetection/jackrabbit/
 bundles/extensions/models/integration-tests/sling
 bundles/extensions/i18n/jackrabbit
 bundles/jcr/contentloader/jackrabbit
 testing/mocks/sling-mock-oak/dependency-reduced-pom.xml
 contrib/extensions/distribution/it/sling
 contrib/explorers/resourceeditor/node
+contrib/nosql/launchpad/sling
 launchpad/docker/*.jar

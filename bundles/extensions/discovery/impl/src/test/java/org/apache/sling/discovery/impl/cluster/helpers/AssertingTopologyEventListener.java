@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -47,12 +48,9 @@ public class AssertingTopologyEventListener implements TopologyEventListener {
         this.debugInfo = debugInfo;
     }
     
-    public void fail(String errorMsg) {
-        this.errorMsg = errorMsg;
-    }
-    
-    public String getErrorMsg() {
-        return errorMsg;
+    @Override
+    public String toString() {
+        return super.toString()+"-[debugInfo="+debugInfo+"]";
     }
     
     private List<TopologyEvent> events_ = new LinkedList<TopologyEvent>();
@@ -146,5 +144,17 @@ public class AssertingTopologyEventListener implements TopologyEventListener {
     
     public int getUnexpectedCount() {
         return unexpectedEvents_.size();
+    }
+
+    public void dump() {
+        StringBuffer ue = new StringBuffer();
+        if (unexpectedEvents_.size()>0) {
+            for (Iterator<TopologyEvent> it = unexpectedEvents_.iterator(); it.hasNext();) {
+                TopologyEvent topologyEvent = it.next();
+                ue.append(topologyEvent+", ");
+            }
+            unexpectedEvents_.iterator();
+        }
+        logger.info("dump: got "+events_.size()+" events, "+unexpectedEvents_.size()+" (details: "+ue+") thereof unexpected. My list of expected events contains "+expectedEvents.size());
     }
 }

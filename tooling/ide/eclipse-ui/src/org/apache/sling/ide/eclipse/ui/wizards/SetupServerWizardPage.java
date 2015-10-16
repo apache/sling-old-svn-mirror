@@ -21,9 +21,8 @@ import static org.apache.sling.ide.eclipse.ui.internal.SlingLaunchpadCombo.Valid
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.artifacts.EmbeddedArtifact;
+import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.SlingLaunchpadConfigurationDefaults;
 import org.apache.sling.ide.eclipse.ui.internal.Activator;
@@ -339,10 +338,9 @@ public class SetupServerWizardPage extends WizardPage {
 			@SuppressWarnings("unused")
 			IRuntime existingRuntime = null;//ServerCore.findRuntime("org.apache.sling.ide.launchpadRuntimeType");
 			IRuntime[] existingRuntimes = ServerCore.getRuntimes();
-			for (int i = 0; i < existingRuntimes.length; i++) {
-				IRuntime aRuntime = existingRuntimes[i];
-				if (aRuntime.getRuntimeType().getId().equals("org.apache.sling.ide.launchpadRuntimeType")) {
-					existingRuntime = aRuntime;
+			for (IRuntime runtime : existingRuntimes) {
+				if (runtime.getRuntimeType().getId().equals("org.apache.sling.ide.launchpadRuntimeType")) {
+					existingRuntime = runtime;
 				}
 			}
 			
@@ -364,19 +362,11 @@ public class SetupServerWizardPage extends WizardPage {
                 if (installedVersion == null || ourVersion.compareTo(installedVersion) > 0) {
 					// then auto-install it if possible
 					try {
-
-                        InputStream contents = null;
-                        try {
-                            contents = toolingSupportBundle.openInputStream();
+                        try (InputStream contents = toolingSupportBundle.openInputStream()) {
                             newOsgiClient().installBundle(contents, toolingSupportBundle.getName());
-                        } finally {
-                            IOUtils.closeQuietly(contents);
                         }
                         finalVersion = ourVersion;
-					} catch (IOException e) {
-                        throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
-                                "Failed installing the tooling support bundle version", e));
-                    } catch (OsgiClientException e) {
+					} catch (IOException | OsgiClientException e) {
                         throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
                                 "Failed installing the tooling support bundle version", e));
                     }

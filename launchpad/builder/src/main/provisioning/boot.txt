@@ -22,17 +22,15 @@
 
 # additional entries for sling.properties
 # ---------------------------------------
-# jackrabbit and oak run modes are mutually exclusive,
+# oak_tar and oak_mongo run modes are mutually exclusive,
 # and cannot be changed after the first startup
-# the same goes for the oak_tar and oak_mongo runmodes
 [settings]
-    sling.run.mode.install.options=jackrabbit,oak|oak_tar,oak_mongo
-    repository.home=${sling.home}/repository
+    sling.run.mode.install.options=oak|oak_tar,oak_mongo
 
 [artifacts]
     org.slf4j/slf4j-api/1.7.6
     org.apache.sling/org.apache.sling.commons.log/4.0.6
-    org.apache.sling/org.apache.sling.commons.logservice/1.0.5-SNAPSHOT
+    org.apache.sling/org.apache.sling.commons.logservice/1.0.6
     org.slf4j/jcl-over-slf4j/1.7.6
     org.slf4j/log4j-over-slf4j/1.7.6
     org.apache.sling/org.apache.sling.settings/1.3.6

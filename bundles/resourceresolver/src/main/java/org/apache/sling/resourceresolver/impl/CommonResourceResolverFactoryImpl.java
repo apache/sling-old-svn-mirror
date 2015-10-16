@@ -79,11 +79,14 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     /** Background thread handling disposing of resource resolver instances. */
     private final Thread refQueueThread;
 
+    private boolean logResourceResolverClosing = false;
+
     /**
      * Create a new common resource resolver factory.
      */
     public CommonResourceResolverFactoryImpl(final ResourceResolverFactoryActivator activator) {
         this.activator = activator;
+        this.logResourceResolverClosing = activator.shouldLogResourceResolverClosing();
         this.refQueueThread = new Thread("Apache Sling Resource Resolver Finalizer Thread") {
 
             @Override
@@ -207,7 +210,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     /**
      * Inform about a closed resource resolver.
      * Make sure to remove it from the current thread context.
-     * @param resolver The resource resolver
+     * @param resourceResolverImpl The resource resolver
      * @param ctx The resource resolver context
      */
     public void unregister(final ResourceResolver resourceResolverImpl,
@@ -396,6 +399,10 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
      */
     public boolean isLive() {
         return this.isActive.get();
+    }
+
+    public boolean shouldLogResourceResolverClosing() {
+        return logResourceResolverClosing;
     }
 
     /**

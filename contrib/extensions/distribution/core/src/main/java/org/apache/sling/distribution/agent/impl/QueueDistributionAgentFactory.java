@@ -43,6 +43,8 @@ import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.impl.exporter.LocalDistributionPackageExporter;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
+import org.apache.sling.distribution.queue.impl.MultipleQueueDispatchingStrategy;
+import org.apache.sling.distribution.queue.impl.SelectiveQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.SingleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
@@ -114,6 +116,11 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
             "e.g. use target=(name=...) to bind to services by name.")
     public static final String TRIGGERS_TARGET = "triggers.target";
 
+    @Property(cardinality = 100, label = "Selective queues", description = "List of selective queues that should used for specific paths." +
+            "The selector format is  {queuePrefix}|{mainQueueMatcher}={pathMatcher}, e.g. french|publish.*=/content/fr.*")
+    public static final String SELECTIVE_QUEUES = "selectiveQueues";
+
+
     @Reference
     private Packaging packaging;
 
@@ -155,17 +162,26 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
         String[] allowedRoots = PropertiesUtil.toStringArray(config.get(ALLOWED_ROOTS), null);
         allowedRoots = SettingsUtils.removeEmptyEntries(allowedRoots);
 
+
+        Map<String, String> selectiveQueues = PropertiesUtil.toMap(config.get(SELECTIVE_QUEUES), new String[0]);
+        selectiveQueues = SettingsUtils.removeEmptyEntries(selectiveQueues);
+
+
         DistributionQueueProvider queueProvider = new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
-        DistributionQueueDispatchingStrategy exportQueueStrategy = new SingleQueueDispatchingStrategy();
-        DistributionQueueDispatchingStrategy importQueueStrategy = null;
+        DistributionQueueDispatchingStrategy exportQueueStrategy = null;
+
+
+        if (selectiveQueues != null) {
+            exportQueueStrategy = new SelectiveQueueDispatchingStrategy(selectiveQueues, new String[] { DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME });
+        } else {
+            exportQueueStrategy = new SingleQueueDispatchingStrategy();
+        }
 
         DistributionPackageExporter packageExporter = new LocalDistributionPackageExporter(packageBuilder);
         DistributionRequestType[] allowedRequests = new DistributionRequestType[]{DistributionRequestType.ADD, DistributionRequestType.DELETE};
-        Set<String> processingQueues = new HashSet<String>();
-        processingQueues.addAll(exportQueueStrategy.getQueueNames());
 
-        return new SimpleDistributionAgent(agentName, false, processingQueues,
+        return new SimpleDistributionAgent(agentName, false, null,
                 serviceName, null, packageExporter, requestAuthorizationStrategy,
-                queueProvider, exportQueueStrategy, importQueueStrategy, distributionEventFactory, resourceResolverFactory, distributionLog, allowedRequests, allowedRoots, 0);
+                queueProvider, exportQueueStrategy, null, distributionEventFactory, resourceResolverFactory, distributionLog, allowedRequests, allowedRoots, 0);
     }
 }

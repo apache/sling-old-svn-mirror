@@ -21,13 +21,16 @@
 
   <modelVersion>4.0.0</modelVersion>
 
+  <!-- SLING-4869
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
     <version>24</version>
     <relativePath/>
   </parent>
+  -->
 
+  <groupId>org.apache.sling</groupId>
   <artifactId>org.apache.sling.launchpad.karaf-distribution</artifactId>
   <version>0.1.1-SNAPSHOT</version>
   <packaging>karaf-assembly</packaging>
@@ -39,60 +42,39 @@
     <dependency>
       <groupId>org.apache.karaf.features</groupId>
       <artifactId>framework</artifactId>
-      <version>4.0.1</version>
+      <version>4.0.2</version>
       <type>kar</type>
     </dependency>
     <dependency>
       <groupId>org.apache.karaf.features</groupId>
       <artifactId>standard</artifactId>
-      <version>4.0.1</version>
+      <version>4.0.2</version>
       <classifier>features</classifier>
       <type>xml</type>
+      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.launchpad.karaf-features</artifactId>
-      <version>0.1.1-SNAPSHOT</version>
+      <version>${project.version}</version>
       <type>kar</type>
-      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.launchpad.karaf-features</artifactId>
+      <version>${project.version}</version>
+      <classifier>features</classifier>
+      <type>xml</type>
+      <scope>runtime</scope>
     </dependency>
   </dependencies>
 
   <build>
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-        <filtering>false</filtering>
-        <includes>
-          <include>**/*</include>
-        </includes>
-      </resource>
-      <resource>
-        <directory>src/main/filtered-resources</directory>
-        <filtering>true</filtering>
-        <includes>
-          <include>**/*</include>
-        </includes>
-      </resource>
-    </resources>
-
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-resources-plugin</artifactId>
-        <version>2.7</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>resources</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
       <plugin>
         <groupId>org.apache.karaf.tooling</groupId>
         <artifactId>karaf-maven-plugin</artifactId>
-        <version>4.0.0</version>
+        <version>4.0.2</version>
         <extensions>true</extensions>
         <executions>
           <execution>

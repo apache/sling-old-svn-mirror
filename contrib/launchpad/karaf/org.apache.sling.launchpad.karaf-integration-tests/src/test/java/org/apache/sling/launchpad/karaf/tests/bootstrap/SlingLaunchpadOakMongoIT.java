@@ -85,10 +85,10 @@ public class SlingLaunchpadOakMongoIT extends KarafTestSupport {
         final String mongoUri = String.format("mongodb://localhost:%s", port);
         return OptionUtils.combine(baseConfiguration(),
             editConfigurationFilePut("etc/org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService.cfg", "mongouri", mongoUri),
-            wrappedBundle(mavenBundle().groupId("de.flapdoodle.embed").artifactId("de.flapdoodle.embed.mongo").version("1.48.0")),
-            wrappedBundle(mavenBundle().groupId("de.flapdoodle.embed").artifactId("de.flapdoodle.embed.process").version("1.41.2")),
-            wrappedBundle(mavenBundle().groupId("net.java.dev.jna").artifactId("jna").version("4.1.0")),
-            wrappedBundle(mavenBundle().groupId("net.java.dev.jna").artifactId("jna-platform").version("4.1.0")),
+            wrappedBundle(mavenBundle().groupId("de.flapdoodle.embed").artifactId("de.flapdoodle.embed.mongo").version("1.50.0")),
+            wrappedBundle(mavenBundle().groupId("de.flapdoodle.embed").artifactId("de.flapdoodle.embed.process").version("1.50.0")),
+            wrappedBundle(mavenBundle().groupId("net.java.dev.jna").artifactId("jna").version("4.2.0")),
+            wrappedBundle(mavenBundle().groupId("net.java.dev.jna").artifactId("jna-platform").version("4.2.0")),
             mavenBundle().groupId("org.apache.commons").artifactId("commons-compress").version("1.9"),
             mavenBundle().groupId("org.apache.commons").artifactId("commons-lang3").version("3.4"),
             addSlingFeatures("sling-launchpad-oak-mongo")

@@ -23,12 +23,12 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
-        <relativePath/>
+        <version>25</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.testing.sling-mock-jackrabbit</artifactId>
-    <version>0.1.3-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
   
     <name>Apache Sling Testing Sling Mock Jackrabbit-based Resource Resolver</name>
@@ -45,14 +45,14 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.sling-mock</artifactId>
-            <version>1.5.1-SNAPSHOT</version>
+            <version>1.6.0</version>
             <scope>compile</scope>
         </dependency>
     
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.sling-mock</artifactId>
-            <version>1.5.1-SNAPSHOT</version>
+            <version>1.6.0</version>
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>

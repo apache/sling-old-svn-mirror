@@ -194,6 +194,7 @@ public class SingleInstanceTest {
 
         AssertingTopologyEventListener assertingTopologyEventListener = new AssertingTopologyEventListener();
         assertingTopologyEventListener.addExpected(Type.TOPOLOGY_INIT);
+        logger.info("testTopologyEventListeners: binding the event listener");
         instance.bindTopologyEventListener(assertingTopologyEventListener);
         Thread.sleep(500); // SLING-4755: async event sending requires some minimal wait time nowadays
         assertEquals(0, assertingTopologyEventListener.getRemainingExpectedCount());
@@ -210,6 +211,8 @@ public class SingleInstanceTest {
         instance.bindPropertyProvider(pp, propertyName);
         logger.info("testTopologyEventListeners: 3rd sleep 1.5s");
         Thread.sleep(1500);
+        logger.info("testTopologyEventListeners: dumping due to failure: ");
+        assertingTopologyEventListener.dump();
         assertEquals(0, assertingTopologyEventListener.getRemainingExpectedCount());
         // we can only assume that the getProperty was called at least once - it
         // could be called multiple times though..
@@ -226,14 +229,14 @@ public class SingleInstanceTest {
         logger.info("testTopologyEventListeners: 4th sleep 2s");
         Thread.sleep(2000);
         assertEquals(0, assertingTopologyEventListener.getRemainingExpectedCount());
-        assertEquals(2, pp.getGetCnt());
+        assertEquals(1, pp.getGetCnt());
 
         // a heartbeat repeat should not result in another call though
         instance.runHeartbeatOnce();
         logger.info("testTopologyEventListeners: 5th sleep 2s");
         Thread.sleep(2000);
         assertEquals(0, assertingTopologyEventListener.getRemainingExpectedCount());
-        assertEquals(3, pp.getGetCnt());
+        assertEquals(2, pp.getGetCnt());
         logger.info("testTopologyEventListeners: done");
     }
 
@@ -268,6 +271,7 @@ public class SingleInstanceTest {
         instance.runHeartbeatOnce();
         Thread.sleep(1000);
         instance.dumpRepo();
+        ada.dump();
         assertEquals(0, ada.getUnexpectedCount());
         assertEquals(1, ada.getEvents().size());
         TopologyEvent initEvent = ada.getEvents().remove(0);

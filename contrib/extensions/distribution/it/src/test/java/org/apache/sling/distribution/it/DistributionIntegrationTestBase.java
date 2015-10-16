@@ -73,7 +73,7 @@ public abstract class DistributionIntegrationTestBase {
                         "packageImporter.endpoints", remoteImporterUrl);
 
 
-                Thread.sleep(3000);
+                Thread.sleep(1000);
 
                 assertExists(authorClient, agentUrl("publish"));
             }
@@ -85,7 +85,7 @@ public abstract class DistributionIntegrationTestBase {
                         "packageImporter.endpoints", remoteImporterUrl, remoteImporterUrl + "badaddress");
 
 
-                Thread.sleep(3000);
+                Thread.sleep(1000);
 
                 assertExists(authorClient, agentUrl("publish-multiple"));
                 assertExists(authorClient, exporterUrl("publish-multiple-passivequeue1"));
@@ -93,11 +93,21 @@ public abstract class DistributionIntegrationTestBase {
             }
 
             {
+                assertExists(authorClient, authorAgentConfigUrl("publish-selective"));
+
+                setArrayProperties(author, authorAgentConfigUrl("publish-selective"),
+                        "packageImporter.endpoints", "publisher1=" + remoteImporterUrl);
+
+                Thread.sleep(1000);
+                assertExists(authorClient, agentUrl("publish-selective"));
+            }
+
+            {
                 assertExists(authorClient, authorAgentConfigUrl("publish-reverse"));
 
                 authorClient.setProperties(authorAgentConfigUrl("publish-reverse"), "packageExporter.endpoints", remoteExporterUrl);
 
-                Thread.sleep(3000);
+                Thread.sleep(1000);
                 assertExists(authorClient, agentUrl("publish-reverse"));
 
                 assertExists(publishClient, exporterUrl("reverse"));

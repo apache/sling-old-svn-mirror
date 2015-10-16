@@ -26,11 +26,9 @@ import javax.jcr.Session;
 import javax.servlet.Servlet;
 
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.api.security.user.Authorizable;
-import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.commons.osgi.OsgiUtil;
@@ -53,25 +51,10 @@ import org.slf4j.LoggerFactory;
  *
  * <li>every known user is allowed to modify it's own properties except for
  * her/his group membership,</li>
- *
- * <li>members of the 'User administrator' group are allowed to create, modify
- * and remove users,</li>
- *
- * <li>members of the 'Group administrator' group are allowed to create, modify
- * and remove groups,</li>
- *
- * <li>group membership can only be edited by members of the 'Group administrator'
- * and the 'User administrator' group.</li>
  * </ul>
  */
-@Component (immediate=true, metatype=true)
+@Component (immediate=true)
 @Service (value=AuthorizablePrivilegesInfo.class)
-@Properties ({
-	@Property (name="service.description",
-			value="User/Group Privileges Information"),
-	@Property (name="service.vendor",
-			value="The Apache Software Foundation")
-})
 public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInfo {
 
     /** default log */
@@ -91,8 +74,6 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
     @Property (value=DEFAULT_USER_ADMIN_GROUP_NAME)
     private static final String PAR_USER_ADMIN_GROUP_NAME = "user.admin.group.name";
 
-    private String userAdminGroupName = DEFAULT_USER_ADMIN_GROUP_NAME;
-
     /**
      * The default 'User administrator' group name
      *
@@ -106,9 +87,6 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
      */
     @Property (value=DEFAULT_GROUP_ADMIN_GROUP_NAME)
     private static final String PAR_GROUP_ADMIN_GROUP_NAME = "group.admin.group.name";
-
-    private String groupAdminGroupName = DEFAULT_GROUP_ADMIN_GROUP_NAME;
-    
     
     /* (non-Javadoc)
      * @see org.apache.sling.jackrabbit.usermanager.AuthorizablePrivilegesInfo#canAddGroup(javax.jcr.Session)
@@ -121,15 +99,6 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
             if (currentUser != null) {
                 if (((User)currentUser).isAdmin()) {
                     return true; //admin user has full control
-                }
-                
-                //check if the user is a member of the 'Group administrator' group
-                Authorizable groupAdmin = userManager.getAuthorizable(this.groupAdminGroupName);
-                if (groupAdmin instanceof Group) {
-                    boolean isMember = ((Group)groupAdmin).isMember(currentUser);
-                    if (isMember) {
-                        return true;
-                    }
                 }
             }
         } catch (RepositoryException e) {
@@ -169,15 +138,6 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
                 if (((User)currentUser).isAdmin()) {
                     return true; //admin user has full control
                 }
-                
-                //check if the user is a member of the 'User administrator' group
-                Authorizable userAdmin = userManager.getAuthorizable(this.userAdminGroupName);
-                if (userAdmin instanceof Group) {
-                    boolean isMember = ((Group)userAdmin).isMember(currentUser);
-                    if (isMember) {
-                        return true;
-                    }
-                }
             }
         } catch (RepositoryException e) {
             log.warn("Failed to determine if {} can add a new user", jcrSession.getUserID());
@@ -198,27 +158,6 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
             if (((User)currentUser).isAdmin()) {
                 return true; //admin user has full control
             }
-
-            Authorizable authorizable = userManager.getAuthorizable(principalId);
-            if (authorizable instanceof User) {
-                //check if the user is a member of the 'User administrator' group
-                Authorizable userAdmin = userManager.getAuthorizable(this.userAdminGroupName);
-                if (userAdmin instanceof Group) {
-                    boolean isMember = ((Group)userAdmin).isMember(currentUser);
-                    if (isMember) {
-                        return true;
-                    }
-                }
-            } else if (authorizable instanceof Group) {
-                //check if the user is a member of the 'Group administrator' group
-                Authorizable groupAdmin = userManager.getAuthorizable(this.groupAdminGroupName);
-                if (groupAdmin instanceof Group) {
-                    boolean isMember = ((Group)groupAdmin).isMember(currentUser);
-                    if (isMember) {
-                        return true;
-                    }
-                }
-            }
         } catch (RepositoryException e) {
             log.warn("Failed to determine if {} can remove authorizable {}", jcrSession.getUserID(), principalId);
         }
@@ -235,27 +174,6 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
 
             if (((User)currentUser).isAdmin()) {
                 return true; //admin user has full control
-            }
-
-            Authorizable authorizable = userManager.getAuthorizable(groupId);
-            if (authorizable instanceof Group) {
-                //check if the user is a member of the 'Group administrator' group
-                Authorizable groupAdmin = userManager.getAuthorizable(this.groupAdminGroupName);
-                if (groupAdmin instanceof Group) {
-                    boolean isMember = ((Group)groupAdmin).isMember(currentUser);
-                    if (isMember) {
-                        return true;
-                    }
-                }
-                
-                //check if the user is a member of the 'User administrator' group
-                Authorizable userAdmin = userManager.getAuthorizable(this.userAdminGroupName);
-                if (userAdmin instanceof Group) {
-                    boolean isMember = ((Group)userAdmin).isMember(currentUser);
-                    if (isMember) {
-                        return true;
-                    }
-                }
             }
         } catch (RepositoryException e) {
             log.warn("Failed to determine if {} can remove authorizable {}", jcrSession.getUserID(), groupId);
@@ -278,27 +196,6 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
 
             if (((User)currentUser).isAdmin()) {
                 return true; //admin user has full control
-            }
-
-            Authorizable authorizable = userManager.getAuthorizable(principalId);
-            if (authorizable instanceof User) {
-                //check if the user is a member of the 'User administrator' group
-                Authorizable userAdmin = userManager.getAuthorizable(this.userAdminGroupName);
-                if (userAdmin instanceof Group) {
-                    boolean isMember = ((Group)userAdmin).isMember(currentUser);
-                    if (isMember) {
-                        return true;
-                    }
-                }
-            } else if (authorizable instanceof Group) {
-                //check if the user is a member of the 'Group administrator' group
-                Authorizable groupAdmin = userManager.getAuthorizable(this.groupAdminGroupName);
-                if (groupAdmin instanceof Group) {
-                    boolean isMember = ((Group)groupAdmin).isMember(currentUser);
-                    if (isMember) {
-                        return true;
-                    }
-                }
             }
         } catch (RepositoryException e) {
             log.warn("Failed to determine if {} can remove authorizable {}", jcrSession.getUserID(), principalId);
@@ -328,17 +225,14 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
         
         Dictionary<?, ?> properties = componentContext.getProperties();
 
-        this.userAdminGroupName = OsgiUtil.toString(properties.get(PAR_USER_ADMIN_GROUP_NAME),
-                DEFAULT_USER_ADMIN_GROUP_NAME);
-        log.info("User Admin Group Name {}", this.userAdminGroupName);
+        String userAdminGroupName = OsgiUtil.toString(properties.get(PAR_USER_ADMIN_GROUP_NAME), null);
+        if ( userAdminGroupName != null && ! DEFAULT_USER_ADMIN_GROUP_NAME.equals(userAdminGroupName)) {
+            log.warn("Configuration setting for {} is deprecated and will not have any effect", PAR_USER_ADMIN_GROUP_NAME);
+        }
 
-        this.groupAdminGroupName = OsgiUtil.toString(properties.get(PAR_GROUP_ADMIN_GROUP_NAME), 
-                DEFAULT_GROUP_ADMIN_GROUP_NAME);
-        log.info("Group Admin Group Name {}", this.groupAdminGroupName);
-    }
-
-    protected void deactivate(ComponentContext componentContext) {
-        this.userAdminGroupName = DEFAULT_USER_ADMIN_GROUP_NAME;
-        this.groupAdminGroupName = DEFAULT_GROUP_ADMIN_GROUP_NAME;
+        String groupAdminGroupName = OsgiUtil.toString(properties.get(PAR_GROUP_ADMIN_GROUP_NAME), null);
+        if ( groupAdminGroupName != null && ! DEFAULT_GROUP_ADMIN_GROUP_NAME.equals(userAdminGroupName)) {
+            log.warn("Configuration setting for {} is deprecated and will not have any effect", PAR_GROUP_ADMIN_GROUP_NAME);
+        }
     }
 }

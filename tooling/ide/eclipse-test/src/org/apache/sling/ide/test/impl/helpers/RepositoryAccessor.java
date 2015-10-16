@@ -63,19 +63,18 @@ public class RepositoryAccessor {
     public void assertGetIsSuccessful(String path, String expectedResult) throws HttpException, IOException {
 
         GetMethod m = new GetMethod(config.getUrl() + path);
-        InputStream input = null;
         try {
             int result = client.executeMethod(m);
 
             assertThat("Unexpected status call for " + m.getURI(), result, CoreMatchers.equalTo(200));
 
-            input = m.getResponseBodyAsStream();
-            String responseBody = IOUtils.toString(input, m.getRequestCharSet());
-
-            assertThat("Unexpected response for " + m.getURI(), responseBody,
-                    CoreMatchers.equalTo(expectedResult));
+            try ( InputStream input = m.getResponseBodyAsStream() ) {
+                String responseBody = IOUtils.toString(input, m.getRequestCharSet());
+    
+                assertThat("Unexpected response for " + m.getURI(), responseBody,
+                        CoreMatchers.equalTo(expectedResult));
+            }
         } finally {
-            IOUtils.closeQuietly(input);
             m.releaseConnection();
         }
     }

@@ -23,8 +23,8 @@ import org.eclipse.core.resources.IProject;
 
 public class Projects {
 
-    private List<IProject> bundleProjects = new ArrayList<IProject>();
-    private List<IProject> contentProjects = new ArrayList<IProject>();
+    private List<IProject> bundleProjects = new ArrayList<>();
+    private List<IProject> contentProjects = new ArrayList<>();
     private IProject reactorProject;
 
     public List<IProject> getBundleProjects() {

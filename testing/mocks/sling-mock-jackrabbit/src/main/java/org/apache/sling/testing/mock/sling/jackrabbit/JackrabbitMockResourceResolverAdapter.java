@@ -18,10 +18,7 @@
  */
 package org.apache.sling.testing.mock.sling.jackrabbit;
 
-import javax.jcr.RepositoryException;
-
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.commons.testing.jcr.RepositoryProvider;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.testing.mock.sling.spi.ResourceResolverTypeAdapter;
 
@@ -37,12 +34,7 @@ public class JackrabbitMockResourceResolverAdapter implements ResourceResolverTy
 
     @Override
     public SlingRepository newSlingRepository() {
-        try {
-            return RepositoryProvider.instance().getRepository();
-        }
-        catch (RepositoryException ex) {
-            throw new RuntimeException("Unable to get jackrabbit SlingRepository instance.", ex);
-        }
+        return new JackrabbitMockSlingRepository();
     }
 
 }

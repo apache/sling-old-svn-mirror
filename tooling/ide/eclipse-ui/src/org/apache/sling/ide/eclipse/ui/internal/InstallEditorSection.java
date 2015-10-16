@@ -23,7 +23,6 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.artifacts.EmbeddedArtifact;
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadConfiguration;
@@ -222,12 +221,9 @@ public class InstallEditorSection extends ServerEditorSection {
                                     message = "Bundle is already installed and up to date";
                                 } else {
                                     monitor.setTaskName("Installing bundle");
-                                    InputStream contents = null;
-                                    try {
-                                        contents = supportBundle.openInputStream();
+                                    
+                                    try (InputStream contents = supportBundle.openInputStream() ){
                                         client.installBundle(contents, supportBundle.getName());
-                                    } finally {
-                                        IOUtils.closeQuietly(contents);
                                     }
                                     deployedVersion = embeddedVersion;
                                     message = "Bundle version " + embeddedVersion + " installed";
@@ -252,11 +248,7 @@ public class InstallEditorSection extends ServerEditorSection {
                                 });
                                 monitor.worked(1);
 
-                            } catch (OsgiClientException e) {
-                                throw new InvocationTargetException(e);
-                            } catch (URISyntaxException e) {
-                                throw new InvocationTargetException(e);
-                            } catch (IOException e) {
+                            } catch (OsgiClientException | IOException | URISyntaxException e) {
                                 throw new InvocationTargetException(e);
                             } finally {
                                 monitor.done();

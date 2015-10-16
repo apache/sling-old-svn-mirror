@@ -23,12 +23,12 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
+        <version>25</version>
         <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.testing.osgi-mock</artifactId>
-    <version>1.5.1-SNAPSHOT</version>
+    <version>1.6.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Testing OSGi Mock</name>

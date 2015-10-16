@@ -228,7 +228,7 @@ public class SlingServletResolver
 
         // start tracking servlet resolution
         final RequestProgressTracker tracker = request.getRequestProgressTracker();
-        final String timerName = "resolveServlet(" + resource + ")";
+        final String timerName = "resolveServlet(" + resource.getPath() + ")";
         tracker.startTimer(timerName);
 
         final String type = resource.getResourceType();

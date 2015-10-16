@@ -28,6 +28,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.jcr.SimpleCredentials;
+import javax.security.auth.login.AccountLockedException;
+import javax.security.auth.login.AccountNotFoundException;
 import javax.security.auth.login.CredentialExpiredException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletRequestEvent;
@@ -464,7 +467,7 @@ public class SlingAuthenticator implements Authenticator,
         try {
             postProcess(authInfo, request, response);
         } catch (LoginException e) {
-            handleLoginFailure(request, response, authInfo.getUser(), e);
+            handleLoginFailure(request, response, authInfo, e);
             return false;
         }
 
@@ -818,7 +821,7 @@ public class SlingAuthenticator implements Authenticator,
             // now find a way to get credentials unless the feedback handler
             // has committed a response to the client already
             if (!response.isCommitted()) {
-                return handleLoginFailure(request, response, authInfo.getUser(), re);
+                return handleLoginFailure(request, response, authInfo, re);
             }
 
         }
@@ -871,7 +874,7 @@ public class SlingAuthenticator implements Authenticator,
             } catch (LoginException re) {
 
                 // cannot login > fail login, do not try to authenticate
-                handleLoginFailure(request, response, "anonymous user", re);
+                handleLoginFailure(request, response, new AuthenticationInfo(null, "anonymous user"), re);
                 return false;
 
             }
@@ -928,9 +931,10 @@ public class SlingAuthenticator implements Authenticator,
     }
 
     private boolean handleLoginFailure(final HttpServletRequest request,
-            final HttpServletResponse response, final String user,
+            final HttpServletResponse response, final AuthenticationInfo authInfo,
             final Exception reason) {
 
+        String user = authInfo.getUser();
         boolean processRequest = false;
         if (reason.getClass().getName().contains("TooManySessionsException")) {
 
@@ -956,20 +960,31 @@ public class SlingAuthenticator implements Authenticator,
                 // request authentication information and send 403 (Forbidden)
                 // if no handler can request authentication information.            
 
+                AuthenticationHandler.FAILURE_REASON_CODES code = AuthenticationHandler.FAILURE_REASON_CODES.INVALID_LOGIN;
+                String message = "User name and password do not match";
+
                 if (reason.getCause() instanceof CredentialExpiredException) {
                     // force failure attribute to be set so handlers can
                     // react to this special circumstance
-                    request.setAttribute(AuthenticationHandler.FAILURE_REASON_CODE,
-                            AuthenticationHandler.FAILURE_REASON_CODES.PASSWORD_EXPIRED);
-                    ensureAttribute(request, AuthenticationHandler.FAILURE_REASON,
-                            "Password expired");
-                } else {
-                    // preset a reason for the login failure (if not done already)
-                    request.setAttribute(AuthenticationHandler.FAILURE_REASON_CODE,
-                            AuthenticationHandler.FAILURE_REASON_CODES.INVALID_LOGIN);
-                    ensureAttribute(request, AuthenticationHandler.FAILURE_REASON,
-                            "User name and password do not match");
+                    Object creds = authInfo.get("user.jcr.credentials");
+                    if (creds instanceof SimpleCredentials && ((SimpleCredentials) creds).getAttribute("PasswordHistoryException") != null) {
+                        code = AuthenticationHandler.FAILURE_REASON_CODES.PASSWORD_EXPIRED_AND_NEW_PASSWORD_IN_HISTORY;
+                        message = "Password expired and new password found in password history";
+                    } else {
+                        code = AuthenticationHandler.FAILURE_REASON_CODES.PASSWORD_EXPIRED;
+                        message = "Password expired";
+                    }
+                } else if (reason.getCause() instanceof AccountLockedException) {
+                    code = AuthenticationHandler.FAILURE_REASON_CODES.ACCOUNT_LOCKED;
+                    message = "Account is locked";
+                } else if (reason.getCause() instanceof AccountNotFoundException) {
+                    code = AuthenticationHandler.FAILURE_REASON_CODES.ACCOUNT_NOT_FOUND;
+                    message = "Account was not found";
                 }
+
+                // preset a reason for the login failure
+                request.setAttribute(AuthenticationHandler.FAILURE_REASON_CODE, code);
+                ensureAttribute(request, AuthenticationHandler.FAILURE_REASON, message);
 
                 doLogin(request, response);
             }

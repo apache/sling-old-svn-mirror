@@ -16,13 +16,13 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
-        <relativePath/>
+        <version>25</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.launchpad</artifactId>
     <packaging>slingstart</packaging>
-    <version>8-SNAPSHOT</version>
+    <version>9-SNAPSHOT</version>
 
     <name>Apache Sling Launchpad Application Builder</name>
     <description>

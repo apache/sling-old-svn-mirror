@@ -23,12 +23,12 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
-        <relativePath/>
+        <version>25</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.jcr.oak.server</artifactId>
-    <version>0.0.2-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Oak Repository Server</name>
@@ -36,12 +36,18 @@
         This bundle provides a SlingRepository based on Apache Oak.
     </description>
 
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/oak-server</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/oak-server</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/jcr/oak-server</url>
+    </scm>
+
     <properties>
         <!-- 
             WARNING make sure oak.version and sling.oak.server.version 
             are in sync with bundles/jcr/it-jackrabbit-oak
         -->
-        <oak.version>1.3.4</oak.version>
+        <oak.version>1.3.7</oak.version>
     </properties>
 
     <build>
@@ -56,6 +62,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Export-Package>!*</Export-Package>
                         <Import-Package>
                           org.apache.jackrabbit.test;resolution:=optional,
                           com.mongodb;resolution:=optional,
@@ -67,10 +74,6 @@
                         
                         <!-- TODO embedding shouldn't be needed but avoids classloading issues -->
                         <Embed-Dependency>oak-jcr</Embed-Dependency>
-                        
-                        <Private-Package>
-                            org.apache.sling.oak.server.*
-                        </Private-Package>
                     </instructions>
                 </configuration>                
             </plugin>
@@ -112,13 +115,13 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.api</artifactId>
-            <version>2.3.1-SNAPSHOT</version>
+            <version>2.3.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.base</artifactId>
-            <version>2.3.1-SNAPSHOT</version>
+            <version>2.3.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

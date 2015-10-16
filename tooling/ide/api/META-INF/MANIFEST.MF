@@ -2,9 +2,9 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Slingclipse-api
 Bundle-SymbolicName: org.apache.sling.ide.api
-Bundle-Version: 1.0.7.qualifier
+Bundle-Version: 1.0.9.qualifier
 Bundle-ActivationPolicy: lazy
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Export-Package: org.apache.sling.ide.filter,
  org.apache.sling.ide.log,
  org.apache.sling.ide.osgi,

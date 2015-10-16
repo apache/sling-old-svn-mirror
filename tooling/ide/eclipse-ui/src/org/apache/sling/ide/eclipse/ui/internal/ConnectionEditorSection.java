@@ -134,17 +134,28 @@ public class ConnectionEditorSection extends ServerEditorSection {
             	}
             	updating = true;
             	try{
-	                if (ISlingLaunchpadServer.PROP_PORT.equals(evt.getPropertyName())) {
-	                    portText.setText(((Integer) evt.getNewValue()).toString());
-	                } else if (ISlingLaunchpadServer.PROP_DEBUG_PORT.equals(evt.getPropertyName())) {
-	                    debugPortText.setText(((Integer) evt.getNewValue()).toString());
-	                } else if (ISlingLaunchpadServer.PROP_CONTEXT_PATH.equals(evt.getPropertyName())) {
-	                    contextPathText.setText((String) evt.getNewValue());
-	                } else if (ISlingLaunchpadServer.PROP_USERNAME.equals(evt.getPropertyName())) {
-	                    usernameText.setText((String) evt.getNewValue());
-	                } else if (ISlingLaunchpadServer.PROP_PASSWORD.equals(evt.getPropertyName())) {
-	                    passwordText.setText((String) evt.getNewValue());
-	                }
+            	    switch ( evt.getPropertyName()) {
+            	        case ISlingLaunchpadServer.PROP_PORT:
+            	            portText.setText(((Integer) evt.getNewValue()).toString());
+            	            break;
+            	            
+            	        case ISlingLaunchpadServer.PROP_DEBUG_PORT:
+            	            debugPortText.setText(((Integer) evt.getNewValue()).toString());
+            	            break;
+            	            
+            	        case ISlingLaunchpadServer.PROP_CONTEXT_PATH:
+            	            contextPathText.setText((String) evt.getNewValue());
+            	            break;
+            	            
+            	        case ISlingLaunchpadServer.PROP_USERNAME:
+            	            usernameText.setText((String) evt.getNewValue());
+            	            break;
+            	            
+            	        case ISlingLaunchpadServer.PROP_PASSWORD:
+            	            passwordText.setText((String) evt.getNewValue());
+            	            break;
+            	            
+            	    }
             	} finally {
             		updating = false;
             	}

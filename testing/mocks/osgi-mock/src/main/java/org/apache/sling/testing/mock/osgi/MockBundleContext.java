@@ -18,21 +18,19 @@
  */
 package org.apache.sling.testing.mock.osgi;
 
-import static java.util.Collections.synchronizedList;
-import static java.util.Collections.synchronizedMap;
-import static java.util.Collections.synchronizedSortedSet;
-
 import java.io.File;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Dictionary;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.framework.FilterImpl;
@@ -60,9 +58,9 @@ import com.google.common.collect.ImmutableList;
 class MockBundleContext implements BundleContext {
 
     private final MockBundle bundle;
-    private final SortedSet<MockServiceRegistration> registeredServices = synchronizedSortedSet(new TreeSet<MockServiceRegistration>());
-    private final Map<ServiceListener, Filter> serviceListeners = synchronizedMap(new HashMap<ServiceListener, Filter>());
-    private final List<BundleListener> bundleListeners = synchronizedList(new ArrayList<BundleListener>());
+    private final SortedSet<MockServiceRegistration> registeredServices = new ConcurrentSkipListSet<MockServiceRegistration>();
+    private final Map<ServiceListener, Filter> serviceListeners = new ConcurrentHashMap<ServiceListener, Filter>();
+    private final Queue<BundleListener> bundleListeners = new ConcurrentLinkedQueue<BundleListener>();
 
     public MockBundleContext() {
         this.bundle = new MockBundle(this);
@@ -75,7 +73,12 @@ class MockBundleContext implements BundleContext {
 
     @Override
     public Filter createFilter(final String s) throws InvalidSyntaxException {
-        return new FilterImpl(s);
+        if (s == null) {
+            return new MatchAllFilter();
+        }
+        else {
+            return new FilterImpl(s);
+        }
     }
 
     @Override
@@ -221,7 +224,12 @@ class MockBundleContext implements BundleContext {
 
     @Override
     public void addServiceListener(final ServiceListener serviceListener) {
-        serviceListeners.put(serviceListener, null);
+        try {
+            addServiceListener(serviceListener, null);
+        }
+        catch (InvalidSyntaxException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     @Override
@@ -289,6 +297,20 @@ class MockBundleContext implements BundleContext {
     public String getProperty(final String s) {
         // no mock implementation, simulate that no property is found and return null
         return null;
+    }
+    
+    /**
+     * Deactivates all bundles registered in this mocked bundle context.
+     */
+    public void shutdown() {
+        for (MockServiceRegistration serviceRegistration : ImmutableList.copyOf(registeredServices).reverse()) {
+            try {
+                MockOsgi.deactivate(serviceRegistration.getService(), this, serviceRegistration.getProperties());
+            }
+            catch (NoScrMetadataException ex) {
+                // ignore, no deactivate method is available then
+            }
+        }
     }
 
     // --- unsupported operations ---

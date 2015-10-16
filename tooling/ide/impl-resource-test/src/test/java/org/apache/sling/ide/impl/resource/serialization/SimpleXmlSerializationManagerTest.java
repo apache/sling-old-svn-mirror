@@ -81,7 +81,7 @@ public class SimpleXmlSerializationManagerTest {
     @Test
     public void stringSerializedData() throws SerializationException, SAXException, IOException {
 
-        Map<String, Object> data = new HashMap<String, Object>();
+        Map<String, Object> data = new HashMap<>();
         data.put("jcr:createdBy", "admin");
         data.put("jcr:lastModifiedBy", "author");
 
@@ -111,7 +111,7 @@ public class SimpleXmlSerializationManagerTest {
     @Test
     public void serializedDataIsEscaped() throws SerializationException, SAXException, IOException {
 
-        Map<String, Object> data = new HashMap<String, Object>();
+        Map<String, Object> data = new HashMap<>();
         data.put("jcr:description", "<p class=\"active\">Welcome</p>");
 
         SerializationData serializationData = sm.newBuilder(null, null).buildSerializationData(null, newResourceWithProperties(data));
@@ -127,7 +127,7 @@ public class SimpleXmlSerializationManagerTest {
         Map<String, Object> serializationData = sm
                 .readSerializationData(null, readSerializationDataFile("stringSerializedData")).getProperties();
 
-        Map<String, Object> expected = new HashMap<String, Object>();
+        Map<String, Object> expected = new HashMap<>();
         expected.put("jcr:createdBy", "admin");
         expected.put("jcr:lastModifiedBy", "author");
 

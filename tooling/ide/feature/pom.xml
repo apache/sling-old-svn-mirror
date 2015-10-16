@@ -21,7 +21,7 @@
   <parent>
     <groupId>org.apache.sling.ide</groupId>
     <artifactId>reactor</artifactId>
-    <version>1.0.7-SNAPSHOT</version>
+    <version>1.0.9-SNAPSHOT</version>
   </parent>
   <artifactId>org.apache.sling.ide.feature</artifactId>
   <packaging>eclipse-feature</packaging>

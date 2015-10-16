@@ -21,15 +21,14 @@ import java.io.OutputStreamWriter;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.io.xpp3.BundleListXpp3Writer;
 
 /**
  * Output the bundle list back to the console.
- * 
- * @goal output-bundle-list
- * @requiresDependencyResolution test
- * 
  */
+@Mojo( name = "output-bundle-list", requiresDependencyResolution = ResolutionScope.TEST)
 public class OutputBundleListMojo extends AbstractUsingBundleListMojo {
 
     @Override

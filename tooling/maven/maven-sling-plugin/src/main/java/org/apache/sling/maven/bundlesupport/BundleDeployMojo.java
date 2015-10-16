@@ -22,6 +22,9 @@ import java.io.File;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.OverConstrainedVersionException;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -29,11 +32,8 @@ import org.apache.maven.project.MavenProject;
  * by maven to an OSGi Bundle Repository accepting the bundle. The plugin uses
  * a </em>multipart/format-data</em> POST request to just post the file to
  * the URL configured in the <code>obr</code> property.
- *
- * @goal deploy
- * @phase deploy
- * @description deploy an OSGi bundle jar to an OBR
  */
+@Mojo(name = "deploy", defaultPhase = LifecyclePhase.DEPLOY)
 public class BundleDeployMojo extends AbstractBundleDeployMojo {
 
     /**
@@ -41,10 +41,8 @@ public class BundleDeployMojo extends AbstractBundleDeployMojo {
      * project to be executed. This property may be set by the
      * <code>sling.deploy.skip</code> comparable to the <code>maven.test.skip</code>
      * property to prevent running the unit tests.
-     *
-     * @parameter expression="${sling.deploy.skip}" default-value="false"
-     * @required
      */
+    @Parameter(property = "sling.deploy.skip", defaultValue = "false", required = true)
     private boolean skip;
 
 	/**
@@ -53,23 +51,19 @@ public class BundleDeployMojo extends AbstractBundleDeployMojo {
      * @parameter expression="${project.build.directory}"
      * @required
      */
+    @Parameter(defaultValue = "${project.build.directory}", readonly = true)
     private String buildDirectory;
 
     /**
      * The name of the generated JAR file.
-     *
-     * @parameter alias="jarName" expression="${project.build.finalName}.jar"
-     * @required
      */
+    @Parameter(property = "project.build.finalName", alias = "jarName", required = true)
     private String jarName;
 
     /**
      * The Maven project.
-     *
-     * @parameter expression="${project}"
-     * @required
-     * @readonly
      */
+    @Parameter( defaultValue = "${project}", readonly = true )
     private MavenProject project;
 
     @Override

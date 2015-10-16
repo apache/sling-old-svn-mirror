@@ -39,7 +39,6 @@ public class SlingJcrJackrabbitSecurityIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            withDerby(),
             addSlingFeatures("sling-jcr-jackrabbit-security")
         );
     }

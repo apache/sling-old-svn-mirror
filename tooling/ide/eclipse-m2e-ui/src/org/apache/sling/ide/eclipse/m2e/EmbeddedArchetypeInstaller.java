@@ -68,7 +68,7 @@ public class EmbeddedArchetypeInstaller {
 	private final String artifactId;
 	private final String version;
 
-	private final Map<String,InputStream> origins = new HashMap<String,InputStream>();
+	private final Map<String,InputStream> origins = new HashMap<>();
 	
 	public EmbeddedArchetypeInstaller(final String groupId,
 			final String artifactId,
@@ -129,18 +129,18 @@ public class EmbeddedArchetypeInstaller {
             for (Iterator<Entry<String, InputStream>> it = entries.iterator(); it.hasNext();) {
                 final Entry<String, InputStream> entry = it.next();
                 final String fileExtension = entry.getKey();
-                final InputStream in = entry.getValue();
                 File tmpFile = File.createTempFile("slingClipseTmp", fileExtension);
-                FileOutputStream fos = new FileOutputStream(tmpFile);
+                
 
-                try {
+                try (InputStream in = entry.getValue(); 
+                        FileOutputStream fos = new FileOutputStream(tmpFile)) {
                     IOUtils.copy(in, fos);
+                    // the below code uses the fileExtension as a type. Most of the time this is correct
+                    // and should be fine for our usage
                     Artifact jarArtifact = new DefaultArtifact(groupId, artifactId, version, "", fileExtension, "",
-                            new DefaultArtifactHandler());
+                            new DefaultArtifactHandler(fileExtension));
                     dai.install(tmpFile, jarArtifact, maven.getLocalRepository());
                 } finally {
-                    IOUtils.closeQuietly(in);
-                    IOUtils.closeQuietly(fos);
                     FileUtils.deleteQuietly(tmpFile);
                 }
             }
@@ -151,9 +151,7 @@ public class EmbeddedArchetypeInstaller {
             archetype.setVersion(version);
             org.apache.maven.archetype.Archetype archetyper = MavenPluginActivator.getDefault().getArchetype();
             archetyper.updateLocalCatalog(archetype);
-        } catch (CoreException e) {
-            throw e;
-        } catch (RuntimeException e) {
+        } catch (CoreException | RuntimeException e) {
             throw e;
         } catch (Exception e) {
             throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
@@ -204,7 +202,7 @@ public class EmbeddedArchetypeInstaller {
 
     private Class<?>[] getClasses(Object repositorySession) {
 
-        List<Class<?>> accu = new ArrayList<Class<?>>();
+        List<Class<?>> accu = new ArrayList<>();
         Class<? extends Object> klazz = repositorySession.getClass();
 
         getClasses(klazz, accu);

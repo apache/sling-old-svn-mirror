@@ -22,6 +22,10 @@ import java.io.IOException;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.StartLevel;
@@ -32,38 +36,24 @@ import org.jdom.output.XMLOutputter;
 
 /**
  * Create and attach a karaf feature descriptor XML file.
- *
- * @goal create-karaf-descriptor
- * @phase package
- * @description create a karaf feature descriptor
- * @requiresDependencyResolution test
  */
+@Mojo(name = "create-karaf-descriptor", defaultPhase = LifecyclePhase.PACKAGE, requiresDependencyResolution = ResolutionScope.TEST)
 public class CreateKarafFeatureDescriptorMojo extends AbstractUsingBundleListMojo {
 
     private static final String CLASSIFIER = "features";
 
     private static final String TYPE = "xml";
 
-    /**
-     * @parameter default-value="sling"
-     */
+    @Parameter(defaultValue = "sling")
     private String featureName;
 
-    /**
-     * @parameter default-value="sling-2.0"
-     */
+    @Parameter(defaultValue = "sling-2.0")
     private String featuresName;
 
-    /**
-     * @parameter default-value="${project.version}"
-     */
+    @Parameter(defaultValue = "${project.version}")
     private String featureVersion;
 
-    /**
-     * The output directory.
-     *
-     * @parameter default-value="${project.build.directory}/features.xml"
-     */
+    @Parameter(defaultValue = "{project.build.directory}/features.xml")
     private File outputFile;
 
     @Override

@@ -22,13 +22,13 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.scripting.sightly.impl.compiler.common.DefaultPluginInvoke;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.Expression;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.node.MapLiteral;
+import org.apache.sling.scripting.sightly.impl.compiler.frontend.CompilerContext;
 import org.apache.sling.scripting.sightly.impl.compiler.ris.command.Patterns;
 import org.apache.sling.scripting.sightly.impl.compiler.ris.command.Procedure;
 import org.apache.sling.scripting.sightly.impl.compiler.ris.command.VariableBinding;
-import org.apache.sling.scripting.sightly.impl.compiler.common.DefaultPluginInvoke;
-import org.apache.sling.scripting.sightly.impl.compiler.frontend.CompilerContext;
 import org.apache.sling.scripting.sightly.impl.compiler.util.stream.PushStream;
 
 /**

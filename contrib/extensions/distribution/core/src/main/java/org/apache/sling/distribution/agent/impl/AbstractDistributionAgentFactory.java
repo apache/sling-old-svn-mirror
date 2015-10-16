@@ -106,7 +106,7 @@ public abstract class AbstractDistributionAgentFactory {
                     if (distributionLog != null) {
                         distributionLog.error("Cannot create agent", t);
                     }
-                    log.error("Cannot create agent", t);
+                    log.error("Cannot create agent {}", OsgiUtils.osgiPropertyMapToString(config), t);
                 }
 
 

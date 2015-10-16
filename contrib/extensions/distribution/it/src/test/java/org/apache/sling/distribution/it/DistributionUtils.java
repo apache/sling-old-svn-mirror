@@ -21,10 +21,14 @@ package org.apache.sling.distribution.it;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
+import junit.framework.Assert;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.entity.ByteArrayEntity;
@@ -308,6 +312,28 @@ public class DistributionUtils {
                 result.add(key);
             }
         }
+        return result;
+    }
+
+    public static Map<String, Map<String, Object>> getQueues(SlingInstance instance, String agentName) throws IOException, JSONException {
+        Map<String, Map<String, Object>> result = new HashMap<String, Map<String, Object>>();
+
+        JSONObject json = getResource(instance, queueUrl(agentName) + ".infinity");
+
+        JSONArray items = json.getJSONArray("items");
+
+        for(int i=0; i < items.length(); i++) {
+            String queueName = items.getString(i);
+
+            Map<String, Object> queueProperties = new HashMap<String, Object>();
+
+            JSONObject queue = json.getJSONObject(queueName);
+            queueProperties.put("empty", queue.getBoolean("empty"));
+            queueProperties.put("itemsCount", queue.get("itemsCount"));
+
+            result.put(queueName, queueProperties);
+        }
+
         return result;
     }
 

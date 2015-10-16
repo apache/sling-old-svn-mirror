@@ -59,7 +59,7 @@ public class TracingOsgiClient implements OsgiClient {
 
     private void logInstallLocalBundle(InputStream input, String explodedBundleLocation) throws OsgiClientException {
 
-        Map<String, Object> props = new HashMap<String, Object>();
+        Map<String, Object> props = new HashMap<>();
         long start = System.currentTimeMillis();
         if (input != null) {
             props.put(CommandExecutionProperties.ACTION_TYPE, "InstallJarredBundle");
