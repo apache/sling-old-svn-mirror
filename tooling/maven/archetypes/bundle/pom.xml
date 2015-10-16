@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling-archetype-parent</artifactId>
-        <version>4</version>
+        <version>5</version>
         <relativePath />
     </parent>
 
