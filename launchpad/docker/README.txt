@@ -30,3 +30,20 @@ the Sling launchpad in a docker container linked to a mongo one. To launch
 both containers, execute:
 
 $ sudo docker-compose -f docker-compose-mongo.yml up
+
+Pushing the docker image to DockerHub
+----------------------------------------------
+
+This assumes that you have the credentials for the apachesling repository
+on DockerHub.
+
+First of all, build the image tagged for the apachesling repository. You
+should tag it with both the 'latest' and the version number of the launchpad
+release. For the 8 release, this would translate into
+
+$ sudo docker build -t apachesling/sling:8 .
+$ sudo docker build -t apachesling/sling:latest .
+
+Then, push the image
+
+$ sudo docker push apachesling/sling:8
