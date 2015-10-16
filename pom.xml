@@ -25,7 +25,6 @@
         <relativePath />
     </parent>
 
-    <groupId>org.apache.sling</groupId>
     <artifactId>sling-archetype-parent</artifactId>
     <packaging>pom</packaging>
     <version>4-SNAPSHOT</version>
@@ -99,6 +98,15 @@
                         <postBuildHookScript>verify.groovy</postBuildHookScript>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <configuration>
+                        <excludes>
+                            <exclude>src/test/resources/projects/*/goal.txt</exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>                
             </plugins>
         </pluginManagement>
     </build>
