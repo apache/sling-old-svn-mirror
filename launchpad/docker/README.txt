@@ -47,3 +47,4 @@ $ sudo docker build -t apachesling/sling:latest .
 Then, push the image
 
 $ sudo docker push apachesling/sling:8
+$ sudo docker push apachesling/sling:latest
