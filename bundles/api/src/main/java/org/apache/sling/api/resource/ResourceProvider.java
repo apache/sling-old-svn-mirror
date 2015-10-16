@@ -41,8 +41,11 @@ import aQute.bnd.annotation.ConsumerType;
  * or a {@link ResourceProviderFactory} service can be implemented which
  * upon successful authentication returns a resource provider with the
  * given user credentials.
+ * 
+ * @deprecated Use the {@link org.apache.sling.spi.resource.provider.ResourceProvider<T>}
  */
 @ConsumerType
+@Deprecated
 public interface ResourceProvider {
 
     /**
