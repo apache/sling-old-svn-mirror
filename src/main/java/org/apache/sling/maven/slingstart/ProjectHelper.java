@@ -48,7 +48,7 @@ public abstract class ProjectHelper {
      * @param info The project info
      * @throws IOException If writing fails
      */
-    public static void storeProjectInfo(final DependencyLifecycleParticipant.ProjectInfo info)
+    public static void storeProjectInfo(final ModelPreprocessor.ProjectInfo info)
     throws IOException {
         // we have to serialize as the dependency lifecycle participant uses a different class loader (!)
         final StringWriter w1 = new StringWriter();
