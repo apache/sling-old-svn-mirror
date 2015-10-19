@@ -31,6 +31,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
@@ -67,9 +68,6 @@ public class UnitChangeMonitor {
      * @return the script's last modified date or 0 if there's no information about the script
      */
     public long getLastModifiedDateForScript(String script) {
-        if (script == null) {
-            return 0;
-        }
         SightlyScript sightlyScript = slyScriptsMap.get(script);
         if (sightlyScript != null) {
             return sightlyScript.lastModified;
@@ -78,8 +76,11 @@ public class UnitChangeMonitor {
     }
 
     public String getScriptEncoding(String script) {
-        SightlyScript sightlyScript = slyScriptsMap.get(script);
-        return sightlyScript.encoding;
+        SightlyScript sightlyScript = getScript(script);
+        if (sightlyScript != null) {
+            return sightlyScript.encoding;
+        }
+        return sightlyEngineConfiguration.getEncoding();
     }
 
     /**
@@ -94,33 +95,6 @@ public class UnitChangeMonitor {
         }
         Long date = slyJavaUseMap.get(className);
         return date != null ? date : 0;
-    }
-
-
-    public void touchScript(String script) {
-        SightlyScript sightlyScript = slyScriptsMap.get(script);
-        if (sightlyScript != null) {
-            sightlyScript.lastModified = System.currentTimeMillis();
-        } else {
-            ResourceResolver resolver = null;
-            String encoding = null;
-            try {
-                resolver =  rrf.getAdministrativeResourceResolver(null);
-                ResourceMetadata scriptResourceMetadata = resolver.getResource(script).getResourceMetadata();
-                encoding = scriptResourceMetadata.getCharacterEncoding();
-            } catch (LoginException e) {
-                // do nothing; we'll just return the default encoding
-                LOG.warn("Cannot read character encoding value for script " + script);
-            } finally {
-                if (resolver != null) {
-                    resolver.close();
-                }
-            }
-            if (StringUtils.isEmpty(encoding)) {
-                encoding = sightlyEngineConfiguration.getEncoding();
-            }
-            slyScriptsMap.put(script, new SightlyScript(script, encoding, System.currentTimeMillis()));
-        }
     }
 
     public void clearJavaUseObject(String className) {
@@ -210,6 +184,38 @@ public class UnitChangeMonitor {
                 slyScriptsMap.remove(path);
             }
         }
+    }
+
+    private SightlyScript getScript(String script) {
+        SightlyScript sightlyScript = null;
+        if (StringUtils.isNotEmpty(script)) {
+            sightlyScript = slyScriptsMap.get(script);
+            if (sightlyScript == null) {
+                ResourceResolver resolver = null;
+                try {
+                    resolver = rrf.getAdministrativeResourceResolver(null);
+                    Resource scriptResource = resolver.getResource(script);
+                    if (scriptResource == null) {
+                        return null;
+                    }
+                    ResourceMetadata scriptResourceMetadata = scriptResource.getResourceMetadata();
+                    String encoding = scriptResourceMetadata.getCharacterEncoding();
+                    if (StringUtils.isEmpty(encoding)) {
+                        encoding = sightlyEngineConfiguration.getEncoding();
+                    }
+                    sightlyScript = new SightlyScript(script, encoding, scriptResourceMetadata.getModificationTime());
+                    slyScriptsMap.put(script, sightlyScript);
+                } catch (LoginException e) {
+                    // do nothing; we'll just return the default encoding
+                    LOG.warn("Cannot read character encoding value for script " + script);
+                } finally {
+                    if (resolver != null) {
+                        resolver.close();
+                    }
+                }
+            }
+        }
+        return sightlyScript;
     }
 
     private class SightlyScript {

@@ -98,7 +98,6 @@ public class UnitLoader {
         Object obj;
         String encoding;
         if (sourceIdentifier.needsUpdate()) {
-            unitChangeMonitor.touchScript(scriptResource.getPath());
             encoding = unitChangeMonitor.getScriptEncoding(scriptResource.getPath());
             String sourceCode = getSourceCodeForScript(adminResolver, sourceIdentifier, bindings, encoding);
             obj = sightlyJavaCompilerService.compileSource(sourceIdentifier, sourceCode, sourceIdentifier.getFullyQualifiedName());
