@@ -18,20 +18,18 @@
  */
 package org.apache.sling.discovery.impl.cluster;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
+import org.apache.sling.discovery.base.commons.ClusterViewService;
+import org.apache.sling.discovery.base.commons.UndefinedClusterViewException;
+import org.apache.sling.discovery.base.commons.UndefinedClusterViewException.Reason;
+import org.apache.sling.discovery.commons.providers.spi.LocalClusterView;
 import org.apache.sling.discovery.impl.Config;
-import org.apache.sling.discovery.impl.cluster.UndefinedClusterViewException.Reason;
 import org.apache.sling.discovery.impl.common.View;
 import org.apache.sling.discovery.impl.common.ViewHelper;
 import org.apache.sling.discovery.impl.common.resource.EstablishedClusterView;
@@ -60,6 +58,15 @@ public class ClusterViewServiceImpl implements ClusterViewService {
     @Reference
     private Config config;
 
+    public static ClusterViewService testConstructor(SlingSettingsService settingsService,
+            ResourceResolverFactory factory, Config config) {
+        ClusterViewServiceImpl service = new ClusterViewServiceImpl();
+        service.settingsService = settingsService;
+        service.resourceResolverFactory = factory;
+        service.config = config;
+        return service;
+    }
+
     public String getSlingId() {
     	if (settingsService==null) {
     		return null;
@@ -67,32 +74,7 @@ public class ClusterViewServiceImpl implements ClusterViewService {
         return settingsService.getSlingId();
     }
 
-    public boolean contains(final String slingId) throws UndefinedClusterViewException {
-        List<InstanceDescription> localInstances = getClusterView().getInstances();
-        for (Iterator<InstanceDescription> it = localInstances.iterator(); it
-                .hasNext();) {
-            InstanceDescription aLocalInstance = it.next();
-            if (aLocalInstance.getSlingId().equals(slingId)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public boolean containsAny(Collection<InstanceDescription> listInstances) 
-            throws UndefinedClusterViewException{
-        for (Iterator<InstanceDescription> it = listInstances.iterator(); it
-                .hasNext();) {
-            InstanceDescription instanceDescription = it.next();
-            if (contains(instanceDescription.getSlingId())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public ClusterView getClusterView() throws UndefinedClusterViewException {
+    public LocalClusterView getLocalClusterView() throws UndefinedClusterViewException {
     	if (resourceResolverFactory==null) {
     		logger.warn("getClusterView: no resourceResolverFactory set at the moment.");
     		throw new UndefinedClusterViewException(Reason.REPOSITORY_EXCEPTION,
@@ -112,16 +94,9 @@ public class ClusterViewServiceImpl implements ClusterViewService {
 
             EstablishedClusterView clusterViewImpl = new EstablishedClusterView(
                     config, view, getSlingId());
-            boolean foundLocal = false;
-            for (Iterator<InstanceDescription> it = clusterViewImpl
-                    .getInstances().iterator(); it.hasNext();) {
-                InstanceDescription instance = it.next();
-                if (instance.isLocal()) {
-                    foundLocal = true;
-                    break;
-                }
-            }
-            if (foundLocal) {
+            
+            InstanceDescription local = clusterViewImpl.getLocalInstance();
+            if (local != null) {
                 return clusterViewImpl;
             } else {
                 logger.info("getClusterView: the local instance ("+getSlingId()+") is currently not included in the existing established view! "

@@ -18,22 +18,15 @@
  */
 package org.apache.sling.discovery.impl.common.heartbeat;
 
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 import javax.jcr.Session;
 
-import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
@@ -45,25 +38,20 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.scheduler.Scheduler;
+import org.apache.sling.discovery.base.commons.BaseViewChecker;
+import org.apache.sling.discovery.base.connectors.announcement.AnnouncementRegistry;
+import org.apache.sling.discovery.base.connectors.ping.ConnectorRegistry;
+import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
 import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.DiscoveryServiceImpl;
 import org.apache.sling.discovery.impl.cluster.voting.VotingHandler;
 import org.apache.sling.discovery.impl.cluster.voting.VotingHelper;
 import org.apache.sling.discovery.impl.cluster.voting.VotingView;
 import org.apache.sling.discovery.impl.common.ViewHelper;
-import org.apache.sling.discovery.impl.common.resource.ResourceHelper;
-import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistry;
-import org.apache.sling.discovery.impl.topology.connector.ConnectorRegistry;
 import org.apache.sling.launchpad.api.StartupListener;
-import org.apache.sling.launchpad.api.StartupMode;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.component.ComponentContext;
 import org.osgi.service.http.HttpService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The heartbeat handler is responsible and capable of issuing both local and
@@ -77,50 +65,15 @@ import org.slf4j.LoggerFactory;
 @Reference(referenceInterface=HttpService.class,
            cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
            policy=ReferencePolicy.DYNAMIC)
-public class HeartbeatHandler implements Runnable, StartupListener {
+public class HeartbeatHandler extends BaseViewChecker {
 
     private static final String PROPERTY_ID_LAST_HEARTBEAT = "lastHeartbeat";
-
-    private static final String PROPERTY_ID_ENDPOINTS = "endpoints";
-
-    private static final String PROPERTY_ID_SLING_HOME_PATH = "slingHomePath";
-
-    private static final String PROPERTY_ID_RUNTIME = "runtimeId";
-
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
-    /** Endpoint service registration property from RFC 189 */
-    private static final String REG_PROPERTY_ENDPOINTS = "osgi.http.service.endpoints";
-
-    /** the name used for the period job with the scheduler **/
-    private String NAME = "discovery.impl.heartbeat.runner.";
-
-    @Reference
-    private SlingSettingsService slingSettingsService;
-
-    @Reference
-    private ResourceResolverFactory resourceResolverFactory;
-
-    @Reference
-    private ConnectorRegistry connectorRegistry;
-
-    @Reference
-    private AnnouncementRegistry announcementRegistry;
-
-    @Reference
-    private Scheduler scheduler;
 
     @Reference
     private Config config;
 
     @Reference
     private VotingHandler votingHandler;
-
-    /** the discovery service reference is used to get properties updated before heartbeats are sent **/
-    private DiscoveryServiceImpl discoveryService;
-
-    /** the sling id of the local instance **/
-    private String slingId;
 
     /** the id which is to be used for the next voting **/
     private String nextVotingId = UUID.randomUUID().toString();
@@ -135,81 +88,50 @@ public class HeartbeatHandler implements Runnable, StartupListener {
      */
     private volatile String newLeaderElectionId;
     
-    /** lock object for synchronizing the run method **/
-    private final Object lock = new Object();
-
     /** SLING-2892: remember first heartbeat written to repository by this instance **/
     private long firstHeartbeatWritten = -1;
 
     /** SLING-2892: remember the value of the heartbeat this instance has written the last time **/
     private Calendar lastHeartbeatWritten = null;
 
-    /** SLING-2895: avoid heartbeats after deactivation **/
-    private volatile boolean activated = false;
+    private DiscoveryServiceImpl discoveryServiceImpl;
 
-    /** SLING-2901: the runtimeId is a unique id, set on activation, used for robust duplicate sling.id detection **/
-    private String runtimeId;
-
-    /** keep a reference to the component context **/
-    private ComponentContext context;
-
-    /** SLING-2968 : start issuing remote heartbeats only after startup finished **/
-    private boolean startupFinished = false;
-
-    /** SLING-3382 : force ping instructs the servlet to start the backoff from scratch again **/
-    private boolean forcePing;
-
-    /** SLING-4765 : store endpoints to /clusterInstances for more verbose duplicate slingId/ghost detection **/
-    private final Map<Long, String[]> endpoints = new HashMap<Long, String[]>();
-
-    public void inform(StartupMode mode, boolean finished) {
-    	if (finished) {
-    		startupFinished(mode);
-    	}
+    /** for testing only **/
+    public static HeartbeatHandler testConstructor(
+            SlingSettingsService slingSettingsService,
+            ResourceResolverFactory factory, 
+            AnnouncementRegistry announcementRegistry, 
+            ConnectorRegistry connectorRegistry,
+            Config config, 
+            Scheduler scheduler) {
+        HeartbeatHandler handler = new HeartbeatHandler();
+        handler.slingSettingsService = slingSettingsService;
+        handler.resourceResolverFactory = factory;
+        handler.announcementRegistry = announcementRegistry;
+        handler.connectorRegistry = connectorRegistry;
+        handler.connectorConfig = config;
+        handler.config = config;
+        handler.scheduler = scheduler;
+        return handler;
     }
 
-    public void startupFinished(StartupMode mode) {
-    	synchronized(lock) {
-    		startupFinished = true;
-    		issueHeartbeat();
-    	}
+    @Override
+    protected void doActivate() {
+        // on activate the resetLeaderElectionId is set to true to ensure that
+        // the 'leaderElectionId' property is reset on next heartbeat issuance.
+        // the idea being that a node which leaves the cluster should not
+        // become leader on next join - and by resetting the leaderElectionId
+        // to the current time, this is ensured.
+        resetLeaderElectionId = true;
+        runtimeId = UUID.randomUUID().toString();
+
+        // SLING-2895: reset variables to avoid unnecessary log.error
+        firstHeartbeatWritten = -1;
+        lastHeartbeatWritten = null;
+
+        logger.info("doActivate: activated with runtimeId: {}, slingId: {}", runtimeId, slingId);
     }
-
-    public void startupProgress(float ratio) {
-    	// we dont care
-    }
-
-    @Activate
-    protected void activate(ComponentContext context) {
-    	synchronized(lock) {
-    		this.context = context;
-
-	        slingId = slingSettingsService.getSlingId();
-	        NAME = "discovery.impl.heartbeat.runner." + slingId;
-	        // on activate the resetLeaderElectionId is set to true to ensure that
-	        // the 'leaderElectionId' property is reset on next heartbeat issuance.
-	        // the idea being that a node which leaves the cluster should not
-	        // become leader on next join - and by resetting the leaderElectionId
-	        // to the current time, this is ensured.
-	        resetLeaderElectionId = true;
-	        runtimeId = UUID.randomUUID().toString();
-
-	        // SLING-2895: reset variables to avoid unnecessary log.error
-	        firstHeartbeatWritten = -1;
-	        lastHeartbeatWritten = null;
-
-	        activated = true;
-	        logger.info("activate: activated with runtimeId: {}, slingId: {}", runtimeId, slingId);
-    	}
-    }
-
-    @Deactivate
-    protected void deactivate() {
-        // SLING-3365 : dont synchronize on deactivate
-        activated = false;
-    	scheduler.removeJob(NAME);
-    }
-
+    
     /**
      * The initialize method is called by the DiscoveryServiceImpl.activate
      * as we require the discoveryService (and the discoveryService has
@@ -228,6 +150,7 @@ public class HeartbeatHandler implements Runnable, StartupListener {
             final String initialVotingId) {
         synchronized(lock) {
         	this.discoveryService = discoveryService;
+            this.discoveryServiceImpl = discoveryService;
         	this.nextVotingId = initialVotingId;
         	logger.info("initialize: nextVotingId="+nextVotingId);
             issueHeartbeat();
@@ -236,25 +159,13 @@ public class HeartbeatHandler implements Runnable, StartupListener {
         try {
             final long interval = config.getHeartbeatInterval();
             logger.info("initialize: starting periodic heartbeat job for "+slingId+" with interval "+interval+" sec.");
+            if (interval==0) {
+                logger.warn("initialize: Repeat interval cannot be zero.");
+            }
             scheduler.addPeriodicJob(NAME, this,
                     null, interval, false);
         } catch (Exception e) {
             logger.error("activate: Could not start heartbeat runner: " + e, e);
-        }
-    }
-
-    public void run() {
-        synchronized(lock) {
-        	if (!activated) {
-        		// SLING:2895: avoid heartbeats if not activated
-        		return;
-        	}
-
-            // issue a heartbeat
-            issueHeartbeat();
-
-            // check the view
-            checkView();
         }
     }
 
@@ -272,21 +183,6 @@ public class HeartbeatHandler implements Runnable, StartupListener {
         return config.getClusterInstancesPath() + "/" + slingId;
     }
 
-    /** Trigger the issuance of the next heartbeat asap instead of at next heartbeat interval **/
-    public void triggerHeartbeat() {
-        forcePing = true;
-        try {
-            // then fire a job immediately
-            // use 'fireJobAt' here, instead of 'fireJob' to make sure the job can always be triggered
-            // 'fireJob' checks for a job from the same job-class to already exist
-            // 'fireJobAt' though allows to pass a name for the job - which can be made unique, thus does not conflict/already-exist
-            logger.info("triggerHeartbeat: firing job to trigger heartbeat");
-            scheduler.fireJobAt(NAME+UUID.randomUUID(), this, null, new Date(System.currentTimeMillis()-1000 /* make sure it gets triggered immediately*/));
-        } catch (Exception e) {
-            logger.info("triggerHeartbeat: Could not trigger heartbeat: " + e);
-        }
-    }
-    
     /**
      * Hook that will cause a reset of the leaderElectionId 
      * on next invocation of issueClusterLocalHeartbeat.
@@ -333,31 +229,14 @@ public class HeartbeatHandler implements Runnable, StartupListener {
      * and then a remote heartbeat (to all the topology connectors
      * which announce this part of the topology to others)
      */
-    void issueHeartbeat() {
+    protected void issueHeartbeat() {
         if (discoveryService == null) {
             logger.error("issueHeartbeat: discoveryService is null");
         } else {
             discoveryService.updateProperties();
         }
         issueClusterLocalHeartbeat();
-        issueRemoteHeartbeats();
-    }
-
-    /** Issue a remote heartbeat using the topology connectors **/
-    private void issueRemoteHeartbeats() {
-        if (connectorRegistry == null) {
-            logger.error("issueRemoteHeartbeats: connectorRegistry is null");
-            return;
-        }
-        if (!startupFinished) {
-        	logger.debug("issueRemoteHeartbeats: not issuing remote heartbeat yet, startup not yet finished");
-        	return;
-        }
-        if (logger.isDebugEnabled()) {
-            logger.debug("issueRemoteHeartbeats: pinging outgoing topology connectors (if there is any) for "+slingId);
-        }
-        connectorRegistry.pingOutgoingConnectors(forcePing);
-        forcePing = false;
+        issueConnectorPings();
     }
 
     /** Issue a cluster local heartbeat (into the repository) **/
@@ -429,7 +308,7 @@ public class HeartbeatHandler implements Runnable, StartupListener {
     						" Check for sling.id.file in your installation of all instances in this cluster " +
     						"to verify this! Duplicate sling.ids are not allowed within a cluster!");
             		logger.error("issueClusterLocalHeartbeat: sending TOPOLOGY_CHANGING before self-disabling.");
-            		discoveryService.forcedShutdown();
+            		discoveryServiceImpl.forcedShutdown();
             		logger.error("issueClusterLocalHeartbeat: disabling discovery.impl");
             		activated = false;
             		if (context!=null) {
@@ -530,18 +409,13 @@ public class HeartbeatHandler implements Runnable, StartupListener {
     /** Check whether the established view matches the reality, ie matches the
      * heartbeats
      */
-    void checkView() {
-        // check the remotes first
-        if (announcementRegistry == null) {
-            logger.error("announcementRegistry is null");
-            return;
-        }
-        announcementRegistry.checkExpiredAnnouncements();
+    protected void doCheckView() {
+        super.doCheckView();
 
         ResourceResolver resourceResolver = null;
         try {
             resourceResolver = getResourceResolver();
-            doCheckView(resourceResolver);
+            doCheckViewWith(resourceResolver);
         } catch (LoginException e) {
             logger.error("checkView: could not log in administratively: " + e,
                     e);
@@ -558,16 +432,16 @@ public class HeartbeatHandler implements Runnable, StartupListener {
 
     /** do the established-against-heartbeat view check using the given resourceResolver.
      */
-    private void doCheckView(final ResourceResolver resourceResolver) throws PersistenceException {
+    private void doCheckViewWith(final ResourceResolver resourceResolver) throws PersistenceException {
 
         if (votingHandler==null) {
-            logger.info("doCheckView: votingHandler is null! slingId="+slingId);
+            logger.info("doCheckViewWith: votingHandler is null! slingId="+slingId);
         } else {
             votingHandler.analyzeVotings(resourceResolver);
             try{
                 votingHandler.cleanupTimedoutVotings(resourceResolver);
             } catch(Exception e) {
-                logger.warn("doCheckView: Exception occurred while cleaning up votings: "+e, e);
+                logger.warn("doCheckViewWith: Exception occurred while cleaning up votings: "+e, e);
             }
         }
 
@@ -580,11 +454,11 @@ public class HeartbeatHandler implements Runnable, StartupListener {
             // settle
             
             // but first: make sure we sent the TOPOLOGY_CHANGING
-            logger.info("doCheckView: there are pending votings, marking topology as changing...");
+            logger.info("doCheckViewWith: there are pending votings, marking topology as changing...");
             discoveryService.handleTopologyChanging();
             
         	if (logger.isDebugEnabled()) {
-	            logger.debug("doCheckView: "
+	            logger.debug("doCheckViewWith: "
 	                    + numOpenNonWinningVotes
 	                    + " ongoing votings, no one winning yet - I shall wait for them to settle.");
         	}
@@ -600,19 +474,19 @@ public class HeartbeatHandler implements Runnable, StartupListener {
             // that's the normal case. the established view matches what we're
             // seeing.
             // all happy and fine
-            logger.debug("doCheckView: no pending nor winning votes. view is fine. we're all happy.");
+            logger.debug("doCheckViewWith: no pending nor winning votes. view is fine. we're all happy.");
             return;
         }
         
         // immediately send a TOPOLOGY_CHANGING - could already be sent, but just to be sure
-        logger.info("doCheckView: no matching established view, marking topology as changing");
+        logger.info("doCheckViewWith: no matching established view, marking topology as changing");
         discoveryService.handleTopologyChanging();
         
     	if (logger.isDebugEnabled()) {
-	        logger.debug("doCheckView: no pending nor winning votes. But: view does not match established or no established yet. Initiating a new voting");
+	        logger.debug("doCheckViewWith: no pending nor winning votes. But: view does not match established or no established yet. Initiating a new voting");
 	        Iterator<String> it = liveInstances.iterator();
 	        while (it.hasNext()) {
-	            logger.debug("doCheckView: one of the live instances is: "
+	            logger.debug("doCheckViewWith: one of the live instances is: "
 	                    + it.next());
 	        }
     	}
@@ -663,89 +537,5 @@ public class HeartbeatHandler implements Runnable, StartupListener {
             }
         }
     }
-
-    /**
-     * Bind a http service
-     */
-    protected void bindHttpService(final ServiceReference reference) {
-        final String[] endpointUrls = toStringArray(reference.getProperty(REG_PROPERTY_ENDPOINTS));
-        if ( endpointUrls != null ) {
-            synchronized ( lock ) {
-                this.endpoints.put((Long)reference.getProperty(Constants.SERVICE_ID), endpointUrls);
-                
-                // make sure this gets written on next heartbeat
-                firstHeartbeatWritten = -1;
-                lastHeartbeatWritten = null;
-            }
-        }
-    }
-
-    /**
-     * Unbind a http service
-     */
-    protected void unbindHttpService(final ServiceReference reference) {
-        synchronized ( lock ) {
-            if ( this.endpoints.remove(reference.getProperty(Constants.SERVICE_ID)) != null ) {
-                // make sure the change gets written on next heartbeat
-                firstHeartbeatWritten = -1;
-                lastHeartbeatWritten = null;
-            }
-        }
-    }
     
-    private String[] toStringArray(final Object propValue) {
-        if (propValue == null) {
-            // no value at all
-            return null;
-
-        } else if (propValue instanceof String) {
-            // single string
-            return new String[] { (String) propValue };
-
-        } else if (propValue instanceof String[]) {
-            // String[]
-            return (String[]) propValue;
-
-        } else if (propValue.getClass().isArray()) {
-            // other array
-            Object[] valueArray = (Object[]) propValue;
-            List<String> values = new ArrayList<String>(valueArray.length);
-            for (Object value : valueArray) {
-                if (value != null) {
-                    values.add(value.toString());
-                }
-            }
-            return values.toArray(new String[values.size()]);
-
-        } else if (propValue instanceof Collection<?>) {
-            // collection
-            Collection<?> valueCollection = (Collection<?>) propValue;
-            List<String> valueList = new ArrayList<String>(valueCollection.size());
-            for (Object value : valueCollection) {
-                if (value != null) {
-                    valueList.add(value.toString());
-                }
-            }
-            return valueList.toArray(new String[valueList.size()]);
-        }
-
-        return null;
-    }
-    
-    private String getEndpointsAsString() {
-        final StringBuilder sb = new StringBuilder();
-        boolean first = true;
-        for(final String[] points : endpoints.values()) {
-            for(final String point : points) {
-                if ( first ) {
-                    first = false;
-                } else {
-                    sb.append(",");
-                }
-                sb.append(point);
-            }
-        }
-        return sb.toString();
-        
-    }
 }

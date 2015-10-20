@@ -16,32 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.discovery.impl.topology.connector.wl;
+package org.apache.sling.discovery.impl.setup;
 
-import javax.servlet.ServletRequest;
+import org.apache.sling.discovery.base.its.setup.VirtualInstance;
+import org.apache.sling.discovery.impl.Config;
+import org.apache.sling.discovery.impl.common.heartbeat.HeartbeatHandler;
 
-import org.apache.commons.net.util.SubnetUtils;
-import org.apache.commons.net.util.SubnetUtils.SubnetInfo;
+public class FullJR2VirtualInstance extends VirtualInstance {
 
-/**
- * Implementation of a WhitelistEntry which accepts
- * cidr and ip mask notations.
- */
-public class SubnetWhitelistEntry implements WhitelistEntry {
+    private FullJR2VirtualInstanceBuilder fullBuilder;
 
-    private final SubnetInfo subnetInfo;
-    
-    public SubnetWhitelistEntry(String cidrNotation) {
-        subnetInfo = new SubnetUtils(cidrNotation).getInfo();
+    public FullJR2VirtualInstance(FullJR2VirtualInstanceBuilder builder) throws Exception {
+        super(builder);
+        fullBuilder = builder;
     }
-    
-    public SubnetWhitelistEntry(String ip, String subnetMask) {
-        subnetInfo = new SubnetUtils(ip, subnetMask).getInfo();
+
+    public HeartbeatHandler getHeartbeatHandler() {
+        return (HeartbeatHandler) getViewChecker();
     }
-    
-    public boolean accepts(ServletRequest request) {
-        final String remoteAddr = request.getRemoteAddr();
-        return subnetInfo.isInRange(remoteAddr);
+
+    public void stopVoting() {
+        fullBuilder.stopVoting();
+    }
+
+    public Config getFullConfig() {
+        return fullBuilder.getConfig();
     }
 
 }

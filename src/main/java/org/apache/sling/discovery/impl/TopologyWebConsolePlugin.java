@@ -52,14 +52,14 @@ import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.InstanceFilter;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
+import org.apache.sling.discovery.base.commons.ClusterViewService;
+import org.apache.sling.discovery.base.connectors.announcement.Announcement;
+import org.apache.sling.discovery.base.connectors.announcement.AnnouncementRegistry;
+import org.apache.sling.discovery.base.connectors.announcement.CachedAnnouncement;
+import org.apache.sling.discovery.base.connectors.ping.ConnectorRegistry;
+import org.apache.sling.discovery.base.connectors.ping.TopologyConnectorClientInformation;
 import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.TopologyView;
-import org.apache.sling.discovery.impl.cluster.ClusterViewService;
-import org.apache.sling.discovery.impl.topology.announcement.Announcement;
-import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistry;
-import org.apache.sling.discovery.impl.topology.announcement.CachedAnnouncement;
-import org.apache.sling.discovery.impl.topology.connector.ConnectorRegistry;
-import org.apache.sling.discovery.impl.topology.connector.TopologyConnectorClientInformation;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -430,8 +430,8 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                 pw.println("<td><b>not connected</b></td>");
                 pw.println("<td"+tooltip+"><b>not ok (HTTP Status-Code: "+statusCode+", "+statusDetails+")</b></td>");
             }
-            pw.println("<td>"+beautifiedTimeDiff(topologyConnectorClient.getLastHeartbeatSent())+"</td>");
-            pw.println("<td>"+beautifiedDueTime(topologyConnectorClient.getNextHeartbeatDue())+"</td>");
+            pw.println("<td>"+beautifiedTimeDiff(topologyConnectorClient.getLastPingSent())+"</td>");
+            pw.println("<td>"+beautifiedDueTime(topologyConnectorClient.getNextPingDue())+"</td>");
             pw.println("<td>"+topologyConnectorClient.getLastRequestEncoding()+"</td>");
             pw.println("<td>"+topologyConnectorClient.getLastResponseEncoding()+"</td>");
             // //TODO fallback urls are not yet implemented!
@@ -525,7 +525,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
             } else {
                 pw.println("<td><i>n/a</i></td>");
             }
-            pw.println("<td>"+beautifiedTimeDiff(incomingCachedAnnouncement.getLastHeartbeat())+"</td>");
+            pw.println("<td>"+beautifiedTimeDiff(incomingCachedAnnouncement.getLastPing())+"</td>");
             pw.println("<td>"+beautifiedDueTime(incomingCachedAnnouncement.getSecondsUntilTimeout())+"</td>");
 
             pw.println("</tr>");
@@ -784,7 +784,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                     pw.print(incomingAnnouncement.getServerInfo());
                     pw.println();
                 }
-                pw.println("Last heartbeat received : "+beautifiedTimeDiff(incomingCachedAnnouncement.getLastHeartbeat()));
+                pw.println("Last heartbeat received : "+beautifiedTimeDiff(incomingCachedAnnouncement.getLastPing()));
                 pw.println("Timeout : "+beautifiedDueTime(incomingCachedAnnouncement.getSecondsUntilTimeout()));
 
                 pw.println();
@@ -845,8 +845,8 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                     }
                     pw.print(" (HTTP StatusCode: "+statusCode+", "+statusDetails+")");
                     pw.println();
-                    pw.println("Last heartbeat sent : "+beautifiedTimeDiff(topologyConnectorClient.getLastHeartbeatSent()));
-                    pw.println("Next heartbeat due : "+beautifiedDueTime(topologyConnectorClient.getNextHeartbeatDue()));
+                    pw.println("Last heartbeat sent : "+beautifiedTimeDiff(topologyConnectorClient.getLastPingSent()));
+                    pw.println("Next heartbeat due : "+beautifiedDueTime(topologyConnectorClient.getNextPingDue()));
                 }
                 pw.println();
             }

@@ -29,6 +29,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.discovery.base.connectors.BaseConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +41,7 @@ import org.slf4j.LoggerFactory;
  */
 @Component(metatype = true, label="%config.name", description="%config.description")
 @Service(value = { Config.class })
-public class Config {
+public class Config implements BaseConfig {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -339,7 +340,7 @@ public class Config {
      * Returns the socket connect() timeout used by the topology connector, 0 disables the timeout
      * @return the socket connect() timeout used by the topology connector, 0 disables the timeout
      */
-    public int getConnectionTimeout() {
+    public int getSocketConnectionTimeout() {
         return connectionTimeout;
     }
 
@@ -387,12 +388,16 @@ public class Config {
         return topologyConnectorWhitelist;
     }
 
+    protected String getDiscoveryResourcePath() {
+        return discoveryResourcePath;
+    }
+    
     /**
      * Returns the resource path where cluster instance informations are stored.
      * @return the resource path where cluster instance informations are stored
      */
     public String getClusterInstancesPath() {
-        return discoveryResourcePath + CLUSTERINSTANCES_RESOURCE;
+        return getDiscoveryResourcePath() + CLUSTERINSTANCES_RESOURCE;
     }
 
     /**
@@ -400,7 +405,7 @@ public class Config {
      * @return the resource path where the established view is stored
      */
     public String getEstablishedViewPath() {
-        return discoveryResourcePath + ESTABLISHED_VIEW_RESOURCE;
+        return getDiscoveryResourcePath() + ESTABLISHED_VIEW_RESOURCE;
     }
 
     /**
@@ -408,7 +413,7 @@ public class Config {
      * @return the resource path where ongoing votings are stored
      */
     public String getOngoingVotingsPath() {
-        return discoveryResourcePath + ONGOING_VOTING_RESOURCE;
+        return getDiscoveryResourcePath() + ONGOING_VOTING_RESOURCE;
     }
 
     /**
@@ -416,7 +421,7 @@ public class Config {
      * @return the resource path where the previous view is stored
      */
     public String getPreviousViewPath() {
-        return discoveryResourcePath + PREVIOUS_VIEW_RESOURCE;
+        return getDiscoveryResourcePath() + PREVIOUS_VIEW_RESOURCE;
     }
 
     /**
@@ -515,4 +520,15 @@ public class Config {
             return factor * getHeartbeatInterval();
         }
     }
+
+    @Override
+    public long getConnectorPingInterval() {
+        return getHeartbeatInterval();
+    }
+
+    @Override
+    public long getConnectorPingTimeout() {
+        return getHeartbeatTimeout();
+    }
+
 }

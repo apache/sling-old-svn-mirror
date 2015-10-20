@@ -132,6 +132,32 @@
 			<version>1.0.0-SNAPSHOT</version>
             <scope>provided</scope>
 		</dependency>
+        <!-- besides including discovery.commons' normal jar above, 
+              for testing a few test helper classes are also reused.
+              in order to achieve that, also adding a test/test-jar dependency: --> 
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.discovery.commons</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>test</scope>
+            <type>test-jar</type>
+        </dependency>
+		<dependency>
+			<groupId>org.apache.sling</groupId>
+			<artifactId>org.apache.sling.discovery.base</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+            <scope>provided</scope>
+		</dependency>
+        <!-- besides including discovery.base' normal jar above, 
+              for testing a few test helper classes are also reused.
+              in order to achieve that, also adding a test/test-jar dependency: --> 
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.discovery.base</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>test</scope>
+            <type>test-jar</type>
+        </dependency>
 		<dependency>
 			<groupId>org.apache.sling</groupId>
 			<artifactId>org.apache.sling.api</artifactId>
