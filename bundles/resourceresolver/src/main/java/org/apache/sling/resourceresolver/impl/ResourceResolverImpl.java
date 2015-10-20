@@ -63,7 +63,6 @@ import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.resourceresolver.impl.providers.stateful.CombinedResourceProvider;
 import org.apache.sling.resourceresolver.impl.providers.stateful.ResourceProviderAuthenticator;
-import org.apache.sling.resourceresolver.impl.providers.stateful.StatefulResourceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,7 +105,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /** Resource resolver context. */
     private final ResourceResolverContext context;
 
-    private final StatefulResourceProvider provider;
+    private final CombinedResourceProvider provider;
 
     private final Map<String, Object> authenticationInfo;
 
@@ -142,7 +141,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         this.factory.register(this, context);
     }
 
-    private StatefulResourceProvider createProvider(ResourceProviderStorage storage) throws LoginException {
+    private CombinedResourceProvider createProvider(ResourceProviderStorage storage) throws LoginException {
         final ResourceProviderAuthenticator authenticator = new ResourceProviderAuthenticator(this, authenticationInfo, this.factory.getResourceAccessSecurityTracker());
         authenticator.authenticateAll(storage.getAuthRequiredHandlers());
         return new CombinedResourceProvider(storage, this, authenticator);

@@ -23,7 +23,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -33,126 +32,120 @@ import org.apache.sling.spi.resource.provider.QueryResult;
 import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 
-public class StatefulResourceProviderWrapper implements StatefulResourceProvider {
+public class EmptyResourceProvider implements StatefulResourceProvider {
 
-    protected final StatefulResourceProvider rp;
-
-    public StatefulResourceProviderWrapper(StatefulResourceProvider rp) {
-        this.rp = rp;
+    @Override
+    public ResourceResolver getResourceResolver() {
+        return null;
     }
 
     @Override
     public void logout() {
-        rp.logout();
     }
 
     @Override
     public void refresh() {
-        rp.refresh();
     }
 
     @Override
     public boolean isLive() {
-        return rp.isLive();
+        return false;
     }
 
     @Override
     public Resource getParent(Resource child, List<StatefulResourceProvider> parentProviders) {
-        return rp.getParent(child, parentProviders);
+        return null;
     }
 
     @Override
-    public Resource getResource(String path, Resource parent, Map<String, String> parameters, boolean isResolve,  List<StatefulResourceProvider> parentProviders) {
-        return rp.getResource(path, parent, parameters, isResolve, parentProviders);
+    public Resource getResource(String path, Resource parent, Map<String, String> parameters, boolean isResolve,
+            List<StatefulResourceProvider> parentProviders) {
+        return null;
     }
 
     @Override
     public Iterator<Resource> listChildren(Resource parent, List<StatefulResourceProvider> parentProviders) {
-        return rp.listChildren(parent, parentProviders);
+        return null;
     }
 
     @Override
     public Collection<String> getAttributeNames() {
-        return rp.getAttributeNames();
+        return null;
     }
 
     @Override
     public Object getAttribute(String name) {
-        return rp.getAttribute(name);
+        return null;
     }
 
     @Override
-    public Resource create(String path, Map<String, Object> properties, List<StatefulResourceProvider> parentProviders) throws PersistenceException {
-        return rp.create(path, properties, parentProviders);
+    public Resource create(String path, Map<String, Object> properties, List<StatefulResourceProvider> parentProviders)
+            throws PersistenceException {
+        return null;
     }
 
     @Override
     public void delete(Resource resource, List<StatefulResourceProvider> parentProviders) throws PersistenceException {
-        rp.delete(resource, parentProviders);
     }
 
     @Override
     public void revert() {
-        rp.revert();
     }
 
     @Override
     public void commit() throws PersistenceException {
-        rp.commit();
     }
 
     @Override
     public boolean hasChanges() {
-        return rp.hasChanges();
+        return false;
     }
 
     @Override
     public QueryResult find(Query q, QueryInstructions qi) {
-        return rp.find(q, qi);
+        return null;
     }
 
     @Override
     public String[] getSupportedLanguages() {
-        return rp.getSupportedLanguages();
+        return null;
     }
 
     @Override
     public Iterator<Resource> findResources(String query, String language) {
-        return rp.findResources(query, language);
+        return null;
     }
 
     @Override
     public Iterator<Map<String, Object>> queryResources(String query, String language) {
-        return rp.queryResources(query, language);
+        return null;
     }
 
     @Override
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
-        return rp.adaptTo(type);
+        return null;
     }
 
     @Override
-    public boolean copy(String srcAbsPath, String destAbsPath, List<StatefulResourceProvider> parentProviders) throws PersistenceException {
-        return rp.copy(srcAbsPath, destAbsPath, parentProviders);
+    public boolean copy(String srcAbsPath, String destAbsPath, List<StatefulResourceProvider> parentProviders)
+            throws PersistenceException {
+        return false;
     }
 
     @Override
-    public boolean move(String srcAbsPath, String destAbsPath, List<StatefulResourceProvider> parentProviders) throws PersistenceException {
-        return rp.move(srcAbsPath, destAbsPath, parentProviders);
-    }
-
-    @Override
-    public ResourceResolver getResourceResolver() {
-        return rp.getResourceResolver();
+    public boolean move(String srcAbsPath, String destAbsPath, List<StatefulResourceProvider> parentProviders)
+            throws PersistenceException {
+        return false;
     }
 
     @Override
     public ResourceProvider<Object> getResourceProvider() {
-        return rp.getResourceProvider();
+        return null;
     }
 
     @Override
-    public ResolveContext<Object> getContext(Map<String, String> parameters) throws LoginException {
-        return rp.getContext(parameters);
+    public ResolveContext<Object> getContext(Map<String, String> parameters) {
+        return null;
     }
+
 }

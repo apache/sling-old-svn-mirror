@@ -18,6 +18,7 @@
  */
 package org.apache.sling.resourceresolver.impl;
 
+import java.util.Collections;
 import java.util.Map;
 
 import org.apache.sling.api.resource.ResourceResolver;
@@ -32,20 +33,22 @@ public class BasicResolveContext<T> implements ResolveContext<T> {
 
     private final T providerState;
 
-    private final ResolveContext<?> parentResolveContext;
+    private final ResolveContext<Object> parentResolveContext;
 
-    private final ResourceProvider<?> parentResourceProvider;
+    private final ResourceProvider<Object> parentResourceProvider;
 
     public BasicResolveContext(ResourceResolver resourceResolver, Map<String, String> resolveParameters,
-            T providerState, ResolveContext<?> parentResolveContext, ResourceProvider<?> parentResourceProvider) {
+            T providerState, ResourceProvider<Object> parentResourceProvider, ResolveContext<Object> parentResolveContext) {
         this.resourceResolver = resourceResolver;
-        this.resolveParameters = resolveParameters;
+        this.resolveParameters = resolveParameters == null ? Collections.<String, String> emptyMap()
+                : resolveParameters;
         this.providerState = providerState;
         this.parentResolveContext = parentResolveContext;
         this.parentResourceProvider = parentResourceProvider;
     }
 
-    public BasicResolveContext(ResourceResolver resourceResolver, Map<String, String> resolveParameters, T providerState) {
+    public BasicResolveContext(ResourceResolver resourceResolver, Map<String, String> resolveParameters,
+            T providerState) {
         this(resourceResolver, resolveParameters, providerState, null, null);
     }
 

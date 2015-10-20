@@ -33,6 +33,7 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.QueriableResourceProvider;
 import org.apache.sling.api.resource.RefreshableResourceProvider;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.spi.resource.provider.JCRQueryProvider;
 import org.apache.sling.spi.resource.provider.ResolveContext;
@@ -45,24 +46,58 @@ public class LegacyResourceProviderAdapter extends ResourceProvider<Object> {
 
     private final String[] languages;
 
-    public LegacyResourceProviderAdapter(org.apache.sling.api.resource.ResourceProvider rp, String[] languages) {
+    private final boolean ownsRoot;
+
+    public LegacyResourceProviderAdapter(org.apache.sling.api.resource.ResourceProvider rp, String[] languages, boolean ownsRoot) {
         this.rp = rp;
         this.languages = languages;
+        this.ownsRoot = ownsRoot;
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public Resource getResource(ResolveContext<Object> ctx, String path, Resource parent) {
+        Resource resourceCandidate;
         if (rp instanceof ParametrizableResourceProvider) {
-            return ((ParametrizableResourceProvider) rp).getResource(ctx.getResourceResolver(), path,
+            resourceCandidate = ((ParametrizableResourceProvider) rp).getResource(ctx.getResourceResolver(), path,
                     ctx.getResolveParameters());
         } else {
-            return rp.getResource(ctx.getResourceResolver(), path);
+            resourceCandidate = rp.getResource(ctx.getResourceResolver(), path);
+        }
+
+        ResourceProvider<?> parentProvider = ctx.getParentResourceProvider();
+        ResolveContext parentCtx = ctx.getParentResolveContext();
+        // Ask the parent provider
+        if (resourceCandidate == null && !ownsRoot && parentProvider != null) {
+            return parentProvider.getResource(parentCtx, path, parent);
+        }
+
+        // Support the INTERNAL_CONTINUE_RESOLVING flag
+        Resource fallbackResource = resourceCandidate;
+        if (resourceCandidate != null && parentProvider != null && isContinueResolving(resourceCandidate)) {
+            resourceCandidate = ctx.getParentResourceProvider().getResource(parentCtx, path, parent);
+        }
+        if (resourceCandidate != null) {
+            return resourceCandidate;
+        } else {
+            return fallbackResource;
         }
     }
 
+    private boolean isContinueResolving(Resource resource) {
+        return resource.getResourceMetadata() != null
+                && resource.getResourceMetadata().containsKey(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING);
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public Iterator<Resource> listChildren(ResolveContext<Object> ctx, Resource parent) {
-        return rp.listChildren(parent);
+        Iterator<Resource> children = rp.listChildren(parent);
+        if (children == null && !ownsRoot && ctx.getParentResourceProvider() != null) {
+            children = ctx.getParentResourceProvider().listChildren((ResolveContext) ctx.getParentResolveContext(),
+                    parent);
+        }
+        return children;
     }
 
     @Override
@@ -115,14 +150,19 @@ public class LegacyResourceProviderAdapter extends ResourceProvider<Object> {
         }
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public Resource create(final @Nonnull ResolveContext<Object> ctx, final String path,
             final Map<String, Object> properties) throws PersistenceException {
+        Resource createdResource = null;
         if (rp instanceof ModifyingResourceProvider) {
-            return ((ModifyingResourceProvider) rp).create(ctx.getResourceResolver(), path, properties);
-        } else {
-            return super.create(ctx, path, properties);
+            createdResource = ((ModifyingResourceProvider) rp).create(ctx.getResourceResolver(), path, properties);
         }
+        if (createdResource == null && !ownsRoot && ctx.getParentResourceProvider() != null) {
+            createdResource = ctx.getParentResourceProvider().create((ResolveContext) ctx.getParentResolveContext(),
+                    path, properties);
+        }
+        return createdResource;
     }
 
     @Override

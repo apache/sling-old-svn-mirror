@@ -19,9 +19,11 @@
 package org.apache.sling.resourceresolver.impl.legacy;
 
 import static org.apache.sling.api.resource.QueriableResourceProvider.LANGUAGES;
+import static org.apache.sling.api.resource.ResourceProvider.OWNS_ROOTS;
 import static org.apache.sling.api.resource.ResourceProvider.ROOTS;
 import static org.apache.sling.api.resource.ResourceProvider.USE_RESOURCE_ACCESS_SECURITY;
 import static org.apache.sling.api.resource.ResourceProviderFactory.PROPERTY_REQUIRED;
+import static org.apache.sling.commons.osgi.PropertiesUtil.toBoolean;
 import static org.apache.sling.spi.resource.provider.ResourceProvider.PROPERTY_ADAPTABLE;
 import static org.apache.sling.spi.resource.provider.ResourceProvider.PROPERTY_ATTRIBUTABLE;
 import static org.apache.sling.spi.resource.provider.ResourceProvider.PROPERTY_AUTHENTICATE;
@@ -74,6 +76,7 @@ public class LegacyResourceProviderWhiteboard {
         BundleContext bundleContext = ref.getBundle().getBundleContext();
         ResourceProvider provider = (ResourceProvider) bundleContext.getService(ref);
         String[] propertyNames = ref.getPropertyKeys();
+        boolean ownsRoot = toBoolean(ref.getProperty(OWNS_ROOTS), false);
 
         List<ServiceRegistration> newServices = new ArrayList<ServiceRegistration>();
         for (String path : PropertiesUtil.toStringArray(ref.getProperty(ROOTS), new String[0])) {
@@ -98,7 +101,7 @@ public class LegacyResourceProviderWhiteboard {
             String[] languages = PropertiesUtil.toStringArray(ref.getProperty(LANGUAGES), new String[0]);
             ServiceRegistration reg = bundleContext.registerService(
                     org.apache.sling.spi.resource.provider.ResourceProvider.class.getName(),
-                    new LegacyResourceProviderAdapter(provider, languages), newProps);
+                    new LegacyResourceProviderAdapter(provider, languages, ownsRoot), newProps);
             newServices.add(reg);
         }
         registrations.put(provider, newServices);
@@ -114,6 +117,7 @@ public class LegacyResourceProviderWhiteboard {
         BundleContext bundleContext = ref.getBundle().getBundleContext();
         ResourceProviderFactory factory = (ResourceProviderFactory) bundleContext.getService(ref);
         String[] propertyNames = ref.getPropertyKeys();
+        boolean ownsRoot = toBoolean(ref.getProperty(OWNS_ROOTS), false);
 
         List<ServiceRegistration> newServices = new ArrayList<ServiceRegistration>();
         for (String path : PropertiesUtil.toStringArray(ref.getProperty(ROOTS), new String[0])) {
@@ -141,7 +145,7 @@ public class LegacyResourceProviderWhiteboard {
             String[] languages = PropertiesUtil.toStringArray(ref.getProperty(LANGUAGES), new String[0]);
             ServiceRegistration reg = bundleContext.registerService(
                     org.apache.sling.spi.resource.provider.ResourceProvider.class.getName(),
-                    new LegacyResourceProviderFactoryAdapter(factory, languages), newProps);
+                    new LegacyResourceProviderFactoryAdapter(factory, languages, ownsRoot), newProps);
             newServices.add(reg);
         }
         registrations.put(factory, newServices);

@@ -42,15 +42,18 @@ public class LegacyResourceProviderFactoryAdapter extends ResourceProvider<Legac
 
     private final String[] languages;
 
-    public LegacyResourceProviderFactoryAdapter(ResourceProviderFactory rpFactory, String[] languages) {
+    private final boolean ownsRoot;
+
+    public LegacyResourceProviderFactoryAdapter(ResourceProviderFactory rpFactory, String[] languages, boolean ownsRoot) {
         this.rpFactory = rpFactory;
         this.languages = languages;
+        this.ownsRoot = ownsRoot;
     }
 
     @Nonnull
     public LegacyResourceProviderAdapter authenticate(final @Nonnull Map<String, Object> authenticationInfo)
             throws LoginException {
-        return new LegacyResourceProviderAdapter(rpFactory.getResourceProvider(authenticationInfo), languages);
+        return new LegacyResourceProviderAdapter(rpFactory.getResourceProvider(authenticationInfo), languages, ownsRoot);
     }
 
     public void logout(final @Nonnull LegacyResourceProviderAdapter state) {
