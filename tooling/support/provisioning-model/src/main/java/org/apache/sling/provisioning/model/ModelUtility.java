@@ -51,6 +51,7 @@ public abstract class ModelUtility {
         // features
         for(final Feature feature : additional.getFeatures()) {
             final Feature baseFeature = base.getOrCreateFeature(feature.getName());
+            baseFeature.setType(feature.getType());
 
             // variables
             baseFeature.getVariables().putAll(feature.getVariables());

@@ -39,6 +39,7 @@ class ModelProcessor {
 
         for(final Feature feature : model.getFeatures()) {
             final Feature newFeature = result.getOrCreateFeature(feature.getName());
+            newFeature.setType(feature.getType());
             newFeature.setComment(feature.getComment());
             newFeature.setLocation(feature.getLocation());
 
