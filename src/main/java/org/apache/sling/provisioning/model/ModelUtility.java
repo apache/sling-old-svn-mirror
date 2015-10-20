@@ -53,6 +53,9 @@ public abstract class ModelUtility {
             final Feature baseFeature = base.getOrCreateFeature(feature.getName());
             baseFeature.setType(feature.getType());
 
+            // additional sections
+            baseFeature.getAdditionalSections().addAll(feature.getAdditionalSections());
+
             // variables
             baseFeature.getVariables().putAll(feature.getVariables());
 
@@ -277,33 +280,33 @@ public abstract class ModelUtility {
          */
         String resolve(final Artifact artifact);
     }
-    
+
     /**
      * Parameter builder class for {@link ModelUtility#getEffectiveModel(Model, ResolverOptions)} method.
      */
     public static final class ResolverOptions {
-        
+
         private VariableResolver variableResolver;
         private ArtifactVersionResolver artifactVersionResolver;
-        
+
         public VariableResolver getVariableResolver() {
             return variableResolver;
         }
-        
+
         public ResolverOptions variableResolver(VariableResolver variableResolver) {
             this.variableResolver = variableResolver;
             return this;
         }
-        
+
         public ArtifactVersionResolver getArtifactVersionResolver() {
             return artifactVersionResolver;
         }
-        
+
         public ResolverOptions artifactVersionResolver(ArtifactVersionResolver dependencyVersionResolver) {
             this.artifactVersionResolver = dependencyVersionResolver;
             return this;
         }
-        
+
     }
 
     /**
@@ -318,7 +321,7 @@ public abstract class ModelUtility {
     public static Model getEffectiveModel(final Model model, final VariableResolver resolver) {
         return getEffectiveModel(model, new ResolverOptions().variableResolver(resolver));
     }
-    
+
     /**
      * Replace all variables in the model and return a new model with the replaced values.
      * @param model The base model.
@@ -329,7 +332,7 @@ public abstract class ModelUtility {
     public static Model getEffectiveModel(final Model model) {
         return getEffectiveModel(model, new ResolverOptions());
     }
-    
+
     /**
      * Replace all variables in the model and return a new model with the replaced values.
      * @param model The base model.
@@ -417,7 +420,7 @@ public abstract class ModelUtility {
         }
         return errors;
     }
-    
+
     /**
      * Applies a set of variables to the given model.
      * All variables that are referenced anywhere within the model are detected and passed to the given variable resolver.
@@ -430,7 +433,7 @@ public abstract class ModelUtility {
      * @since 1.3
      */
     public static Model applyVariables(final Model model, final VariableResolver resolver) {
-        
+
         // define delegating resolver that collects all variable names and value per feature
         final Map<String,Map<String,String>> collectedVars = new HashMap<String, Map<String,String>>();
         VariableResolver variableCollector = new VariableResolver() {
@@ -448,10 +451,10 @@ public abstract class ModelUtility {
                 return value;
             }
         };
-        
+
         // use effective model processor to collect variables, but drop the resulting model
         new EffectiveModelProcessor(new ResolverOptions().variableResolver(variableCollector)).process(model);
-        
+
         // define a processor that updates the "variables" sections in the features
         ModelProcessor variablesUpdater = new ModelProcessor() {
             @Override
@@ -466,7 +469,7 @@ public abstract class ModelUtility {
                 return newVariables;
             }
         };
-        
+
         // return model with replaced "variables" sections
         return variablesUpdater.process(model);
     }
@@ -482,7 +485,7 @@ public abstract class ModelUtility {
      * @since 1.3
      */
     public static Model applyArtifactVersions(final Model model, final ArtifactVersionResolver resolver) {
-        
+
         // define a processor that updates the versions of artifacts
         ModelProcessor versionUpdater = new ModelProcessor() {
             @Override
@@ -501,7 +504,7 @@ public abstract class ModelUtility {
                         artifact.getType());
             }
         };
-        
+
         // return model with updated version artifacts
         return versionUpdater.process(model);
     }
