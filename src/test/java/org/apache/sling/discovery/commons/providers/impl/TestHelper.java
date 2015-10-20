@@ -22,12 +22,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
+import java.util.HashMap;
 import java.util.Random;
 import java.util.UUID;
 
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.commons.providers.BaseTopologyView;
+import org.apache.sling.discovery.commons.providers.DefaultClusterView;
+import org.apache.sling.discovery.commons.providers.DefaultInstanceDescription;
 import org.apache.sling.discovery.commons.providers.EventFactory;
+import org.apache.sling.discovery.commons.providers.DummyTopologyView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +39,7 @@ public class TestHelper {
 
     private static final Logger logger = LoggerFactory.getLogger(TestHelper.class);
 
-    public static void assertEvents(ViewStateManagerImpl mgr, Listener listener, TopologyEvent... events) {
+    public static void assertEvents(ViewStateManagerImpl mgr, DummyListener listener, TopologyEvent... events) {
         waitForAsyncEvents(mgr);
         assertEquals(events.length, listener.countEvents());
         for (int i = 0; i < events.length; i++) {
@@ -85,14 +89,14 @@ public class TestHelper {
         }
     }
 
-    public static void assertNoEvents(Listener listener) {
+    public static void assertNoEvents(DummyListener listener) {
         assertEquals(0, listener.countEvents());
     }
 
     /** does couple loops randomly calling handleChanging() (or not) and then handleNewView().
      * Note: random is passed to allow customizing and not hardcoding this method to a particular random 
      * @throws InterruptedException **/
-    public static void randomEventLoop(ViewStateManagerImpl mgr, SimpleDiscoveryService sds, int loopSize, int delayInMillis, final Random random, Listener... listeners) throws InterruptedException {
+    public static void randomEventLoop(ViewStateManagerImpl mgr, DummyDiscoveryService sds, int loopSize, int delayInMillis, final Random random, DummyListener... listeners) throws InterruptedException {
         for(int i=0; i<loopSize; i++) {
             final boolean shouldCallChanging = random.nextBoolean();
             if (shouldCallChanging) {
@@ -113,7 +117,7 @@ public class TestHelper {
                     assertNoEvents(listeners[j]);
                 }
             }
-            final BaseTopologyView view = new SimpleTopologyView().addInstance();
+            final DummyTopologyView view = new DummyTopologyView().addInstance();
             BaseTopologyView[] lastViews = new BaseTopologyView[listeners.length];
             for(int j=0; j<listeners.length; j++) {
                 lastViews[j] = listeners[j].getLastView();
@@ -122,6 +126,7 @@ public class TestHelper {
             if (sds!=null) {
                 sds.setTopoology(view);
             }
+            DummyTopologyView clonedView = view.clone();
             mgr.handleNewView(view);
             if (delayInMillis>0) {
                 logger.debug("randomEventLoop: waiting "+delayInMillis+"ms ...");
@@ -137,24 +142,22 @@ public class TestHelper {
             } else {
                 logger.debug("randomEventLoop: asserting CHANGED event was sent");
                 for(int j=0; j<listeners.length; j++) {
-                    assertEvents(mgr, listeners[j], EventFactory.newChangedEvent(lastViews[j], view));
+                    assertEvents(mgr, listeners[j], EventFactory.newChangedEvent(lastViews[j], clonedView));
                 }
             }
         }
     }
 
-    public static SimpleTopologyView newView(boolean isCurrent, String leaderId, String localId, String... slingIds) {
+    public static DummyTopologyView newView(boolean isCurrent, String leaderId, String localId, String... slingIds) {
         return newView(UUID.randomUUID().toString(), UUID.randomUUID().toString(), isCurrent, leaderId, localId, slingIds);
     }
 
-    public static SimpleTopologyView newView(String syncId, String clusterId, boolean isCurrent, String leaderId, String localId, String... slingIds) {
-        SimpleTopologyView topology = new SimpleTopologyView(syncId);
-        SimpleClusterView cluster = new SimpleClusterView(clusterId);
+    public static DummyTopologyView newView(String syncId, String clusterId, boolean isCurrent, String leaderId, String localId, String... slingIds) {
+        DummyTopologyView topology = new DummyTopologyView(syncId);
+        DefaultClusterView cluster = new DefaultClusterView(clusterId);
         for (String slingId : slingIds) {
-            SimpleInstanceDescription id = new SimpleInstanceDescription(
-                    slingId.equals(leaderId), slingId.equals(localId), slingId, null);
-            id.setClusterView(cluster);
-            cluster.addInstanceDescription(id);
+            DefaultInstanceDescription id = new DefaultInstanceDescription(cluster,
+                    slingId.equals(leaderId), slingId.equals(localId), slingId, new HashMap<String, String>());
             topology.addInstanceDescription(id);
         }
         if (!isCurrent) {

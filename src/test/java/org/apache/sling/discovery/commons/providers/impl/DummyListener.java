@@ -28,13 +28,15 @@ import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.commons.providers.BaseTopologyView;
 
-public class Listener implements TopologyEventListener {
+public class DummyListener implements TopologyEventListener {
 
+    private List<TopologyEvent> allEvents = new LinkedList<TopologyEvent>();
     private List<TopologyEvent> events = new LinkedList<TopologyEvent>();
     private TopologyEvent lastEvent;
     
     public synchronized void handleTopologyEvent(TopologyEvent event) {
         events.add(event);
+        allEvents.add(event);
         lastEvent = event;
     }
     

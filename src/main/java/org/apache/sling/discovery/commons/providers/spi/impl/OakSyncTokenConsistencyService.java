@@ -18,37 +18,30 @@
  */
 package org.apache.sling.discovery.commons.providers.spi.impl;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
-import javax.jcr.Session;
-
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
-import org.apache.sling.api.resource.ModifiableValueMap;
-import org.apache.sling.api.resource.PersistenceException;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.commons.providers.BaseTopologyView;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.sling.discovery.commons.providers.spi.ConsistencyService;
+import org.apache.sling.settings.SlingSettingsService;
 
 /**
  * Inherits the 'sync-token' part from the SyncTokenConsistencyService
  * and adds the 'wait while backlog' part to it, based on
  * the Oak discovery-lite descriptor.
  */
+@Component(immediate = false)
+@Service(value = { ConsistencyService.class })
 public class OakSyncTokenConsistencyService extends SyncTokenConsistencyService {
-
-    private static final String IDMAP_PATH = "/var/discovery/commons/idmap";
 
     static enum BacklogStatus {
         UNDEFINED /* when there was an error retrieving the backlog status with oak */,
@@ -56,87 +49,59 @@ public class OakSyncTokenConsistencyService extends SyncTokenConsistencyService 
         NO_BACKLOG /* when oak's discovery lite descriptor declared we're backlog-free now */
     }
     
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private long backlogWaitTimeoutMillis;
 
-    /** TODO: avoid hardcoding the constant here but use an Oak constant class instead if possible */
-    public static final String OAK_DISCOVERYLITE_CLUSTERVIEW = "oak.discoverylite.clusterview";
+    private long backlogWaitIntervalMillis;
 
-    private boolean initialized = false;
-
-    private final long waitWhileBacklogTimeoutMillis;
+    @Reference
+    private IdMapService idMapService;
+    
+    public static OakSyncTokenConsistencyService testConstructorAndActivate(
+            final DiscoveryLiteConfig commonsConfig,
+            final IdMapService idMapService,
+            final SlingSettingsService settingsService,
+            ResourceResolverFactory resourceResolverFactory) {
+        OakSyncTokenConsistencyService service = testConstructor(commonsConfig, idMapService, settingsService, resourceResolverFactory);
+        service.activate();
+        return service;
+    }
     
     /**
-     * 
+     * for testing only!
      * @param resourceResolverFactory
      * @param slingId the local slingId
      * @param syncTokenTimeoutMillis timeout value in millis after which the
      * sync-token process is cancelled - or -1 if no timeout should be used there
-     * @param waitWhileBacklogTimeoutMillis timeout value in millis after which
+     * @param backlogWaitTimeoutMillis timeout value in millis after which
      * the waiting-while-backlog should be cancelled - or -1 if no timeout should be 
      * used there
      * @throws LoginException when the login for initialization failed
      * @throws JSONException when the descriptor wasn't proper json at init time
      */
-    public OakSyncTokenConsistencyService(ResourceResolverFactory resourceResolverFactory,
-            String slingId, long syncTokenTimeoutMillis, long waitWhileBacklogTimeoutMillis) {
-        super(resourceResolverFactory, slingId, syncTokenTimeoutMillis);
-        this.waitWhileBacklogTimeoutMillis = waitWhileBacklogTimeoutMillis;
-        startBackgroundCheck("idmap-initializer", new BackgroundCheck() {
-            
-            @Override
-            public boolean check() {
-                return ensureInitialized();
-            }
-        }, null, -1);
-    }
-    
-    private boolean ensureInitialized() {
-        if (initialized) {
-            return true;
+    public static OakSyncTokenConsistencyService testConstructor(
+            final DiscoveryLiteConfig commonsConfig,
+            final IdMapService idMapService,
+            final SlingSettingsService settingsService,
+            ResourceResolverFactory resourceResolverFactory) {
+        OakSyncTokenConsistencyService service = new OakSyncTokenConsistencyService();
+        if (commonsConfig == null) {
+            throw new IllegalArgumentException("commonsConfig must not be null");
         }
-        logger.info("ensureInitialized: initializing.");
-        try {
-            initialized = init();
-            return initialized;
-        } catch (LoginException e) {
-            logger.error("ensureInitialized: could not login: "+e, e);
-            return false;
-        } catch (JSONException e) {
-            logger.error("ensureInitialized: got JSONException: "+e, e);
-            return false;
-        } catch (PersistenceException e) {
-            logger.error("ensureInitialized: got PersistenceException: "+e, e);
-            return false;
+        if (resourceResolverFactory == null) {
+            throw new IllegalArgumentException("resourceResolverFactory must not be null");
         }
-    }
-    
-    private boolean init() throws LoginException, JSONException, PersistenceException {
-        ResourceResolver resourceResolver = null;
-        try{
-            resourceResolver = getResourceResolver();
-            JSONObject descriptor = getDescriptor(resourceResolver);
-            if (descriptor == null) {
-                logger.info("init: could not yet get descriptor '"+OAK_DISCOVERYLITE_CLUSTERVIEW+"'!");
-                return false;
-            }
-            Object meObj = descriptor.get("me");
-            if (meObj == null || !(meObj instanceof Number)) {
-                logger.info("init: 'me' value of descriptor not a Number: "+meObj+" (descriptor: "+descriptor+")");
-                return false;
-            }
-            Number me = (Number)meObj;
-            final Resource resource = getOrCreateResource(resourceResolver, IDMAP_PATH);
-            ModifiableValueMap idmap = resource.adaptTo(ModifiableValueMap.class);
-            idmap.put(slingId, me.longValue());
-            resourceResolver.commit();
-            logger.info("init: mapped slingId="+slingId+" to discoveryLiteId="+me);
-            return true;
-        } finally {
-            if (resourceResolver!=null) {
-                resourceResolver.close();
-            }
+        if (settingsService == null) {
+            throw new IllegalArgumentException("settingsService must not be null");
         }
-        
+        service.commonsConfig = commonsConfig;
+        service.resourceResolverFactory = resourceResolverFactory;
+        service.syncTokenTimeoutMillis = commonsConfig.getBgTimeoutMillis();
+        service.syncTokenIntervalMillis = commonsConfig.getBgIntervalMillis();
+        service.idMapService = idMapService;
+        service.settingsService = settingsService;
+        service.backlogWaitIntervalMillis = commonsConfig.getBgIntervalMillis();
+        service.backlogWaitTimeoutMillis = commonsConfig.getBgTimeoutMillis();
+        return service;
     }
     
     @Override
@@ -161,12 +126,17 @@ public class OakSyncTokenConsistencyService extends SyncTokenConsistencyService 
     private void waitWhileBacklog(final BaseTopologyView view, final Runnable runnable) {
         // start backgroundChecking until the backlogStatus 
         // is NO_BACKLOG
-        startBackgroundCheck("OakSyncTokenConsistencyService-waitWhileBacklog", new BackgroundCheck() {
+        startBackgroundCheck("OakSyncTokenConsistencyService-backlog-waiting", new BackgroundCheck() {
             
             @Override
             public boolean check() {
-                if (!ensureInitialized()) {
-                    logger.info("waitWhileBacklog: could not initialize...");
+                try {
+                    if (!idMapService.isInitialized()) {
+                        logger.info("waitWhileBacklog: could not initialize...");
+                        return false;
+                    }
+                } catch (Exception e) {
+                    logger.error("waitWhileBacklog: could not initialized due to "+e, e);
                     return false;
                 }
                 BacklogStatus backlogStatus = getBacklogStatus(view);
@@ -178,7 +148,7 @@ public class OakSyncTokenConsistencyService extends SyncTokenConsistencyService 
                     return false;
                 }
             }
-        }, runnable, waitWhileBacklogTimeoutMillis);
+        }, runnable, backlogWaitTimeoutMillis, backlogWaitIntervalMillis);
     }
     
     private BacklogStatus getBacklogStatus(BaseTopologyView view) {
@@ -186,11 +156,9 @@ public class OakSyncTokenConsistencyService extends SyncTokenConsistencyService 
         ResourceResolver resourceResolver = null;
         try{
             resourceResolver = getResourceResolver();
-            JSONObject descriptor = getDescriptor(resourceResolver);
-            if (descriptor == null) {
-                logger.warn("getBacklogStatus: could not get descriptor '"+OAK_DISCOVERYLITE_CLUSTERVIEW+"'!");
-                return BacklogStatus.UNDEFINED;
-            }
+            DiscoveryLiteDescriptor descriptor = 
+                    DiscoveryLiteDescriptor.getDescriptorFrom(resourceResolver);
+
             // backlog-free means:
             // 1) 'deactivating' must be empty 
             //     (otherwise we indeed have a backlog)
@@ -205,40 +173,28 @@ public class OakSyncTokenConsistencyService extends SyncTokenConsistencyService 
             // * instances in the view but not contained in the descriptor at all
             //     (this might be the case for just-started instances)
             
-            Object activeObj = descriptor.get("active");
-            JSONArray active = (JSONArray) activeObj;
-            Object deactivatingObj = descriptor.get("deactivating");
-            JSONArray deactivating = (JSONArray) deactivatingObj;
+            int[] activeIds = descriptor.getActiveIds();
+            int[] deactivatingIds = descriptor.getDeactivatingIds();
             // we're not worried about 'inactive' ones - as that could
             // be a larger list filled with legacy entries too
             // plus once the instance is inactive there's no need to 
             // check anything further - that one is then backlog-free
             
             // 1) 'deactivating' must be empty 
-            if (deactivating.length()!=0) {
-                logger.info("getBacklogStatus: there are deactivating instances: "+deactivating);
+            if (deactivatingIds.length!=0) {
+                logger.info("getBacklogStatus: there are deactivating instances: "+deactivatingIds);
                 return BacklogStatus.HAS_BACKLOG;
             }
 
-            Resource resource = getOrCreateResource(resourceResolver, IDMAP_PATH);
-            ValueMap idmapValueMap = resource.adaptTo(ValueMap.class);
             ClusterView cluster = view.getLocalInstance().getClusterView();
             Set<String> slingIds = new HashSet<String>();
             for (InstanceDescription instance : cluster.getInstances()) {
                 slingIds.add(instance.getSlingId());
             }
-            Map<Long, String> idmap = new HashMap<Long, String>();
-            for (String slingId : idmapValueMap.keySet()) {
-                Object value = idmapValueMap.get(slingId);
-                if (value instanceof Number) {
-                    Number number = (Number)value;
-                    idmap.put(number.longValue(), slingId);
-                }
-            }
             
-            for(int i=0; i<active.length(); i++) {
-                Number activeId = (Number) active.get(i);
-                String slingId = idmap.get(activeId.longValue());
+            for(int i=0; i<activeIds.length; i++) {
+                int activeId = activeIds[i];
+                String slingId = idMapService.toSlingId(activeId, resourceResolver);
                 // 2) all ids of the descriptor must have a mapping to slingIds
                 if (slingId == null) {
                     logger.info("getBacklogStatus: no slingId found for active id: "+activeId);
@@ -253,14 +209,8 @@ public class OakSyncTokenConsistencyService extends SyncTokenConsistencyService 
 
             logger.info("getBacklogStatus: no backlog (anymore)");
             return BacklogStatus.NO_BACKLOG;
-        } catch (LoginException e) {
-            logger.error("getBacklogStatus: could not login: "+e, e);
-            return BacklogStatus.UNDEFINED;
-        } catch (JSONException e) {
-            logger.error("getBacklogStatus: got JSONException: "+e, e);
-            return BacklogStatus.UNDEFINED;
-        } catch (PersistenceException e) {
-            logger.error("getBacklogStatus: got PersistenceException: "+e, e);
+        } catch(Exception e) {
+            logger.info("getBacklogStatus: failed to determine backlog status: "+e);
             return BacklogStatus.UNDEFINED;
         } finally {
             logger.trace("getBacklogStatus: end");
@@ -270,20 +220,5 @@ public class OakSyncTokenConsistencyService extends SyncTokenConsistencyService 
         }
     }
     
-    /**
-     * {"seq":8,"final":true,"id":"aae34e9a-b08d-409e-be10-9ff4106e5387","me":4,"active":[4],"deactivating":[],"inactive":[1,2,3]}
-     */
-    private JSONObject getDescriptor(ResourceResolver resourceResolver) throws JSONException {
-        Session session = resourceResolver.adaptTo(Session.class);
-        if (session == null) {
-            return null;
-        }
-        String descriptorStr = session.getRepository().getDescriptor(OAK_DISCOVERYLITE_CLUSTERVIEW);
-        if (descriptorStr == null) {
-            return null;
-        }
-        JSONObject descriptor = new JSONObject(descriptorStr);
-        return descriptor;
-    }
 
 }

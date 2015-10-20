@@ -16,14 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.sling.discovery.commons.providers.impl;
 
-/**
- * Provides commons utility for providers of the Discovery API.
- *
- * @version 1.0.0
- */
-@Version("1.0.0")
-package org.apache.sling.discovery.commons.providers;
+import org.apache.sling.discovery.DiscoveryService;
+import org.apache.sling.discovery.TopologyView;
+import org.apache.sling.discovery.commons.providers.BaseTopologyView;
 
-import aQute.bnd.annotation.Version;
+public class DummyDiscoveryService implements DiscoveryService {
 
+    private BaseTopologyView topologyView;
+
+    public void setTopoology(BaseTopologyView topologyView) {
+        this.topologyView = topologyView;
+    }
+    
+    @Override
+    public TopologyView getTopology() {
+        return topologyView;
+    }
+
+}

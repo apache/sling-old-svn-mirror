@@ -16,14 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-/**
- * Provides commons utility for providers of the Discovery API.
- *
- * @version 1.0.0
- */
-@Version("1.0.0")
 package org.apache.sling.discovery.commons.providers;
 
-import aQute.bnd.annotation.Version;
+import java.util.Map;
 
+import org.junit.Test;
+
+public class NonLocalInstanceDescriptionTest extends DefaultInstanceDescriptionTest {
+
+    @Override
+    public DefaultInstanceDescription constructInstanceDescription(
+            DefaultClusterView clusterView, boolean isLeader,
+            boolean isOwn, String theSlingId, Map<String, String> properties)
+            throws Exception {
+
+        return new NonLocalInstanceDescription(clusterView, isLeader,
+                theSlingId, properties);
+    }
+
+    @Override
+    @Test
+    public void testNotOwnInstance() throws Exception {
+        // exclude that one - since incoming instancedescription is always !own!
+    }
+
+}

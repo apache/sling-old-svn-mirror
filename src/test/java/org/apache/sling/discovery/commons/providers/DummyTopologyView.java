@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.discovery.commons.providers.impl;
+package org.apache.sling.discovery.commons.providers;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,28 +30,27 @@ import java.util.UUID;
 import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.InstanceFilter;
-import org.apache.sling.discovery.commons.providers.BaseTopologyView;
 
-public class SimpleTopologyView extends BaseTopologyView {
+public class DummyTopologyView extends BaseTopologyView {
 
     private List<InstanceDescription> instances = new LinkedList<InstanceDescription>();
 
     private final String id;
 
-    public SimpleTopologyView() {
+    public DummyTopologyView() {
         id = UUID.randomUUID().toString();
     }
     
-    public SimpleTopologyView(String id) {
+    public DummyTopologyView(String id) {
         this.id = id;
     }
     
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof SimpleTopologyView)) {
+        if (!(obj instanceof DummyTopologyView)) {
             return false;
         }
-        final SimpleTopologyView other = (SimpleTopologyView) obj;
+        final DummyTopologyView other = (DummyTopologyView) obj;
         if (this==other) {
             return true;
         }
@@ -139,43 +138,37 @@ public class SimpleTopologyView extends BaseTopologyView {
         return id;
     }
 
-    public SimpleTopologyView addInstance() {
+    public DummyTopologyView addInstance() {
         final String slingId = UUID.randomUUID().toString();
         final String clusterId = UUID.randomUUID().toString();
-        final SimpleClusterView cluster = new SimpleClusterView(clusterId);
-        final SimpleInstanceDescription instance = new SimpleInstanceDescription(true, true, slingId, null);
-        instance.setClusterView(cluster);
-        cluster.addInstanceDescription(instance);
+        final DefaultClusterView cluster = new DefaultClusterView(clusterId);
+        final DefaultInstanceDescription instance = new DefaultInstanceDescription(cluster, true, true, slingId, new HashMap<String, String>());
         instances.add(instance);
         return this;
     }
 
-    public SimpleTopologyView addInstance(String slingId, SimpleClusterView cluster, boolean isLeader, boolean isLocal) {
-        final SimpleInstanceDescription instance = new SimpleInstanceDescription(isLeader, isLocal, slingId, null);
-        instance.setClusterView(cluster);
-        cluster.addInstanceDescription(instance);
+    public DummyTopologyView addInstance(String slingId, DefaultClusterView cluster, boolean isLeader, boolean isLocal) {
+        final DefaultInstanceDescription instance = new DefaultInstanceDescription(cluster, isLeader, isLocal, slingId, new HashMap<String, String>());
         instances.add(instance);
         return this;
     }
 
-    public SimpleTopologyView addInstance(InstanceDescription artefact) {
-        final String slingId = artefact.getSlingId();
-        final boolean isLeader = artefact.isLeader();
-        final boolean isLocal = artefact.isLocal();
-        SimpleClusterView cluster = (SimpleClusterView) artefact.getClusterView();
-        final SimpleInstanceDescription instance = new SimpleInstanceDescription(isLeader, isLocal, slingId, artefact.getProperties());
-        instance.setClusterView(cluster);
-        cluster.addInstanceDescription(instance);
-        instances.add(instance);
-        return this;
-    }
+//    public SimpleTopologyView addInstance(InstanceDescription artefact) {
+//        final String slingId = artefact.getSlingId();
+//        final boolean isLeader = artefact.isLeader();
+//        final boolean isLocal = artefact.isLocal();
+//        DefaultClusterViewImpl cluster = (DefaultClusterViewImpl) artefact.getClusterView();
+//        final DefaultInstanceDescriptionImpl instance = new DefaultInstanceDescriptionImpl(cluster, isLeader, isLocal, slingId, artefact.getProperties());
+//        instances.add(instance);
+//        return this;
+//    }
 
-    public SimpleTopologyView removeInstance(String slingId) {
+    public DummyTopologyView removeInstance(String slingId) {
         for (Iterator<InstanceDescription> it = instances.iterator(); it.hasNext();) {
             InstanceDescription id = (InstanceDescription) it.next();
             if (id.getSlingId().equals(slingId)) {
                 it.remove();
-                SimpleClusterView cluster = (SimpleClusterView) id.getClusterView();
+                DefaultClusterView cluster = (DefaultClusterView) id.getClusterView();
                 if (!cluster.removeInstanceDescription(id)) {
                     throw new IllegalStateException("could not remove id: "+id);
                 }
@@ -185,21 +178,20 @@ public class SimpleTopologyView extends BaseTopologyView {
         throw new IllegalStateException("instance not found: "+slingId);
     }
 
-    public static SimpleTopologyView clone(final SimpleTopologyView view) {
-        final SimpleTopologyView result = new SimpleTopologyView(view.id);
+    public static DummyTopologyView clone(final DummyTopologyView view) {
+        final DummyTopologyView result = new DummyTopologyView(view.id);
         final Iterator<InstanceDescription> it = view.getInstances().iterator();
-        Map<String,SimpleClusterView> clusters = new HashMap<String, SimpleClusterView>();
+        Map<String,DefaultClusterView> clusters = new HashMap<String, DefaultClusterView>();
         while(it.hasNext()) {
             InstanceDescription id = it.next();
-            SimpleInstanceDescription clone = clone(id);
             String clusterId = id.getClusterView().getId();
-            SimpleClusterView cluster = clusters.get(clusterId);
+            DefaultClusterView cluster = clusters.get(clusterId);
             if (cluster==null) {
-                cluster = new SimpleClusterView(clusterId);
+                cluster = new DefaultClusterView(clusterId);
                 clusters.put(clusterId, cluster);
             }
-            clone.setClusterView(cluster);
-            result.addInstance(clone);
+            DefaultInstanceDescription clone = clone(cluster, id);
+            result.addInstanceDescription(clone);
         }
         if (!view.isCurrent()) {
             result.setNotCurrent();
@@ -207,11 +199,11 @@ public class SimpleTopologyView extends BaseTopologyView {
         return result;
     }
     
-    private static SimpleInstanceDescription clone(InstanceDescription id) {
-        return new SimpleInstanceDescription(id.isLeader(), id.isLocal(), id.getSlingId(), id.getProperties());
+    private static DefaultInstanceDescription clone(DefaultClusterView cluster, InstanceDescription id) {
+        return new DefaultInstanceDescription(cluster, id.isLeader(), id.isLocal(), id.getSlingId(), id.getProperties());
     }
 
-    public SimpleTopologyView clone() {
-        return SimpleTopologyView.clone(this);
+    public DummyTopologyView clone() {
+        return DummyTopologyView.clone(this);
     }
 }

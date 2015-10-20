@@ -30,10 +30,12 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
-import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.commons.providers.BaseTopologyView;
+import org.apache.sling.discovery.commons.providers.DefaultClusterView;
+import org.apache.sling.discovery.commons.providers.DefaultInstanceDescription;
 import org.apache.sling.discovery.commons.providers.EventFactory;
+import org.apache.sling.discovery.commons.providers.DummyTopologyView;
 import org.apache.sling.discovery.commons.providers.spi.ConsistencyService;
 import org.junit.After;
 import org.junit.Before;
@@ -92,20 +94,20 @@ public class TestViewStateManager {
         defaultRandom= null;
     }
     
-    void assertEvents(Listener listener, TopologyEvent... events) {
+    void assertEvents(DummyListener listener, TopologyEvent... events) {
         TestHelper.assertEvents(mgr, listener, events);
     }
     
     /** does couple loops randomly calling handleChanging() (or not) and then handleNewView().
      * Note: random is passed to allow customizing and not hardcoding this method to a particular random 
      * @throws InterruptedException **/
-    private void randomEventLoop(final Random random, Listener... listeners) throws InterruptedException {
+    private void randomEventLoop(final Random random, DummyListener... listeners) throws InterruptedException {
         TestHelper.randomEventLoop(mgr, null, 100, -1, random, listeners);
     }
     
     @Test
     public void testDuplicateListeners() throws Exception {
-        final Listener listener = new Listener();
+        final DummyListener listener = new DummyListener();
         mgr.bind(listener);
         mgr.bind(listener); // we should be generous and allow duplicate registration
         assertTrue(mgr.unbind(listener));
@@ -121,14 +123,14 @@ public class TestViewStateManager {
     
     @Test
     public void testBindActivateChangingChanged() throws Exception {
-        final Listener listener = new Listener();
+        final DummyListener listener = new DummyListener();
         mgr.bind(listener);
         TestHelper.assertNoEvents(listener);
         mgr.handleActivated();
         TestHelper.assertNoEvents(listener);
         mgr.handleChanging();
         TestHelper.assertNoEvents(listener);
-        final BaseTopologyView view = new SimpleTopologyView().addInstance();
+        final BaseTopologyView view = new DummyTopologyView().addInstance();
         mgr.handleNewView(view);
         assertEvents(listener, EventFactory.newInitEvent(view));
         randomEventLoop(defaultRandom, listener);
@@ -136,14 +138,14 @@ public class TestViewStateManager {
     
     @Test
     public void testBindChangingActivateChanged() throws Exception {
-        final Listener listener = new Listener();
+        final DummyListener listener = new DummyListener();
         mgr.bind(listener);
         TestHelper.assertNoEvents(listener);
         mgr.handleChanging();
         TestHelper.assertNoEvents(listener);
         mgr.handleActivated();
         TestHelper.assertNoEvents(listener);
-        final BaseTopologyView view = new SimpleTopologyView().addInstance();
+        final BaseTopologyView view = new DummyTopologyView().addInstance();
         mgr.handleNewView(view);
         assertEvents(listener, EventFactory.newInitEvent(view));
         randomEventLoop(defaultRandom, listener);
@@ -151,12 +153,12 @@ public class TestViewStateManager {
     
     @Test
     public void testBindChangingChangedActivate() throws Exception {
-        final Listener listener = new Listener();
+        final DummyListener listener = new DummyListener();
         mgr.bind(listener);
         TestHelper.assertNoEvents(listener);
         mgr.handleChanging();
         TestHelper.assertNoEvents(listener);
-        final BaseTopologyView view = new SimpleTopologyView().addInstance();
+        final BaseTopologyView view = new DummyTopologyView().addInstance();
         mgr.handleNewView(view);
         TestHelper.assertNoEvents(listener);
         mgr.handleActivated();
@@ -166,19 +168,19 @@ public class TestViewStateManager {
     
     @Test
     public void testBindChangingChangedChangingActivate() throws Exception {
-        final Listener listener = new Listener();
+        final DummyListener listener = new DummyListener();
         mgr.bind(listener);
         TestHelper.assertNoEvents(listener);
         mgr.handleChanging();
         TestHelper.assertNoEvents(listener);
-        final BaseTopologyView view = new SimpleTopologyView().addInstance();
+        final BaseTopologyView view = new DummyTopologyView().addInstance();
         mgr.handleNewView(view);
         TestHelper.assertNoEvents(listener);
         mgr.handleChanging();
         TestHelper.assertNoEvents(listener);
         mgr.handleActivated();
         TestHelper.assertNoEvents(listener);
-        final BaseTopologyView view2 = new SimpleTopologyView().addInstance();
+        final BaseTopologyView view2 = new DummyTopologyView().addInstance();
         mgr.handleNewView(view2);
         assertEvents(listener, EventFactory.newInitEvent(view2));
         randomEventLoop(defaultRandom, listener);
@@ -186,17 +188,17 @@ public class TestViewStateManager {
     
     @Test
     public void testBindChangedChangingActivate() throws Exception {
-        final Listener listener = new Listener();
+        final DummyListener listener = new DummyListener();
         mgr.bind(listener);
         TestHelper.assertNoEvents(listener);
-        final BaseTopologyView view = new SimpleTopologyView().addInstance();
+        final BaseTopologyView view = new DummyTopologyView().addInstance();
         mgr.handleNewView(view);
         TestHelper.assertNoEvents(listener);
         mgr.handleChanging();
         TestHelper.assertNoEvents(listener);
         mgr.handleActivated();
         TestHelper.assertNoEvents(listener);
-        final BaseTopologyView view2 = new SimpleTopologyView().addInstance();
+        final BaseTopologyView view2 = new DummyTopologyView().addInstance();
         mgr.handleNewView(view2);
         assertEvents(listener, EventFactory.newInitEvent(view2));
         randomEventLoop(defaultRandom, listener);
@@ -204,7 +206,7 @@ public class TestViewStateManager {
     
     @Test
     public void testActivateBindChangingChanged() throws Exception {
-        final Listener listener = new Listener();
+        final DummyListener listener = new DummyListener();
         // first activate
         mgr.handleActivated();
         TestHelper.assertNoEvents(listener); // paranoia
@@ -213,7 +215,7 @@ public class TestViewStateManager {
         TestHelper.assertNoEvents(listener); // there was no changing or changed yet
         mgr.handleChanging();
         TestHelper.assertNoEvents(listener);
-        final BaseTopologyView view = new SimpleTopologyView().addInstance();
+        final BaseTopologyView view = new DummyTopologyView().addInstance();
         mgr.handleNewView(view);
         assertEvents(listener, EventFactory.newInitEvent(view));
         randomEventLoop(defaultRandom, listener);
@@ -221,20 +223,20 @@ public class TestViewStateManager {
 
     @Test
     public void testPropertiesChanged() throws Exception {
-        final Listener listener = new Listener();
+        final DummyListener listener = new DummyListener();
         mgr.handleActivated();
         mgr.bind(listener);
         mgr.handleChanging();
-        SimpleTopologyView oldView = new SimpleTopologyView().addInstance();
-        SimpleInstanceDescription localInstance = 
-                (SimpleInstanceDescription) oldView.getLocalInstance();
+        DummyTopologyView oldView = new DummyTopologyView().addInstance();
+        DefaultInstanceDescription localInstance = 
+                (DefaultInstanceDescription) oldView.getLocalInstance();
         localInstance.setProperty("foo", "bar1");
         mgr.handleNewView(oldView);
         TopologyEvent initEvent = EventFactory.newInitEvent(oldView.clone());
         assertEvents(listener, initEvent);
-        SimpleTopologyView newView = oldView.clone();
+        DummyTopologyView newView = oldView.clone();
         oldView.setNotCurrent();
-        localInstance = (SimpleInstanceDescription) newView.getLocalInstance();
+        localInstance = (DefaultInstanceDescription) newView.getLocalInstance();
         localInstance.setProperty("foo", "bar2");
         mgr.handleNewView(newView);
         Thread.sleep(2000);
@@ -244,7 +246,7 @@ public class TestViewStateManager {
 
     @Test
     public void testActivateChangingBindChanged() throws Exception {
-        final Listener listener = new Listener();
+        final DummyListener listener = new DummyListener();
         // first activate
         mgr.handleActivated();
         TestHelper.assertNoEvents(listener); // paranoia
@@ -253,7 +255,7 @@ public class TestViewStateManager {
         // then bind
         mgr.bind(listener);
         TestHelper.assertNoEvents(listener); // no changed event yet
-        final BaseTopologyView view = new SimpleTopologyView().addInstance();
+        final BaseTopologyView view = new DummyTopologyView().addInstance();
         mgr.handleNewView(view);
         assertEvents(listener, EventFactory.newInitEvent(view));
         randomEventLoop(defaultRandom, listener);
@@ -261,13 +263,13 @@ public class TestViewStateManager {
 
     @Test
     public void testActivateChangingChangedBind() throws Exception {
-        final Listener listener = new Listener();
+        final DummyListener listener = new DummyListener();
         // first activate
         mgr.handleActivated();
         TestHelper.assertNoEvents(listener); // paranoia
         mgr.handleChanging();
         TestHelper.assertNoEvents(listener); // no listener yet
-        final BaseTopologyView view = new SimpleTopologyView().addInstance();
+        final BaseTopologyView view = new DummyTopologyView().addInstance();
         mgr.handleNewView(view);
         TestHelper.assertNoEvents(listener); // no listener yet
         // then bind
@@ -278,8 +280,8 @@ public class TestViewStateManager {
     
     @Test
     public void testBindActivateBindChangingChanged() throws Exception {
-        final Listener listener1 = new Listener();
-        final Listener listener2 = new Listener();
+        final DummyListener listener1 = new DummyListener();
+        final DummyListener listener2 = new DummyListener();
         
         mgr.bind(listener1);
         TestHelper.assertNoEvents(listener1);
@@ -291,7 +293,7 @@ public class TestViewStateManager {
         mgr.handleChanging();
         TestHelper.assertNoEvents(listener1);
         TestHelper.assertNoEvents(listener2);
-        final BaseTopologyView view = new SimpleTopologyView().addInstance();
+        final BaseTopologyView view = new DummyTopologyView().addInstance();
         mgr.handleNewView(view);
         assertEvents(listener1, EventFactory.newInitEvent(view));
         assertEvents(listener2, EventFactory.newInitEvent(view));
@@ -301,8 +303,8 @@ public class TestViewStateManager {
 
     @Test
     public void testBindActivateChangingBindChanged() throws Exception {
-        final Listener listener1 = new Listener();
-        final Listener listener2 = new Listener();
+        final DummyListener listener1 = new DummyListener();
+        final DummyListener listener2 = new DummyListener();
         
         mgr.bind(listener1);
         TestHelper.assertNoEvents(listener1);
@@ -313,7 +315,7 @@ public class TestViewStateManager {
         mgr.bind(listener2);
         TestHelper.assertNoEvents(listener1);
         TestHelper.assertNoEvents(listener2);
-        final BaseTopologyView view = new SimpleTopologyView().addInstance();
+        final BaseTopologyView view = new DummyTopologyView().addInstance();
         mgr.handleNewView(view);
         assertEvents(listener1, EventFactory.newInitEvent(view));
         assertEvents(listener2, EventFactory.newInitEvent(view));
@@ -323,31 +325,31 @@ public class TestViewStateManager {
     
     @Test
     public void testActivateBindChangingDuplicateHandleNewView() throws Exception {
-        final Listener listener = new Listener();
+        final DummyListener listener = new DummyListener();
         mgr.handleActivated();
         mgr.bind(listener);
         mgr.handleChanging();
-        final SimpleTopologyView view = new SimpleTopologyView().addInstance();
+        final DummyTopologyView view = new DummyTopologyView().addInstance();
         mgr.handleNewView(view);
         assertEvents(listener, EventFactory.newInitEvent(view));
-        mgr.handleNewView(SimpleTopologyView.clone(view));
+        mgr.handleNewView(DummyTopologyView.clone(view));
         TestHelper.assertNoEvents(listener);
         randomEventLoop(defaultRandom, listener);
     }
     
     @Test
     public void testActivateBindChangingChangedBindDuplicateHandleNewView() throws Exception {
-        final Listener listener1 = new Listener();
+        final DummyListener listener1 = new DummyListener();
         mgr.handleActivated();
         mgr.bind(listener1);
         mgr.handleChanging();
-        final SimpleTopologyView view = new SimpleTopologyView().addInstance();
+        final DummyTopologyView view = new DummyTopologyView().addInstance();
         mgr.handleNewView(view);
         assertEvents(listener1, EventFactory.newInitEvent(view));
         
-        final Listener listener2 = new Listener();
+        final DummyListener listener2 = new DummyListener();
         mgr.bind(listener2);
-        mgr.handleNewView(SimpleTopologyView.clone(view));
+        mgr.handleNewView(DummyTopologyView.clone(view));
         TestHelper.assertNoEvents(listener1);
         assertEvents(listener2, EventFactory.newInitEvent(view));
         randomEventLoop(defaultRandom, listener1, listener2);
@@ -355,32 +357,32 @@ public class TestViewStateManager {
     
     @Test
     public void testActivateChangedBindDuplicateHandleNewView() throws Exception {
-        final Listener listener = new Listener();
+        final DummyListener listener = new DummyListener();
         mgr.handleActivated();
         TestHelper.assertNoEvents(listener);
-        final SimpleTopologyView view = new SimpleTopologyView().addInstance();
+        final DummyTopologyView view = new DummyTopologyView().addInstance();
         mgr.handleNewView(view);
         TestHelper.assertNoEvents(listener);
         mgr.bind(listener);
         assertEvents(listener, EventFactory.newInitEvent(view));
-        mgr.handleNewView(SimpleTopologyView.clone(view));
+        mgr.handleNewView(DummyTopologyView.clone(view));
         TestHelper.assertNoEvents(listener);
         randomEventLoop(defaultRandom, listener);
     }
     
     @Test
     public void testBindActivateChangedChanged() throws Exception {
-        final Listener listener = new Listener();
+        final DummyListener listener = new DummyListener();
         mgr.handleActivated();
         TestHelper.assertNoEvents(listener);
         mgr.bind(listener);
         TestHelper.assertNoEvents(listener);
         mgr.handleChanging();
         TestHelper.assertNoEvents(listener);
-        final BaseTopologyView view1 = new SimpleTopologyView().addInstance();
+        final BaseTopologyView view1 = new DummyTopologyView().addInstance();
         mgr.handleNewView(view1);
         assertEvents(listener, EventFactory.newInitEvent(view1));
-        final BaseTopologyView view2 = new SimpleTopologyView().addInstance();
+        final BaseTopologyView view2 = new DummyTopologyView().addInstance();
         mgr.handleNewView(view2);
         assertEvents(listener, EventFactory.newChangingEvent(view1), EventFactory.newChangedEvent(view1, view2));
         randomEventLoop(defaultRandom, listener);
@@ -388,12 +390,12 @@ public class TestViewStateManager {
     
     @Test
     public void testBindActivateChangedDeactivateChangingActivateChanged() throws Exception {
-        final Listener listener = new Listener();
+        final DummyListener listener = new DummyListener();
         mgr.bind(listener);
         TestHelper.assertNoEvents(listener);
         mgr.handleActivated();
         TestHelper.assertNoEvents(listener);
-        final BaseTopologyView view1 = new SimpleTopologyView().addInstance();
+        final BaseTopologyView view1 = new DummyTopologyView().addInstance();
         mgr.handleNewView(view1);
         assertEvents(listener, EventFactory.newInitEvent(view1));
         mgr.handleDeactivated();
@@ -403,42 +405,42 @@ public class TestViewStateManager {
         mgr.bind(listener); // need to bind again after deactivate
         mgr.handleActivated();
         TestHelper.assertNoEvents(listener);
-        final BaseTopologyView view2 = new SimpleTopologyView().addInstance();
+        final BaseTopologyView view2 = new DummyTopologyView().addInstance();
         mgr.handleNewView(view2);
         assertEvents(listener, EventFactory.newInitEvent(view2));
     }
 
     @Test
     public void testBindActivateChangedDeactivateChangedActivateChanged() throws Exception {
-        final Listener listener = new Listener();
+        final DummyListener listener = new DummyListener();
         mgr.bind(listener);
         TestHelper.assertNoEvents(listener);
         mgr.handleActivated();
         TestHelper.assertNoEvents(listener);
-        final BaseTopologyView view1 = new SimpleTopologyView().addInstance();
+        final BaseTopologyView view1 = new DummyTopologyView().addInstance();
         mgr.handleNewView(view1);
         assertEvents(listener, EventFactory.newInitEvent(view1));
         mgr.handleDeactivated();
         TestHelper.assertNoEvents(listener);
-        final BaseTopologyView view2 = new SimpleTopologyView().addInstance();
+        final BaseTopologyView view2 = new DummyTopologyView().addInstance();
         mgr.handleNewView(view2);
         TestHelper.assertNoEvents(listener);
         mgr.bind(listener); // need to bind again after deactivate
         mgr.handleActivated();
         assertEvents(listener, EventFactory.newInitEvent(view2));
-        final BaseTopologyView view3 = new SimpleTopologyView().addInstance();
+        final BaseTopologyView view3 = new DummyTopologyView().addInstance();
         mgr.handleNewView(view3);
         assertEvents(listener, EventFactory.newChangingEvent(view2), EventFactory.newChangedEvent(view2, view3));
     }
 
     @Test
     public void testBindActivateChangedChangingDeactivateActivateChangingChanged() throws Exception {
-        final Listener listener = new Listener();
+        final DummyListener listener = new DummyListener();
         mgr.bind(listener);
         TestHelper.assertNoEvents(listener);
         mgr.handleActivated();
         TestHelper.assertNoEvents(listener);
-        final BaseTopologyView view1 = new SimpleTopologyView().addInstance();
+        final BaseTopologyView view1 = new DummyTopologyView().addInstance();
         mgr.handleNewView(view1);
         assertEvents(listener, EventFactory.newInitEvent(view1));
         mgr.handleChanging();
@@ -450,7 +452,7 @@ public class TestViewStateManager {
         TestHelper.assertNoEvents(listener);
         mgr.handleChanging();
         TestHelper.assertNoEvents(listener);
-        final BaseTopologyView view2 = new SimpleTopologyView().addInstance();
+        final BaseTopologyView view2 = new DummyTopologyView().addInstance();
         mgr.handleNewView(view2);
         assertEvents(listener, EventFactory.newInitEvent(view2));
     }
@@ -464,7 +466,7 @@ public class TestViewStateManager {
         final ReentrantLock lock = new ReentrantLock();
         final ConsistencyServiceWithSemaphore cs = new ConsistencyServiceWithSemaphore(lock, serviceSemaphore );
         mgr = new ViewStateManagerImpl(lock, cs);
-        final Listener listener = new Listener();
+        final DummyListener listener = new DummyListener();
         mgr.bind(listener);
         TestHelper.assertNoEvents(listener);
         mgr.handleActivated();
@@ -472,8 +474,8 @@ public class TestViewStateManager {
         final String slingId1 = UUID.randomUUID().toString();
         final String slingId2 = UUID.randomUUID().toString();
         final String clusterId = UUID.randomUUID().toString();
-        final SimpleClusterView cluster = new SimpleClusterView(clusterId);
-        final SimpleTopologyView view1 = new SimpleTopologyView()
+        final DefaultClusterView cluster = new DefaultClusterView(clusterId);
+        final DummyTopologyView view1 = new DummyTopologyView()
                 .addInstance(slingId1, cluster, true, true)
                 .addInstance(slingId2, cluster, false, false);
         async(new Runnable() {
@@ -488,7 +490,7 @@ public class TestViewStateManager {
         serviceSemaphore.release(1);
         Thread.sleep(1000);
         assertEvents(listener, EventFactory.newInitEvent(view1));
-        final SimpleTopologyView view2 = view1.clone();
+        final DummyTopologyView view2 = view1.clone();
         mgr.handleChanging();
         assertEvents(listener, EventFactory.newChangingEvent(view1));
         view2.removeInstance(slingId2);
@@ -526,7 +528,7 @@ public class TestViewStateManager {
         final ReentrantLock lock = new ReentrantLock();
         final ConsistencyServiceWithSemaphore cs = new ConsistencyServiceWithSemaphore(lock, serviceSemaphore );
         mgr = new ViewStateManagerImpl(lock, cs);
-        final Listener listener = new Listener();
+        final DummyListener listener = new DummyListener();
         mgr.bind(listener);
         TestHelper.assertNoEvents(listener);
         mgr.handleActivated();
@@ -535,13 +537,13 @@ public class TestViewStateManager {
         final String slingId2 = UUID.randomUUID().toString();
         final String slingId3 = UUID.randomUUID().toString();
         final String clusterId = UUID.randomUUID().toString();
-        final SimpleClusterView cluster = new SimpleClusterView(clusterId);
-        final SimpleTopologyView view1 = new SimpleTopologyView()
+        final DefaultClusterView cluster = new DefaultClusterView(clusterId);
+        final DummyTopologyView view1 = new DummyTopologyView()
                 .addInstance(slingId1, cluster, true, true)
                 .addInstance(slingId2, cluster, false, false)
                 .addInstance(slingId3, cluster, false, false);
-        final SimpleTopologyView view2 = SimpleTopologyView.clone(view1).removeInstance(slingId2);
-        final SimpleTopologyView view3 = SimpleTopologyView.clone(view1).removeInstance(slingId2).removeInstance(slingId3);
+        final DummyTopologyView view2 = DummyTopologyView.clone(view1).removeInstance(slingId2);
+        final DummyTopologyView view3 = DummyTopologyView.clone(view1).removeInstance(slingId2).removeInstance(slingId3);
         async(new Runnable() {
 
             public void run() {

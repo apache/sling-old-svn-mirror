@@ -16,23 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.discovery.commons.providers.impl;
+package org.apache.sling.discovery.commons.providers.spi;
 
-import org.apache.sling.discovery.DiscoveryService;
-import org.apache.sling.discovery.TopologyView;
-import org.apache.sling.discovery.commons.providers.BaseTopologyView;
+import org.apache.sling.discovery.commons.providers.DefaultClusterView;
 
-public class SimpleDiscoveryService implements DiscoveryService {
+public class LocalClusterView extends DefaultClusterView {
 
-    private BaseTopologyView topologyView;
+    private final String localClusterSyncTokenId;
 
-    public void setTopoology(BaseTopologyView topologyView) {
-        this.topologyView = topologyView;
+    public LocalClusterView(String id, String localClusterSyncTokenId) {
+        super(id);
+        this.localClusterSyncTokenId = localClusterSyncTokenId;
     }
     
-    @Override
-    public TopologyView getTopology() {
-        return topologyView;
+    public String getLocalClusterSyncTokenId() {
+        return localClusterSyncTokenId;
     }
 
 }

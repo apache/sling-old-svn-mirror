@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
  * appropriately. Additionally, the ConsistencyService callback will
  * also be locked using the provided lock object.
  */
-class ViewStateManagerImpl implements ViewStateManager {
+public class ViewStateManagerImpl implements ViewStateManager {
 
     private static final Logger logger = LoggerFactory.getLogger(ViewStateManagerImpl.class);
     
@@ -412,10 +412,13 @@ class ViewStateManagerImpl implements ViewStateManager {
         if (minEventDelayHandler!=null) {
             if (minEventDelayHandler.handlesNewView(newView)) {
                 return;// true;
+            } else {
+                logger.debug("handleNewView: event delaying not applicable this time, invoking hanldeNewViewNonDelayed next.");
             }
+        } else {
+            logger.debug("handleNewView: minEventDelayHandler not set, invoking hanldeNewViewNonDelayed...");
         }
-        logger.debug("handleNewView: minEventDelayHandler not set or not applicable this time, invoking hanldeNewViewNonDelayed...");
-        /*return */handleNewViewNonDelayed(newView);
+        handleNewViewNonDelayed(newView);
     }
 
     boolean handleNewViewNonDelayed(final BaseTopologyView newView) {
@@ -521,10 +524,11 @@ class ViewStateManagerImpl implements ViewStateManager {
                         try{
                             logger.debug("consistencyService.callback.run: lock aquired. (modCnt should be {}, is {})", lastModCnt, modCnt);
                             if (modCnt!=lastModCnt) {
-                                logger.debug("consistencyService.callback.run: modCnt changed (from {} to {}) - ignoring",
+                                logger.info("consistencyService.callback.run: modCnt changed (from {} to {}) - ignoring",
                                         lastModCnt, modCnt);
                                 return;
                             }
+                            logger.info("consistencyService.callback.run: invoking doHandleConsistent.");
                             // else:
                             doHandleConsistent(newView);
                         } finally {
@@ -618,6 +622,25 @@ class ViewStateManagerImpl implements ViewStateManager {
     /** get-hook for testing only! **/
     AsyncEventSender getAsyncEventSender() {
         return asyncEventSender;
+    }
+
+    @Override
+    public boolean waitForAsyncEvents(long timeout) {
+        long end = System.currentTimeMillis() + timeout;
+        while(asyncEventSender.hasInFlightEvent() || 
+                (minEventDelayHandler!=null && minEventDelayHandler.isDelaying())) {
+            if (timeout==0) {
+                return false;
+            }
+            if (timeout<0 || System.currentTimeMillis()<end) {
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    // ignore
+                }
+            }
+        }
+        return true;
     }
     
 }

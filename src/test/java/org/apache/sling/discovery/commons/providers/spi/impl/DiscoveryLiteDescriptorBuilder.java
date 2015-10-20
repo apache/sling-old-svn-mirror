@@ -25,45 +25,68 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 
 // {"seq":8,"final":true,"id":"aae34e9a-b08d-409e-be10-9ff4106e5387","me":4,"active":[4],"deactivating":[],"inactive":[1,2,3]}
-public class DiscoLite {
+public class DiscoveryLiteDescriptorBuilder {
     
     private int seqNum;
     private int me;
     private Integer[] activeIds = new Integer[0];
     private Integer[] inactiveIds = new Integer[0];
     private Integer[] deactivating = new Integer[0];
+    private String id;
+    private boolean isFinal = false;
 
-    public DiscoLite() {
+    public DiscoveryLiteDescriptorBuilder() {
         // nothing here
     }
     
-    public DiscoLite seq(int seqNum) {
+    @Override
+    public String toString() {
+        try {
+            return asJson();
+        } catch (JSONException e) {
+            return "A DiscoLite["+e+"]";
+        }
+    }
+    
+    public DiscoveryLiteDescriptorBuilder setFinal(boolean isFinal) {
+        this.isFinal = isFinal;
+        return this;
+    }
+
+    public DiscoveryLiteDescriptorBuilder seq(int seqNum) {
         this.seqNum = seqNum;
         return this;
     }
 
-    public DiscoLite me(int me) {
+    public DiscoveryLiteDescriptorBuilder me(int me) {
         this.me = me;
         return this;
     }
 
-    public DiscoLite activeIds(Integer... activeIds) {
+    public DiscoveryLiteDescriptorBuilder id(String id) {
+        this.id = id;
+        return this;
+    }
+
+    public DiscoveryLiteDescriptorBuilder activeIds(Integer... activeIds) {
         this.activeIds = activeIds;
         return this;
     }
 
-    public DiscoLite inactiveIds(Integer... inactiveIds) {
+    public DiscoveryLiteDescriptorBuilder inactiveIds(Integer... inactiveIds) {
         this.inactiveIds = inactiveIds;
         return this;
     }
 
-    public DiscoLite deactivatingIds(Integer... deactivating) {
+    public DiscoveryLiteDescriptorBuilder deactivatingIds(Integer... deactivating) {
         this.deactivating = deactivating;
         return this;
     }
     
     public String asJson() throws JSONException {
         JSONObject json = new JSONObject();
+        json.put("id", id);
+        json.put("final", isFinal);
         json.put("me", me);
         json.put("seq", seqNum);
         json.put("active", new JSONArray(Arrays.asList(activeIds)));
@@ -71,4 +94,5 @@ public class DiscoLite {
         json.put("deactivating", new JSONArray(Arrays.asList(deactivating)));
         return json.toString();
     }
+
 }

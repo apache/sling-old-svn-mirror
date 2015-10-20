@@ -25,7 +25,7 @@ import java.util.NoSuchElementException;
 
 import org.apache.sling.commons.scheduler.Scheduler;
 
-public class SimpleScheduler implements Scheduler {
+public class DummyScheduler implements Scheduler {
 
     private boolean failMode;
 

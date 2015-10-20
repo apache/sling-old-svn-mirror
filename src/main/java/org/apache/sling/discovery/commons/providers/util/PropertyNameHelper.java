@@ -16,14 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.sling.discovery.commons.providers.util;
 
-/**
- * Provides commons utility for providers of the Discovery API.
- *
- * @version 1.0.0
- */
-@Version("1.0.0")
-package org.apache.sling.discovery.commons.providers;
+public class PropertyNameHelper {
 
-import aQute.bnd.annotation.Version;
+    /** SLING-2883 : properly test for valid property names **/
+    public static boolean isValidPropertyName(String name) {
+        if (name==null || name.length()==0) {
+            return false;
+        }
+        return name.matches("[a-zA-Z0-9._-]+");
+    }
 
+}
