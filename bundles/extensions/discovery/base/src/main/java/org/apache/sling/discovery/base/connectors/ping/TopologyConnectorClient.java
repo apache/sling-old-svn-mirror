@@ -166,7 +166,7 @@ public class TopologyConnectorClient implements
     	// setting the connection timeout (idle connection, configured in seconds)
     	putRequest.setConfig(RequestConfig.
     			custom().
-    			setConnectTimeout(1000*config.getSocketConnectionTimeout()).
+    			setConnectTimeout(1000*config.getSocketConnectTimeout()).
     			build());
 
         Announcement resultingAnnouncement = null;
@@ -460,7 +460,7 @@ public class TopologyConnectorClient implements
         // setting the connection timeout (idle connection, configured in seconds)
         deleteRequest.setConfig(RequestConfig.
         		custom().
-        		setConnectTimeout(1000*config.getSocketConnectionTimeout()).
+        		setConnectTimeout(1000*config.getSocketConnectTimeout()).
         		build());
 
         try {
