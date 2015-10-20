@@ -58,6 +58,9 @@ class MinEventDelayHandler {
             throw new IllegalArgumentException("discoveryService must not be null");
         }
         this.discoveryService = discoveryService;
+        if (scheduler==null) {
+            throw new IllegalArgumentException("scheduler must not be null");
+        }
         this.scheduler = scheduler;
         if (minEventDelaySecs<=0) {
             throw new IllegalArgumentException("minEventDelaySecs must be greater than 0 (is "+minEventDelaySecs+")");
@@ -79,10 +82,18 @@ class MinEventDelayHandler {
             return true;
         }
         
-        if (!viewStateManager.hadPreviousView() 
-                || viewStateManager.isPropertiesDiff(newView) 
-                || viewStateManager.unchanged(newView)) {
-            logger.info("handleNewView: we never had a previous view, so we mustn't delay");
+        if (!viewStateManager.hadPreviousView()) {
+            logger.info("handlesNewView: never had a previous view, hence no delaying applicable");
+            return false;
+        }
+        
+        if (viewStateManager.isPropertiesDiff(newView)) {
+            logger.info("handlesNewView: only properties differ, hence no delaying applicable");
+            return false;
+        }
+        
+        if (viewStateManager.unchanged(newView)) {
+            logger.info("handlesNewView: view is unchanged, hence no delaying applicable");
             return false;
         }
         
@@ -90,6 +101,15 @@ class MinEventDelayHandler {
         if (!triggerAsyncDelaying(newView)) {
             logger.info("handleNewView: could not trigger async delaying, sending new view now.");
             viewStateManager.handleNewViewNonDelayed(newView);
+        } else {
+            // if triggering the async event was successful, then we should also
+            // ensure that we sent out a TOPOLOGY_CHANGING *before* that delayed event hits.
+            //
+            // and, we're still in lock.lock() - so we are safe to do a handleChanging() here
+            // even though there is the very unlikely possibility that the async-delay-thread
+            // would compete - but even if it would, thanks to the lock.lock() that would be safe.
+            // so: we're going to do a handleChanging here:
+            viewStateManager.handleChanging();
         }
         return true;
     }
@@ -163,6 +183,11 @@ class MinEventDelayHandler {
             logger.info("runAfter: could not schedule a job: "+e);
             return false;
         }
+    }
+
+    /** for testing only **/
+    public boolean isDelaying() {
+        return isDelaying;
     }
 
 }

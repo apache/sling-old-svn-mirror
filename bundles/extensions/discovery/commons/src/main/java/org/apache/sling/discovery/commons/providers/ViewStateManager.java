@@ -88,4 +88,14 @@ public interface ViewStateManager {
      */
     void handleNewView(BaseTopologyView newView);
 
+    /** 
+     * for testing only: wait for any potentially queued async events to be delivered 
+     * before returning.
+     * <p>
+     * @param timeout time in millis to wait for at max - 0 to not wait at all - -1 
+     * to wait indefinitely
+     * @return true if no more async events exist, false if the timeout hit early 
+     */
+    boolean waitForAsyncEvents(long timeout);
+
 }

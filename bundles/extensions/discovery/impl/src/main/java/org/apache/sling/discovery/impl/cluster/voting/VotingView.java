@@ -34,10 +34,10 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
 import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.common.View;
 import org.apache.sling.discovery.impl.common.ViewHelper;
-import org.apache.sling.discovery.impl.common.resource.ResourceHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

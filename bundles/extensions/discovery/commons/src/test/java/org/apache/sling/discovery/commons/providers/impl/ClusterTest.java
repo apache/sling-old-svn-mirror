@@ -82,7 +82,7 @@ public class ClusterTest {
         }
     }
     
-    private void assertCountEvents(ViewStateManagerImpl mgr, Listener l, TopologyEvent.Type... types) throws InterruptedException {
+    private void assertCountEvents(ViewStateManagerImpl mgr, DummyListener l, TopologyEvent.Type... types) throws InterruptedException {
         waitForInflightEvents(mgr);
         assertEquals(types.length, l.countEvents());
         Iterator<TopologyEvent> it = l.getEvents().iterator();
@@ -123,12 +123,12 @@ public class ClusterTest {
         final String slingId2 = UUID.randomUUID().toString();
         
         // bind l1
-        Listener l1 = new Listener();
+        DummyListener l1 = new DummyListener();
         mgr1.bind(l1);
         assertCountEvents(mgr1, l1);
         
         // bind l2
-        Listener l2 = new Listener();
+        DummyListener l2 = new DummyListener();
         mgr2.bind(l2);
         assertCountEvents(mgr2, l2);
         

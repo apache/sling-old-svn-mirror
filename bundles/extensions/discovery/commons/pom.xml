@@ -31,10 +31,8 @@
     <packaging>bundle</packaging>
     <version>1.0.0-SNAPSHOT</version>
 
-    <name>Apache Sling Discovery Commons Bundle</name>
-    <description>
-        Commons services related to Sling Discovery.
-    </description>
+    <name>Apache Sling Discovery Commons</name>
+    <description>Common services related to Sling Discovery</description>
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/discovery/commons</connection>
@@ -48,6 +46,21 @@
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
+            </plugin>
+			<!-- discovery.commons exports a few test classes for reuse.
+                 In order for others to use these, the test-jar must be built/installed too.
+                 Note that 'mvn -Dmaven.test.skip=true' does NOT build the test-jar,
+                 however 'mvn -DskipTests' does. -->
+             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -175,5 +188,11 @@
         	<type>bundle</type>
         	<scope>test</scope>
         </dependency>
+		<dependency>
+			<groupId>org.apache.sling</groupId>
+			<artifactId>org.apache.sling.settings</artifactId>
+			<version>1.2.2</version>
+            <scope>provided</scope>
+		</dependency>
     </dependencies>
 </project>

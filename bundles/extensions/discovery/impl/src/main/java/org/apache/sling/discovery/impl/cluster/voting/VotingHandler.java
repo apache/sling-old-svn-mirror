@@ -38,8 +38,8 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
 import org.apache.sling.discovery.impl.Config;
-import org.apache.sling.discovery.impl.common.resource.ResourceHelper;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
@@ -84,6 +84,16 @@ public class VotingHandler implements EventHandler {
      * to ensure the leaderElectionId is correctly set upon voting
      */
     private volatile String leaderElectionId;
+    
+    /** for testing only **/
+    public static VotingHandler testConstructor(SlingSettingsService settingsService,
+            ResourceResolverFactory factory, Config config) {
+        VotingHandler handler = new VotingHandler();
+        handler.slingSettingsService = settingsService;
+        handler.resolverFactory = factory;
+        handler.config = config;
+        return handler;
+    }
 
     protected void activate(final ComponentContext context) {
         slingId = slingSettingsService.getSlingId();
@@ -140,6 +150,7 @@ public class VotingHandler implements EventHandler {
      */
     public synchronized void analyzeVotings(final ResourceResolver resourceResolver) throws PersistenceException {
         // SLING-3406: refreshing resourceResolver/session here to get the latest state from the repository
+        logger.debug("analyzeVotings: start. slingId: {}", slingId);
         resourceResolver.refresh();
         VotingView winningVote = VotingHelper.getWinningVoting(
                 resourceResolver, config);

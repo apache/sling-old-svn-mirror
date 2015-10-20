@@ -47,26 +47,25 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.scheduler.Scheduler;
-import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.DiscoveryService;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.PropertyProvider;
 import org.apache.sling.discovery.TopologyEventListener;
-import org.apache.sling.discovery.TopologyView;
+import org.apache.sling.discovery.base.commons.BaseDiscoveryService;
+import org.apache.sling.discovery.base.commons.ClusterViewService;
+import org.apache.sling.discovery.base.commons.DefaultTopologyView;
+import org.apache.sling.discovery.base.connectors.announcement.AnnouncementRegistry;
+import org.apache.sling.discovery.base.connectors.ping.ConnectorRegistry;
 import org.apache.sling.discovery.commons.providers.BaseTopologyView;
+import org.apache.sling.discovery.commons.providers.DefaultClusterView;
+import org.apache.sling.discovery.commons.providers.DefaultInstanceDescription;
 import org.apache.sling.discovery.commons.providers.ViewStateManager;
 import org.apache.sling.discovery.commons.providers.impl.ViewStateManagerFactory;
 import org.apache.sling.discovery.commons.providers.spi.ConsistencyService;
-import org.apache.sling.discovery.impl.cluster.ClusterViewService;
-import org.apache.sling.discovery.impl.cluster.UndefinedClusterViewException;
-import org.apache.sling.discovery.impl.cluster.UndefinedClusterViewException.Reason;
-import org.apache.sling.discovery.impl.common.DefaultClusterViewImpl;
-import org.apache.sling.discovery.impl.common.DefaultInstanceDescriptionImpl;
+import org.apache.sling.discovery.commons.providers.spi.impl.IdMapService;
+import org.apache.sling.discovery.commons.providers.util.PropertyNameHelper;
+import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
 import org.apache.sling.discovery.impl.common.heartbeat.HeartbeatHandler;
-import org.apache.sling.discovery.impl.common.resource.ResourceHelper;
-import org.apache.sling.discovery.impl.topology.TopologyViewImpl;
-import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistry;
-import org.apache.sling.discovery.impl.topology.connector.ConnectorRegistry;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -81,7 +80,7 @@ import org.slf4j.LoggerFactory;
  */
 @Component(immediate = true)
 @Service(value = { DiscoveryService.class, DiscoveryServiceImpl.class })
-public class DiscoveryServiceImpl implements DiscoveryService {
+public class DiscoveryServiceImpl extends BaseDiscoveryService {
 
     private final static Logger logger = LoggerFactory.getLogger(DiscoveryServiceImpl.class);
 
@@ -126,12 +125,12 @@ public class DiscoveryServiceImpl implements DiscoveryService {
 
     @Reference
     private Config config;
+    
+    @Reference
+    private IdMapService idMapService;
 
     /** the slingId of the local instance **/
     private String slingId;
-
-    /** the old view previously valid and sent to the TopologyEventListeners **/
-    private TopologyViewImpl oldView;
 
     private ServiceRegistration mbeanRegistration;
 
@@ -139,6 +138,27 @@ public class DiscoveryServiceImpl implements DiscoveryService {
 
     private ReentrantLock viewStateManagerLock; 
     
+    /** for testing only **/
+    public static BaseDiscoveryService testConstructor(ResourceResolverFactory resourceResolverFactory, 
+            AnnouncementRegistry announcementRegistry, 
+            ConnectorRegistry connectorRegistry,
+            ClusterViewService clusterViewService,
+            HeartbeatHandler heartbeatHandler,
+            SlingSettingsService settingsService,
+            Scheduler scheduler,
+            Config config) {
+        DiscoveryServiceImpl discoService = new DiscoveryServiceImpl();
+        discoService.resourceResolverFactory = resourceResolverFactory;
+        discoService.announcementRegistry = announcementRegistry;
+        discoService.connectorRegistry = connectorRegistry;
+        discoService.clusterViewService = clusterViewService;
+        discoService.heartbeatHandler = heartbeatHandler;
+        discoService.settingsService = settingsService;
+        discoService.scheduler = scheduler;
+        discoService.config = config;
+        return discoService;
+    }
+
     public DiscoveryServiceImpl() {
         viewStateManagerLock = new ReentrantLock();
         final ConsistencyService consistencyService = new ConsistencyService() {
@@ -174,12 +194,23 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         }
     }
     
-    private void setOldView(TopologyViewImpl view) {
-        if (view==null) {
-            throw new IllegalArgumentException("view must not be null");
+    protected void handleIsolatedFromTopology() {
+        if (heartbeatHandler!=null) {
+            // SLING-5030 part 2: when we detect being isolated we should
+            // step at the end of the leader-election queue and 
+            // that can be achieved by resetting the leaderElectionId
+            // (which will in turn take effect on the next round of
+            // voting, or also double-checked when the local instance votes)
+            //
+            //TODO:
+            // Note that when the local instance doesn't notice
+            // an 'ISOLATED_FROM_TOPOLOGY' case, then the leaderElectionId
+            // will not be reset. Which means that it then could potentially
+            // regain leadership.
+            if (heartbeatHandler.resetLeaderElectionId()) {
+                logger.info("getTopology: reset leaderElectionId to force this instance to the end of the instance order (thus incl not to remain leader)");
+            }
         }
-        logger.debug("setOldView: oldView is now: {}", oldView);
-        oldView = view;
     }
     
     /**
@@ -209,19 +240,19 @@ public class DiscoveryServiceImpl implements DiscoveryService {
             // this way for the single-instance case the clusterId can
             // remain the same between a getTopology() that is invoked before
             // the first TOPOLOGY_INIT and afterwards
-            DefaultClusterViewImpl isolatedCluster = new DefaultClusterViewImpl(isolatedClusterId);
+            DefaultClusterView isolatedCluster = new DefaultClusterView(isolatedClusterId);
             Map<String, String> emptyProperties = new HashMap<String, String>();
-            DefaultInstanceDescriptionImpl isolatedInstance = 
-                    new DefaultInstanceDescriptionImpl(isolatedCluster, true, true, slingId, emptyProperties);
+            DefaultInstanceDescription isolatedInstance = 
+                    new DefaultInstanceDescription(isolatedCluster, true, true, slingId, emptyProperties);
             Collection<InstanceDescription> col = new ArrayList<InstanceDescription>();
             col.add(isolatedInstance);
-            final TopologyViewImpl topology = new TopologyViewImpl();
+            final DefaultTopologyView topology = new DefaultTopologyView();
             topology.addInstances(col);
             topology.setNotCurrent();
             setOldView(topology);
         }
-        setOldView((TopologyViewImpl) getTopology());
-        oldView.setNotCurrent();
+        setOldView((DefaultTopologyView) getTopology());
+        getOldView().setNotCurrent();
 
         // make sure the first heartbeat is issued as soon as possible - which
         // is right after this service starts. since the two (discoveryservice
@@ -235,7 +266,7 @@ public class DiscoveryServiceImpl implements DiscoveryService {
 
             doUpdateProperties();
 
-            TopologyViewImpl newView = (TopologyViewImpl) getTopology();
+            DefaultTopologyView newView = (DefaultTopologyView) getTopology();
             if (newView.isCurrent()) {
                 viewStateManager.handleNewView(newView);
             } else {
@@ -468,58 +499,6 @@ public class DiscoveryServiceImpl implements DiscoveryService {
     }
 
     /**
-     * @see DiscoveryService#getTopology()
-     */
-    public TopologyView getTopology() {
-        if (clusterViewService == null) {
-            throw new IllegalStateException(
-                    "DiscoveryService not yet initialized with IClusterViewService");
-        }
-        // create a new topology view
-        final TopologyViewImpl topology = new TopologyViewImpl();
-
-        ClusterView localClusterView = null;
-        try {
-            localClusterView = clusterViewService.getClusterView();
-        } catch (UndefinedClusterViewException e) {
-            // SLING-5030 : when we're cut off from the local cluster we also
-            // treat it as being cut off from the entire topology, ie we don't
-            // update the announcements but just return
-            // the previous oldView marked as !current
-            logger.info("getTopology: undefined cluster view: "+e.getReason()+"] "+e);
-            oldView.setNotCurrent();
-            if (e.getReason()==Reason.ISOLATED_FROM_TOPOLOGY) {
-                if (heartbeatHandler!=null) {
-                    // SLING-5030 part 2: when we detect being isolated we should
-                    // step at the end of the leader-election queue and 
-                    // that can be achieved by resetting the leaderElectionId
-                    // (which will in turn take effect on the next round of
-                    // voting, or also double-checked when the local instance votes)
-                    //
-                    //TODO:
-                    // Note that when the local instance doesn't notice
-                    // an 'ISOLATED_FROM_TOPOLOGY' case, then the leaderElectionId
-                    // will not be reset. Which means that it then could potentially
-                    // regain leadership.
-                    if (heartbeatHandler.resetLeaderElectionId()) {
-                        logger.info("getTopology: reset leaderElectionId to force this instance to the end of the instance order (thus incl not to remain leader)");
-                    }
-                }
-            }
-            return oldView;
-        }
-
-        final List<InstanceDescription> localInstances = localClusterView.getInstances();
-        topology.addInstances(localInstances);
-
-        Collection<InstanceDescription> attachedInstances = announcementRegistry
-                .listInstances(localClusterView);
-        topology.addInstances(attachedInstances);
-
-        return topology;
-    }
-
-    /**
      * Update the properties and sent a topology event if applicable
      */
     public void updateProperties() {
@@ -576,7 +555,7 @@ public class DiscoveryServiceImpl implements DiscoveryService {
 
         /** SLING-2883 : put property only if valid **/
 		private void putPropertyIfValid(final String name, final String val) {
-			if (ResourceHelper.isValidPropertyName(name)) {
+			if (PropertyNameHelper.isValidPropertyName(name)) {
 				this.properties.put(name, val);
 			}
 		}
@@ -640,18 +619,26 @@ public class DiscoveryServiceImpl implements DiscoveryService {
 	            logger.error("forcedShutdown: ignoring forced shutdown. Service is not activated.");
 	            return;
 	        }
-	        if (oldView == null) {
+	        if (getOldView() == null) {
 	            logger.error("forcedShutdown: ignoring forced shutdown. No oldView available.");
 	            return;
 	        }
 	        logger.error("forcedShutdown: sending TOPOLOGY_CHANGING to all listeners");
 	        // SLING-4638: make sure the oldView is really marked as old:
-	        oldView.setNotCurrent();
+	        getOldView().setNotCurrent();
 	        viewStateManager.handleChanging();
 	        logger.error("forcedShutdown: deactivating DiscoveryService.");
 	        // to make sure no further event is sent after this, flag this service as deactivated
             activated = false;
 		}
 	}
+	
+    protected ClusterViewService getClusterViewService() {
+        return clusterViewService;
+    }
+    
+    protected AnnouncementRegistry getAnnouncementRegistry() {
+        return announcementRegistry;
+    }
 
 }
