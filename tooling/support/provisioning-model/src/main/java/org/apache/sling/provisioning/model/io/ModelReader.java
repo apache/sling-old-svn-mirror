@@ -31,6 +31,7 @@ import org.apache.sling.provisioning.model.Feature;
 import org.apache.sling.provisioning.model.Model;
 import org.apache.sling.provisioning.model.ModelConstants;
 import org.apache.sling.provisioning.model.RunMode;
+import org.apache.sling.provisioning.model.Section;
 
 /**
  * This class offers a method to read a model using a {@code Reader} instance.
@@ -44,7 +45,8 @@ public class ModelReader {
         ARTIFACTS("artifacts", new String[] {"runModes", "startLevel"}),
         SETTINGS("settings", new String[] {"runModes"}),
         CONFIGURATIONS("configurations", new String[] {"runModes"}),
-        CONFIG(null, null);
+        CONFIG(null, null),
+        ADDITIONAL(null, null);
 
         public final String name;
 
@@ -79,6 +81,8 @@ public class ModelReader {
     private ArtifactGroup artifactGroup;
     private Configuration config;
 
+    private Section additionalSection;
+
     private String comment;
 
     private StringBuilder configBuilder;
@@ -109,6 +113,14 @@ public class ModelReader {
 
             // ignore empty line
             if ( line.isEmpty() ) {
+                if ( this.mode == CATEGORY.ADDITIONAL ) {
+                    if ( this.additionalSection.getContents() == null ) {
+                        this.additionalSection.setContents(line);
+                    } else {
+                        this.additionalSection.setContents(this.additionalSection.getContents() + '\n' + line);
+                    }
+                    continue;
+                }
                 checkConfig();
                 continue;
             }
@@ -119,6 +131,14 @@ public class ModelReader {
                     configBuilder.append(line);
                     configBuilder.append('\n');
 
+                    continue;
+                }
+                if ( this.mode == CATEGORY.ADDITIONAL ) {
+                    if ( this.additionalSection.getContents() == null ) {
+                        this.additionalSection.setContents(line);
+                    } else {
+                        this.additionalSection.setContents(this.additionalSection.getContents() + '\n' + line);
+                    }
                     continue;
                 }
                 final String c = line.substring(1).trim();
@@ -138,6 +158,7 @@ public class ModelReader {
             }
 
             if ( line.startsWith("[") ) {
+                additionalSection = null;
                 if ( !line.endsWith("]") ) {
                     throw new IOException(exceptionPrefix + "Illegal category definition in line " + this.lineNumberReader.getLineNumber() + ": " + line);
                 }
@@ -154,7 +175,8 @@ public class ModelReader {
                     }
                 }
                 if ( found == null ) {
-                    throw new IOException(exceptionPrefix + "Unknown category in line " + this.lineNumberReader.getLineNumber() + ": " + line);
+                    // additional section
+                    found = CATEGORY.ADDITIONAL;
                 }
                 this.mode = found;
                 Map<String, String> parameters = Collections.emptyMap();
@@ -207,6 +229,13 @@ public class ModelReader {
                                          checkRunMode(parameters);
                                          this.init(this.runMode.getConfigurations());
                                          break;
+                    case ADDITIONAL: checkFeature();
+                                     this.runMode = null;
+                                     this.artifactGroup = null;
+                                     this.additionalSection = new Section(category);
+                                     this.init(this.additionalSection);
+                                     this.feature.getAdditionalSections().add(this.additionalSection);
+                                     this.additionalSection.getAttributes().putAll(parameters);
                 }
             } else {
                 switch ( this.mode ) {
@@ -288,6 +317,12 @@ public class ModelReader {
                     case CONFIG : configBuilder.append(line);
                                   configBuilder.append('\n');
                                   break;
+                    case ADDITIONAL : if ( this.additionalSection.getContents() == null ) {
+                                          this.additionalSection.setContents(line);
+                                      } else {
+                                          this.additionalSection.setContents(this.additionalSection.getContents() + '\n' + line);
+                                      }
+                                      break;
                 }
             }
 

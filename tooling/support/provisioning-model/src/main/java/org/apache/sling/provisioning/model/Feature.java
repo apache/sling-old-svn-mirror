@@ -32,6 +32,10 @@ public class Feature
     extends Commentable
     implements Comparable<Feature> {
 
+    /**
+     * The feature type
+     * @since 1.4.0
+     */
     public enum Type {
         PLAIN("plain"),
         SUBSYSTEM_FEATURE("osgi.subsystem.feature"),
@@ -71,6 +75,9 @@ public class Feature
 
     /** Feature name. */
     private final String name;
+
+    /** Additional sections. */
+    private final List<Section> additionalSections = new ArrayList<Section>();
 
     /**
      * Construct a new feature.
@@ -144,12 +151,48 @@ public class Feature
         return result;
     }
 
+    /**
+     * Get the feature type.
+     * @return The feature type.
+     * @since 1.4.0
+     */
     public Type getType() {
         return type;
     }
 
-    public void setType(Type t) {
-        type = t;
+    /**
+     * Set the feature type.
+     * @param t The new type
+     * @since 1.4.0
+     */
+    public void setType(final Type t) {
+        type = ( t == null ? Type.PLAIN : t);
+    }
+
+    /**
+     * Get all additional sections
+     * @return The list of additional sections. It might be empty.
+     * @since 1.4.0
+     */
+    public List<Section> getAdditionalSections() {
+        return this.additionalSections;
+    }
+
+    /**
+     * Get all sections with the given name.
+     * @param name The section name.
+     * @return The list of sections. The list might be empty.
+     * @since 1.4.0
+     */
+    public List<Section> getAdditionalSections(final String name) {
+        final List<Section> result = new ArrayList<Section>();
+
+        for(final Section s : this.additionalSections) {
+            if ( name.equals(s.getName()) ) {
+                result.add(s);
+            }
+        }
+        return result;
     }
 
     @Override
@@ -171,6 +214,7 @@ public class Feature
         return "Feature [runModes=" + runModes + ", variables=" + variables
                 + ", name=" + name
                 + ( type != Type.PLAIN ? ", type=" + type : "" )
+                + ( additionalSections.isEmpty() ? "" : ", additionalSections=" + this.additionalSections)
                 + ( this.getLocation() != null ? ", location=" + this.getLocation() : "")
                 + "]";
     }
