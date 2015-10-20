@@ -16,7 +16,7 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-[feature name=f]
+[feature name=f type=osgi.subsystem.composite]
 
 [artifacts startLevel=3]
  g/a/2.0.0

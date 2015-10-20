@@ -32,8 +32,39 @@ public class Feature
     extends Commentable
     implements Comparable<Feature> {
 
+    public enum Type {
+        PLAIN("plain"),
+        SUBSYSTEM_FEATURE("osgi.subsystem.feature"),
+        SUBSYSTEM_APPLICATION("osgi.subsystem.application"),
+        SUBSYSTEM_COMPOSITE("osgi.subsystem.composite");
+
+        private final String textRepresentation;
+
+        private Type(final String textRep) {
+            textRepresentation = textRep;
+        }
+
+        public String getTextRepresentation() {
+            return textRepresentation;
+        }
+
+        public static Type fromTextRepresentation(final String textRep) {
+            if (textRep == null)
+                return PLAIN;
+
+            for (final Type t : values()) {
+                if (t.getTextRepresentation().equals(textRep))
+                    return t;
+            }
+            return null;
+        }
+    }
+
     /** All run modes. */
     private final List<RunMode> runModes = new ArrayList<RunMode>();
+
+    /** The type of feature */
+    private volatile Type type = Type.PLAIN;
 
     /** Variables. */
     private final KeyValueMap<String> variables = new KeyValueMap<String>();
@@ -113,6 +144,14 @@ public class Feature
         return result;
     }
 
+    public Type getType() {
+        return type;
+    }
+
+    public void setType(Type t) {
+        type = t;
+    }
+
     @Override
     public int compareTo(final Feature o) {
         if ( this.name == null ) {
@@ -131,8 +170,8 @@ public class Feature
     public String toString() {
         return "Feature [runModes=" + runModes + ", variables=" + variables
                 + ", name=" + name
+                + ( type != Type.PLAIN ? ", type=" + type : "" )
                 + ( this.getLocation() != null ? ", location=" + this.getLocation() : "")
                 + "]";
     }
-
 }

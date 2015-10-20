@@ -39,7 +39,7 @@ public class ModelReader {
 
     private enum CATEGORY {
         NONE(null, null),
-        FEATURE("feature", new String[] {"name"}),
+        FEATURE("feature", new String[] {"name", "type"}),
         VARIABLES("variables", null),
         ARTIFACTS("artifacts", new String[] {"runModes", "startLevel"}),
         SETTINGS("settings", new String[] {"runModes"}),
@@ -174,6 +174,7 @@ public class ModelReader {
                                        throw new IOException(exceptionPrefix + "Duplicate feature in line " + this.lineNumberReader.getLineNumber() + ": " + line);
                                    }
                                    this.feature = model.getOrCreateFeature(name);
+                                   this.feature.setType(Feature.Type.fromTextRepresentation(parameters.get("type")));
                                    this.init(this.feature);
                                    this.runMode = null;
                                    this.artifactGroup = null;

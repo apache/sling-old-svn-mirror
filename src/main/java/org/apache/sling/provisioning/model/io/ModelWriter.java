@@ -87,6 +87,10 @@ public class ModelWriter {
             writeComment(pw, feature);
             pw.print("[feature name=");
             pw.print(feature.getName());
+            if (feature.getType() != Feature.Type.PLAIN) {
+                pw.print(" type=");
+                pw.print(feature.getType().getTextRepresentation());
+            }
             pw.println("]");
             pw.println();
 

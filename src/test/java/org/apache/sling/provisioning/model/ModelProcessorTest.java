@@ -18,33 +18,34 @@
  */
 package org.apache.sling.provisioning.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 import java.util.Enumeration;
 import java.util.Map.Entry;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 public class ModelProcessorTest {
-    
+
     private Model testModel;
     private ModelProcessor underTest;
-    
+
     @Before
     public void setUp() {
         testModel = new Model();
         testModel.setLocation("LocM1");
-        
+
         Feature feature1 = testModel.getOrCreateFeature("feature1");
         feature1.setLocation("LocF1");
         feature1.setComment("ComF1");
+        feature1.setType(Feature.Type.SUBSYSTEM_COMPOSITE);
         feature1.getVariables().setLocation("LocFV1");
         feature1.getVariables().setComment("ComFV1");
         feature1.getVariables().put("k1", "v1");
         feature1.getVariables().put("k2", "v2");
-        
+
         RunMode runMode11 = feature1.getOrCreateRunMode(new String[] { "rm1", "rm2"});
         runMode11.setLocation("LocRM11");
 
@@ -52,19 +53,19 @@ public class ModelProcessorTest {
         ArtifactGroup group12 = runMode12.getOrCreateArtifactGroup(10);
         group12.setLocation("LocRMG11");
         group12.setComment("ComRMG11");
-        
+
         group12.add(new Artifact("g1", "a1", "v1", "c1", "t1"));
         group12.add(new Artifact("g2", "a2", "v2", null, null));
-        
+
         runMode12.getConfigurations().setLocation("LocConf12");
         runMode12.getConfigurations().setComment("ComConf12");
-        
+
         Configuration conf121 = runMode12.getOrCreateConfiguration("pid1", null);
         conf121.setLocation("LocConf121");
         conf121.setComment("ComConf121");
         conf121.getProperties().put("conf1", "v1");
         conf121.getProperties().put("conf2", "v2");
-        
+
         Configuration conf122 = runMode12.getOrCreateConfiguration("pid2", "fac2");
         conf122.setLocation("LocConf122");
         conf122.setComment("ComConf122");
@@ -72,16 +73,16 @@ public class ModelProcessorTest {
 
         runMode12.getSettings().setLocation("LocSet12");
         runMode12.getSettings().setComment("ComSet12");
-        
+
         runMode12.getSettings().put("set1", "v1");
         runMode12.getSettings().put("set2", "v2");
-        
+
         Feature feature2 = testModel.getOrCreateFeature("feature1");
 
         RunMode runMode21 = feature2.getOrCreateRunMode(new String[0]);
         ArtifactGroup group21 = runMode21.getOrCreateArtifactGroup(20);
         group21.add(new Artifact("g3", "a3", null, null, null));
-        
+
         underTest = new TestModelProcessor();
     }
 
@@ -90,11 +91,12 @@ public class ModelProcessorTest {
         Model model = underTest.process(testModel);
 
         assertEquals("LocM1", model.getLocation());
-        
+
         Feature feature1 = model.getFeature("feature1");
         assertNotNull(feature1);
         assertEquals("LocF1", feature1.getLocation());
         assertEquals("ComF1", feature1.getComment());
+        assertEquals(Feature.Type.SUBSYSTEM_COMPOSITE, feature1.getType());
         assertEquals("LocFV1", feature1.getVariables().getLocation());
         assertEquals("ComFV1", feature1.getVariables().getComment());
         assertEquals("#v1", feature1.getVariables().get("k1"));
@@ -111,20 +113,20 @@ public class ModelProcessorTest {
         assertNotNull(group12);
         assertEquals("LocRMG11", group12.getLocation());
         assertEquals("ComRMG11", group12.getComment());
-        
+
         U.assertArtifactsInGroup(group12, 2);
         U.assertArtifact(group12, "mvn:#g1/#a1/#v1/#t1/#c1");
         U.assertArtifact(group12, "mvn:#g2/#a2/#v2/#jar");
 
         assertEquals("LocConf12", runMode12.getConfigurations().getLocation());
         assertEquals("ComConf12", runMode12.getConfigurations().getComment());
-        
+
         Configuration conf121 = runMode12.getConfiguration("pid1", null);
         assertEquals("LocConf121", conf121.getLocation());
         assertEquals("ComConf121", conf121.getComment());
         assertEquals("#v1", conf121.getProperties().get("conf1"));
         assertEquals("#v2", conf121.getProperties().get("conf2"));
-        
+
         Configuration conf122 = runMode12.getConfiguration("pid2", "fac2");
         assertEquals("LocConf122", conf122.getLocation());
         assertEquals("ComConf122", conf122.getComment());
@@ -143,12 +145,12 @@ public class ModelProcessorTest {
 
         ArtifactGroup group21 = runMode21.getArtifactGroup(20);
         assertNotNull(group21);
-        
+
         U.assertArtifactsInGroup(group21, 1);
         U.assertArtifact(group21, "mvn:#g3/#a3/#LATEST/#jar");
     }
-    
-    
+
+
     static final class TestModelProcessor extends ModelProcessor {
 
         @Override
