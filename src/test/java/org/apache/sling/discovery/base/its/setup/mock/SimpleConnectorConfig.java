@@ -45,7 +45,7 @@ public class SimpleConnectorConfig implements ModifiableTestBaseConfig {
     private int minEventDelay;
 
     @Override
-    public int getSocketConnectionTimeout() {
+    public int getSocketConnectTimeout() {
         return connectionTimeout;
     }
     

@@ -29,7 +29,7 @@ public interface BaseConfig {
      * Returns the socket connect() timeout used by the topology connector, 0 disables the timeout
      * @return the socket connect() timeout used by the topology connector, 0 disables the timeout
      */
-    public int getSocketConnectionTimeout();
+    public int getSocketConnectTimeout();
 
     /**
      * Returns the socket read timeout (SO_TIMEOUT) used by the topology connector, 0 disables the timeout
