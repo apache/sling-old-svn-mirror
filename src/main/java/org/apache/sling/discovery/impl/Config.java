@@ -340,7 +340,7 @@ public class Config implements BaseConfig {
      * Returns the socket connect() timeout used by the topology connector, 0 disables the timeout
      * @return the socket connect() timeout used by the topology connector, 0 disables the timeout
      */
-    public int getSocketConnectionTimeout() {
+    public int getSocketConnectTimeout() {
         return connectionTimeout;
     }
 
