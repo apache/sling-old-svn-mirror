@@ -176,6 +176,9 @@ public class ModelReader {
                 }
                 if ( found == null ) {
                     // additional section
+                    if ( !category.startsWith(":") ) {
+                        throw new IOException(exceptionPrefix + "Unknown category in line " + this.lineNumberReader.getLineNumber() + ": " + category);
+                    }
                     found = CATEGORY.ADDITIONAL;
                 }
                 this.mode = found;
@@ -232,7 +235,7 @@ public class ModelReader {
                     case ADDITIONAL: checkFeature();
                                      this.runMode = null;
                                      this.artifactGroup = null;
-                                     this.additionalSection = new Section(category);
+                                     this.additionalSection = new Section(category.substring(1));
                                      this.init(this.additionalSection);
                                      this.feature.getAdditionalSections().add(this.additionalSection);
                                      this.additionalSection.getAttributes().putAll(parameters);

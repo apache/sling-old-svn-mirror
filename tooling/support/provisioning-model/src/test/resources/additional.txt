@@ -24,7 +24,7 @@
 [artifacts]
     commons-io/commons-io/1.4/jar
 
-[additional stuff=free]
+[:additional stuff=free]
   # Hello
   world
   

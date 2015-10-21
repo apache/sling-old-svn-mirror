@@ -241,7 +241,7 @@ public class ModelWriter {
 
             // additional sections
             for(final Section section : feature.getAdditionalSections()) {
-                pw.print("  [");
+                pw.print("  [:");
                 pw.print(section.getName());
                 for(final Map.Entry<String, String> entry : section.getAttributes().entrySet()) {
                     pw.print(' ');
