@@ -39,11 +39,6 @@ public class DummyDiscoveryService extends BaseDiscoveryService {
     }
     
     @Override
-    public void updateProperties() {
-        throw new IllegalStateException("updateProperties not yet impl");
-    }
-
-    @Override
     protected ClusterViewService getClusterViewService() {
         return clusterViewService;
     }
@@ -56,16 +51,6 @@ public class DummyDiscoveryService extends BaseDiscoveryService {
     @Override
     protected void handleIsolatedFromTopology() {
         throw new IllegalStateException("handleIsolatedFromTopology not yet impl");
-    }
-    
-    @Override
-    public void handlePotentialTopologyChange() {
-        throw new IllegalStateException("handlePotentialTopologyChange not yet impl");
-    }
-    
-    @Override
-    public void handleTopologyChanging() {
-        throw new IllegalStateException("handleTopologyChanging not yet impl");
     }
     
 }

@@ -338,7 +338,7 @@ public class VirtualInstance {
         try {
             stopViewChecker();
         } catch (Throwable e) {
-            throw new Exception("Caught Throwable in stopConnectorPinger: "+e, e);
+            throw new Exception("Caught Throwable in stop(): "+e, e);
         }
 
         if (resourceResolver != null) {
