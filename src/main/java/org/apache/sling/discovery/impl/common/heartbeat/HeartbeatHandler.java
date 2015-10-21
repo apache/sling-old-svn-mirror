@@ -39,6 +39,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.discovery.base.commons.BaseViewChecker;
+import org.apache.sling.discovery.base.connectors.BaseConfig;
 import org.apache.sling.discovery.base.connectors.announcement.AnnouncementRegistry;
 import org.apache.sling.discovery.base.connectors.ping.ConnectorRegistry;
 import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
@@ -68,6 +69,21 @@ import org.osgi.service.http.HttpService;
 public class HeartbeatHandler extends BaseViewChecker {
 
     private static final String PROPERTY_ID_LAST_HEARTBEAT = "lastHeartbeat";
+
+    @Reference
+    protected SlingSettingsService slingSettingsService;
+
+    @Reference
+    protected ResourceResolverFactory resourceResolverFactory;
+
+    @Reference
+    protected ConnectorRegistry connectorRegistry;
+
+    @Reference
+    protected AnnouncementRegistry announcementRegistry;
+
+    @Reference
+    protected Scheduler scheduler;
 
     @Reference
     private Config config;
@@ -109,12 +125,41 @@ public class HeartbeatHandler extends BaseViewChecker {
         handler.resourceResolverFactory = factory;
         handler.announcementRegistry = announcementRegistry;
         handler.connectorRegistry = connectorRegistry;
-        handler.connectorConfig = config;
         handler.config = config;
         handler.scheduler = scheduler;
         return handler;
     }
-
+    
+    @Override
+    protected AnnouncementRegistry getAnnouncementRegistry() {
+        return announcementRegistry;
+    }
+    
+    @Override
+    protected BaseConfig getConnectorConfig() {
+        return config;
+    }
+    
+    @Override
+    protected ConnectorRegistry getConnectorRegistry() {
+        return connectorRegistry;
+    }
+    
+    @Override
+    protected ResourceResolverFactory getResourceResolverFactory() {
+        return resourceResolverFactory;
+    }
+    
+    @Override
+    protected Scheduler getScheduler() {
+        return scheduler;
+    }
+    
+    @Override
+    protected SlingSettingsService getSlingSettingsService() {
+        return slingSettingsService;
+    }
+    
     @Override
     protected void doActivate() {
         // on activate the resetLeaderElectionId is set to true to ensure that
@@ -149,7 +194,6 @@ public class HeartbeatHandler extends BaseViewChecker {
     public void initialize(final DiscoveryServiceImpl discoveryService,
             final String initialVotingId) {
         synchronized(lock) {
-        	this.discoveryService = discoveryService;
             this.discoveryServiceImpl = discoveryService;
         	this.nextVotingId = initialVotingId;
         	logger.info("initialize: nextVotingId="+nextVotingId);
@@ -230,15 +274,19 @@ public class HeartbeatHandler extends BaseViewChecker {
      * which announce this part of the topology to others)
      */
     protected void issueHeartbeat() {
-        if (discoveryService == null) {
-            logger.error("issueHeartbeat: discoveryService is null");
-        } else {
-            discoveryService.updateProperties();
-        }
+        updateProperties();
         issueClusterLocalHeartbeat();
         issueConnectorPings();
     }
 
+    protected void updateProperties() {
+        if (discoveryServiceImpl == null) {
+            logger.debug("updateProperties: discoveryService is null");
+        } else {
+            discoveryServiceImpl.updateProperties();
+        }
+    }
+    
     /** Issue a cluster local heartbeat (into the repository) **/
     private void issueClusterLocalHeartbeat() {
         if (logger.isDebugEnabled()) {
@@ -276,7 +324,7 @@ public class HeartbeatHandler extends BaseViewChecker {
             				// sling instance accessing the same repository (ie in the same cluster)
             				// using the same sling.id - hence writing to the same
             				// resource
-            			    discoveryService.handleTopologyChanging();
+            			    discoveryServiceImpl.handleTopologyChanging();
             				logger.error("issueClusterLocalHeartbeat: SLING-2892: Detected unexpected, concurrent update of: "+
             						myClusterNodePath+" 'lastHeartbeat'. If not done manually, " +
             						"this likely indicates that there is more than 1 instance running in this cluster" +
@@ -296,7 +344,7 @@ public class HeartbeatHandler extends BaseViewChecker {
             	    // someone deleted the resource property
             	    firstHeartbeatWritten = -1;
             	} else if (!runtimeId.equals(readRuntimeId)) {
-            	    discoveryService.handleTopologyChanging();
+            	    discoveryServiceImpl.handleTopologyChanging();
                     final String slingHomePath = slingSettingsService==null ? "n/a" : slingSettingsService.getSlingHomePath();
                     final String endpointsAsString = getEndpointsAsString();
                     final String readEndpoints = resourceMap.get(PROPERTY_ID_ENDPOINTS, String.class);
@@ -455,7 +503,7 @@ public class HeartbeatHandler extends BaseViewChecker {
             
             // but first: make sure we sent the TOPOLOGY_CHANGING
             logger.info("doCheckViewWith: there are pending votings, marking topology as changing...");
-            discoveryService.handleTopologyChanging();
+            discoveryServiceImpl.handleTopologyChanging();
             
         	if (logger.isDebugEnabled()) {
 	            logger.debug("doCheckViewWith: "
@@ -480,7 +528,7 @@ public class HeartbeatHandler extends BaseViewChecker {
         
         // immediately send a TOPOLOGY_CHANGING - could already be sent, but just to be sure
         logger.info("doCheckViewWith: no matching established view, marking topology as changing");
-        discoveryService.handleTopologyChanging();
+        discoveryServiceImpl.handleTopologyChanging();
         
     	if (logger.isDebugEnabled()) {
 	        logger.debug("doCheckViewWith: no pending nor winning votes. But: view does not match established or no established yet. Initiating a new voting");

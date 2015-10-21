@@ -30,6 +30,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.discovery.base.connectors.BaseConfig;
+import org.apache.sling.discovery.commons.providers.spi.base.DiscoveryLiteConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,8 +41,8 @@ import org.slf4j.LoggerFactory;
  * The properties are described below under.
  */
 @Component(metatype = true, label="%config.name", description="%config.description")
-@Service(value = { Config.class })
-public class Config implements BaseConfig {
+@Service(value = { Config.class, BaseConfig.class, DiscoveryLiteConfig.class })
+public class Config implements BaseConfig, DiscoveryLiteConfig {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -529,6 +530,26 @@ public class Config implements BaseConfig {
     @Override
     public long getConnectorPingTimeout() {
         return getHeartbeatTimeout();
+    }
+
+    @Override
+    public String getSyncTokenPath() {
+        return getDiscoveryResourcePath() + "/synctokens";
+    }
+
+    @Override
+    public String getIdMapPath() {
+        return getDiscoveryResourcePath() + "/idmaps";
+    }
+
+    @Override
+    public long getBgTimeoutMillis() {
+        return -1;
+    }
+
+    @Override
+    public long getBgIntervalMillis() {
+        return 1000;
     }
 
 }

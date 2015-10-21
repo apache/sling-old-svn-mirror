@@ -316,9 +316,21 @@ public class VotingView extends View {
         } else {
             boolean shouldVote = true;
             try {
-                if (memberMap.containsKey("vote") && ((Property)memberMap.get("vote")).getBoolean()==vote) {
-                    logger.debug("vote: already voted, with same vote ("+vote+"), not voting again");
-                    shouldVote = false;
+                if (memberMap.containsKey("vote")) {
+                    Object v = memberMap.get("vote");
+                    if (v instanceof Property) {
+                        Property p = (Property)v;
+                        if (p.getBoolean() == vote) {
+                            logger.debug("vote: already voted, with same vote ("+vote+"), not voting again");
+                            shouldVote = false;
+                        }
+                    } else if (v instanceof Boolean) {
+                        Boolean b = (Boolean)v;
+                        if (b == vote) {
+                            logger.debug("vote: already voted, with same vote ("+vote+"), not voting again");
+                            shouldVote = false;
+                        }
+                    }
                 }
             } catch (ValueFormatException e) {
                 logger.warn("vote: got a ValueFormatException: "+e, e);

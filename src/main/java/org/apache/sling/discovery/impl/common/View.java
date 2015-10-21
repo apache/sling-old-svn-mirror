@@ -106,7 +106,7 @@ public class View {
      */
     public boolean matchesLiveView(final Resource clusterInstancesRes, final Config config) {
         return matches(ViewHelper.determineLiveInstances(clusterInstancesRes,
-                config));
+                config)) == null;
     }
 
     /**
@@ -114,30 +114,51 @@ public class View {
      * @param view a set of slingIds against which to compare this view
      * @return true if this view matches the given set of slingIds
      */
-    public boolean matches(final Set<String> view) {
+    public String matches(final Set<String> view) {
         final Set<String> viewCopy = new HashSet<String>(view);
         final Resource members = getResource().getChild("members");
         if (members == null) {
-            return false;
+            return "no members resource found";
         }
         try{
 	        final Iterator<Resource> it = members.getChildren().iterator();
+	        StringBuffer sb = new StringBuffer();
+	        boolean success = true;
 	        while (it.hasNext()) {
 	            Resource aMemberRes = it.next();
 	
-	            if (!viewCopy.remove(aMemberRes.getName())) {
-	                return false;
+	            if (sb.length() != 0) {
+	                sb.append(", ");
 	            }
+	            if (!viewCopy.remove(aMemberRes.getName())) {
+	                success = false;
+	                sb.append("old: " + aMemberRes.getName());
+	            } else {
+	                sb.append("fine: " + aMemberRes.getName());
+	            }
+	        }
+	        // now the ViewCopy set must be empty to represent a match
+	        if (viewCopy.size() != 0) {
+	            success = false;
+                if (sb.length() != 0) {
+                    sb.append(", ");
+                }
+                for (String newlyAdded : viewCopy) {
+                    sb.append("new: " + newlyAdded);
+                }
+	        }
+	        if (success) {
+	            return null;
+	        } else {
+	            return sb.toString();
 	        }
         } catch(RuntimeException re) {
         	// SLING-2945 : the members resource could have been deleted
         	//              by another party simultaneously
         	//              so treat this situation nicely
         	logger.info("matches: cannot compare due to "+re);
-        	return false;
+        	return "RuntimeException: "+re;
         }
-        // now the ViewCopy set must be empty to represent a match
-        return (viewCopy.size() == 0);
     }
 
     /**
