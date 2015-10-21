@@ -1,0 +1,315 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership. The ASF
+ * licenses this file to You under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+package org.apache.sling.provisioning.model;
+
+import static org.apache.sling.provisioning.model.ModelResolveUtility.getProcessedConfiguration;
+
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Utility for merging two model.
+ *
+ * @since 1.4
+ */
+public abstract class MergeUtility {
+
+    /**
+     * Options for specifying some parts of the merge operation.
+     */
+    public static class MergeOptions {
+
+        private boolean handleRemoveRunMode = true;
+
+        private boolean latestArtifactWins = true;
+
+        /**
+         * Returns {@code true} if the remove run mode should be respected.
+         * @return {@code true} or {@code false}
+         */
+        public boolean isHandleRemoveRunMode() {
+            return handleRemoveRunMode;
+        }
+
+        /**
+         * Set to {@code true} if the remove run mode should be respected.
+         * @param handleRemoveRunMode
+         */
+        public void setHandleRemoveRunMode(boolean handleRemoveRunMode) {
+            this.handleRemoveRunMode = handleRemoveRunMode;
+        }
+
+        /**
+         * Returns {@code true} if the latest artifact should win on a merge.
+         * @return {@code true} or {@code false} if the artifact with the
+         *         highest version should win
+         */
+        public boolean isLatestArtifactWins() {
+            return latestArtifactWins;
+        }
+
+        /**
+         * Set to {@code true} if the latest artifact should win on a merge.
+         * Set to {@code false} if the artifact with the highest version should win
+         */
+        public void setLatestArtifactWins(boolean latestArtifactWins) {
+            this.latestArtifactWins = latestArtifactWins;
+        }
+    }
+
+    /**
+     * Merge the additional model into the base model.
+     * @param base The base model.
+     * @param additional The additional model.
+     */
+    public static void merge(final Model base, final Model additional) {
+        merge(base, additional, new MergeOptions());
+    }
+
+    /**
+     * Merge the additional model into the base model.
+     * @param base The base model.
+     * @param additional The additional model.
+     * @param options The merge options
+     */
+    public static void merge(final Model base, final Model additional, final MergeOptions options) {
+        // features
+        for(final Feature feature : additional.getFeatures()) {
+            final Feature baseFeature = base.getOrCreateFeature(feature.getName());
+            baseFeature.setType(feature.getType());
+
+            // additional sections
+            baseFeature.getAdditionalSections().addAll(feature.getAdditionalSections());
+
+            // variables
+            baseFeature.getVariables().putAll(feature.getVariables());
+
+            // run modes
+            for(final RunMode runMode : feature.getRunModes()) {
+                // check for special remove run mode
+                final String names[] = runMode.getNames();
+                if ( options.isHandleRemoveRunMode() && names != null ) {
+                    if ( handleRemoveRunMode(baseFeature, runMode) ) {
+                        continue;
+                    }
+                }
+                final RunMode baseRunMode = baseFeature.getOrCreateRunMode(names);
+
+                // artifact groups
+                for(final ArtifactGroup group : runMode.getArtifactGroups()) {
+                    final ArtifactGroup baseGroup = baseRunMode.getOrCreateArtifactGroup(group.getStartLevel());
+
+                    for(final Artifact artifact : group) {
+                        boolean addArtifact = true;
+                        for(final ArtifactGroup searchGroup : baseRunMode.getArtifactGroups()) {
+                            final Artifact found = searchGroup.search(artifact);
+                            if ( found != null ) {
+                                if ( options.isLatestArtifactWins() ) {
+                                    searchGroup.remove(found);
+                                } else {
+                                    final Version baseVersion = new Version(found.getVersion());
+                                    final Version mergeVersion = new Version(artifact.getVersion());
+                                    if ( baseVersion.compareTo(mergeVersion) <= 0 ) {
+                                        searchGroup.remove(found);
+                                    } else {
+                                        addArtifact = false;
+                                    }
+                                }
+                            }
+                        }
+                        if ( addArtifact ) {
+                            baseGroup.add(artifact);
+                        }
+                    }
+                }
+
+                // configurations
+                for(final Configuration config : runMode.getConfigurations()) {
+                    final Configuration found = baseRunMode.getOrCreateConfiguration(config.getPid(), config.getFactoryPid());
+
+                    mergeConfiguration(found, config);
+                }
+
+                // settings
+                for(final Map.Entry<String, String> entry : runMode.getSettings() ) {
+                    baseRunMode.getSettings().put(entry.getKey(), entry.getValue());
+                }
+            }
+
+        }
+    }
+
+    /**
+     * Handle the remove run mode
+     * @param baseFeature The base feature
+     * @param runMode The current run mode
+     * @return {@code true} if the current run mode is a remove run mode
+     */
+    private static boolean handleRemoveRunMode(final Feature baseFeature, final RunMode runMode) {
+        String names[] = runMode.getNames();
+        int removeIndex = -1;
+        int index = 0;
+        for(final String name : names) {
+            if ( name.equals(ModelConstants.RUN_MODE_REMOVE) ) {
+                removeIndex = index;
+                break;
+            }
+            index++;
+        }
+        if ( removeIndex != -1 ) {
+            String[] newNames = null;
+            if ( names.length > 1 ) {
+                newNames = new String[names.length - 1];
+                index = 0;
+                for(final String name : names) {
+                    if ( !name.equals(ModelConstants.RUN_MODE_REMOVE) ) {
+                        newNames[index++] = name;
+                    }
+                }
+            }
+            names = newNames;
+            final RunMode baseRunMode = baseFeature.getRunMode(names);
+            if ( baseRunMode != null ) {
+
+                // artifact groups
+                for(final ArtifactGroup group : runMode.getArtifactGroups()) {
+                    for(final Artifact artifact : group) {
+                        for(final ArtifactGroup searchGroup : baseRunMode.getArtifactGroups()) {
+                            final Artifact found = searchGroup.search(artifact);
+                            if ( found != null ) {
+                                searchGroup.remove(found);
+                            }
+                        }
+                    }
+                }
+
+                // configurations
+                for(final Configuration config : runMode.getConfigurations()) {
+                    final Configuration found = baseRunMode.getConfiguration(config.getPid(), config.getFactoryPid());
+                    if ( found != null ) {
+                        baseRunMode.getConfigurations().remove(found);
+                    }
+                }
+
+                // settings
+                for(final Map.Entry<String, String> entry : runMode.getSettings() ) {
+                    baseRunMode.getSettings().remove(entry.getKey());
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Merge two configurations
+     * @param baseConfig The base configuration.
+     * @param mergeConfig The merge configuration.
+     */
+    private static void mergeConfiguration(final Configuration baseConfig, final Configuration mergeConfig) {
+        // check for merge mode
+        final boolean isNew = baseConfig.getProperties().isEmpty();
+        if ( isNew ) {
+            copyConfigurationProperties(baseConfig, mergeConfig);
+            final Object mode = mergeConfig.getProperties().get(ModelConstants.CFG_UNPROCESSED_MODE);
+            if ( mode != null ) {
+                baseConfig.getProperties().put(ModelConstants.CFG_UNPROCESSED_MODE, mode);
+            }
+        } else {
+            final boolean baseIsRaw = baseConfig.getProperties().get(ModelConstants.CFG_UNPROCESSED) != null;
+            final boolean mergeIsRaw = mergeConfig.getProperties().get(ModelConstants.CFG_UNPROCESSED) != null;
+            // simplest case, both are raw
+            if ( baseIsRaw && mergeIsRaw ) {
+                final String cfgMode = (String)mergeConfig.getProperties().get(ModelConstants.CFG_UNPROCESSED_MODE);
+                if ( cfgMode == null || ModelConstants.CFG_MODE_OVERWRITE.equals(cfgMode) ) {
+                    copyConfigurationProperties(baseConfig, mergeConfig);
+                } else {
+                    final Configuration newConfig = new Configuration(baseConfig.getPid(), baseConfig.getFactoryPid());
+                    getProcessedConfiguration(null, newConfig, baseConfig, false, null);
+                    clearConfiguration(baseConfig);
+                    copyConfigurationProperties(baseConfig, newConfig);
+
+                    clearConfiguration(newConfig);
+                    getProcessedConfiguration(null, newConfig, mergeConfig, false, null);
+
+                    if ( baseConfig.isSpecial() ) {
+                        final String baseValue = baseConfig.getProperties().get(baseConfig.getPid()).toString();
+                        final String mergeValue = newConfig.getProperties().get(baseConfig.getPid()).toString();
+                        baseConfig.getProperties().put(baseConfig.getPid(), baseValue + "\n" + mergeValue);
+                    } else {
+                        copyConfigurationProperties(baseConfig, newConfig);
+                    }
+                }
+
+            // another simple case, both are not raw
+            } else if ( !baseIsRaw && !mergeIsRaw ) {
+                // merge mode is always overwrite
+                clearConfiguration(baseConfig);
+                copyConfigurationProperties(baseConfig, mergeConfig);
+
+            // base is not raw but merge is
+            } else if ( !baseIsRaw && mergeIsRaw ) {
+                final String cfgMode = (String)mergeConfig.getProperties().get(ModelConstants.CFG_UNPROCESSED_MODE);
+                if ( cfgMode == null || ModelConstants.CFG_MODE_OVERWRITE.equals(cfgMode) ) {
+                    clearConfiguration(baseConfig);
+                    copyConfigurationProperties(baseConfig, mergeConfig);
+                } else {
+                    final Configuration newMergeConfig = new Configuration(mergeConfig.getPid(), mergeConfig.getFactoryPid());
+                    getProcessedConfiguration(null, newMergeConfig, mergeConfig, false, null);
+
+                    if ( baseConfig.isSpecial() ) {
+                        final String baseValue = baseConfig.getProperties().get(baseConfig.getPid()).toString();
+                        final String mergeValue = newMergeConfig.getProperties().get(baseConfig.getPid()).toString();
+                        baseConfig.getProperties().put(baseConfig.getPid(), baseValue + "\n" + mergeValue);
+                    } else {
+                        copyConfigurationProperties(baseConfig, newMergeConfig);
+                    }
+                }
+
+                // base is raw, but merge is not raw
+            } else {
+                // merge mode is always overwrite
+                clearConfiguration(baseConfig);
+                copyConfigurationProperties(baseConfig, mergeConfig);
+            }
+        }
+    }
+
+    private static void clearConfiguration(final Configuration cfg) {
+        final Set<String> keys = new HashSet<String>();
+        final Enumeration<String> e = cfg.getProperties().keys();
+        while ( e.hasMoreElements() ) {
+            keys.add(e.nextElement());
+        }
+
+        for(final String key : keys) {
+            cfg.getProperties().remove(key);
+        }
+    }
+
+    private static void copyConfigurationProperties(final Configuration baseConfig, final Configuration mergeConfig) {
+        final Enumeration<String> e = mergeConfig.getProperties().keys();
+        while ( e.hasMoreElements() ) {
+            final String key = e.nextElement();
+            if ( !key.equals(ModelConstants.CFG_UNPROCESSED_MODE) ) {
+                baseConfig.getProperties().put(key, mergeConfig.getProperties().get(key));
+            }
+        }
+    }
+}
