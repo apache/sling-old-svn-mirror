@@ -30,6 +30,7 @@ import org.apache.sling.provisioning.model.ArtifactGroup;
 import org.apache.sling.provisioning.model.Commentable;
 import org.apache.sling.provisioning.model.Configuration;
 import org.apache.sling.provisioning.model.Feature;
+import org.apache.sling.provisioning.model.FeatureTypes;
 import org.apache.sling.provisioning.model.Model;
 import org.apache.sling.provisioning.model.ModelConstants;
 import org.apache.sling.provisioning.model.RunMode;
@@ -88,9 +89,9 @@ public class ModelWriter {
             writeComment(pw, feature);
             pw.print("[feature name=");
             pw.print(feature.getName());
-            if (feature.getType() != Feature.Type.PLAIN) {
+            if (! FeatureTypes.PLAIN.equals(feature.getType()) ) {
                 pw.print(" type=");
-                pw.print(feature.getType().getTextRepresentation());
+                pw.print(feature.getType());
             }
             pw.println("]");
             pw.println();

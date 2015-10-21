@@ -16,35 +16,18 @@
  */
 package org.apache.sling.provisioning.model;
 
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 
-public class FeatureTest {
-    @Test
-    public void testTypeEnum() {
-        assertEquals(Feature.Type.SUBSYSTEM_APPLICATION,
-                Feature.Type.fromTextRepresentation("osgi.subsystem.application"));
-        assertEquals(Feature.Type.SUBSYSTEM_COMPOSITE,
-                Feature.Type.fromTextRepresentation("osgi.subsystem.composite"));
-        assertEquals(Feature.Type.SUBSYSTEM_FEATURE,
-                Feature.Type.fromTextRepresentation("osgi.subsystem.feature"));
-        assertEquals(Feature.Type.PLAIN, Feature.Type.fromTextRepresentation(null));
+import org.junit.Test;
 
-        assertEquals("osgi.subsystem.application",
-                Feature.Type.SUBSYSTEM_APPLICATION.getTextRepresentation());
-        assertEquals("osgi.subsystem.composite",
-                Feature.Type.SUBSYSTEM_COMPOSITE.getTextRepresentation());
-        assertEquals("osgi.subsystem.feature",
-                Feature.Type.SUBSYSTEM_FEATURE.getTextRepresentation());
-    }
+public class FeatureTest {
 
     @Test
     public void testFeatureType() {
         Feature f = new Feature("blah");
-        assertEquals(Feature.Type.PLAIN, f.getType());
+        assertEquals(FeatureTypes.PLAIN, f.getType());
 
-        f.setType(Feature.Type.SUBSYSTEM_APPLICATION);
-        assertEquals(Feature.Type.SUBSYSTEM_APPLICATION, f.getType());
+        f.setType(FeatureTypes.SUBSYSTEM_APPLICATION);
+        assertEquals(FeatureTypes.SUBSYSTEM_APPLICATION, f.getType());
     }
 }

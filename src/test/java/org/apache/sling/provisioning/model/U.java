@@ -16,14 +16,6 @@
  */
 package org.apache.sling.provisioning.model;
 
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.sling.provisioning.model.io.ModelReader;
-
 import static org.apache.sling.provisioning.model.ModelConstants.DEFAULT_RUN_MODE;
 import static org.apache.sling.provisioning.model.ModelConstants.DEFAULT_START_LEVEL;
 import static org.junit.Assert.assertEquals;
@@ -31,6 +23,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.sling.provisioning.model.io.ModelReader;
 
 /** Test utilities */
 public class U {
@@ -120,7 +120,7 @@ public class U {
         final Feature exampleFeature = m.getFeature("example");
         final RunMode defaultExampleRM = exampleFeature.getRunMode();
         final List<Configuration> configs = assertConfigurationsInRunMode(defaultExampleRM, 3);
-        assertEquals(Feature.Type.SUBSYSTEM_FEATURE, exampleFeature.getType());
+        assertEquals(FeatureTypes.SUBSYSTEM_FEATURE, exampleFeature.getType());
         final Configuration cfg = assertConfiguration(configs, "org.apache.sling.another.config");
     }
 

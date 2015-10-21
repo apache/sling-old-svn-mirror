@@ -32,43 +32,11 @@ public class Feature
     extends Commentable
     implements Comparable<Feature> {
 
-    /**
-     * The feature type
-     * @since 1.4.0
-     */
-    public enum Type {
-        PLAIN("plain"),
-        SUBSYSTEM_FEATURE("osgi.subsystem.feature"),
-        SUBSYSTEM_APPLICATION("osgi.subsystem.application"),
-        SUBSYSTEM_COMPOSITE("osgi.subsystem.composite");
-
-        private final String textRepresentation;
-
-        private Type(final String textRep) {
-            textRepresentation = textRep;
-        }
-
-        public String getTextRepresentation() {
-            return textRepresentation;
-        }
-
-        public static Type fromTextRepresentation(final String textRep) {
-            if (textRep == null)
-                return PLAIN;
-
-            for (final Type t : values()) {
-                if (t.getTextRepresentation().equals(textRep))
-                    return t;
-            }
-            return null;
-        }
-    }
-
     /** All run modes. */
     private final List<RunMode> runModes = new ArrayList<RunMode>();
 
     /** The type of feature */
-    private volatile Type type = Type.PLAIN;
+    private volatile String type = FeatureTypes.PLAIN;
 
     /** Variables. */
     private final KeyValueMap<String> variables = new KeyValueMap<String>();
@@ -156,7 +124,7 @@ public class Feature
      * @return The feature type.
      * @since 1.4.0
      */
-    public Type getType() {
+    public String getType() {
         return type;
     }
 
@@ -165,8 +133,8 @@ public class Feature
      * @param t The new type
      * @since 1.4.0
      */
-    public void setType(final Type t) {
-        type = ( t == null ? Type.PLAIN : t);
+    public void setType(final String t) {
+        type = ( t == null ? FeatureTypes.PLAIN : t);
     }
 
     /**
@@ -213,7 +181,7 @@ public class Feature
     public String toString() {
         return "Feature [runModes=" + runModes + ", variables=" + variables
                 + ", name=" + name
-                + ( type != Type.PLAIN ? ", type=" + type : "" )
+                + ( FeatureTypes.PLAIN.equals(this.type) ? "" : ", type=" + type )
                 + ( additionalSections.isEmpty() ? "" : ", additionalSections=" + this.additionalSections)
                 + ( this.getLocation() != null ? ", location=" + this.getLocation() : "")
                 + "]";

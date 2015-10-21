@@ -18,14 +18,14 @@
  */
 package org.apache.sling.provisioning.model;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.Enumeration;
 import java.util.Map.Entry;
 
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 public class ModelProcessorTest {
 
@@ -40,7 +40,7 @@ public class ModelProcessorTest {
         Feature feature1 = testModel.getOrCreateFeature("feature1");
         feature1.setLocation("LocF1");
         feature1.setComment("ComF1");
-        feature1.setType(Feature.Type.SUBSYSTEM_COMPOSITE);
+        feature1.setType(FeatureTypes.SUBSYSTEM_COMPOSITE);
         feature1.getVariables().setLocation("LocFV1");
         feature1.getVariables().setComment("ComFV1");
         feature1.getVariables().put("k1", "v1");
@@ -96,7 +96,7 @@ public class ModelProcessorTest {
         assertNotNull(feature1);
         assertEquals("LocF1", feature1.getLocation());
         assertEquals("ComF1", feature1.getComment());
-        assertEquals(Feature.Type.SUBSYSTEM_COMPOSITE, feature1.getType());
+        assertEquals(FeatureTypes.SUBSYSTEM_COMPOSITE, feature1.getType());
         assertEquals("LocFV1", feature1.getVariables().getLocation());
         assertEquals("ComFV1", feature1.getVariables().getComment());
         assertEquals("#v1", feature1.getVariables().get("k1"));
