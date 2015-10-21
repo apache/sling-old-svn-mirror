@@ -88,23 +88,12 @@ public abstract class AbstractTopologyEventTest {
                 .setConnectorPingTimeout(3 /* heartbeat-timeout */)
                 .setMinEventDelay(3 /*min event delay*/).build();
         AssertingTopologyEventListener l1 = new AssertingTopologyEventListener("instance1.l1");
+        l1.addExpected(Type.TOPOLOGY_INIT);
         instance1.bindTopologyEventListener(l1);
         logger.info("testDelayedInitEvent: instance1 created, no events expected yet. slingId="+instance1.slingId);
         
-        // should not have received any events yet
-        assertEquals(0, l1.getEvents().size());
-        assertEquals(0, l1.getUnexpectedCount());
-
-        // one heartbeat doesn't make a day yet - and is 2sec too early for the init
         instance1.heartbeatsAndCheckView();
         Thread.sleep(1200);
-        logger.info("testDelayedInitEvent: even after 500ms no events expected, as it needs more than 1 heartbeat");
-        // should not have received any events yet
-        assertEquals(0, l1.getEvents().size());
-        assertEquals(0, l1.getUnexpectedCount());
-        
-        // but two are a good start
-        l1.addExpected(Type.TOPOLOGY_INIT);
         instance1.heartbeatsAndCheckView();
         Thread.sleep(1200);
         instance1.heartbeatsAndCheckView();
