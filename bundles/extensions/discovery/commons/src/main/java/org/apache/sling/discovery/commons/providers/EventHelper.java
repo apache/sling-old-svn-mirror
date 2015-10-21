@@ -20,9 +20,11 @@ package org.apache.sling.discovery.commons.providers;
 
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
+import org.apache.sling.discovery.TopologyView;
 
-/** Factory for creating TopologyEvents with BaseTopologyView **/
-public class EventFactory {
+/** Contains static factory methods for creating TopologyEvents with BaseTopologyView
+ *  as well as some TopologyEvent related helper methods**/
+public class EventHelper {
 
     /** Simple factory method for creating a TOPOLOGY_INIT event with the given newView **/
     public static TopologyEvent newInitEvent(final BaseTopologyView newView) {
@@ -77,6 +79,32 @@ public class EventFactory {
             throw new IllegalStateException("newView must be current");
         }
         return new TopologyEvent(Type.PROPERTIES_CHANGED, oldView, newView);
+    }
+    
+    /**
+     * Returns a shorter toString than the default TopologyEvent.toString()
+     * which can be rather large and unusable in log files
+     */
+    public static String toShortString(TopologyEvent event) {
+        final TopologyView oldView = event.getOldView();
+        final TopologyView newView = event.getNewView();
+        final String oldViewToString;
+        final String newViewtoString;
+        if (oldView instanceof BaseTopologyView) {
+            final BaseTopologyView baseOldView = (BaseTopologyView)oldView;
+            oldViewToString = baseOldView.toShortString();
+        } else {
+            oldViewToString = String.valueOf(oldView);
+        }
+        if (newView instanceof BaseTopologyView) {
+            final BaseTopologyView baseNewView = (BaseTopologyView)newView;
+            newViewtoString = baseNewView.toShortString();
+        } else {
+            newViewtoString = String.valueOf(newView);
+        }
+        return "TopologyEvent [type=" + event.getType() 
+            + ", oldView=" + oldViewToString
+            + ", newView=" + newViewtoString + "]";
     }
 
 }

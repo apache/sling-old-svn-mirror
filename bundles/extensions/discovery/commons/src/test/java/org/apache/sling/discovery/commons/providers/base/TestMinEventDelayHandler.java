@@ -30,7 +30,7 @@ import org.apache.log4j.LogManager;
 import org.apache.sling.discovery.commons.providers.BaseTopologyView;
 import org.apache.sling.discovery.commons.providers.DefaultClusterView;
 import org.apache.sling.discovery.commons.providers.DummyTopologyView;
-import org.apache.sling.discovery.commons.providers.EventFactory;
+import org.apache.sling.discovery.commons.providers.EventHelper;
 import org.apache.sling.discovery.commons.providers.base.ViewStateManagerImpl;
 import org.apache.sling.discovery.commons.providers.spi.ConsistencyService;
 import org.junit.After;
@@ -102,7 +102,7 @@ public class TestMinEventDelayHandler {
         final BaseTopologyView view = new DummyTopologyView().addInstance();
         logger.info("testNormalDelaying: calling handleNewView...");
         mgr.handleNewView(view);
-        TestHelper.assertEvents(mgr, listener, EventFactory.newInitEvent(view));
+        TestHelper.assertEvents(mgr, listener, EventHelper.newInitEvent(view));
         for(int i=0; i<7; i++) {
             logger.info("testNormalDelaying: calling randomEventLoop...");
             TestHelper.randomEventLoop(mgr, sds, 4, 1500, defaultRandom, listener);
@@ -124,7 +124,7 @@ public class TestMinEventDelayHandler {
         assertNoEvents(listener);
         final BaseTopologyView view = new DummyTopologyView().addInstance();
         mgr.handleNewView(view);
-        TestHelper.assertEvents(mgr, listener, EventFactory.newInitEvent(view));
+        TestHelper.assertEvents(mgr, listener, EventHelper.newInitEvent(view));
         for(int i=0; i<7; i++) {
             TestHelper.randomEventLoop(mgr, sds, 100, -1, defaultRandom, listener);
             Thread.sleep(1000);
@@ -150,13 +150,13 @@ public class TestMinEventDelayHandler {
         DummyTopologyView clonedView = view.clone();
         logger.info("testLongMinDelay: calling handleNewView...");
         mgr.handleNewView(view);
-        TestHelper.assertEvents(mgr, listener, EventFactory.newInitEvent(view));
+        TestHelper.assertEvents(mgr, listener, EventHelper.newInitEvent(view));
         final DummyTopologyView view2 = new DummyTopologyView().addInstance();
         view2.addInstance(UUID.randomUUID().toString(), (DefaultClusterView) view2.getLocalInstance().getClusterView(), false, false);
         logger.info("testLongMinDelay: calling handleNewView...");
         clonedView.setNotCurrent();
         mgr.handleNewView(view2);
-        TestHelper.assertEvents(mgr, listener, EventFactory.newChangingEvent(clonedView));
+        TestHelper.assertEvents(mgr, listener, EventHelper.newChangingEvent(clonedView));
         assertFalse(view.isCurrent());
     }
 }

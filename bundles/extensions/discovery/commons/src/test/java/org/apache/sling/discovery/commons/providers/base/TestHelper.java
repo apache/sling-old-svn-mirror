@@ -31,7 +31,7 @@ import org.apache.sling.discovery.commons.providers.BaseTopologyView;
 import org.apache.sling.discovery.commons.providers.DefaultClusterView;
 import org.apache.sling.discovery.commons.providers.DefaultInstanceDescription;
 import org.apache.sling.discovery.commons.providers.DummyTopologyView;
-import org.apache.sling.discovery.commons.providers.EventFactory;
+import org.apache.sling.discovery.commons.providers.EventHelper;
 import org.apache.sling.discovery.commons.providers.base.ViewStateManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,7 +110,7 @@ public class TestHelper {
                 waitForAsyncEvents(mgr);
                 logger.debug("randomEventLoop: asserting CHANGING event was sent...");
                 for(int j=0; j<listeners.length; j++) {
-                    assertEvents(mgr, listeners[j], EventFactory.newChangingEvent(listeners[j].getLastView()));
+                    assertEvents(mgr, listeners[j], EventHelper.newChangingEvent(listeners[j].getLastView()));
                 }
             } else {
                 logger.debug("randomEventLoop: asserting no events...");
@@ -138,12 +138,12 @@ public class TestHelper {
                 // in that case I should still get a CHANGING - by contract
                 logger.debug("randomEventLoop: asserting CHANGING, CHANGED events were sent");
                 for(int j=0; j<listeners.length; j++) {
-                    assertEvents(mgr, listeners[j], EventFactory.newChangingEvent(lastViews[j]), EventFactory.newChangedEvent(lastViews[j], view));
+                    assertEvents(mgr, listeners[j], EventHelper.newChangingEvent(lastViews[j]), EventHelper.newChangedEvent(lastViews[j], view));
                 }
             } else {
                 logger.debug("randomEventLoop: asserting CHANGED event was sent");
                 for(int j=0; j<listeners.length; j++) {
-                    assertEvents(mgr, listeners[j], EventFactory.newChangedEvent(lastViews[j], clonedView));
+                    assertEvents(mgr, listeners[j], EventHelper.newChangedEvent(lastViews[j], clonedView));
                 }
             }
         }

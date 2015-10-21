@@ -36,7 +36,7 @@ import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.commons.InstancesDiff;
 import org.apache.sling.discovery.commons.InstancesDiff.InstanceCollection;
 import org.apache.sling.discovery.commons.providers.BaseTopologyView;
-import org.apache.sling.discovery.commons.providers.EventFactory;
+import org.apache.sling.discovery.commons.providers.EventHelper;
 import org.apache.sling.discovery.commons.providers.ViewStateManager;
 import org.apache.sling.discovery.commons.providers.spi.ConsistencyService;
 import org.slf4j.Logger;
@@ -204,7 +204,7 @@ public class ViewStateManagerImpl implements ViewStateManager {
                     // otherwise we can send the TOPOLOGY_INIT now
                     logger.debug("bind: view is defined, sending INIT now to {}",
                             eventListener);
-                    enqueue(eventListener, EventFactory.newInitEvent(previousView), true);
+                    enqueue(eventListener, EventHelper.newInitEvent(previousView), true);
                     eventListeners.add(eventListener);
                 }
             } else {
@@ -258,7 +258,7 @@ public class ViewStateManagerImpl implements ViewStateManager {
             return;
         }
         if (logInfo) {
-            logger.info("enqueue: enqueuing topologyEvent {}, to {}", event, da);
+            logger.info("enqueue: enqueuing topologyEvent {}, to {}", EventHelper.toShortString(event), da);
         } else {
             logger.debug("enqueue: enqueuing topologyEvent {}, to {}", event, da);
         }
@@ -269,7 +269,7 @@ public class ViewStateManagerImpl implements ViewStateManager {
 
     /** Internal helper method that sends a given event to a list of listeners **/
     private void enqueueForAll(final List<TopologyEventListener> audience, final TopologyEvent event) {
-        logger.info("enqueueForAll: sending topologyEvent {}, to all ({}) listeners", event, audience.size());
+        logger.info("enqueueForAll: sending topologyEvent {}, to all ({}) listeners", EventHelper.toShortString(event), audience.size());
         for (Iterator<TopologyEventListener> it = audience.iterator(); it.hasNext();) {
             TopologyEventListener topologyEventListener = it.next();
             enqueue(topologyEventListener, event, false);
@@ -300,7 +300,7 @@ public class ViewStateManagerImpl implements ViewStateManager {
             th.start();
 
             if (previousView!=null && !isChanging) {
-                enqueueForAll(unInitializedEventListeners, EventFactory.newInitEvent(previousView));
+                enqueueForAll(unInitializedEventListeners, EventHelper.newInitEvent(previousView));
                 eventListeners.addAll(unInitializedEventListeners);
                 unInitializedEventListeners.clear();
             }
@@ -387,7 +387,7 @@ public class ViewStateManagerImpl implements ViewStateManager {
             
             logger.debug("handleChanging: sending TOPOLOGY_CHANGING to initialized listeners");
             previousView.setNotCurrent();
-            enqueueForAll(eventListeners, EventFactory.newChangingEvent(previousView));
+            enqueueForAll(eventListeners, EventHelper.newChangingEvent(previousView));
         } finally {
             lock.unlock();
             logger.trace("handleChanging: finally");
@@ -476,7 +476,7 @@ public class ViewStateManagerImpl implements ViewStateManager {
                 // and that one does not go via consistencyservice
                 logger.info("handleNewViewNonDelayed: properties changed to: "+newView);
                 previousView.setNotCurrent();
-                enqueueForAll(eventListeners, EventFactory.newPropertiesChangedEvent(previousView, newView));
+                enqueueForAll(eventListeners, EventHelper.newPropertiesChangedEvent(previousView, newView));
                 logger.trace("handleNewViewNonDelayed: setting previousView to {}", newView);
                 previousView = newView;
                 return true;
@@ -608,7 +608,7 @@ public class ViewStateManagerImpl implements ViewStateManager {
         } else {
             logger.debug("doHandleConsistent: sending TOPOLOGY_CHANGED to initialized listeners");
             previousView.setNotCurrent();
-            enqueueForAll(eventListeners, EventFactory.newChangedEvent(previousView, newView));
+            enqueueForAll(eventListeners, EventHelper.newChangedEvent(previousView, newView));
         }
         
         if (unInitializedEventListeners.size()>0) {
@@ -617,7 +617,7 @@ public class ViewStateManagerImpl implements ViewStateManager {
             // waiting for oh so long
             logger.debug("doHandleConsistent: sending TOPOLOGY_INIT to uninitialized listeners ({})", 
                     unInitializedEventListeners.size());
-            enqueueForAll(unInitializedEventListeners, EventFactory.newInitEvent(newView));
+            enqueueForAll(unInitializedEventListeners, EventHelper.newInitEvent(newView));
             eventListeners.addAll(unInitializedEventListeners);
             unInitializedEventListeners.clear();
         }
