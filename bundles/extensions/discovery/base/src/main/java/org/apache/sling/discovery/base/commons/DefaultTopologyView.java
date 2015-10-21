@@ -237,7 +237,7 @@ public class DefaultTopologyView extends BaseTopologyView {
 
     @Override
     public String toString() {
-        return "TopologyViewImpl [current=" + isCurrent() + ", num=" + instances.size() + ", instances="
+        return "DefaultTopologyView[current=" + isCurrent() + ", num=" + instances.size() + ", instances="
                 + instances + "]";
     }
 
