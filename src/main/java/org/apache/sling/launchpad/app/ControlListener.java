@@ -202,7 +202,7 @@ class ControlListener implements Runnable {
                     break;
                 }
 
-                // delay processing after unsuccessfull attempts
+                // delay processing after unsuccessful attempts
                 if (delay > 0) {
                     Main.info(s.getRemoteSocketAddress() + ": Delay: " + (delay / 1000), null);
                     try {
