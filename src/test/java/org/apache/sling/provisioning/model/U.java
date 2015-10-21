@@ -50,6 +50,21 @@ public class U {
         return readCompleteTestModel(TEST_MODEL_FILENAMES);
     }
 
+    /** Read the  model from that name */
+    public static Model readTestModel(final String name) throws Exception {
+        final Reader reader = new InputStreamReader(U.class.getResourceAsStream("/" + name), "UTF-8");
+        try {
+            final Model current = ModelReader.read(reader, name);
+            final Map<Traceable, String> errors = ModelUtility.validate(current);
+            if (errors != null ) {
+                throw new Exception("Invalid model at " + name + " : " + errors);
+            }
+            return current;
+        } finally {
+            reader.close();
+        }
+    }
+
     /** Read the complete model from that names */
     public static Model readCompleteTestModel(final String[] names) throws Exception {
         final Model result = new Model();
