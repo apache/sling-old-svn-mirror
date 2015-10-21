@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.sling.resourceresolver.impl.tree.params;
+package org.apache.sling.resourceresolver.impl.params;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

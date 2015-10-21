@@ -18,6 +18,8 @@
  */
 package org.apache.sling.resourceresolver.impl;
 
+import static java.util.Arrays.asList;
+import static org.apache.sling.resourceresolver.impl.MockedResourceResolverImplTest.createRPHandler;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -26,7 +28,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -38,11 +39,16 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.NonExistingResource;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.SyntheticResource;
-import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
+import org.apache.sling.spi.resource.provider.ResolveContext;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -55,15 +61,37 @@ public class ResourceResolverImplTest {
     private ResourceResolver resResolver;
 
     private ResourceResolverFactoryImpl resFac;
+    
+    private ResourceProviderTracker resourceProviderTracker;
 
-    @Before public void setup() {
-        commonFactory = new CommonResourceResolverFactoryImpl(new ResourceResolverFactoryActivator());
+    @Before public void setup() throws LoginException {
+        ResourceProvider<?> rp = new ResourceProvider<Object>() {
+
+            @Override
+            public Resource getResource(ResolveContext<Object> ctx, String path, Resource parent) {
+                return null;
+            }
+
+            @Override
+            public Iterator<Resource> listChildren(ResolveContext<Object> ctx, Resource parent) {
+                return null;
+            }
+        };
+
+        List<ResourceProviderHandler> handlers = asList(createRPHandler(rp, "rp1", 0, "/"));
+        resourceProviderTracker = Mockito.mock(ResourceProviderTracker.class);
+        ResourceProviderStorage storage = new ResourceProviderStorage(handlers);
+        Mockito.when(resourceProviderTracker.getResourceProviderStorage()).thenReturn(storage);
+        ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
+        activator.resourceProviderTracker = resourceProviderTracker;
+        commonFactory = new CommonResourceResolverFactoryImpl(activator);
         resFac = new ResourceResolverFactoryImpl(commonFactory, /* TODO: using Bundle */ null, null);
-        resResolver = new ResourceResolverImpl(commonFactory, new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker()));
+        resResolver = resFac.getAdministrativeResourceResolver(null);
     }
 
+    @SuppressWarnings("deprecation")
     @Test public void testClose() throws Exception {
-        final ResourceResolver rr = new ResourceResolverImpl(commonFactory, new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker()));
+        final ResourceResolver rr = new ResourceResolverImpl(commonFactory, false, null, resourceProviderTracker.getResourceProviderStorage());
         assertTrue(rr.isLive());
         rr.close();
         assertFalse(rr.isLive());
@@ -174,8 +202,7 @@ public class ResourceResolverImplTest {
         ResourceResolverFactoryActivator rrfa = Mockito.spy(new ResourceResolverFactoryActivator());
         Whitebox.setInternalState(rrfa, "logResourceResolverClosing", true);
         CommonResourceResolverFactoryImpl crrfi = new CommonResourceResolverFactoryImpl(rrfa);
-        final ResourceResolver rr = new ResourceResolverImpl(crrfi, new ResourceResolverContext(false, null, new
-            ResourceAccessSecurityTracker()));
+        final ResourceResolver rr = new ResourceResolverImpl(crrfi, false, null, resourceProviderTracker.getResourceProviderStorage());
         assertTrue(rr.isLive());
         rr.close();
         assertFalse(rr.isLive());
@@ -453,12 +480,12 @@ public class ResourceResolverImplTest {
         try {
             this.resResolver.create(r, "a", null);
             fail("This should be unsupported.");
-        } catch (final UnsupportedOperationException uoe) {
+        } catch (final PersistenceException uoe) {
             // correct
         }
     }
 
-    @Test public void test_getResourceSuperType() {
+    @Test public void test_getResourceSuperType() throws LoginException {
         // the resource resolver
         final List<ResourceResolver> resolvers = new ArrayList<ResourceResolver>();
         final PathBasedResourceResolverImpl resolver = new PathBasedResourceResolverImpl(
@@ -470,9 +497,7 @@ public class ResourceResolverImplTest {
                             throws LoginException {
                         return resolvers.get(0);
                     }
-
-                },
-                new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker()));
+                }, resourceProviderTracker);
         resolvers.add(resolver);
 
         // the resources to test
@@ -491,7 +516,7 @@ public class ResourceResolverImplTest {
         assertNull(resolver.getParentResourceType(r2.getResourceType()));
     }
 
-    @Test public void test_isA() {
+    @Test public void test_isA() throws LoginException {
         final Resource typeResource = Mockito.mock(Resource.class);
         Mockito.when(typeResource.getResourceType()).thenReturn("x:y");
         Mockito.when(typeResource.getResourceSuperType()).thenReturn("t:c");
@@ -506,9 +531,7 @@ public class ResourceResolverImplTest {
                             throws LoginException {
                         return resolvers.get(0);
                     }
-
-                },
-                new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker()));
+                }, resourceProviderTracker);
         resolvers.add(resolver);
         final Resource r = new SyntheticResource(resolver, "/a", "a:b") {
             @Override
@@ -530,9 +553,8 @@ public class ResourceResolverImplTest {
 
         private final Map<String, Resource> resources = new HashMap<String, Resource>();
 
-        public PathBasedResourceResolverImpl(
-                CommonResourceResolverFactoryImpl factory, ResourceResolverContext ctx) {
-            super(factory, ctx);
+        public PathBasedResourceResolverImpl(CommonResourceResolverFactoryImpl factory, ResourceProviderTracker resourceProviderTracker) throws LoginException {
+            super(factory, false, null, resourceProviderTracker.getResourceProviderStorage());
         }
 
         public void setResource(final String path, final Resource r) {

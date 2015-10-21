@@ -19,15 +19,16 @@
 package org.apache.sling.resourceresolver.impl;
 
 import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.Hashtable;
 import java.util.List;
-import java.util.Map;
 
+import org.apache.sling.resourceresolver.impl.legacy.LegacyResourceProviderWhiteboard;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,16 +37,15 @@ public class FactoryPreconditions {
     private static final class RequiredProvider {
         public String pid;
         public Filter filter;
-        public final List<Map<String, Object>> matchingServices = new ArrayList<Map<String,Object>>();
     };
 
-    private final List<Map<String, Object>> earlyPropertiesList = new ArrayList<Map<String, Object>>();
+    private ResourceProviderTracker tracker;
 
     private volatile List<RequiredProvider> requiredProviders;
 
-    private Boolean cachedResult = Boolean.FALSE;
+    public void activate(final BundleContext bc, final String[] configuration, ResourceProviderTracker tracker) {
+        this.tracker = tracker;
 
-    public void activate(final BundleContext bc, final String[] configuration) {
         final List<RequiredProvider> rps = new ArrayList<RequiredProvider>();
         if ( configuration != null ) {
             final Logger logger = LoggerFactory.getLogger(getClass());
@@ -69,14 +69,7 @@ public class FactoryPreconditions {
                 }
             }
         }
-        synchronized ( this ) {
-            this.requiredProviders = rps;
-            this.cachedResult = null;
-            for(final Map<String,Object> props : this.earlyPropertiesList) {
-                this.bindProvider(props);
-            }
-            this.earlyPropertiesList.clear();
-        }
+        this.requiredProviders = rps;
     }
 
     public void deactivate() {
@@ -85,75 +78,26 @@ public class FactoryPreconditions {
 
     public boolean checkPreconditions() {
         synchronized ( this ) {
-            if ( cachedResult != null ) {
-                return cachedResult;
-            }
             boolean canRegister = false;
-            if ( this.requiredProviders != null) {
-                canRegister = true;
-                for(final RequiredProvider rp : this.requiredProviders) {
-                    if ( rp.matchingServices.size() == 0 ) {
-                        canRegister = false;
-                        break;
+            if (this.requiredProviders != null) {
+                canRegister = false;
+                for (ResourceProviderHandler h : this.tracker.getResourceProviderStorage().getAllHandlers()) {
+                    for (final RequiredProvider rp : this.requiredProviders) {
+                        ServiceReference ref = h.getInfo().getServiceReference();
+                        if (rp.filter != null && rp.filter.match(ref)) {
+                            canRegister = true;
+                            break;
+                        } else if (rp.pid != null && rp.pid.equals(ref.getProperty(Constants.SERVICE_PID))){
+                            canRegister = true;
+                            break;
+                        } else if (rp.pid != null && rp.pid.equals(ref.getProperty(LegacyResourceProviderWhiteboard.ORIGINAL_SERVICE_PID))) {
+                            canRegister = true;
+                            break;
+                        }
                     }
                 }
             }
-            this.cachedResult = canRegister;
             return canRegister;
-        }
-    }
-
-    public void bindProvider(final Map<String, Object> props) {
-        synchronized ( this ) {
-            if ( this.requiredProviders == null ) {
-                this.earlyPropertiesList.add(props);
-                return;
-            }
-            Dictionary<String, Object> dict = null;
-            for(final RequiredProvider rp : this.requiredProviders) {
-                if ( rp.pid != null ) {
-                    if ( rp.pid.equals(props.get(Constants.SERVICE_PID)) ) {
-                        rp.matchingServices.add(props);
-                        this.cachedResult = null;
-                    }
-                } else {
-                    if ( dict == null ) {
-                        dict = new Hashtable<String, Object>(props);
-                    }
-                    if ( rp.filter.match(dict) ) {
-                        rp.matchingServices.add(props);
-                        this.cachedResult = null;
-                    }
-                }
-            }
-        }
-    }
-
-    private boolean removeFromList(final List<Map<String, Object>> list, final Map<String, Object> props) {
-        final Long id = (Long) props.get(Constants.SERVICE_ID);
-        int index = 0;
-        while ( index < list.size() ) {
-            final Long currentId = (Long ) list.get(index).get(Constants.SERVICE_ID);
-            if ( currentId == id ) {
-                list.remove(index);
-                return true;
-            }
-            index++;
-        }
-        return false;
-    }
-
-    public void unbindProvider(final Map<String, Object> props) {
-        synchronized ( this ) {
-            if ( this.requiredProviders == null ) {
-                this.removeFromList(this.earlyPropertiesList, props);
-                return;
-            }
-            for(final RequiredProvider rp : this.requiredProviders) {
-                if ( this.removeFromList(rp.matchingServices, props) ) {
-                    this.cachedResult = null;
-                }
-            }
         }
     }
 }

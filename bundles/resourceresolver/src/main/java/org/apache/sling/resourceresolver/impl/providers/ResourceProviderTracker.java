@@ -21,6 +21,7 @@ package org.apache.sling.resourceresolver.impl.providers;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.runtime.dto.FailureReason;
 import org.apache.sling.api.resource.runtime.dto.ResourceProviderDTO;
@@ -37,6 +39,7 @@ import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.event.EventAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 import org.slf4j.Logger;
@@ -57,6 +60,11 @@ public class ResourceProviderTracker {
     private final Map<String, List<ResourceProviderHandler>> handlers = new HashMap<String, List<ResourceProviderHandler>>();
 
     private final Map<ResourceProviderInfo, FailureReason> invalidProviders = new HashMap<ResourceProviderInfo, FailureReason>();
+
+    @Reference
+    private EventAdmin eventAdmin;
+
+    private volatile ResourceProviderStorage storage;
 
     @Activate
     protected void activate(final BundleContext bundleContext) {
@@ -88,6 +96,7 @@ public class ResourceProviderTracker {
                 return reference;
             }
         });
+        this.tracker.open();
     }
 
     @Deactivate
@@ -97,32 +106,37 @@ public class ResourceProviderTracker {
             this.tracker = null;
         }
         this.infos.clear();
+        this.handlers.clear();
+        this.invalidProviders.clear();
     }
 
     private void register(final ResourceProviderInfo info) {
         if ( info.isValid() ) {
            logger.debug("Registering new resource provider {}", info);
            synchronized ( this.handlers ) {
-               List<ResourceProviderHandler> infos = this.handlers.get(info.getPath());
-               if ( infos == null ) {
-                   infos = new ArrayList<ResourceProviderHandler>();
-                   this.handlers.put(info.getPath(), infos);
+               List<ResourceProviderHandler> matchingHandlers = this.handlers.get(info.getPath());
+               if ( matchingHandlers == null ) {
+                   matchingHandlers = new ArrayList<ResourceProviderHandler>();
+                   this.handlers.put(info.getPath(), matchingHandlers);
                }
-               final ResourceProviderHandler handler = new ResourceProviderHandler(bundleContext, info);
-               infos.add(handler);
-               Collections.sort(infos);
-               if ( infos.get(0) == handler ) {
+               final ResourceProviderHandler handler = new ResourceProviderHandler(bundleContext, info, eventAdmin);
+               matchingHandlers.add(handler);
+               Collections.sort(matchingHandlers);
+               if ( matchingHandlers.get(0) == handler ) {
                    if ( !this.activate(handler) ) {
-                       infos.remove(handler);
-                       if ( infos.isEmpty() ) {
+                       matchingHandlers.remove(handler);
+                       if ( matchingHandlers.isEmpty() ) {
                            this.handlers.remove(info.getPath());
                        }
                    } else {
-                       if ( infos.size() > 1 ) {
-                           this.deactivate(infos.get(1));
+                       if ( matchingHandlers.size() > 1 ) {
+                           this.deactivate(matchingHandlers.get(1));
                        }
                    }
                }
+           }
+           synchronized(this) {
+               storage = null;
            }
         } else {
             logger.debug("Ignoring invalid resource provider {}", info);
@@ -135,36 +149,50 @@ public class ResourceProviderTracker {
     private void unregister(final ResourceProviderInfo info) {
         if ( info.isValid() ) {
             logger.debug("Unregistering resource provider {}", info);
-            final List<ResourceProviderHandler> infos = this.handlers.get(info.getPath());
-            if ( infos != null ) {
-                boolean activate = false;
-                if ( infos.get(0).getInfo() == info ) {
-                    activate = true;
-                    this.deactivate(infos.get(0));
-                }
-                if ( infos.remove(info) ) {
-                    if ( infos.isEmpty() ) {
-                        this.handlers.remove(info.getPath());
-                    } else {
-                        while ( activate ) {
-                            if ( !this.activate(infos.get(0)) ) {
-                                infos.remove(0);
-                                activate = !this.handlers.isEmpty();
-                                if ( !activate ) {
-                                    this.handlers.remove(info.getPath());
-                                }
+            synchronized (this.handlers) {
+                final List<ResourceProviderHandler> matchingHandlers = this.handlers.get(info.getPath());
+                if ( matchingHandlers != null ) {
+                    boolean doActivateNext = false;
+                    if ( matchingHandlers.get(0).getInfo() == info ) {
+                        doActivateNext = true;
+                        this.deactivate(matchingHandlers.get(0));
+                    }
+                    if (removeHandlerByInfo(info, matchingHandlers)) {
+                        while (doActivateNext && !matchingHandlers.isEmpty()) {
+                            if (this.activate(matchingHandlers.get(0))) {
+                                doActivateNext = false;
+                            } else {
+                                matchingHandlers.remove(0);
                             }
                         }
                     }
+                    if (matchingHandlers.isEmpty()) {
+                        this.handlers.remove(info.getPath());
+                    }
                 }
             }
-
+            synchronized(this) {
+                storage = null;
+            }
         } else {
             logger.debug("Unregistering invalid resource provider {}", info);
             synchronized ( this.invalidProviders ) {
                 this.invalidProviders.remove(info);
             }
         }
+    }
+
+    private boolean removeHandlerByInfo(final ResourceProviderInfo info, final List<ResourceProviderHandler> infos) {
+        Iterator<ResourceProviderHandler> it = infos.iterator();
+        boolean removed = false;
+        while (it.hasNext()) {
+            if (it.next().getInfo() == info) {
+                it.remove();
+                removed = true;
+                break;
+            }
+        }
+        return removed;
     }
 
     private void deactivate(final ResourceProviderHandler handler) {
@@ -215,6 +243,32 @@ public class ResourceProviderTracker {
         }
         dto.providers = dtos.toArray(new ResourceProviderDTO[dtos.size()]);
         dto.failedProviders = failures.toArray(new ResourceProviderFailureDTO[failures.size()]);
+    }
+
+    private List<ResourceProviderHandler> getHandlers() {
+        List<ResourceProviderHandler> result = new ArrayList<ResourceProviderHandler>();
+        synchronized (this.handlers) {
+            for (List<ResourceProviderHandler> list : handlers.values()) {
+                ResourceProviderHandler h  = list.get(0);
+                if (h != null) {
+                    result.add(h);
+                }
+            }
+        }
+        return result;
+    }
+
+    public ResourceProviderStorage getResourceProviderStorage() {
+        ResourceProviderStorage result = storage;
+        if (result == null) {
+            synchronized(this) {
+                if (storage == null) {
+                    storage = new ResourceProviderStorage(getHandlers());
+                }
+                result = storage;
+            }
+        }
+        return result;
     }
 
     private void fill(final ResourceProviderDTO d, final ResourceProviderInfo info) {
