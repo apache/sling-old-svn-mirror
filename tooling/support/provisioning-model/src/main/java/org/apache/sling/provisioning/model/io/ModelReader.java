@@ -196,7 +196,7 @@ public class ModelReader {
                                        throw new IOException(exceptionPrefix + "Duplicate feature in line " + this.lineNumberReader.getLineNumber() + ": " + line);
                                    }
                                    this.feature = model.getOrCreateFeature(name);
-                                   this.feature.setType(Feature.Type.fromTextRepresentation(parameters.get("type")));
+                                   this.feature.setType(parameters.get("type"));
                                    this.init(this.feature);
                                    this.runMode = null;
                                    this.artifactGroup = null;

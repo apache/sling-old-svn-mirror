@@ -16,15 +16,15 @@
  */
 package org.apache.sling.provisioning.model;
 
-import java.util.List;
-
-import org.junit.Test;
-
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+
+import org.junit.Test;
 
 public class ModelUtilityTest {
 
@@ -41,7 +41,7 @@ public class ModelUtilityTest {
         final List<Artifact> list = U.assertArtifactsInGroup(model.getFeature("f").getRunMode().getArtifactGroup(3), 1);
 
         U.assertArtifact(list.get(0), "g", "a", "2.0.0", "jar", null);
-        assertEquals(Feature.Type.SUBSYSTEM_COMPOSITE, model.getFeature("f").getType());
+        assertEquals(FeatureTypes.SUBSYSTEM_COMPOSITE, model.getFeature("f").getType());
     }
 
     @Test public void removeTest() throws Exception {
@@ -52,7 +52,7 @@ public class ModelUtilityTest {
         assertNotNull(model.getFeature("f").getRunMode());
         assertNotNull(model.getFeature("f").getRunMode().getArtifactGroup(5));
         assertNotNull(model.getFeature("f").getRunMode().getArtifactGroup(7));
-        assertEquals(Feature.Type.PLAIN, model.getFeature("f").getType());
+        assertEquals(FeatureTypes.PLAIN, model.getFeature("f").getType());
 
         final List<Artifact> group5 = U.assertArtifactsInGroup(model.getFeature("f").getRunMode().getArtifactGroup(5), 1);
         U.assertArtifact(group5.get(0), "g", "a", "1.0.0", "jar", null);
