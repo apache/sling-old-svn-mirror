@@ -128,17 +128,17 @@ class MinEventDelayHandler {
                     // check if the new topology is already ready
                     TopologyView t = discoveryService.getTopology();
                     if (!(t instanceof BaseTopologyView)) {
-                        logger.error("asyncDelay.run: topology not of type BaseTopologyView: "+t);
+                        logger.error("asyncDelay.run: done delaying. topology not of type BaseTopologyView: "+t);
                         // cannot continue in this case
                         return;
                     }
                     BaseTopologyView topology = (BaseTopologyView) t;
                     
                     if (topology.isCurrent()) {
-                        logger.debug("asyncDelay.run: got new view: ", topology);
+                        logger.info("asyncDelay.run: done delaying. got new view: ", topology.toShortString());
                         viewStateManager.handleNewViewNonDelayed(topology);
                     } else {
-                        logger.info("asyncDelay.run: new view (still/again) not current, delaying again");
+                        logger.info("asyncDelay.run: done delaying. new view (still/again) not current, delaying again");
                         triggerAsyncDelaying(topology);
                         // we're actually not interested in the result here
                         // if the async part failed, then we have to rely

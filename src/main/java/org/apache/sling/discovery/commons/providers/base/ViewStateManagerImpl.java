@@ -33,8 +33,6 @@ import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
-import org.apache.sling.discovery.commons.InstancesDiff;
-import org.apache.sling.discovery.commons.InstancesDiff.InstanceCollection;
 import org.apache.sling.discovery.commons.providers.BaseTopologyView;
 import org.apache.sling.discovery.commons.providers.EventHelper;
 import org.apache.sling.discovery.commons.providers.ViewStateManager;
@@ -484,37 +482,23 @@ public class ViewStateManagerImpl implements ViewStateManager {
             
             final boolean invokeConsistencyService;
             if (consistencyService==null) {
-                logger.debug("handleNewViewNonDelayed: no consistencyService set - continuing directly.");
+                logger.info("handleNewViewNonDelayed: no consistencyService set - continuing directly.");
                 invokeConsistencyService = false;
-            } else if (previousView==null) {
-                // when there was no previous view, we cannot determine if
-                // any instance left
-                // so for safety reason: always invoke the consistencyservice
-                logger.debug("handleNewViewNonDelayed: no previousView set - invoking consistencyService");
-                invokeConsistencyService = true;
             } else {
-                final InstancesDiff diff = new InstancesDiff(previousView, newView);
-                InstanceCollection removed = diff.removed();
-//                Collection<InstanceDescription> c = removed.get();
-//                Iterator<InstanceDescription> it = c.iterator();
-//                while(it.hasNext()) {
-//                    logger.info("handleNewViewNonDelayed: removed: "+it.next());
-//                }
-                InstanceCollection inClusterView = removed.
-                        isInClusterView(newView.getLocalInstance().getClusterView());
-//                c = removed.get();
-//                it = c.iterator();
-//                while(it.hasNext()) {
-//                    logger.info("handleNewViewNonDelayed: inClusterView: "+it.next());
-//                }
-                final boolean anyInstanceLeftLocalCluster = inClusterView.
-                        get().size()>0;
-                if (anyInstanceLeftLocalCluster) {
-                    logger.debug("handleNewViewNonDelayed: anyInstanceLeftLocalCluster=true, hence invoking consistencyService next");
-                } else {
-                    logger.debug("handleNewViewNonDelayed: anyInstanceLeftLocalCluster=false - continuing directly.");
-                }
-                invokeConsistencyService = anyInstanceLeftLocalCluster;
+                // there used to be a distinction between:
+                // * if no previousView is set, then we should invoke the consistencyService
+                // * if one was set, then we only invoke it if any instance left the cluster
+                // this algorithm would not work though, as the newly joining instance
+                // would always have (previousView==null) - thus would always do the syncToken
+                // thingy - while the existing instances would think: ah, no instance left,
+                // so it is not so urgent to do the syncToken.
+                // at which point the joining instance would wait forever for a syncToken 
+                // to arrive.
+                //
+                // which is a long way of saying: if the consistencyService is configured,
+                // then we always use it, hence:
+                logger.info("handleNewViewNonDelayed: consistencyService set - invoking consistencyService");
+                invokeConsistencyService = true;
             }
                         
             if (invokeConsistencyService) {
@@ -522,7 +506,7 @@ public class ViewStateManagerImpl implements ViewStateManager {
                 // then:
                 // run the set consistencyService
                 final int lastModCnt = modCnt;
-                logger.debug("handleNewViewNonDelayed: invoking consistencyService (modCnt={})", modCnt);
+                logger.info("handleNewViewNonDelayed: invoking consistencyService (modCnt={})", modCnt);
                 consistencyService.sync(newView,
                         new Runnable() {
                     
@@ -551,6 +535,7 @@ public class ViewStateManagerImpl implements ViewStateManager {
                 // or using it is not applicable at this stage - so continue
                 // with sending the TOPOLOGY_CHANGED (or TOPOLOGY_INIT if there
                 // are any newly bound topology listeners) directly
+                logger.info("handleNewViewNonDelayed: not invoking consistencyService, considering consistent now");
                 doHandleConsistent(newView);
             }
             logger.debug("handleNewViewNonDelayed: end");
