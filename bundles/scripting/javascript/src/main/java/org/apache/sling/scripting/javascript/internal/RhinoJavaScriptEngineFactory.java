@@ -169,8 +169,8 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory im
 
             final Context rhinoContext = Context.enter();
             try {
-
-                Scriptable tmpScope = rhinoContext.initStandardObjects(new ImporterTopLevel(), false);
+                rhinoContext.setOptimizationLevel(optimizationLevel);
+                Scriptable tmpScope = rhinoContext.initStandardObjects(new ImporterTopLevel(rhinoContext), false);
 
                 // default classes
                 addHostObjects(tmpScope, (Class<? extends ScriptableObject>[]) HOSTOBJECT_CLASSES);

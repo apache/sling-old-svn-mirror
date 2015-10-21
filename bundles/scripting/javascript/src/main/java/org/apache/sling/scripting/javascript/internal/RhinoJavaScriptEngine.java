@@ -248,7 +248,7 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine implements 
                 } else {
                     // create the request top scope, use the ImporterToplevel here
                     // to support the importPackage and importClasses functions
-                    scope = new ImporterTopLevel(rhinoContext);
+                    scope = new ImporterTopLevel();
 
                     // Set the global scope to be our prototype
                     scope.setPrototype(rootScope);
