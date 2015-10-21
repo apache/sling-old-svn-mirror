@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.discovery.commons.providers.spi.impl;
+package org.apache.sling.discovery.commons.providers.spi.base;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -42,7 +42,7 @@ import org.apache.sling.settings.SlingSettingsService;
  * do the same can map clusterNodeIds to slingIds (or vice-versa)
  */
 @Component(immediate = false)
-@Service
+@Service(value = IdMapService.class)
 public class IdMapService extends AbstractServiceWithBackgroundCheck {
 
     @Reference

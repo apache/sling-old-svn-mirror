@@ -28,7 +28,6 @@ import java.util.UUID;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.discovery.base.connectors.BaseConfig;
@@ -66,27 +65,6 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
     /** the name used for the period job with the scheduler **/
     protected String NAME = "discovery.impl.heartbeat.runner.";
 
-    @Reference
-    protected SlingSettingsService slingSettingsService;
-
-    @Reference
-    protected ResourceResolverFactory resourceResolverFactory;
-
-    @Reference
-    protected ConnectorRegistry connectorRegistry;
-
-    @Reference
-    protected AnnouncementRegistry announcementRegistry;
-
-    @Reference
-    protected Scheduler scheduler;
-
-    @Reference
-    protected BaseConfig connectorConfig;
-
-    /** the discovery service reference is used to get properties updated before heartbeats are sent **/
-    protected BaseDiscoveryService discoveryService;
-
     /** the sling id of the local instance **/
     protected String slingId;
     
@@ -116,6 +94,18 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
     		startupFinished(mode);
     	}
     }
+    
+    protected abstract SlingSettingsService getSlingSettingsService();
+
+    protected abstract ResourceResolverFactory getResourceResolverFactory();
+
+    protected abstract ConnectorRegistry getConnectorRegistry();
+
+    protected abstract AnnouncementRegistry getAnnouncementRegistry();
+
+    protected abstract Scheduler getScheduler();
+
+    protected abstract BaseConfig getConnectorConfig();
 
     public void startupFinished(StartupMode mode) {
     	synchronized(lock) {
@@ -133,7 +123,7 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
     	synchronized(lock) {
     		this.context = context;
 
-	        slingId = slingSettingsService.getSlingId();
+	        slingId = getSlingSettingsService().getSlingId();
 	        NAME = "discovery.connectors.common.runner." + slingId;
 
 	        doActivate();
@@ -143,9 +133,9 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
 
     protected void doActivate() {
         try {
-            final long interval = connectorConfig.getConnectorPingInterval();
+            final long interval = getConnectorConfig().getConnectorPingInterval();
             logger.info("doActivate: starting periodic connectorPing job for "+slingId+" with interval "+interval+" sec.");
-            scheduler.addPeriodicJob(NAME, this,
+            getScheduler().addPeriodicJob(NAME, this,
                     null, interval, false);
         } catch (Exception e) {
             logger.error("doActivate: Could not start connectorPing runner: " + e, e);
@@ -158,7 +148,7 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
         // SLING-3365 : dont synchronize on deactivate
         activated = false;
         logger.info("deactivate: deactivated slingId: {}, this: {}", slingId, this);
-    	scheduler.removeJob(NAME);
+    	getScheduler().removeJob(NAME);
     }
     
     /** for testing only **/
@@ -175,7 +165,7 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
     
     @Override
     public void heartbeatAndCheckView() {
-        logger.info("run: start. [ConnectorPinger of slingId="+slingId+"]");
+        logger.debug("run: start. [for slingId="+slingId+"]");
         synchronized(lock) {
         	if (!activated) {
         		// SLING:2895: avoid heartbeats if not activated
@@ -189,7 +179,7 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
             // check the view
             doCheckView();
         }
-        logger.info("run: end. [ConnectorPinger of slingId="+slingId+"]");
+        logger.debug("run: end. [for slingId="+slingId+"]");
     }
 
     /** Trigger the issuance of the next heartbeat asap instead of at next heartbeat interval **/
@@ -201,7 +191,7 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
             // 'fireJob' checks for a job from the same job-class to already exist
             // 'fireJobAt' though allows to pass a name for the job - which can be made unique, thus does not conflict/already-exist
             logger.info("triggerConnectorPing: firing job to trigger heartbeat");
-            scheduler.fireJobAt(NAME+UUID.randomUUID(), this, null, new Date(System.currentTimeMillis()-1000 /* make sure it gets triggered immediately*/));
+            getScheduler().fireJobAt(NAME+UUID.randomUUID(), this, null, new Date(System.currentTimeMillis()-1000 /* make sure it gets triggered immediately*/));
         } catch (Exception e) {
             logger.info("triggerConnectorPing: Could not trigger heartbeat: " + e);
         }
@@ -216,18 +206,16 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
      * which announce this part of the topology to others)
      */
     protected void issueHeartbeat() {
-        if (discoveryService == null) {
-            logger.error("issueHeartbeat: discoveryService is null");
-        } else {
-            discoveryService.updateProperties();
-        }
-//        issueClusterLocalHeartbeat();
+        updateProperties();
+
         issueConnectorPings();
     }
 
+    protected abstract void updateProperties();
+
     /** Issue a remote heartbeat using the topology connectors **/
     protected void issueConnectorPings() {
-        if (connectorRegistry == null) {
+        if (getConnectorRegistry() == null) {
             logger.error("issueConnectorPings: connectorRegistry is null");
             return;
         }
@@ -238,7 +226,7 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
         if (logger.isDebugEnabled()) {
             logger.debug("issueConnectorPings: pinging outgoing topology connectors (if there is any) for "+slingId);
         }
-        connectorRegistry.pingOutgoingConnectors(forcePing);
+        getConnectorRegistry().pingOutgoingConnectors(forcePing);
         forcePing = false;
     }
 
@@ -247,11 +235,11 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
      */
     protected void doCheckView() {
         // check the remotes first
-        if (announcementRegistry == null) {
+        if (getAnnouncementRegistry() == null) {
             logger.error("announcementRegistry is null");
             return;
         }
-        announcementRegistry.checkExpiredAnnouncements();
+        getAnnouncementRegistry().checkExpiredAnnouncements();
     }
 
     /**

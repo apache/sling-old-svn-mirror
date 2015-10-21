@@ -47,12 +47,6 @@ public abstract class BaseDiscoveryService implements DiscoveryService {
     
     protected abstract void handleIsolatedFromTopology();
     
-    public abstract void updateProperties();
-
-    public abstract void handlePotentialTopologyChange();
-
-    public abstract void handleTopologyChanging();
-
     protected DefaultTopologyView getOldView() {
         return oldView;
     }
@@ -69,16 +63,17 @@ public abstract class BaseDiscoveryService implements DiscoveryService {
      * @see DiscoveryService#getTopology()
      */
     public TopologyView getTopology() {
-        ClusterViewService clusterViewService = getClusterViewService();
-        if (clusterViewService == null) {
-            throw new IllegalStateException(
-                    "DiscoveryService not yet initialized with IClusterViewService");
-        }
         // create a new topology view
         final DefaultTopologyView topology = new DefaultTopologyView();
 
         LocalClusterView localClusterView = null;
         try {
+            ClusterViewService clusterViewService = getClusterViewService();
+            if (clusterViewService == null) {
+                throw new UndefinedClusterViewException(
+                        Reason.REPOSITORY_EXCEPTION,
+                        "no ClusterViewService available at the moment");
+            }
             localClusterView = clusterViewService.getLocalClusterView();
             topology.setLocalClusterView(localClusterView);
         } catch (UndefinedClusterViewException e) {

@@ -40,7 +40,7 @@ import org.apache.sling.discovery.base.its.setup.mock.MockFactory;
 import org.apache.sling.discovery.base.its.setup.mock.SimpleConnectorConfig;
 import org.apache.sling.discovery.commons.providers.DefaultClusterView;
 import org.apache.sling.discovery.commons.providers.DefaultInstanceDescription;
-import org.apache.sling.discovery.commons.providers.spi.impl.DummySlingSettingsService;
+import org.apache.sling.discovery.commons.providers.spi.base.DummySlingSettingsService;
 import org.junit.Before;
 import org.junit.Test;
 

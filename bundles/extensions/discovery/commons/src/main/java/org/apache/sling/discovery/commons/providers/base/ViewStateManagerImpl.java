@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.discovery.commons.providers.impl;
+package org.apache.sling.discovery.commons.providers.base;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -204,7 +204,7 @@ public class ViewStateManagerImpl implements ViewStateManager {
                     // otherwise we can send the TOPOLOGY_INIT now
                     logger.debug("bind: view is defined, sending INIT now to {}",
                             eventListener);
-                    enqueue(eventListener, EventFactory.newInitEvent(previousView));
+                    enqueue(eventListener, EventFactory.newInitEvent(previousView), true);
                     eventListeners.add(eventListener);
                 }
             } else {
@@ -240,7 +240,7 @@ public class ViewStateManagerImpl implements ViewStateManager {
         }
     }
     
-    private void enqueue(final TopologyEventListener da, final TopologyEvent event) {
+    private void enqueue(final TopologyEventListener da, final TopologyEvent event, boolean logInfo) {
         logger.trace("enqueue: start: topologyEvent {}, to {}", event, da);
         if (asyncEventSender==null) {
             // this should never happen - sendTopologyEvent should only be called
@@ -250,10 +250,18 @@ public class ViewStateManagerImpl implements ViewStateManager {
         }
         if (lastEventMap.get(da)==event.getType() && event.getType()==Type.TOPOLOGY_CHANGING) {
             // don't sent TOPOLOGY_CHANGING twice
-            logger.debug("enqueue: listener already got TOPOLOGY_CHANGING: {}", da);
+            if (logInfo) {
+                logger.info("enqueue: listener already got TOPOLOGY_CHANGING: {}", da);
+            } else {
+                logger.debug("enqueue: listener already got TOPOLOGY_CHANGING: {}", da);
+            }
             return;
         }
-        logger.debug("enqueue: enqueuing topologyEvent {}, to {}", event, da);
+        if (logInfo) {
+            logger.info("enqueue: enqueuing topologyEvent {}, to {}", event, da);
+        } else {
+            logger.debug("enqueue: enqueuing topologyEvent {}, to {}", event, da);
+        }
         asyncEventSender.enqueue(da, event);
         lastEventMap.put(da, event.getType());
         logger.trace("enqueue: sending topologyEvent {}, to {}", event, da);
@@ -261,10 +269,10 @@ public class ViewStateManagerImpl implements ViewStateManager {
 
     /** Internal helper method that sends a given event to a list of listeners **/
     private void enqueueForAll(final List<TopologyEventListener> audience, final TopologyEvent event) {
-        logger.debug("enqueueForAll: sending topologyEvent {}, to all ({}) listeners", event, audience.size());
+        logger.info("enqueueForAll: sending topologyEvent {}, to all ({}) listeners", event, audience.size());
         for (Iterator<TopologyEventListener> it = audience.iterator(); it.hasNext();) {
             TopologyEventListener topologyEventListener = it.next();
-            enqueue(topologyEventListener, event);
+            enqueue(topologyEventListener, event, false);
         }
         logger.trace("enqueueForAll: sent topologyEvent {}, to all ({}) listeners", event, audience.size());
     }

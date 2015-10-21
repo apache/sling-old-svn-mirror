@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.discovery.commons.providers.spi.impl;
+package org.apache.sling.discovery.commons.providers.spi.base;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -29,9 +29,12 @@ import org.apache.jackrabbit.oak.plugins.memory.MemoryNodeStore;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.discovery.commons.providers.DummyTopologyView;
 import org.apache.sling.discovery.commons.providers.ViewStateManager;
-import org.apache.sling.discovery.commons.providers.impl.DummyListener;
-import org.apache.sling.discovery.commons.providers.impl.TestHelper;
-import org.apache.sling.discovery.commons.providers.impl.ViewStateManagerFactory;
+import org.apache.sling.discovery.commons.providers.base.DummyListener;
+import org.apache.sling.discovery.commons.providers.base.TestHelper;
+import org.apache.sling.discovery.commons.providers.base.ViewStateManagerFactory;
+import org.apache.sling.discovery.commons.providers.spi.base.DiscoveryLiteConfig;
+import org.apache.sling.discovery.commons.providers.spi.base.IdMapService;
+import org.apache.sling.discovery.commons.providers.spi.base.OakSyncTokenConsistencyService;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.junit.After;
 import org.junit.Before;

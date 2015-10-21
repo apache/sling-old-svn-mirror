@@ -33,7 +33,7 @@ import org.apache.sling.discovery.base.connectors.announcement.AnnouncementRegis
 import org.apache.sling.discovery.base.connectors.ping.ConnectorRegistry;
 import org.apache.sling.discovery.base.connectors.ping.ConnectorRegistryImpl;
 import org.apache.sling.discovery.base.its.setup.mock.FailingScheduler;
-import org.apache.sling.discovery.commons.providers.spi.impl.DummySlingSettingsService;
+import org.apache.sling.discovery.commons.providers.spi.base.DummySlingSettingsService;
 import org.apache.sling.settings.SlingSettingsService;
 
 import junitx.util.PrivateAccessor;

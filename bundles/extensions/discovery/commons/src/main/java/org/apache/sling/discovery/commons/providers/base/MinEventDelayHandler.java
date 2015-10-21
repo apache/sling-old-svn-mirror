@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.discovery.commons.providers.impl;
+package org.apache.sling.discovery.commons.providers.base;
 
 import java.util.Date;
 import java.util.concurrent.locks.Lock;
@@ -93,7 +93,9 @@ class MinEventDelayHandler {
         }
         
         if (viewStateManager.unchanged(newView)) {
-            logger.info("handlesNewView: view is unchanged, hence no delaying applicable");
+            // this will be the most frequent case
+            // hence log only with trace
+            logger.trace("handlesNewView: view is unchanged, hence no delaying applicable");
             return false;
         }
         
@@ -133,10 +135,10 @@ class MinEventDelayHandler {
                     BaseTopologyView topology = (BaseTopologyView) t;
                     
                     if (topology.isCurrent()) {
-                        logger.info("asyncDelay.run: got new view: "+topology);
+                        logger.debug("asyncDelay.run: got new view: ", topology);
                         viewStateManager.handleNewViewNonDelayed(topology);
                     } else {
-                        logger.info("asyncDelay.run: new view (still) not current, delaying again");
+                        logger.info("asyncDelay.run: new view (still/again) not current, delaying again");
                         triggerAsyncDelaying(topology);
                         // we're actually not interested in the result here
                         // if the async part failed, then we have to rely

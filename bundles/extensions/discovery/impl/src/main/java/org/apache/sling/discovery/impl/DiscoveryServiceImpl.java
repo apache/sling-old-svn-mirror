@@ -60,9 +60,9 @@ import org.apache.sling.discovery.commons.providers.BaseTopologyView;
 import org.apache.sling.discovery.commons.providers.DefaultClusterView;
 import org.apache.sling.discovery.commons.providers.DefaultInstanceDescription;
 import org.apache.sling.discovery.commons.providers.ViewStateManager;
-import org.apache.sling.discovery.commons.providers.impl.ViewStateManagerFactory;
+import org.apache.sling.discovery.commons.providers.base.ViewStateManagerFactory;
 import org.apache.sling.discovery.commons.providers.spi.ConsistencyService;
-import org.apache.sling.discovery.commons.providers.spi.impl.IdMapService;
+import org.apache.sling.discovery.commons.providers.spi.base.IdMapService;
 import org.apache.sling.discovery.commons.providers.util.PropertyNameHelper;
 import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
 import org.apache.sling.discovery.impl.common.heartbeat.HeartbeatHandler;
@@ -592,15 +592,26 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
      * Handle the fact that the topology has likely changed
      */
     public void handlePotentialTopologyChange() {
-        BaseTopologyView t = (BaseTopologyView) getTopology();
-        if (t.isCurrent()) {
-            // if we have a valid view, let the viewStateManager do the
-            // comparison and sending of an event, if necessary
-            viewStateManager.handleNewView(t);
-        } else {
-            // if we don't have a view, then we might have to send
-            // a CHANGING event, let that be decided by the viewStateManager as well
-            viewStateManager.handleChanging();
+        viewStateManagerLock.lock();
+        try{
+            if (!activated) {
+                logger.debug("handlePotentialTopologyChange: not yet activated, ignoring");
+                return;
+            }
+            BaseTopologyView t = (BaseTopologyView) getTopology();
+            if (t.isCurrent()) {
+                // if we have a valid view, let the viewStateManager do the
+                // comparison and sending of an event, if necessary
+                viewStateManager.handleNewView(t);
+            } else {
+                // if we don't have a view, then we might have to send
+                // a CHANGING event, let that be decided by the viewStateManager as well
+                viewStateManager.handleChanging();
+            }
+        } finally {
+            if (viewStateManagerLock!=null) {
+                viewStateManagerLock.unlock();
+            }
         }
     }
 

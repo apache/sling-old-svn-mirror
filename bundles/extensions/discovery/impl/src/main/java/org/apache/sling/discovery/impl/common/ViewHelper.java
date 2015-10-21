@@ -126,7 +126,13 @@ public class ViewHelper {
         if (establishedView == null) {
             return false;
         } else {
-            return (establishedView.matches(view));
+            String mismatchDetails = establishedView.matches(view);
+            if (mismatchDetails != null) {
+                logger.info("establishedViewMatches: established view does not match. (details: " + mismatchDetails + ")");
+            } else {
+                logger.debug("establishedViewMatches: established view matches with expected.");
+            }
+            return mismatchDetails == null;
         }
     }
 

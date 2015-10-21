@@ -16,12 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.discovery.commons.providers.spi.impl;
+package org.apache.sling.discovery.commons.providers.spi.base;
 
 import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
@@ -42,21 +39,9 @@ import org.slf4j.LoggerFactory;
  * but not the 'wait while backlog' part (which is left to subclasses
  * if needed).
  */
-@Component(immediate = false)
-@Service(value = { ConsistencyService.class })
-public class SyncTokenConsistencyService extends AbstractServiceWithBackgroundCheck implements ConsistencyService {
+public abstract class BaseSyncTokenConsistencyService extends AbstractServiceWithBackgroundCheck implements ConsistencyService {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-
-    /** the config to be used by this class **/
-    @Reference
-    protected DiscoveryLiteConfig commonsConfig;
-
-    @Reference
-    protected ResourceResolverFactory resourceResolverFactory;
-
-    @Reference
-    protected SlingSettingsService settingsService;
 
     protected String slingId;
 
@@ -64,45 +49,20 @@ public class SyncTokenConsistencyService extends AbstractServiceWithBackgroundCh
     
     protected long syncTokenIntervalMillis;
 
-    public static SyncTokenConsistencyService testConstructorAndActivate(
-            DiscoveryLiteConfig commonsConfig,
-            ResourceResolverFactory resourceResolverFactory,
-            SlingSettingsService settingsService) {
-        SyncTokenConsistencyService service = testConstructor(commonsConfig, resourceResolverFactory, settingsService);
-        service.activate();
-        return service;
-    }
-    
-    public static SyncTokenConsistencyService testConstructor(
-            DiscoveryLiteConfig commonsConfig,
-            ResourceResolverFactory resourceResolverFactory,
-            SlingSettingsService settingsService) {
-        SyncTokenConsistencyService service = new SyncTokenConsistencyService();
-        if (commonsConfig == null) {
-            throw new IllegalArgumentException("commonsConfig must not be null");
-        }
-        if (resourceResolverFactory == null) {
-            throw new IllegalArgumentException("resourceResolverFactory must not be null");
-        }
-        if (settingsService == null) {
-            throw new IllegalArgumentException("settingsService must not be null");
-        }
-        service.commonsConfig = commonsConfig;
-        service.resourceResolverFactory = resourceResolverFactory;
-        service.syncTokenTimeoutMillis = commonsConfig.getBgTimeoutMillis();
-        service.syncTokenIntervalMillis = commonsConfig.getBgIntervalMillis();
-        service.settingsService = settingsService;
-        return service;
-    }
+    protected abstract DiscoveryLiteConfig getCommonsConfig();
+
+    protected abstract ResourceResolverFactory getResourceResolverFactory();
+
+    protected abstract SlingSettingsService getSettingsService();
     
     @Activate
     protected void activate() {
-        this.slingId = settingsService.getSlingId();
+        this.slingId = getSettingsService().getSlingId();
     }
     
     /** Get or create a ResourceResolver **/
     protected ResourceResolver getResourceResolver() throws LoginException {
-        return resourceResolverFactory.getAdministrativeResourceResolver(null);
+        return getResourceResolverFactory().getAdministrativeResourceResolver(null);
     }
     
     @Override
@@ -161,7 +121,7 @@ public class SyncTokenConsistencyService extends AbstractServiceWithBackgroundCh
     }
 
     private String getSyncTokenPath() {
-        return commonsConfig.getSyncTokenPath();
+        return getCommonsConfig().getSyncTokenPath();
     }
 
     private boolean seenAllSyncTokens(BaseTopologyView view) {

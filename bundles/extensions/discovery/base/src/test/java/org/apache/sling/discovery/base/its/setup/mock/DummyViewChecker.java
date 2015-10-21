@@ -18,6 +18,7 @@
  */
 package org.apache.sling.discovery.base.its.setup.mock;
 
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.discovery.base.commons.BaseViewChecker;
@@ -28,6 +29,18 @@ import org.apache.sling.settings.SlingSettingsService;
 
 public class DummyViewChecker extends BaseViewChecker {
     
+    protected SlingSettingsService slingSettingsService;
+
+    protected ResourceResolverFactory resourceResolverFactory;
+
+    protected ConnectorRegistry connectorRegistry;
+
+    protected AnnouncementRegistry announcementRegistry;
+
+    protected Scheduler scheduler;
+
+    protected BaseConfig connectorConfig;
+
     public static DummyViewChecker testConstructor(
             SlingSettingsService slingSettingsService,
             ResourceResolverFactory resourceResolverFactory,
@@ -45,4 +58,38 @@ public class DummyViewChecker extends BaseViewChecker {
         return pinger;
     }
 
+    @Override
+    protected SlingSettingsService getSlingSettingsService() {
+        return slingSettingsService;
+    }
+
+    @Override
+    protected ResourceResolverFactory getResourceResolverFactory() {
+        return resourceResolverFactory;
+    }
+
+    @Override
+    protected ConnectorRegistry getConnectorRegistry() {
+        return connectorRegistry;
+    }
+
+    @Override
+    protected AnnouncementRegistry getAnnouncementRegistry() {
+        return announcementRegistry;
+    }
+
+    @Override
+    protected Scheduler getScheduler() {
+        return scheduler;
+    }
+
+    @Override
+    protected BaseConfig getConnectorConfig() {
+        return connectorConfig;
+    }
+
+    @Override
+    protected void updateProperties() {
+        // nothing done for the dummyViewChecker
+    }
 }

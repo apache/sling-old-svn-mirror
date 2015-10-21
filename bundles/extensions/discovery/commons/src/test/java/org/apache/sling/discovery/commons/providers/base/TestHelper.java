@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.discovery.commons.providers.impl;
+package org.apache.sling.discovery.commons.providers.base;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -30,8 +30,9 @@ import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.commons.providers.BaseTopologyView;
 import org.apache.sling.discovery.commons.providers.DefaultClusterView;
 import org.apache.sling.discovery.commons.providers.DefaultInstanceDescription;
-import org.apache.sling.discovery.commons.providers.EventFactory;
 import org.apache.sling.discovery.commons.providers.DummyTopologyView;
+import org.apache.sling.discovery.commons.providers.EventFactory;
+import org.apache.sling.discovery.commons.providers.base.ViewStateManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
