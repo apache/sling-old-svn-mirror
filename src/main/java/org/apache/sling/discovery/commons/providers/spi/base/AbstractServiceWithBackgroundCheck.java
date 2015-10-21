@@ -122,7 +122,9 @@ public abstract class AbstractServiceWithBackgroundCheck {
         }
 
         void cancel() {
-            logger.info("cancel: "+threadName);
+            if (!done) {
+                logger.info("cancel: "+threadName);
+            }
             cancelled = true;
         }
 
