@@ -21,6 +21,7 @@ package org.apache.sling.discovery.commons.providers.spi.base;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -40,7 +41,7 @@ import org.apache.sling.settings.SlingSettingsService;
  * the Oak discovery-lite descriptor.
  */
 @Component(immediate = false)
-@Service(value = { ConsistencyService.class })
+@Service(value = { ConsistencyService.class, OakSyncTokenConsistencyService.class })
 public class OakSyncTokenConsistencyService extends BaseSyncTokenConsistencyService {
 
     static enum BacklogStatus {
@@ -49,10 +50,6 @@ public class OakSyncTokenConsistencyService extends BaseSyncTokenConsistencyServ
         NO_BACKLOG /* when oak's discovery lite descriptor declared we're backlog-free now */
     }
     
-    private long backlogWaitTimeoutMillis;
-
-    private long backlogWaitIntervalMillis;
-
     @Reference
     private IdMapService idMapService;
     
@@ -104,13 +101,15 @@ public class OakSyncTokenConsistencyService extends BaseSyncTokenConsistencyServ
         }
         service.commonsConfig = commonsConfig;
         service.resourceResolverFactory = resourceResolverFactory;
-        service.syncTokenTimeoutMillis = commonsConfig.getBgTimeoutMillis();
-        service.syncTokenIntervalMillis = commonsConfig.getBgIntervalMillis();
         service.idMapService = idMapService;
         service.settingsService = settingsService;
-        service.backlogWaitIntervalMillis = commonsConfig.getBgIntervalMillis();
-        service.backlogWaitTimeoutMillis = commonsConfig.getBgTimeoutMillis();
         return service;
+    }
+    
+    @Activate
+    protected void activate() {
+        this.slingId = getSettingsService().getSlingId();
+        logger.info("activate: activated with slingId="+slingId);
     }
     
     @Override
@@ -119,13 +118,13 @@ public class OakSyncTokenConsistencyService extends BaseSyncTokenConsistencyServ
         cancelPreviousBackgroundCheck();
 
         // first do the wait-for-backlog part
-        logger.info("sync: doing wait-for-backlog part for view="+view);
+        logger.info("sync: doing wait-for-backlog part for view="+view.toShortString());
         waitWhileBacklog(view, new Runnable() {
 
             @Override
             public void run() {
                 // when done, then do the sync-token part
-                logger.info("sync: doing sync-token part for view="+view);
+                logger.info("sync: doing sync-token part for view="+view.toShortString());
                 syncToken(view, callback);
             }
             
@@ -157,7 +156,7 @@ public class OakSyncTokenConsistencyService extends BaseSyncTokenConsistencyServ
                     return false;
                 }
             }
-        }, runnable, backlogWaitTimeoutMillis, backlogWaitIntervalMillis);
+        }, runnable, getCommonsConfig().getBgTimeoutMillis(), getCommonsConfig().getBgIntervalMillis());
     }
     
     private BacklogStatus getBacklogStatus(BaseTopologyView view) {

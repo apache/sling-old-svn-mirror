@@ -18,7 +18,6 @@
  */
 package org.apache.sling.discovery.commons.providers.spi.base;
 
-import org.apache.felix.scr.annotations.Activate;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
@@ -31,8 +30,6 @@ import org.apache.sling.discovery.commons.providers.BaseTopologyView;
 import org.apache.sling.discovery.commons.providers.spi.ConsistencyService;
 import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
 import org.apache.sling.settings.SlingSettingsService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Implements the 'sync-token' part of the ConsistencyService,
@@ -41,24 +38,13 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class BaseSyncTokenConsistencyService extends AbstractServiceWithBackgroundCheck implements ConsistencyService {
 
-    protected final Logger logger = LoggerFactory.getLogger(getClass());
-
     protected String slingId;
-
-    protected long syncTokenTimeoutMillis;
-    
-    protected long syncTokenIntervalMillis;
 
     protected abstract DiscoveryLiteConfig getCommonsConfig();
 
     protected abstract ResourceResolverFactory getResourceResolverFactory();
 
     protected abstract SlingSettingsService getSettingsService();
-    
-    @Activate
-    protected void activate() {
-        this.slingId = getSettingsService().getSlingId();
-    }
     
     /** Get or create a ResourceResolver **/
     protected ResourceResolver getResourceResolver() throws LoginException {
@@ -76,42 +62,61 @@ public abstract class BaseSyncTokenConsistencyService extends AbstractServiceWit
     }
 
     protected void syncToken(final BaseTopologyView view, final Runnable callback) {
-        // 1) first storing my syncToken
-        try {
-            storeMySyncToken(view.getLocalClusterSyncTokenId());
-        } catch (LoginException e) {
-            logger.error("syncToken: will run into timeout: could not login for storing my syncToken: "+e, e);
-        } catch (PersistenceException e) {
-            logger.error("syncToken: will run into timeout: got PersistenceException while storing my syncToken: "+e, e);
-        }
-        // if anything goes wrong above, then this will mean for the others
-        // that they will have to wait until the timeout hits
-        // which means we should do the same..
-        // hence no further action possible on error above
         
-        // 2) then check if all others have done the same already
         startBackgroundCheck("SyncTokenConsistencyService", new BackgroundCheck() {
             
             @Override
             public boolean check() {
+                // 1) first storing my syncToken
+                if (!storeMySyncToken(view.getLocalClusterSyncTokenId())) {
+                    // if anything goes wrong above, then this will mean for the others
+                    // that they will have to wait until the timeout hits
+                    
+                    // so to try to avoid this, retry storing my sync token later:
+                    return false;
+                }
+                
+                
+                // 2) then check if all others have done the same already
                 return seenAllSyncTokens(view);
             }
-        }, callback, syncTokenTimeoutMillis, syncTokenIntervalMillis);
+        }, callback, getCommonsConfig().getBgTimeoutMillis(), getCommonsConfig().getBgIntervalMillis());
     }
 
-    private void storeMySyncToken(String syncTokenId) throws LoginException, PersistenceException {
+    private boolean storeMySyncToken(String syncTokenId) {
         logger.trace("storeMySyncToken: start");
+        if (slingId == null) {
+            logger.info("storeMySyncToken: not yet activated (slingId is null)");
+            return false;
+        }
         ResourceResolver resourceResolver = null;
         try{
             resourceResolver = getResourceResolver();
             final Resource resource = ResourceHelper.getOrCreateResource(resourceResolver, getSyncTokenPath());
             ModifiableValueMap syncTokens = resource.adaptTo(ModifiableValueMap.class);
-            Object currentValue = syncTokens.get(slingId);
-            if (currentValue == null || !syncTokenId.equals(currentValue)) {
-                syncTokens.put(slingId, syncTokenId);
+            boolean updateToken = false;
+            if (!syncTokens.containsKey(slingId)) {
+                updateToken = true;
+            } else {
+                Object existingToken = syncTokens.get(slingId);
+                if (existingToken==null || !existingToken.equals(syncTokenId)) {
+                    updateToken = true;
+                }
             }
-            resourceResolver.commit();
-            logger.info("syncToken: stored syncToken of slingId="+slingId+" as="+syncTokenId);
+            if (updateToken) {
+                syncTokens.put(slingId, syncTokenId);
+                resourceResolver.commit();
+                logger.info("storeMySyncToken: stored syncToken of slingId="+slingId+" as="+syncTokenId);
+            } else {
+                logger.info("storeMySyncToken: syncToken was left unchanged for slingId="+slingId+" at="+syncTokenId);
+            }
+            return true;
+        } catch (LoginException e) {
+            logger.error("storeMySyncToken: could not login for storing my syncToken: "+e, e);
+            return false;
+        } catch (PersistenceException e) {
+            logger.error("storeMySyncToken: got PersistenceException while storing my syncToken: "+e, e);
+            return false;
         } finally {
             logger.trace("storeMySyncToken: end");
             if (resourceResolver!=null) {
@@ -133,17 +138,21 @@ public abstract class BaseSyncTokenConsistencyService extends AbstractServiceWit
             ValueMap syncTokens = resource.adaptTo(ValueMap.class);
             String syncToken = view.getLocalClusterSyncTokenId();
             
+            boolean success = true;
             for (InstanceDescription instance : view.getLocalInstance().getClusterView().getInstances()) {
                 Object currentValue = syncTokens.get(instance.getSlingId());
                 if (currentValue == null) {
-                    logger.info("seenAllSyncTokens: no syncToken of "+instance);
-                    return false;
-                }
-                if (!syncToken.equals(currentValue)) {
-                    logger.info("seenAllSyncTokens: old syncToken of " + instance
+                    logger.info("seenAllSyncTokens: no syncToken of "+instance.getSlingId());
+                    success = false;
+                } else if (!syncToken.equals(currentValue)) {
+                    logger.info("seenAllSyncTokens: old syncToken of " + instance.getSlingId()
                             + " : expected=" + syncToken + " got="+currentValue);
-                    return false;
+                    success = false;
                 }
+            }
+            if (!success) {
+                logger.info("seenAllSyncTokens: not yet seen all expected syncTokens (see above for details)");
+                return false;
             }
             
             resourceResolver.commit();
