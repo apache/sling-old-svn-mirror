@@ -414,6 +414,12 @@ public class ViewStateManagerImpl implements ViewStateManager {
         if (!localInstance.isLocal()) {
             throw new IllegalStateException("newView's local instance is not isLocal - very unexpected - hence cannot be current");
         }
+        
+        // cancel any potentially ongoing sync
+        if (consistencyService != null) {
+            consistencyService.cancelSync();
+        }
+        
         logger.debug("handleNewView: newView is current, so trying with minEventDelayHandler...");
         if (minEventDelayHandler!=null) {
             if (minEventDelayHandler.handlesNewView(newView)) {

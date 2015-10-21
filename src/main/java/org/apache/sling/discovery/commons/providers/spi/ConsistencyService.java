@@ -81,4 +81,6 @@ public interface ConsistencyService {
      */
     void sync(BaseTopologyView view, Runnable callback);
     
+    void cancelSync();
+    
 }
