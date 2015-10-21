@@ -61,6 +61,11 @@ public class TestMinEventDelayHandler {
             public void sync(BaseTopologyView view, Runnable callback) {
                 callback.run();
             }
+            
+            @Override
+            public void cancelSync() {
+                // nothing to cancel, we're auto-run
+            }
         });
         defaultRandom = new Random(1234123412); // I want randomness yes, but deterministic, for some methods at least
         

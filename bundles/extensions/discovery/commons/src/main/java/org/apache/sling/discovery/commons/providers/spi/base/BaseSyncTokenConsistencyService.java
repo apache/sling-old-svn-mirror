@@ -52,6 +52,11 @@ public abstract class BaseSyncTokenConsistencyService extends AbstractServiceWit
     }
     
     @Override
+    public void cancelSync() {
+        cancelPreviousBackgroundCheck();
+    }
+    
+    @Override
     public void sync(BaseTopologyView view, Runnable callback) {
         // cancel the previous background-check if it's still running
         cancelPreviousBackgroundCheck();

@@ -168,6 +168,11 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
                 logger.debug("sync: no syncToken applicable");
                 callback.run();
             }
+            
+            @Override
+            public void cancelSync() {
+                // cancelling not applicable
+            }
         };
         viewStateManager = ViewStateManagerFactory.newViewStateManager(viewStateManagerLock, consistencyService);
     }

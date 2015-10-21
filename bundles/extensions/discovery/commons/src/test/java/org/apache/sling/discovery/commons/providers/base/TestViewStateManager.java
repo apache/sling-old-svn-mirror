@@ -22,6 +22,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
@@ -36,7 +38,6 @@ import org.apache.sling.discovery.commons.providers.DefaultClusterView;
 import org.apache.sling.discovery.commons.providers.DefaultInstanceDescription;
 import org.apache.sling.discovery.commons.providers.DummyTopologyView;
 import org.apache.sling.discovery.commons.providers.EventHelper;
-import org.apache.sling.discovery.commons.providers.base.ViewStateManagerImpl;
 import org.apache.sling.discovery.commons.providers.spi.ConsistencyService;
 import org.junit.After;
 import org.junit.Before;
@@ -72,6 +73,11 @@ public class TestViewStateManager {
             }
         }
         
+        @Override
+        public void cancelSync() {
+            // TODO not implemented yet
+        }
+        
     }
     
     private ViewStateManagerImpl mgr;
@@ -84,6 +90,11 @@ public class TestViewStateManager {
             
             public void sync(BaseTopologyView view, Runnable callback) {
                 callback.run();
+            }
+            
+            @Override
+            public void cancelSync() {
+                // nothing to cancel, we're auto-run
             }
         });
         defaultRandom = new Random(1234123412); // I want randomness yes, but deterministic, for some methods at least
@@ -203,6 +214,50 @@ public class TestViewStateManager {
         mgr.handleNewView(view2);
         assertEvents(listener, EventHelper.newInitEvent(view2));
         randomEventLoop(defaultRandom, listener);
+    }
+    
+    @Test
+    public void testCancelSync() throws Exception {
+        final List<Runnable> syncCallbacks = new LinkedList<Runnable>();
+        mgr = new ViewStateManagerImpl(new ReentrantLock(), new ConsistencyService() {
+            
+            public void sync(BaseTopologyView view, Runnable callback) {
+                synchronized(syncCallbacks) {
+                    syncCallbacks.add(callback);
+                }
+            }
+            
+            @Override
+            public void cancelSync() {
+                synchronized(syncCallbacks) {
+                    syncCallbacks.clear();
+                }
+            }
+        });
+        mgr.handleActivated();
+        final DummyListener listener = new DummyListener();
+        mgr.bind(listener);
+        mgr.handleChanging();
+        final BaseTopologyView view = new DummyTopologyView().addInstance();
+        mgr.handleNewView(view);
+        assertTrue(mgr.waitForAsyncEvents(1000));
+        TestHelper.assertNoEvents(listener);
+        synchronized(syncCallbacks) {
+            assertEquals(1, syncCallbacks.size());
+        }
+        String id1 = UUID.randomUUID().toString();
+        String id2 = UUID.randomUUID().toString();
+        final BaseTopologyView view2 = TestHelper.newView(true, id1, id1, id1, id2); 
+        mgr.handleNewView(view2);
+        assertTrue(mgr.waitForAsyncEvents(1000));
+        TestHelper.assertNoEvents(listener);
+        synchronized(syncCallbacks) {
+            assertEquals(1, syncCallbacks.size());
+            syncCallbacks.get(0).run();
+            syncCallbacks.clear();
+        }
+        assertTrue(mgr.waitForAsyncEvents(1000));
+        assertEvents(listener, EventHelper.newInitEvent(view2));
     }
     
     @Test

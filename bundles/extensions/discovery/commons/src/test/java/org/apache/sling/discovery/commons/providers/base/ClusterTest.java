@@ -64,6 +64,11 @@ public class ClusterTest {
             public void sync(BaseTopologyView view, Runnable callback) {
                 callback.run();
             }
+            
+            @Override
+            public void cancelSync() {
+                // nothing to cancel, we're auto-run
+            }
         });
         mgrList.add(mgr);
         return mgr;
