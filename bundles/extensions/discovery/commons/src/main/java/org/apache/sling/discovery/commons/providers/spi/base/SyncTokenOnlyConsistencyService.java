@@ -18,6 +18,7 @@
  */
 package org.apache.sling.discovery.commons.providers.spi.base;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -47,22 +48,16 @@ public class SyncTokenOnlyConsistencyService extends BaseSyncTokenConsistencySer
     @Reference
     protected SlingSettingsService settingsService;
 
-    protected String slingId;
-
-    protected long syncTokenTimeoutMillis;
-    
-    protected long syncTokenIntervalMillis;
-
     public static BaseSyncTokenConsistencyService testConstructorAndActivate(
             DiscoveryLiteConfig commonsConfig,
             ResourceResolverFactory resourceResolverFactory,
             SlingSettingsService settingsService) {
-        BaseSyncTokenConsistencyService service = testConstructor(commonsConfig, resourceResolverFactory, settingsService);
+        SyncTokenOnlyConsistencyService service = testConstructor(commonsConfig, resourceResolverFactory, settingsService);
         service.activate();
         return service;
     }
     
-    public static BaseSyncTokenConsistencyService testConstructor(
+    public static SyncTokenOnlyConsistencyService testConstructor(
             DiscoveryLiteConfig commonsConfig,
             ResourceResolverFactory resourceResolverFactory,
             SlingSettingsService settingsService) {
@@ -78,12 +73,16 @@ public class SyncTokenOnlyConsistencyService extends BaseSyncTokenConsistencySer
         }
         service.commonsConfig = commonsConfig;
         service.resourceResolverFactory = resourceResolverFactory;
-        service.syncTokenTimeoutMillis = commonsConfig.getBgTimeoutMillis();
-        service.syncTokenIntervalMillis = commonsConfig.getBgIntervalMillis();
         service.settingsService = settingsService;
         return service;
     }
 
+    @Activate
+    protected void activate() {
+        this.slingId = getSettingsService().getSlingId();
+        logger.info("activate: activated with slingId="+slingId);
+    }
+    
     @Override
     protected DiscoveryLiteConfig getCommonsConfig() {
         return commonsConfig;
