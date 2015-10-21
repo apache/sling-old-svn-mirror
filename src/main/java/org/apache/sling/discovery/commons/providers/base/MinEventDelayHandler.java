@@ -135,7 +135,7 @@ class MinEventDelayHandler {
                     BaseTopologyView topology = (BaseTopologyView) t;
                     
                     if (topology.isCurrent()) {
-                        logger.info("asyncDelay.run: done delaying. got new view: ", topology.toShortString());
+                        logger.info("asyncDelay.run: done delaying. got new view: "+ topology.toShortString());
                         viewStateManager.handleNewViewNonDelayed(topology);
                     } else {
                         logger.info("asyncDelay.run: done delaying. new view (still/again) not current, delaying again");
