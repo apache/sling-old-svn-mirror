@@ -188,7 +188,7 @@ class MinEventDelayHandler {
     }
 
     /** for testing only **/
-    public boolean isDelaying() {
+    boolean isDelaying() {
         return isDelaying;
     }
 
