@@ -31,55 +31,55 @@ public class EventFactoryTest {
     @Test
     public void testInitEvent() throws Exception {
         try{
-            EventFactory.newInitEvent(null);
+            EventHelper.newInitEvent(null);
             fail("should complain");
         } catch(Exception e) {
             // ok
         }
-        EventFactory.newInitEvent(newView());
+        EventHelper.newInitEvent(newView());
     }
     
     @Test
     public void testChangingEvent() throws Exception {
         try{
-            EventFactory.newChangingEvent(null);
+            EventHelper.newChangingEvent(null);
             fail("should complain");
         } catch(Exception e) {
             // ok
         }
         try{
-            EventFactory.newChangingEvent(newView());
+            EventHelper.newChangingEvent(newView());
             fail("should complain");
         } catch(Exception e) {
             // ok
         }
         BaseTopologyView view = newView();
         view.setNotCurrent();
-        EventFactory.newChangingEvent(view);
+        EventHelper.newChangingEvent(view);
     }
 
     @Test
     public void testChangedEvent() throws Exception {
         try{
-            EventFactory.newChangedEvent(null, null);
+            EventHelper.newChangedEvent(null, null);
             fail("should complain");
         } catch(Exception e) {
             // ok
         }
         try{
-            EventFactory.newChangedEvent(newView(), null);
+            EventHelper.newChangedEvent(newView(), null);
             fail("should complain");
         } catch(Exception e) {
             // ok
         }
         try{
-            EventFactory.newChangedEvent(null, newView());
+            EventHelper.newChangedEvent(null, newView());
             fail("should complain");
         } catch(Exception e) {
             // ok
         }
         try{
-            EventFactory.newChangedEvent(newView(), newView());
+            EventHelper.newChangedEvent(newView(), newView());
             fail("should complain");
         } catch(Exception e) {
             // ok
@@ -87,31 +87,31 @@ public class EventFactoryTest {
         BaseTopologyView oldView = newView();
         oldView.setNotCurrent();
         BaseTopologyView newView = newView();
-        EventFactory.newChangedEvent(oldView, newView);
+        EventHelper.newChangedEvent(oldView, newView);
     }
     
     @Test
     public void testPropertiesEvent() throws Exception {
         try{
-            EventFactory.newPropertiesChangedEvent(null, null);
+            EventHelper.newPropertiesChangedEvent(null, null);
             fail("should complain");
         } catch(Exception e) {
             // ok
         }
         try{
-            EventFactory.newPropertiesChangedEvent(newView(), null);
+            EventHelper.newPropertiesChangedEvent(newView(), null);
             fail("should complain");
         } catch(Exception e) {
             // ok
         }
         try{
-            EventFactory.newPropertiesChangedEvent(null, newView());
+            EventHelper.newPropertiesChangedEvent(null, newView());
             fail("should complain");
         } catch(Exception e) {
             // ok
         }
         try{
-            EventFactory.newPropertiesChangedEvent(newView(), newView());
+            EventHelper.newPropertiesChangedEvent(newView(), newView());
             fail("should complain");
         } catch(Exception e) {
             // ok
@@ -119,6 +119,6 @@ public class EventFactoryTest {
         BaseTopologyView oldView = newView();
         oldView.setNotCurrent();
         BaseTopologyView newView = newView();
-        EventFactory.newPropertiesChangedEvent(oldView, newView);
+        EventHelper.newPropertiesChangedEvent(oldView, newView);
     }
 }

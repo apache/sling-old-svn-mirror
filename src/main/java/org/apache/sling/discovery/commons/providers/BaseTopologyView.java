@@ -18,6 +18,7 @@
  */
 package org.apache.sling.discovery.commons.providers;
 
+import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.TopologyView;
 
 /**
@@ -81,5 +82,24 @@ public abstract class BaseTopologyView implements TopologyView {
      * the lifetime of a cluster.
      */
     public abstract String getLocalClusterSyncTokenId();
+
+    public String toShortString() {
+        StringBuffer sb = new StringBuffer();
+        for (InstanceDescription instance : getInstances()) {
+            if (sb.length()!=0) {
+                sb.append(",");
+            }
+            sb.append(instance.getSlingId());
+            sb.append("[");
+            sb.append("local=");
+            sb.append(instance.isLocal());
+            sb.append(",leader=");
+            sb.append(instance.isLeader());
+            sb.append("]");
+        }
+        return "DefaultTopologyView[current=" + isCurrent() 
+            + ", num=" + getInstances().size() 
+            + ", instances=" + sb.toString() + "]";
+    }
 
 }
