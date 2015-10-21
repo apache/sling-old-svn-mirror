@@ -23,7 +23,7 @@
  * @version 1.0.0
  */
 @Version("1.0.0")
-package org.apache.sling.discovery.commons.providers.impl;
+package org.apache.sling.discovery.commons.providers.base;
 
 import aQute.bnd.annotation.Version;
 

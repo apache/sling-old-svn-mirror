@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.discovery.commons.providers.spi.impl;
+package org.apache.sling.discovery.commons.providers.spi.base;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -30,6 +30,7 @@ import org.apache.jackrabbit.commons.SimpleValueFactory;
 import org.apache.jackrabbit.oak.util.GenericDescriptors;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.discovery.commons.providers.spi.base.DiscoveryLiteDescriptor;
 
 public class DescriptorHelper {
 

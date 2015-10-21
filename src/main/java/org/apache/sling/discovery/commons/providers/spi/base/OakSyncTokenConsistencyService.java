@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.discovery.commons.providers.spi.impl;
+package org.apache.sling.discovery.commons.providers.spi.base;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -41,7 +41,7 @@ import org.apache.sling.settings.SlingSettingsService;
  */
 @Component(immediate = false)
 @Service(value = { ConsistencyService.class })
-public class OakSyncTokenConsistencyService extends SyncTokenConsistencyService {
+public class OakSyncTokenConsistencyService extends BaseSyncTokenConsistencyService {
 
     static enum BacklogStatus {
         UNDEFINED /* when there was an error retrieving the backlog status with oak */,
@@ -56,6 +56,15 @@ public class OakSyncTokenConsistencyService extends SyncTokenConsistencyService 
     @Reference
     private IdMapService idMapService;
     
+    @Reference
+    protected DiscoveryLiteConfig commonsConfig;
+
+    @Reference
+    protected ResourceResolverFactory resourceResolverFactory;
+
+    @Reference
+    protected SlingSettingsService settingsService;
+
     public static OakSyncTokenConsistencyService testConstructorAndActivate(
             final DiscoveryLiteConfig commonsConfig,
             final IdMapService idMapService,
@@ -218,6 +227,21 @@ public class OakSyncTokenConsistencyService extends SyncTokenConsistencyService 
                 resourceResolver.close();
             }
         }
+    }
+
+    @Override
+    protected DiscoveryLiteConfig getCommonsConfig() {
+        return commonsConfig;
+    }
+
+    @Override
+    protected ResourceResolverFactory getResourceResolverFactory() {
+        return resourceResolverFactory;
+    }
+
+    @Override
+    protected SlingSettingsService getSettingsService() {
+        return settingsService;
     }
     
 

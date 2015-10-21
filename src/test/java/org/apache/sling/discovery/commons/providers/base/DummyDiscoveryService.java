@@ -16,23 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.discovery.commons.providers.impl;
+package org.apache.sling.discovery.commons.providers.base;
 
-import java.util.concurrent.locks.Lock;
+import org.apache.sling.discovery.DiscoveryService;
+import org.apache.sling.discovery.TopologyView;
+import org.apache.sling.discovery.commons.providers.BaseTopologyView;
 
-import org.apache.sling.discovery.commons.providers.ViewStateManager;
-import org.apache.sling.discovery.commons.providers.spi.ConsistencyService;
+public class DummyDiscoveryService implements DiscoveryService {
 
-/**
- * Used to create an implementation classes of type ViewStateManager
- * (with the idea to be able to leave the implementation classes
- * as package-protected)
- */
-public class ViewStateManagerFactory {
+    private BaseTopologyView topologyView;
 
-    public static ViewStateManager newViewStateManager(Lock lock, 
-            ConsistencyService consistencyService) {
-        return new ViewStateManagerImpl(lock, consistencyService);
+    public void setTopoology(BaseTopologyView topologyView) {
+        this.topologyView = topologyView;
+    }
+    
+    @Override
+    public TopologyView getTopology() {
+        return topologyView;
     }
 
 }

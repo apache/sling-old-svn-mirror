@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.discovery.commons.providers.spi.impl;
+package org.apache.sling.discovery.commons.providers.spi.base;
 
 import javax.jcr.Session;
 
