@@ -60,8 +60,11 @@ import org.apache.sling.discovery.commons.providers.DefaultClusterView;
 import org.apache.sling.discovery.commons.providers.DefaultInstanceDescription;
 import org.apache.sling.discovery.commons.providers.ViewStateManager;
 import org.apache.sling.discovery.commons.providers.base.ViewStateManagerFactory;
+import org.apache.sling.discovery.commons.providers.spi.ConsistencyService;
+import org.apache.sling.discovery.commons.providers.spi.base.ConsistencyServiceChain;
 import org.apache.sling.discovery.commons.providers.spi.base.IdMapService;
-import org.apache.sling.discovery.commons.providers.spi.base.OakSyncTokenConsistencyService;
+import org.apache.sling.discovery.commons.providers.spi.base.OakBacklogConsistencyService;
+import org.apache.sling.discovery.commons.providers.spi.base.SyncTokenConsistencyService;
 import org.apache.sling.discovery.commons.providers.util.PropertyNameHelper;
 import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
 import org.apache.sling.discovery.oak.pinger.OakViewChecker;
@@ -129,7 +132,10 @@ public class OakDiscoveryService extends BaseDiscoveryService {
     private IdMapService idMapService;
     
     @Reference
-    private OakSyncTokenConsistencyService consistencyService;
+    private OakBacklogConsistencyService oakBacklogConsistencyService;
+
+    @Reference
+    private SyncTokenConsistencyService syncTokenConsistencyService;
 
     /** the slingId of the local instance **/
     private String slingId;
@@ -150,7 +156,8 @@ public class OakDiscoveryService extends BaseDiscoveryService {
             OakViewChecker connectorPinger,
             Scheduler scheduler,
             IdMapService idMapService,
-            OakSyncTokenConsistencyService consistencyService,
+            OakBacklogConsistencyService oakBacklogConsistencyService,
+            SyncTokenConsistencyService syncTokenConsistencyService,
             ResourceResolverFactory factory) {
         OakDiscoveryService discoService = new OakDiscoveryService();
         discoService.settingsService = settingsService;
@@ -161,7 +168,8 @@ public class OakDiscoveryService extends BaseDiscoveryService {
         discoService.oakViewChecker = connectorPinger;
         discoService.scheduler = scheduler;
         discoService.idMapService = idMapService;
-        discoService.consistencyService = consistencyService;
+        discoService.oakBacklogConsistencyService = oakBacklogConsistencyService;
+        discoService.syncTokenConsistencyService = syncTokenConsistencyService;
         discoService.resourceResolverFactory = factory;
         return discoService;
     }
@@ -201,7 +209,13 @@ public class OakDiscoveryService extends BaseDiscoveryService {
 
         slingId = settingsService.getSlingId();
 
-        //TODO: this should fail as bind can now run into viewStateManager==null
+        ConsistencyService consistencyService;
+        if (config.getSyncTokenEnabled()) {
+            consistencyService = new ConsistencyServiceChain(oakBacklogConsistencyService, syncTokenConsistencyService);
+        } else {
+            consistencyService = oakBacklogConsistencyService;
+            
+        }
         viewStateManager = ViewStateManagerFactory.newViewStateManager(viewStateManagerLock, consistencyService);
 
         if (config.getMinEventDelay()>0) {

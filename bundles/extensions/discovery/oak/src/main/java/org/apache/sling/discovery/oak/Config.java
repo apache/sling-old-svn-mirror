@@ -73,6 +73,15 @@ public class Config implements BaseConfig, DiscoveryLiteConfig {
     public static final String DISCOVERY_LITE_CHECK_INTERVAL_KEY = "discoveryLiteCheckInterval";
     protected long discoveryLiteCheckInterval = DEFAULT_DISCOVERY_LITE_CHECK_INTERVAL;
     
+    /**
+     * If set to true a syncToken will be used on top of waiting for
+     * deactivating instances to be fully processed.
+     * If set to false, only deactivating instances will be waited for
+     * to be fully processed.
+     */
+    @Property(boolValue=true)
+    private static final String SYNC_TOKEN_ENABLED = "enableSyncToken";
+
     /** Configure the time (in seconds) which must be passed at minimum between sending TOPOLOGY_CHANGING/_CHANGED (avoid flooding). */
     public static final int DEFAULT_MIN_EVENT_DELAY = 3;
     @Property(intValue=DEFAULT_MIN_EVENT_DELAY)
@@ -194,6 +203,12 @@ public class Config implements BaseConfig, DiscoveryLiteConfig {
     /** the maximum backoff factor to be used for stable connectors **/
     private int backoffStableFactor = DEFAULT_BACKOFF_STABLE_FACTOR;
     
+    /**
+     * Whether, on top of waiting for deactivating instances,
+     * a syncToken should also be used
+     */
+    private boolean syncTokenEnabled;
+    
     @Activate
     protected void activate(final Map<String, Object> properties) {
 		logger.debug("activate: config activated.");
@@ -295,6 +310,7 @@ public class Config implements BaseConfig, DiscoveryLiteConfig {
         
         hmacEnabled = PropertiesUtil.toBoolean(properties.get(HMAC_ENABLED), true);
         encryptionEnabled = PropertiesUtil.toBoolean(properties.get(ENCRYPTION_ENABLED), false);
+        syncTokenEnabled = PropertiesUtil.toBoolean(properties.get(SYNC_TOKEN_ENABLED), true);
         sharedKey = PropertiesUtil.toString(properties.get(SHARED_KEY), null);
         keyInterval = PropertiesUtil.toLong(SHARED_KEY_INTERVAL, DEFAULT_SHARED_KEY_INTERVAL);
         
@@ -466,5 +482,9 @@ public class Config implements BaseConfig, DiscoveryLiteConfig {
     public long getBgIntervalMillis() {
         // TODO: currently hard coded
         return 1000;
+    }
+    
+    public boolean getSyncTokenEnabled() {
+        return syncTokenEnabled;
     }
 }
