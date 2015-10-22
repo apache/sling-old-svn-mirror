@@ -54,7 +54,9 @@
             <resource>
                 <directory>src/main/resources</directory>
             </resource>
-
+            <resource>
+                <directory>src/main/avro</directory>
+            </resource>
         </resources>
         <plugins>
             <plugin>
@@ -76,6 +78,10 @@
                         <goals>
                             <goal>schema</goal>
                         </goals>
+                        <configuration>
+                            <sourceDirectory>${project.basedir}/src/main/avro/</sourceDirectory>
+                            <outputDirectory>${project.basedir}/src/main/java/</outputDirectory>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -94,6 +100,37 @@
                 <configuration>
                     <instructions>
                         <Bundle-SymbolicName>org.apache.sling.distribution.extensions</Bundle-SymbolicName>
+                        <Embed-Dependency>kryo,reflectasm,minlog,asm,objenesis,avro,avro-ipc,
+                            jackson-core-asl,
+                            jackson-mapper-asl,
+                            paranamer,
+                            commons-compress,
+                            org.apache.sling.jcr.resource;inline="org/apache/sling/jcr/resource/internal/helper/jcr/JcrNodeResource.*|
+                            org/apache/sling/jcr/resource/internal/helper/jcr/JcrItemResource.*|
+                            org/apache/sling/jcr/resource/internal/helper/LazyInputStream.*|
+                            org/apache/sling/jcr/resource/internal/HelperData*|
+                            org/apache/sling/jcr/resource/internal/JcrModifiableValueMap*|"
+                            org/apache/sling/jcr/resource/internal/JcrValueMap*|"
+                            org/apache/sling/jcr/resource/internal/helper/jcr/PathMapper*|"
+                            org/apache/sling/jcr/resource/internal/helper/JcrPropertyMapCacheEntry*"
+                        </Embed-Dependency>
+                        <Import-Package>
+                            !sun.*,
+                            !org.joda.time.*,
+                            !org.tukaani.xz,
+                            !org.xerial.snappy,
+                            !sun.misc,
+                            !javax.inject,
+                            !org.apache.velocity.*,
+                            !org.jboss.netty.*,
+                            !org.mortbay.jetty.*,
+                            !org.mortbay.resource.*,
+                            !org.apache.sling.api.resource,
+                            *
+                        </Import-Package>
+                        <DynamicImport-Package>
+                            org.apache.sling.api.resource
+                        </DynamicImport-Package>
                     </instructions>
                 </configuration>
             </plugin>
@@ -241,6 +278,43 @@
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
             <version>2.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- avro -->
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+            <version>1.7.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro-ipc</artifactId>
+            <version>1.7.7</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-core-asl</artifactId>
+            <version>1.9.13</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
+            <version>1.9.13</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.thoughtworks.paranamer</groupId>
+            <artifactId>paranamer</artifactId>
+            <version>2.3</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>1.4.1</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
