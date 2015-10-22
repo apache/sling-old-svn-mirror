@@ -18,6 +18,7 @@
  */
 package org.apache.sling.distribution.serialization.impl.avro;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
@@ -106,6 +107,7 @@ public class AvroDistributionPackageBuilder implements DistributionPackageBuilde
         return AvroDistributionPackageBuilderFactory.RESOURCEAVRO;
     }
 
+    @Nonnull
     @Override
     public DistributionPackage createPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionException {
         DistributionPackage distributionPackage;
@@ -169,6 +171,7 @@ public class AvroDistributionPackageBuilder implements DistributionPackageBuilde
         return avroShallowResource;
     }
 
+    @Nonnull
     @Override
     public DistributionPackage readPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
         try {
@@ -199,6 +202,7 @@ public class AvroDistributionPackageBuilder implements DistributionPackageBuilde
         return avroResources;
     }
 
+    @CheckForNull
     @Override
     public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String id) {
         File file = new File(id);
