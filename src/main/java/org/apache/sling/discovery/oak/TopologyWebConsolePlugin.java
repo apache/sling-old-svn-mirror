@@ -279,14 +279,14 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         pw.println("<br/>");
 
         ResourceResolver resourceResolver = null;
-        pw.println("<p class=\"statline ui-state-highlight\">Discovery-Lite Descriptor History</p>");
+        pw.println("<p class=\"statline ui-state-highlight\">Oak Discovery-Lite Descriptor History</p>");
         pw.println("<pre>");
         for (String discoLiteHistoryEntry : discoveryLiteHistory) {
             pw.println(discoLiteHistoryEntry);
         }
         pw.println("</pre>");
         pw.println("<br/>");
-        pw.println("<p class=\"statline ui-state-highlight\">Current Discovery-Lite Descriptor Value</p>");
+        pw.println("<p class=\"statline ui-state-highlight\">Current Oak Discovery-Lite Descriptor</p>");
         pw.println("<pre>");
         try{
             resourceResolver = getResourceResolver();
@@ -924,14 +924,14 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         }
 
         ResourceResolver resourceResolver = null;
-        pw.println("Discovery-Lite Descriptor History");
+        pw.println("Oak Discovery-Lite Descriptor History");
         pw.println("---------------------------------------");
         for (String discoLiteHistoryEntry : discoveryLiteHistory) {
             pw.println(discoLiteHistoryEntry);
         }
         pw.println();
         pw.println();
-        pw.println("Current Discovery-Lite Descriptor Value");
+        pw.println("Current Oak Discovery-Lite Descriptor");
         pw.println("---------------------------------------");
         try{
             resourceResolver = getResourceResolver();
