@@ -18,13 +18,10 @@
  */
 package org.apache.sling.discovery.commons.providers.spi.base;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
@@ -37,43 +34,79 @@ import org.apache.sling.discovery.commons.providers.BaseTopologyView;
 import org.apache.sling.discovery.commons.providers.spi.ConsistencyService;
 import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
 import org.apache.sling.settings.SlingSettingsService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Implements the 'sync-token' part of the ConsistencyService,
- * but not the 'wait while backlog' part (which is left to subclasses
- * if needed).
+ * Implements the syncToken idea: each instance stores a key-value
+ * pair with key=stringId and value=discoveryLiteSequenceNumber
+ * under /var/discovery/oak/syncTokens - and then waits until it
+ * sees the same token from all other instances in the cluster.
+ * This way, once the syncToken is received the local instance
+ * knows that all instances in the cluster are now in TOPOLOGY_CHANGING state
+ * (thus all topology-dependent activity is now stalled and waiting)
+ * and are aware of the new discoveryLite view.
  */
-public abstract class BaseSyncTokenConsistencyService extends AbstractServiceWithBackgroundCheck implements ConsistencyService {
+@Component(immediate = false)
+@Service(value = { ConsistencyService.class, SyncTokenConsistencyService.class })
+public class SyncTokenConsistencyService extends AbstractServiceWithBackgroundCheck implements ConsistencyService {
 
-    class HistoryEntry {
-        BaseTopologyView view;
-        String msg;
-        String fullLine;
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
+
+    @Reference
+    protected DiscoveryLiteConfig commonsConfig;
+
+    @Reference
+    protected ResourceResolverFactory resourceResolverFactory;
+
+    @Reference
+    protected SlingSettingsService settingsService;
+
+    public static SyncTokenConsistencyService testConstructorAndActivate(
+            DiscoveryLiteConfig commonsConfig,
+            ResourceResolverFactory resourceResolverFactory,
+            SlingSettingsService settingsService) {
+        SyncTokenConsistencyService service = testConstructor(commonsConfig, resourceResolverFactory, settingsService);
+        service.activate();
+        return service;
     }
     
-    /** the date format used in the truncated log of topology events **/
-    private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+    public static SyncTokenConsistencyService testConstructor(
+            DiscoveryLiteConfig commonsConfig,
+            ResourceResolverFactory resourceResolverFactory,
+            SlingSettingsService settingsService) {
+        SyncTokenConsistencyService service = new SyncTokenConsistencyService();
+        if (commonsConfig == null) {
+            throw new IllegalArgumentException("commonsConfig must not be null");
+        }
+        if (resourceResolverFactory == null) {
+            throw new IllegalArgumentException("resourceResolverFactory must not be null");
+        }
+        if (settingsService == null) {
+            throw new IllegalArgumentException("settingsService must not be null");
+        }
+        service.commonsConfig = commonsConfig;
+        service.resourceResolverFactory = resourceResolverFactory;
+        service.settingsService = settingsService;
+        return service;
+    }
 
-    protected String slingId;
-
-    protected List<HistoryEntry> history = new LinkedList<HistoryEntry>();
-    
-    protected abstract DiscoveryLiteConfig getCommonsConfig();
-
-    protected abstract ResourceResolverFactory getResourceResolverFactory();
-
-    protected abstract SlingSettingsService getSettingsService();
+    @Activate
+    protected void activate() {
+        this.slingId = settingsService.getSlingId();
+        logger.info("activate: activated with slingId="+slingId);
+    }
     
     /** Get or create a ResourceResolver **/
     protected ResourceResolver getResourceResolver() throws LoginException {
-        return getResourceResolverFactory().getAdministrativeResourceResolver(null);
+        return resourceResolverFactory.getAdministrativeResourceResolver(null);
     }
     
     @Override
     public void cancelSync() {
         cancelPreviousBackgroundCheck();
     }
-    
+
     @Override
     public void sync(BaseTopologyView view, Runnable callback) {
         // cancel the previous background-check if it's still running
@@ -105,7 +138,7 @@ public abstract class BaseSyncTokenConsistencyService extends AbstractServiceWit
                 // 2) then check if all others have done the same already
                 return seenAllSyncTokens(view);
             }
-        }, callback, getCommonsConfig().getBgTimeoutMillis(), getCommonsConfig().getBgIntervalMillis());
+        }, callback, commonsConfig.getBgTimeoutMillis(), commonsConfig.getBgIntervalMillis());
     }
 
     private boolean storeMySyncToken(String syncTokenId) {
@@ -151,7 +184,7 @@ public abstract class BaseSyncTokenConsistencyService extends AbstractServiceWit
     }
 
     private String getSyncTokenPath() {
-        return getCommonsConfig().getSyncTokenPath();
+        return commonsConfig.getSyncTokenPath();
     }
 
     private boolean seenAllSyncTokens(BaseTopologyView view) {
@@ -212,44 +245,4 @@ public abstract class BaseSyncTokenConsistencyService extends AbstractServiceWit
         }
     }
     
-    public List<String> getSyncHistory() {
-        List<HistoryEntry> snapshot;
-        synchronized(history) {
-            snapshot = Collections.unmodifiableList(history);
-        }
-        List<String> result = new ArrayList<String>(snapshot.size());
-        for (HistoryEntry historyEntry : snapshot) {
-            result.add(historyEntry.fullLine);
-        }
-        return result;
-    }
-
-    protected void addHistoryEntry(BaseTopologyView view, String msg) {
-        synchronized(history) {
-            for(int i = history.size() - 1; i>=0; i--) {
-                HistoryEntry entry = history.get(i);
-                if (!entry.view.equals(view)) {
-                    // don't filter if the view starts differing,
-                    // only filter for the last few entries where
-                    // the view is equal
-                    break;
-                }
-                if (entry.msg.equals(msg)) {
-                    // if the view is equal and the msg matches
-                    // then this is a duplicate entry, so ignore
-                    return;
-                }
-            }
-            String fullLine = sdf.format(Calendar.getInstance().getTime()) + ": " + msg;
-            HistoryEntry newEntry = new HistoryEntry();
-            newEntry.view = view;
-            newEntry.fullLine = fullLine;
-            newEntry.msg = msg;
-            history.add(newEntry);
-            while (history.size() > 12) {
-                history.remove(0);
-            }
-        }
-    }
-
 }
