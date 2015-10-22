@@ -60,13 +60,30 @@ public class VersionTest {
     }
 
     @Test
-    public void testQualifier() {
-        final String v1 = "1";
-        final String v1snapshot = "1-SNAPSHOT";
+    public void testSnapshotQualifier() {
+        final Version v1 = new Version("1");
+        final Version v1snapshot = new Version("1-SNAPSHOT");
+        final Version v1a = new Version("1-A");
 
-        final Version ve1 = new Version(v1);
-        final Version ve1snapshot = new Version(v1snapshot);
+        // snapshot is lower than the corresponding version
+        assertTrue(v1.compareTo(v1snapshot) > 0);
+        assertTrue(v1snapshot.compareTo(v1) < 0);
 
-        assertTrue(ve1.compareTo(ve1snapshot) > 0);
+        // qualifier is higher than the version
+        assertTrue(v1a.compareTo(v1) > 0);
+        assertTrue(v1.compareTo(v1a) < 0);
+
+        // qualifier is higher than snapshot
+        assertTrue(v1a.compareTo(v1snapshot) > 0);
+        assertTrue(v1snapshot.compareTo(v1a) < 0);
+    }
+
+    @Test
+    public void testQualifiers() {
+        final Version va = new Version("1-A");
+        final Version vb = new Version("1-B");
+
+        assertTrue(va.compareTo(vb) < 0);
+        assertTrue(vb.compareTo(va) > 0);
     }
 }

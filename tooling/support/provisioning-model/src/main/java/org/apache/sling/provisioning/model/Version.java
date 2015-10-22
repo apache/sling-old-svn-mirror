@@ -119,7 +119,14 @@ public class Version implements Comparable<Version> {
 	            if (result == 0) {
 	                result = microVersion - other.microVersion;
 	                if (result == 0) {
-	                    result = other.qualifier.compareTo(qualifier);
+	                    result = qualifier.compareTo(other.qualifier);
+	                    if ( result != 0 ) {
+	                        if ( "SNAPSHOT".equals(qualifier) ) {
+	                            result = -1;
+	                        } else if ( "SNAPSHOT".equals(other.qualifier) ) {
+	                            result = 1;
+	                        }
+	                    }
 	                }
 	            }
 
