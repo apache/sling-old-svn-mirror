@@ -17,7 +17,6 @@
 package org.apache.sling.commons.json.io;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -188,70 +187,65 @@ public class JSONRenderer {
 
     /** Quote the supplied string for JSON */
     public String quote(String string) {
-        final StringWriter sw = new StringWriter();
-        try {
-            quote(sw, string);
-        } catch(IOException ioex) {
-            throw new RuntimeException("IOException in quote()", ioex);
-        }
-        return sw.toString();
-    }
-
-    /** Quote the supplied string for JSON, to the supplied Writer */
-    public void quote(Writer w, String string) throws IOException {
         if (string == null || string.length() == 0) {
-            w.write("\"\"");
-            return;
+            return "\"\"";
         }
 
-        char         b;
-        char         c = 0;
-        int          i;
-        int          len = string.length();
-        String       t;
+        char          b;
+        char          c = 0;
+        int           i;
+        int           len = string.length();
+        StringBuilder sb = new StringBuilder(len + 2);
+        String        t;
 
-        w.write('"');
+        sb.append('"');
         for (i = 0; i < len; i += 1) {
             b = c;
             c = string.charAt(i);
             switch (c) {
-            case '\\':
-            case '"':
-                w.write('\\');
-                w.write(c);
-                break;
-            case '/':
-                if (b == '<') {
-                    w.write('\\');
-                }
-                w.write(c);
-                break;
-            case '\b':
-                w.write("\\b");
-                break;
-            case '\t':
-                w.write("\\t");
-                break;
-            case '\n':
-                w.write("\\n");
-                break;
-            case '\f':
-                w.write("\\f");
-                break;
-            case '\r':
-                w.write("\\r");
-                break;
-            default:
-                if (c < ' ' || (c >= '\u0080' && c < '\u00a0') ||
-                               (c >= '\u2000' && c < '\u2100')) {
-                    t = "000" + Integer.toHexString(c);
-                    w.write("\\u" + t.substring(t.length() - 4));
-                } else {
-                    w.write(c);
-                }
+                case '\\':
+                case '"':
+                    sb.append('\\');
+                    sb.append(c);
+                    break;
+                case '/':
+                    if (b == '<') {
+                        sb.append('\\');
+                    }
+                    sb.append(c);
+                    break;
+                case '\b':
+                    sb.append("\\b");
+                    break;
+                case '\t':
+                    sb.append("\\t");
+                    break;
+                case '\n':
+                    sb.append("\\n");
+                    break;
+                case '\f':
+                    sb.append("\\f");
+                    break;
+                case '\r':
+                    sb.append("\\r");
+                    break;
+                default:
+                    if (c < ' ' || (c >= '\u0080' && c < '\u00a0') ||
+                            (c >= '\u2000' && c < '\u2100')) {
+                        t = "000" + Integer.toHexString(c);
+                        sb.append("\\u").append(t.substring(t.length() - 4));
+                    } else {
+                        sb.append(c);
+                    }
             }
         }
-        w.write('"');
+        sb.append('"');
+        return sb.toString();
+    }
+
+    /** Quote the supplied string for JSON, to the supplied Writer */
+    public void quote(Writer w, String string) throws IOException {
+        w.write(quote(string));
     }
 
     /**

@@ -25,6 +25,9 @@ import org.apache.sling.commons.json.util.DespacedRendering;
 import org.apache.sling.commons.json.util.TestJSONObject;
 import org.junit.Test;
 
+import java.io.IOException;
+import java.io.StringWriter;
+
 
 /** Most of the JSONRenderer code is tested indirectly
  *  via existing JSONObject and JSONArray tests - this
@@ -120,5 +123,19 @@ public class JSONRendererTest {
                 "-nl-___children___:[-nl-{-nl-___name___:_k0_,-nl-_name_:_k0_",
                 "-nl-_thisis_:_k0_-nl-},-nl-{-nl-___name___:_k1_,-nl-_name_:_k1_,-nl-_thisis_:_k1_-nl-}-nl-]"
                 );
-    }    
+    }
+
+    /**
+     * Just to make sure that quote(writer, string) which is not indirectly tested anymore still works. For other quote
+     * tests see JSONObjectToStringTest.testQuote*
+     */
+    @Test
+    public void testQuoteWriter() throws IOException {
+        StringWriter writer = new StringWriter();
+        renderer.quote(writer, "\\");
+        renderer.quote(writer, "");
+        renderer.quote(writer, null);
+        assertEquals("\"\\\\\"\"\"\"\"", writer.toString());
+    }
+
 }
