@@ -288,6 +288,7 @@ public class SlingAuthenticator implements Authenticator,
         Hashtable<String, Object> props = new Hashtable<String, Object>();
         props.put("felix.webconsole.label", plugin.getLabel());
         props.put("felix.webconsole.title", plugin.getTitle());
+        props.put("felix.webconsole.category", "Sling");
         props.put(Constants.SERVICE_DESCRIPTION,
             "Sling Request Authenticator WebConsole Plugin");
         props.put(Constants.SERVICE_VENDOR,
