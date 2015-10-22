@@ -87,7 +87,7 @@ class MinEventDelayHandler {
             return false;
         }
         
-        if (viewStateManager.isPropertiesDiff(newView)) {
+        if (viewStateManager.onlyDiffersInProperties(newView)) {
             logger.info("handlesNewView: only properties differ, hence no delaying applicable");
             return false;
         }

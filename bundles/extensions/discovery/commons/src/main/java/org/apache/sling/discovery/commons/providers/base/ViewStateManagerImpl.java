@@ -454,7 +454,7 @@ public class ViewStateManagerImpl implements ViewStateManager {
                     logger.debug("handleNewViewNonDelayed: we were not in changing state and new view matches old, so - ignoring");
                     return false;
                 }
-                if (previousView==null || !isPropertiesDiff(newView)) {
+                if (previousView==null || !onlyDiffersInProperties(newView)) {
                     logger.debug("handleNewViewNonDelayed: implicitly triggering a handleChanging as we were not in changing state");
                     handleChanging();
                     logger.debug("handleNewViewNonDelayed: implicitly triggering of a handleChanging done");
@@ -475,7 +475,7 @@ public class ViewStateManagerImpl implements ViewStateManager {
             }
             
             // now check if the view indeed changed or if it was just the properties
-            if (!isChanging && isPropertiesDiff(newView)) {
+            if (!isChanging && onlyDiffersInProperties(newView)) {
                 // well then send a properties changed event only
                 // and that one does not go via consistencyservice
                 logger.info("handleNewViewNonDelayed: properties changed to: "+newView);
@@ -552,7 +552,7 @@ public class ViewStateManagerImpl implements ViewStateManager {
         }
     }
 
-    protected boolean isPropertiesDiff(BaseTopologyView newView) {
+    protected boolean onlyDiffersInProperties(BaseTopologyView newView) {
         if (previousView==null) {
             return false;
         }
@@ -571,13 +571,17 @@ public class ViewStateManagerImpl implements ViewStateManager {
         }
         
         for(InstanceDescription oldInstance : previousView.getInstances()) {
-            if (!newIds.contains(oldInstance.getSlingId())) {
+            InstanceDescription newInstance = newView.getInstance(oldInstance.getSlingId());
+            if (newInstance == null) {
+                return false;
+            }
+            if (oldInstance.isLeader() != newInstance.isLeader()) {
                 return false;
             }
         }
         return true;
     }
-
+    
     private void doHandleConsistent(BaseTopologyView newView) {
         logger.trace("doHandleConsistent: start");
         
