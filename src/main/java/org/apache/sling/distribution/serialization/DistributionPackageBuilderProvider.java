@@ -18,7 +18,6 @@
  */
 package org.apache.sling.distribution.serialization;
 
-
 /**
  * A helper interface to allow finding registered {@link org.apache.sling.distribution.serialization.DistributionPackageBuilder}s
  */

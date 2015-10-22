@@ -42,14 +42,14 @@ import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.event.DistributionEventTopics;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.impl.CompositeDistributionResponse;
-import org.apache.sling.distribution.impl.DistributionException;
+import org.apache.sling.distribution.DistributionException;
 import org.apache.sling.distribution.impl.SimpleDistributionResponse;
 import org.apache.sling.distribution.log.DistributionLog;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
-import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
-import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueEntry;
@@ -76,9 +76,8 @@ public class SimpleDistributionAgent implements DistributionAgent {
     private final DistributionPackageImporter distributionPackageImporter;
     private final DistributionPackageExporter distributionPackageExporter;
 
-    private final DistributionQueueDispatchingStrategy exportQueueStrategy;
-    private final DistributionQueueDispatchingStrategy importQueueStrategy;
-
+    private final DistributionQueueDispatchingStrategy scheduleQueueStrategy;
+    private final DistributionQueueDispatchingStrategy errorQueueStrategy;
 
     private final DistributionEventFactory distributionEventFactory;
 
@@ -103,8 +102,8 @@ public class SimpleDistributionAgent implements DistributionAgent {
                                    DistributionPackageExporter distributionPackageExporter,
                                    DistributionRequestAuthorizationStrategy distributionRequestAuthorizationStrategy,
                                    DistributionQueueProvider queueProvider,
-                                   DistributionQueueDispatchingStrategy exportQueueStrategy,
-                                   DistributionQueueDispatchingStrategy importQueueStrategy,
+                                   DistributionQueueDispatchingStrategy scheduleQueueStrategy,
+                                   DistributionQueueDispatchingStrategy errorQueueStrategy,
                                    DistributionEventFactory distributionEventFactory,
                                    ResourceResolverFactory resourceResolverFactory,
                                    DefaultDistributionLog log,
@@ -124,7 +123,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
                 || subServiceName == null
                 || distributionRequestAuthorizationStrategy == null
                 || queueProvider == null
-                || exportQueueStrategy == null
+                || scheduleQueueStrategy == null
                 || distributionEventFactory == null
                 || resourceResolverFactory == null) {
 
@@ -134,7 +133,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
                     subServiceName,
                     distributionRequestAuthorizationStrategy,
                     queueProvider,
-                    exportQueueStrategy,
+                    scheduleQueueStrategy,
                     distributionEventFactory,
                     resourceResolverFactory});
             throw new IllegalArgumentException("all arguments are required: " + errorMessage);
@@ -148,8 +147,8 @@ public class SimpleDistributionAgent implements DistributionAgent {
         this.distributionPackageImporter = distributionPackageImporter;
         this.distributionPackageExporter = distributionPackageExporter;
         this.queueProvider = queueProvider;
-        this.exportQueueStrategy = exportQueueStrategy;
-        this.importQueueStrategy = importQueueStrategy;
+        this.scheduleQueueStrategy = scheduleQueueStrategy;
+        this.errorQueueStrategy = errorQueueStrategy;
         this.distributionEventFactory = distributionEventFactory;
     }
 
@@ -224,7 +223,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
         // dispatch the distribution package to the queue distribution handler
         try {
-            Iterable<DistributionQueueItemStatus> states = exportQueueStrategy.add(distributionPackage, queueProvider);
+            Iterable<DistributionQueueItemStatus> states = scheduleQueueStrategy.add(distributionPackage, queueProvider);
             for (DistributionQueueItemStatus state : states) {
                 DistributionRequestState requestState = getRequestStateFromQueueState(state.getItemState());
                 distributionResponses.add(new SimpleDistributionResponse(requestState, state.getItemState().toString()));
@@ -248,9 +247,9 @@ public class SimpleDistributionAgent implements DistributionAgent {
     @Nonnull
     public Set<String> getQueueNames() {
         Set<String> queueNames = new TreeSet<String>();
-        queueNames.addAll(exportQueueStrategy.getQueueNames());
-        if (importQueueStrategy != null) {
-            queueNames.addAll(importQueueStrategy.getQueueNames());
+        queueNames.addAll(scheduleQueueStrategy.getQueueNames());
+        if (errorQueueStrategy != null) {
+            queueNames.addAll(errorQueueStrategy.getQueueNames());
         }
         return queueNames;
     }
@@ -389,7 +388,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
                     success = true;
                     DistributionPackageUtils.releaseOrDelete(distributionPackage, queueName);
                     generatePackageEvent(DistributionEventTopics.AGENT_PACKAGE_DISTRIBUTED, distributionPackage);
-                } else if (importQueueStrategy != null && queueItemStatus.getAttempts() > retryAttempts) {
+                } else if (errorQueueStrategy != null && queueItemStatus.getAttempts() > retryAttempts) {
                     success = reEnqueuePackage(distributionPackage);
                     DistributionPackageUtils.releaseOrDelete(distributionPackage, queueName);
                 }
@@ -425,12 +424,12 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
     private boolean reEnqueuePackage(DistributionPackage distributionPackage) {
 
-        if (importQueueStrategy == null) {
+        if (errorQueueStrategy == null) {
             return false;
         }
 
         try {
-            importQueueStrategy.add(distributionPackage, queueProvider);
+            errorQueueStrategy.add(distributionPackage, queueProvider);
         } catch (DistributionException e) {
             log.error("could not reenqueue package {}", distributionPackage.getId(), e);
             return false;

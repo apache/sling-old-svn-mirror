@@ -36,8 +36,8 @@ import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
-import org.apache.sling.distribution.impl.DistributionException;
-import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.DistributionException;
+import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.serialization.impl.AbstractDistributionPackageBuilder;
 import org.slf4j.Logger;
@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
 /**
  * a {@link org.apache.sling.distribution.serialization.DistributionPackageBuilder} based on Apache Jackrabbit FileVault.
  * <p/>
- * Each {@link org.apache.sling.distribution.packaging.DistributionPackage} created by {@link FileVaultDistributionPackageBuilder} is
+ * Each {@link DistributionPackage} created by {@link FileVaultDistributionPackageBuilder} is
  * backed by a {@link org.apache.jackrabbit.vault.packaging.VaultPackage}. 
  */
 public class FileVaultDistributionPackageBuilder extends AbstractDistributionPackageBuilder implements

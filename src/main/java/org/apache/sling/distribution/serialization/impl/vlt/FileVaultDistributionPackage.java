@@ -25,14 +25,14 @@ import java.io.InputStream;
 
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.distribution.DistributionRequestType;
-import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.distribution.serialization.DistributionPackage;
+import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.apache.sling.distribution.serialization.impl.AbstractDistributionPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * a FileVault {@link org.apache.sling.distribution.packaging.DistributionPackage}
+ * a FileVault {@link DistributionPackage}
  */
 public class FileVaultDistributionPackage extends AbstractDistributionPackage implements DistributionPackage {
 

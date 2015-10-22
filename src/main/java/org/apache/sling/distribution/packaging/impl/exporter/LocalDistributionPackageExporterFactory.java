@@ -31,8 +31,8 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
-import org.apache.sling.distribution.impl.DistributionException;
-import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.DistributionException;
+import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.slf4j.Logger;
@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * {@link org.apache.sling.distribution.packaging.DistributionPackageExporter} implementation which creates a FileVault based
- * {@link org.apache.sling.distribution.packaging.DistributionPackage} locally.
+ * {@link DistributionPackage} locally.
  */
 @Component(label = "Apache Sling Distribution Exporter - Local Package Exporter Factory",
         metatype = true,

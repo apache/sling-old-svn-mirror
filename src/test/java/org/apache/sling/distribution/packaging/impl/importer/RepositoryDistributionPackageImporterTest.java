@@ -28,8 +28,8 @@ import javax.jcr.security.Privilege;
 
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.impl.DistributionException;
-import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.DistributionException;
+import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.junit.Test;
 

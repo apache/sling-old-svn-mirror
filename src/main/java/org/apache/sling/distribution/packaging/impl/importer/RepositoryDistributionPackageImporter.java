@@ -30,17 +30,17 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.impl.DistributionException;
-import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.DistributionException;
+import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
-import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * {@link org.apache.sling.distribution.packaging.DistributionPackageImporter} importing
- * {@link org.apache.sling.distribution.packaging.DistributionPackage} stream + type into an underlying JCR repository.
+ * {@link DistributionPackage} stream + type into an underlying JCR repository.
  */
 public class RepositoryDistributionPackageImporter implements DistributionPackageImporter {
 

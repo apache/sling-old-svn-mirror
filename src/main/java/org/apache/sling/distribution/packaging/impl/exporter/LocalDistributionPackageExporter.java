@@ -24,14 +24,14 @@ import java.util.List;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
-import org.apache.sling.distribution.impl.DistributionException;
-import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.DistributionException;
+import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 
 /**
  * {@link org.apache.sling.distribution.packaging.DistributionPackageExporter} implementation which creates a FileVault based
- * {@link org.apache.sling.distribution.packaging.DistributionPackage} locally.
+ * {@link DistributionPackage} locally.
  */
 public class LocalDistributionPackageExporter implements DistributionPackageExporter {
 
