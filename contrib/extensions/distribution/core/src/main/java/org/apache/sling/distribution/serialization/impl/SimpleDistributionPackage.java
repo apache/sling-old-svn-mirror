@@ -27,13 +27,13 @@ import org.apache.commons.io.IOUtils;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
-import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.distribution.serialization.DistributionPackage;
+import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A simple {@link org.apache.sling.distribution.packaging.DistributionPackage} is used for deletion of certain paths on the target instance
+ * A simple {@link DistributionPackage} is used for deletion of certain paths on the target instance
  */
 public class SimpleDistributionPackage extends AbstractDistributionPackage implements DistributionPackage {
 

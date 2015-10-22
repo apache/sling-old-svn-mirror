@@ -217,20 +217,19 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
         DistributionPackageExporter packageExporter = new LocalDistributionPackageExporter(packageBuilder);
         DistributionQueueProvider queueProvider = new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
 
-        DistributionQueueDispatchingStrategy exportQueueStrategy = null;
-        DistributionQueueDispatchingStrategy importQueueStrategy = null;
+        DistributionQueueDispatchingStrategy exportQueueStrategy;
+        DistributionQueueDispatchingStrategy errorQueueStrategy = null;
 
         DistributionPackageImporter packageImporter = null;
         Map<String, String> importerEndpointsMap = SettingsUtils.toUriMap(config.get(IMPORTER_ENDPOINTS));
         boolean useMultipleQueues = PropertiesUtil.toBoolean(config.get(USE_MULTIPLE_QUEUES), false);
         Set<String> processingQueues = new HashSet<String>();
 
-
         if (useMultipleQueues) {
             Set<String> queuesMap = new TreeSet<String>();
             queuesMap.addAll(importerEndpointsMap.keySet());
             queuesMap.addAll(Arrays.asList(passiveQueues));
-            String[] queueNames = queuesMap.toArray(new String[0]);
+            String[] queueNames = queuesMap.toArray(new String[queuesMap.size()]);
 
             if (selectiveQueues != null) {
                 SelectiveQueueDispatchingStrategy dispatchingStrategy = new SelectiveQueueDispatchingStrategy(selectiveQueues, queueNames);
@@ -244,7 +243,6 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
             processingQueues.addAll(importerEndpointsMap.keySet());
             processingQueues.removeAll(Arrays.asList(passiveQueues));
 
-
             packageImporter = new RemoteDistributionPackageImporter(distributionLog, transportSecretProvider, importerEndpointsMap, TransportEndpointStrategyType.One);
         } else {
             exportQueueStrategy = new SingleQueueDispatchingStrategy();
@@ -254,19 +252,16 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
 
         DistributionRequestType[] allowedRequests = new DistributionRequestType[]{DistributionRequestType.ADD, DistributionRequestType.DELETE};
 
-
         String retryStrategy = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(RETRY_STRATEGY), null));
         int retryAttepts = PropertiesUtil.toInteger(config.get(RETRY_ATTEMPTS), 100);
 
-
         if ("errorQueue".equals(retryStrategy)) {
-            importQueueStrategy = new ErrorQueueDispatchingStrategy(processingQueues.toArray(new String[0]));
+            errorQueueStrategy = new ErrorQueueDispatchingStrategy(processingQueues.toArray(new String[processingQueues.size()]));
         }
-
 
         return new SimpleDistributionAgent(agentName, queueProcessingEnabled, processingQueues,
                 serviceName, packageImporter, packageExporter, requestAuthorizationStrategy,
-                queueProvider, exportQueueStrategy, importQueueStrategy, distributionEventFactory, resourceResolverFactory, distributionLog, allowedRequests, allowedRoots, retryAttepts);
+                queueProvider, exportQueueStrategy, errorQueueStrategy, distributionEventFactory, resourceResolverFactory, distributionLog, allowedRequests, allowedRoots, retryAttepts);
 
 
     }

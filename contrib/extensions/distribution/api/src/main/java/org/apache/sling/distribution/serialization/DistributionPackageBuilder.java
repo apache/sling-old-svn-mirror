@@ -23,12 +23,11 @@ import javax.annotation.Nonnull;
 import java.io.InputStream;
 
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.distribution.DistributionException;
 import org.apache.sling.distribution.DistributionRequest;
-import org.apache.sling.distribution.impl.DistributionException;
-import org.apache.sling.distribution.packaging.DistributionPackage;
 
 /**
- * A builder for {@link org.apache.sling.distribution.packaging.DistributionPackage}s
+ * A builder for {@link DistributionPackage}s
  */
 public interface DistributionPackageBuilder {
 
@@ -39,33 +38,33 @@ public interface DistributionPackageBuilder {
     String getType();
 
     /**
-     * creates a {@link org.apache.sling.distribution.packaging.DistributionPackage} for a specific {@link org.apache.sling.distribution.DistributionRequest}
+     * creates a {@link DistributionPackage} for a specific {@link org.apache.sling.distribution.DistributionRequest}
      *
      * @param resourceResolver the resource resolver used to access the resources to be packaged
      * @param request          the {@link org.apache.sling.distribution.DistributionRequest} to create the package for
-     * @return a {@link org.apache.sling.distribution.packaging.DistributionPackage} or <code>null</code> if it could not be created
+     * @return a {@link DistributionPackage} or <code>null</code> if it could not be created
      * @throws DistributionException if any error occurs while creating the package, or if the resource resolver is not authorized to do that
      */
     @Nonnull
     DistributionPackage createPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionException;
 
     /**
-     * reads a stream and tries to convert it to a {@link org.apache.sling.distribution.packaging.DistributionPackage} this provider can read and install
+     * reads a stream and tries to convert it to a {@link DistributionPackage} this provider can read and install
      *
      * @param resourceResolver resource resolver used to store the eventually created package
      * @param stream           the {@link InputStream} of the package to read
-     * @return a {@link org.apache.sling.distribution.packaging.DistributionPackage} if it can read it from the stream
-     * @throws DistributionException when the stream cannot be read as a {@link org.apache.sling.distribution.packaging.DistributionPackage}
+     * @return a {@link DistributionPackage} if it can read it from the stream
+     * @throws DistributionException when the stream cannot be read as a {@link DistributionPackage}
      */
     @Nonnull
     DistributionPackage readPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException;
 
     /**
-     * get an already created (and saved into the repository) {@link org.apache.sling.distribution.packaging.DistributionPackage} by its id
+     * get an already created (and saved into the repository) {@link DistributionPackage} by its id
      *
      * @param resourceResolver resource resolver used to access the package with the given id
-     * @param id               the unique identifier of an already created {@link org.apache.sling.distribution.packaging.DistributionPackage}
-     * @return a {@link org.apache.sling.distribution.packaging.DistributionPackage} if one with such an id exists, <code>null</code> otherwise
+     * @param id               the unique identifier of an already created {@link DistributionPackage}
+     * @return a {@link DistributionPackage} if one with such an id exists, <code>null</code> otherwise
      * @throws DistributionException when the stream the package with that id cannot be retrieved
      */
     @CheckForNull

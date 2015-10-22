@@ -20,11 +20,11 @@ package org.apache.sling.distribution.serialization.impl;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.distribution.serialization.DistributionPackage;
+import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 
 /**
- * abstract implementation of a {@link org.apache.sling.distribution.packaging.DistributionPackage}
+ * abstract implementation of a {@link DistributionPackage}
  */
 public abstract class AbstractDistributionPackage implements DistributionPackage {
     private final DistributionPackageInfo info;

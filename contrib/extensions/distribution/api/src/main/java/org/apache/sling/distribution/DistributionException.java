@@ -17,9 +17,11 @@
  * under the License.
  */
 
-package org.apache.sling.distribution.impl;
+package org.apache.sling.distribution;
 
-
+/**
+ * Generic checked exception for distribution
+ */
 public class DistributionException extends Exception {
     public DistributionException(Throwable e) {
         super(e);

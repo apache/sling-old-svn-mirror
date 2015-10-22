@@ -26,8 +26,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.sling.distribution.impl.DistributionException;
-import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.DistributionException;
+import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueEntry;
@@ -47,7 +47,6 @@ public class ErrorQueueDispatchingStrategy implements DistributionQueueDispatchi
     private final Set<String> queueNames = new TreeSet<String>();
 
     public ErrorQueueDispatchingStrategy(String[] queueNames) {
-
         this.queueNames.addAll(Arrays.asList(queueNames));
     }
 

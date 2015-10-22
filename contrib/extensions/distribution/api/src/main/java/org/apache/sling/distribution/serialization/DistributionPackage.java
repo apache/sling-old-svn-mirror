@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.packaging;
+package org.apache.sling.distribution.serialization;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -31,8 +31,7 @@ import aQute.bnd.annotation.ConsumerType;
 public interface DistributionPackage {
 
     /**
-     * get package id. the id is a unique string that can be used to retrieve
-     * the package from an {@link DistributionPackageExporter}
+     * get package id. the id is a unique string that can be used to identify the package
      *
      * @return the package id
      */

@@ -22,9 +22,10 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import aQute.bnd.annotation.ProviderType;
+import org.apache.sling.distribution.serialization.DistributionPackage;
 
 /**
- * A queue is responsible for collecting the {@link org.apache.sling.distribution.packaging.DistributionPackage}s
+ * A queue is responsible for collecting the {@link DistributionPackage}s
  * exported by a {@link org.apache.sling.distribution.agent.DistributionAgent} in
  * order to be able to process them also when there are multiple (concurrent)
  * {@link org.apache.sling.distribution.DistributionRequest}s executed
@@ -47,7 +48,7 @@ public interface DistributionQueue {
     /**
      * add a distribution item to this queue
      *
-     * @param item a distribution item, typically representing a {@link org.apache.sling.distribution.packaging.DistributionPackage}
+     * @param item a distribution item, typically representing a {@link DistributionPackage}
      *             to distribute
      * @return {@code true} if the item was added correctly to the queue,
      * {@code false} otherwise

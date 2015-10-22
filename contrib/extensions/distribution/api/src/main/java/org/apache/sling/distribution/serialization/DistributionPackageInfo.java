@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.packaging;
+package org.apache.sling.distribution.serialization;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -34,7 +34,6 @@ import org.apache.sling.distribution.DistributionRequestType;
  * Additional information is optional and components should expect every piece of it to be null.
  */
 public final class DistributionPackageInfo extends ValueMapDecorator implements ValueMap {
-
 
     /**
      * distribution package type

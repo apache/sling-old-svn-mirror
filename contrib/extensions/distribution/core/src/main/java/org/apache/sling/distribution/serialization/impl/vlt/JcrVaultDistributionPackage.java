@@ -26,14 +26,14 @@ import java.io.InputStream;
 
 import org.apache.jackrabbit.vault.packaging.JcrPackage;
 import org.apache.sling.distribution.DistributionRequestType;
-import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.distribution.serialization.DistributionPackage;
+import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.apache.sling.distribution.serialization.impl.AbstractDistributionPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * a JcrPackage based {@link org.apache.sling.distribution.packaging.DistributionPackage}
+ * a JcrPackage based {@link DistributionPackage}
  */
 public class JcrVaultDistributionPackage extends AbstractDistributionPackage implements DistributionPackage {
     private final Logger log = LoggerFactory.getLogger(getClass());

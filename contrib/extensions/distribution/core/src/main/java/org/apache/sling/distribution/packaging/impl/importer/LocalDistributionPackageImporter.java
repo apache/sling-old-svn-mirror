@@ -22,10 +22,10 @@ import javax.annotation.Nonnull;
 import java.io.InputStream;
 
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.impl.DistributionException;
-import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.DistributionException;
+import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
-import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.slf4j.Logger;
@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * {@link org.apache.sling.distribution.packaging.DistributionPackageImporter} implementation which imports a FileVault
- * based {@link org.apache.sling.distribution.packaging.DistributionPackage} locally.
+ * based {@link DistributionPackage} locally.
  */
 
 public class LocalDistributionPackageImporter implements DistributionPackageImporter {
