@@ -61,6 +61,7 @@ import org.apache.sling.discovery.commons.providers.DefaultInstanceDescription;
 import org.apache.sling.discovery.commons.providers.ViewStateManager;
 import org.apache.sling.discovery.commons.providers.base.ViewStateManagerFactory;
 import org.apache.sling.discovery.commons.providers.spi.ConsistencyService;
+import org.apache.sling.discovery.commons.providers.spi.base.ConsistencyHistory;
 import org.apache.sling.discovery.commons.providers.spi.base.ConsistencyServiceChain;
 import org.apache.sling.discovery.commons.providers.spi.base.IdMapService;
 import org.apache.sling.discovery.commons.providers.spi.base.OakBacklogConsistencyService;
@@ -211,6 +212,10 @@ public class OakDiscoveryService extends BaseDiscoveryService {
 
         ConsistencyService consistencyService;
         if (config.getSyncTokenEnabled()) {
+            //TODO: ConsistencyHistory is implemented a little bit hacky ..
+            ConsistencyHistory consistencyHistory = new ConsistencyHistory();
+            oakBacklogConsistencyService.setConsistencyHistory(consistencyHistory);
+            syncTokenConsistencyService.setConsistencyHistory(consistencyHistory);
             consistencyService = new ConsistencyServiceChain(oakBacklogConsistencyService, syncTokenConsistencyService);
         } else {
             consistencyService = oakBacklogConsistencyService;
