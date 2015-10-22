@@ -82,7 +82,7 @@ public abstract class DistributionIntegrationTestBase {
             {
                 assertExists(authorClient, authorAgentConfigUrl("publish-multiple"));
                 setArrayProperties(author, authorAgentConfigUrl("publish-multiple"),
-                        "packageImporter.endpoints", remoteImporterUrl, remoteImporterUrl + "badaddress");
+                        "packageImporter.endpoints", "endpoint1=" + remoteImporterUrl, "endpoint2=" + remoteImporterUrl + "badaddress");
 
 
                 Thread.sleep(1000);

@@ -30,8 +30,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.distribution.impl.DistributionException;
 import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -60,7 +60,7 @@ public class RepositoryDistributionPackageImporter implements DistributionPackag
         this.privilegeName = privilegeName;
     }
 
-    public void importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageImportException {
+    public void importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException {
 
         Session session = null;
         try {
@@ -91,7 +91,7 @@ public class RepositoryDistributionPackageImporter implements DistributionPackag
                 throw new Exception("could not get a Session to deliver package to the repository");
             }
         } catch (Exception e) {
-            throw new DistributionPackageImportException(e);
+            throw new DistributionException(e);
         } finally {
             if (session != null) {
                 session.logout();
@@ -99,8 +99,8 @@ public class RepositoryDistributionPackageImporter implements DistributionPackag
         }
     }
 
-    public DistributionPackageInfo importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException {
-        throw new DistributionPackageImportException("not supported");
+    public DistributionPackageInfo importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
+        throw new DistributionException("not supported");
     }
 
     private Session authenticate() throws Exception {

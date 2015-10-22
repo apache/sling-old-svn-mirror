@@ -38,6 +38,7 @@ import org.apache.http.entity.ContentType;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.impl.DistributionException;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
@@ -45,7 +46,6 @@ import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.transport.core.DistributionTransport;
-import org.apache.sling.distribution.transport.core.DistributionTransportException;
 import org.apache.sling.distribution.util.RequestUtils;
 
 /**
@@ -74,7 +74,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
         this.maxPullItems = maxPullItems;
     }
 
-    public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionTransportException {
+    public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException {
         String hostAndPort = getHostAndPort(distributionEndpoint.getUri());
 
         URI packageOrigin = distributionPackage.getInfo().getOrigin();
@@ -111,8 +111,8 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
                 log.info("delivered package {} of type {} with paths {}", distributionPackage.getId(),
                         distributionPackage.getType(),
                         Arrays.toString(distributionPackage.getInfo().getPaths()));
-            } catch (Exception ex) {
-                throw new DistributionTransportException(ex);
+            } catch (Throwable ex) {
+                throw new DistributionException(ex);
             }
         }
 
@@ -120,7 +120,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
 
     @Nonnull
     public List<DistributionPackage> retrievePackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest
-            distributionRequest) throws DistributionTransportException {
+            distributionRequest) throws DistributionException {
         log.debug("pulling from {}", distributionEndpoint.getUri());
         List<DistributionPackage> result = new ArrayList<DistributionPackage>();
 

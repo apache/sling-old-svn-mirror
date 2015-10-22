@@ -28,8 +28,8 @@ import javax.jcr.security.Privilege;
 
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.distribution.impl.DistributionException;
 import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.junit.Test;
 
@@ -57,7 +57,7 @@ public class RepositoryDistributionPackageImporterTest {
             when(distributionPackage.getId()).thenReturn("someid");
             repositoryDistributionPackageImporter.importPackage(resourceResolver, distributionPackage);
             fail("import cannot succeed if service is user is unable to obtain a session");
-        } catch (DistributionPackageImportException e) {
+        } catch (DistributionException e) {
             // expected to fail
         }
     }
@@ -82,7 +82,7 @@ public class RepositoryDistributionPackageImporterTest {
             when(distributionPackage.getId()).thenReturn("someid");
             repositoryDistributionPackageImporter.importPackage(resourceResolver, distributionPackage);
             fail("import cannot succeed if privileges are not sufficient");
-        } catch (DistributionPackageImportException e) {
+        } catch (DistributionException e) {
             // expected to fail
         }
     }

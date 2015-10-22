@@ -27,6 +27,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
+import org.apache.sling.distribution.impl.DistributionException;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
@@ -103,11 +104,15 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
 
         if (packageBuilder != null) {
 
-            DistributionPackage distributionPackage = packageBuilder.getPackage(resourceResolver, id);
-
-            if (distributionPackage != null) {
-                DistributionPackageUtils.releaseOrDelete(distributionPackage, queue.getName());
+            DistributionPackage distributionPackage = null;
+            try {
+                distributionPackage = packageBuilder.getPackage(resourceResolver, id);
+            } catch (DistributionException e) {
+                log.error("cannot get package", e);
             }
+
+            DistributionPackageUtils.releaseOrDelete(distributionPackage, queue.getName());
+
         }
     }
 }

@@ -36,10 +36,9 @@ import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.impl.DistributionException;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.serialization.DistributionPackageBuildingException;
-import org.apache.sling.distribution.serialization.DistributionPackageReadingException;
 import org.apache.sling.distribution.serialization.impl.AbstractDistributionPackageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,7 +82,7 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
 
     @Override
     protected DistributionPackage createPackageForAdd(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request)
-            throws DistributionPackageBuildingException {
+            throws DistributionException {
         Session session = null;
         VaultPackage vaultPackage = null;
         try {
@@ -99,9 +98,9 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
 
             vaultPackage = VltUtils.createPackage(packaging.getPackageManager(), session, opts, tempDirectory);
             return new FileVaultDistributionPackage(getType(), vaultPackage);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             VltUtils.deletePackage(vaultPackage);
-            throw new DistributionPackageBuildingException(e);
+            throw new DistributionException(e);
         } finally {
             ungetSession(session);
         }
@@ -109,7 +108,7 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
 
     @Override
     protected DistributionPackage readPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull final InputStream stream)
-            throws DistributionPackageReadingException {
+            throws DistributionException {
         log.debug("reading a stream");
         VaultPackage vaultPackage = null;
         try {
@@ -117,9 +116,9 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
 
             return new FileVaultDistributionPackage(getType(), vaultPackage);
 
-        } catch (Exception e) {
+        } catch (Throwable e) {
             VltUtils.deletePackage(vaultPackage);
-            throw new DistributionPackageReadingException("could not read package", e);
+            throw new DistributionException(e);
         }
     }
 
@@ -139,7 +138,7 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
     }
 
     @Override
-    public boolean installPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageReadingException {
+    public boolean installPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException {
         log.debug("reading a distribution package stream");
 
         Session session = null;
@@ -156,7 +155,7 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
             }
         } catch (Exception e) {
             log.error("could not install the package", e);
-            throw new DistributionPackageReadingException(e);
+            throw new DistributionException(e);
         } finally {
             ungetSession(session);
         }

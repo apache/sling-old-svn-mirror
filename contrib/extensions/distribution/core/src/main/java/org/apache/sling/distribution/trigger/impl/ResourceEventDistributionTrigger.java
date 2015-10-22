@@ -27,9 +27,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
+import org.apache.sling.distribution.impl.DistributionException;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
-import org.apache.sling.distribution.trigger.DistributionTriggerException;
 import org.apache.sling.event.dea.DEAConstants;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -78,7 +78,7 @@ public class ResourceEventDistributionTrigger implements DistributionTrigger {
         registrations.clear();
     }
 
-    public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
+    public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionException {
         // register an event handler on path which triggers the agent on node / property changes / addition / removals
         Dictionary<String, Object> properties = new Hashtable<String, Object>();
         properties.put(EventConstants.EVENT_TOPIC, new String[]{SlingConstants.TOPIC_RESOURCE_ADDED,
@@ -92,11 +92,11 @@ public class ResourceEventDistributionTrigger implements DistributionTrigger {
         if (triggerPathEventRegistration != null) {
             registrations.put(requestHandler.toString(), triggerPathEventRegistration);
         } else {
-            throw new DistributionTriggerException("cannot register event handler service for triggering agent");
+            throw new DistributionException("cannot register event handler service for triggering agent");
         }
     }
 
-    public void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
+    public void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionException {
         ServiceRegistration serviceRegistration = registrations.get(requestHandler.toString());
         if (serviceRegistration != null) {
             serviceRegistration.unregister();

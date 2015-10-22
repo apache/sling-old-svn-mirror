@@ -30,6 +30,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
+import org.apache.sling.distribution.impl.DistributionException;
 import org.osgi.framework.BundleContext;
 
 @Component(metatype = true,
@@ -64,7 +65,7 @@ public class PrivilegeDistributionRequestAuthorizationStrategyFactory implements
         authorizationStrategy = new PrivilegeDistributionRequestAuthorizationStrategy(jcrPrivilege);
     }
 
-    public void checkPermission(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionRequestAuthorizationException {
+    public void checkPermission(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionException {
         authorizationStrategy.checkPermission(resourceResolver, distributionRequest);
     }
 }

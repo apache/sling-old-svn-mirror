@@ -18,6 +18,7 @@
  */
 package org.apache.sling.distribution.agent.impl;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.apache.sling.api.resource.ResourceResolver;
@@ -158,14 +159,15 @@ public class SimpleDistributionAgentTest {
         DistributionRequestAuthorizationStrategy packageExporterStrategy = mock(DistributionRequestAuthorizationStrategy.class);
 
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
-        DistributionQueueDispatchingStrategy distributionHandler = mock(DistributionQueueDispatchingStrategy.class);
+        DistributionQueueDispatchingStrategy dispatchingStrategy = mock(DistributionQueueDispatchingStrategy.class);
+        when(dispatchingStrategy.getQueueNames()).thenReturn(Arrays.asList(new String[]{ DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME }));
         DistributionEventFactory distributionEventFactory = mock(DistributionEventFactory.class);
         ResourceResolverFactory resolverFactory = mock(ResourceResolverFactory.class);
 
         SimpleDistributionAgent agent = new SimpleDistributionAgent(name,
                 false, null, "serviceName", packageImporter,
                 packageExporter, packageExporterStrategy,
-                queueProvider, distributionHandler, null,
+                queueProvider, dispatchingStrategy, null,
                 distributionEventFactory, resolverFactory, mock(DefaultDistributionLog.class), null, null, 0);
         DistributionQueue queue = mock(DistributionQueue.class);
         when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME))
@@ -178,17 +180,18 @@ public class SimpleDistributionAgentTest {
         String name = "sample-agent";
         DistributionPackageImporter packageImporter = mock(DistributionPackageImporter.class);
         DistributionPackageExporter packageExporter = mock(DistributionPackageExporter.class);
-        DistributionRequestAuthorizationStrategy packageExporterStrategy = mock(DistributionRequestAuthorizationStrategy.class);
+        DistributionRequestAuthorizationStrategy authorizationStrategy = mock(DistributionRequestAuthorizationStrategy.class);
 
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
-        DistributionQueueDispatchingStrategy distributionHandler = mock(DistributionQueueDispatchingStrategy.class);
+        DistributionQueueDispatchingStrategy dispatchingStrategy = mock(DistributionQueueDispatchingStrategy.class);
+        when(dispatchingStrategy.getQueueNames()).thenReturn(Arrays.asList(new String[]{ "priority" }));
         DistributionEventFactory distributionEventFactory = mock(DistributionEventFactory.class);
         ResourceResolverFactory resolverFactory = mock(ResourceResolverFactory.class);
 
         SimpleDistributionAgent agent = new SimpleDistributionAgent(name,
                 false, null, "serviceName", packageImporter,
-                packageExporter, packageExporterStrategy,
-                queueProvider, distributionHandler, null,
+                packageExporter, authorizationStrategy,
+                queueProvider, dispatchingStrategy, null,
                 distributionEventFactory, resolverFactory, mock(DefaultDistributionLog.class), null, null, 0);
         DistributionQueue queue = mock(DistributionQueue.class);
         when(queueProvider.getQueue("priority")).thenReturn(queue);

@@ -22,6 +22,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.impl.DistributionException;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 
 /**
@@ -38,10 +39,10 @@ public interface DistributionTransport {
      *
      * @param resourceResolver    a resolver used to eventually access local resources needed by the transport algorithm
      * @param distributionPackage a {@link org.apache.sling.distribution.packaging.DistributionPackage} to transport
-     * @throws DistributionTransportException if the {@link org.apache.sling.distribution.packaging.DistributionPackage}
+     * @throws DistributionException if the {@link org.apache.sling.distribution.packaging.DistributionPackage}
      *                                        fails to be delivered to the target instance (e.g. because of network, I/O issues)
      */
-    void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionTransportException;
+    void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException;
 
     /**
      * Retrieve {@link org.apache.sling.distribution.packaging.DistributionPackage}s from a target Sling instance, which
@@ -52,10 +53,10 @@ public interface DistributionTransport {
      *                         instance
      * @return an {@link java.lang.Iterable} of {@link org.apache.sling.distribution.packaging.DistributionPackage}s fetched
      * from the target instance.
-     * @throws DistributionTransportException if the {@link org.apache.sling.distribution.packaging.DistributionPackage}s
+     * @throws DistributionException if the {@link org.apache.sling.distribution.packaging.DistributionPackage}s
      *                                        fail to be retrieved from the target instance
      */
     @Nonnull
-    Iterable<DistributionPackage> retrievePackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionTransportException;
+    Iterable<DistributionPackage> retrievePackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionException;
 
 }

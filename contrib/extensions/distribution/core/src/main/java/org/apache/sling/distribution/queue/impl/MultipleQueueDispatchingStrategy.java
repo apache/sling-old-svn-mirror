@@ -25,11 +25,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.sling.distribution.impl.DistributionException;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.SharedDistributionPackage;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
-import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemState;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
@@ -50,10 +50,10 @@ public class MultipleQueueDispatchingStrategy implements DistributionQueueDispat
         this.queueNames = Collections.unmodifiableList(Arrays.asList(queueNames));
     }
 
-    public Iterable<DistributionQueueItemStatus> add(@Nonnull DistributionPackage distributionPackage, @Nonnull DistributionQueueProvider queueProvider) throws DistributionQueueException {
+    public Iterable<DistributionQueueItemStatus> add(@Nonnull DistributionPackage distributionPackage, @Nonnull DistributionQueueProvider queueProvider) throws DistributionException {
 
         if (!(distributionPackage instanceof SharedDistributionPackage) && queueNames.size() > 1) {
-            throw new DistributionQueueException("distribution package must be a shared package to be added in multiple queues");
+            throw new DistributionException("distribution package must be a shared package to be added in multiple queues");
         }
 
         DistributionQueueItem queueItem = getItem(distributionPackage);

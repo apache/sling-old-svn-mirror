@@ -29,10 +29,10 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.impl.DistributionException;
 import org.apache.sling.distribution.resources.DistributionResourceTypes;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
-import org.apache.sling.distribution.trigger.DistributionTriggerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,7 +92,7 @@ public class DistributionTriggerServlet extends SlingAllMethodsServlet {
 
             distributionTrigger.unregister(distributionRequestHandler);
 
-        } catch (DistributionTriggerException e) {
+        } catch (DistributionException e) {
             response.setStatus(400);
             response.getWriter().write("error while (un)registering trigger " + e.toString());
         }

@@ -45,11 +45,11 @@ import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
+import org.apache.sling.distribution.impl.DistributionException;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
-import org.apache.sling.distribution.trigger.DistributionTriggerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,7 +83,7 @@ public class RemoteEventDistributionTrigger implements DistributionTrigger {
         this.scheduler = scheduler;
     }
 
-    public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
+    public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionException {
         try {
             log.info("applying remote event distribution trigger");
 
@@ -93,11 +93,11 @@ public class RemoteEventDistributionTrigger implements DistributionTrigger {
             options.onLeaderOnly(true);
             scheduler.schedule(new EventBasedDistribution(requestHandler), options);
         } catch (Exception e) {
-            throw new DistributionTriggerException("unable to register handler " + requestHandler, e);
+            throw new DistributionException("unable to register handler " + requestHandler, e);
         }
     }
 
-    public void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
+    public void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionException {
         Future<HttpResponse> httpResponseFuture = requests.remove(requestHandler.toString());
         if (httpResponseFuture != null) {
             httpResponseFuture.cancel(true);

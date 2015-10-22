@@ -36,9 +36,9 @@ import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
+import org.apache.sling.distribution.impl.DistributionException;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
-import org.apache.sling.distribution.trigger.DistributionTriggerException;
 import org.apache.sling.distribution.util.DistributionJcrUtils;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.slf4j.Logger;
@@ -74,7 +74,7 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
         this.scheduler = scheduler;
     }
 
-    public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
+    public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionException {
         Session session;
         try {
             session = getSession();
@@ -83,11 +83,11 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
             session.getWorkspace().getObservationManager().addEventListener(
                     listener, getEventTypes(), path, true, null, null, false);
         } catch (RepositoryException e) {
-            throw new DistributionTriggerException("unable to register handler " + requestHandler, e);
+            throw new DistributionException("unable to register handler " + requestHandler, e);
         }
     }
 
-    public void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
+    public void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionException {
         JcrEventDistributionTriggerListener listener = registeredListeners.get(requestHandler.toString());
         if (listener != null) {
             Session session;
@@ -95,7 +95,7 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
                 session = getSession();
                 session.getWorkspace().getObservationManager().removeEventListener(listener);
             } catch (RepositoryException e) {
-                throw new DistributionTriggerException("unable to unregister handler " + requestHandler, e);
+                throw new DistributionException("unable to unregister handler " + requestHandler, e);
             }
         }
     }

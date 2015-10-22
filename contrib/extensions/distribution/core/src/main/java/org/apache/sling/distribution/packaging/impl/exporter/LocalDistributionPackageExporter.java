@@ -24,11 +24,10 @@ import java.util.List;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.impl.DistributionException;
 import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.packaging.DistributionPackageExportException;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.serialization.DistributionPackageBuildingException;
 
 /**
  * {@link org.apache.sling.distribution.packaging.DistributionPackageExporter} implementation which creates a FileVault based
@@ -43,22 +42,17 @@ public class LocalDistributionPackageExporter implements DistributionPackageExpo
     }
 
     @Nonnull
-    public List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionPackageExportException {
+    public List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionException {
         List<DistributionPackage> result = new ArrayList<DistributionPackage>();
 
-        DistributionPackage createdPackage;
-        try {
-            createdPackage = packageBuilder.createPackage(resourceResolver, distributionRequest);
-        } catch (DistributionPackageBuildingException e) {
-            throw new DistributionPackageExportException(e);
-        }
-        if (createdPackage != null) {
-            result.add(createdPackage);
-        }
+        DistributionPackage createdPackage = packageBuilder.createPackage(resourceResolver, distributionRequest);
+
+        result.add(createdPackage);
+
         return result;
     }
 
-    public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String distributionPackageId) {
+    public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String distributionPackageId) throws DistributionException {
         return packageBuilder.getPackage(resourceResolver, distributionPackageId);
     }
 }

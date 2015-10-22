@@ -27,7 +27,6 @@ import javax.jcr.Session;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -48,10 +47,9 @@ import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.impl.DistributionException;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.serialization.DistributionPackageBuildingException;
-import org.apache.sling.distribution.serialization.DistributionPackageReadingException;
 import org.apache.sling.distribution.serialization.impl.AbstractDistributionPackageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,7 +90,7 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
     }
 
     @Override
-    protected DistributionPackage createPackageForAdd(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionPackageBuildingException {
+    protected DistributionPackage createPackageForAdd(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionException {
         Session session = null;
         VaultPackage vaultPackage = null;
         JcrPackage jcrPackage = null;
@@ -115,7 +113,7 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
             return new JcrVaultDistributionPackage(getType(), jcrPackage, session);
         } catch (Throwable e) {
             VltUtils.deletePackage(jcrPackage);
-            throw new DistributionPackageBuildingException(e);
+            throw new DistributionException(e);
         } finally {
             ungetSession(session);
             VltUtils.deletePackage(vaultPackage);
@@ -123,7 +121,7 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
     }
 
     @Override
-    protected DistributionPackage readPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageReadingException {
+    protected DistributionPackage readPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
         Session session = null;
         VaultPackage vaultPackage = null;
         JcrPackage jcrPackage = null;
@@ -137,7 +135,7 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
             return new JcrVaultDistributionPackage(getType(), jcrPackage, session);
         } catch (Throwable e) {
             VltUtils.deletePackage(jcrPackage);
-            throw new DistributionPackageReadingException(e);
+            throw new DistributionException(e);
         } finally {
             ungetSession(session);
             VltUtils.deletePackage(vaultPackage);
@@ -145,7 +143,7 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
     }
 
     @Override
-    protected boolean installPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageReadingException {
+    protected boolean installPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException {
         Session session = null;
         try {
             session = getSession(resourceResolver);
@@ -158,7 +156,7 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
 
             return true;
         } catch (Exception e) {
-            throw new DistributionPackageReadingException(e);
+            throw new DistributionException(e);
         } finally {
             ungetSession(session);
         }
