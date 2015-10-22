@@ -22,12 +22,12 @@ import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
 
-import aQute.bnd.annotation.ConsumerType;
+import aQute.bnd.annotation.ProviderType;
 
 /**
  * A distribution package
  */
-@ConsumerType
+@ProviderType
 public interface DistributionPackage {
 
     /**

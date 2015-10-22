@@ -22,6 +22,7 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.io.InputStream;
 
+import aQute.bnd.annotation.ProviderType;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionException;
 import org.apache.sling.distribution.DistributionRequest;
@@ -29,6 +30,7 @@ import org.apache.sling.distribution.DistributionRequest;
 /**
  * A builder for {@link DistributionPackage}s
  */
+@ProviderType
 public interface DistributionPackageBuilder {
 
     /**
