@@ -33,8 +33,9 @@ import org.apache.sling.discovery.base.its.setup.VirtualInstance;
 import org.apache.sling.discovery.base.its.setup.VirtualInstanceBuilder;
 import org.apache.sling.discovery.base.its.setup.mock.MockFactory;
 import org.apache.sling.discovery.commons.providers.spi.base.IdMapService;
-import org.apache.sling.discovery.commons.providers.spi.base.OakSyncTokenConsistencyService;
+import org.apache.sling.discovery.commons.providers.spi.base.OakBacklogConsistencyService;
 import org.apache.sling.discovery.commons.providers.spi.base.RepositoryTestHelper;
+import org.apache.sling.discovery.commons.providers.spi.base.SyncTokenConsistencyService;
 import org.apache.sling.discovery.oak.OakDiscoveryService;
 import org.apache.sling.discovery.oak.cluster.OakClusterViewService;
 import org.apache.sling.discovery.oak.pinger.OakViewChecker;
@@ -53,7 +54,8 @@ public class OakVirtualInstanceBuilder extends VirtualInstanceBuilder {
     private IdMapService idMapService;
     private OakViewChecker oakViewChecker;
     private SimulatedLeaseCollection leaseCollection;
-    private OakSyncTokenConsistencyService consistencyService;
+    private OakBacklogConsistencyService consistencyService;
+    private SyncTokenConsistencyService syncTokenConsistencyService;
     
     @Override
     public VirtualInstanceBuilder createNewRepository() throws Exception {
@@ -187,15 +189,26 @@ public class OakVirtualInstanceBuilder extends VirtualInstanceBuilder {
         return OakViewChecker.testConstructor(getSlingSettingsService(), getResourceResolverFactory(), getConnectorRegistry(), getAnnouncementRegistry(), getScheduler(), getConfig());
     }
 
-    private OakSyncTokenConsistencyService getConsistencyService() throws Exception {
+    private OakBacklogConsistencyService getOakBacklogConsistencyService() throws Exception {
         if (consistencyService == null) {
-            consistencyService = createConsistencyService();
+            consistencyService = createOakBacklogConsistencyService();
         }
         return consistencyService;
     }
     
-    private OakSyncTokenConsistencyService createConsistencyService() {
-        return OakSyncTokenConsistencyService.testConstructorAndActivate(getConfig(), getIdMapService(), getSlingSettingsService(), getResourceResolverFactory());
+    private OakBacklogConsistencyService createOakBacklogConsistencyService() {
+        return OakBacklogConsistencyService.testConstructorAndActivate(getConfig(), getIdMapService(), getSlingSettingsService(), getResourceResolverFactory());
+    }
+
+    private SyncTokenConsistencyService getSyncTokenConsistencyService() throws Exception {
+        if (syncTokenConsistencyService == null) {
+            syncTokenConsistencyService = createSyncTokenConsistencyService();
+        }
+        return syncTokenConsistencyService;
+    }
+    
+    private SyncTokenConsistencyService createSyncTokenConsistencyService() {
+        return SyncTokenConsistencyService.testConstructorAndActivate(getConfig(), getResourceResolverFactory(), getSlingSettingsService());
     }
 
     @Override
@@ -209,7 +222,8 @@ public class OakVirtualInstanceBuilder extends VirtualInstanceBuilder {
                 getOakViewChecker(), 
                 getScheduler(), 
                 getIdMapService(), 
-                getConsistencyService(), 
+                getOakBacklogConsistencyService(),
+                getSyncTokenConsistencyService(),
                 getResourceResolverFactory());
     }
 

@@ -63,8 +63,10 @@ import org.apache.sling.discovery.base.connectors.announcement.AnnouncementRegis
 import org.apache.sling.discovery.base.connectors.announcement.CachedAnnouncement;
 import org.apache.sling.discovery.base.connectors.ping.ConnectorRegistry;
 import org.apache.sling.discovery.base.connectors.ping.TopologyConnectorClientInformation;
+import org.apache.sling.discovery.commons.InstancesDiff;
+import org.apache.sling.discovery.commons.InstancesDiff.InstanceCollection;
 import org.apache.sling.discovery.commons.providers.spi.base.DiscoveryLiteDescriptor;
-import org.apache.sling.discovery.commons.providers.spi.base.OakSyncTokenConsistencyService;
+import org.apache.sling.discovery.commons.providers.spi.base.OakBacklogConsistencyService;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,7 +114,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
     protected ResourceResolverFactory resourceResolverFactory;
 
     @Reference
-    private OakSyncTokenConsistencyService consistencyService;
+    private OakBacklogConsistencyService consistencyService;
 
     private TopologyView currentView;
     
@@ -588,9 +590,33 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         if (event.getType() == Type.PROPERTIES_CHANGED) {
             this.currentView = event.getNewView();
 
+            StringBuilder sb = new StringBuilder();
+            InstancesDiff instanceDiff = new InstancesDiff(event.getOldView(), event.getNewView());
+            
+            // there shouldn't be any instances added, but for paranoia reason:
+            Collection<InstanceDescription> added = instanceDiff.added().get();
+            if (!added.isEmpty()) {
+                sb.append("instances were added:");
+                for (InstanceDescription instance : added) {
+                    sb.append(" ");
+                    sb.append(instance.getSlingId());
+                }
+                sb.append(".");
+            }
+            
+            // there shouldn't be any instances removed as well, but again for paranoia reason:
+            Collection<InstanceDescription> removed = instanceDiff.removed().get();
+            if (!removed.isEmpty()) {
+                sb.append("instances were removed:");
+                for (InstanceDescription instance : added) {
+                    sb.append(" ");
+                    sb.append(instance.getSlingId());
+                }
+                sb.append(".");
+            }
+            
             Set<InstanceDescription> newInstances = event.getNewView()
                     .getInstances();
-            StringBuilder sb = new StringBuilder();
             for (Iterator<InstanceDescription> it = newInstances.iterator(); it
                     .hasNext();) {
                 final InstanceDescription newInstanceDescription = it.next();
@@ -601,8 +627,8 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                             + newInstanceDescription
                             + " in oldview.. event="
                             + event);
-                    addEventLog(event.getType(), event.getType().toString()+" (new instance "+newInstanceDescription.getSlingId()+" not found in old view)");
-                    return;
+                    sb.append("did not find instance in old view: " + newInstanceDescription.getSlingId() + ".");
+                    continue;
                 }
 
                 Map<String, String> oldProps = oldInstanceDescription
@@ -616,7 +642,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                     }
                     sb.append("on instance "
                             + newInstanceDescription.getSlingId() + (newInstanceDescription.isLeader() ? " [isLeader]" : "") 
-                            + ": " + diff);
+                            + ": " + diff + ". ");
                 }
             }
 
