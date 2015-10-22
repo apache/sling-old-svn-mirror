@@ -91,7 +91,8 @@ import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(metatype = true, immediate = true)
+@Component(metatype = true, immediate = true,
+        label = "Apache Sling Model Adapter Factory")
 @Service(value = ModelFactory.class)
 @References({
     @Reference(
