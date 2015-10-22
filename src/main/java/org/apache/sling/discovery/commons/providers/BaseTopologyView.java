@@ -102,4 +102,18 @@ public abstract class BaseTopologyView implements TopologyView {
             + ", instances=" + sb.toString() + "]";
     }
 
+    /**
+     * Simple getter for a particular slingId
+     * @param slingId the slingId for which to lookup the InstanceDescription
+     * @return the InstanceDescription matching the provided slingId - or null if it doesn't exist
+     */
+    public InstanceDescription getInstance(String slingId) {
+        for (InstanceDescription instance : getInstances()) {
+            if (instance.getSlingId().equals(slingId)) {
+                return instance;
+            }
+        }
+        return null;
+    }
+
 }
