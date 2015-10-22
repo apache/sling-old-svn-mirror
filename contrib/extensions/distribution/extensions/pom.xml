@@ -65,6 +65,8 @@
                 <configuration>
                     <excludes>
                         <exclude>**/*.avsc</exclude>
+                        <exclude>**/*.avro</exclude>
+                        <exclude>**/*.kryo</exclude>
                     </excludes>
                 </configuration>
             </plugin>
