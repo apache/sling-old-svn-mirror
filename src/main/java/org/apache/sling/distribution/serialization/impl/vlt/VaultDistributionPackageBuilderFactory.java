@@ -18,6 +18,7 @@
  */
 package org.apache.sling.distribution.serialization.impl.vlt;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.io.InputStream;
 import java.util.Map;
@@ -154,14 +155,17 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
         return packageBuilder.getType();
     }
 
+    @Nonnull
     public DistributionPackage createPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionException {
         return packageBuilder.createPackage(resourceResolver, request);
     }
 
+    @Nonnull
     public DistributionPackage readPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
         return packageBuilder.readPackage(resourceResolver, stream);
     }
 
+    @CheckForNull
     public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String id) throws DistributionException {
         return packageBuilder.getPackage(resourceResolver, id);
     }

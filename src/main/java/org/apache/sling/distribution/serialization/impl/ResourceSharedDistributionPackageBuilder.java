@@ -79,6 +79,7 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
 
     }
 
+    @Nonnull
     @CheckForNull
     public DistributionPackage readPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
         DistributionPackage distributionPackage = distributionPackageBuilder.readPackage(resourceResolver, stream);
@@ -101,6 +102,7 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
         return new ResourceSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
     }
 
+    @CheckForNull
     public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String distributionPackageId) throws DistributionException {
         String packageName = distributionPackageId;
         String originalPackageId = retrieveIdFromName(resourceResolver, packageName);
