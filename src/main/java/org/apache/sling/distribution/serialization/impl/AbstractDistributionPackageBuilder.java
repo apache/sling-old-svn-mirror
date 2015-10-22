@@ -28,11 +28,10 @@ import java.io.InputStream;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.impl.DistributionException;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.serialization.DistributionPackageBuildingException;
-import org.apache.sling.distribution.serialization.DistributionPackageReadingException;
 import org.apache.sling.distribution.serialization.impl.vlt.VltUtils;
 import org.apache.sling.distribution.util.DistributionJcrUtils;
 import org.slf4j.Logger;
@@ -55,9 +54,9 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         return type;
     }
 
-    @CheckForNull
+    @Nonnull
     public DistributionPackage createPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request)
-            throws DistributionPackageBuildingException {
+            throws DistributionException {
         DistributionPackage distributionPackage;
 
         request = VltUtils.sanitizeRequest(request);
@@ -72,20 +71,17 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         } else if (DistributionRequestType.TEST.equals(request.getRequestType())) {
             distributionPackage = new SimpleDistributionPackage(request, type);
         } else {
-            throw new DistributionPackageBuildingException("unknown action type "
-                    + request.getRequestType());
+            throw new DistributionException("unknown action type " + request.getRequestType());
         }
 
-        if (distributionPackage != null) {
-            distributionPackage.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, request.getRequestType());
-            distributionPackage.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, request.getPaths());
-        }
+        distributionPackage.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, request.getRequestType());
+        distributionPackage.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, request.getPaths());
 
         return distributionPackage;
     }
 
-    @CheckForNull
-    public DistributionPackage readPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageReadingException {
+    @Nonnull
+    public DistributionPackage readPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
 
         if (!stream.markSupported()) {
             stream = new BufferedInputStream(stream);
@@ -101,12 +97,12 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         return distributionPackage;
     }
 
-    public boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageReadingException {
+    public boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException {
 
         DistributionRequestType actionType = distributionPackage.getInfo().getRequestType();
 
         if (!type.equals(distributionPackage.getType())) {
-            throw new DistributionPackageReadingException("not supported package type" + distributionPackage.getType());
+            throw new DistributionException("not supported package type" + distributionPackage.getType());
         }
 
         boolean installed = false;
@@ -122,7 +118,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         return installed;
     }
 
-    private boolean installDeletePackage(@Nonnull ResourceResolver resourceResolver, @CheckForNull DistributionPackage distributionPackage) throws DistributionPackageReadingException {
+    private boolean installDeletePackage(@Nonnull ResourceResolver resourceResolver, @CheckForNull DistributionPackage distributionPackage) throws DistributionException {
         Session session = null;
         try {
             if (distributionPackage != null) {
@@ -135,7 +131,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
                 return true;
             }
         } catch (Exception e) {
-            throw new DistributionPackageReadingException(e);
+            throw new DistributionException(e);
         } finally {
             ungetSession(session);
         }
@@ -176,15 +172,15 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
 
     @CheckForNull
     protected abstract DistributionPackage createPackageForAdd(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request)
-            throws DistributionPackageBuildingException;
+            throws DistributionException;
 
     @CheckForNull
     protected abstract DistributionPackage readPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream)
-            throws DistributionPackageReadingException;
+            throws DistributionException;
 
 
     protected abstract boolean installPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage)
-            throws DistributionPackageReadingException;
+            throws DistributionException;
 
     @CheckForNull
     protected abstract DistributionPackage getPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull String id);

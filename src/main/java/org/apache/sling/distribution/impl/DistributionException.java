@@ -16,18 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.trigger;
 
-/**
- * Exception representing errors during (un)registration of {@link DistributionTrigger}s
- */
-public class DistributionTriggerException extends Exception {
+package org.apache.sling.distribution.impl;
 
-    public DistributionTriggerException(String message, Throwable throwable) {
-        super(message, throwable);
+
+public class DistributionException extends Exception {
+    public DistributionException(Throwable e) {
+        super(e);
     }
 
-    public DistributionTriggerException(String message) {
-        super(message);
+    public DistributionException(String string) {
+        super(string);
+    }
+
+    public DistributionException(String string, Throwable cause) {
+        super(string, cause);
     }
 }

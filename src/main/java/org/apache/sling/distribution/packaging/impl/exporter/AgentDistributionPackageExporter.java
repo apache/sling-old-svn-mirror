@@ -26,10 +26,10 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.agent.DistributionAgent;
+import org.apache.sling.distribution.impl.DistributionException;
 import org.apache.sling.distribution.log.DistributionLog;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.packaging.DistributionPackageExportException;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
@@ -66,7 +66,7 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
     }
 
     @Nonnull
-    public List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionPackageExportException {
+    public List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionException {
 
         List<DistributionPackage> result = new ArrayList<DistributionPackage>();
 
@@ -76,7 +76,7 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
         }
 
         if (!DistributionRequestType.PULL.equals(distributionRequest.getRequestType())) {
-            throw new DistributionPackageExportException("request type not supported " + distributionRequest.getRequestType());
+            throw new DistributionException("request type not supported " + distributionRequest.getRequestType());
         }
 
         try {

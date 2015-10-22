@@ -24,6 +24,7 @@ import java.io.InputStream;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.impl.DistributionException;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 
 /**
@@ -43,10 +44,10 @@ public interface DistributionPackageBuilder {
      * @param resourceResolver the resource resolver used to access the resources to be packaged
      * @param request          the {@link org.apache.sling.distribution.DistributionRequest} to create the package for
      * @return a {@link org.apache.sling.distribution.packaging.DistributionPackage} or <code>null</code> if it could not be created
-     * @throws DistributionPackageBuildingException if any error occurs while creating the package, or if the resource resolver is not authorized to do that
+     * @throws DistributionException if any error occurs while creating the package, or if the resource resolver is not authorized to do that
      */
-    @CheckForNull
-    DistributionPackage createPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionPackageBuildingException;
+    @Nonnull
+    DistributionPackage createPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionException;
 
     /**
      * reads a stream and tries to convert it to a {@link org.apache.sling.distribution.packaging.DistributionPackage} this provider can read and install
@@ -54,10 +55,10 @@ public interface DistributionPackageBuilder {
      * @param resourceResolver resource resolver used to store the eventually created package
      * @param stream           the {@link InputStream} of the package to read
      * @return a {@link org.apache.sling.distribution.packaging.DistributionPackage} if it can read it from the stream
-     * @throws DistributionPackageReadingException when the stream cannot be read as a {@link org.apache.sling.distribution.packaging.DistributionPackage}
+     * @throws DistributionException when the stream cannot be read as a {@link org.apache.sling.distribution.packaging.DistributionPackage}
      */
-    @CheckForNull
-    DistributionPackage readPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageReadingException;
+    @Nonnull
+    DistributionPackage readPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException;
 
     /**
      * get an already created (and saved into the repository) {@link org.apache.sling.distribution.packaging.DistributionPackage} by its id
@@ -65,9 +66,10 @@ public interface DistributionPackageBuilder {
      * @param resourceResolver resource resolver used to access the package with the given id
      * @param id               the unique identifier of an already created {@link org.apache.sling.distribution.packaging.DistributionPackage}
      * @return a {@link org.apache.sling.distribution.packaging.DistributionPackage} if one with such an id exists, <code>null</code> otherwise
+     * @throws DistributionException when the stream the package with that id cannot be retrieved
      */
     @CheckForNull
-    DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String id);
+    DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String id) throws DistributionException;
 
     /**
      * Installs the given distributionPackage into the repository
@@ -75,8 +77,8 @@ public interface DistributionPackageBuilder {
      * @param resourceResolver   the resource resolver used to install the packaged resources
      * @param distributionPackage the distribution package to install
      * @return <code>true</code> if the package was installed successfully
-     * @throws DistributionPackageReadingException
+     * @throws DistributionException
      */
-    boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageReadingException;
+    boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException;
 
 }

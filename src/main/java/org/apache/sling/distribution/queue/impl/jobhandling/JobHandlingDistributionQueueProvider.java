@@ -27,8 +27,8 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.sling.distribution.impl.DistributionException;
 import org.apache.sling.distribution.queue.DistributionQueue;
-import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueProcessor;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.event.jobs.JobManager;
@@ -65,7 +65,7 @@ public class JobHandlingDistributionQueueProvider implements DistributionQueuePr
     }
 
     @Nonnull
-    public DistributionQueue getQueue(@Nonnull String queueName) throws DistributionQueueException {
+    public DistributionQueue getQueue(@Nonnull String queueName) {
         String topic = JobHandlingDistributionQueue.DISTRIBUTION_QUEUE_TOPIC + '/' + name + "/" + queueName;
         boolean isActive = jobConsumer != null && (processingQueueNames == null || processingQueueNames.contains(queueName));
 
@@ -73,9 +73,9 @@ public class JobHandlingDistributionQueueProvider implements DistributionQueuePr
     }
 
 
-    public void enableQueueProcessing(@Nonnull DistributionQueueProcessor queueProcessor, String... queueNames) throws DistributionQueueException {
+    public void enableQueueProcessing(@Nonnull DistributionQueueProcessor queueProcessor, String... queueNames) throws DistributionException {
         if (jobConsumer != null) {
-            throw new DistributionQueueException("job already registered");
+            throw new DistributionException("job already registered");
         }
         // eventually register job consumer for sling job handling based queues
         Dictionary<String, Object> jobProps = new Hashtable<String, Object>();

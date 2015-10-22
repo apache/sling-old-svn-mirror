@@ -18,8 +18,8 @@
  */
 package org.apache.sling.distribution.queue.impl;
 
+import org.apache.sling.distribution.impl.DistributionException;
 import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 
@@ -49,7 +49,7 @@ public class SelectiveQueueDispatchingStrategy implements DistributionQueueDispa
     }
 
     @Override
-    public Iterable<DistributionQueueItemStatus> add(@Nonnull DistributionPackage distributionPackage, @Nonnull DistributionQueueProvider queueProvider) throws DistributionQueueException {
+    public Iterable<DistributionQueueItemStatus> add(@Nonnull DistributionPackage distributionPackage, @Nonnull DistributionQueueProvider queueProvider) throws DistributionException {
         String[] paths = distributionPackage.getInfo().getPaths();
         Map<String, String> matchingQueues = paths != null ?  getMatchingQueues(paths) : new HashMap<String, String>();
 

@@ -26,6 +26,7 @@ import java.util.List;
 import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.impl.DistributionException;
 
 /**
  * A {@link DistributionPackageExporter ) is responsible of exporting
@@ -51,7 +52,7 @@ public interface DistributionPackageExporter {
      * @return a {@link java.util.List} of {@link DistributionPackage}s
      */
     @Nonnull
-    List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionPackageExportException;
+    List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionException;
 
     /**
      * Retrieves a {@link DistributionPackage} given its identifier, if it already exists.
@@ -63,5 +64,5 @@ public interface DistributionPackageExporter {
      * @return a {@link DistributionPackage} if available, {@code null} otherwise
      */
     @CheckForNull
-    DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String distributionPackageId);
+    DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String distributionPackageId) throws DistributionException;
 }

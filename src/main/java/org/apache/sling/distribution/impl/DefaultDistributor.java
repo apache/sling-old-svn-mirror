@@ -30,7 +30,6 @@ import org.apache.sling.distribution.DistributionRequestState;
 import org.apache.sling.distribution.DistributionResponse;
 import org.apache.sling.distribution.Distributor;
 import org.apache.sling.distribution.agent.DistributionAgent;
-import org.apache.sling.distribution.agent.DistributionAgentException;
 import org.apache.sling.distribution.component.impl.DistributionComponentProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,9 +57,9 @@ public class DefaultDistributor implements Distributor {
 
         try {
             return agent.execute(resourceResolver, distributionRequest);
-        } catch (DistributionAgentException e) {
+        } catch (DistributionException e) {
             log.error("cannot execute", e);
-            return new SimpleDistributionResponse(DistributionRequestState.DROPPED, "Cannot execute request");
+            return new SimpleDistributionResponse(DistributionRequestState.DROPPED, "Cannot execute request " + e.getMessage());
         }
     }
 }

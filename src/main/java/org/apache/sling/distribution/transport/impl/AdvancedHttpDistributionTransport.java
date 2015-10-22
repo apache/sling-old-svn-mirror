@@ -33,12 +33,12 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ContentType;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.distribution.impl.DistributionException;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
-import org.apache.sling.distribution.transport.core.DistributionTransportException;
 
 /**
  * Advanced HTTP {@link org.apache.sling.distribution.transport.core.DistributionTransport} supporting custom HTTP headers
@@ -79,7 +79,7 @@ public class AdvancedHttpDistributionTransport extends SimpleHttpDistributionTra
     }
 
     @Override
-    public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionTransportException {
+    public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException {
         log.info("delivering package {} to {} using auth {}",
                 distributionPackage.getId(),
                 distributionEndpoint.getUri(), secretProvider);
@@ -90,8 +90,8 @@ public class AdvancedHttpDistributionTransport extends SimpleHttpDistributionTra
 
             deliverPackage(executor, distributionPackage, distributionEndpoint);
 
-        } catch (Exception ex) {
-            throw new DistributionTransportException(ex);
+        } catch (IOException ex) {
+            throw new DistributionException(ex);
         }
 
     }
