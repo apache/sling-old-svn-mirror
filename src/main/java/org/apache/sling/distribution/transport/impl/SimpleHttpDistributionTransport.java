@@ -56,6 +56,11 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
     private static final String USERNAME = "username";
     private static final String PASSWORD = "password";
 
+    /**
+     * distribution package origin uri
+     */
+    public static String PACKAGE_INFO_PROPERTY_ORIGIN_URI = "internal.origin.uri";
+
     protected final DefaultDistributionLog log;
     private final DistributionEndpoint distributionEndpoint;
     private final DistributionPackageBuilder packageBuilder;
@@ -77,7 +82,8 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
     public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException {
         String hostAndPort = getHostAndPort(distributionEndpoint.getUri());
 
-        URI packageOrigin = distributionPackage.getInfo().getOrigin();
+        URI packageOrigin = distributionPackage.getInfo().get(PACKAGE_INFO_PROPERTY_ORIGIN_URI, URI.class);
+
         if (packageOrigin != null && hostAndPort.equals(getHostAndPort(packageOrigin))) {
             log.info("skipping distribution of package {} to same origin {}", distributionPackage.getId(), hostAndPort);
         } else {
@@ -150,7 +156,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
 
                 final DistributionPackage responsePackage = packageBuilder.readPackage(resourceResolver, inputStream);
                 if (responsePackage != null) {
-                    responsePackage.getInfo().put(DistributionPackageInfo.PROPERTY_ORIGIN_URI, distributionURI);
+                    responsePackage.getInfo().put(PACKAGE_INFO_PROPERTY_ORIGIN_URI, distributionURI);
                     log.debug("pulled package no {} with info {}", pulls, responsePackage.getInfo());
 
                     result.add(responsePackage);

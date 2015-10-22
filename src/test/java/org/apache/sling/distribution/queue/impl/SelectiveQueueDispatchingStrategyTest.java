@@ -125,9 +125,8 @@ public class SelectiveQueueDispatchingStrategyTest {
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
 
         Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put(DistributionPackageInfo.PROPERTY_PACKAGE_TYPE, "vlt");
         properties.put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, new String[] { "/content/news/a" });
-        when(distributionPackage.getInfo()).thenReturn(new DistributionPackageInfo(properties));
+        when(distributionPackage.getInfo()).thenReturn(new DistributionPackageInfo("vlt", properties));
 
         DistributionQueue news1 = mock(DistributionQueue.class);
         when(news1.getName()).thenReturn("news-publish1");
@@ -153,9 +152,8 @@ public class SelectiveQueueDispatchingStrategyTest {
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
 
         Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put(DistributionPackageInfo.PROPERTY_PACKAGE_TYPE, "vlt");
         properties.put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, new String[] { "/content/other" });
-        when(distributionPackage.getInfo()).thenReturn(new DistributionPackageInfo(properties));
+        when(distributionPackage.getInfo()).thenReturn(new DistributionPackageInfo("vlt", properties));
 
         DistributionQueue other1 = mock(DistributionQueue.class);
         when(other1.getName()).thenReturn("publish1");

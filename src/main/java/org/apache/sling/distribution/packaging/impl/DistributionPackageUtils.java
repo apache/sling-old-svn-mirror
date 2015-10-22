@@ -19,6 +19,8 @@
 
 package org.apache.sling.distribution.packaging.impl;
 
+import org.apache.sling.distribution.queue.DistributionQueueEntry;
+import org.apache.sling.distribution.queue.DistributionQueueStatus;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.apache.sling.distribution.packaging.SharedDistributionPackage;
@@ -32,6 +34,11 @@ import org.slf4j.LoggerFactory;
 public class DistributionPackageUtils {
 
     static Logger log = LoggerFactory.getLogger(DistributionPackageUtils.class);
+
+    /**
+     * distribution package origin queue
+     */
+    public static String PACKAGE_INFO_PROPERTY_ORIGIN_QUEUE = "internal.origin.queue";
 
     /**
      * Acquires the package if it's a {@link SharedDistributionPackage}, via {@link SharedDistributionPackage#acquire(String)}
@@ -92,7 +99,17 @@ public class DistributionPackageUtils {
      * @return a {@link DistributionPackageInfo}
      */
     public static DistributionPackageInfo fromQueueItem(DistributionQueueItem queueItem) {
-        return new DistributionPackageInfo(queueItem);
+        String type = queueItem.get(DistributionPackageInfo.PROPERTY_PACKAGE_TYPE, String.class);
+        return new DistributionPackageInfo(type, queueItem);
+    }
+
+    public static String getQueueName(DistributionPackageInfo packageInfo) {
+        return packageInfo.get(PACKAGE_INFO_PROPERTY_ORIGIN_QUEUE, String.class);
+    }
+
+    public static void mergeQueueEntry(DistributionPackageInfo packageInfo, DistributionQueueEntry entry) {
+        packageInfo.putAll(entry.getItem());
+        packageInfo.put(PACKAGE_INFO_PROPERTY_ORIGIN_QUEUE, entry.getStatus().getQueueName());
     }
 
 }
