@@ -25,19 +25,18 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.api.resource.ModifiableValueMap;
-import org.apache.sling.api.resource.ModifyingResourceProvider;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
+import org.apache.sling.spi.resource.provider.ResolveContext;
 
 /**
  * This is a modifiable resource provider.
  */
 public class CRUDMergingResourceProvider
-    extends MergingResourceProvider
-    implements ModifyingResourceProvider {
+    extends MergingResourceProvider {
 
     public CRUDMergingResourceProvider(final String mergeRootPath,
             final MergedResourcePicker picker,
@@ -90,15 +89,12 @@ public class CRUDMergingResourceProvider
         return holder;
     }
 
-    /**
-     * @see org.apache.sling.api.resource.ModifyingResourceProvider#create(org.apache.sling.api.resource.ResourceResolver, java.lang.String, java.util.Map)
-     */
-    public Resource create(final ResourceResolver resolver,
-            final String path,
-            final Map<String, Object> properties)
-    throws PersistenceException {
+    @Override
+    public Resource create(final ResolveContext<Void> ctx, final String path, final Map<String, Object> properties) throws PersistenceException {
+        final ResourceResolver resolver = ctx.getResourceResolver();
+
         // check if the resource exists
-        final Resource mountResource = this.getResource(resolver, path);
+        final Resource mountResource = this.getResource(ctx, path, null);
         if ( mountResource != null ) {
             throw new PersistenceException("Resource at " + path + " already exists.", null, path, null);
         }
@@ -127,25 +123,20 @@ public class CRUDMergingResourceProvider
             }
             // TODO check parent hiding
         }
-        return this.getResource(resolver, path);
+        return this.getResource(ctx, path, null);
     }
 
-    /**
-     * @see org.apache.sling.api.resource.ModifyingResourceProvider#delete(org.apache.sling.api.resource.ResourceResolver, java.lang.String)
-     */
-    public void delete(final ResourceResolver resolver, final String path)
-    throws PersistenceException {
+    @Override
+    public void delete(final ResolveContext<Void> ctx, final Resource resource) throws PersistenceException {
+        final ResourceResolver resolver = ctx.getResourceResolver();
+        final String path = resource.getPath();
+
         // deleting of the root mount resource is not supported
         final String relativePath = getRelativePath(path);
         if ( relativePath == null || relativePath.length() == 0 ) {
-            throw new PersistenceException("Resource at " + path + " can't be created.", null, path, null);
+            throw new PersistenceException("Resource at " + path + " can't be deleted.", null, path, null);
         }
 
-        // check if the resource exists
-        final Resource mntResource = this.getResource(resolver, path);
-        if ( mntResource == null ) {
-            throw new PersistenceException("Resource at " + path + " does not exist", null, path, null);
-        }
         final ExtendedResourceHolder holder = this.getAllResources(resolver, path, relativePath);
         // we only support modifications if there is more than one location merged
         if ( holder.count < 2 ) {
@@ -165,25 +156,20 @@ public class CRUDMergingResourceProvider
         }
     }
 
-    /**
-     * @see org.apache.sling.api.resource.ModifyingResourceProvider#revert(org.apache.sling.api.resource.ResourceResolver)
-     */
-    public void revert(final ResourceResolver resolver) {
+    @Override
+    public void revert(final ResolveContext<Void> ctx) {
         // the provider for the merged resources will revert
     }
 
-    /**
-     * @see org.apache.sling.api.resource.ModifyingResourceProvider#commit(org.apache.sling.api.resource.ResourceResolver)
-     */
-    public void commit(final ResourceResolver resolver) throws PersistenceException {
+    @Override
+    public void commit(final ResolveContext<Void> ctx) throws PersistenceException {
         // the provider for the merged resources will commit
     }
 
-    /**
-     * @see org.apache.sling.api.resource.ModifyingResourceProvider#hasChanges(org.apache.sling.api.resource.ResourceResolver)
-     */
-    public boolean hasChanges(final ResourceResolver resolver) {
+    @Override
+    public boolean hasChanges(final ResolveContext<Void> ctx) {
         // the provider for the merged resources will return changes
         return false;
     }
+
 }

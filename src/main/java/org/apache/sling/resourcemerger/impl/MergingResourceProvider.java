@@ -18,20 +18,19 @@
  */
 package org.apache.sling.resourcemerger.impl;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
+import org.apache.sling.spi.resource.provider.ResolveContext;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
 
-class MergingResourceProvider implements ResourceProvider {
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+public class MergingResourceProvider extends ResourceProvider<Void> {
 
     protected final String mergeRootPath;
 
@@ -202,16 +201,26 @@ class MergingResourceProvider implements ResourceProvider {
         return null;
     }
 
+    @Override
+    public Resource getParent(ResolveContext<Void> ctx, Resource child) {
+        final String parentPath = ResourceUtil.getParent(child.getPath());
+        if (parentPath == null) {
+            return null;
+        }
+        return this.getResource(ctx, parentPath, child);
+    }
+
     /**
      * {@inheritDoc}
      */
-    public Resource getResource(final ResourceResolver resolver, final String path) {
+    public Resource getResource(final ResolveContext<Void> ctx, final String path, final Resource parent) {
         final String relativePath = getRelativePath(path);
 
         if (relativePath != null) {
             final ResourceHolder holder = new ResourceHolder(ResourceUtil.getName(path));
 
-            final Iterator<Resource> resources = picker.pickResources(resolver, relativePath).iterator();
+            final ResourceResolver resolver = ctx.getResourceResolver();
+            final Iterator<Resource> resources = picker.pickResources(resolver, relativePath, parent).iterator();
 
             if (!resources.hasNext()) {
                 return null;
@@ -228,8 +237,11 @@ class MergingResourceProvider implements ResourceProvider {
                 } else {
                     // check parent for hiding
                     // SLING 3521 : if parent is not readable, nothing is hidden
-                    final Resource parent = resource.getParent();
-                    hidden = (parent == null ? false : new ParentHidingHandler(parent, this.traverseHierarchie).isHidden(holder.name));
+                    final Resource resourceParent = resource.getParent();
+                    hidden = resourceParent != null && new ParentHidingHandler(resourceParent, this.traverseHierarchie).isHidden(holder.name);
+
+                    // TODO Usually, the parent does not exist if the resource is a NonExistingResource. Ideally, this
+                    // common case should be optimised
                 }
                 if (hidden) {
                     holder.resources.clear();
@@ -246,15 +258,15 @@ class MergingResourceProvider implements ResourceProvider {
     /**
      * {@inheritDoc}
      */
-    public Iterator<Resource> listChildren(Resource resource) {
-        final ResourceResolver resolver = resource.getResourceResolver();
+    public Iterator<Resource> listChildren(final ResolveContext<Void> ctx, final Resource parent) {
+        final ResourceResolver resolver = parent.getResourceResolver();
 
-        final String relativePath = getRelativePath(resource.getPath());
+        final String relativePath = getRelativePath(parent.getPath());
 
         if (relativePath != null) {
             final List<ResourceHolder> candidates = new ArrayList<ResourceHolder>();
 
-            final Iterator<Resource> resources = picker.pickResources(resolver, relativePath).iterator();
+            final Iterator<Resource> resources = picker.pickResources(resolver, relativePath, parent).iterator();
 
             boolean isUnderlying = true;
             while (resources.hasNext()) {
@@ -321,14 +333,6 @@ class MergingResourceProvider implements ResourceProvider {
         }
 
         return null;
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    public Resource getResource(final ResourceResolver resolver, final HttpServletRequest request, final String path) {
-        return getResource(resolver, path);
     }
 
 }

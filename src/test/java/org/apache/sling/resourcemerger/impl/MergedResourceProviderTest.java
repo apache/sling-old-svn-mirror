@@ -36,6 +36,8 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.resourcemerger.impl.picker.MergingResourcePicker;
+import org.apache.sling.resourceresolver.impl.BasicResolveContext;
+import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.testing.resourceresolver.MockHelper;
 import org.apache.sling.testing.resourceresolver.MockResourceResolverFactory;
 import org.apache.sling.testing.resourceresolver.MockResourceResolverFactoryOptions;
@@ -47,6 +49,7 @@ public class MergedResourceProviderTest {
     private ResourceResolver resolver;
 
     private CRUDMergingResourceProvider provider;
+    private ResolveContext<Void> ctx;
 
     @Before public void setup() throws Exception {
         final MockResourceResolverFactoryOptions options = new MockResourceResolverFactoryOptions();
@@ -66,6 +69,7 @@ public class MergedResourceProviderTest {
                                                            .p("b", "x")
                                                            .p("d", "1")
                                             .resource(".X")
+                                          .resource("/apps/b").resource("c").resource("d").resource("e").resource("f")
                                         .resource("/libs")
                                           .resource("deleteTest")
                                           .resource(".mvmTest").p("a", "1").p("b", "2")
@@ -79,9 +83,11 @@ public class MergedResourceProviderTest {
                                           .resource("/libs/a/Y/a")
                                           .resource("/libs/a/Y/b")
                                           .resource("/libs/a/Y/c")
+                                          .resource("/libs/b").resource("c").resource("d").resource("e").resource("f")
                                         .commit();
 
         this.provider = new CRUDMergingResourceProvider("/merged", new MergingResourcePicker(), false);
+        this.ctx = new BasicResolveContext(resolver, Collections.<String, String>emptyMap(), null);
     }
 
     @Test public void testHideChildren() {
@@ -98,17 +104,17 @@ public class MergedResourceProviderTest {
         assertNull(this.resolver.getResource("/apps/a/y"));
 
         // now do the real checks
-        assertNull(this.provider.getResource(this.resolver, "/merged/a/Z"));
-        assertNotNull(this.provider.getResource(this.resolver, "/merged/a/Y"));
-        assertNotNull(this.provider.getResource(this.resolver, "/merged/a/X"));
-        assertNull(this.provider.getResource(this.resolver, "/merged/a/x"));
-        assertNull(this.provider.getResource(this.resolver, "/merged/a/y"));
+        assertNull(this.provider.getResource(ctx, "/merged/a/Z", null));
+        assertNotNull(this.provider.getResource(ctx, "/merged/a/Y", null));
+        assertNotNull(this.provider.getResource(ctx, "/merged/a/X", null));
+        assertNull(this.provider.getResource(ctx, "/merged/a/x", null));
+        assertNull(this.provider.getResource(ctx, "/merged/a/y", null));
     }
 
     @Test public void testListChildren() {
-        final Resource rsrcA = this.provider.getResource(this.resolver, "/merged/a");
+        final Resource rsrcA = this.provider.getResource(ctx, "/merged/a", null);
         assertNotNull(rsrcA);
-        final Iterator<Resource> i = this.provider.listChildren(rsrcA);
+        final Iterator<Resource> i = this.provider.listChildren(ctx, rsrcA);
         assertNotNull(i);
         final List<String> names = new ArrayList<String>();
         while ( i.hasNext() ) {
@@ -124,9 +130,9 @@ public class MergedResourceProviderTest {
     }
 
     @Test public void testListSubChildren() {
-        final Resource rsrcY = this.provider.getResource(this.resolver, "/merged/a/Y");
+        final Resource rsrcY = this.provider.getResource(ctx, "/merged/a/Y", null);
         assertNotNull(rsrcY);
-        final Iterator<Resource> i = this.provider.listChildren(rsrcY);
+        final Iterator<Resource> i = this.provider.listChildren(ctx, rsrcY);
         assertNotNull(i);
         final List<String> names = new ArrayList<String>();
         while ( i.hasNext() ) {
@@ -139,7 +145,7 @@ public class MergedResourceProviderTest {
     }
 
     @Test public void testProperties() {
-        final Resource rsrcA1 = this.provider.getResource(this.resolver, "/merged/a/1");
+        final Resource rsrcA1 = this.provider.getResource(ctx, "/merged/a/1", null);
         final ValueMap vm = rsrcA1.adaptTo(ValueMap.class);
         assertNotNull(vm);
         assertEquals(3, vm.size());
@@ -150,24 +156,24 @@ public class MergedResourceProviderTest {
 
     @Test public void testResourceType() {
         // a/2 defines the property and it's overlayed
-        final Resource rsrcA2 = this.provider.getResource(this.resolver, "/merged/a/2");
+        final Resource rsrcA2 = this.provider.getResource(ctx, "/merged/a/2", null);
         assertEquals("apps", rsrcA2.getResourceType());
 
         // a/12 doesn't define the property and it's overlayed
-        final Resource rsrcA1 = this.provider.getResource(this.resolver, "/merged/a/1");
+        final Resource rsrcA1 = this.provider.getResource(ctx, "/merged/a/1", null);
         assertEquals("a/1", rsrcA1.getResourceType());
 
     }
 
     @Test public void testClearProperties() {
-        final Resource rsrcA3 = this.provider.getResource(this.resolver, "/merged/a/3");
+        final Resource rsrcA3 = this.provider.getResource(ctx, "/merged/a/3", null);
         final ValueMap vm = rsrcA3.adaptTo(ValueMap.class);
         assertNotNull(vm);
         assertEquals(0, vm.size());
     }
 
     @Test public void testHideProperties() {
-        final Resource rsrcA4 = this.provider.getResource(this.resolver, "/merged/a/4");
+        final Resource rsrcA4 = this.provider.getResource(ctx, "/merged/a/4", null);
         final ValueMap vm = rsrcA4.adaptTo(ValueMap.class);
         assertNotNull(vm);
         assertEquals(3, vm.size());
@@ -179,7 +185,7 @@ public class MergedResourceProviderTest {
     @Test public void testSimpleCreateAndDelete() throws PersistenceException {
         final String path = "/merged/a/new";
         try {
-            final Resource rsrc = this.provider.create(this.resolver, path, Collections.singletonMap("foo", (Object)"bla"));
+            final Resource rsrc = this.provider.create(ctx, path, Collections.singletonMap("foo", (Object)"bla"));
             assertNotNull(rsrc);
             assertEquals(path, rsrc.getPath());
             final ValueMap vm = ResourceUtil.getValueMap(rsrc);
@@ -191,8 +197,8 @@ public class MergedResourceProviderTest {
             assertEquals("bla", vmReal.get("foo"));
             assertNull(this.resolver.getResource("/libs/a/new"));
 
-            this.provider.delete(this.resolver, path);
-            assertNull(this.provider.getResource(this.resolver, path));
+            this.provider.delete(ctx, rsrc);
+            assertNull(this.provider.getResource(ctx, path, null));
             assertNull(this.resolver.getResource("/libs/a/new"));
             assertNull(this.resolver.getResource("/apps/a/new"));
 
@@ -207,13 +213,13 @@ public class MergedResourceProviderTest {
             assertNotNull(this.resolver.getResource("/libs/deleteTest"));
             assertNull(this.resolver.getResource("/apps/deleteTest"));
 
-            final Resource rsrc = this.provider.getResource(this.resolver, path);
+            final Resource rsrc = this.provider.getResource(ctx, path, null);
             assertNotNull(rsrc);
             assertEquals(path, rsrc.getPath());
 
-            this.provider.delete(this.resolver, path);
+            this.provider.delete(ctx, rsrc);
 
-            assertNull(this.provider.getResource(this.resolver, path));
+            assertNull(this.provider.getResource(ctx, path, null));
             assertNotNull(this.resolver.getResource("/libs/deleteTest"));
             final Resource hidingRsrc = this.resolver.getResource("/apps/deleteTest");
             assertNotNull(hidingRsrc);
@@ -231,14 +237,14 @@ public class MergedResourceProviderTest {
             assertNotNull(this.resolver.getResource("/libs/deleteTest"));
             assertNull(this.resolver.getResource("/apps/deleteTest"));
 
-            final Resource rsrc = this.provider.getResource(this.resolver, path);
+            final Resource rsrc = this.provider.getResource(ctx, path, null);
             assertNotNull(rsrc);
             assertEquals(path, rsrc.getPath());
 
-            this.provider.delete(this.resolver, path);
-            this.provider.create(this.resolver, path, Collections.singletonMap("foo", (Object)"bla"));
+            this.provider.delete(ctx, rsrc);
+            this.provider.create(ctx, path, Collections.singletonMap("foo", (Object)"bla"));
 
-            assertNotNull(this.provider.getResource(this.resolver, path));
+            assertNotNull(this.provider.getResource(ctx, path, null));
             assertNotNull(this.resolver.getResource("/libs/deleteTest"));
             final Resource hidingRsrc = this.resolver.getResource("/apps/deleteTest");
             assertNotNull(hidingRsrc);
@@ -256,7 +262,7 @@ public class MergedResourceProviderTest {
             assertNotNull(this.resolver.getResource("/libs/mvmTest"));
             assertNull(this.resolver.getResource("/apps/mvmTest"));
 
-            final Resource rsrc = this.provider.getResource(this.resolver, path);
+            final Resource rsrc = this.provider.getResource(ctx, path, null);
             assertNotNull(rsrc);
             final ValueMap beforeVM = rsrc.getValueMap();
             assertEquals("1", beforeVM.get("a"));
@@ -273,7 +279,7 @@ public class MergedResourceProviderTest {
             assertNotNull(this.resolver.getResource("/libs/mvmTest"));
             assertNotNull(this.resolver.getResource("/apps/mvmTest"));
 
-            final Resource rsrc2 = this.provider.getResource(this.resolver, path);
+            final Resource rsrc2 = this.provider.getResource(ctx, path, null);
             assertNotNull(rsrc2);
             final ValueMap afterVM = rsrc2.getValueMap();
             assertNull(afterVM.get("a"));
@@ -299,4 +305,37 @@ public class MergedResourceProviderTest {
         }
 
     }
+
+    @Test public void testGetWithRelatedResource() {
+        final String path = "/merged/b/c/d";
+        String[] relatedPaths = new String[] {
+                null, // no related resource
+                "/merged/a", // not related
+                "/merged/b", // parent of parent
+                "/merged/b/c", // parent
+                "/merged/b/c/d", // itself
+                "/merged/b/c/d/e", // child
+                "/merged/b/c/d/e/f" // deep child
+        };
+        for (String relatedPath : relatedPaths) {
+            final Resource relatedResource;
+            if (relatedPath != null) {
+                relatedResource = provider.getResource(ctx, relatedPath, null);
+                assertNotNull("Not found: " + relatedPath, relatedResource);
+            } else {
+                relatedResource = null;
+            }
+            Resource resource = provider.getResource(ctx, path, relatedResource);
+            assertNotNull(resource);
+            assertEquals(path, resource.getPath());
+            assertTrue(resource instanceof MergedResource);
+
+            MergedResource mergedResource = (MergedResource) resource;
+            List<Resource> mappedResources = mergedResource.getMappedResources();
+            assertEquals(2, mappedResources.size());
+            assertEquals(mappedResources.get(0).getPath(), "/libs/b/c/d");
+            assertEquals(mappedResources.get(1).getPath(), "/apps/b/c/d");
+        }
+    }
+
 }
