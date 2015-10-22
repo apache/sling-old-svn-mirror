@@ -61,7 +61,7 @@ public class OakSyncTokenConsistencyService extends BaseSyncTokenConsistencyServ
 
     @Reference
     protected SlingSettingsService settingsService;
-
+    
     public static OakSyncTokenConsistencyService testConstructorAndActivate(
             final DiscoveryLiteConfig commonsConfig,
             final IdMapService idMapService,
@@ -141,18 +141,24 @@ public class OakSyncTokenConsistencyService extends BaseSyncTokenConsistencyServ
                 try {
                     if (!idMapService.isInitialized()) {
                         logger.info("waitWhileBacklog: could not initialize...");
+                        addHistoryEntry(view, "could not initialize idMapService");
                         return false;
                     }
                 } catch (Exception e) {
                     logger.error("waitWhileBacklog: could not initialized due to "+e, e);
+                    addHistoryEntry(view, "got Exception while initializing idMapService ("+e+")");
                     return false;
                 }
                 BacklogStatus backlogStatus = getBacklogStatus(view);
                 if (backlogStatus == BacklogStatus.NO_BACKLOG) {
                     logger.info("waitWhileBacklog: no backlog (anymore), done.");
+                    addHistoryEntry(view, "no backlog (anymore)");
                     return true;
                 } else {
                     logger.info("waitWhileBacklog: backlogStatus still "+backlogStatus);
+                    // clear the cache to make sure to get the latest version in case something changed
+                    idMapService.clearCache();
+                    addHistoryEntry(view, "backlog status "+backlogStatus);
                     return false;
                 }
             }
@@ -243,5 +249,4 @@ public class OakSyncTokenConsistencyService extends BaseSyncTokenConsistencyServ
         return settingsService;
     }
     
-
 }

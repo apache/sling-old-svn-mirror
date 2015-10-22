@@ -19,6 +19,7 @@
 package org.apache.sling.discovery.commons.providers.spi.base;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -141,9 +142,42 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck {
             long me = descriptor.getMyId();
             final Resource resource = ResourceHelper.getOrCreateResource(resourceResolver, getIdMapPath());
             ModifiableValueMap idmap = resource.adaptTo(ModifiableValueMap.class);
-            idmap.put(slingId, me);
+            // check to see if either my slingId is already mapped to another clusterNodeId
+            // or when my clusterNodeId is already mapped to another slingId
+            // in both cases: clean that up
+            boolean foundMe = false;
+            for (String aKey : new HashSet<String>(idmap.keySet())) {
+                Object value = idmap.get(aKey);
+                if (value instanceof Number) {
+                    Number n = (Number)value;
+                    if (n.longValue()==me) {
+                        // my clusterNodeId is already mapped to
+                        // let's check if the key is my slingId
+                        if (aKey.equals(slingId)) {
+                            // perfect
+                            foundMe = true;
+                        } else {
+                            // cleanup necessary
+                            logger.info("init: my clusterNodeId is already mapped to by another slingId, deleting entry: key="+aKey+" mapped to "+value);
+                            idmap.remove(aKey);
+                        }
+                    } else if (aKey.equals(slingId)) {
+                        // cleanup necessary
+                        logger.info("init: my slingId is already mapped to by another clusterNodeId, deleting entry: key="+aKey+" mapped to "+value);
+                        idmap.remove(aKey);
+                    } else {
+                        // that's just some other slingId-clusterNodeId mapping
+                        // leave it unchanged
+                    }
+                }
+            }
+            if (!foundMe) {
+                logger.info("init: added the following mapping: slingId="+slingId+" to discovery-lite id="+me);
+                idmap.put(slingId, me);
+            } else {
+                logger.info("init: mapping already existed, left unchanged: slingId="+slingId+" to discovery-lite id="+me);
+            }
             resourceResolver.commit();
-            logger.info("init: mapped slingId="+slingId+" to discovery-lite id="+me);
             this.me = me;
             initialized = true;
             notifyAll();
@@ -160,6 +194,7 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck {
     }
     
     public synchronized void clearCache() {
+        logger.info("clearCache: clearing idmap cache");
         idMapCache.clear();
     }
 
@@ -171,6 +206,7 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck {
         }
         // cache-miss
         Map<Integer, String> readMap = readIdMap(resourceResolver);
+        logger.info("toSlingId: cache miss, refreshing idmap cache");
         idMapCache.putAll(readMap);
         return idMapCache.get(clusterNodeId);
     }

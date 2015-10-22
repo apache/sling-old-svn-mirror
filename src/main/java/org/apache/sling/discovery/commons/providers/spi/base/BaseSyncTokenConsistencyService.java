@@ -18,6 +18,13 @@
  */
 package org.apache.sling.discovery.commons.providers.spi.base;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
@@ -38,8 +45,19 @@ import org.apache.sling.settings.SlingSettingsService;
  */
 public abstract class BaseSyncTokenConsistencyService extends AbstractServiceWithBackgroundCheck implements ConsistencyService {
 
+    class HistoryEntry {
+        BaseTopologyView view;
+        String msg;
+        String fullLine;
+    }
+    
+    /** the date format used in the truncated log of topology events **/
+    private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+
     protected String slingId;
 
+    protected List<HistoryEntry> history = new LinkedList<HistoryEntry>();
+    
     protected abstract DiscoveryLiteConfig getCommonsConfig();
 
     protected abstract ResourceResolverFactory getResourceResolverFactory();
@@ -73,11 +91,13 @@ public abstract class BaseSyncTokenConsistencyService extends AbstractServiceWit
             @Override
             public boolean check() {
                 // 1) first storing my syncToken
-                if (!storeMySyncToken(view.getLocalClusterSyncTokenId())) {
+                final String localClusterSyncTokenId = view.getLocalClusterSyncTokenId();
+                if (!storeMySyncToken(localClusterSyncTokenId)) {
                     // if anything goes wrong above, then this will mean for the others
                     // that they will have to wait until the timeout hits
                     
                     // so to try to avoid this, retry storing my sync token later:
+                    addHistoryEntry(view, "storing my syncToken ("+localClusterSyncTokenId+")");
                     return false;
                 }
                 
@@ -144,20 +164,35 @@ public abstract class BaseSyncTokenConsistencyService extends AbstractServiceWit
             String syncToken = view.getLocalClusterSyncTokenId();
             
             boolean success = true;
+            StringBuffer historyEntry = new StringBuffer();
             for (InstanceDescription instance : view.getLocalInstance().getClusterView().getInstances()) {
                 Object currentValue = syncTokens.get(instance.getSlingId());
                 if (currentValue == null) {
-                    logger.info("seenAllSyncTokens: no syncToken of "+instance.getSlingId());
+                    String msg = "no syncToken yet of "+instance.getSlingId();
+                    logger.info("seenAllSyncTokens: " + msg);
+                    if (historyEntry.length() != 0) {
+                        historyEntry.append(",");
+                    }
+                    historyEntry.append(msg);
                     success = false;
                 } else if (!syncToken.equals(currentValue)) {
-                    logger.info("seenAllSyncTokens: old syncToken of " + instance.getSlingId()
-                            + " : expected=" + syncToken + " got="+currentValue);
+                    String msg = "syncToken of " + instance.getSlingId()
+                                                + " is " + currentValue
+                                                + " waiting for " + syncToken;
+                    logger.info("seenAllSyncTokens: " + msg);
+                    if (historyEntry.length() != 0) {
+                        historyEntry.append(",");
+                    }
+                    historyEntry.append(msg);
                     success = false;
                 }
             }
             if (!success) {
                 logger.info("seenAllSyncTokens: not yet seen all expected syncTokens (see above for details)");
+                addHistoryEntry(view, historyEntry.toString());
                 return false;
+            } else {
+                addHistoryEntry(view, "seen all syncTokens");
             }
             
             resourceResolver.commit();
@@ -176,4 +211,45 @@ public abstract class BaseSyncTokenConsistencyService extends AbstractServiceWit
             }
         }
     }
+    
+    public List<String> getSyncHistory() {
+        List<HistoryEntry> snapshot;
+        synchronized(history) {
+            snapshot = Collections.unmodifiableList(history);
+        }
+        List<String> result = new ArrayList<String>(snapshot.size());
+        for (HistoryEntry historyEntry : snapshot) {
+            result.add(historyEntry.fullLine);
+        }
+        return result;
+    }
+
+    protected void addHistoryEntry(BaseTopologyView view, String msg) {
+        synchronized(history) {
+            for(int i = history.size() - 1; i>=0; i--) {
+                HistoryEntry entry = history.get(i);
+                if (!entry.view.equals(view)) {
+                    // don't filter if the view starts differing,
+                    // only filter for the last few entries where
+                    // the view is equal
+                    break;
+                }
+                if (entry.msg.equals(msg)) {
+                    // if the view is equal and the msg matches
+                    // then this is a duplicate entry, so ignore
+                    return;
+                }
+            }
+            String fullLine = sdf.format(Calendar.getInstance().getTime()) + ": " + msg;
+            HistoryEntry newEntry = new HistoryEntry();
+            newEntry.view = view;
+            newEntry.fullLine = fullLine;
+            newEntry.msg = msg;
+            history.add(newEntry);
+            while (history.size() > 12) {
+                history.remove(0);
+            }
+        }
+    }
+
 }
