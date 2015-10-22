@@ -210,6 +210,7 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
             Dictionary<String, String> props = new Hashtable<String, String>();
             props.put("felix.webconsole.label", MimeTypeWebConsolePlugin.LABEL);
             props.put("felix.webconsole.title", MimeTypeWebConsolePlugin.TITLE);
+            props.put("felix.webconsole.category", "Sling");
             props.put("felix.webconsole.css", MimeTypeWebConsolePlugin.CSS_REFS);
 
             webConsolePluginService = context.getBundleContext().registerService(
