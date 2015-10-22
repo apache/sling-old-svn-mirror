@@ -46,6 +46,7 @@ import org.apache.sling.distribution.DistributionException;
 import org.apache.sling.distribution.impl.SimpleDistributionResponse;
 import org.apache.sling.distribution.log.DistributionLog;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
+import org.apache.sling.distribution.queue.impl.DistributionQueueUtils;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
@@ -381,8 +382,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
             distributionPackage = distributionPackageExporter.getPackage(agentResourceResolver, queueItem.getId());
 
             if (distributionPackage != null) {
-                distributionPackage.getInfo().putAll(queueItem);
-                distributionPackage.getInfo().put(DistributionPackageInfo.PROPERTY_ORIGIN_QUEUE, queueName);
+                DistributionPackageUtils.mergeQueueEntry(distributionPackage.getInfo(), queueEntry);
 
                 if (processPackage(agentResourceResolver, distributionPackage)) {
                     success = true;

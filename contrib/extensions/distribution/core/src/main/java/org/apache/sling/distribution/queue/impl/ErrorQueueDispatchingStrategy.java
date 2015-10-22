@@ -54,7 +54,7 @@ public class ErrorQueueDispatchingStrategy implements DistributionQueueDispatchi
     public Iterable<DistributionQueueItemStatus> add(@Nonnull DistributionPackage distributionPackage, @Nonnull DistributionQueueProvider queueProvider) throws DistributionException {
 
         List<DistributionQueueItemStatus> result = new ArrayList<DistributionQueueItemStatus>();
-        String originQueue = distributionPackage.getInfo().getQueue();
+        String originQueue = DistributionPackageUtils.getQueueName(distributionPackage.getInfo());
 
         if (!queueNames.contains(originQueue)) {
             return result;
