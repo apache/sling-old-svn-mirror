@@ -137,7 +137,7 @@ public class ResourceResolverFactoryActivator implements Runnable, EventHandler 
     private static final String PROP_ALLOW_DIRECT = "resource.resolver.allowDirect";
 
     @Property(unbounded=PropertyUnbounded.ARRAY,
-              value = "org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory",
+              value = "org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProvider",
               label = "Required Providers",
               description = "A resource resolver factory is only " +
                              "available (registered) if all resource providers mentioned in this configuration " +

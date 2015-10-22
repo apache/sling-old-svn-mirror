@@ -48,6 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** A Resource that wraps a JCR Node */
+@SuppressWarnings("deprecation")
 @Adaptable(adaptableClass=Resource.class, adapters={
         @Adapter({Node.class, Map.class, Item.class, ValueMap.class}),
         @Adapter(value=PersistableValueMap.class, condition="If the resource is a JcrNodeResource and the user has set property privileges on the node."),
