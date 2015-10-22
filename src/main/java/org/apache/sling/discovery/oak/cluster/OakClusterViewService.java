@@ -68,6 +68,9 @@ public class OakClusterViewService implements ClusterViewService {
     @Reference
     private IdMapService idMapService;
     
+    /** the last sequence number read from the oak discovery-lite descriptor **/
+    private long lastSeqNum = -1;
+    
     public static OakClusterViewService testConstructor(SlingSettingsService settingsService,
             ResourceResolverFactory resourceResolverFactory,
             IdMapService idMapService,
@@ -98,6 +101,11 @@ public class OakClusterViewService implements ClusterViewService {
             resourceResolver = getResourceResolver();
             DiscoveryLiteDescriptor descriptor = 
                     DiscoveryLiteDescriptor.getDescriptorFrom(resourceResolver);
+            if (lastSeqNum!=descriptor.getSeqNum()) {
+                logger.info("getLocalClusterView: sequence number change detected - clearing idmap cache");
+                idMapService.clearCache();
+                lastSeqNum = descriptor.getSeqNum();
+            }
             return asClusterView(descriptor, resourceResolver);
         } catch (UndefinedClusterViewException e) {
             logger.info("getLocalClusterView: undefined clusterView: "+e.getReason()+" - "+e.getMessage());
@@ -122,7 +130,7 @@ public class OakClusterViewService implements ClusterViewService {
         }
         logger.trace("asClusterView: start");
         String clusterViewId = descriptor.getViewId();
-        String localClusterSyncTokenId = descriptor.getViewId()+"_"+descriptor.getSeqNum();
+        String localClusterSyncTokenId = /*descriptor.getViewId()+"_"+*/String.valueOf(descriptor.getSeqNum());
         if (!descriptor.isFinal()) {
             throw new UndefinedClusterViewException(Reason.NO_ESTABLISHED_VIEW, "descriptor is not yet final: "+descriptor);
         }
@@ -146,6 +154,7 @@ public class OakClusterViewService implements ClusterViewService {
         for (Integer id : activeIdsList) {
             String slingId = idMapService.toSlingId(id, resourceResolver);
             if (slingId == null) {
+                idMapService.clearCache();
                 throw new UndefinedClusterViewException(Reason.NO_ESTABLISHED_VIEW,
                         "no slingId mapped for clusterNodeId="+id);
             }
@@ -169,6 +178,7 @@ public class OakClusterViewService implements ClusterViewService {
             boolean isOwn = id==me;
             String slingId = idMapService.toSlingId(id, resourceResolver);
             if (slingId==null) {
+                idMapService.clearCache();
                 logger.info("asClusterView: cannot resolve oak-clusterNodeId {} to a slingId", id);
                 throw new Exception("Cannot resolve oak-clusterNodeId "+id+" to a slingId");
             }

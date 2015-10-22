@@ -55,6 +55,8 @@ import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.InstanceFilter;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
+import org.apache.sling.discovery.TopologyEventListener;
+import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.discovery.base.commons.ClusterViewService;
 import org.apache.sling.discovery.base.connectors.announcement.Announcement;
 import org.apache.sling.discovery.base.connectors.announcement.AnnouncementRegistry;
@@ -62,8 +64,7 @@ import org.apache.sling.discovery.base.connectors.announcement.CachedAnnouncemen
 import org.apache.sling.discovery.base.connectors.ping.ConnectorRegistry;
 import org.apache.sling.discovery.base.connectors.ping.TopologyConnectorClientInformation;
 import org.apache.sling.discovery.commons.providers.spi.base.DiscoveryLiteDescriptor;
-import org.apache.sling.discovery.TopologyEventListener;
-import org.apache.sling.discovery.TopologyView;
+import org.apache.sling.discovery.commons.providers.spi.base.OakSyncTokenConsistencyService;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,10 +111,19 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
     @Reference
     protected ResourceResolverFactory resourceResolverFactory;
 
+    @Reference
+    private OakSyncTokenConsistencyService consistencyService;
+
     private TopologyView currentView;
     
     private List<String> discoveryLiteHistory = new LinkedList<String>();
 
+    /** 
+     * keeps hold of the last DiscoveryLiteDescriptor that was added
+     * to the discoveryLiteHistory - in order to de-duplicate as we go
+     */
+    private DiscoveryLiteDescriptor lastDiscoveryLiteDescriptor = null;
+    
     @Override
     public String getLabel() {
         return LABEL;
@@ -277,32 +287,6 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         listIncomingTopologyConnectors(pw);
         listOutgoingTopologyConnectors(pw);
         pw.println("<br/>");
-
-        ResourceResolver resourceResolver = null;
-        pw.println("<p class=\"statline ui-state-highlight\">Oak Discovery-Lite Descriptor History</p>");
-        pw.println("<pre>");
-        for (String discoLiteHistoryEntry : discoveryLiteHistory) {
-            pw.println(discoLiteHistoryEntry);
-        }
-        pw.println("</pre>");
-        pw.println("<br/>");
-        pw.println("<p class=\"statline ui-state-highlight\">Current Oak Discovery-Lite Descriptor</p>");
-        pw.println("<pre>");
-        try{
-            resourceResolver = getResourceResolver();
-            DiscoveryLiteDescriptor descriptor = DiscoveryLiteDescriptor.getDescriptorFrom(resourceResolver);
-            final String logEntry = getCurrentDateFormatted() + ": " + descriptor.getDescriptorStr();
-            pw.println(logEntry);
-        } catch(Exception e) {
-            logger.error("renderOverview: Exception: "+e, e);
-            pw.println("Got exception trying to get repository descriptor: "+e);
-        } finally {
-            if (resourceResolver != null) {
-                resourceResolver.close();
-            }
-        }
-        pw.println("</pre>");
-        pw.println("<br/>");
         
         pw.println("<p class=\"statline ui-state-highlight\">Topology Change History</p>");
         pw.println("<pre>");
@@ -322,6 +306,23 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         }
         pw.println("</pre>");
         pw.println("</br>");
+
+        pw.println("<p class=\"statline ui-state-highlight\">Oak Discovery-Lite Descriptor History</p>");
+        updateDiscoveryLiteHistory();
+        pw.println("<pre>");
+        for (String discoLiteHistoryEntry : discoveryLiteHistory) {
+            pw.println(discoLiteHistoryEntry);
+        }
+        pw.println("</pre>");
+        pw.println("<br/>");
+
+        pw.println("<p class=\"statline ui-state-highlight\">ConsistencyService History</p>");
+        pw.println("<pre>");
+        for (String syncHistoryEntry : consistencyService.getSyncHistory()) {
+            pw.println(syncHistoryEntry);
+        }
+        pw.println("</pre>");
+        pw.println("<br/>");
     }
 
     /**
@@ -600,7 +601,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                             + newInstanceDescription
                             + " in oldview.. event="
                             + event);
-                    addEventLog(event.getType(), event.getType().toString());
+                    addEventLog(event.getType(), event.getType().toString()+" (new instance "+newInstanceDescription.getSlingId()+" not found in old view)");
                     return;
                 }
 
@@ -619,7 +620,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                 }
             }
 
-            addEventLog(event.getType(), sb.toString());
+            addEventLog(event.getType(), "details: "+sb.toString());
         } else if (event.getType() == Type.TOPOLOGY_INIT) {
             this.currentView = event.getNewView();
             StringBuilder details = new StringBuilder();
@@ -692,7 +693,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                                 + details);
             }
         }
-        addDiscoveryLiteHistoryEntry();
+        updateDiscoveryLiteHistory();
     }
 
     /**
@@ -735,17 +736,22 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
     }
 
     /**
-     * add a discoveryLite descriptor entry to the history, truncating if necessary
+     * if there's any change add a discoveryLite descriptor entry to the history, truncating if necessary
      */
-    private synchronized void addDiscoveryLiteHistoryEntry() {
+    private synchronized void updateDiscoveryLiteHistory() {
         ResourceResolver resourceResolver = null;
         try{
             resourceResolver = getResourceResolver();
             DiscoveryLiteDescriptor descriptor = 
                     DiscoveryLiteDescriptor.getDescriptorFrom(resourceResolver);
 
+            if (lastDiscoveryLiteDescriptor!=null && 
+                    descriptor.getDescriptorStr().equals(lastDiscoveryLiteDescriptor.getDescriptorStr())) {
+                // de-duplication - then there's nothing to update
+                return;
+            }
             final String logEntry = getCurrentDateFormatted() + ": " + descriptor.getDescriptorStr();
-            
+            lastDiscoveryLiteDescriptor = descriptor;
             discoveryLiteHistory.add(logEntry);
             while (discoveryLiteHistory.size() > 12) {
                 discoveryLiteHistory.remove(0);
@@ -923,34 +929,6 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
             pw.println();
         }
 
-        ResourceResolver resourceResolver = null;
-        pw.println("Oak Discovery-Lite Descriptor History");
-        pw.println("---------------------------------------");
-        for (String discoLiteHistoryEntry : discoveryLiteHistory) {
-            pw.println(discoLiteHistoryEntry);
-        }
-        pw.println();
-        pw.println();
-        pw.println("Current Oak Discovery-Lite Descriptor");
-        pw.println("---------------------------------------");
-        try{
-            resourceResolver = getResourceResolver();
-            DiscoveryLiteDescriptor descriptor = DiscoveryLiteDescriptor.getDescriptorFrom(resourceResolver);
-            final String logEntry = getCurrentDateFormatted() + ": " + descriptor.getDescriptorStr();
-            pw.println(logEntry);
-            pw.println();
-            pw.println();
-        } catch(Exception e) {
-            logger.error("renderOverview: Exception: "+e, e);
-            pw.println("Got exception trying to get repository descriptor: "+e);
-            pw.println();
-            pw.println();
-        } finally {
-            if (resourceResolver != null) {
-                resourceResolver.close();
-            }
-        }
-
         if ( topologyLog.size() > 0 ) {
             pw.println("Topology Change History");
             pw.println("---------------------------------------");
@@ -969,6 +947,23 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
             }
             pw.println();
         }
+
+        pw.println("Oak Discovery-Lite Descriptor History");
+        pw.println("---------------------------------------");
+        updateDiscoveryLiteHistory();
+        for (String discoLiteHistoryEntry : discoveryLiteHistory) {
+            pw.println(discoLiteHistoryEntry);
+        }
+        pw.println();
+        pw.println();
+
+        pw.println("ConsistencyService History");
+        pw.println("---------------------------------------");
+        for (String syncHistoryEntry : consistencyService.getSyncHistory()) {
+            pw.println(syncHistoryEntry);
+        }
+        pw.println();
+        pw.println();
     }
 
     private String getCurrentDateFormatted() {
