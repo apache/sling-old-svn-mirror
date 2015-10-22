@@ -62,6 +62,8 @@ public class SyncTokenConsistencyService extends AbstractServiceWithBackgroundCh
     @Reference
     protected SlingSettingsService settingsService;
 
+    protected ConsistencyHistory consistencyHistory = new ConsistencyHistory();
+
     public static SyncTokenConsistencyService testConstructorAndActivate(
             DiscoveryLiteConfig commonsConfig,
             ResourceResolverFactory resourceResolverFactory,
@@ -97,6 +99,14 @@ public class SyncTokenConsistencyService extends AbstractServiceWithBackgroundCh
         logger.info("activate: activated with slingId="+slingId);
     }
     
+    public void setConsistencyHistory(ConsistencyHistory consistencyHistory) {
+        this.consistencyHistory = consistencyHistory;
+    }
+    
+    public ConsistencyHistory getConsistencyHistory() {
+        return consistencyHistory;
+    }
+    
     /** Get or create a ResourceResolver **/
     protected ResourceResolver getResourceResolver() throws LoginException {
         return resourceResolverFactory.getAdministrativeResourceResolver(null);
@@ -130,7 +140,7 @@ public class SyncTokenConsistencyService extends AbstractServiceWithBackgroundCh
                     // that they will have to wait until the timeout hits
                     
                     // so to try to avoid this, retry storing my sync token later:
-                    addHistoryEntry(view, "storing my syncToken ("+localClusterSyncTokenId+")");
+                    consistencyHistory.addHistoryEntry(view, "storing my syncToken ("+localClusterSyncTokenId+")");
                     return false;
                 }
                 
@@ -222,10 +232,10 @@ public class SyncTokenConsistencyService extends AbstractServiceWithBackgroundCh
             }
             if (!success) {
                 logger.info("seenAllSyncTokens: not yet seen all expected syncTokens (see above for details)");
-                addHistoryEntry(view, historyEntry.toString());
+                consistencyHistory.addHistoryEntry(view, historyEntry.toString());
                 return false;
             } else {
-                addHistoryEntry(view, "seen all syncTokens");
+                consistencyHistory.addHistoryEntry(view, "seen all syncTokens");
             }
             
             resourceResolver.commit();

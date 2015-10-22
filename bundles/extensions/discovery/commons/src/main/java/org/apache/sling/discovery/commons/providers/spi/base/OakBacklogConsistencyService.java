@@ -19,6 +19,7 @@
 package org.apache.sling.discovery.commons.providers.spi.base;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -60,6 +61,8 @@ public class OakBacklogConsistencyService extends AbstractServiceWithBackgroundC
 
     @Reference
     protected SlingSettingsService settingsService;
+
+    private ConsistencyHistory consistencyHistory = new ConsistencyHistory();
     
     public static OakBacklogConsistencyService testConstructorAndActivate(
             final DiscoveryLiteConfig commonsConfig,
@@ -111,6 +114,14 @@ public class OakBacklogConsistencyService extends AbstractServiceWithBackgroundC
         logger.info("activate: activated with slingId="+slingId);
     }
     
+    public void setConsistencyHistory(ConsistencyHistory consistencyHistory) {
+        this.consistencyHistory = consistencyHistory;
+    }
+    
+    public ConsistencyHistory getConsistencyHistory() {
+        return consistencyHistory;
+    }
+    
     /** Get or create a ResourceResolver **/
     protected ResourceResolver getResourceResolver() throws LoginException {
         return resourceResolverFactory.getAdministrativeResourceResolver(null);
@@ -141,24 +152,24 @@ public class OakBacklogConsistencyService extends AbstractServiceWithBackgroundC
                 try {
                     if (!idMapService.isInitialized()) {
                         logger.info("waitWhileBacklog: could not initialize...");
-                        addHistoryEntry(view, "could not initialize idMapService");
+                        consistencyHistory.addHistoryEntry(view, "could not initialize idMapService");
                         return false;
                     }
                 } catch (Exception e) {
                     logger.error("waitWhileBacklog: could not initialized due to "+e, e);
-                    addHistoryEntry(view, "got Exception while initializing idMapService ("+e+")");
+                    consistencyHistory.addHistoryEntry(view, "got Exception while initializing idMapService ("+e+")");
                     return false;
                 }
                 BacklogStatus backlogStatus = getBacklogStatus(view);
                 if (backlogStatus == BacklogStatus.NO_BACKLOG) {
                     logger.info("waitWhileBacklog: no backlog (anymore), done.");
-                    addHistoryEntry(view, "no backlog (anymore)");
+                    consistencyHistory.addHistoryEntry(view, "no backlog (anymore)");
                     return true;
                 } else {
                     logger.info("waitWhileBacklog: backlogStatus still "+backlogStatus);
                     // clear the cache to make sure to get the latest version in case something changed
                     idMapService.clearCache();
-                    addHistoryEntry(view, "backlog status "+backlogStatus);
+                    consistencyHistory.addHistoryEntry(view, "backlog status "+backlogStatus);
                     return false;
                 }
             }
@@ -240,6 +251,10 @@ public class OakBacklogConsistencyService extends AbstractServiceWithBackgroundC
 
     protected SlingSettingsService getSettingsService() {
         return settingsService;
+    }
+
+    public List<String> getSyncHistory() {
+        return consistencyHistory.getSyncHistory();
     }
 
 }
