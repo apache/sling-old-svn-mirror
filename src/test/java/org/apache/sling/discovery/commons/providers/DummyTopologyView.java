@@ -121,7 +121,13 @@ public class DummyTopologyView extends BaseTopologyView {
 
     @Override
     public Set<InstanceDescription> findInstances(InstanceFilter filter) {
-        throw new IllegalStateException("not yet implemented");
+        Set<InstanceDescription> result = new HashSet<InstanceDescription>();
+        for (InstanceDescription instanceDescription : instances) {
+            if (filter.accept(instanceDescription)) {
+                result.add(instanceDescription);
+            }
+        }
+        return result;
     }
 
     @Override
