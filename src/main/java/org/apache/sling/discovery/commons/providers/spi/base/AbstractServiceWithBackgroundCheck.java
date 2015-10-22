@@ -18,6 +18,17 @@
  */
 package org.apache.sling.discovery.commons.providers.spi.base;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.discovery.commons.providers.BaseTopologyView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,8 +39,21 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractServiceWithBackgroundCheck {
 
+    class HistoryEntry {
+        BaseTopologyView view;
+        String msg;
+        String fullLine;
+    }
+    
+    /** the date format used in the truncated log of topology events **/
+    private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
+    protected String slingId;
+
+    protected List<HistoryEntry> history = new LinkedList<HistoryEntry>();
+    
     /**
      * The BackgroundCheckRunnable implements the details of
      * calling BackgroundCheck.check and looping until it 
@@ -215,4 +239,45 @@ public abstract class AbstractServiceWithBackgroundCheck {
             backgroundOp.triggerCheck();
         }
     }
+    
+    public List<String> getSyncHistory() {
+        List<HistoryEntry> snapshot;
+        synchronized(history) {
+            snapshot = Collections.unmodifiableList(history);
+        }
+        List<String> result = new ArrayList<String>(snapshot.size());
+        for (HistoryEntry historyEntry : snapshot) {
+            result.add(historyEntry.fullLine);
+        }
+        return result;
+    }
+
+    protected void addHistoryEntry(BaseTopologyView view, String msg) {
+        synchronized(history) {
+            for(int i = history.size() - 1; i>=0; i--) {
+                HistoryEntry entry = history.get(i);
+                if (!entry.view.equals(view)) {
+                    // don't filter if the view starts differing,
+                    // only filter for the last few entries where
+                    // the view is equal
+                    break;
+                }
+                if (entry.msg.equals(msg)) {
+                    // if the view is equal and the msg matches
+                    // then this is a duplicate entry, so ignore
+                    return;
+                }
+            }
+            String fullLine = sdf.format(Calendar.getInstance().getTime()) + ": " + msg;
+            HistoryEntry newEntry = new HistoryEntry();
+            newEntry.view = view;
+            newEntry.fullLine = fullLine;
+            newEntry.msg = msg;
+            history.add(newEntry);
+            while (history.size() > 12) {
+                history.remove(0);
+            }
+        }
+    }
+
 }

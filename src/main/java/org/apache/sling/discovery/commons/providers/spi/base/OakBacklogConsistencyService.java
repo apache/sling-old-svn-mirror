@@ -36,13 +36,12 @@ import org.apache.sling.discovery.commons.providers.spi.ConsistencyService;
 import org.apache.sling.settings.SlingSettingsService;
 
 /**
- * Inherits the 'sync-token' part from the SyncTokenConsistencyService
- * and adds the 'wait while backlog' part to it, based on
- * the Oak discovery-lite descriptor.
+ * The OakBacklogConsistencyService will wait until all instances
+ * in the local cluster are no longer in any backlog state.
  */
 @Component(immediate = false)
-@Service(value = { ConsistencyService.class, OakSyncTokenConsistencyService.class })
-public class OakSyncTokenConsistencyService extends BaseSyncTokenConsistencyService {
+@Service(value = { ConsistencyService.class, OakBacklogConsistencyService.class })
+public class OakBacklogConsistencyService extends AbstractServiceWithBackgroundCheck implements ConsistencyService {
 
     static enum BacklogStatus {
         UNDEFINED /* when there was an error retrieving the backlog status with oak */,
@@ -62,12 +61,12 @@ public class OakSyncTokenConsistencyService extends BaseSyncTokenConsistencyServ
     @Reference
     protected SlingSettingsService settingsService;
     
-    public static OakSyncTokenConsistencyService testConstructorAndActivate(
+    public static OakBacklogConsistencyService testConstructorAndActivate(
             final DiscoveryLiteConfig commonsConfig,
             final IdMapService idMapService,
             final SlingSettingsService settingsService,
             ResourceResolverFactory resourceResolverFactory) {
-        OakSyncTokenConsistencyService service = testConstructor(commonsConfig, idMapService, settingsService, resourceResolverFactory);
+        OakBacklogConsistencyService service = testConstructor(commonsConfig, idMapService, settingsService, resourceResolverFactory);
         service.activate();
         return service;
     }
@@ -84,12 +83,12 @@ public class OakSyncTokenConsistencyService extends BaseSyncTokenConsistencyServ
      * @throws LoginException when the login for initialization failed
      * @throws JSONException when the descriptor wasn't proper json at init time
      */
-    public static OakSyncTokenConsistencyService testConstructor(
+    public static OakBacklogConsistencyService testConstructor(
             final DiscoveryLiteConfig commonsConfig,
             final IdMapService idMapService,
             final SlingSettingsService settingsService,
             ResourceResolverFactory resourceResolverFactory) {
-        OakSyncTokenConsistencyService service = new OakSyncTokenConsistencyService();
+        OakBacklogConsistencyService service = new OakBacklogConsistencyService();
         if (commonsConfig == null) {
             throw new IllegalArgumentException("commonsConfig must not be null");
         }
@@ -112,6 +111,16 @@ public class OakSyncTokenConsistencyService extends BaseSyncTokenConsistencyServ
         logger.info("activate: activated with slingId="+slingId);
     }
     
+    /** Get or create a ResourceResolver **/
+    protected ResourceResolver getResourceResolver() throws LoginException {
+        return resourceResolverFactory.getAdministrativeResourceResolver(null);
+    }
+    
+    @Override
+    public void cancelSync() {
+        cancelPreviousBackgroundCheck();
+    }
+
     @Override
     public void sync(final BaseTopologyView view, final Runnable callback) {
         // cancel the previous backgroundCheck if it's still running
@@ -119,16 +128,7 @@ public class OakSyncTokenConsistencyService extends BaseSyncTokenConsistencyServ
 
         // first do the wait-for-backlog part
         logger.info("sync: doing wait-for-backlog part for view="+view.toShortString());
-        waitWhileBacklog(view, new Runnable() {
-
-            @Override
-            public void run() {
-                // when done, then do the sync-token part
-                logger.info("sync: doing sync-token part for view="+view.toShortString());
-                syncToken(view, callback);
-            }
-            
-        });
+        waitWhileBacklog(view, callback);
     }
 
     private void waitWhileBacklog(final BaseTopologyView view, final Runnable runnable) {
@@ -234,19 +234,12 @@ public class OakSyncTokenConsistencyService extends BaseSyncTokenConsistencyServ
         }
     }
 
-    @Override
     protected DiscoveryLiteConfig getCommonsConfig() {
         return commonsConfig;
     }
 
-    @Override
-    protected ResourceResolverFactory getResourceResolverFactory() {
-        return resourceResolverFactory;
-    }
-
-    @Override
     protected SlingSettingsService getSettingsService() {
         return settingsService;
     }
-    
+
 }
