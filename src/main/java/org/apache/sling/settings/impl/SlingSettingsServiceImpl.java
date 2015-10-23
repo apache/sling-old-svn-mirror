@@ -18,8 +18,6 @@
  */
 package org.apache.sling.settings.impl;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -129,12 +127,12 @@ public class SlingSettingsServiceImpl
             // the osgi framework does not support storing something in the file system
             throw new RuntimeException("Unable to read from bundle data file.");
         }
-        this.slingId = this.readSlingId(idFile, SLING_ID_LENGTH);
+        this.slingId = SlingIdUtil.readSlingId(idFile, SLING_ID_LENGTH);
 
         // no sling id yet or failure to read file: create an id and store
         if (slingId == null) {
             slingId = UUID.randomUUID().toString();
-            this.writeSlingId(idFile, this.slingId);
+            SlingIdUtil.writeSlingId(idFile, this.slingId);
         }
     }
 
@@ -285,60 +283,6 @@ public class SlingSettingsServiceImpl
             }
             if ( fos != null ) {
                 try { fos.close(); } catch ( final IOException ignore) {}
-            }
-        }
-    }
-
-    /**
-     * Read the id from a file.
-     */
-    String readSlingId(final File idFile, int maxLength) {
-        if (idFile.exists() && idFile.length() >= maxLength) {
-            DataInputStream dis = null;
-            try {
-                final byte[] rawBytes = new byte[maxLength];
-                dis = new DataInputStream(new FileInputStream(idFile));
-                dis.readFully(rawBytes);
-                final String rawString = new String(rawBytes, "ISO-8859-1");
-
-                // roundtrip to ensure correct format of UUID value
-                final String id = UUID.fromString(rawString).toString();
-                logger.debug("Got Sling ID {} from file {}", id, idFile);
-
-                return id;
-            } catch (final Throwable t) {
-                logger.error("Failed reading UUID from id file " + idFile
-                        + ", creating new id", t);
-            } finally {
-                if (dis != null) {
-                    try {
-                        dis.close();
-                    } catch (IOException ignore){}
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Write the sling id file.
-     */
-    void writeSlingId(final File idFile, final String id) {
-        idFile.delete();
-        idFile.getParentFile().mkdirs();
-        DataOutputStream dos = null;
-        try {
-            final byte[] rawBytes = id.getBytes("ISO-8859-1");
-            dos = new DataOutputStream(new FileOutputStream(idFile));
-            dos.write(rawBytes, 0, rawBytes.length);
-            dos.flush();
-        } catch (final Throwable t) {
-            logger.error("Failed writing UUID to id file " + idFile, t);
-        } finally {
-            if (dos != null) {
-                try {
-                    dos.close();
-                } catch (IOException ignore) {}
             }
         }
     }

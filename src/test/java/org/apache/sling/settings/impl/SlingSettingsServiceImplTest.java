@@ -108,13 +108,13 @@ public class SlingSettingsServiceImplTest {
     private String readSlingId(File slingIdFile, File optionsFile, int maxLength)
             throws IOException {
         SlingSettingsServiceImpl settings = getSlingSettings(slingIdFile, optionsFile);
-        return settings.readSlingId(slingIdFile, maxLength);
+        return SlingIdUtil.readSlingId(slingIdFile, maxLength);
     }
 
     private void writeSlingId(File slingIdFile, File optionsFile, String slingId)
             throws IOException {
         SlingSettingsServiceImpl settings = getSlingSettings(slingIdFile, optionsFile);
-        settings.writeSlingId(slingIdFile, slingId);
+        SlingIdUtil.writeSlingId(slingIdFile, slingId);
     }
 
     private SlingSettingsServiceImpl getSlingSettings(File slingIdFile, File optionsFile)
