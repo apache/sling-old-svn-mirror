@@ -18,14 +18,20 @@
  */
 package org.apache.sling.discovery.commons.providers.spi.base;
 
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
@@ -36,6 +42,12 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
 import org.apache.sling.settings.SlingSettingsService;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventConstants;
+import org.osgi.service.event.EventHandler;
 
 /**
  * The IdMapService is responsible for storing a slingId-clusterNodeId
@@ -43,8 +55,8 @@ import org.apache.sling.settings.SlingSettingsService;
  * do the same can map clusterNodeIds to slingIds (or vice-versa)
  */
 @Component(immediate = false)
-@Service(value = IdMapService.class)
-public class IdMapService extends AbstractServiceWithBackgroundCheck {
+@Service(value = { IdMapService.class })
+public class IdMapService extends AbstractServiceWithBackgroundCheck implements EventHandler {
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
@@ -61,8 +73,15 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck {
 
     private long me;
 
+    private final Map<Integer, String> oldIdMapCache = new HashMap<Integer, String>();
     private final Map<Integer, String> idMapCache = new HashMap<Integer, String>();
 
+    private long lastCacheInvalidation = -1;
+
+    private BundleContext bundleContext;
+
+    private ServiceRegistration eventHandlerRegistration;
+    
     /** test-only constructor **/
     public static IdMapService testConstructor(
             DiscoveryLiteConfig commonsConfig,
@@ -72,12 +91,15 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck {
         service.commonsConfig = commonsConfig;
         service.settingsService = settingsService;
         service.resourceResolverFactory = resourceResolverFactory;
-        service.activate();
+        service.activate(null);
         return service;
     }
 
     @Activate
-    protected void activate() {
+    protected void activate(BundleContext bundleContext) {
+        this.bundleContext = bundleContext;
+        registerEventHandler();
+        
         startBackgroundCheck("IdMapService-initializer", new BackgroundCheck() {
             
             @Override
@@ -92,6 +114,32 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck {
         }, null, -1, 1000 /* = 1sec interval */);
     }
     
+    @Deactivate
+    protected void deactivate() {
+        if (eventHandlerRegistration != null) {
+            eventHandlerRegistration.unregister();
+            eventHandlerRegistration = null;
+        }
+    }
+    
+    private void registerEventHandler() {
+        if (bundleContext == null) {
+            logger.info("registerEventHandler: bundleContext is null - cannot register");
+            return;
+        }
+        Dictionary<String,Object> properties = new Hashtable<String,Object>();
+        properties.put(Constants.SERVICE_DESCRIPTION, "IdMap Change Listener.");
+        String[] topics = new String[] {
+                SlingConstants.TOPIC_RESOURCE_ADDED,
+                SlingConstants.TOPIC_RESOURCE_CHANGED,
+                SlingConstants.TOPIC_RESOURCE_REMOVED };
+        properties.put(EventConstants.EVENT_TOPIC, topics);
+        String path = getIdMapPath().endsWith("/") ? getIdMapPath() + "*" : getIdMapPath() + "/*";
+        properties.put(EventConstants.EVENT_FILTER, "(&(path="+path+"))");
+        eventHandlerRegistration = bundleContext.registerService(
+                EventHandler.class.getName(), this, properties);
+    }
+
     /** Get or create a ResourceResolver **/
     private ResourceResolver getResourceResolver() throws LoginException {
         return resourceResolverFactory.getAdministrativeResourceResolver(null);
@@ -194,20 +242,55 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck {
     }
     
     public synchronized void clearCache() {
-        logger.info("clearCache: clearing idmap cache");
-        idMapCache.clear();
+        if (!idMapCache.isEmpty()) {
+            logger.debug("clearCache: clearing idmap cache");
+            oldIdMapCache.clear();
+            oldIdMapCache.putAll(idMapCache);
+            idMapCache.clear();
+        } else {
+            logger.debug("clearCache: cache was already emtpy");
+        }
+        lastCacheInvalidation = System.currentTimeMillis();
     }
 
     public synchronized String toSlingId(int clusterNodeId, ResourceResolver resourceResolver) throws PersistenceException {
+        if (System.currentTimeMillis() - lastCacheInvalidation > 30000) {
+            // since upon a restart of an instance it could opt to have changed
+            // the slingId, we might not be able to catch that change if we
+            // noticed the view change before that (the view change would
+            // force a cache invalidation).
+            // we can either rely on observation - or combine that with
+            // an invalidation of once per minute
+            // (note that this means we'll be reading 
+            // /var/discovery/oak/idMap once per minute - but that sounds
+            // perfectly fine)
+            clearCache();
+        }
         String slingId = idMapCache.get(clusterNodeId);
         if (slingId!=null) {
             // cache-hit
             return slingId;
         }
         // cache-miss
+        logger.debug("toSlingId: cache miss, refreshing idmap cache");
         Map<Integer, String> readMap = readIdMap(resourceResolver);
-        logger.info("toSlingId: cache miss, refreshing idmap cache");
-        idMapCache.putAll(readMap);
+        Set<Entry<Integer, String>> newEntries = readMap.entrySet();
+        for (Entry<Integer, String> newEntry : newEntries) {
+            String oldValue = oldIdMapCache.get(newEntry.getKey());
+            if (oldValue == null || !oldValue.equals(newEntry.getValue())) {
+                logger.info("toSlingId: mapping for "+newEntry.getKey()+" to "+newEntry.getValue() + " was newly added.");
+            } else if (!oldValue.equals(newEntry.getValue())) {
+                logger.info("toSlingId: mapping for "+newEntry.getKey()+" changed from "+oldValue+" to "+newEntry.getValue());
+            }
+            idMapCache.put(newEntry.getKey(), newEntry.getValue());
+        }
+        Set<Entry<Integer, String>> oldEntries = oldIdMapCache.entrySet();
+        for (Entry<Integer, String> oldEntry : oldEntries) {
+            if (!idMapCache.containsKey(oldEntry.getKey())) {
+                logger.info("toSlingId: mapping for "+oldEntry.getKey()+" to "+oldEntry.getValue()+" disappeared.");
+            }
+        }
+        
         return idMapCache.get(clusterNodeId);
     }
     
@@ -227,6 +310,22 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck {
 
     private String getIdMapPath() {
         return commonsConfig.getIdMapPath();
+    }
+
+    @Override
+    public void handleEvent(Event event) {
+        final String resourcePath = (String) event.getProperty("path");
+        if (resourcePath == null) {
+            // not of my business
+            return;
+        }
+        
+        if (!resourcePath.startsWith(getIdMapPath())) {
+            // not of my business
+            return;
+        }
+        logger.debug("handleEvent: got event for path: {}, event: {}", resourcePath, event);
+        clearCache();
     }
 
 }
