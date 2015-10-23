@@ -69,7 +69,7 @@ public class SlingSettingsServiceImplTest {
     @Test
     public void testGenerateSlingId()
             throws IOException {
-        String slingId =  readSlingId(slingIdFile, optionsFile, SLING_ID.length());
+        String slingId =  readSlingId(slingIdFile, optionsFile);
         Assert.assertNotNull(slingId);
     }
 
@@ -77,10 +77,10 @@ public class SlingSettingsServiceImplTest {
     public void testGetSlingId()
             throws IOException {
         writeSlingId(slingIdFile, optionsFile, SLING_ID);
-        String generated =  readSlingId(slingIdFile, optionsFile, SLING_ID.length());
+        String generated =  readSlingId(slingIdFile, optionsFile);
         Assert.assertNotNull(generated);
         Assert.assertEquals(SLING_ID, generated);
-        String slingId = readSlingId(slingIdFile, optionsFile, SLING_ID.length());
+        String slingId = readSlingId(slingIdFile, optionsFile);
         Assert.assertNotNull(slingId);
         Assert.assertEquals(generated, slingId);
     }
@@ -90,7 +90,7 @@ public class SlingSettingsServiceImplTest {
             throws IOException {
         String data = SLING_ID + RandomStringUtils.randomAscii(1024 * 1024); // 1MB long random String
         writeSlingId(slingIdFile, optionsFile, data);
-        String slingId =  readSlingId(slingIdFile, optionsFile, SLING_ID.length());
+        String slingId =  readSlingId(slingIdFile, optionsFile);
         Assert.assertNotNull(slingId);
         Assert.assertEquals(SLING_ID, slingId);
     }
@@ -100,15 +100,15 @@ public class SlingSettingsServiceImplTest {
             throws IOException {
         String data = RandomStringUtils.randomAscii(8); // 8 byte long string
         writeSlingId(slingIdFile, optionsFile, data);
-        String slingId =  readSlingId(slingIdFile, optionsFile, SLING_ID.length());
+        String slingId =  readSlingId(slingIdFile, optionsFile);
         Assert.assertNotNull(slingId);
         Assert.assertNotEquals(SLING_ID, slingId);
     }
 
-    private String readSlingId(File slingIdFile, File optionsFile, int maxLength)
+    private String readSlingId(File slingIdFile, File optionsFile)
             throws IOException {
         SlingSettingsServiceImpl settings = getSlingSettings(slingIdFile, optionsFile);
-        return SlingIdUtil.readSlingId(slingIdFile, maxLength);
+        return SlingIdUtil.readSlingId(slingIdFile);
     }
 
     private void writeSlingId(File slingIdFile, File optionsFile, String slingId)
