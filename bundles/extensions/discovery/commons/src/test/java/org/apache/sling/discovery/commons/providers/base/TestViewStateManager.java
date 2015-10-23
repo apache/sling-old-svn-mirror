@@ -63,7 +63,9 @@ public class TestViewStateManager {
             try {
                 lock.unlock();
                 try{
+                    logger.info("ConsistencyServiceWithSemaphore.sync: acquiring lock ...");
                     semaphore.acquire();
+                    logger.info("ConsistencyServiceWithSemaphore.sync: lock acquired.");
                 } finally {
                     lock.lock();
                 }
@@ -102,6 +104,10 @@ public class TestViewStateManager {
     
     @After
     public void teardown() throws Exception {
+        if (mgr != null) {
+            // release any async event sender ..
+            mgr.handleDeactivated();
+        }
         mgr = null;
         defaultRandom= null;
     }
@@ -240,7 +246,7 @@ public class TestViewStateManager {
         mgr.handleChanging();
         final BaseTopologyView view = new DummyTopologyView().addInstance();
         mgr.handleNewView(view);
-        assertTrue(mgr.waitForAsyncEvents(1000));
+        assertEquals(0, mgr.waitForAsyncEvents(1000));
         TestHelper.assertNoEvents(listener);
         synchronized(syncCallbacks) {
             assertEquals(1, syncCallbacks.size());
@@ -249,14 +255,14 @@ public class TestViewStateManager {
         String id2 = UUID.randomUUID().toString();
         final BaseTopologyView view2 = TestHelper.newView(true, id1, id1, id1, id2); 
         mgr.handleNewView(view2);
-        assertTrue(mgr.waitForAsyncEvents(1000));
+        assertEquals(0, mgr.waitForAsyncEvents(1000));
         TestHelper.assertNoEvents(listener);
         synchronized(syncCallbacks) {
             assertEquals(1, syncCallbacks.size());
             syncCallbacks.get(0).run();
             syncCallbacks.clear();
         }
-        assertTrue(mgr.waitForAsyncEvents(1000));
+        assertEquals(0, mgr.waitForAsyncEvents(1000));
         assertEvents(listener, EventHelper.newInitEvent(view2));
     }
     
@@ -609,10 +615,12 @@ public class TestViewStateManager {
         });
         Thread.sleep(1000);
         TestHelper.assertNoEvents(listener);
+        assertEquals("should have one thread now waiting", 1, serviceSemaphore.getQueueLength());
         serviceSemaphore.release(1); // release the first one only
         Thread.sleep(1000);
         assertEvents(listener, EventHelper.newInitEvent(view1));
         mgr.handleChanging();
+        assertEquals(0, mgr.waitForAsyncEvents(500));
         assertEvents(listener, EventHelper.newChangingEvent(view1));
         async(new Runnable() {
 
@@ -625,6 +633,7 @@ public class TestViewStateManager {
         Thread.sleep(1000);
         logger.debug("run: asserting no events");
         TestHelper.assertNoEvents(listener);
+        assertEquals("should have one thread now waiting", 1, serviceSemaphore.getQueueLength());
         assertFalse("should not be locked", lock.isLocked());
 
         logger.debug("run: issuing a second event");
@@ -649,12 +658,16 @@ public class TestViewStateManager {
         });
         logger.debug("run: waiting 1sec");
         Thread.sleep(1000);
+        int remainingAsyncEvents = mgr.waitForAsyncEvents(2000);
+        logger.info("run: result of waitForAsyncEvent is: "+remainingAsyncEvents);
+        assertEquals("should have one thread now waiting", 1, serviceSemaphore.getQueueLength());
         assertEquals("should be acquiring (by thread2)", 1, testSemaphore.getQueueLength());
         // releasing the testSemaphore
         testSemaphore.release();
         logger.debug("run: waiting 1sec");
         Thread.sleep(1000);
-        assertEquals("should have both threads now waiting", 2, serviceSemaphore.getQueueLength());
+        assertEquals("should have two async events now in the queue or being sent", 2, mgr.waitForAsyncEvents(500));
+        assertEquals("but should only have 1 thread actually sitting on the semaphore waiting", 1, serviceSemaphore.getQueueLength());
         logger.debug("run: releasing consistencyService");
         serviceSemaphore.release(1); // release the first one only
         logger.debug("run: waiting 1sec");

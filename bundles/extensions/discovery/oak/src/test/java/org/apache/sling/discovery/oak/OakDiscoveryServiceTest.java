@@ -104,12 +104,12 @@ public class OakDiscoveryServiceTest {
         DescriptorHelper.setDiscoveryLiteDescriptor(builder.getResourceResolverFactory(), 
                 discoBuilder);
         discoveryService.handlePotentialTopologyChange();
-        assertTrue(discoveryService.getViewStateManager().waitForAsyncEvents(2000));
+        assertEquals(0, discoveryService.getViewStateManager().waitForAsyncEvents(2000));
         assertEquals(1, listener.countEvents());
         discoveryService.unbindTopologyEventListener(listener);
         assertEquals(1, listener.countEvents());
         discoveryService.bindTopologyEventListener(listener);
-        assertTrue(discoveryService.getViewStateManager().waitForAsyncEvents(2000));
+        assertEquals(0, discoveryService.getViewStateManager().waitForAsyncEvents(2000));
         assertEquals(2, listener.countEvents()); // should now have gotten an INIT too
     }
     

@@ -55,7 +55,12 @@ final class AsyncEventSender implements Runnable {
     
     /** Enqueues a particular event for asynchronous sending to a particular listener **/
     void enqueue(TopologyEventListener listener, TopologyEvent event) {
-        final AsyncEvent asyncEvent = new AsyncEvent(listener, event);
+        final AsyncTopologyEvent asyncEvent = new AsyncTopologyEvent(listener, event);
+        enqueue(asyncEvent);
+    }
+
+    /** Enqueues an AsyncEvent for later in-order execution **/
+    void enqueue(final AsyncEvent asyncEvent) {
         synchronized(eventQ) {
             eventQ.add(asyncEvent);
             if (logger.isDebugEnabled()) {
@@ -110,7 +115,7 @@ final class AsyncEventSender implements Runnable {
                         isSending = asyncEvent!=null;
                     }
                     if (asyncEvent!=null) {
-                        sendTopologyEvent(asyncEvent);
+                        asyncEvent.trigger();
                     }
                 } catch(Throwable th) {
                     // Even though we should never catch Error or RuntimeException
@@ -141,24 +146,20 @@ final class AsyncEventSender implements Runnable {
         }
     }
 
-    /** Actual sending of the asynchronous event - catches RuntimeExceptions a listener can send. (Error is caught outside) **/
-    private void sendTopologyEvent(AsyncEvent asyncEvent) {
-        logger.trace("sendTopologyEvent: start");
-        final TopologyEventListener listener = asyncEvent.listener;
-        final TopologyEvent event = asyncEvent.event;
-        try{
-            logger.debug("sendTopologyEvent: sending to listener: {}, event: {}", listener, event);
-            listener.handleTopologyEvent(event);
-        } catch(final Exception e) {
-            logger.warn("sendTopologyEvent: handler threw exception. handler: "+listener+", exception: "+e, e);
-        }
-        logger.trace("sendTopologyEvent: start: listener: {}, event: {}", listener, event);
-    }
-
     /** for testing only: checks whether there are any events being queued or sent **/
     boolean hasInFlightEvent() {
         synchronized(eventQ) {
             return isSending || !eventQ.isEmpty();
+        }
+    }
+
+    public int getInFlightEventCnt() {
+        synchronized(eventQ) {
+            int cnt = eventQ.size();
+            if (isSending) {
+                cnt++;
+            }
+            return cnt;
         }
     }
     

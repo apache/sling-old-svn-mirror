@@ -20,12 +20,17 @@ package org.apache.sling.discovery.commons.providers.base;
 
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEventListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** SLING-4755 : encapsulates an event that yet has to be sent (asynchronously) for a particular listener **/
-final class AsyncEvent {
+final class AsyncTopologyEvent implements AsyncEvent {
+    
+    static final Logger logger = LoggerFactory.getLogger(AsyncTopologyEvent.class);
+
     final TopologyEventListener listener;
     final TopologyEvent event;
-    AsyncEvent(TopologyEventListener listener, TopologyEvent event) {
+    AsyncTopologyEvent(TopologyEventListener listener, TopologyEvent event) {
         if (listener==null) {
             throw new IllegalArgumentException("listener must not be null");
         }
@@ -37,6 +42,19 @@ final class AsyncEvent {
     }
     @Override
     public String toString() {
-        return "an AsyncEvent[event="+event+", listener="+listener+"]";
+        return "an AsyncTopologyEvent[event="+event+", listener="+listener+"]";
     }
+
+    /** Actual sending of the asynchronous event - catches RuntimeExceptions a listener can send. (Error is caught outside) **/
+    public void trigger() {
+        logger.trace("trigger: start");
+        try{
+            logger.debug("trigger: sending to listener: {}, event: {}", listener, event);
+            listener.handleTopologyEvent(event);
+        } catch(final Exception e) {
+            logger.warn("trigger: handler threw exception. handler: "+listener+", exception: "+e, e);
+        }
+        logger.trace("trigger: start: listener: {}, event: {}", listener, event);
+    }
+
 }

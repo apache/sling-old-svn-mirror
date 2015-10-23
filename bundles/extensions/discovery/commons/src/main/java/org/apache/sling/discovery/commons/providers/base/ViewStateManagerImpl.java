@@ -512,26 +512,56 @@ public class ViewStateManagerImpl implements ViewStateManager {
                 // then:
                 // run the set consistencyService
                 final int lastModCnt = modCnt;
-                logger.info("handleNewViewNonDelayed: invoking consistencyService (modCnt={})", modCnt);
-                consistencyService.sync(newView,
-                        new Runnable() {
+                logger.info("handleNewViewNonDelayed: invoking waitForAsyncEvents, then consistencyService (modCnt={})", modCnt);
+                asyncEventSender.enqueue(new AsyncEvent() {
                     
-                    public void run() {
-                        logger.trace("consistencyService.callback.run: start. acquiring lock...");
+                    @Override
+                    public String toString() {
+                        return "the waitForAsyncEvents-flush-token-"+hashCode();
+                    }
+                    
+                    @Override
+                    public void trigger() {
+                        // when this event is triggered we're guaranteed to have 
+                        // no more async events - cos the async events are handled
+                        // in a queue and this AsyncEvent was put at the end of the
+                        // queue at enqueue time. So now e can go ahead.
+                        // the plus using such a token event is that others when
+                        // calling waitForAsyncEvent() will get blocked while this
+                        // 'token async event' is handled. Which is what we explicitly want.
                         lock.lock();
                         try{
-                            logger.debug("consistencyService.callback.run: lock aquired. (modCnt should be {}, is {})", lastModCnt, modCnt);
                             if (modCnt!=lastModCnt) {
-                                logger.info("consistencyService.callback.run: modCnt changed (from {} to {}) - ignoring",
+                                logger.info("handleNewViewNonDelayed/waitForAsyncEvents.run: modCnt changed (from {} to {}) - ignoring",
                                         lastModCnt, modCnt);
                                 return;
                             }
-                            logger.info("consistencyService.callback.run: invoking doHandleConsistent.");
-                            // else:
-                            doHandleConsistent(newView);
+                            logger.info("handleNewViewNonDelayed/waitForAsyncEvents.run: done, now invoking consistencyService (modCnt={})", modCnt);
+                            consistencyService.sync(newView,
+                                    new Runnable() {
+                                
+                                public void run() {
+                                    logger.trace("consistencyService.callback.run: start. acquiring lock...");
+                                    lock.lock();
+                                    try{
+                                        logger.debug("consistencyService.callback.run: lock aquired. (modCnt should be {}, is {})", lastModCnt, modCnt);
+                                        if (modCnt!=lastModCnt) {
+                                            logger.info("consistencyService.callback.run: modCnt changed (from {} to {}) - ignoring",
+                                                    lastModCnt, modCnt);
+                                            return;
+                                        }
+                                        logger.info("consistencyService.callback.run: invoking doHandleConsistent.");
+                                        // else:
+                                        doHandleConsistent(newView);
+                                    } finally {
+                                        lock.unlock();
+                                        logger.trace("consistencyService.callback.run: end.");
+                                    }
+                                }
+                                
+                            });
                         } finally {
                             lock.unlock();
-                            logger.trace("consistencyService.callback.run: end.");
                         }
                     }
                     
@@ -628,22 +658,38 @@ public class ViewStateManagerImpl implements ViewStateManager {
     }
 
     @Override
-    public boolean waitForAsyncEvents(long timeout) {
+    public int waitForAsyncEvents(long timeout) {
         long end = System.currentTimeMillis() + timeout;
-        while(asyncEventSender.hasInFlightEvent() || 
-                (minEventDelayHandler!=null && minEventDelayHandler.isDelaying())) {
-            if (timeout==0) {
-                return false;
+        while(true) {
+            int inFlightEventCnt = getInFlightAsyncEventCnt();
+            if (inFlightEventCnt==0) {
+                // no in-flight events - return 0
+                return 0;
             }
-            if (timeout<0 || System.currentTimeMillis()<end) {
+            if (timeout==0) {
+                // timeout is set to 'no-wait', but we have in-flight events,
+                // return the actual cnt
+                return inFlightEventCnt;
+            }
+            if (timeout<0 /*infinite waiting*/ || System.currentTimeMillis()<end) {
                 try {
                     Thread.sleep(50);
                 } catch (InterruptedException e) {
                     // ignore
                 }
+            } else {
+                // timeout hit
+                return inFlightEventCnt;
             }
         }
-        return true;
+    }
+    
+    private int getInFlightAsyncEventCnt() {
+        int cnt = asyncEventSender.getInFlightEventCnt();
+        if (minEventDelayHandler!=null && minEventDelayHandler.isDelaying()) {
+            cnt++;
+        }
+        return cnt;
     }
     
 }
