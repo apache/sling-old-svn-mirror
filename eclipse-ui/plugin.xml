@@ -287,6 +287,9 @@
 		         overrides="org.eclipse.jdt.ui.navigator.actions.OpenActions">
 <!--	         overrides="org.eclipse.ui.navigator.resources.OpenActions"> 
 		         //org.eclipse.jdt.ui.navigator.actions.OpenActions -->
+		         <enablement>
+		         	<instanceof value="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode"/>
+		         </enablement>
 		   </actionProvider>
      <override
            policy="InvokeAlwaysRegardlessOfSuppressedExt"
