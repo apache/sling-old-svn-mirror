@@ -134,7 +134,10 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
                 SlingConstants.TOPIC_RESOURCE_CHANGED,
                 SlingConstants.TOPIC_RESOURCE_REMOVED };
         properties.put(EventConstants.EVENT_TOPIC, topics);
-        String path = getIdMapPath().endsWith("/") ? getIdMapPath() + "*" : getIdMapPath() + "/*";
+        String path = getIdMapPath();
+        if (path.endsWith("/")) {
+            path = path.substring(0, path.length()-1);
+        }
         properties.put(EventConstants.EVENT_FILTER, "(&(path="+path+"))");
         eventHandlerRegistration = bundleContext.registerService(
                 EventHandler.class.getName(), this, properties);
