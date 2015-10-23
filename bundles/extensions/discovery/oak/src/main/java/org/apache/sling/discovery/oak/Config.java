@@ -73,6 +73,16 @@ public class Config implements BaseConfig, DiscoveryLiteConfig {
     public static final String DISCOVERY_LITE_CHECK_INTERVAL_KEY = "discoveryLiteCheckInterval";
     protected long discoveryLiteCheckInterval = DEFAULT_DISCOVERY_LITE_CHECK_INTERVAL;
     
+    public static final long DEFAULT_CLUSTER_SYNC_SERVICE_TIMEOUT = 120;
+    @Property(longValue=DEFAULT_CLUSTER_SYNC_SERVICE_TIMEOUT)
+    public static final String CLUSTER_SYNC_SERVICE_TIMEOUT_KEY = "clusterSyncServiceTimeout";
+    protected long clusterSyncServiceTimeout = DEFAULT_CLUSTER_SYNC_SERVICE_TIMEOUT;
+
+    public static final long DEFAULT_CLUSTER_SYNC_SERVICE_INTERVAL = 2;
+    @Property(longValue=DEFAULT_CLUSTER_SYNC_SERVICE_INTERVAL)
+    public static final String CLUSTER_SYNC_SERVICE_INTERVAL_KEY = "clusterSyncServiceInterval";
+    protected long clusterSyncServiceInterval = DEFAULT_CLUSTER_SYNC_SERVICE_INTERVAL;
+
     /**
      * If set to true a syncToken will be used on top of waiting for
      * deactivating instances to be fully processed.
@@ -234,6 +244,17 @@ public class Config implements BaseConfig, DiscoveryLiteConfig {
         logger.debug("configure: discoveryLiteCheckInterval='{}'",
                 this.discoveryLiteCheckInterval);
                 
+        this.clusterSyncServiceTimeout = PropertiesUtil.toLong(
+                properties.get(CLUSTER_SYNC_SERVICE_TIMEOUT_KEY),
+                DEFAULT_CLUSTER_SYNC_SERVICE_TIMEOUT);
+        logger.debug("configure: clusterSyncServiceTimeout='{}'",
+                this.clusterSyncServiceTimeout);
+
+        this.clusterSyncServiceInterval = PropertiesUtil.toLong(
+                properties.get(CLUSTER_SYNC_SERVICE_INTERVAL_KEY),
+                DEFAULT_CLUSTER_SYNC_SERVICE_TIMEOUT);
+        logger.debug("configure: clusterSyncServiceInterval='{}'",
+                this.clusterSyncServiceInterval);
 
         this.minEventDelay = PropertiesUtil.toInteger(
                 properties.get(MIN_EVENT_DELAY_KEY),
@@ -473,15 +494,13 @@ public class Config implements BaseConfig, DiscoveryLiteConfig {
     }
     
     @Override
-    public long getBgTimeoutMillis() {
-        // TODO: currently hard coded
-        return -1;
+    public long getClusterSyncServiceTimeoutMillis() {
+        return clusterSyncServiceTimeout * 1000;
     }
 
     @Override
-    public long getBgIntervalMillis() {
-        // TODO: currently hard coded
-        return 1000;
+    public long getClusterSyncServiceIntervalMillis() {
+        return clusterSyncServiceInterval * 1000;
     }
     
     public boolean getSyncTokenEnabled() {

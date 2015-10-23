@@ -61,7 +61,7 @@ import org.apache.sling.discovery.commons.providers.DefaultClusterView;
 import org.apache.sling.discovery.commons.providers.DefaultInstanceDescription;
 import org.apache.sling.discovery.commons.providers.ViewStateManager;
 import org.apache.sling.discovery.commons.providers.base.ViewStateManagerFactory;
-import org.apache.sling.discovery.commons.providers.spi.ConsistencyService;
+import org.apache.sling.discovery.commons.providers.spi.ClusterSyncService;
 import org.apache.sling.discovery.commons.providers.spi.base.IdMapService;
 import org.apache.sling.discovery.commons.providers.util.PropertyNameHelper;
 import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
@@ -161,7 +161,7 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
 
     public DiscoveryServiceImpl() {
         viewStateManagerLock = new ReentrantLock();
-        final ConsistencyService consistencyService = new ConsistencyService() {
+        final ClusterSyncService consistencyService = new ClusterSyncService() {
 
             @Override
             public void sync(BaseTopologyView view, Runnable callback) {

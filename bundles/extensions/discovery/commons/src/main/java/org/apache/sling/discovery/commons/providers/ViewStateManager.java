@@ -26,7 +26,7 @@ import org.apache.sling.discovery.TopologyEventListener;
  * The ViewStateManager is at the core of managing TopologyEventListeners,
  * the 'view state' (changing vs changed) and sending out the appropriate
  * and according TopologyEvents to the registered listeners - depending
- * on the implementation it also supports the ConsistencyService, which is
+ * on the implementation it also supports the ClusterSyncService, which is
  * invoked on handleNewView.
  */
 public interface ViewStateManager {

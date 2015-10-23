@@ -21,7 +21,7 @@ package org.apache.sling.discovery.commons.providers.spi;
 import org.apache.sling.discovery.commons.providers.BaseTopologyView;
 
 /**
- * The ConsistencyService can be used to establish strong
+ * The ClusterSyncService can be used to establish strong
  * consistency with the underlying (eventually consistent) repository in use.
  * <p>
  * The issue is described in length in SLING-4627 - the short
@@ -41,7 +41,7 @@ import org.apache.sling.discovery.commons.providers.BaseTopologyView;
  * to settle before the topology-dependent activity can continue
  * </li>
  * </ul>
- * Both of these two aspects are handled by this ConsistencyService.
+ * Both of these two aspects are handled by this ClusterSyncService.
  * The former one by introducing a 'sync token' that gets written
  * to the repository and on receiving it by the peers they know
  * that the writing instance is aware of the ongoing change, that
@@ -54,7 +54,7 @@ import org.apache.sling.discovery.commons.providers.BaseTopologyView;
  * is still being deactivated (eg has backlog). So this second
  * part is repository dependent.
  */
-public interface ConsistencyService {
+public interface ClusterSyncService {
 
     /**
      * Starts the synchronization process and calls the provided

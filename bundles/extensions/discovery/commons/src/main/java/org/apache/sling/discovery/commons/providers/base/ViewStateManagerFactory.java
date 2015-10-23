@@ -21,7 +21,7 @@ package org.apache.sling.discovery.commons.providers.base;
 import java.util.concurrent.locks.Lock;
 
 import org.apache.sling.discovery.commons.providers.ViewStateManager;
-import org.apache.sling.discovery.commons.providers.spi.ConsistencyService;
+import org.apache.sling.discovery.commons.providers.spi.ClusterSyncService;
 
 /**
  * Used to create an implementation classes of type ViewStateManager
@@ -31,7 +31,7 @@ import org.apache.sling.discovery.commons.providers.spi.ConsistencyService;
 public class ViewStateManagerFactory {
 
     public static ViewStateManager newViewStateManager(Lock lock, 
-            ConsistencyService consistencyService) {
+            ClusterSyncService consistencyService) {
         return new ViewStateManagerImpl(lock, consistencyService);
     }
 

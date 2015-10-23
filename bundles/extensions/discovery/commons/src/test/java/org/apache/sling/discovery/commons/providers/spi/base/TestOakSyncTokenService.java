@@ -34,13 +34,13 @@ import org.apache.sling.discovery.commons.providers.base.TestHelper;
 import org.apache.sling.discovery.commons.providers.base.ViewStateManagerFactory;
 import org.apache.sling.discovery.commons.providers.spi.base.DiscoveryLiteConfig;
 import org.apache.sling.discovery.commons.providers.spi.base.IdMapService;
-import org.apache.sling.discovery.commons.providers.spi.base.OakBacklogConsistencyService;
+import org.apache.sling.discovery.commons.providers.spi.base.OakBacklogClusterSyncService;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class TestOakSyncTokenConsistencyService {
+public class TestOakSyncTokenService {
 
     private static final String SYNCTOKEN_PATH = "/var/discovery/commons/synctokens";
 
@@ -71,12 +71,12 @@ public class TestOakSyncTokenConsistencyService {
         }
 
         @Override
-        public long getBgTimeoutMillis() {
+        public long getClusterSyncServiceTimeoutMillis() {
             return bgTimeoutMillis;
         }
 
         @Override
-        public long getBgIntervalMillis() {
+        public long getClusterSyncServiceIntervalMillis() {
             return bgIntervalMillis;
         }
 
@@ -119,7 +119,7 @@ public class TestOakSyncTokenConsistencyService {
     public void testOneNode() throws Exception {
         DummyTopologyView one = TestHelper.newView(true, slingId1, slingId1, slingId1);
         Lock lock = new ReentrantLock();
-        OakBacklogConsistencyService cs = OakBacklogConsistencyService.testConstructorAndActivate(new SimpleCommonsConfig(), idMapService1, new DummySlingSettingsService(slingId1), factory1);
+        OakBacklogClusterSyncService cs = OakBacklogClusterSyncService.testConstructorAndActivate(new SimpleCommonsConfig(), idMapService1, new DummySlingSettingsService(slingId1), factory1);
         ViewStateManager vsm = ViewStateManagerFactory.newViewStateManager(lock, cs);
         DummyListener l = new DummyListener();
         assertEquals(0, l.countEvents());
@@ -145,7 +145,7 @@ public class TestOakSyncTokenConsistencyService {
         String slingId2 = UUID.randomUUID().toString();
         DummyTopologyView two1 = TestHelper.newView(true, slingId1, slingId1, slingId1, slingId2);
         Lock lock1 = new ReentrantLock();
-        OakBacklogConsistencyService cs1 = OakBacklogConsistencyService.testConstructorAndActivate(new SimpleCommonsConfig(), idMapService1, new DummySlingSettingsService(slingId1), factory1);
+        OakBacklogClusterSyncService cs1 = OakBacklogClusterSyncService.testConstructorAndActivate(new SimpleCommonsConfig(), idMapService1, new DummySlingSettingsService(slingId1), factory1);
         ViewStateManager vsm1 = ViewStateManagerFactory.newViewStateManager(lock1, cs1);
         DummyListener l = new DummyListener();
         vsm1.bind(l);
@@ -161,7 +161,7 @@ public class TestOakSyncTokenConsistencyService {
         Lock lock2 = new ReentrantLock();
         IdMapService idMapService2 = IdMapService.testConstructor(
                 new SimpleCommonsConfig(), new DummySlingSettingsService(slingId2), factory2);
-        OakBacklogConsistencyService cs2 = OakBacklogConsistencyService.testConstructorAndActivate(new SimpleCommonsConfig(), idMapService2, new DummySlingSettingsService(slingId2), factory2);
+        OakBacklogClusterSyncService cs2 = OakBacklogClusterSyncService.testConstructorAndActivate(new SimpleCommonsConfig(), idMapService2, new DummySlingSettingsService(slingId2), factory2);
         ViewStateManager vsm2 = ViewStateManagerFactory.newViewStateManager(lock2, cs2);
         cs1.triggerBackgroundCheck();
         cs2.triggerBackgroundCheck();

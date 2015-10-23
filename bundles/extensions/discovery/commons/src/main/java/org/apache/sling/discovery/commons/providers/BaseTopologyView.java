@@ -52,7 +52,7 @@ public abstract class BaseTopologyView implements TopologyView {
 
     /**
      * Returns the id that shall be used in the syncToken
-     * by the ConsistencyService.
+     * by the ClusterSyncService.
      * <p>
      * The clusterSyncId uniquely identifies each change
      * of the local cluster for all participating instances. 
@@ -72,7 +72,7 @@ public abstract class BaseTopologyView implements TopologyView {
      * of the TopologyView for all participating instances
      * in the whole topology).
      * <p>
-     * This id can further safely be used by the ConsistencyService
+     * This id can further safely be used by the ClusterSyncService
      * to identify a syncToken that it writes and that all
      * other instances in the lcoal cluster wait for, before
      * sending a TOPOLOGY_CHANGED event.
