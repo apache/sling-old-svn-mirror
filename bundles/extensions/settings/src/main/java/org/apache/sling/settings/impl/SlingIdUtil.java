@@ -28,14 +28,14 @@ import java.util.UUID;
 
 public class SlingIdUtil {
 
-    static String createSlingId() {
+    public static String createSlingId() {
         return UUID.randomUUID().toString();
     }
 
     /**
      * Read the id from a file.
      */
-    static String readSlingId(final File idFile, int maxLength) throws IOException {
+    public static String readSlingId(final File idFile, int maxLength) throws IOException {
         if (idFile.exists() && idFile.length() >= maxLength) {
             DataInputStream dis = null;
             try {
@@ -60,7 +60,7 @@ public class SlingIdUtil {
     /**
      * Write the sling id file.
      */
-    static void writeSlingId(final File idFile, final String id) throws IOException {
+    public static void writeSlingId(final File idFile, final String id) throws IOException {
         idFile.delete();
         idFile.getParentFile().mkdirs();
         DataOutputStream dos = null;
