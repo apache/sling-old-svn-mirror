@@ -127,12 +127,23 @@ public class SlingSettingsServiceImpl
             // the osgi framework does not support storing something in the file system
             throw new RuntimeException("Unable to read from bundle data file.");
         }
-        this.slingId = SlingIdUtil.readSlingId(idFile, SLING_ID_LENGTH);
+
+        try {
+            slingId = SlingIdUtil.readSlingId(idFile, SLING_ID_LENGTH);
+            logger.info("Read Sling ID {} from file {}", slingId, idFile);
+        } catch (final Throwable t) {
+            logger.error("Failed reading Sling ID from file " + idFile, t);
+        }
 
         // no sling id yet or failure to read file: create an id and store
         if (slingId == null) {
             slingId = UUID.randomUUID().toString();
-            SlingIdUtil.writeSlingId(idFile, this.slingId);
+            logger.info("Created new Sling ID {}", slingId);
+            try {
+                SlingIdUtil.writeSlingId(idFile, slingId);
+            } catch (final Throwable t) {
+                logger.error("Failed writing Sling ID to file " + idFile, t);
+            }
         }
     }
 
