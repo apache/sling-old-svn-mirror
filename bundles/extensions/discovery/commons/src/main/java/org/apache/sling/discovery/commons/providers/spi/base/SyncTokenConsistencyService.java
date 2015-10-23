@@ -34,8 +34,6 @@ import org.apache.sling.discovery.commons.providers.BaseTopologyView;
 import org.apache.sling.discovery.commons.providers.spi.ConsistencyService;
 import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
 import org.apache.sling.settings.SlingSettingsService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Implements the syncToken idea: each instance stores a key-value
@@ -50,8 +48,6 @@ import org.slf4j.LoggerFactory;
 @Component(immediate = false)
 @Service(value = { ConsistencyService.class, SyncTokenConsistencyService.class })
 public class SyncTokenConsistencyService extends AbstractServiceWithBackgroundCheck implements ConsistencyService {
-
-    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Reference
     protected DiscoveryLiteConfig commonsConfig;
@@ -143,7 +139,6 @@ public class SyncTokenConsistencyService extends AbstractServiceWithBackgroundCh
                     consistencyHistory.addHistoryEntry(view, "storing my syncToken ("+localClusterSyncTokenId+")");
                     return false;
                 }
-                
                 
                 // 2) then check if all others have done the same already
                 return seenAllSyncTokens(view);
