@@ -19,6 +19,7 @@
 package org.apache.sling.discovery.commons.providers.base;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
@@ -134,6 +135,7 @@ public class TestHelper {
                 Thread.sleep(delayInMillis);
                 logger.debug("randomEventLoop: waiting "+delayInMillis+"ms done.");
             }
+            assertEquals(0, mgr.waitForAsyncEvents(500));
             if (!shouldCallChanging) {
                 // in that case I should still get a CHANGING - by contract
                 logger.debug("randomEventLoop: asserting CHANGING, CHANGED events were sent");

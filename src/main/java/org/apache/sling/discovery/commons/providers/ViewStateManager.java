@@ -94,8 +94,9 @@ public interface ViewStateManager {
      * <p>
      * @param timeout time in millis to wait for at max - 0 to not wait at all - -1 
      * to wait indefinitely
-     * @return true if no more async events exist, false if the timeout hit early 
+     * @return 0 if no more async events exist, >0 the number of queued or in-flight (being sent)
+     * events if the timeout hit early
      */
-    boolean waitForAsyncEvents(long timeout);
+    int waitForAsyncEvents(long timeout);
 
 }

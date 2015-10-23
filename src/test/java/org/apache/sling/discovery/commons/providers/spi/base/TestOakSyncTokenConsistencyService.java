@@ -136,7 +136,7 @@ public class TestOakSyncTokenConsistencyService {
         DescriptorHelper.setDiscoveryLiteDescriptor(factory1, new DiscoveryLiteDescriptorBuilder().me(1).seq(1).activeIds(1).setFinal(true));
         assertTrue(idMapService1.waitForInit(2000));
         cs.triggerBackgroundCheck();
-        assertTrue(vsm.waitForAsyncEvents(1000));
+        assertEquals(0, vsm.waitForAsyncEvents(1000));
         assertEquals(1, l.countEvents());
     }
     
@@ -180,7 +180,10 @@ public class TestOakSyncTokenConsistencyService {
         DummyTopologyView two2 = TestHelper.newView(two1.getLocalClusterSyncTokenId(), two1.getLocalInstance().getClusterView().getId(), true, slingId1, slingId1, slingId1, slingId2);
         vsm2.handleNewView(two2);
         cs1.triggerBackgroundCheck();
+        cs1.triggerBackgroundCheck();
         cs2.triggerBackgroundCheck();
+        cs2.triggerBackgroundCheck();
+        assertEquals(0, vsm1.waitForAsyncEvents(500));
         assertEquals(1, l.countEvents());
         DummyTopologyView oneLeaving = two1.clone();
         oneLeaving.removeInstance(slingId2);
