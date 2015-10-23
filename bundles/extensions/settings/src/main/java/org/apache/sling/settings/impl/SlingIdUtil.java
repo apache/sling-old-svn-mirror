@@ -28,6 +28,9 @@ import java.util.UUID;
 
 public class SlingIdUtil {
 
+    /** The length in bytes of a sling identifier */
+    private static final int SLING_ID_LENGTH = 36;
+
     public static String createSlingId() {
         return UUID.randomUUID().toString();
     }
@@ -35,11 +38,11 @@ public class SlingIdUtil {
     /**
      * Read the id from a file.
      */
-    public static String readSlingId(final File idFile, int maxLength) throws IOException {
-        if (idFile.exists() && idFile.length() >= maxLength) {
+    public static String readSlingId(final File idFile) throws IOException {
+        if (idFile.exists() && idFile.length() >= SLING_ID_LENGTH) {
             DataInputStream dis = null;
             try {
-                final byte[] rawBytes = new byte[maxLength];
+                final byte[] rawBytes = new byte[SLING_ID_LENGTH];
                 dis = new DataInputStream(new FileInputStream(idFile));
                 dis.readFully(rawBytes);
                 final String rawString = new String(rawBytes, "ISO-8859-1");

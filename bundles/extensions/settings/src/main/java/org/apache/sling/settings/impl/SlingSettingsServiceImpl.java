@@ -76,9 +76,6 @@ public class SlingSettingsServiceImpl
     /** The name of the data file holding install run mode options */
     private static final String OPTIONS_FILE = "sling.options.file";
 
-    /** The length in bytes of a sling identifier */
-    private static final int SLING_ID_LENGTH = 36;
-
     /** The properties for name, description. */
     private final Map<String, String> slingProps = new HashMap<String, String>();
 
@@ -128,7 +125,7 @@ public class SlingSettingsServiceImpl
         }
 
         try {
-            slingId = SlingIdUtil.readSlingId(idFile, SLING_ID_LENGTH);
+            slingId = SlingIdUtil.readSlingId(idFile);
             logger.info("Read Sling ID {} from file {}", slingId, idFile);
         } catch (final Throwable t) {
             logger.error("Failed reading Sling ID from file " + idFile, t);
