@@ -38,7 +38,7 @@ import org.apache.sling.discovery.commons.providers.DefaultClusterView;
 import org.apache.sling.discovery.commons.providers.DefaultInstanceDescription;
 import org.apache.sling.discovery.commons.providers.DummyTopologyView;
 import org.apache.sling.discovery.commons.providers.EventHelper;
-import org.apache.sling.discovery.commons.providers.spi.ConsistencyService;
+import org.apache.sling.discovery.commons.providers.spi.ClusterSyncService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,12 +49,12 @@ public class TestViewStateManager {
 
     private static final Logger logger = LoggerFactory.getLogger(TestViewStateManager.class);
 
-    private class ConsistencyServiceWithSemaphore implements ConsistencyService {
+    private class ClusterSyncServiceWithSemaphore implements ClusterSyncService {
 
         private final Semaphore semaphore;
         private final Lock lock;
 
-        public ConsistencyServiceWithSemaphore(Lock lock, Semaphore semaphore) {
+        public ClusterSyncServiceWithSemaphore(Lock lock, Semaphore semaphore) {
             this.lock = lock;
             this.semaphore = semaphore;
         }
@@ -63,9 +63,9 @@ public class TestViewStateManager {
             try {
                 lock.unlock();
                 try{
-                    logger.info("ConsistencyServiceWithSemaphore.sync: acquiring lock ...");
+                    logger.info("ClusterSyncServiceWithSemaphore.sync: acquiring lock ...");
                     semaphore.acquire();
-                    logger.info("ConsistencyServiceWithSemaphore.sync: lock acquired.");
+                    logger.info("ClusterSyncServiceWithSemaphore.sync: lock acquired.");
                 } finally {
                     lock.lock();
                 }
@@ -88,7 +88,7 @@ public class TestViewStateManager {
 
     @Before
     public void setup() throws Exception {
-        mgr = new ViewStateManagerImpl(new ReentrantLock(), new ConsistencyService() {
+        mgr = new ViewStateManagerImpl(new ReentrantLock(), new ClusterSyncService() {
             
             public void sync(BaseTopologyView view, Runnable callback) {
                 callback.run();
@@ -225,7 +225,7 @@ public class TestViewStateManager {
     @Test
     public void testCancelSync() throws Exception {
         final List<Runnable> syncCallbacks = new LinkedList<Runnable>();
-        mgr = new ViewStateManagerImpl(new ReentrantLock(), new ConsistencyService() {
+        mgr = new ViewStateManagerImpl(new ReentrantLock(), new ClusterSyncService() {
             
             public void sync(BaseTopologyView view, Runnable callback) {
                 synchronized(syncCallbacks) {
@@ -526,7 +526,7 @@ public class TestViewStateManager {
         commonsLogger.setLevel(Level.INFO); // change here to DEBUG in case of issues with this test
         final Semaphore serviceSemaphore = new Semaphore(0);
         final ReentrantLock lock = new ReentrantLock();
-        final ConsistencyServiceWithSemaphore cs = new ConsistencyServiceWithSemaphore(lock, serviceSemaphore );
+        final ClusterSyncServiceWithSemaphore cs = new ClusterSyncServiceWithSemaphore(lock, serviceSemaphore );
         mgr = new ViewStateManagerImpl(lock, cs);
         final DummyListener listener = new DummyListener();
         mgr.bind(listener);
@@ -588,7 +588,7 @@ public class TestViewStateManager {
         final Semaphore serviceSemaphore = new Semaphore(0);
         final Semaphore testSemaphore = new Semaphore(0);
         final ReentrantLock lock = new ReentrantLock();
-        final ConsistencyServiceWithSemaphore cs = new ConsistencyServiceWithSemaphore(lock, serviceSemaphore );
+        final ClusterSyncServiceWithSemaphore cs = new ClusterSyncServiceWithSemaphore(lock, serviceSemaphore );
         mgr = new ViewStateManagerImpl(lock, cs);
         final DummyListener listener = new DummyListener();
         mgr.bind(listener);

@@ -27,7 +27,7 @@ import java.util.List;
 
 import org.apache.sling.discovery.commons.providers.BaseTopologyView;
 
-public class ConsistencyHistory {
+public class ClusterSyncHistory {
 
     class HistoryEntry {
         BaseTopologyView view;

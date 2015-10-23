@@ -23,25 +23,25 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.sling.discovery.commons.providers.BaseTopologyView;
-import org.apache.sling.discovery.commons.providers.spi.ConsistencyService;
+import org.apache.sling.discovery.commons.providers.spi.ClusterSyncService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Allows chaining of ConsistencyServices, itself implementing
- * the ConsistencyService interface
+ * Allows chaining of ClusterSyncService, itself implementing
+ * the ClusterSyncService interface
  */
-public class ConsistencyServiceChain implements ConsistencyService {
+public class ClusterSyncServiceChain implements ClusterSyncService {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final List<ConsistencyService> chain;
+    private final List<ClusterSyncService> chain;
 
     /**
-     * Creates a new chain of ConsistencyServices that calls a
-     * cascaded sync with the provided ConsistencyServices.
+     * Creates a new chain of ClusterSyncService that calls a
+     * cascaded sync with the provided ClusterSyncService.
      */
-    public ConsistencyServiceChain(ConsistencyService... chain) {
+    public ClusterSyncServiceChain(ClusterSyncService... chain) {
         if (chain==null || chain.length==0) {
             throw new IllegalArgumentException("chain must be 1 or more");
         }
@@ -50,18 +50,18 @@ public class ConsistencyServiceChain implements ConsistencyService {
     
     @Override
     public void sync(BaseTopologyView view, Runnable callback) {
-        final Iterator<ConsistencyService> chainIt = chain.iterator();
+        final Iterator<ClusterSyncService> chainIt = chain.iterator();
         chainedSync(view, callback, chainIt);
     }
 
     private void chainedSync(final BaseTopologyView view, final Runnable callback, 
-            final Iterator<ConsistencyService> chainIt) {
+            final Iterator<ClusterSyncService> chainIt) {
         if (!chainIt.hasNext()) {
             logger.debug("doSync: done with sync chain, invoking callback");
             callback.run();
             return;
         }
-        ConsistencyService next = chainIt.next();
+        ClusterSyncService next = chainIt.next();
         next.sync(view, new Runnable() {
 
             @Override
@@ -74,7 +74,7 @@ public class ConsistencyServiceChain implements ConsistencyService {
 
     @Override
     public void cancelSync() {
-        for (ConsistencyService consistencyService : chain) {
+        for (ClusterSyncService consistencyService : chain) {
             consistencyService.cancelSync();
         }
     }

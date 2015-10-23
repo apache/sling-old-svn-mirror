@@ -31,7 +31,7 @@ import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.commons.providers.BaseTopologyView;
 import org.apache.sling.discovery.commons.providers.base.ViewStateManagerImpl;
-import org.apache.sling.discovery.commons.providers.spi.ConsistencyService;
+import org.apache.sling.discovery.commons.providers.spi.ClusterSyncService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -59,7 +59,7 @@ public class ClusterTest {
     }
     
     private ViewStateManagerImpl newMgr() {
-        ViewStateManagerImpl mgr = new ViewStateManagerImpl(new ReentrantLock(), new ConsistencyService() {
+        ViewStateManagerImpl mgr = new ViewStateManagerImpl(new ReentrantLock(), new ClusterSyncService() {
             
             public void sync(BaseTopologyView view, Runnable callback) {
                 callback.run();

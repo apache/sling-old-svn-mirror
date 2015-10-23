@@ -31,7 +31,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.commons.providers.BaseTopologyView;
-import org.apache.sling.discovery.commons.providers.spi.ConsistencyService;
+import org.apache.sling.discovery.commons.providers.spi.ClusterSyncService;
 import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
 import org.apache.sling.settings.SlingSettingsService;
 
@@ -46,8 +46,8 @@ import org.apache.sling.settings.SlingSettingsService;
  * and are aware of the new discoveryLite view.
  */
 @Component(immediate = false)
-@Service(value = { ConsistencyService.class, SyncTokenConsistencyService.class })
-public class SyncTokenConsistencyService extends AbstractServiceWithBackgroundCheck implements ConsistencyService {
+@Service(value = { ClusterSyncService.class, SyncTokenService.class })
+public class SyncTokenService extends AbstractServiceWithBackgroundCheck implements ClusterSyncService {
 
     @Reference
     protected DiscoveryLiteConfig commonsConfig;
@@ -58,22 +58,22 @@ public class SyncTokenConsistencyService extends AbstractServiceWithBackgroundCh
     @Reference
     protected SlingSettingsService settingsService;
 
-    protected ConsistencyHistory consistencyHistory = new ConsistencyHistory();
+    protected ClusterSyncHistory clusterSyncHistory = new ClusterSyncHistory();
 
-    public static SyncTokenConsistencyService testConstructorAndActivate(
+    public static SyncTokenService testConstructorAndActivate(
             DiscoveryLiteConfig commonsConfig,
             ResourceResolverFactory resourceResolverFactory,
             SlingSettingsService settingsService) {
-        SyncTokenConsistencyService service = testConstructor(commonsConfig, resourceResolverFactory, settingsService);
+        SyncTokenService service = testConstructor(commonsConfig, resourceResolverFactory, settingsService);
         service.activate();
         return service;
     }
     
-    public static SyncTokenConsistencyService testConstructor(
+    public static SyncTokenService testConstructor(
             DiscoveryLiteConfig commonsConfig,
             ResourceResolverFactory resourceResolverFactory,
             SlingSettingsService settingsService) {
-        SyncTokenConsistencyService service = new SyncTokenConsistencyService();
+        SyncTokenService service = new SyncTokenService();
         if (commonsConfig == null) {
             throw new IllegalArgumentException("commonsConfig must not be null");
         }
@@ -95,12 +95,12 @@ public class SyncTokenConsistencyService extends AbstractServiceWithBackgroundCh
         logger.info("activate: activated with slingId="+slingId);
     }
     
-    public void setConsistencyHistory(ConsistencyHistory consistencyHistory) {
-        this.consistencyHistory = consistencyHistory;
+    public void setConsistencyHistory(ClusterSyncHistory consistencyHistory) {
+        this.clusterSyncHistory = consistencyHistory;
     }
     
-    public ConsistencyHistory getConsistencyHistory() {
-        return consistencyHistory;
+    public ClusterSyncHistory getClusterSyncHistory() {
+        return clusterSyncHistory;
     }
     
     /** Get or create a ResourceResolver **/
@@ -125,7 +125,7 @@ public class SyncTokenConsistencyService extends AbstractServiceWithBackgroundCh
 
     protected void syncToken(final BaseTopologyView view, final Runnable callback) {
         
-        startBackgroundCheck("SyncTokenConsistencyService", new BackgroundCheck() {
+        startBackgroundCheck("SyncTokenService", new BackgroundCheck() {
             
             @Override
             public boolean check() {
@@ -136,14 +136,14 @@ public class SyncTokenConsistencyService extends AbstractServiceWithBackgroundCh
                     // that they will have to wait until the timeout hits
                     
                     // so to try to avoid this, retry storing my sync token later:
-                    consistencyHistory.addHistoryEntry(view, "storing my syncToken ("+localClusterSyncTokenId+")");
+                    clusterSyncHistory.addHistoryEntry(view, "storing my syncToken ("+localClusterSyncTokenId+")");
                     return false;
                 }
                 
                 // 2) then check if all others have done the same already
                 return seenAllSyncTokens(view);
             }
-        }, callback, commonsConfig.getBgTimeoutMillis(), commonsConfig.getBgIntervalMillis());
+        }, callback, commonsConfig.getClusterSyncServiceTimeoutMillis(), commonsConfig.getClusterSyncServiceIntervalMillis());
     }
 
     private boolean storeMySyncToken(String syncTokenId) {
@@ -227,10 +227,10 @@ public class SyncTokenConsistencyService extends AbstractServiceWithBackgroundCh
             }
             if (!success) {
                 logger.info("seenAllSyncTokens: not yet seen all expected syncTokens (see above for details)");
-                consistencyHistory.addHistoryEntry(view, historyEntry.toString());
+                clusterSyncHistory.addHistoryEntry(view, historyEntry.toString());
                 return false;
             } else {
-                consistencyHistory.addHistoryEntry(view, "seen all syncTokens");
+                clusterSyncHistory.addHistoryEntry(view, "seen all syncTokens");
             }
             
             resourceResolver.commit();

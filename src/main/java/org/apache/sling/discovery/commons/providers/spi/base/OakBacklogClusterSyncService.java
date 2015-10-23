@@ -33,16 +33,16 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.commons.providers.BaseTopologyView;
-import org.apache.sling.discovery.commons.providers.spi.ConsistencyService;
+import org.apache.sling.discovery.commons.providers.spi.ClusterSyncService;
 import org.apache.sling.settings.SlingSettingsService;
 
 /**
- * The OakBacklogConsistencyService will wait until all instances
+ * The OakBacklogClusterSyncService will wait until all instances
  * in the local cluster are no longer in any backlog state.
  */
 @Component(immediate = false)
-@Service(value = { ConsistencyService.class, OakBacklogConsistencyService.class })
-public class OakBacklogConsistencyService extends AbstractServiceWithBackgroundCheck implements ConsistencyService {
+@Service(value = { ClusterSyncService.class, OakBacklogClusterSyncService.class })
+public class OakBacklogClusterSyncService extends AbstractServiceWithBackgroundCheck implements ClusterSyncService {
 
     static enum BacklogStatus {
         UNDEFINED /* when there was an error retrieving the backlog status with oak */,
@@ -62,14 +62,14 @@ public class OakBacklogConsistencyService extends AbstractServiceWithBackgroundC
     @Reference
     protected SlingSettingsService settingsService;
 
-    private ConsistencyHistory consistencyHistory = new ConsistencyHistory();
+    private ClusterSyncHistory consistencyHistory = new ClusterSyncHistory();
     
-    public static OakBacklogConsistencyService testConstructorAndActivate(
+    public static OakBacklogClusterSyncService testConstructorAndActivate(
             final DiscoveryLiteConfig commonsConfig,
             final IdMapService idMapService,
             final SlingSettingsService settingsService,
             ResourceResolverFactory resourceResolverFactory) {
-        OakBacklogConsistencyService service = testConstructor(commonsConfig, idMapService, settingsService, resourceResolverFactory);
+        OakBacklogClusterSyncService service = testConstructor(commonsConfig, idMapService, settingsService, resourceResolverFactory);
         service.activate();
         return service;
     }
@@ -86,12 +86,12 @@ public class OakBacklogConsistencyService extends AbstractServiceWithBackgroundC
      * @throws LoginException when the login for initialization failed
      * @throws JSONException when the descriptor wasn't proper json at init time
      */
-    public static OakBacklogConsistencyService testConstructor(
+    public static OakBacklogClusterSyncService testConstructor(
             final DiscoveryLiteConfig commonsConfig,
             final IdMapService idMapService,
             final SlingSettingsService settingsService,
             ResourceResolverFactory resourceResolverFactory) {
-        OakBacklogConsistencyService service = new OakBacklogConsistencyService();
+        OakBacklogClusterSyncService service = new OakBacklogClusterSyncService();
         if (commonsConfig == null) {
             throw new IllegalArgumentException("commonsConfig must not be null");
         }
@@ -114,11 +114,11 @@ public class OakBacklogConsistencyService extends AbstractServiceWithBackgroundC
         logger.info("activate: activated with slingId="+slingId);
     }
     
-    public void setConsistencyHistory(ConsistencyHistory consistencyHistory) {
+    public void setConsistencyHistory(ClusterSyncHistory consistencyHistory) {
         this.consistencyHistory = consistencyHistory;
     }
     
-    public ConsistencyHistory getConsistencyHistory() {
+    public ClusterSyncHistory getConsistencyHistory() {
         return consistencyHistory;
     }
     
@@ -145,7 +145,7 @@ public class OakBacklogConsistencyService extends AbstractServiceWithBackgroundC
     private void waitWhileBacklog(final BaseTopologyView view, final Runnable runnable) {
         // start backgroundChecking until the backlogStatus 
         // is NO_BACKLOG
-        startBackgroundCheck("OakSyncTokenConsistencyService-backlog-waiting", new BackgroundCheck() {
+        startBackgroundCheck("OakBacklogClusterSyncService-backlog-waiting", new BackgroundCheck() {
             
             @Override
             public boolean check() {
@@ -173,7 +173,7 @@ public class OakBacklogConsistencyService extends AbstractServiceWithBackgroundC
                     return false;
                 }
             }
-        }, runnable, getCommonsConfig().getBgTimeoutMillis(), getCommonsConfig().getBgIntervalMillis());
+        }, runnable, getCommonsConfig().getClusterSyncServiceTimeoutMillis(), getCommonsConfig().getClusterSyncServiceIntervalMillis());
     }
     
     private BacklogStatus getBacklogStatus(BaseTopologyView view) {

@@ -32,7 +32,7 @@ import org.apache.sling.discovery.commons.providers.DefaultClusterView;
 import org.apache.sling.discovery.commons.providers.DummyTopologyView;
 import org.apache.sling.discovery.commons.providers.EventHelper;
 import org.apache.sling.discovery.commons.providers.base.ViewStateManagerImpl;
-import org.apache.sling.discovery.commons.providers.spi.ConsistencyService;
+import org.apache.sling.discovery.commons.providers.spi.ClusterSyncService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -56,7 +56,7 @@ public class TestMinEventDelayHandler {
 
     @Before
     public void setup() throws Exception {
-        mgr = new ViewStateManagerImpl(new ReentrantLock(), new ConsistencyService() {
+        mgr = new ViewStateManagerImpl(new ReentrantLock(), new ClusterSyncService() {
             
             public void sync(BaseTopologyView view, Runnable callback) {
                 callback.run();
