@@ -34,7 +34,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.osgi.framework.BundleContext;
 
-public class SlingSettingsServiceImplTest {
+public class SlingIdUtilTest {
 
     private static final String SLING_ID_FILE_NAME = "sling.id.file";
 
