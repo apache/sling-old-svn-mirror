@@ -46,7 +46,7 @@
     org.apache.sling/org.apache.sling.engine/2.4.5-SNAPSHOT
     org.apache.sling/org.apache.sling.event/3.7.4
     org.apache.sling/org.apache.sling.event.dea/1.0.4
-    org.apache.sling/org.apache.sling.fsresource/1.1.4
+    org.apache.sling/org.apache.sling.fsresource/1.1.5-SNAPSHOT
     org.apache.sling/org.apache.sling.i18n/2.4.4
     org.apache.sling/org.apache.sling.installer.console/1.0.1-SNAPSHOT
     org.apache.sling/org.apache.sling.installer.provider.jcr/3.1.16
