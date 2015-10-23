@@ -33,9 +33,9 @@ import org.apache.sling.discovery.base.its.setup.VirtualInstance;
 import org.apache.sling.discovery.base.its.setup.VirtualInstanceBuilder;
 import org.apache.sling.discovery.base.its.setup.mock.MockFactory;
 import org.apache.sling.discovery.commons.providers.spi.base.IdMapService;
-import org.apache.sling.discovery.commons.providers.spi.base.OakBacklogConsistencyService;
+import org.apache.sling.discovery.commons.providers.spi.base.OakBacklogClusterSyncService;
 import org.apache.sling.discovery.commons.providers.spi.base.RepositoryTestHelper;
-import org.apache.sling.discovery.commons.providers.spi.base.SyncTokenConsistencyService;
+import org.apache.sling.discovery.commons.providers.spi.base.SyncTokenService;
 import org.apache.sling.discovery.oak.OakDiscoveryService;
 import org.apache.sling.discovery.oak.cluster.OakClusterViewService;
 import org.apache.sling.discovery.oak.pinger.OakViewChecker;
@@ -54,8 +54,8 @@ public class OakVirtualInstanceBuilder extends VirtualInstanceBuilder {
     private IdMapService idMapService;
     private OakViewChecker oakViewChecker;
     private SimulatedLeaseCollection leaseCollection;
-    private OakBacklogConsistencyService consistencyService;
-    private SyncTokenConsistencyService syncTokenConsistencyService;
+    private OakBacklogClusterSyncService consistencyService;
+    private SyncTokenService syncTokenService;
     
     @Override
     public VirtualInstanceBuilder createNewRepository() throws Exception {
@@ -189,26 +189,26 @@ public class OakVirtualInstanceBuilder extends VirtualInstanceBuilder {
         return OakViewChecker.testConstructor(getSlingSettingsService(), getResourceResolverFactory(), getConnectorRegistry(), getAnnouncementRegistry(), getScheduler(), getConfig());
     }
 
-    private OakBacklogConsistencyService getOakBacklogConsistencyService() throws Exception {
+    private OakBacklogClusterSyncService getOakBacklogClusterSyncService() throws Exception {
         if (consistencyService == null) {
-            consistencyService = createOakBacklogConsistencyService();
+            consistencyService = createOakBacklogClusterSyncService();
         }
         return consistencyService;
     }
     
-    private OakBacklogConsistencyService createOakBacklogConsistencyService() {
-        return OakBacklogConsistencyService.testConstructorAndActivate(getConfig(), getIdMapService(), getSlingSettingsService(), getResourceResolverFactory());
+    private OakBacklogClusterSyncService createOakBacklogClusterSyncService() {
+        return OakBacklogClusterSyncService.testConstructorAndActivate(getConfig(), getIdMapService(), getSlingSettingsService(), getResourceResolverFactory());
     }
 
-    private SyncTokenConsistencyService getSyncTokenConsistencyService() throws Exception {
-        if (syncTokenConsistencyService == null) {
-            syncTokenConsistencyService = createSyncTokenConsistencyService();
+    private SyncTokenService getSyncTokenService() throws Exception {
+        if (syncTokenService == null) {
+            syncTokenService = createSyncTokenService();
         }
-        return syncTokenConsistencyService;
+        return syncTokenService;
     }
     
-    private SyncTokenConsistencyService createSyncTokenConsistencyService() {
-        return SyncTokenConsistencyService.testConstructorAndActivate(getConfig(), getResourceResolverFactory(), getSlingSettingsService());
+    private SyncTokenService createSyncTokenService() {
+        return SyncTokenService.testConstructorAndActivate(getConfig(), getResourceResolverFactory(), getSlingSettingsService());
     }
 
     @Override
@@ -222,8 +222,8 @@ public class OakVirtualInstanceBuilder extends VirtualInstanceBuilder {
                 getOakViewChecker(), 
                 getScheduler(), 
                 getIdMapService(), 
-                getOakBacklogConsistencyService(),
-                getSyncTokenConsistencyService(),
+                getOakBacklogClusterSyncService(),
+                getSyncTokenService(),
                 getResourceResolverFactory());
     }
 

@@ -65,7 +65,7 @@ import org.apache.sling.discovery.base.connectors.ping.ConnectorRegistry;
 import org.apache.sling.discovery.base.connectors.ping.TopologyConnectorClientInformation;
 import org.apache.sling.discovery.commons.InstancesDiff;
 import org.apache.sling.discovery.commons.providers.spi.base.DiscoveryLiteDescriptor;
-import org.apache.sling.discovery.commons.providers.spi.base.OakBacklogConsistencyService;
+import org.apache.sling.discovery.commons.providers.spi.base.OakBacklogClusterSyncService;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,7 +114,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
     protected ResourceResolverFactory resourceResolverFactory;
 
     @Reference
-    private OakBacklogConsistencyService consistencyService;
+    private OakBacklogClusterSyncService clusterSyncService;
 
     private TopologyView currentView;
     
@@ -318,9 +318,9 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         pw.println("</pre>");
         pw.println("<br/>");
 
-        pw.println("<p class=\"statline ui-state-highlight\">ConsistencyService History</p>");
+        pw.println("<p class=\"statline ui-state-highlight\">ClusterSyncService History</p>");
         pw.println("<pre>");
-        for (String syncHistoryEntry : consistencyService.getSyncHistory()) {
+        for (String syncHistoryEntry : clusterSyncService.getSyncHistory()) {
             pw.println(syncHistoryEntry);
         }
         pw.println("</pre>");
@@ -983,9 +983,9 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         pw.println();
         pw.println();
 
-        pw.println("ConsistencyService History");
+        pw.println("ClusterSyncService History");
         pw.println("---------------------------------------");
-        for (String syncHistoryEntry : consistencyService.getSyncHistory()) {
+        for (String syncHistoryEntry : clusterSyncService.getSyncHistory()) {
             pw.println(syncHistoryEntry);
         }
         pw.println();

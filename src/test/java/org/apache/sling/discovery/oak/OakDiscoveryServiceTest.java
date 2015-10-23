@@ -56,12 +56,12 @@ public class OakDiscoveryServiceTest {
         }
 
         @Override
-        public long getBgTimeoutMillis() {
+        public long getClusterSyncServiceTimeoutMillis() {
             return bgTimeoutMillis;
         }
 
         @Override
-        public long getBgIntervalMillis() {
+        public long getClusterSyncServiceIntervalMillis() {
             return bgIntervalMillis;
         }
 

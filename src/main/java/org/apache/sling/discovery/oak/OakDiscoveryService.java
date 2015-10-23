@@ -60,12 +60,12 @@ import org.apache.sling.discovery.commons.providers.DefaultClusterView;
 import org.apache.sling.discovery.commons.providers.DefaultInstanceDescription;
 import org.apache.sling.discovery.commons.providers.ViewStateManager;
 import org.apache.sling.discovery.commons.providers.base.ViewStateManagerFactory;
-import org.apache.sling.discovery.commons.providers.spi.ConsistencyService;
-import org.apache.sling.discovery.commons.providers.spi.base.ConsistencyHistory;
-import org.apache.sling.discovery.commons.providers.spi.base.ConsistencyServiceChain;
+import org.apache.sling.discovery.commons.providers.spi.ClusterSyncService;
+import org.apache.sling.discovery.commons.providers.spi.base.ClusterSyncHistory;
+import org.apache.sling.discovery.commons.providers.spi.base.ClusterSyncServiceChain;
 import org.apache.sling.discovery.commons.providers.spi.base.IdMapService;
-import org.apache.sling.discovery.commons.providers.spi.base.OakBacklogConsistencyService;
-import org.apache.sling.discovery.commons.providers.spi.base.SyncTokenConsistencyService;
+import org.apache.sling.discovery.commons.providers.spi.base.OakBacklogClusterSyncService;
+import org.apache.sling.discovery.commons.providers.spi.base.SyncTokenService;
 import org.apache.sling.discovery.commons.providers.util.PropertyNameHelper;
 import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
 import org.apache.sling.discovery.oak.pinger.OakViewChecker;
@@ -133,10 +133,10 @@ public class OakDiscoveryService extends BaseDiscoveryService {
     private IdMapService idMapService;
     
     @Reference
-    private OakBacklogConsistencyService oakBacklogConsistencyService;
+    private OakBacklogClusterSyncService oakBacklogClusterSyncService;
 
     @Reference
-    private SyncTokenConsistencyService syncTokenConsistencyService;
+    private SyncTokenService syncTokenService;
 
     /** the slingId of the local instance **/
     private String slingId;
@@ -157,8 +157,8 @@ public class OakDiscoveryService extends BaseDiscoveryService {
             OakViewChecker connectorPinger,
             Scheduler scheduler,
             IdMapService idMapService,
-            OakBacklogConsistencyService oakBacklogConsistencyService,
-            SyncTokenConsistencyService syncTokenConsistencyService,
+            OakBacklogClusterSyncService oakBacklogClusterSyncService,
+            SyncTokenService syncTokenService,
             ResourceResolverFactory factory) {
         OakDiscoveryService discoService = new OakDiscoveryService();
         discoService.settingsService = settingsService;
@@ -169,8 +169,8 @@ public class OakDiscoveryService extends BaseDiscoveryService {
         discoService.oakViewChecker = connectorPinger;
         discoService.scheduler = scheduler;
         discoService.idMapService = idMapService;
-        discoService.oakBacklogConsistencyService = oakBacklogConsistencyService;
-        discoService.syncTokenConsistencyService = syncTokenConsistencyService;
+        discoService.oakBacklogClusterSyncService = oakBacklogClusterSyncService;
+        discoService.syncTokenService = syncTokenService;
         discoService.resourceResolverFactory = factory;
         return discoService;
     }
@@ -210,15 +210,15 @@ public class OakDiscoveryService extends BaseDiscoveryService {
 
         slingId = settingsService.getSlingId();
 
-        ConsistencyService consistencyService;
+        ClusterSyncService consistencyService;
         if (config.getSyncTokenEnabled()) {
             //TODO: ConsistencyHistory is implemented a little bit hacky ..
-            ConsistencyHistory consistencyHistory = new ConsistencyHistory();
-            oakBacklogConsistencyService.setConsistencyHistory(consistencyHistory);
-            syncTokenConsistencyService.setConsistencyHistory(consistencyHistory);
-            consistencyService = new ConsistencyServiceChain(oakBacklogConsistencyService, syncTokenConsistencyService);
+            ClusterSyncHistory consistencyHistory = new ClusterSyncHistory();
+            oakBacklogClusterSyncService.setConsistencyHistory(consistencyHistory);
+            syncTokenService.setConsistencyHistory(consistencyHistory);
+            consistencyService = new ClusterSyncServiceChain(oakBacklogClusterSyncService, syncTokenService);
         } else {
-            consistencyService = oakBacklogConsistencyService;
+            consistencyService = oakBacklogClusterSyncService;
             
         }
         viewStateManager = ViewStateManagerFactory.newViewStateManager(viewStateManagerLock, consistencyService);
