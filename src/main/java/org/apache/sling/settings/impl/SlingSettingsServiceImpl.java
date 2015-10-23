@@ -35,7 +35,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import org.apache.sling.launchpad.api.StartupHandler;
 import org.apache.sling.launchpad.api.StartupMode;
@@ -137,7 +136,7 @@ public class SlingSettingsServiceImpl
 
         // no sling id yet or failure to read file: create an id and store
         if (slingId == null) {
-            slingId = UUID.randomUUID().toString();
+            slingId = SlingIdUtil.createSlingId();
             logger.info("Created new Sling ID {}", slingId);
             try {
                 SlingIdUtil.writeSlingId(idFile, slingId);

@@ -28,6 +28,10 @@ import java.util.UUID;
 
 public class SlingIdUtil {
 
+    static String createSlingId() {
+        return UUID.randomUUID().toString();
+    }
+
     /**
      * Read the id from a file.
      */
