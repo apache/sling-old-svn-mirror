@@ -543,12 +543,12 @@ public class Config implements BaseConfig, DiscoveryLiteConfig {
     }
 
     @Override
-    public long getBgTimeoutMillis() {
+    public long getClusterSyncServiceTimeoutMillis() {
         return -1;
     }
 
     @Override
-    public long getBgIntervalMillis() {
+    public long getClusterSyncServiceIntervalMillis() {
         return 1000;
     }
 
