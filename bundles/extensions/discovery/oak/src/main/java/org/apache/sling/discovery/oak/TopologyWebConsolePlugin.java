@@ -64,7 +64,6 @@ import org.apache.sling.discovery.base.connectors.announcement.CachedAnnouncemen
 import org.apache.sling.discovery.base.connectors.ping.ConnectorRegistry;
 import org.apache.sling.discovery.base.connectors.ping.TopologyConnectorClientInformation;
 import org.apache.sling.discovery.commons.InstancesDiff;
-import org.apache.sling.discovery.commons.InstancesDiff.InstanceCollection;
 import org.apache.sling.discovery.commons.providers.spi.base.DiscoveryLiteDescriptor;
 import org.apache.sling.discovery.commons.providers.spi.base.OakBacklogConsistencyService;
 import org.osgi.framework.BundleContext;
@@ -82,6 +81,7 @@ import org.slf4j.LoggerFactory;
             value="Apache Sling Web Console Plugin to display Background servlets and ExecutionEngine status"),
     @Property(name=WebConsoleConstants.PLUGIN_LABEL, value=TopologyWebConsolePlugin.LABEL),
     @Property(name=WebConsoleConstants.PLUGIN_TITLE, value=TopologyWebConsolePlugin.TITLE),
+    @Property(name="felix.webconsole.category", value="Sling"),
     @Property(name="felix.webconsole.configprinter.modes", value={"zip"})
 })
 @SuppressWarnings("serial")
