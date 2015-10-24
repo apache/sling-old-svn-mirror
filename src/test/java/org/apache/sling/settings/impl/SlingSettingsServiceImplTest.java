@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.sling.settings.SlingSettingsService;
 import org.junit.After;
 import org.junit.Assert;
 import org.apache.sling.launchpad.api.StartupHandler;
@@ -67,30 +68,33 @@ public class SlingSettingsServiceImplTest {
     }
 
     @Test
-    public void testGenerateSlingId()
+    public void testGetSlingIdCreating()
             throws IOException {
-        String slingId =  readSlingId(slingIdFile, optionsFile);
+        final SlingSettingsService slingSettingsService = getSlingSettings(slingIdFile, optionsFile);
+
+        final String slingId = slingSettingsService.getSlingId();
         Assert.assertNotNull(slingId);
     }
 
     @Test
-    public void testGetSlingId()
+    public void testGetSlingIdExisting()
             throws IOException {
-        writeSlingId(slingIdFile, optionsFile, SLING_ID);
-        String generated =  readSlingId(slingIdFile, optionsFile);
-        Assert.assertNotNull(generated);
-        Assert.assertEquals(SLING_ID, generated);
-        String slingId = readSlingId(slingIdFile, optionsFile);
+        SlingIdUtil.writeSlingId(slingIdFile, SLING_ID);
+        final SlingSettingsService slingSettingsService = getSlingSettings(slingIdFile, optionsFile);
+
+        final String slingId = slingSettingsService.getSlingId();
         Assert.assertNotNull(slingId);
-        Assert.assertEquals(generated, slingId);
+        Assert.assertEquals(SLING_ID, slingId);
     }
 
     @Test
-    public void testGetLongSlingIdFromTooLargeData()
+    public void testGetSlingIdFromTooLargeData()
             throws IOException {
-        String data = SLING_ID + RandomStringUtils.randomAscii(1024 * 1024); // 1MB long random String
-        writeSlingId(slingIdFile, optionsFile, data);
-        String slingId =  readSlingId(slingIdFile, optionsFile);
+        final String data = SLING_ID + RandomStringUtils.randomAscii(1024 * 1024); // 1MB long random String
+        SlingIdUtil.writeSlingId(slingIdFile, data);
+        final SlingSettingsService slingSettingsService = getSlingSettings(slingIdFile, optionsFile);
+
+        final String slingId = slingSettingsService.getSlingId();
         Assert.assertNotNull(slingId);
         Assert.assertEquals(SLING_ID, slingId);
     }
@@ -98,23 +102,13 @@ public class SlingSettingsServiceImplTest {
     @Test
     public void testGetSlingIdFromTooShortData()
             throws IOException {
-        String data = RandomStringUtils.randomAscii(8); // 8 byte long string
-        writeSlingId(slingIdFile, optionsFile, data);
-        String slingId =  readSlingId(slingIdFile, optionsFile);
+        final String data = RandomStringUtils.randomAscii(8); // 8 byte long string
+        SlingIdUtil.writeSlingId(slingIdFile, data);
+        final SlingSettingsService slingSettingsService = getSlingSettings(slingIdFile, optionsFile);
+
+        final String slingId = slingSettingsService.getSlingId();
         Assert.assertNotNull(slingId);
         Assert.assertNotEquals(SLING_ID, slingId);
-    }
-
-    private String readSlingId(File slingIdFile, File optionsFile)
-            throws IOException {
-        SlingSettingsServiceImpl settings = getSlingSettings(slingIdFile, optionsFile);
-        return SlingIdUtil.readSlingId(slingIdFile);
-    }
-
-    private void writeSlingId(File slingIdFile, File optionsFile, String slingId)
-            throws IOException {
-        SlingSettingsServiceImpl settings = getSlingSettings(slingIdFile, optionsFile);
-        SlingIdUtil.writeSlingId(slingIdFile, slingId);
     }
 
     private SlingSettingsServiceImpl getSlingSettings(File slingIdFile, File optionsFile)
