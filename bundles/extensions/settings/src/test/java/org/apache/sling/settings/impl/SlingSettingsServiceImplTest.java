@@ -32,8 +32,10 @@ import org.junit.Assert;
 import org.apache.sling.launchpad.api.StartupHandler;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.osgi.framework.BundleContext;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class SlingSettingsServiceImplTest {
 
@@ -49,15 +51,13 @@ public class SlingSettingsServiceImplTest {
 
     @Before
     public void before() throws IOException {
-        slingIdFile = File.createTempFile(
-                SLING_ID_FILE_NAME, "");
-        optionsFile = File.createTempFile(
-                OPTIONS_FILE_NAME, "");
+        slingIdFile = File.createTempFile(SLING_ID_FILE_NAME, "");
+        optionsFile = File.createTempFile(OPTIONS_FILE_NAME, "");
     }
 
     @After
     public void after() throws IOException {
-        if (slingIdFile != null ) {
+        if (slingIdFile != null) {
             slingIdFile.delete();
             slingIdFile = null;
         }
@@ -68,19 +68,17 @@ public class SlingSettingsServiceImplTest {
     }
 
     @Test
-    public void testGetSlingIdCreating()
-            throws IOException {
-        final SlingSettingsService slingSettingsService = getSlingSettings(slingIdFile, optionsFile);
+    public void testGetSlingIdCreating() throws IOException {
+        final SlingSettingsService slingSettingsService = createSlingSettingsService(slingIdFile, optionsFile);
 
         final String slingId = slingSettingsService.getSlingId();
         Assert.assertNotNull(slingId);
     }
 
     @Test
-    public void testGetSlingIdExisting()
-            throws IOException {
+    public void testGetSlingIdExisting() throws IOException {
         SlingIdUtil.writeSlingId(slingIdFile, SLING_ID);
-        final SlingSettingsService slingSettingsService = getSlingSettings(slingIdFile, optionsFile);
+        final SlingSettingsService slingSettingsService = createSlingSettingsService(slingIdFile, optionsFile);
 
         final String slingId = slingSettingsService.getSlingId();
         Assert.assertNotNull(slingId);
@@ -88,11 +86,10 @@ public class SlingSettingsServiceImplTest {
     }
 
     @Test
-    public void testGetSlingIdFromTooLargeData()
-            throws IOException {
+    public void testGetSlingIdFromTooLargeData() throws IOException {
         final String data = SLING_ID + RandomStringUtils.randomAscii(1024 * 1024); // 1MB long random String
         SlingIdUtil.writeSlingId(slingIdFile, data);
-        final SlingSettingsService slingSettingsService = getSlingSettings(slingIdFile, optionsFile);
+        final SlingSettingsService slingSettingsService = createSlingSettingsService(slingIdFile, optionsFile);
 
         final String slingId = slingSettingsService.getSlingId();
         Assert.assertNotNull(slingId);
@@ -100,44 +97,40 @@ public class SlingSettingsServiceImplTest {
     }
 
     @Test
-    public void testGetSlingIdFromTooShortData()
-            throws IOException {
-        final String data = RandomStringUtils.randomAscii(8); // 8 byte long string
+    public void testGetSlingIdFromTooShortData() throws IOException {
+        final String data = RandomStringUtils.randomAscii(8); // 8 byte long random String
         SlingIdUtil.writeSlingId(slingIdFile, data);
-        final SlingSettingsService slingSettingsService = getSlingSettings(slingIdFile, optionsFile);
+        final SlingSettingsService slingSettingsService = createSlingSettingsService(slingIdFile, optionsFile);
 
         final String slingId = slingSettingsService.getSlingId();
         Assert.assertNotNull(slingId);
         Assert.assertNotEquals(SLING_ID, slingId);
     }
 
-    private SlingSettingsServiceImpl getSlingSettings(File slingIdFile, File optionsFile)
-            throws IOException {
-        BundleContext context = Mockito.mock(BundleContext.class);
-        Mockito.when(context.getDataFile(SLING_ID_FILE_NAME))
-                .thenReturn(slingIdFile);
-        Mockito.when(context.getDataFile(OPTIONS_FILE_NAME))
-                .thenReturn(optionsFile);
-        StartupHandler handler = Mockito.mock(StartupHandler.class);
+    private SlingSettingsService createSlingSettingsService(final File slingIdFile, final File optionsFile) throws IOException {
+        BundleContext context = mock(BundleContext.class);
+        when(context.getDataFile(SLING_ID_FILE_NAME)).thenReturn(slingIdFile);
+        when(context.getDataFile(OPTIONS_FILE_NAME)).thenReturn(optionsFile);
+        final StartupHandler handler = mock(StartupHandler.class);
         // write options
-        List<SlingSettingsServiceImpl.Options> options = new ArrayList<SlingSettingsServiceImpl.Options>();
+        final List<SlingSettingsServiceImpl.Options> options = new ArrayList<SlingSettingsServiceImpl.Options>();
         FileOutputStream fos = null;
         ObjectOutputStream oos = null;
         try {
             fos = new FileOutputStream(optionsFile);
             oos = new ObjectOutputStream(fos);
             oos.writeObject(options);
-        } catch ( final IOException ioe ) {
+        } catch (final IOException ioe) {
             throw new RuntimeException("Unable to write to options data file.", ioe);
         } finally {
-            if ( oos != null ) {
+            if (oos != null) {
                 try {
                     oos.close();
                 } catch (IOException ignore) {
                     // ...
                 }
             }
-            if ( fos != null ) {
+            if (fos != null) {
                 try {
                     fos.close();
                 } catch (IOException ignore) {
@@ -147,4 +140,5 @@ public class SlingSettingsServiceImplTest {
         }
         return new SlingSettingsServiceImpl(context, handler);
     }
+
 }
