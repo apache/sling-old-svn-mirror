@@ -28,12 +28,13 @@ import java.util.List;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.sling.settings.SlingSettingsService;
 import org.junit.After;
-import org.junit.Assert;
 import org.apache.sling.launchpad.api.StartupHandler;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -70,7 +71,7 @@ public class SlingSettingsServiceImplTest {
         final SlingSettingsService slingSettingsService = createSlingSettingsService(slingIdFile, optionsFile);
 
         final String slingId = slingSettingsService.getSlingId();
-        Assert.assertNotNull(slingId);
+        assertNotNull(slingId);
     }
 
     @Test
@@ -80,8 +81,8 @@ public class SlingSettingsServiceImplTest {
         final SlingSettingsService slingSettingsService = createSlingSettingsService(slingIdFile, optionsFile);
 
         final String slingId = slingSettingsService.getSlingId();
-        Assert.assertNotNull(slingId);
-        Assert.assertEquals(expected, slingId);
+        assertNotNull(slingId);
+        assertEquals(expected, slingId);
     }
 
     @Test
@@ -92,8 +93,8 @@ public class SlingSettingsServiceImplTest {
         final SlingSettingsService slingSettingsService = createSlingSettingsService(slingIdFile, optionsFile);
 
         final String slingId = slingSettingsService.getSlingId();
-        Assert.assertNotNull(slingId);
-        Assert.assertEquals(expected, slingId);
+        assertNotNull(slingId);
+        assertEquals(expected, slingId);
     }
 
     @Test
@@ -103,7 +104,7 @@ public class SlingSettingsServiceImplTest {
         final SlingSettingsService slingSettingsService = createSlingSettingsService(slingIdFile, optionsFile);
 
         final String slingId = slingSettingsService.getSlingId();
-        Assert.assertNotNull(slingId);
+        assertNotNull(slingId);
     }
 
     private SlingSettingsService createSlingSettingsService(final File slingIdFile, final File optionsFile) throws IOException {
