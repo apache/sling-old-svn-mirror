@@ -43,8 +43,6 @@ public class SlingSettingsServiceImplTest {
 
     private static final String OPTIONS_FILE_NAME = "sling.options.file";
 
-    private static final String SLING_ID = "097bae9b-bf60-45a2-ad8c-ccdd374dd9b0";
-
     private File slingIdFile = null;
 
     private File optionsFile = null;
@@ -77,23 +75,25 @@ public class SlingSettingsServiceImplTest {
 
     @Test
     public void testGetSlingIdExisting() throws IOException {
-        SlingIdUtil.writeSlingId(slingIdFile, SLING_ID);
+        final String expected = SlingIdUtil.createSlingId();
+        SlingIdUtil.writeSlingId(slingIdFile, expected);
         final SlingSettingsService slingSettingsService = createSlingSettingsService(slingIdFile, optionsFile);
 
         final String slingId = slingSettingsService.getSlingId();
         Assert.assertNotNull(slingId);
-        Assert.assertEquals(SLING_ID, slingId);
+        Assert.assertEquals(expected, slingId);
     }
 
     @Test
     public void testGetSlingIdFromTooLargeData() throws IOException {
-        final String data = SLING_ID + RandomStringUtils.randomAscii(1024 * 1024); // 1MB long random String
+        final String expected = SlingIdUtil.createSlingId();
+        final String data = expected + RandomStringUtils.randomAscii(1024 * 1024); // 1MB long random String
         SlingIdUtil.writeSlingId(slingIdFile, data);
         final SlingSettingsService slingSettingsService = createSlingSettingsService(slingIdFile, optionsFile);
 
         final String slingId = slingSettingsService.getSlingId();
         Assert.assertNotNull(slingId);
-        Assert.assertEquals(SLING_ID, slingId);
+        Assert.assertEquals(expected, slingId);
     }
 
     @Test
@@ -104,7 +104,6 @@ public class SlingSettingsServiceImplTest {
 
         final String slingId = slingSettingsService.getSlingId();
         Assert.assertNotNull(slingId);
-        Assert.assertNotEquals(SLING_ID, slingId);
     }
 
     private SlingSettingsService createSlingSettingsService(final File slingIdFile, final File optionsFile) throws IOException {
