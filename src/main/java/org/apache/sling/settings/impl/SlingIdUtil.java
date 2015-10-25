@@ -28,7 +28,9 @@ import java.util.UUID;
 
 public class SlingIdUtil {
 
-    /** The length in bytes of a sling identifier */
+    /**
+     * The length in bytes of a sling identifier
+     */
     private static final int SLING_ID_LENGTH = 36;
 
     public static String createSlingId() {
@@ -53,7 +55,8 @@ public class SlingIdUtil {
                 if (dis != null) {
                     try {
                         dis.close();
-                    } catch (IOException ignore){}
+                    } catch (IOException ignore) {
+                    }
                 }
             }
         }
@@ -76,7 +79,8 @@ public class SlingIdUtil {
             if (dos != null) {
                 try {
                     dos.close();
-                } catch (IOException ignore) {}
+                } catch (IOException ignore) {
+                }
             }
         }
     }
