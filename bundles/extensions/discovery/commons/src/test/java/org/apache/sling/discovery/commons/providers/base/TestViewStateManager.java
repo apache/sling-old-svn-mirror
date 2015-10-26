@@ -520,7 +520,7 @@ public class TestViewStateManager {
     }
     
     @Test
-    public void testConsistencyService_noConcurrency() throws Exception {
+    public void testClusterSyncService_noConcurrency() throws Exception {
         final org.apache.log4j.Logger commonsLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery.commons.providers");
         final org.apache.log4j.Level logLevel = commonsLogger.getLevel();
         commonsLogger.setLevel(Level.INFO); // change here to DEBUG in case of issues with this test
@@ -581,7 +581,7 @@ public class TestViewStateManager {
     }
 
     @Test
-    public void testConsistencyService_withConcurrency() throws Exception {
+    public void testClusterSyncService_withConcurrency() throws Exception {
         final org.apache.log4j.Logger commonsLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery.commons.providers");
         final org.apache.log4j.Level logLevel = commonsLogger.getLevel();
         commonsLogger.setLevel(Level.INFO); // change here to DEBUG in case of issues with this test
