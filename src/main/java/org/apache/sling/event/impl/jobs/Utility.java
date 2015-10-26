@@ -34,7 +34,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
-import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.osgi.service.event.Event;
 import org.slf4j.Logger;
@@ -103,9 +102,6 @@ public abstract class Utility {
     public static Event toEvent(final Job job) {
         final Map<String, Object> eventProps = new HashMap<String, Object>();
         eventProps.putAll(((JobImpl)job).getProperties());
-        if ( job.getName() != null ) {
-            eventProps.put(JobUtil.PROPERTY_JOB_NAME, job.getName());
-        }
         eventProps.put(ResourceHelper.PROPERTY_JOB_ID, job.getId());
         eventProps.remove(JobConsumer.PROPERTY_JOB_ASYNC_HANDLER);
         return new Event(job.getTopic(), eventProps);
@@ -121,7 +117,6 @@ public abstract class Utility {
             boolean first = true;
             for(final String propName : properties.keySet()) {
                 if ( propName.equals(ResourceHelper.PROPERTY_JOB_ID)
-                    || propName.equals(JobUtil.PROPERTY_JOB_NAME)
                     || propName.equals(ResourceHelper.PROPERTY_JOB_TOPIC) ) {
                    continue;
                 }
@@ -153,15 +148,10 @@ public abstract class Utility {
      * This method prints out the job topic and all of the properties.
      */
     public static String toString(final String jobTopic,
-            final String name,
             final Map<String, Object> properties) {
         final StringBuilder sb = new StringBuilder("Sling Job ");
         sb.append("[topic=");
         sb.append(jobTopic);
-        if ( name != null ) {
-            sb.append(", name=");
-            sb.append(name);
-        }
         appendProperties(sb, properties);
 
         sb.append("]");
@@ -179,10 +169,6 @@ public abstract class Utility {
             sb.append(job.getTopic());
             sb.append(", id=");
             sb.append(job.getId());
-            if ( job.getName() != null ) {
-                sb.append(", name=");
-                sb.append(job.getName());
-            }
             appendProperties(sb, ((JobImpl)job).getProperties());
             sb.append("]");
             return sb.toString();
@@ -224,7 +210,6 @@ public abstract class Utility {
                         }
                     }
                     job = new JobImpl(topic,
-                            (String)jobProperties.get(JobUtil.PROPERTY_JOB_NAME),
                             jobId,
                             jobProperties);
                 } else {

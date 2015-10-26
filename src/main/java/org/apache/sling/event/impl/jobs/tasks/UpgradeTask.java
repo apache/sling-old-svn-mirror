@@ -29,7 +29,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.discovery.InstanceDescription;
-import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.JobTopicTraverser;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
@@ -82,7 +81,7 @@ public class UpgradeTask {
      * This has changed, the jobs are now stored with their real topic.
      */
     private void upgradeBridgedJobs() {
-        final String path = configuration.getLocalJobsPath() + '/' + JobImpl.PROPERTY_BRIDGED_EVENT;
+        final String path = configuration.getLocalJobsPath() + "/slingevent:eventadmin";
         final ResourceResolver resolver = configuration.createResourceResolver();
         if ( resolver != null ) {
             try {
@@ -91,7 +90,7 @@ public class UpgradeTask {
                     upgradeBridgedJobs(rootResource);
                 }
                 if ( caps.isLeader() ) {
-                    final Resource unassignedRoot = resolver.getResource(configuration.getUnassignedJobsPath() + '/' + JobImpl.PROPERTY_BRIDGED_EVENT);
+                    final Resource unassignedRoot = resolver.getResource(configuration.getUnassignedJobsPath() + "/slingevent:eventadmin");
                     if ( unassignedRoot != null ) {
                         upgradeBridgedJobs(unassignedRoot);
                     }
@@ -226,7 +225,6 @@ public class UpgradeTask {
 
             final Map<String, Object> properties = ResourceHelper.cloneValueMap(vm);
 
-            properties.put(JobImpl.PROPERTY_BRIDGED_EVENT, true);
             final String topic = (String)properties.remove("slingevent:topic");
             properties.put(ResourceHelper.PROPERTY_JOB_TOPIC, topic);
 
@@ -243,7 +241,7 @@ public class UpgradeTask {
                 properties.put(Job.PROPERTY_JOB_RETRY_COUNT, 0);
             }
 
-            final List<InstanceDescription> potentialTargets = caps.getPotentialTargets("/", null);
+            final List<InstanceDescription> potentialTargets = caps.getPotentialTargets(topic);
             String targetId = null;
             if ( potentialTargets != null && potentialTargets.size() > 0 ) {
                 final QueueConfigurationManager qcm = configuration.getQueueConfigurationManager();

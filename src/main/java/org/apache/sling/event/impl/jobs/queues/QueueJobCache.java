@@ -168,7 +168,7 @@ public class QueueJobCache {
                         final JobExecutor consumer = jobConsumerManager.getExecutor(job.getTopic());
 
                         handler = new JobHandler(job, consumer, this.configuration);
-                        if ( (consumer != null || (job.isBridgedEvent() && jobConsumerManager.supportsBridgedEvents())) ) {
+                        if ( consumer != null ) {
                             if ( !handler.startProcessing(queue) ) {
                                 statisticsManager.jobDequeued(queue.getName(), handler.getJob().getTopic());
                                 if ( logger.isDebugEnabled() ) {
