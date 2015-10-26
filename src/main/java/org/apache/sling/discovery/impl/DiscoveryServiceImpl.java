@@ -62,7 +62,6 @@ import org.apache.sling.discovery.commons.providers.DefaultInstanceDescription;
 import org.apache.sling.discovery.commons.providers.ViewStateManager;
 import org.apache.sling.discovery.commons.providers.base.ViewStateManagerFactory;
 import org.apache.sling.discovery.commons.providers.spi.ClusterSyncService;
-import org.apache.sling.discovery.commons.providers.spi.base.IdMapService;
 import org.apache.sling.discovery.commons.providers.util.PropertyNameHelper;
 import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
 import org.apache.sling.discovery.impl.common.heartbeat.HeartbeatHandler;
@@ -126,9 +125,6 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
     @Reference
     private Config config;
     
-    @Reference
-    private IdMapService idMapService;
-
     /** the slingId of the local instance **/
     private String slingId;
 
