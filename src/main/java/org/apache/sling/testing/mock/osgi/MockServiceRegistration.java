@@ -21,7 +21,6 @@ package org.apache.sling.testing.mock.osgi;
 import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
@@ -124,8 +123,7 @@ class MockServiceRegistration implements ServiceRegistration, Comparable<MockSer
     }
 
     /**
-     * Try to read OSGI-metadata from /OSGI-INF and read all implemented
-     * interfaces and service properties
+     * Try to read OSGI-metadata from /OSGI-INF and read all implemented interfaces
      */
     private void readOsgiMetadata() {
         Class<?> serviceClass = service.getClass();
@@ -136,12 +134,6 @@ class MockServiceRegistration implements ServiceRegistration, Comparable<MockSer
 
         // add service interfaces from OSGi metadata
         clazzes.addAll(metadata.getServiceInterfaces());
-
-        // add properties from OSGi metadata
-        Map<String, Object> props = metadata.getProperties();
-        for (Map.Entry<String, Object> entry : props.entrySet()) {
-            properties.put(entry.getKey(), entry.getValue());
-        }
     }
 
     @Override

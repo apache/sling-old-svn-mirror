@@ -77,9 +77,9 @@ public class MockServiceReferenceTest {
         bundleContext.registerService((String) null, serviceWithMetadata, null);
         ServiceReference reference = this.bundleContext.getServiceReference(Comparable.class.getName());
 
-        assertEquals(5000, reference.getProperty("service.ranking"));
-        assertEquals("The Apache Software Foundation", reference.getProperty("service.vendor"));
-        assertEquals("org.apache.sling.models.impl.injectors.OSGiServiceInjector", reference.getProperty("service.pid"));
+        assertEquals(5000, reference.getProperty(Constants.SERVICE_RANKING));
+        assertEquals("The Apache Software Foundation", reference.getProperty(Constants.SERVICE_VENDOR));
+        assertEquals("org.apache.sling.testing.mock.osgi.OsgiMetadataUtilTest$ServiceWithMetadata", reference.getProperty(Constants.SERVICE_PID));
     }
 
 }
