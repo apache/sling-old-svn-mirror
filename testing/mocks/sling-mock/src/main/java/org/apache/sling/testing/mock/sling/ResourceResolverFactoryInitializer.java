@@ -127,10 +127,6 @@ class ResourceResolverFactoryInitializer {
      */
     private static void initializeResourceResolverFactoryActivator(BundleContext bundleContext) {
         Dictionary<String, Object> config = new Hashtable<String, Object>();
-        config.put(Constants.SERVICE_VENDOR, "sling-mock");
-        config.put(Constants.SERVICE_DESCRIPTION, "sling-mock");
-        config.put("resource.resolver.manglenamespaces", true);
-        config.put("resource.resolver.searchpath", new String[] { "/apps", "/libs" });
         config.put("resource.resolver.required.providers", new String[0]);
 
         ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
