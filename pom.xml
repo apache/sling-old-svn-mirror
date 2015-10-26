@@ -57,6 +57,13 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+                <!--  with 3.0.0 the following bundle dependency is failing
+                      on AEM 5.6.1 - thus switching back to 2.5.3 here:
+					javax.servlet,version=[2.6,3) - - Cannot be resolved
+					javax.servlet.http,version=[2.6,3) - - Cannot be resolved
+					org.apache.commons.codec.binary,version=[1.6,2) - - Cannot be resolved
+                       -->
+                <version>2.5.3</version>
                 <extensions>true</extensions>
                 <configuration>
                   <instructions>
