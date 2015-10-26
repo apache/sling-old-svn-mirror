@@ -64,6 +64,14 @@ public class VotingView extends View {
     public static VotingView newVoting(final ResourceResolver resourceResolver,
             final Config config,
             final String newViewId, String initiatorId, final Set<String> liveInstances) throws PersistenceException {
+        if (!liveInstances.contains(initiatorId)) {
+            // SLING-4617 : a voting, on a single instance, was created without the local instance
+            // this should in no case happen - the local instance should always be part of the live
+            // instances. if that's not the case, then something's fishy and we should not create
+            // the new voting - and instead rely on a retry later.
+            logger.warn("newVoting: liveInstances does not include initiatorId (local instance) - not creating new, invalid, voting");
+            return null;
+        }
         final Resource votingResource = ResourceHelper.getOrCreateResource(
                 resourceResolver, config.getOngoingVotingsPath() + "/"
                         + newViewId);
