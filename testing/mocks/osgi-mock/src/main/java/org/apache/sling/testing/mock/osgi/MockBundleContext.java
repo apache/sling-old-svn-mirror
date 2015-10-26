@@ -49,6 +49,7 @@ import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.ConfigurationAdmin;
 
 import com.google.common.collect.ImmutableList;
 
@@ -61,9 +62,13 @@ class MockBundleContext implements BundleContext {
     private final SortedSet<MockServiceRegistration> registeredServices = new ConcurrentSkipListSet<MockServiceRegistration>();
     private final Map<ServiceListener, Filter> serviceListeners = new ConcurrentHashMap<ServiceListener, Filter>();
     private final Queue<BundleListener> bundleListeners = new ConcurrentLinkedQueue<BundleListener>();
+    private final ConfigurationAdmin configAdmin = new MockConfigurationAdmin();
 
     public MockBundleContext() {
         this.bundle = new MockBundle(this);
+        
+        // register configuration admin by default
+        registerService(ConfigurationAdmin.class.getName(), configAdmin, null);
     }
 
     @Override
@@ -100,7 +105,7 @@ class MockBundleContext implements BundleContext {
     @SuppressWarnings("unchecked")
     @Override
     public ServiceRegistration registerService(final String[] clazzes, final Object service, final Dictionary properties) {
-        Dictionary<String, Object> mergedPropertes = MapUtil.propertiesMergeWithOsgiMetadata(service, properties);
+        Dictionary<String, Object> mergedPropertes = MapUtil.propertiesMergeWithOsgiMetadata(service, configAdmin, properties);
         MockServiceRegistration registration = new MockServiceRegistration(this.bundle, clazzes, service, mergedPropertes, this);
         handleRefsUpdateOnRegister(registration);
         this.registeredServices.add(registration);

@@ -27,6 +27,8 @@ import java.util.Map;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
 
@@ -157,7 +159,7 @@ public final class MockOsgi {
      */
     @Deprecated
     public static boolean activate(Object target, Dictionary<String, Object> properties) {
-        Dictionary<String, Object> mergedProperties = propertiesMergeWithOsgiMetadata(target, properties);
+        Dictionary<String, Object> mergedProperties = propertiesMergeWithOsgiMetadata(target, null, properties);
         ComponentContext componentContext = newComponentContext(mergedProperties);
         return OsgiServiceUtil.activateDeactivate(target, componentContext, true);
     }
@@ -183,7 +185,7 @@ public final class MockOsgi {
      * @return true if activation method was called. False if no activate method is defined.
      */
     public static boolean activate(Object target, BundleContext bundleContext, Dictionary<String, Object> properties) {
-        Dictionary<String, Object> mergedProperties = propertiesMergeWithOsgiMetadata(target, properties);
+        Dictionary<String, Object> mergedProperties = propertiesMergeWithOsgiMetadata(target, getConfigAdmin(bundleContext), properties);
         ComponentContext componentContext = newComponentContext(bundleContext, mergedProperties);
         return OsgiServiceUtil.activateDeactivate(target, componentContext, true);
     }
@@ -231,7 +233,7 @@ public final class MockOsgi {
      */
     @Deprecated
     public static boolean deactivate(Object target, Dictionary<String, Object> properties) {
-        Dictionary<String, Object> mergedProperties = propertiesMergeWithOsgiMetadata(target, properties);
+        Dictionary<String, Object> mergedProperties = propertiesMergeWithOsgiMetadata(target, null, properties);
         ComponentContext componentContext = newComponentContext(mergedProperties);
         return OsgiServiceUtil.activateDeactivate(target, componentContext, false);
     }
@@ -257,7 +259,7 @@ public final class MockOsgi {
      * @return true if deactivation method was called. False if no deactivate method is defined.
      */
     public static boolean deactivate(Object target, BundleContext bundleContext, Dictionary<String, Object> properties) {
-        Dictionary<String, Object> mergedProperties = propertiesMergeWithOsgiMetadata(target, properties);
+        Dictionary<String, Object> mergedProperties = propertiesMergeWithOsgiMetadata(target, getConfigAdmin(bundleContext), properties);
         ComponentContext componentContext = newComponentContext(bundleContext, mergedProperties);
         return OsgiServiceUtil.activateDeactivate(target, componentContext, false);
     }
@@ -292,7 +294,7 @@ public final class MockOsgi {
      * @return true if modified method was called. False if no modified method is defined.
      */
     public static boolean modified(Object target, BundleContext bundleContext, Map<String, Object> properties) {
-        Map<String, Object> mergedProperties = propertiesMergeWithOsgiMetadata(target, properties);
+        Map<String, Object> mergedProperties = propertiesMergeWithOsgiMetadata(target, getConfigAdmin(bundleContext), properties);
         return OsgiServiceUtil.modified(target, bundleContext, mergedProperties);
     }
     
@@ -302,6 +304,19 @@ public final class MockOsgi {
      */
     public static void shutdown(BundleContext bundleContext) {
         ((MockBundleContext)bundleContext).shutdown();
+    }
+    
+    /**
+     * Get configuration admin.
+     * @param bundleContext Bundle context
+     * @return Configuration admin or null if not registered.
+     */
+    private static ConfigurationAdmin getConfigAdmin(BundleContext bundleContext) {
+        ServiceReference ref = bundleContext.getServiceReference(ConfigurationAdmin.class.getName());
+        if (ref != null) {
+            return (ConfigurationAdmin)bundleContext.getService(ref);
+        }
+        return null;
     }
     
 }
