@@ -368,7 +368,7 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
         this.providerInfos.add(info);
         Collections.sort(this.providerInfos);
         this.doUpdateProperties();
-        handlePotentialTopologyChange();
+        checkForTopologyChange();
     }
 
     /**
@@ -407,7 +407,7 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
         final ProviderInfo info = new ProviderInfo(propertyProvider, props);
         if ( this.providerInfos.remove(info) && update ) {
             this.doUpdateProperties();
-            this.handlePotentialTopologyChange();
+            this.checkForTopologyChange();
         }
     }
 
@@ -511,7 +511,7 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
             logger.debug("updateProperties: calling doUpdateProperties.");
             doUpdateProperties();
             logger.debug("updateProperties: calling handlePotentialTopologyChange.");
-            handlePotentialTopologyChange();
+            checkForTopologyChange();
             logger.debug("updateProperties: done.");
         }
     }
@@ -594,13 +594,13 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
     }
 
     /**
-     * Handle the fact that the topology has likely changed
+     * Check the current topology for any potential change
      */
-    public void handlePotentialTopologyChange() {
+    public void checkForTopologyChange() {
         viewStateManagerLock.lock();
         try{
             if (!activated) {
-                logger.debug("handlePotentialTopologyChange: not yet activated, ignoring");
+                logger.debug("checkForTopologyChange: not yet activated, ignoring");
                 return;
             }
             BaseTopologyView t = (BaseTopologyView) getTopology();
