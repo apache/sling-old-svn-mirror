@@ -272,4 +272,23 @@ public class MergeUtilityTest {
         assertEquals("bar", cfgB.getProperties().get("foo"));
         assertArrayEquals(new Integer[] {1,2,3}, (Integer[])cfgC.getProperties().get("array"));
     }
+
+    @Test public void mergeStartlevelTest() throws Exception {
+        final Model model = U.readTestModel("merge/startlevel-base.txt");
+        final Model merge = U.readTestModel("merge/startlevel-merge.txt");
+        MergeUtility.merge(model, merge);
+
+        assertNotNull(model.getFeature("f"));
+        assertNotNull(model.getFeature("f").getRunMode());
+        assertNotNull(model.getFeature("f").getRunMode().getArtifactGroup(3));
+        assertNotNull(model.getFeature("f").getRunMode().getArtifactGroup(5));
+        final List<Artifact> list5 = U.assertArtifactsInGroup(model.getFeature("f").getRunMode().getArtifactGroup(5), 1);
+        U.assertArtifact(list5.get(0), "g", "a", "2.0.0", "jar", null);
+
+        final List<Artifact> list3 = U.assertArtifactsInGroup(model.getFeature("f").getRunMode().getArtifactGroup(3), 1);
+        U.assertArtifact(list3.get(0), "g", "b", "1.1.0", "jar", null);
+
+        final List<Artifact> list = U.assertArtifactsInGroup(model.getFeature("f").getRunMode().getArtifactGroup(0), 1);
+        U.assertArtifact(list.get(0), "g", "c", "1.6.0", "jar", null);
+    }
 }

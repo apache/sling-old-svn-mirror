@@ -84,6 +84,21 @@ public abstract class MergeUtility {
 
     /**
      * Merge the additional model into the base model.
+     * <p>
+     * Merging is performed feature by feature. Each feature is treated separately.
+     * If the base model does not have a feature from the additional model, the complete
+     * feature is added. If the base model has a feature which is not in the additional model,
+     * the feature is left as is.
+     * <p>
+     * For each feature, the following actions are performed:
+     * <ul>
+     *   <li>The feature type of the base feature is set to the type of the additional feature.</li>
+     *   <li>All additional sections of the additional feature are added to the base feature.</li>
+     *   <li>All variables from the additional feature are set on the base feature, overriding
+     *    values if already present.</li>
+     *   <li>Each run mode of the additional feature is merged into the base feature.</li>
+     * </ul>
+     * <p>
      * @param base The base model.
      * @param additional The additional model.
      * @param options The merge options
@@ -115,6 +130,8 @@ public abstract class MergeUtility {
                 for(final ArtifactGroup group : runMode.getArtifactGroups()) {
                     final ArtifactGroup baseGroup = baseRunMode.getOrCreateArtifactGroup(group.getStartLevel());
 
+                    int foundStartLevel = 0;
+
                     for(final Artifact artifact : group) {
                         boolean addArtifact = true;
                         for(final ArtifactGroup searchGroup : baseRunMode.getArtifactGroups()) {
@@ -122,11 +139,13 @@ public abstract class MergeUtility {
                             if ( found != null ) {
                                 if ( options.isLatestArtifactWins() ) {
                                     searchGroup.remove(found);
+                                    foundStartLevel = searchGroup.getStartLevel();
                                 } else {
                                     final Version baseVersion = new Version(found.getVersion());
                                     final Version mergeVersion = new Version(artifact.getVersion());
                                     if ( baseVersion.compareTo(mergeVersion) <= 0 ) {
                                         searchGroup.remove(found);
+                                        foundStartLevel = searchGroup.getStartLevel();
                                     } else {
                                         addArtifact = false;
                                     }
@@ -134,7 +153,11 @@ public abstract class MergeUtility {
                             }
                         }
                         if ( addArtifact ) {
-                            baseGroup.add(artifact);
+                            if ( group.getStartLevel() == 0 && foundStartLevel != 0 ) {
+                                baseRunMode.getOrCreateArtifactGroup(foundStartLevel).add(artifact);
+                            } else {
+                                baseGroup.add(artifact);
+                            }
                         }
                     }
                 }
