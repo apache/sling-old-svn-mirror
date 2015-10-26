@@ -38,7 +38,6 @@ import org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl;
 import org.apache.sling.testing.mock.osgi.MockEventAdmin;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.event.EventAdmin;
 
