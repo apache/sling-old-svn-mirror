@@ -219,7 +219,7 @@ public class OakViewChecker extends BaseViewChecker {
             // all that we can therefore do here is assume something
             // might have changed and let discoveryService/viewStateManager
             // filter out the 99.99% of unchanged cases.
-            discoveryService.handlePotentialTopologyChange();
+            discoveryService.checkForTopologyChange();
         }
         logger.debug("discoveryLiteCheck: end. [for slingId="+slingId+"]");
     }
@@ -310,7 +310,7 @@ public class OakViewChecker extends BaseViewChecker {
         // all that we can therefore do here is assume something
         // might have changed and let discoveryService/viewStateManager
         // filter out the 99.99% of unchanged cases.
-        discoveryService.handlePotentialTopologyChange();
+        discoveryService.checkForTopologyChange();
     }
 
     protected void updateProperties() {

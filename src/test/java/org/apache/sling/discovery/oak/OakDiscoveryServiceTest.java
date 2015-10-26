@@ -103,7 +103,7 @@ public class OakDiscoveryServiceTest {
         discoBuilder.setFinal(true);
         DescriptorHelper.setDiscoveryLiteDescriptor(builder.getResourceResolverFactory(), 
                 discoBuilder);
-        discoveryService.handlePotentialTopologyChange();
+        discoveryService.checkForTopologyChange();
         assertEquals(0, discoveryService.getViewStateManager().waitForAsyncEvents(2000));
         assertEquals(1, listener.countEvents());
         discoveryService.unbindTopologyEventListener(listener);
