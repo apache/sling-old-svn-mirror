@@ -33,10 +33,8 @@ public interface QueueConfiguration {
         UNORDERED,          // unordered, parallel processing (push)
         ORDERED,            // ordered, FIFO (push)
         TOPIC_ROUND_ROBIN,  // unordered, parallel processing, executed based on topic (push)
-        @Deprecated
-        IGNORE,             // This queue type is not supported anymore
-        @Deprecated
-        DROP                // This queue type is not supported anymore
+        _UNSUPPORTED_1,     // This queue type is not supported anymore
+        _UNSUPPORTED_2      // This queue type is not supported anymore
     }
 
     /**
@@ -65,13 +63,6 @@ public interface QueueConfiguration {
     Type getType();
 
     /**
-     * Return the thread priority for the job thread.
-     * @deprecated Use {@link #getThreadPriority()}
-     */
-    @Deprecated
-    JobUtil.JobPriority getPriority();
-
-    /**
      * Return the thread priority for the job thread
      */
     ThreadPriority getThreadPriority();
@@ -80,18 +71,6 @@ public interface QueueConfiguration {
      * Return the max number of parallel processes.
      */
     int getMaxParallel();
-
-    /**
-     * @deprecated This information is not used anymore
-     */
-    @Deprecated
-    boolean isLocalQueue();
-
-    /**
-     * @deprecated This information is not used anymore
-     */
-    @Deprecated
-    String[] getApplicationIds();
 
     /**
      * The list of topics this queue is bound to.

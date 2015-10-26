@@ -100,9 +100,6 @@ public class JobConsumerManager {
     /** The map with the consumers, keyed by topic, sorted by service ranking. */
     private final Map<String, List<ConsumerInfo>> topicToConsumerMap = new HashMap<String, List<ConsumerInfo>>();
 
-    /** Marker if this instance supports bridged events. */
-    private boolean supportsBridgedEvents;
-
     /** ServiceRegistration for propagation. */
     private ServiceRegistration propagationService;
 
@@ -240,13 +237,6 @@ public class JobConsumerManager {
     }
 
     /**
-     * Does this instance supports bridged events?
-     */
-    public boolean supportsBridgedEvents() {
-        return supportsBridgedEvents;
-    }
-
-    /**
      * Bind a new consumer
      * @param serviceReference The service reference to the consumer.
      */
@@ -304,7 +294,6 @@ public class JobConsumerManager {
                         }
                     }
                 }
-                this.supportsBridgedEvents = this.topicToConsumerMap.containsKey("/");
                 if ( changed ) {
                     this.calculateTopics(this.propagationService != null);
                 }
@@ -354,7 +343,6 @@ public class JobConsumerManager {
                         }
                     }
                 }
-                this.supportsBridgedEvents = this.topicToConsumerMap.containsKey("/");
                 if ( changed ) {
                     this.calculateTopics(this.propagationService != null);
                 }

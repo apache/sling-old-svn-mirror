@@ -18,21 +18,15 @@
  */
 package org.apache.sling.event.impl.jobs.tasks;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Iterator;
-import java.util.List;
 
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
 import org.apache.sling.event.impl.jobs.scheduling.JobSchedulerImpl;
-import org.apache.sling.event.impl.support.BatchResourceRemover;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,85 +91,7 @@ public class CleanUpTask {
             }
         }
 
-        // lock cleanup is done every minute
-        this.lockCleanup(topologyCapabilities);
         logger.debug("Job manager maintenance: Finished #{}", this.schedulerRuns);
-    }
-
-    /**
-     * Clean up the locks
-     * All locks older than two minutes are removed
-     */
-    private void lockCleanup(final TopologyCapabilities caps) {
-        if ( caps != null && caps.isLeader() ) {
-            this.logger.debug("Cleaning up job resource tree: removing obsolete locks");
-            final List<Resource> candidates = new ArrayList<Resource>();
-            final ResourceResolver resolver = this.configuration.createResourceResolver();
-            if ( resolver != null ) {
-                try {
-                    final Resource parentResource = resolver.getResource(this.configuration.getLocksPath());
-                    if ( parentResource != null ) {
-                        final Calendar startDate = Calendar.getInstance();
-                        startDate.add(Calendar.MINUTE, -2);
-
-                        this.lockCleanup(caps, candidates, parentResource, startDate);
-                        final BatchResourceRemover remover = new BatchResourceRemover();
-                        boolean batchRemove = true;
-                        for(final Resource lockResource : candidates) {
-                            if ( caps.isActive() ) {
-                                try {
-                                    if ( batchRemove ) {
-                                        remover.delete(lockResource);
-                                    } else {
-                                        resolver.delete(lockResource);
-                                        resolver.commit();
-                                    }
-                                } catch ( final PersistenceException pe) {
-                                    batchRemove = false;
-                                    this.ignoreException(pe);
-                                    resolver.refresh();
-                                }
-                            } else {
-                                break;
-                            }
-                        }
-                        try {
-                            resolver.commit();
-                        } catch ( final PersistenceException pe) {
-                            this.ignoreException(pe);
-                            resolver.refresh();
-                        }
-                    }
-                } finally {
-                    resolver.close();
-                }
-            }
-        }
-    }
-
-    /**
-     * Recursive lock cleanup
-     */
-    private void lockCleanup(final TopologyCapabilities caps,
-            final List<Resource> candidates,
-            final Resource parentResource,
-            final Calendar startDate) {
-        for(final Resource childResource : parentResource.getChildren()) {
-            if ( caps.isActive() ) {
-                final ValueMap vm = ResourceUtil.getValueMap(childResource);
-                final Calendar created = vm.get(Utility.PROPERTY_LOCK_CREATED, Calendar.class);
-                if ( created != null ) {
-                    // lock resource
-                    if ( created.before(startDate) ) {
-                        candidates.add(childResource);
-                    }
-                } else {
-                    lockCleanup(caps, candidates, childResource, startDate);
-                }
-            } else {
-                break;
-            }
-        }
     }
 
     /**
@@ -337,16 +253,6 @@ public class CleanUpTask {
             this.logger.warn("Exception during job resource tree cleanup.", pe);
         } finally {
             resolver.close();
-        }
-    }
-
-    /**
-     * Helper method which just logs the exception in debug mode.
-     * @param e
-     */
-    private void ignoreException(final Exception e) {
-        if ( this.logger.isDebugEnabled() ) {
-            this.logger.debug("Ignored exception " + e.getMessage(), e);
         }
     }
 }
