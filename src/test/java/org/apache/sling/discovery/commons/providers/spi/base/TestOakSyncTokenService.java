@@ -191,10 +191,12 @@ public class TestOakSyncTokenService {
         vsm1.handleNewView(oneLeaving);
         cs1.triggerBackgroundCheck();
         cs2.triggerBackgroundCheck();
+        assertEquals(0, vsm1.waitForAsyncEvents(2000));
         assertEquals(2, l.countEvents());
         DescriptorHelper.setDiscoveryLiteDescriptor(factory1, new DiscoveryLiteDescriptorBuilder().setFinal(true).me(1).seq(2).activeIds(1).inactiveIds(2));
         cs1.triggerBackgroundCheck();
         cs2.triggerBackgroundCheck();
+        assertEquals(0, vsm1.waitForAsyncEvents(2000));
         RepositoryTestHelper.dumpRepo(factory1);
         assertEquals(3, l.countEvents());
     }
