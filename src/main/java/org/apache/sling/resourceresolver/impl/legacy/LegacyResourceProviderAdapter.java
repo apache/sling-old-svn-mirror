@@ -36,7 +36,8 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.spi.resource.provider.JCRQueryProvider;
-import org.apache.sling.spi.resource.provider.ResolveContext;
+import org.apache.sling.spi.resource.provider.ResolverContext;
+import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 
 @SuppressWarnings("deprecation")
@@ -56,26 +57,26 @@ public class LegacyResourceProviderAdapter extends ResourceProvider<Object> {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
-    public Resource getResource(ResolveContext<Object> ctx, String path, Resource parent) {
+    public Resource getResource(ResolverContext<Object> ctx, String path, ResourceContext resourceContext, Resource parent) {
         Resource resourceCandidate;
         if (rp instanceof ParametrizableResourceProvider) {
             resourceCandidate = ((ParametrizableResourceProvider) rp).getResource(ctx.getResourceResolver(), path,
-                    ctx.getResolveParameters());
+                    resourceContext.getResolveParameters());
         } else {
             resourceCandidate = rp.getResource(ctx.getResourceResolver(), path);
         }
 
         ResourceProvider<?> parentProvider = ctx.getParentResourceProvider();
-        ResolveContext parentCtx = ctx.getParentResolveContext();
+        ResolverContext parentCtx = ctx.getParentResolveContext();
         // Ask the parent provider
         if (resourceCandidate == null && !ownsRoot && parentProvider != null) {
-            return parentProvider.getResource(parentCtx, path, parent);
+            return parentProvider.getResource(parentCtx, path, resourceContext, parent);
         }
 
         // Support the INTERNAL_CONTINUE_RESOLVING flag
         Resource fallbackResource = resourceCandidate;
         if (resourceCandidate != null && parentProvider != null && isContinueResolving(resourceCandidate)) {
-            resourceCandidate = ctx.getParentResourceProvider().getResource(parentCtx, path, parent);
+            resourceCandidate = ctx.getParentResourceProvider().getResource(parentCtx, path, resourceContext, parent);
         }
         if (resourceCandidate != null) {
             return resourceCandidate;
@@ -91,17 +92,17 @@ public class LegacyResourceProviderAdapter extends ResourceProvider<Object> {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
-    public Iterator<Resource> listChildren(ResolveContext<Object> ctx, Resource parent) {
+    public Iterator<Resource> listChildren(ResolverContext<Object> ctx, Resource parent) {
         Iterator<Resource> children = rp.listChildren(parent);
         if (children == null && !ownsRoot && ctx.getParentResourceProvider() != null) {
-            children = ctx.getParentResourceProvider().listChildren((ResolveContext) ctx.getParentResolveContext(),
+            children = ctx.getParentResourceProvider().listChildren((ResolverContext) ctx.getParentResolveContext(),
                     parent);
         }
         return children;
     }
 
     @Override
-    public void refresh(final @Nonnull ResolveContext<Object> ctx) {
+    public void refresh(final @Nonnull ResolverContext<Object> ctx) {
         if (rp instanceof RefreshableResourceProvider) {
             ((RefreshableResourceProvider) rp).refresh();
         }
@@ -117,7 +118,7 @@ public class LegacyResourceProviderAdapter extends ResourceProvider<Object> {
     }
 
     @Override
-    public Collection<String> getAttributeNames(final @Nonnull ResolveContext<Object> ctx) {
+    public Collection<String> getAttributeNames(final @Nonnull ResolverContext<Object> ctx) {
         if (rp instanceof AttributableResourceProvider) {
             return ((AttributableResourceProvider) rp).getAttributeNames(ctx.getResourceResolver());
         } else {
@@ -126,7 +127,7 @@ public class LegacyResourceProviderAdapter extends ResourceProvider<Object> {
     }
 
     @Override
-    public Object getAttribute(final @Nonnull ResolveContext<Object> ctx, final @Nonnull String name) {
+    public Object getAttribute(final @Nonnull ResolverContext<Object> ctx, final @Nonnull String name) {
         if (rp instanceof AttributableResourceProvider) {
             return ((AttributableResourceProvider) rp).getAttribute(ctx.getResourceResolver(), name);
         } else {
@@ -135,7 +136,7 @@ public class LegacyResourceProviderAdapter extends ResourceProvider<Object> {
     }
 
     @Override
-    public boolean isLive(final @Nonnull ResolveContext<Object> ctx) {
+    public boolean isLive(final @Nonnull ResolverContext<Object> ctx) {
         if (rp instanceof DynamicResourceProvider) {
             return ((DynamicResourceProvider) rp).isLive();
         } else {
@@ -152,21 +153,21 @@ public class LegacyResourceProviderAdapter extends ResourceProvider<Object> {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
-    public Resource create(final @Nonnull ResolveContext<Object> ctx, final String path,
+    public Resource create(final @Nonnull ResolverContext<Object> ctx, final String path,
             final Map<String, Object> properties) throws PersistenceException {
         Resource createdResource = null;
         if (rp instanceof ModifyingResourceProvider) {
             createdResource = ((ModifyingResourceProvider) rp).create(ctx.getResourceResolver(), path, properties);
         }
         if (createdResource == null && !ownsRoot && ctx.getParentResourceProvider() != null) {
-            createdResource = ctx.getParentResourceProvider().create((ResolveContext) ctx.getParentResolveContext(),
+            createdResource = ctx.getParentResourceProvider().create((ResolverContext) ctx.getParentResolveContext(),
                     path, properties);
         }
         return createdResource;
     }
 
     @Override
-    public void delete(final @Nonnull ResolveContext<Object> ctx, final @Nonnull Resource resource)
+    public void delete(final @Nonnull ResolverContext<Object> ctx, final @Nonnull Resource resource)
             throws PersistenceException {
         if (rp instanceof ModifyingResourceProvider) {
             ((ModifyingResourceProvider) rp).delete(ctx.getResourceResolver(), resource.getPath());
@@ -176,7 +177,7 @@ public class LegacyResourceProviderAdapter extends ResourceProvider<Object> {
     }
 
     @Override
-    public void revert(final @Nonnull ResolveContext<Object> ctx) {
+    public void revert(final @Nonnull ResolverContext<Object> ctx) {
         if (rp instanceof ModifyingResourceProvider) {
             ((ModifyingResourceProvider) rp).revert(ctx.getResourceResolver());
         } else {
@@ -185,7 +186,7 @@ public class LegacyResourceProviderAdapter extends ResourceProvider<Object> {
     }
 
     @Override
-    public void commit(final @Nonnull ResolveContext<Object> ctx) throws PersistenceException {
+    public void commit(final @Nonnull ResolverContext<Object> ctx) throws PersistenceException {
         if (rp instanceof ModifyingResourceProvider) {
             ((ModifyingResourceProvider) rp).commit(ctx.getResourceResolver());
         } else {
@@ -194,7 +195,7 @@ public class LegacyResourceProviderAdapter extends ResourceProvider<Object> {
     }
 
     @Override
-    public boolean hasChanges(final @Nonnull ResolveContext<Object> ctx) {
+    public boolean hasChanges(final @Nonnull ResolverContext<Object> ctx) {
         if (rp instanceof ModifyingResourceProvider) {
             return ((ModifyingResourceProvider) rp).hasChanges(ctx.getResourceResolver());
         } else {
@@ -205,26 +206,26 @@ public class LegacyResourceProviderAdapter extends ResourceProvider<Object> {
     private static class JCRQueryProviderAdapter implements JCRQueryProvider<Object> {
 
         private final QueriableResourceProvider rp;
-        
+
         private final String[] languages;
-        
+
         public JCRQueryProviderAdapter(QueriableResourceProvider rp, String[] languages) {
             this.rp = rp;
             this.languages = languages;
         }
 
         @Override
-        public String[] getSupportedLanguages(ResolveContext<Object> ctx) {
+        public String[] getSupportedLanguages(ResolverContext<Object> ctx) {
             return languages;
         }
 
         @Override
-        public Iterator<Resource> findResources(ResolveContext<Object> ctx, String query, String language) {
+        public Iterator<Resource> findResources(ResolverContext<Object> ctx, String query, String language) {
             return rp.findResources(ctx.getResourceResolver(), query, language);
         }
 
         @Override
-        public Iterator<ValueMap> queryResources(ResolveContext<Object> ctx, String query, String language) {
+        public Iterator<ValueMap> queryResources(ResolverContext<Object> ctx, String query, String language) {
             return rp.queryResources(ctx.getResourceResolver(), query, language);
         }
     }

@@ -18,11 +18,10 @@
  */
 package org.apache.sling.resourceresolver.impl;
 
+import static org.apache.sling.resourceresolver.impl.MockedResourceResolverImplTest.createRPHandler;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-
-import static org.apache.sling.resourceresolver.impl.MockedResourceResolverImplTest.createRPHandler;
 
 import java.util.Arrays;
 
@@ -32,11 +31,9 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.resourceresolver.impl.CommonResourceResolverFactoryImpl;
-import org.apache.sling.resourceresolver.impl.ResourceResolverFactoryActivator;
-import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
-import org.apache.sling.spi.resource.provider.ResolveContext;
+import org.apache.sling.spi.resource.provider.ResolverContext;
+import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -57,10 +54,10 @@ public class ProviderHandlerTest {
         });
 
         final ResourceProvider<?> leaveProvider = Mockito.mock(ResourceProvider.class);
-        Mockito.when(leaveProvider.getResource(Mockito.any(ResolveContext.class), Mockito.eq(servletpath), Mockito.any(Resource.class))).thenReturn(servletResource);
+        Mockito.when(leaveProvider.getResource(Mockito.any(ResolverContext.class), Mockito.eq(servletpath), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(servletResource);
         ResourceProviderHandler h = createRPHandler(leaveProvider, "my-pid", 0, servletpath);
         ResourceResolver resolver = new ResourceResolverImpl(new CommonResourceResolverFactoryImpl(new ResourceResolverFactoryActivator()), false, null, Arrays.asList(h));
-        
+
         final Resource parent = resolver.getResource(ResourceUtil.getParent(servletpath));
         assertNotNull("Parent must be available", parent);
         assertTrue("Resource should be synthetic", ResourceUtil.isSyntheticResource(parent));

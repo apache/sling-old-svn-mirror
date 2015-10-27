@@ -35,7 +35,7 @@ import org.apache.sling.api.resource.query.QueryInstructions;
 import org.apache.sling.api.resource.query.QueryManager;
 import org.apache.sling.spi.resource.provider.JCRQueryProvider;
 import org.apache.sling.spi.resource.provider.QueryResult;
-import org.apache.sling.spi.resource.provider.ResolveContext;
+import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 
 /**
@@ -168,7 +168,7 @@ public interface StatefulResourceProvider {
 
     /**
      * @return Context for the wrapped ResourceProvider
-     * @throws LoginException 
+     * @throws LoginException
      */
-    ResolveContext<Object> getContext(Map<String, String> parameters) throws LoginException;
+    ResolverContext<Object> getContext() throws LoginException;
 }

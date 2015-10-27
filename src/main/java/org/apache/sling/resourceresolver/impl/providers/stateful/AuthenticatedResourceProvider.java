@@ -39,7 +39,8 @@ import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
 import org.apache.sling.spi.resource.provider.JCRQueryProvider;
 import org.apache.sling.spi.resource.provider.QueryProvider;
 import org.apache.sling.spi.resource.provider.QueryResult;
-import org.apache.sling.spi.resource.provider.ResolveContext;
+import org.apache.sling.spi.resource.provider.ResolverContext;
+import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,7 +69,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
 
     private Object contextData;
 
-    private ResolveContext<Object> cachedContext;
+    private ResolverContext<Object> cachedContext;
 
     private QueryProvider<Object> cachedQueryProvider;
 
@@ -94,35 +95,31 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
         return contextData;
     }
 
-    private ResolveContext<Object> getBasicContext() throws LoginException {
+    private ResolverContext<Object> getBasicContext() throws LoginException {
         if (cachedContext != null) {
             return cachedContext;
         }
-        return cachedContext = getContext(null, null);
+        return cachedContext = getContext(null);
     }
 
     @Override
-    public ResolveContext<Object> getContext(Map<String, String> parameters) throws LoginException {
-        if (parameters == null || parameters.isEmpty()) {
-            return getBasicContext();
-        } else {
-            return getContext(parameters, null);
-        }
+    public ResolverContext<Object> getContext() throws LoginException {
+        return getBasicContext();
     }
 
-    private ResolveContext<Object> getContext(Map<String, String> parameters, List<StatefulResourceProvider> parentProviders) throws LoginException {
+    private ResolverContext<Object> getContext(List<StatefulResourceProvider> parentProviders) throws LoginException {
         ResourceProvider<Object> parentProvider = null;
-        ResolveContext<Object> parentContext = null;
+        ResolverContext<Object> parentContext = null;
         try {
             if (parentProviders != null && !parentProviders.isEmpty()) {
                 StatefulResourceProvider statefulParentProvider = parentProviders.get(0);
                 parentProvider = statefulParentProvider.getResourceProvider();
-                parentContext = statefulParentProvider.getContext(parameters);
+                parentContext = statefulParentProvider.getContext();
             }
         } catch (LoginException e) {
             logger.warn("Can't authenticate the parent resource provider", e);
         }
-        return new BasicResolveContext<Object>(resolver, parameters, authenticate(), parentProvider, parentContext);
+        return new BasicResolveContext<Object>(resolver, authenticate(), parentProvider, parentContext);
     }
 
     @Override
@@ -160,7 +157,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     @Override
     public Resource getParent(Resource child, List<StatefulResourceProvider> parentProviders) {
         try {
-            return rp.getParent(getContext(child.getResourceMetadata().getParameterMap(), parentProviders), child);
+            return rp.getParent(getContext(parentProviders), child);
         } catch (LoginException e) {
             logger.error("Can't create context", e);
             return null;
@@ -168,9 +165,20 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     }
 
     @Override
-    public Resource getResource(String path, Resource parent, Map<String, String> parameters, boolean isResolve, List<StatefulResourceProvider> parentProviders) {
+    public Resource getResource(String path, Resource parent, final Map<String, String> parameters, boolean isResolve, List<StatefulResourceProvider> parentProviders) {
+        ResourceContext resourceContext = ResourceContext.EMPTY_CONTEXT;
+        if ( parameters != null ) {
+            resourceContext = new ResourceContext() {
+
+                @Override
+                public Map<String, String> getResolveParameters() {
+                    // TODO Auto-generated method stub
+                    return parameters;
+                }
+            };
+        }
         try {
-            return rp.getResource(getContext(parameters, parentProviders), path, parent);
+            return rp.getResource(getContext(parentProviders), path, resourceContext, parent);
         } catch (LoginException e) {
             logger.error("Can't create context", e);
             return null;
@@ -181,7 +189,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     @Override
     public Iterator<Resource> listChildren(Resource parent, List<StatefulResourceProvider> parentProviders) {
         try {
-            return rp.listChildren(getContext(parent.getResourceMetadata().getParameterMap(), parentProviders), parent);
+            return rp.listChildren(getContext(parentProviders), parent);
         } catch (LoginException e) {
             logger.error("Can't create context", e);
             return null;
@@ -227,7 +235,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     @Override
     public Resource create(String path, Map<String, Object> properties, List<StatefulResourceProvider> parentProviders) throws PersistenceException {
         try {
-            return rp.create(getContext(null, parentProviders), path, properties);
+            return rp.create(getContext(parentProviders), path, properties);
         } catch (LoginException e) {
             logger.error("Can't create context", e);
             return null;
@@ -237,7 +245,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     @Override
     public void delete(Resource resource, List<StatefulResourceProvider> parentProviders) throws PersistenceException {
         try {
-            rp.delete(getContext(resource.getResourceMetadata().getParameterMap(), parentProviders), resource);
+            rp.delete(getContext(parentProviders), resource);
         } catch (LoginException e) {
             logger.error("Can't create context", e);
         }
@@ -355,7 +363,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     @Override
     public boolean copy(String srcAbsPath, String destAbsPath, List<StatefulResourceProvider> parentProviders) throws PersistenceException {
         try {
-            return rp.copy(getContext(null, parentProviders), srcAbsPath, destAbsPath);
+            return rp.copy(getContext(parentProviders), srcAbsPath, destAbsPath);
         } catch (LoginException e) {
             logger.error("Can't create context", e);
             return false;
@@ -365,7 +373,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     @Override
     public boolean move(String srcAbsPath, String destAbsPath, List<StatefulResourceProvider> parentProviders) throws PersistenceException {
         try {
-            return rp.move(getContext(null, parentProviders), srcAbsPath, destAbsPath);
+            return rp.move(getContext(parentProviders), srcAbsPath, destAbsPath);
         } catch (LoginException e) {
             logger.error("Can't create context", e);
             return false;
