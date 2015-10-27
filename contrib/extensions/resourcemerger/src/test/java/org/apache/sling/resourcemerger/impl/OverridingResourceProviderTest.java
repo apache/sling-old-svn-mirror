@@ -25,7 +25,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -35,6 +34,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.resourcemerger.impl.picker.OverridingResourcePicker;
 import org.apache.sling.resourceresolver.impl.BasicResolveContext;
+import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.testing.resourceresolver.MockHelper;
 import org.apache.sling.testing.resourceresolver.MockResourceResolverFactory;
 import org.apache.sling.testing.resourceresolver.MockResourceResolverFactoryOptions;
@@ -101,12 +101,12 @@ public class OverridingResourceProviderTest {
                     .commit();
 
         this.provider = new MergingResourceProvider("/override", new OverridingResourcePicker(), false, true);
-        this.ctx = new BasicResolveContext(resolver, Collections.<String, String>emptyMap(), null);
+        this.ctx = new BasicResolveContext(resolver, null);
     }
 
     @Test
     public void testOverridingOnTarget() {
-        final Resource rsrcA2 = this.provider.getResource(ctx, "/override/apps/a/2", null);
+        final Resource rsrcA2 = this.provider.getResource(ctx, "/override/apps/a/2", ResourceContext.EMPTY_CONTEXT, null);
         final ValueMap vm = rsrcA2.adaptTo(ValueMap.class);
         assertNotNull(vm);
         assertEquals(3, vm.size()); //3rd is resource:superType
@@ -116,7 +116,7 @@ public class OverridingResourceProviderTest {
 
     @Test
     public void testOverridingViaParent() {
-        final Resource rsrcA2 = this.provider.getResource(ctx, "/override/apps/a/2/c", null);
+        final Resource rsrcA2 = this.provider.getResource(ctx, "/override/apps/a/2/c", ResourceContext.EMPTY_CONTEXT, null);
         final ValueMap vm = rsrcA2.adaptTo(ValueMap.class);
         assertNotNull(vm);
         assertEquals(2, vm.size());
@@ -126,15 +126,15 @@ public class OverridingResourceProviderTest {
 
     @Test
     public void testInheritingFromGrandParent() {
-        assertNotNull(this.provider.getResource(ctx, "/override/apps/a/3/a", null));
-        assertNull(this.provider.getResource(ctx, "/override/apps/a/3/b", null));
-        assertNotNull(this.provider.getResource(ctx, "/override/apps/a/3/c", null));
-        assertNotNull(this.provider.getResource(ctx, "/override/apps/a/3/d", null));
+        assertNotNull(this.provider.getResource(ctx, "/override/apps/a/3/a", ResourceContext.EMPTY_CONTEXT, null));
+        assertNull(this.provider.getResource(ctx, "/override/apps/a/3/b", ResourceContext.EMPTY_CONTEXT, null));
+        assertNotNull(this.provider.getResource(ctx, "/override/apps/a/3/c", ResourceContext.EMPTY_CONTEXT, null));
+        assertNotNull(this.provider.getResource(ctx, "/override/apps/a/3/d", ResourceContext.EMPTY_CONTEXT, null));
     }
 
     @Test
     public void testHideChildrenFromList() {
-        final Resource rsrcA2 = this.provider.getResource(ctx, "/override/apps/a/2", null);
+        final Resource rsrcA2 = this.provider.getResource(ctx, "/override/apps/a/2", ResourceContext.EMPTY_CONTEXT, null);
         final Iterator<Resource> children = this.provider.listChildren(ctx, rsrcA2);
         final List<String> names = new ArrayList<String>();
         while (children.hasNext()) {
@@ -147,12 +147,12 @@ public class OverridingResourceProviderTest {
 
     @Test
     public void testHideChildrenFromGet() {
-        assertNotNull(this.provider.getResource(ctx, "/override/apps/a/1/b/1", null));
-        assertNull(this.provider.getResource(ctx, "/override/apps/a/2/b", null));
-        assertNull(this.provider.getResource(ctx, "/override/apps/a/2/b/1", null));
-        assertNotNull(this.provider.getResource(ctx, "/override/apps/a/2/d/1/a", null));
-        assertNotNull(this.provider.getResource(ctx, "/override/apps/a/2/d/1/b", null));
-        assertNotNull(this.provider.getResource(ctx, "/override/apps/a/2/d/1/b/1", null));
+        assertNotNull(this.provider.getResource(ctx, "/override/apps/a/1/b/1", ResourceContext.EMPTY_CONTEXT, null));
+        assertNull(this.provider.getResource(ctx, "/override/apps/a/2/b", ResourceContext.EMPTY_CONTEXT, null));
+        assertNull(this.provider.getResource(ctx, "/override/apps/a/2/b/1", ResourceContext.EMPTY_CONTEXT, null));
+        assertNotNull(this.provider.getResource(ctx, "/override/apps/a/2/d/1/a", ResourceContext.EMPTY_CONTEXT, null));
+        assertNotNull(this.provider.getResource(ctx, "/override/apps/a/2/d/1/b", ResourceContext.EMPTY_CONTEXT, null));
+        assertNotNull(this.provider.getResource(ctx, "/override/apps/a/2/d/1/b/1", ResourceContext.EMPTY_CONTEXT, null));
     }
 
     // doing it this way because the mock resource resolver doesn't
@@ -170,7 +170,7 @@ public class OverridingResourceProviderTest {
 
     @Test
     public void testOverriddenIncludesChildFromSuper() {
-        final Resource rsrcA2 = this.provider.getResource(ctx, "/override/apps/a/2", null);
+        final Resource rsrcA2 = this.provider.getResource(ctx, "/override/apps/a/2", ResourceContext.EMPTY_CONTEXT, null);
 
         Resource d = getChildResource(rsrcA2, "d");
         assertNotNull(d);
@@ -184,12 +184,12 @@ public class OverridingResourceProviderTest {
 
     @Test
     public void testLoopInInheritance() {
-        final Resource rsrcA4 = this.provider.getResource(ctx, "/override/apps/a/4", null);
+        final Resource rsrcA4 = this.provider.getResource(ctx, "/override/apps/a/4", ResourceContext.EMPTY_CONTEXT, null);
 
         Resource d = getChildResource(rsrcA4, "d");
         assertNotNull(d);
 
-        final Resource z = this.provider.getResource(ctx, "/override/apps/x/z", null);
+        final Resource z = this.provider.getResource(ctx, "/override/apps/x/z", ResourceContext.EMPTY_CONTEXT, null);
         assertNotNull(z);
     }
 }

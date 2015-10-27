@@ -37,7 +37,8 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.resourcemerger.impl.picker.MergingResourcePicker;
 import org.apache.sling.resourceresolver.impl.BasicResolveContext;
-import org.apache.sling.spi.resource.provider.ResolveContext;
+import org.apache.sling.spi.resource.provider.ResolverContext;
+import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.testing.resourceresolver.MockHelper;
 import org.apache.sling.testing.resourceresolver.MockResourceResolverFactory;
 import org.apache.sling.testing.resourceresolver.MockResourceResolverFactoryOptions;
@@ -49,7 +50,7 @@ public class MergedResourceProviderTest {
     private ResourceResolver resolver;
 
     private CRUDMergingResourceProvider provider;
-    private ResolveContext<Void> ctx;
+    private ResolverContext<Void> ctx;
 
     @Before public void setup() throws Exception {
         final MockResourceResolverFactoryOptions options = new MockResourceResolverFactoryOptions();
@@ -87,7 +88,7 @@ public class MergedResourceProviderTest {
                                         .commit();
 
         this.provider = new CRUDMergingResourceProvider("/merged", new MergingResourcePicker(), false);
-        this.ctx = new BasicResolveContext(resolver, Collections.<String, String>emptyMap(), null);
+        this.ctx = new BasicResolveContext(resolver, null);
     }
 
     @Test public void testHideChildren() {
@@ -104,15 +105,15 @@ public class MergedResourceProviderTest {
         assertNull(this.resolver.getResource("/apps/a/y"));
 
         // now do the real checks
-        assertNull(this.provider.getResource(ctx, "/merged/a/Z", null));
-        assertNotNull(this.provider.getResource(ctx, "/merged/a/Y", null));
-        assertNotNull(this.provider.getResource(ctx, "/merged/a/X", null));
-        assertNull(this.provider.getResource(ctx, "/merged/a/x", null));
-        assertNull(this.provider.getResource(ctx, "/merged/a/y", null));
+        assertNull(this.provider.getResource(ctx, "/merged/a/Z", ResourceContext.EMPTY_CONTEXT, null));
+        assertNotNull(this.provider.getResource(ctx, "/merged/a/Y", ResourceContext.EMPTY_CONTEXT, null));
+        assertNotNull(this.provider.getResource(ctx, "/merged/a/X", ResourceContext.EMPTY_CONTEXT, null));
+        assertNull(this.provider.getResource(ctx, "/merged/a/x", ResourceContext.EMPTY_CONTEXT, null));
+        assertNull(this.provider.getResource(ctx, "/merged/a/y", ResourceContext.EMPTY_CONTEXT, null));
     }
 
     @Test public void testListChildren() {
-        final Resource rsrcA = this.provider.getResource(ctx, "/merged/a", null);
+        final Resource rsrcA = this.provider.getResource(ctx, "/merged/a", ResourceContext.EMPTY_CONTEXT, null);
         assertNotNull(rsrcA);
         final Iterator<Resource> i = this.provider.listChildren(ctx, rsrcA);
         assertNotNull(i);
@@ -130,7 +131,7 @@ public class MergedResourceProviderTest {
     }
 
     @Test public void testListSubChildren() {
-        final Resource rsrcY = this.provider.getResource(ctx, "/merged/a/Y", null);
+        final Resource rsrcY = this.provider.getResource(ctx, "/merged/a/Y", ResourceContext.EMPTY_CONTEXT, null);
         assertNotNull(rsrcY);
         final Iterator<Resource> i = this.provider.listChildren(ctx, rsrcY);
         assertNotNull(i);
@@ -145,7 +146,7 @@ public class MergedResourceProviderTest {
     }
 
     @Test public void testProperties() {
-        final Resource rsrcA1 = this.provider.getResource(ctx, "/merged/a/1", null);
+        final Resource rsrcA1 = this.provider.getResource(ctx, "/merged/a/1", ResourceContext.EMPTY_CONTEXT, null);
         final ValueMap vm = rsrcA1.adaptTo(ValueMap.class);
         assertNotNull(vm);
         assertEquals(3, vm.size());
@@ -156,24 +157,24 @@ public class MergedResourceProviderTest {
 
     @Test public void testResourceType() {
         // a/2 defines the property and it's overlayed
-        final Resource rsrcA2 = this.provider.getResource(ctx, "/merged/a/2", null);
+        final Resource rsrcA2 = this.provider.getResource(ctx, "/merged/a/2", ResourceContext.EMPTY_CONTEXT, null);
         assertEquals("apps", rsrcA2.getResourceType());
 
         // a/12 doesn't define the property and it's overlayed
-        final Resource rsrcA1 = this.provider.getResource(ctx, "/merged/a/1", null);
+        final Resource rsrcA1 = this.provider.getResource(ctx, "/merged/a/1", ResourceContext.EMPTY_CONTEXT, null);
         assertEquals("a/1", rsrcA1.getResourceType());
 
     }
 
     @Test public void testClearProperties() {
-        final Resource rsrcA3 = this.provider.getResource(ctx, "/merged/a/3", null);
+        final Resource rsrcA3 = this.provider.getResource(ctx, "/merged/a/3", ResourceContext.EMPTY_CONTEXT, null);
         final ValueMap vm = rsrcA3.adaptTo(ValueMap.class);
         assertNotNull(vm);
         assertEquals(0, vm.size());
     }
 
     @Test public void testHideProperties() {
-        final Resource rsrcA4 = this.provider.getResource(ctx, "/merged/a/4", null);
+        final Resource rsrcA4 = this.provider.getResource(ctx, "/merged/a/4", ResourceContext.EMPTY_CONTEXT, null);
         final ValueMap vm = rsrcA4.adaptTo(ValueMap.class);
         assertNotNull(vm);
         assertEquals(3, vm.size());
@@ -198,7 +199,7 @@ public class MergedResourceProviderTest {
             assertNull(this.resolver.getResource("/libs/a/new"));
 
             this.provider.delete(ctx, rsrc);
-            assertNull(this.provider.getResource(ctx, path, null));
+            assertNull(this.provider.getResource(ctx, path, ResourceContext.EMPTY_CONTEXT, null));
             assertNull(this.resolver.getResource("/libs/a/new"));
             assertNull(this.resolver.getResource("/apps/a/new"));
 
@@ -213,13 +214,13 @@ public class MergedResourceProviderTest {
             assertNotNull(this.resolver.getResource("/libs/deleteTest"));
             assertNull(this.resolver.getResource("/apps/deleteTest"));
 
-            final Resource rsrc = this.provider.getResource(ctx, path, null);
+            final Resource rsrc = this.provider.getResource(ctx, path, ResourceContext.EMPTY_CONTEXT, null);
             assertNotNull(rsrc);
             assertEquals(path, rsrc.getPath());
 
             this.provider.delete(ctx, rsrc);
 
-            assertNull(this.provider.getResource(ctx, path, null));
+            assertNull(this.provider.getResource(ctx, path, ResourceContext.EMPTY_CONTEXT, null));
             assertNotNull(this.resolver.getResource("/libs/deleteTest"));
             final Resource hidingRsrc = this.resolver.getResource("/apps/deleteTest");
             assertNotNull(hidingRsrc);
@@ -237,14 +238,14 @@ public class MergedResourceProviderTest {
             assertNotNull(this.resolver.getResource("/libs/deleteTest"));
             assertNull(this.resolver.getResource("/apps/deleteTest"));
 
-            final Resource rsrc = this.provider.getResource(ctx, path, null);
+            final Resource rsrc = this.provider.getResource(ctx, path, ResourceContext.EMPTY_CONTEXT, null);
             assertNotNull(rsrc);
             assertEquals(path, rsrc.getPath());
 
             this.provider.delete(ctx, rsrc);
             this.provider.create(ctx, path, Collections.singletonMap("foo", (Object)"bla"));
 
-            assertNotNull(this.provider.getResource(ctx, path, null));
+            assertNotNull(this.provider.getResource(ctx, path, ResourceContext.EMPTY_CONTEXT, null));
             assertNotNull(this.resolver.getResource("/libs/deleteTest"));
             final Resource hidingRsrc = this.resolver.getResource("/apps/deleteTest");
             assertNotNull(hidingRsrc);
@@ -262,7 +263,7 @@ public class MergedResourceProviderTest {
             assertNotNull(this.resolver.getResource("/libs/mvmTest"));
             assertNull(this.resolver.getResource("/apps/mvmTest"));
 
-            final Resource rsrc = this.provider.getResource(ctx, path, null);
+            final Resource rsrc = this.provider.getResource(ctx, path, ResourceContext.EMPTY_CONTEXT, null);
             assertNotNull(rsrc);
             final ValueMap beforeVM = rsrc.getValueMap();
             assertEquals("1", beforeVM.get("a"));
@@ -279,7 +280,7 @@ public class MergedResourceProviderTest {
             assertNotNull(this.resolver.getResource("/libs/mvmTest"));
             assertNotNull(this.resolver.getResource("/apps/mvmTest"));
 
-            final Resource rsrc2 = this.provider.getResource(ctx, path, null);
+            final Resource rsrc2 = this.provider.getResource(ctx, path, ResourceContext.EMPTY_CONTEXT, null);
             assertNotNull(rsrc2);
             final ValueMap afterVM = rsrc2.getValueMap();
             assertNull(afterVM.get("a"));
@@ -320,12 +321,12 @@ public class MergedResourceProviderTest {
         for (String relatedPath : relatedPaths) {
             final Resource relatedResource;
             if (relatedPath != null) {
-                relatedResource = provider.getResource(ctx, relatedPath, null);
+                relatedResource = provider.getResource(ctx, relatedPath, ResourceContext.EMPTY_CONTEXT, null);
                 assertNotNull("Not found: " + relatedPath, relatedResource);
             } else {
                 relatedResource = null;
             }
-            Resource resource = provider.getResource(ctx, path, relatedResource);
+            Resource resource = provider.getResource(ctx, path, ResourceContext.EMPTY_CONTEXT, relatedResource);
             assertNotNull(resource);
             assertEquals(path, resource.getPath());
             assertTrue(resource instanceof MergedResource);

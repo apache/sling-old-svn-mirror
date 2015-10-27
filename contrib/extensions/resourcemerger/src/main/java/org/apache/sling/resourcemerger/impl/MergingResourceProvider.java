@@ -18,17 +18,18 @@
  */
 package org.apache.sling.resourcemerger.impl;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
-import org.apache.sling.spi.resource.provider.ResolveContext;
+import org.apache.sling.spi.resource.provider.ResolverContext;
+import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 public class MergingResourceProvider extends ResourceProvider<Void> {
 
@@ -202,18 +203,19 @@ public class MergingResourceProvider extends ResourceProvider<Void> {
     }
 
     @Override
-    public Resource getParent(ResolveContext<Void> ctx, Resource child) {
+    public Resource getParent(ResolverContext<Void> ctx, Resource child) {
         final String parentPath = ResourceUtil.getParent(child.getPath());
         if (parentPath == null) {
             return null;
         }
-        return this.getResource(ctx, parentPath, child);
+        return this.getResource(ctx, parentPath, ResourceContext.EMPTY_CONTEXT, child);
     }
 
     /**
      * {@inheritDoc}
      */
-    public Resource getResource(final ResolveContext<Void> ctx, final String path, final Resource parent) {
+    @Override
+    public Resource getResource(final ResolverContext<Void> ctx, final String path, final ResourceContext rCtx, final Resource parent) {
         final String relativePath = getRelativePath(path);
 
         if (relativePath != null) {
@@ -258,7 +260,8 @@ public class MergingResourceProvider extends ResourceProvider<Void> {
     /**
      * {@inheritDoc}
      */
-    public Iterator<Resource> listChildren(final ResolveContext<Void> ctx, final Resource parent) {
+    @Override
+    public Iterator<Resource> listChildren(final ResolverContext<Void> ctx, final Resource parent) {
         final ResourceResolver resolver = parent.getResourceResolver();
 
         final String relativePath = getRelativePath(parent.getPath());
