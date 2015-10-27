@@ -42,7 +42,7 @@ import aQute.bnd.annotation.ConsumerType;
  * repository, a database, or bundle resources.
  * <p>
  * This extension point is defined by an abstract class (in contrast to
- * an interface) as this will allow to add new functionality in new versions
+ * an interface) as this allows to add new functionality in new versions
  * without breaking any implementation.
  * <p>
  * This service is intended to be implemented by providers of resource
@@ -72,7 +72,11 @@ import aQute.bnd.annotation.ConsumerType;
  * the current user. This object is passed into the provider with
  * every method through {@link ResolveContext#getProviderState()}.
  * If a provider requires authentication, the {@link #logout(Object)} method
- * is called, when the resource resolver is closed.
+ * is called, when the resource resolver is closed. If the provider
+ * does not set this service property or sets it to {@link #AUTHENTICATE_NO}
+ * the {@link #authenticate(Map)} and {@link #logout(Object)} method
+ * are never called and therefore {@link ResolveContext#getProviderState()}
+ * will return {@code null}.
  * <p>
  * Each method gets the {@link ResolveContext} which gives access to
  * further functionality.
