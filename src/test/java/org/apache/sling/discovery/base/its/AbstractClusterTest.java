@@ -781,6 +781,7 @@ public abstract class AbstractClusterTest {
         // -> corresponds to starting to ping
         instance3.heartbeatsAndCheckView();
         instance3.heartbeatsAndCheckView();
+        Thread.sleep(1000);
         pingConnector(instance3, instance1);
         // make asserts on the topology
         instance1.dumpRepo();
