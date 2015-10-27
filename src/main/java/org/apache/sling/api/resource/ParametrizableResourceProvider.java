@@ -35,7 +35,9 @@ import aQute.bnd.annotation.ConsumerType;
  * {@link ResourceProvider#getResource(ResourceResolver, String)} is called.
  *
  * @since 2.8.0 (Sling API Bundle 2.9.0)
+ * @deprecated Use the {@link org.apache.sling.spi.resource.provider.ResourceProvider<T>}
  */
+@Deprecated
 @ConsumerType
 public interface ParametrizableResourceProvider {
 
