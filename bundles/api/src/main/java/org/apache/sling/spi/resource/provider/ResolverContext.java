@@ -35,21 +35,13 @@ import aQute.bnd.annotation.ProviderType;
  * is returned in {@link #getProviderState()}.
  */
 @ProviderType
-public interface ResolveContext<T> {
+public interface ResolverContext<T> {
 
     /**
      * Get the current resource resolver.
      * @return The resource resolver.
      */
     @Nonnull ResourceResolver getResourceResolver();
-
-    /**
-     * Return optional parameters for resolving the resource.
-     * For example if the resource is resolved through an http request, this
-     * map could contain the path parameters of the url.
-     * @return A non empty map with parameters or {@code null}.
-     */
-    @CheckForNull Map<String, String> getResolveParameters();
 
     /**
      * This is the object returned by {@link ResourceProvider#authenticate(Map)}
@@ -62,14 +54,5 @@ public interface ResolveContext<T> {
      * @return A resolve context or {@code null} if there is no parent.
      * @see #getParentResourceProvider()
      */
-    @CheckForNull ResolveContext<?> getParentResolveContext();
-
-    /**
-     * Return the parent resource provider.
-     * If the parent should be used for resolving, a context created with
-     * {@link #getParentResolveContext()} should be passed to that
-     * instance.
-     * @return The parent provider or {@code null} if there is no parent.
-     */
-    @CheckForNull ResourceProvider<?> getParentResourceProvider();
+    @CheckForNull ResolverContext<?> getParentResolveContext();
 }
