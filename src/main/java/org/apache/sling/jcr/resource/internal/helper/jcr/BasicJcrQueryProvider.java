@@ -38,7 +38,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.spi.resource.provider.JCRQueryProvider;
-import org.apache.sling.spi.resource.provider.ResolveContext;
+import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +56,7 @@ public class BasicJcrQueryProvider implements JCRQueryProvider<JcrProviderState>
     private static final String QUERY_COLUMN_SCORE = "jcr:score";
 
     @Override
-    public String[] getSupportedLanguages(ResolveContext<JcrProviderState> ctx) {
+    public String[] getSupportedLanguages(ResolverContext<JcrProviderState> ctx) {
         try {
             return ctx.getProviderState().getSession().getWorkspace().getQueryManager().getSupportedQueryLanguages();
         } catch (final RepositoryException e) {
@@ -65,7 +65,7 @@ public class BasicJcrQueryProvider implements JCRQueryProvider<JcrProviderState>
     }
 
     @Override
-    public Iterator<Resource> findResources(ResolveContext<JcrProviderState> ctx, String query, String language) {
+    public Iterator<Resource> findResources(ResolverContext<JcrProviderState> ctx, String query, String language) {
         try {
             final QueryResult res = JcrResourceUtil.query(ctx.getProviderState().getSession(), query, language);
             return new JcrNodeResourceIterator(ctx.getResourceResolver(), res.getNodes(), ctx.getProviderState().getHelperData());
@@ -77,7 +77,7 @@ public class BasicJcrQueryProvider implements JCRQueryProvider<JcrProviderState>
     }
 
     @Override
-    public Iterator<ValueMap> queryResources(final ResolveContext<JcrProviderState> ctx, String query, String language) {
+    public Iterator<ValueMap> queryResources(final ResolverContext<JcrProviderState> ctx, String query, String language) {
         final String queryLanguage = ArrayUtils.contains(getSupportedLanguages(ctx), language) ? language : DEFAULT_QUERY_LANGUAGE;
 
         try {
@@ -93,10 +93,12 @@ public class BasicJcrQueryProvider implements JCRQueryProvider<JcrProviderState>
                     next = seek();
                 }
 
+                @Override
                 public boolean hasNext() {
                     return next != null;
                 };
 
+                @Override
                 public ValueMap next() {
                     if ( next == null ) {
                         throw new NoSuchElementException();
@@ -151,6 +153,7 @@ public class BasicJcrQueryProvider implements JCRQueryProvider<JcrProviderState>
                     return result;
                 }
 
+                @Override
                 public void remove() {
                     throw new UnsupportedOperationException("remove");
                 }
