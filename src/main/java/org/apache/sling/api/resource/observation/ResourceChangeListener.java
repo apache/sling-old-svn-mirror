@@ -72,7 +72,7 @@ public interface ResourceChangeListener {
     String CHANGES = "resource.change.types";
 
     /**
-     * Report a resource change based on the filter properties of this listener.
+     * Report resource changes based on the filter properties of this listener.
      * @param changes The changes.
      */
     void onChange(@Nonnull List<ResourceChange> changes);
