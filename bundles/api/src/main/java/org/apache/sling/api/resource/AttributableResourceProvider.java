@@ -35,7 +35,9 @@ import aQute.bnd.annotation.ConsumerType;
  * @see ResourceResolver#getAttributeNames()
  *
  * @since 2.2 (Sling API Bundle 2.2.0)
+ * @deprecated Use the {@link org.apache.sling.spi.resource.provider.ResourceProvider<T>}
  */
+@Deprecated
 @ConsumerType
 public interface AttributableResourceProvider extends ResourceProvider {
 
