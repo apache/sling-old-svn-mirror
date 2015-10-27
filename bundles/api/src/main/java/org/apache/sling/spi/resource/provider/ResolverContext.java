@@ -55,4 +55,13 @@ public interface ResolverContext<T> {
      * @see #getParentResourceProvider()
      */
     @CheckForNull ResolverContext<?> getParentResolveContext();
+
+    /**
+     * Return the parent resource provider.
+     * If the parent should be used for resolving, a context created with
+     * {@link ResourceContext#getParentResolveContext()} should be passed to that
+     * instance.
+     * @return The parent provider or {@code null} if there is no parent.
+     */
+    @CheckForNull ResourceProvider<?> getParentResourceProvider();
 }

@@ -20,7 +20,6 @@ package org.apache.sling.spi.resource.provider;
 
 import java.util.Set;
 
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import aQute.bnd.annotation.ProviderType;
@@ -42,13 +41,4 @@ public interface ProviderContext {
      * @return A set of paths. The set might be empty
      */
     Set<String> getExcludedPaths();
-
-    /**
-     * Return the parent resource provider.
-     * If the parent should be used for resolving, a context created with
-     * {@link ResourceContext#getParentResolveContext()} should be passed to that
-     * instance.
-     * @return The parent provider or {@code null} if there is no parent.
-     */
-    @CheckForNull ResourceProvider<?> getParentResourceProvider();
 }
