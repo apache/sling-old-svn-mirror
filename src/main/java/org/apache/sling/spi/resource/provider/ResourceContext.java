@@ -18,29 +18,34 @@
  */
 package org.apache.sling.spi.resource.provider;
 
+import java.util.Map;
+
 import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
 
-import org.apache.sling.api.resource.query.Query;
-import org.apache.sling.api.resource.query.QueryInstructions;
+import aQute.bnd.annotation.ProviderType;
 
-import aQute.bnd.annotation.ConsumerType;
-
-@ConsumerType
-public interface QueryProvider <T> {
+/**
+ * The resource context provides additional information for resource resolving.
+ */
+@ProviderType
+public interface ResourceContext {
 
     /**
-     * Execute the query within the context of the provided context.
-     *
-     * The implementation needs to filter the result based on the configuration
-     * from the {@link ProviderContext#getExcludedPaths()}.
-     *
-     * @param ctx The resource context-
-     * @param q The query
-     * @param qi The query instructions
-     * @return A query result or {@code null}.
+     * Return optional parameters for resolving the resource.
+     * For example if the resource is resolved through an http request, this
+     * map could contain the path parameters of the url.
+     * @return A non empty map with parameters or {@code null}.
      */
-    @CheckForNull QueryResult find(@Nonnull ResolverContext<T> ctx,
-            @Nonnull Query q,
-            @Nonnull QueryInstructions qi);
+    @CheckForNull Map<String, String> getResolveParameters();
+
+    /**
+     * "Empty" instance, not providing any additional information.
+     */
+    ResourceContext EMPTY_CONTEXT = new ResourceContext() {
+
+        @Override
+        public Map<String, String> getResolveParameters() {
+            return null;
+        }
+    };
 }

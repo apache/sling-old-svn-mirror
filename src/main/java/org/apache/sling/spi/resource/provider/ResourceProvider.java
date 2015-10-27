@@ -70,15 +70,15 @@ import aQute.bnd.annotation.ConsumerType;
  * cases, the resource resolver calls {@link #authenticate(Map)} and on
  * successful authentication the provider returns a state object for
  * the current user. This object is passed into the provider with
- * every method through {@link ResolveContext#getProviderState()}.
+ * every method through {@link ResourceContext#getProviderState()}.
  * If a provider requires authentication, the {@link #logout(Object)} method
  * is called, when the resource resolver is closed. If the provider
  * does not set this service property or sets it to {@link #AUTHENTICATE_NO}
  * the {@link #authenticate(Map)} and {@link #logout(Object)} method
- * are never called and therefore {@link ResolveContext#getProviderState()}
+ * are never called and therefore {@link ResourceContext#getProviderState()}
  * will return {@code null}.
  * <p>
- * Each method gets the {@link ResolveContext} which gives access to
+ * Each method gets the {@link ResourceContext} which gives access to
  * further functionality.
  * <p>
  * TODO - query
@@ -151,8 +151,8 @@ public abstract class ResourceProvider<T> {
 
     /**
      * A modifiable resource provider is capable of creating, changing and deleting resources.
-     * This means the methods {@link #create(ResolveContext, String, Map)},
-     * {@link #delete(ResolveContext, Resource)} and adapting a resource to a modifiable
+     * This means the methods {@link #create(ResourceContext, String, Map)},
+     * {@link #delete(ResourceContext, Resource)} and adapting a resource to a modifiable
      * value map is supported.
      * If this flag is set to {@code false}, the resource resolver does not take this
      * provider into account for modifications and modification operations to this provider
@@ -172,7 +172,7 @@ public abstract class ResourceProvider<T> {
     public static final String PROPERTY_ADAPTABLE = "provider.adaptable";
 
     /**
-     * If this flag is set to {@code true}, the resource resolver will call {@link #refresh(ResolveContext)}
+     * If this flag is set to {@code true}, the resource resolver will call {@link #refresh(ResourceContext)}
      * when it's refreshed itself.
      */
     public static final String PROPERTY_REFRESHABLE = "provider.refreshable";
@@ -265,7 +265,7 @@ public abstract class ResourceProvider<T> {
      * <p>
      * Returns a provider context object if authentication is successful. The
      * context object is passed to the resource provider in all messages through
-     * the {@link ResolveContext}. A valid implementation might return {@code null}
+     * the {@link ResourceContext}. A valid implementation might return {@code null}
      * as the context information.
      * <p>
      * If authentication fails a {@code LoginException} must be thrown.
@@ -320,11 +320,11 @@ public abstract class ResourceProvider<T> {
     /**
      * The provider is updated to reflect the latest state.
      * Resources which have changes pending are not discarded.
-     * {@link #revert(ResolveContext)} can be called to discard changes.
+     * {@link #revert(ResourceContext)} can be called to discard changes.
      *
-     * @param ctx The {@link ResolveContext} to which the returned {@link Resource} is attached.
+     * @param ctx The {@link ResourceContext} to which the returned {@link Resource} is attached.
      */
-    public void refresh(final @Nonnull ResolveContext<T> ctx) {
+    public void refresh(final @Nonnull ResolverContext<T> ctx) {
         // nothing to do here
     }
 
@@ -335,12 +335,12 @@ public abstract class ResourceProvider<T> {
      * This method will never throw an exception
      * even after the resource provider has been closed
      *
-     * @param ctx The {@link ResolveContext} to which the returned {@link Resource} is attached.
+     * @param ctx The {@link ResourceContext} to which the returned {@link Resource} is attached.
      * @return <code>true</code> if the resource provider has not been closed
      *         yet and is still active.. Once the resource provider has been closed
      *         or is not active anymore, this method returns <code>false</code>.
      */
-    public boolean isLive(final @Nonnull ResolveContext<T> ctx) {
+    public boolean isLive(final @Nonnull ResolverContext<T> ctx) {
         return true;
     }
 
@@ -354,19 +354,19 @@ public abstract class ResourceProvider<T> {
      * depending on the full path of resource resolution passed into the
      * resource resolver.
      *
-     * @param ctx The {@link ResolveContext} to which the returned {@link Resource} is attached.
+     * @param ctx The {@link ResourceContext} to which the returned {@link Resource} is attached.
      * @param child The child resource.
      * @return <code>null</code> if this provider does not have a resource for
      *         the parent.
      * @throws org.apache.sling.api.SlingException
      *             may be thrown in case of any problem creating the <code>Resource</code> instance.
      */
-    public @CheckForNull Resource getParent(final @Nonnull ResolveContext<T> ctx, final  @Nonnull Resource child) {
+    public @CheckForNull Resource getParent(final @Nonnull ResolverContext<T> ctx, final @Nonnull Resource child) {
         final String parentPath = ResourceUtil.getParent(child.getPath());
         if (parentPath == null) {
             return null;
         }
-        return this.getResource(ctx, parentPath, null);
+        return this.getResource(ctx, parentPath, ResourceContext.EMPTY_CONTEXT, null);
     }
 
     /**
@@ -383,14 +383,16 @@ public abstract class ResourceProvider<T> {
      * @param resourceResolver
      *            The {@link ResourceResolver} to which the returned {@link Resource} is attached.
      * @param path The full path of the resource.
+     * @param resourceContext Additional information for resolving teh resource
      * @param parent Optional parent resource
      * @return <code>null</code> If this provider does not have a resource for
      *         the path.
      * @throws org.apache.sling.api.SlingException
      *             may be thrown in case of any problem creating the <code>Resource</code> instance.
      */
-    public abstract @CheckForNull Resource getResource(@Nonnull final ResolveContext<T> ctx,
+    public abstract @CheckForNull Resource getResource(@Nonnull final ResolverContext<T> ctx,
             @Nonnull final String path,
+            @Nonnull final ResourceContext resourceContext,
             @CheckForNull final Resource parent);
 
     /**
@@ -413,7 +415,7 @@ public abstract class ResourceProvider<T> {
      * As with {@link #getResource(ResourceResolver, String)} the returned Resource objects must
      * not be cached objects.
      *
-     * @param ctx The {@link ResolveContext} to which the returned {@link Resource} is attached.
+     * @param ctx The {@link ResourceContext} to which the returned {@link Resource} is attached.
      * @param parent
      *            The {@link Resource Resource} whose children are requested.
      * @return An <code>Iterator</code> of {@link Resource} objects or <code>null</code> if the resource
@@ -423,18 +425,18 @@ public abstract class ResourceProvider<T> {
      * @throws SlingException
      *             If any error occurs acquiring the child resource iterator.
      */
-    public abstract @CheckForNull Iterator<Resource> listChildren(final @Nonnull ResolveContext<T> ctx, final @Nonnull Resource parent);
+    public abstract @CheckForNull Iterator<Resource> listChildren(final @Nonnull ResolverContext<T> ctx, final @Nonnull Resource parent);
 
     /**
      * Returns a collection of attribute names whose value can be retrieved
      * calling the {@link #getAttribute(ResourceResolver, String)} method.
      *
-     * @param ctx The {@link ResolveContext} to which the returned {@link Resource} is attached.
+     * @param ctx The {@link ResourceContext} to which the returned {@link Resource} is attached.
      * @return A collection of attribute names or <code>null</code>
      * @throws IllegalStateException if this resource provider has already been
      *                               closed.
      */
-    public Collection<String> getAttributeNames(final @Nonnull ResolveContext<T> ctx) {
+    public Collection<String> getAttributeNames(final @Nonnull ResolverContext<T> ctx) {
         return null;
     }
 
@@ -443,7 +445,7 @@ public abstract class ResourceProvider<T> {
      * if the attribute is not set or not visible (as e.g. security
      * sensitive attributes).
      *
-     * @param ctx The {@link ResolveContext} to which the returned {@link Resource} is attached.
+     * @param ctx The {@link ResourceContext} to which the returned {@link Resource} is attached.
      * @param name
      *            The name of the attribute to access
      * @return The value of the attribute or <code>null</code> if the attribute
@@ -451,7 +453,7 @@ public abstract class ResourceProvider<T> {
      * @throws IllegalStateException
      *             if this resource provider has already been closed.
      */
-    public Object getAttribute(final @Nonnull ResolveContext<T> ctx, final @Nonnull String name) {
+    public Object getAttribute(final @Nonnull ResolverContext<T> ctx, final @Nonnull String name) {
         return null;
     }
 
@@ -463,14 +465,14 @@ public abstract class ResourceProvider<T> {
      * A resource provider should value {@link ResourceResolver#PROPERTY_RESOURCE_TYPE}
      * to set the resource type of a resource.
      *
-     * @param ctx The {@link ResolveContext} to which the returned {@link Resource} is attached.
+     * @param ctx The {@link ResourceContext} to which the returned {@link Resource} is attached.
      * @param path The resource path.
      * @param properties Optional properties
      * @return The new resource.
      *
      * @throws PersistenceException If anything fails
      */
-    public Resource create(final @Nonnull ResolveContext<T> ctx, final String path, final Map<String, Object> properties)
+    public Resource create(final @Nonnull ResolverContext<T> ctx, final String path, final Map<String, Object> properties)
     throws PersistenceException {
         throw new PersistenceException("create is not supported.");
     }
@@ -480,12 +482,12 @@ public abstract class ResourceProvider<T> {
      * This change is kept in the transient space of this provider
      * until {@link #commit(ResourceResolver)} is called.
      *
-     * @param ctx The {@link ResolveContext} to which the returned {@link Resource} is attached.
+     * @param ctx The {@link ResourceContext} to which the returned {@link Resource} is attached.
      * @param resource The resource to delete.
      *
      * @throws PersistenceException If anything fails
      */
-    public void delete(final @Nonnull ResolveContext<T> ctx, final @Nonnull Resource resource)
+    public void delete(final @Nonnull ResolverContext<T> ctx, final @Nonnull Resource resource)
     throws PersistenceException {
         throw new PersistenceException("delete is not supported.");
     }
@@ -493,20 +495,20 @@ public abstract class ResourceProvider<T> {
     /**
      * Revert all transient changes: create, delete and updates.
      *
-     * @param ctx The {@link ResolveContext} to which the returned {@link Resource} is attached.
+     * @param ctx The {@link ResourceContext} to which the returned {@link Resource} is attached.
      */
-    public void revert(final @Nonnull ResolveContext<T> ctx) {
+    public void revert(final @Nonnull ResolverContext<T> ctx) {
         // nothing to do here
     }
 
     /**
      * Commit all transient changes: create, delete and updates
      *
-     * @param ctx The {@link ResolveContext} to which the returned {@link Resource} is attached.
+     * @param ctx The {@link ResourceContext} to which the returned {@link Resource} is attached.
      *
      * @throws PersistenceException If anything fails
      */
-    public void commit(final @Nonnull ResolveContext<T> ctx)
+    public void commit(final @Nonnull ResolverContext<T> ctx)
     throws PersistenceException {
         // nothing to do here
     }
@@ -514,9 +516,9 @@ public abstract class ResourceProvider<T> {
     /**
      * Are there any transient changes?
      *
-     * @param ctx The {@link ResolveContext} to which the returned {@link Resource} is attached.
+     * @param ctx The {@link ResourceContext} to which the returned {@link Resource} is attached.
      */
-    public boolean hasChanges(final @Nonnull ResolveContext<T> ctx) {
+    public boolean hasChanges(final @Nonnull ResolverContext<T> ctx) {
         return false;
     }
 
@@ -549,12 +551,12 @@ public abstract class ResourceProvider<T> {
      * well as their behaviour with respect to returning newly created or not
      * instance on each call.
      *
-     * @param ctx The {@link ResolveContext}.
+     * @param ctx The {@link ResourceContext}.
      * @param type The generic type to which this resource is adapted to.
      * @return The adapter target or {@code null} if the provider cannot
      *         be adapt to the requested type.
      */
-    public @CheckForNull <AdapterType> AdapterType adaptTo(final  @Nonnull ResolveContext<T> ctx,
+    public @CheckForNull <AdapterType> AdapterType adaptTo(final  @Nonnull ResolverContext<T> ctx,
             final @Nonnull Class<AdapterType> type) {
         return null;
     }
@@ -577,7 +579,7 @@ public abstract class ResourceProvider<T> {
      * @throws PersistenceException If an error occurs.
      * @return {@code true} if the provider can perform the copy
      */
-    public boolean copy(final  @Nonnull ResolveContext<T> ctx,
+    public boolean copy(final  @Nonnull ResolverContext<T> ctx,
               final String srcAbsPath,
               final String destAbsPath) throws PersistenceException {
         return false;
@@ -602,7 +604,7 @@ public abstract class ResourceProvider<T> {
      * @return {@code true} if the provider can perform the move
      */
 
-    public boolean move(final  @Nonnull ResolveContext<T> ctx,
+    public boolean move(final  @Nonnull ResolverContext<T> ctx,
               final String srcAbsPath,
               final String destAbsPath) throws PersistenceException {
         return false;
