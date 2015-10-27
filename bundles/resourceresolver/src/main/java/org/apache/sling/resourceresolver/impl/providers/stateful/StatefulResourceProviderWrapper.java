@@ -30,7 +30,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.query.Query;
 import org.apache.sling.api.resource.query.QueryInstructions;
 import org.apache.sling.spi.resource.provider.QueryResult;
-import org.apache.sling.spi.resource.provider.ResolveContext;
+import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 
 public class StatefulResourceProviderWrapper implements StatefulResourceProvider {
@@ -152,7 +152,7 @@ public class StatefulResourceProviderWrapper implements StatefulResourceProvider
     }
 
     @Override
-    public ResolveContext<Object> getContext(Map<String, String> parameters) throws LoginException {
-        return rp.getContext(parameters);
+    public ResolverContext<Object> getContext() throws LoginException {
+        return rp.getContext();
     }
 }

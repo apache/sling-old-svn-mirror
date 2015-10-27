@@ -29,7 +29,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.query.Query;
 import org.apache.sling.api.resource.query.QueryInstructions;
 import org.apache.sling.spi.resource.provider.QueryResult;
-import org.apache.sling.spi.resource.provider.ResolveContext;
+import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 
 public class EmptyResourceProvider implements StatefulResourceProvider {
@@ -144,7 +144,7 @@ public class EmptyResourceProvider implements StatefulResourceProvider {
     }
 
     @Override
-    public ResolveContext<Object> getContext(Map<String, String> parameters) {
+    public ResolverContext<Object> getContext() {
         return null;
     }
 

@@ -18,38 +18,31 @@
  */
 package org.apache.sling.resourceresolver.impl;
 
-import java.util.Collections;
-import java.util.Map;
-
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.spi.resource.provider.ResolveContext;
+import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 
-public class BasicResolveContext<T> implements ResolveContext<T> {
+public class BasicResolveContext<T> implements ResolverContext<T> {
 
     private final ResourceResolver resourceResolver;
 
-    private final Map<String, String> resolveParameters;
-
     private final T providerState;
 
-    private final ResolveContext<Object> parentResolveContext;
+    private final ResolverContext<Object> parentResolveContext;
 
     private final ResourceProvider<Object> parentResourceProvider;
 
-    public BasicResolveContext(ResourceResolver resourceResolver, Map<String, String> resolveParameters,
-            T providerState, ResourceProvider<Object> parentResourceProvider, ResolveContext<Object> parentResolveContext) {
+    public BasicResolveContext(ResourceResolver resourceResolver,
+            T providerState, ResourceProvider<Object> parentResourceProvider, ResolverContext<Object> parentResolveContext) {
         this.resourceResolver = resourceResolver;
-        this.resolveParameters = resolveParameters == null ? Collections.<String, String> emptyMap()
-                : resolveParameters;
         this.providerState = providerState;
         this.parentResolveContext = parentResolveContext;
         this.parentResourceProvider = parentResourceProvider;
     }
 
-    public BasicResolveContext(ResourceResolver resourceResolver, Map<String, String> resolveParameters,
+    public BasicResolveContext(ResourceResolver resourceResolver,
             T providerState) {
-        this(resourceResolver, resolveParameters, providerState, null, null);
+        this(resourceResolver, providerState, null, null);
     }
 
     @Override
@@ -58,17 +51,12 @@ public class BasicResolveContext<T> implements ResolveContext<T> {
     }
 
     @Override
-    public Map<String, String> getResolveParameters() {
-        return resolveParameters;
-    }
-
-    @Override
     public T getProviderState() {
         return providerState;
     }
 
     @Override
-    public ResolveContext<?> getParentResolveContext() {
+    public ResolverContext<?> getParentResolveContext() {
         return parentResolveContext;
     }
 

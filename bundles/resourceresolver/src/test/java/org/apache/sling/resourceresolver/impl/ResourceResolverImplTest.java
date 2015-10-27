@@ -47,7 +47,8 @@ import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
-import org.apache.sling.spi.resource.provider.ResolveContext;
+import org.apache.sling.spi.resource.provider.ResolverContext;
+import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,19 +62,19 @@ public class ResourceResolverImplTest {
     private ResourceResolver resResolver;
 
     private ResourceResolverFactoryImpl resFac;
-    
+
     private ResourceProviderTracker resourceProviderTracker;
 
     @Before public void setup() throws LoginException {
         ResourceProvider<?> rp = new ResourceProvider<Object>() {
 
             @Override
-            public Resource getResource(ResolveContext<Object> ctx, String path, Resource parent) {
+            public Resource getResource(ResolverContext<Object> ctx, String path, ResourceContext rCtx, Resource parent) {
                 return null;
             }
 
             @Override
-            public Iterator<Resource> listChildren(ResolveContext<Object> ctx, Resource parent) {
+            public Iterator<Resource> listChildren(ResolverContext<Object> ctx, Resource parent) {
                 return null;
             }
         };
