@@ -164,6 +164,7 @@ public abstract class AbstractSingleInstanceTest {
         instance.heartbeatsAndCheckView();
         
         final String propertyValue = UUID.randomUUID().toString();
+        Thread.sleep(2000);
         doTestProperty(UUID.randomUUID().toString(), propertyValue, propertyValue);
 
         doTestProperty("", propertyValue, null);
