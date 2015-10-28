@@ -20,7 +20,9 @@ package org.apache.sling.resourceresolver.impl.providers;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -31,20 +33,26 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.runtime.dto.FailureReason;
 import org.apache.sling.api.resource.runtime.dto.ResourceProviderDTO;
 import org.apache.sling.api.resource.runtime.dto.ResourceProviderFailureDTO;
 import org.apache.sling.api.resource.runtime.dto.RuntimeDTO;
+import org.apache.sling.resourceresolver.impl.legacy.LegacyResourceProviderWhiteboard;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * This service keeps track of all resource providers.
+ */
 @Component
 @Service(value = ResourceProviderTracker.class)
 public class ResourceProviderTracker {
@@ -59,7 +67,7 @@ public class ResourceProviderTracker {
 
     private final Map<String, List<ResourceProviderHandler>> handlers = new HashMap<String, List<ResourceProviderHandler>>();
 
-    private final Map<ResourceProviderInfo, FailureReason> invalidProviders = new HashMap<ResourceProviderInfo, FailureReason>();
+    private final Map<ResourceProviderInfo, FailureReason> invalidProviders = new ConcurrentHashMap<ResourceProviderInfo, FailureReason>();
 
     @Reference
     private EventAdmin eventAdmin;
@@ -110,6 +118,10 @@ public class ResourceProviderTracker {
         this.invalidProviders.clear();
     }
 
+    /**
+     * Try to register a new resource provider.
+     * @param info The resource provider info.
+     */
     private void register(final ResourceProviderInfo info) {
         if ( info.isValid() ) {
            logger.debug("Registering new resource provider {}", info);
@@ -119,7 +131,7 @@ public class ResourceProviderTracker {
                    matchingHandlers = new ArrayList<ResourceProviderHandler>();
                    this.handlers.put(info.getPath(), matchingHandlers);
                }
-               final ResourceProviderHandler handler = new ResourceProviderHandler(bundleContext, info, eventAdmin);
+               final ResourceProviderHandler handler = new ResourceProviderHandler(bundleContext, info);
                matchingHandlers.add(handler);
                Collections.sort(matchingHandlers);
                if ( matchingHandlers.get(0) == handler ) {
@@ -135,19 +147,23 @@ public class ResourceProviderTracker {
                    }
                }
            }
-           synchronized(this) {
-               storage = null;
-           }
         } else {
-            logger.debug("Ignoring invalid resource provider {}", info);
-            synchronized ( this.invalidProviders ) {
-                this.invalidProviders.put(info, FailureReason.invalid);
-            }
+            logger.warn("Ignoring invalid resource provider {}", info);
+            this.invalidProviders.put(info, FailureReason.invalid);
         }
     }
 
+    /**
+     * Unregister a resource provider.
+     * @param info The resource provider info.
+     */
     private void unregister(final ResourceProviderInfo info) {
-        if ( info.isValid() ) {
+        final boolean isInvalid;
+        synchronized ( this.invalidProviders ) {
+            isInvalid = this.invalidProviders.remove(info) != null;
+        }
+
+        if ( !isInvalid ) {
             logger.debug("Unregistering resource provider {}", info);
             synchronized (this.handlers) {
                 final List<ResourceProviderHandler> matchingHandlers = this.handlers.get(info.getPath());
@@ -171,17 +187,18 @@ public class ResourceProviderTracker {
                     }
                 }
             }
-            synchronized(this) {
-                storage = null;
-            }
+            storage = null;
         } else {
             logger.debug("Unregistering invalid resource provider {}", info);
-            synchronized ( this.invalidProviders ) {
-                this.invalidProviders.remove(info);
-            }
         }
     }
 
+    /**
+     * Search the info in the list of handlers.
+     * @param info The provider info
+     * @param infos The list of handlers
+     * @return {@code true} if the info got removed.
+     */
     private boolean removeHandlerByInfo(final ResourceProviderInfo info, final List<ResourceProviderHandler> infos) {
         Iterator<ResourceProviderHandler> it = infos.iterator();
         boolean removed = false;
@@ -195,19 +212,41 @@ public class ResourceProviderTracker {
         return removed;
     }
 
+    /**
+     * Deactivate a resource provider
+     * @param handler The provider handler
+     */
     private void deactivate(final ResourceProviderHandler handler) {
         handler.deactivate();
+        postEvent(SlingConstants.TOPIC_RESOURCE_PROVIDER_REMOVED, handler.getInfo());
         logger.debug("Deactivated resource provider {}", handler.getInfo());
     }
 
+    private void postEvent(final String topic, final ResourceProviderInfo info) {
+        final Dictionary<String, Object> eventProps = new Hashtable<String, Object>();
+        eventProps.put(SlingConstants.PROPERTY_PATH, info.getPath());
+        String pid = (String) info.getServiceReference().getProperty(Constants.SERVICE_PID);
+        if (pid == null) {
+            pid = (String) info.getServiceReference().getProperty(LegacyResourceProviderWhiteboard.ORIGINAL_SERVICE_PID);
+        }
+        if (pid != null) {
+            eventProps.put(Constants.SERVICE_PID, pid);
+        }
+        eventAdmin.postEvent(new Event(topic, eventProps));
+    }
+
+    /**
+     * Activate a resource provider
+     * @param handler The provider handler
+     */
     private boolean activate(final ResourceProviderHandler handler) {
-        if ( handler.getResourceProvider() == null ) {
-            logger.debug("Activating resource provider {} failed", handler.getInfo());
-            synchronized ( this.invalidProviders ) {
-                this.invalidProviders.put(handler.getInfo(), FailureReason.service_not_gettable);
-            }
+        if ( !handler.activate() ) {
+            logger.warn("Activating resource provider {} failed", handler.getInfo());
+            this.invalidProviders.put(handler.getInfo(), FailureReason.service_not_gettable);
+
             return false;
         }
+        postEvent(SlingConstants.TOPIC_RESOURCE_PROVIDER_ADDED, handler.getInfo());
         logger.debug("Activated resource provider {}", handler.getInfo());
         return true;
     }
@@ -245,25 +284,19 @@ public class ResourceProviderTracker {
         dto.failedProviders = failures.toArray(new ResourceProviderFailureDTO[failures.size()]);
     }
 
-    private List<ResourceProviderHandler> getHandlers() {
-        List<ResourceProviderHandler> result = new ArrayList<ResourceProviderHandler>();
-        synchronized (this.handlers) {
-            for (List<ResourceProviderHandler> list : handlers.values()) {
-                ResourceProviderHandler h  = list.get(0);
-                if (h != null) {
-                    result.add(h);
-                }
-            }
-        }
-        return result;
-    }
-
     public ResourceProviderStorage getResourceProviderStorage() {
         ResourceProviderStorage result = storage;
         if (result == null) {
-            synchronized(this) {
+            synchronized (this.handlers) {
                 if (storage == null) {
-                    storage = new ResourceProviderStorage(getHandlers());
+                    final List<ResourceProviderHandler> handlerList = new ArrayList<ResourceProviderHandler>();
+                    for (List<ResourceProviderHandler> list : handlers.values()) {
+                        ResourceProviderHandler h  = list.get(0);
+                        if (h != null) {
+                            handlerList.add(h);
+                        }
+                    }
+                    storage = new ResourceProviderStorage(handlerList);
                 }
                 result = storage;
             }
