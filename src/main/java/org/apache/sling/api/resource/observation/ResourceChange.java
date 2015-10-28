@@ -33,7 +33,7 @@ import aQute.bnd.annotation.ConsumerType;
  * instance.
  *
  * Resource listeners only receive external changes if they mark themselves
- * as a {@link ExternalResourceListener}.
+ * as a {@link ExternalResourceChangeListener}.
  *
  * For all events (local and external), the path and the type of change is
  * set.

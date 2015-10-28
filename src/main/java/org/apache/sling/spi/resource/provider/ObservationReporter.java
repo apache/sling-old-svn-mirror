@@ -47,6 +47,9 @@ public interface ObservationReporter {
      * it should set the distribute flag. In this case the resource resolver implementation
      * will distribute the events to all other instances.
      *
+     * Due to performance reasons, the observation reporter might not verify if the
+     * reported change matches the observer configurations.
+     *
      * @param changes The list of changes.
      * @param distribute Whether the changes should be distributed to other instances.
      */
