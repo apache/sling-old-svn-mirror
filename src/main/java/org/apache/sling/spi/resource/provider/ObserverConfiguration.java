@@ -20,6 +20,8 @@ package org.apache.sling.spi.resource.provider;
 
 import java.util.Set;
 
+import javax.annotation.Nonnull;
+
 import org.apache.sling.api.resource.observation.ResourceChange;
 
 import aQute.bnd.annotation.ProviderType;
@@ -30,11 +32,27 @@ import aQute.bnd.annotation.ProviderType;
 @ProviderType
 public interface ObserverConfiguration {
 
+    /**
+     * {@code true} if a listener is interested in external events.
+     */
     boolean includeExternal();
 
-    Set<String> getPaths();
+    /**
+     * The set of paths this listener is interested in. Each entry is absolute.
+     * @return Non empty set of paths
+     */
+    @Nonnull Set<String> getPaths();
 
-    Set<String> getExcludedPaths();
+    /**
+     * The set of excluded paths.
+     * All the paths are sub paths from one entry of {@link #getPaths()}
+     * @return A set of excluded paths, might be empty.
+     */
+    @Nonnull Set<String> getExcludedPaths();
 
-    Set<ResourceChange.ChangeType> getChangeTypes();
+    /**
+     * The set of types listeners are interested in.
+     * @return Non empty set of types
+     */
+    @Nonnull Set<ResourceChange.ChangeType> getChangeTypes();
 }
