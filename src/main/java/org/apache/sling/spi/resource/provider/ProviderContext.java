@@ -30,6 +30,9 @@ import aQute.bnd.annotation.ProviderType;
 @ProviderType
 public interface ProviderContext {
 
+    long OBSERVATION_LISTENER_CHANGED = 1;
+    long EXCLUDED_PATHS_CHANGED       = 2;
+
     /**
      * Get the observation reporter for this instance.
      * @return The observation reporter.
