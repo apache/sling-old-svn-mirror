@@ -18,18 +18,16 @@
  */
 package org.apache.sling.resourceresolver.impl.providers;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.runtime.RuntimeService;
 import org.apache.sling.api.resource.runtime.dto.RuntimeDTO;
 
-@Component
-@Service(value = RuntimeService.class)
 public class RuntimeServiceImpl implements RuntimeService {
 
-    @Reference
-    private ResourceProviderTracker tracker;
+    private final ResourceProviderTracker tracker;
+
+    public RuntimeServiceImpl(final ResourceProviderTracker tracker) {
+        this.tracker = tracker;
+    }
 
     @Override
     public RuntimeDTO getRuntimeDTO() {

@@ -233,9 +233,8 @@ public abstract class ResourceProvider<T> {
     /**
      * With a call to this method, the provider implementation is notified
      * that it is not used anymore in the resource tree.
-     * @param ctx The context for this provider.
      */
-    public void deactivate(@Nonnull ProviderContext ctx) {
+    public void deactivate() {
         this.ctx = null;
     }
 
@@ -245,9 +244,9 @@ public abstract class ResourceProvider<T> {
      * has changed. For example, observation listeners might have changed.
      * This method is only called while the provider is used in the resource
      * tree.
-     * @param ctx The context for this provider.
+     * @param changeSet A bit set of provider info that has changed.
      */
-    public void update(@Nonnull ProviderContext ctx) {
+    public void update(final long changeSet) {
         this.ctx = ctx;
     }
 

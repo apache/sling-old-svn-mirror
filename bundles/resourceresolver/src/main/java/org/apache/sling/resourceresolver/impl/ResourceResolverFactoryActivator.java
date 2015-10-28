@@ -41,12 +41,14 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.ResourceDecorator;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.runtime.RuntimeService;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
 import org.apache.sling.resourceresolver.impl.observation.ResourceChangeListenerWhiteboard;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
+import org.apache.sling.resourceresolver.impl.providers.RuntimeServiceImpl;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -88,6 +90,9 @@ public class ResourceResolverFactoryActivator implements Runnable, EventHandler 
     private static final class FactoryRegistration {
         /** Registration .*/
         public volatile ServiceRegistration factoryRegistration;
+
+        /** Runtime registration. */
+        public volatile ServiceRegistration runtimeRegistration;
 
         public volatile CommonResourceResolverFactoryImpl commonFactory;
     }
@@ -596,8 +601,11 @@ public class ResourceResolverFactoryActivator implements Runnable, EventHandler 
             if ( local.factoryRegistration != null ) {
                 local.factoryRegistration.unregister();
             }
+            if ( local.runtimeRegistration != null ) {
+                local.runtimeRegistration.unregister();
+            }
             if ( local.commonFactory != null ) {
-                local.commonFactory.deactivate();;
+                local.commonFactory.deactivate();
             }
         }
     }
@@ -632,6 +640,9 @@ public class ResourceResolverFactoryActivator implements Runnable, EventHandler 
                         // nothing to do
                     }
                 }, serviceProps);
+
+            local.runtimeRegistration = localContext.getBundleContext().registerService(RuntimeService.class.getName(),
+                    new RuntimeServiceImpl(this.resourceProviderTracker), null);
 
             this.factoryRegistration = local;
         }
