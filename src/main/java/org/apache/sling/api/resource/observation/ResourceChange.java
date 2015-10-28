@@ -45,7 +45,7 @@ import aQute.bnd.annotation.ConsumerType;
  * for external events.
  */
 @ConsumerType
-public abstract class ResourceChange {
+public class ResourceChange {
 
     /**
      * The type of the change
