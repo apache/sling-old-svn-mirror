@@ -19,6 +19,7 @@
 package org.apache.sling.resourceresolver.impl.providers;
 
 import org.apache.sling.resourceresolver.impl.providers.tree.Pathable;
+import org.apache.sling.spi.resource.provider.ProviderContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
 
@@ -58,7 +59,7 @@ public class ResourceProviderHandler implements Comparable<ResourceProviderHandl
 
     public void deactivate() {
         if ( this.provider != null ) {
-            this.provider.deactivate(this.context);
+            this.provider.deactivate();
             this.provider = null;
             this.context.update(null, null);
             this.bundleContext.ungetService(this.info.getServiceReference());
@@ -77,7 +78,7 @@ public class ResourceProviderHandler implements Comparable<ResourceProviderHandl
 
     public void update() {
         if ( this.provider != null ) {
-            this.provider.update(this.context);
+            this.provider.update(ProviderContext.EXCLUDED_PATHS_CHANGED + ProviderContext.OBSERVATION_LISTENER_CHANGED);
         }
     }
 
