@@ -489,11 +489,8 @@ public class ResourceResolverImplTest {
         }
     }
 
-    @Test public void test_getResourceSuperType() throws LoginException {
-        // the resource resolver
-        final List<ResourceResolver> resolvers = new ArrayList<ResourceResolver>();
-        final PathBasedResourceResolverImpl resolver = new PathBasedResourceResolverImpl(resolvers, resourceProviderTracker);
-        resolvers.add(resolver);
+    @Test public void test_getResourceSuperType() {
+        final PathBasedResourceResolverImpl resolver = getPathBasedResourceResolver();
 
         // the resources to test
         final Resource r = resolver.add(new SyntheticResource(resolver, "/a", "a:b"));
@@ -504,10 +501,8 @@ public class ResourceResolverImplTest {
         assertNull(resolver.getParentResourceType(r2.getResourceType()));
     }
 
-    @Test public void test_isA() throws LoginException {
-        final List<ResourceResolver> resolvers = new ArrayList<ResourceResolver>();
-        final PathBasedResourceResolverImpl resolver = new PathBasedResourceResolverImpl(resolvers, resourceProviderTracker);
-        resolvers.add(resolver);
+    @Test public void testIsResourceType() {
+        final PathBasedResourceResolverImpl resolver = getPathBasedResourceResolver();
         
         final Resource r = resolver.add(new SyntheticResourceWithSupertype(resolver, "/a", "a:b", "d:e"));
         resolver.add(new SyntheticResourceWithSupertype(resolver, "/d/e", "x:y", "t:c"));
@@ -517,6 +512,54 @@ public class ResourceResolverImplTest {
         assertFalse(resolver.isResourceType(r, "x:y"));
         assertTrue(resolver.isResourceType(r, "t:c"));
         assertFalse(resolver.isResourceType(r, "h:p"));
+    }
+
+    @Test public void testIsResourceTypeWithPaths() {
+        final PathBasedResourceResolverImpl resolver = getPathBasedResourceResolver();
+        
+        /**
+         * prepare resource type hierarchy
+         * /types/1
+         *  +- /types/2
+         *    +- /types/3
+         */
+        resolver.add(new SyntheticResourceWithSupertype(resolver, "/types/1", "/types/component", "/types/2"));
+        resolver.add(new SyntheticResourceWithSupertype(resolver, "/types/2", "/types/component", "/types/3"));
+        resolver.add(new SyntheticResource(resolver, "/types/3", "/types/component"));
+
+        Resource resourceT1 = resolver.add(new SyntheticResource(resolver, "/resourceT1", "/types/1"));
+        Resource resourceT2 = resolver.add(new SyntheticResource(resolver, "/resourceT2", "/types/2"));
+        Resource resourceT3 = resolver.add(new SyntheticResource(resolver, "/resourceT3", "/types/3"));
+
+        assertTrue(resolver.isResourceType(resourceT1, "/types/1"));
+        assertTrue(resolver.isResourceType(resourceT1, "/types/2"));
+        assertTrue(resolver.isResourceType(resourceT1, "/types/3"));
+        assertFalse(resolver.isResourceType(resourceT1, "/types/component"));
+        assertFalse(resolver.isResourceType(resourceT1, "/types/unknown"));
+
+        assertFalse(resolver.isResourceType(resourceT2, "/types/1"));
+        assertTrue(resolver.isResourceType(resourceT2, "/types/2"));
+        assertTrue(resolver.isResourceType(resourceT2, "/types/3"));
+        assertFalse(resolver.isResourceType(resourceT2, "/types/component"));
+        assertFalse(resolver.isResourceType(resourceT2, "/types/unknown"));
+
+        assertFalse(resolver.isResourceType(resourceT3, "/types/1"));
+        assertFalse(resolver.isResourceType(resourceT3, "/types/2"));
+        assertTrue(resolver.isResourceType(resourceT3, "/types/3"));
+        assertFalse(resolver.isResourceType(resourceT3, "/types/component"));
+        assertFalse(resolver.isResourceType(resourceT3, "/types/unknown"));
+    }
+
+    private PathBasedResourceResolverImpl getPathBasedResourceResolver() {
+        try {
+            final List<ResourceResolver> resolvers = new ArrayList<ResourceResolver>();
+            final PathBasedResourceResolverImpl resolver = new PathBasedResourceResolverImpl(resolvers, resourceProviderTracker);
+            resolvers.add(resolver);
+            return resolver;
+        }
+        catch (LoginException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     private static class PathBasedResourceResolverImpl extends ResourceResolverImpl {
