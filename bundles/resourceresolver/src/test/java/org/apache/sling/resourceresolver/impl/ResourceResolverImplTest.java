@@ -26,6 +26,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,7 +55,6 @@ import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.mockito.internal.util.reflection.Whitebox;
 
 public class ResourceResolverImplTest {
@@ -80,9 +82,9 @@ public class ResourceResolverImplTest {
         };
 
         List<ResourceProviderHandler> handlers = asList(createRPHandler(rp, "rp1", 0, "/"));
-        resourceProviderTracker = Mockito.mock(ResourceProviderTracker.class);
+        resourceProviderTracker = mock(ResourceProviderTracker.class);
         ResourceProviderStorage storage = new ResourceProviderStorage(handlers);
-        Mockito.when(resourceProviderTracker.getResourceProviderStorage()).thenReturn(storage);
+        when(resourceProviderTracker.getResourceProviderStorage()).thenReturn(storage);
         ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
         activator.resourceProviderTracker = resourceProviderTracker;
         commonFactory = new CommonResourceResolverFactoryImpl(activator);
@@ -198,9 +200,10 @@ public class ResourceResolverImplTest {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testCloseWithStackTraceLogging() throws Exception {
-        ResourceResolverFactoryActivator rrfa = Mockito.spy(new ResourceResolverFactoryActivator());
+        ResourceResolverFactoryActivator rrfa = spy(new ResourceResolverFactoryActivator());
         Whitebox.setInternalState(rrfa, "logResourceResolverClosing", true);
         CommonResourceResolverFactoryImpl crrfi = new CommonResourceResolverFactoryImpl(rrfa);
         final ResourceResolver rr = new ResourceResolverImpl(crrfi, false, null, resourceProviderTracker.getResourceProviderStorage());
@@ -351,10 +354,10 @@ public class ResourceResolverImplTest {
         assertEquals("Path must be the original path", no_resource_path,
                 res0.getPath());
 
-        final HttpServletRequest req1 = Mockito.mock(HttpServletRequest.class);
-        Mockito.when(req1.getProtocol()).thenReturn("http");
-        Mockito.when(req1.getServerName()).thenReturn("localhost");
-        Mockito.when(req1.getPathInfo()).thenReturn(no_resource_path);
+        final HttpServletRequest req1 = mock(HttpServletRequest.class);
+        when(req1.getProtocol()).thenReturn("http");
+        when(req1.getServerName()).thenReturn("localhost");
+        when(req1.getPathInfo()).thenReturn(no_resource_path);
 
         final Resource res1 = resResolver.resolve(req1);
         assertNotNull("Expecting resource if resolution fails", res1);
@@ -363,10 +366,10 @@ public class ResourceResolverImplTest {
         assertEquals("Path must be the original path", no_resource_path,
                 res1.getPath());
 
-        final HttpServletRequest req2 = Mockito.mock(HttpServletRequest.class);
-        Mockito.when(req2.getProtocol()).thenReturn("http");
-        Mockito.when(req2.getServerName()).thenReturn("localhost");
-        Mockito.when(req2.getPathInfo()).thenReturn(null);
+        final HttpServletRequest req2 = mock(HttpServletRequest.class);
+        when(req2.getProtocol()).thenReturn("http");
+        when(req2.getServerName()).thenReturn("localhost");
+        when(req2.getPathInfo()).thenReturn(null);
         final Resource res2 = resResolver.resolve(req2);
         assertNotNull("Expecting resource if resolution fails", res2);
         assertTrue("Resource must be NonExistingResource",
@@ -458,8 +461,8 @@ public class ResourceResolverImplTest {
     }
 
     @Test public void testBasicCrud() throws Exception {
-        final Resource r = Mockito.mock(Resource.class);
-        Mockito.when(r.getPath()).thenReturn("/some");
+        final Resource r = mock(Resource.class);
+        when(r.getPath()).thenReturn("/some");
         try {
             this.resResolver.create(null, "a", null);
             fail("Null parent resource should throw NPE");
