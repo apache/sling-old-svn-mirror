@@ -166,7 +166,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     }
 
     @Deactivate
-    protected void deactivate() {
+    protected void deactivateComponent() {
         unregisterLegacyListener();
     }
 
