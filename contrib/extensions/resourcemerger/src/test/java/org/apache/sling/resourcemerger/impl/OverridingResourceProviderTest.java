@@ -33,7 +33,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.resourcemerger.impl.picker.OverridingResourcePicker;
-import org.apache.sling.resourceresolver.impl.BasicResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.testing.resourceresolver.MockHelper;
 import org.apache.sling.testing.resourceresolver.MockResourceResolverFactory;
@@ -101,7 +100,7 @@ public class OverridingResourceProviderTest {
                     .commit();
 
         this.provider = new MergingResourceProvider("/override", new OverridingResourcePicker(), false, true);
-        this.ctx = new BasicResolveContext(resolver, null, "/");
+        this.ctx = new BasicResolveContext(resolver);
     }
 
     @Test
