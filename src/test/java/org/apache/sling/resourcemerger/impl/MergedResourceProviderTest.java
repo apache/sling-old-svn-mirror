@@ -88,7 +88,7 @@ public class MergedResourceProviderTest {
                                         .commit();
 
         this.provider = new CRUDMergingResourceProvider("/merged", new MergingResourcePicker(), false);
-        this.ctx = new BasicResolveContext(resolver, null);
+        this.ctx = new BasicResolveContext(resolver, null, "/");
     }
 
     @Test public void testHideChildren() {

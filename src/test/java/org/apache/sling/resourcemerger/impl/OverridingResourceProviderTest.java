@@ -101,7 +101,7 @@ public class OverridingResourceProviderTest {
                     .commit();
 
         this.provider = new MergingResourceProvider("/override", new OverridingResourcePicker(), false, true);
-        this.ctx = new BasicResolveContext(resolver, null);
+        this.ctx = new BasicResolveContext(resolver, null, "/");
     }
 
     @Test
