@@ -33,6 +33,7 @@ import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.vault.fs.api.ImportMode;
 import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.api.WorkspaceFilter;
@@ -50,6 +51,7 @@ import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionException;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
+import org.apache.sling.distribution.serialization.impl.AbstractDistributionPackage;
 import org.apache.sling.distribution.serialization.impl.AbstractDistributionPackageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,7 +77,7 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
     private final File tempDirectory;
     private final TreeMap<String, PathFilterSet> filters;
 
-    public JcrVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots, String[] filterRules, String tempFilesFolder, String tempPackagesNode) {
+    public JcrVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots, String[] filterRules, String tempFilesFolder) {
         super(type);
 
         this.packaging = packaging;
@@ -83,7 +85,7 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
         this.importMode = importMode;
         this.aclHandling = aclHandling;
         this.packageRoots = packageRoots;
-        this.tempPackagesNode = tempPackagesNode;
+        this.tempPackagesNode = AbstractDistributionPackage.PACKAGES_ROOT + "/" + type + "/data";
 
         this.tempDirectory = VltUtils.getTempFolder(tempFilesFolder);
         this.filters = VltUtils.parseFilters(filterRules);
@@ -240,8 +242,8 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
 
     private Node getPackageRoot(Session session) throws RepositoryException {
         Node packageRoot = null;
-        if (tempPackagesNode != null && session.nodeExists(tempPackagesNode)) {
-            packageRoot = session.getNode(tempPackagesNode);
+        if (tempPackagesNode != null) {
+            packageRoot = JcrUtils.getOrCreateByPath(tempPackagesNode, "sling:Folder", "sling:Folder", session, true);
         }
         return packageRoot;
     }

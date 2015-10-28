@@ -40,25 +40,28 @@ import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 
 public class ResourceSharedDistributionPackageBuilder implements DistributionPackageBuilder {
 
-    private final String PN_ORIGINAL_ID = "original.package.id";
-    private final String PN_ORIGINAL_REQUEST_TYPE = "original.package.request.type";
-    private final String PN_ORIGINAL_PATHS = "original.package.paths";
+    private static final String PN_ORIGINAL_ID = "original.package.id";
+    private static final String PN_ORIGINAL_REQUEST_TYPE = "original.package.request.type";
+    private static final String PN_ORIGINAL_PATHS = "original.package.paths";
 
-    private final String PACKAGE_NAME_PREFIX = "distrpackage";
-    private final String SHARED_PACKAGES_ROOT = "/var/sling/distribution/packages";
+    private static final String PACKAGE_NAME_PREFIX = "distrpackage";
+    private final String sharedPackagesRoot;
+    private final String type;
 
     private final DistributionPackageBuilder distributionPackageBuilder;
 
     // use a global repolock for syncing access to the shared package root
     // TODO: this can be finegrained when we will allow configurable package roots
-    private final static Object repolock = new Object();
+    private final Object repolock = new Object();
 
     public ResourceSharedDistributionPackageBuilder(DistributionPackageBuilder distributionPackageExporter) {
         this.distributionPackageBuilder = distributionPackageExporter;
+        this.type = distributionPackageBuilder.getType();
+        this.sharedPackagesRoot = AbstractDistributionPackage.PACKAGES_ROOT + "/" + type + "/shared";
     }
 
     public String getType() {
-        return distributionPackageBuilder.getType();
+        return type;
     }
 
     @Nonnull
@@ -169,7 +172,7 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
     }
 
     private String getPathFromName(String name) {
-        String packagePath = SHARED_PACKAGES_ROOT + "/" + name;
+        String packagePath = sharedPackagesRoot + "/" + name;
         return packagePath;
     }
 
