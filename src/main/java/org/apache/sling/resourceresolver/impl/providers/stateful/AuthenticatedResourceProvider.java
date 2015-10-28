@@ -95,7 +95,12 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
 
     private Object authenticate() throws LoginException {
         if (!authenticated && (info.getAuthType() == AuthType.required || info.getAuthType() == AuthType.lazy)) {
-            contextData = rp.authenticate(authInfo);
+            try {
+                contextData = rp.authenticate(authInfo);
+            } catch ( final LoginException le ) {
+                logger.debug("Unable to login into resource provider " + rp, le);
+                throw le;
+            }
             authenticated = true;
         }
         return contextData;

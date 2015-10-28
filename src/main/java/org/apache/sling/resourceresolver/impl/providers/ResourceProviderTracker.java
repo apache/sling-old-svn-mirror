@@ -22,10 +22,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -34,11 +36,19 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
+import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
+import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.api.resource.runtime.dto.FailureReason;
 import org.apache.sling.api.resource.runtime.dto.ResourceProviderDTO;
 import org.apache.sling.api.resource.runtime.dto.ResourceProviderFailureDTO;
 import org.apache.sling.api.resource.runtime.dto.RuntimeDTO;
 import org.apache.sling.resourceresolver.impl.legacy.LegacyResourceProviderWhiteboard;
+import org.apache.sling.resourceresolver.impl.observation.BasicObservationReporter;
+import org.apache.sling.resourceresolver.impl.observation.ResourceChangeListenerWhiteboard;
+import org.apache.sling.spi.resource.provider.ObservationReporter;
+import org.apache.sling.spi.resource.provider.ObserverConfiguration;
+import org.apache.sling.spi.resource.provider.ProviderContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -57,6 +67,8 @@ import org.slf4j.LoggerFactory;
 @Service(value = ResourceProviderTracker.class)
 public class ResourceProviderTracker {
 
+    private static final ObservationReporter EMPTY_REPORTER = new BasicObservationReporter(Collections.<ResourceChangeListener, ObserverConfiguration> emptyMap());
+
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final Map<ServiceReference, ResourceProviderInfo> infos = new ConcurrentHashMap<ServiceReference, ResourceProviderInfo>();
@@ -71,6 +83,11 @@ public class ResourceProviderTracker {
 
     @Reference
     private EventAdmin eventAdmin;
+
+    private ObservationReporter reporter = EMPTY_REPORTER;
+
+    @Reference
+    private ResourceChangeListenerWhiteboard resourceChangeListeners;
 
     private volatile ResourceProviderStorage storage;
 
@@ -218,11 +235,12 @@ public class ResourceProviderTracker {
      */
     private void deactivate(final ResourceProviderHandler handler) {
         handler.deactivate();
-        postEvent(SlingConstants.TOPIC_RESOURCE_PROVIDER_REMOVED, handler.getInfo());
+        postOSGiEvent(SlingConstants.TOPIC_RESOURCE_PROVIDER_REMOVED, handler.getInfo());
+        postResourceProviderChange(ChangeType.PROVIDER_REMOVED, handler.getInfo());
         logger.debug("Deactivated resource provider {}", handler.getInfo());
     }
 
-    private void postEvent(final String topic, final ResourceProviderInfo info) {
+    private void postOSGiEvent(final String topic, final ResourceProviderInfo info) {
         final Dictionary<String, Object> eventProps = new Hashtable<String, Object>();
         eventProps.put(SlingConstants.PROPERTY_PATH, info.getPath());
         String pid = (String) info.getServiceReference().getProperty(Constants.SERVICE_PID);
@@ -233,6 +251,11 @@ public class ResourceProviderTracker {
             eventProps.put(Constants.SERVICE_PID, pid);
         }
         eventAdmin.postEvent(new Event(topic, eventProps));
+    }
+
+    private void postResourceProviderChange(ChangeType type, final ResourceProviderInfo info) {
+        ResourceChange change = new ResourceChange(type, info.getPath(), false, null, null, null);
+        this.reporter.reportChanges(Collections.singletonList(change), false);
     }
 
     /**
@@ -246,7 +269,8 @@ public class ResourceProviderTracker {
 
             return false;
         }
-        postEvent(SlingConstants.TOPIC_RESOURCE_PROVIDER_ADDED, handler.getInfo());
+        postOSGiEvent(SlingConstants.TOPIC_RESOURCE_PROVIDER_ADDED, handler.getInfo());
+        postResourceProviderChange(ChangeType.PROVIDER_ADDED, handler.getInfo());
         logger.debug("Activated resource provider {}", handler.getInfo());
         return true;
     }
@@ -311,5 +335,17 @@ public class ResourceProviderTracker {
         d.path = info.getPath();
         d.serviceId = (Long)info.getServiceReference().getProperty(Constants.SERVICE_ID);
         d.useResourceAccessSecurity = info.getUseResourceAccessSecurity();
+    }
+
+    private ProviderContext createProviderContext(final ResourceProviderHandler handler) {
+        final Set<String> excludedPaths = new HashSet<String>();
+        String path = handler.getInfo().getPath();
+        for (String providerPath : handlers.keySet()) {
+            if (providerPath.startsWith(path)) {
+                excludedPaths.add(providerPath);
+            }
+        }
+        excludedPaths.remove(path);
+        return new ProviderContextImpl(reporter, excludedPaths);
     }
 }

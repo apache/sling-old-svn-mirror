@@ -18,7 +18,6 @@
  */
 package org.apache.sling.resourceresolver.impl;
 
-import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -96,8 +95,6 @@ public class BasicResolveContext<T> implements ResolverContext<T> {
                             } catch ( final LoginException se) {
                                 // skip this, try next
                                 this.parentProvider = null;
-                            } catch ( final SlingException se) {
-                                // TODO we should rather catch LoginException from getStatefulResourceProvider
                             }
                             if ( this.parentProvider == null ) {
                                 path = ResourceUtil.getParent(path);

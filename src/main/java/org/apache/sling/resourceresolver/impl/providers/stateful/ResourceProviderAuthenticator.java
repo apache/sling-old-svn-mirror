@@ -24,7 +24,8 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.sling.api.SlingException;
+import javax.annotation.Nonnull;
+
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.runtime.dto.AuthType;
@@ -73,9 +74,6 @@ public class ResourceProviderAuthenticator {
         StatefulResourceProvider rp = stateful.get(handler);
         if (rp == null) {
             rp = createStateful(handler, combinedProvider);
-            if (rp == null) {
-                return null;
-            }
             stateful.put(handler, rp);
             if (handler.getInfo().getAuthType() != AuthType.no) {
                 authenticated.add(rp);
@@ -87,12 +85,13 @@ public class ResourceProviderAuthenticator {
         return rp;
     }
 
-    public StatefulResourceProvider getStateful(ResourceProviderHandler handler, CombinedResourceProvider combinedProvider) {
-        try {
-            return authenticate(handler, combinedProvider);
-        } catch (LoginException e) {
-            throw new SlingException("Can't authenticate provider", e);
-        }
+    public Collection<StatefulResourceProvider> getAllUsed() {
+        return stateful.values();
+    }
+
+    public StatefulResourceProvider getStateful(ResourceProviderHandler handler, CombinedResourceProvider combinedProvider)
+    throws LoginException {
+        return authenticate(handler, combinedProvider);
     }
 
     public Collection<StatefulResourceProvider> getAllUsedAuthenticated() {
@@ -104,7 +103,7 @@ public class ResourceProviderAuthenticator {
     }
 
     public Collection<StatefulResourceProvider> getAll(List<ResourceProviderHandler> handlers,
-            CombinedResourceProvider combinedProvider) {
+            CombinedResourceProvider combinedProvider) throws LoginException {
         List<StatefulResourceProvider> result = new ArrayList<StatefulResourceProvider>(handlers.size());
         for (ResourceProviderHandler h : handlers) {
             result.add(getStateful(h, combinedProvider));
@@ -112,13 +111,9 @@ public class ResourceProviderAuthenticator {
         return result;
     }
 
-    private StatefulResourceProvider createStateful(ResourceProviderHandler handler,
+    private @Nonnull StatefulResourceProvider createStateful(ResourceProviderHandler handler,
             CombinedResourceProvider combinedProvider) throws LoginException {
-        ResourceProvider<?> rp = handler.getResourceProvider();
-        if (rp == null) {
-            logger.warn("Empty resource provider for {}", handler);
-            return null;
-        }
+        final ResourceProvider<?> rp = handler.getResourceProvider();
         StatefulResourceProvider authenticated;
         authenticated = new AuthenticatedResourceProvider(rp, handler.getInfo(), resolver, authInfo, combinedProvider);
         if (handler.getInfo().getUseResourceAccessSecurity()) {
