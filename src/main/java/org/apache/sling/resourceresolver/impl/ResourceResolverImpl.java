@@ -23,10 +23,12 @@ import static org.apache.commons.lang.StringUtils.defaultString;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
@@ -1265,12 +1267,17 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
              if (resourceType.equals(resource.getResourceType())) {
                  result = true;
              } else {
+                 Set<String> superTypesChecked = new HashSet<String>();
                  String superType = this.getParentResourceType(resource);
                  while (!result && superType != null) {
                      if (resourceType.equals(superType)) {
                          result = true;
                      } else {
+                         superTypesChecked.add(superType);
                          superType = this.getParentResourceType(superType);
+                         if (superType != null && superTypesChecked.contains(superType)) {
+                             throw new SlingException("Cyclic dependency for resourceSuperType hierarchy detected on resource " + resource.getPath(), null);
+                         }
                      }
                  }
              }

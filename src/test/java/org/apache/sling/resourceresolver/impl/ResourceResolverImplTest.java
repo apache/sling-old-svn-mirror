@@ -40,6 +40,7 @@ import java.util.Map;
 import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.PersistenceException;
@@ -548,6 +549,49 @@ public class ResourceResolverImplTest {
         assertTrue(resolver.isResourceType(resourceT3, "/types/3"));
         assertFalse(resolver.isResourceType(resourceT3, "/types/component"));
         assertFalse(resolver.isResourceType(resourceT3, "/types/unknown"));
+    }
+
+    @Test(expected=SlingException.class)  public void testIsResourceCyclicHierarchyDirect() {
+        final PathBasedResourceResolverImpl resolver = getPathBasedResourceResolver();
+        
+        /**
+         * prepare resource type hierarchy
+         * /types/1  <---+
+         *  +- /types/2 -+
+         */
+        resolver.add(new SyntheticResourceWithSupertype(resolver, "/types/1", "/types/component", "/types/2"));
+        resolver.add(new SyntheticResourceWithSupertype(resolver, "/types/2", "/types/component", "/types/1"));
+
+        Resource resource = resolver.add(new SyntheticResource(resolver, "/resourceT1", "/types/1"));
+
+        assertTrue(resolver.isResourceType(resource, "/types/1"));
+        assertTrue(resolver.isResourceType(resource, "/types/2"));
+        
+        // this should throw a SlingException when detecting the cyclic hierarchy
+        resolver.isResourceType(resource, "/types/unknown");
+    }
+
+    @Test(expected=SlingException.class) public void testIsResourceCyclicHierarchyIndirect() {
+        final PathBasedResourceResolverImpl resolver = getPathBasedResourceResolver();
+        
+        /**
+         * prepare resource type hierarchy
+         * /types/1   <----+
+         *  +- /types/2    |
+         *    +- /types/3 -+
+         */
+        resolver.add(new SyntheticResourceWithSupertype(resolver, "/types/1", "/types/component", "/types/2"));
+        resolver.add(new SyntheticResourceWithSupertype(resolver, "/types/2", "/types/component", "/types/3"));
+        resolver.add(new SyntheticResourceWithSupertype(resolver, "/types/3", "/types/component", "/types/1"));
+
+        Resource resource = resolver.add(new SyntheticResource(resolver, "/resourceT1", "/types/1"));
+
+        assertTrue(resolver.isResourceType(resource, "/types/1"));
+        assertTrue(resolver.isResourceType(resource, "/types/2"));
+        assertTrue(resolver.isResourceType(resource, "/types/3"));
+
+        // this should throw a SlingException when detecting the cyclic hierarchy
+        resolver.isResourceType(resource, "/types/unknown");
     }
 
     private PathBasedResourceResolverImpl getPathBasedResourceResolver() {
