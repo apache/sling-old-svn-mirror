@@ -489,59 +489,25 @@ public class ResourceResolverImplTest {
     @Test public void test_getResourceSuperType() throws LoginException {
         // the resource resolver
         final List<ResourceResolver> resolvers = new ArrayList<ResourceResolver>();
-        final PathBasedResourceResolverImpl resolver = new PathBasedResourceResolverImpl(
-                new CommonResourceResolverFactoryImpl(new ResourceResolverFactoryActivator()) {
-
-                    @Override
-                    public ResourceResolver getAdministrativeResourceResolver(
-                            Map<String, Object> authenticationInfo)
-                            throws LoginException {
-                        return resolvers.get(0);
-                    }
-                }, resourceProviderTracker);
+        final PathBasedResourceResolverImpl resolver = new PathBasedResourceResolverImpl(resolvers, resourceProviderTracker);
         resolvers.add(resolver);
 
         // the resources to test
-        final Resource r = Mockito.mock(Resource.class);
-        Mockito.when(r.getResourceType()).thenReturn("a:b");
-        final Resource r2 = Mockito.mock(Resource.class);
-        Mockito.when(r2.getResourceType()).thenReturn("a:c");
-        final Resource typeResource = Mockito.mock(Resource.class);
-        Mockito.when(typeResource.getResourceType()).thenReturn("x:y");
-        Mockito.when(typeResource.getResourceSuperType()).thenReturn("t:c");
-
-        resolver.setResource("/a", r);
-        resolver.setResource("/a/b", typeResource);
+        final Resource r = resolver.add(new SyntheticResource(resolver, "/a", "a:b"));
+        final Resource r2 = resolver.add(new SyntheticResource(resolver, "/a2", "a:c"));
+        resolver.add(new SyntheticResourceWithSupertype(resolver, "/a/b", "x:y", "t:c"));
 
         assertEquals("t:c", resolver.getParentResourceType(r.getResourceType()));
         assertNull(resolver.getParentResourceType(r2.getResourceType()));
     }
 
     @Test public void test_isA() throws LoginException {
-        final Resource typeResource = Mockito.mock(Resource.class);
-        Mockito.when(typeResource.getResourceType()).thenReturn("x:y");
-        Mockito.when(typeResource.getResourceSuperType()).thenReturn("t:c");
-
         final List<ResourceResolver> resolvers = new ArrayList<ResourceResolver>();
-        final PathBasedResourceResolverImpl resolver = new PathBasedResourceResolverImpl(
-                new CommonResourceResolverFactoryImpl(new ResourceResolverFactoryActivator()) {
-
-                    @Override
-                    public ResourceResolver getAdministrativeResourceResolver(
-                            Map<String, Object> authenticationInfo)
-                            throws LoginException {
-                        return resolvers.get(0);
-                    }
-                }, resourceProviderTracker);
+        final PathBasedResourceResolverImpl resolver = new PathBasedResourceResolverImpl(resolvers, resourceProviderTracker);
         resolvers.add(resolver);
-        final Resource r = new SyntheticResource(resolver, "/a", "a:b") {
-            @Override
-            public String getResourceSuperType() {
-                return "d:e";
-            }
-        };
-        resolver.setResource("/a", r);
-        resolver.setResource("/d/e", typeResource);
+        
+        final Resource r = resolver.add(new SyntheticResourceWithSupertype(resolver, "/a", "a:b", "d:e"));
+        resolver.add(new SyntheticResourceWithSupertype(resolver, "/d/e", "x:y", "t:c"));
 
         assertTrue(resolver.isResourceType(r, "a:b"));
         assertTrue(resolver.isResourceType(r, "d:e"));
@@ -554,12 +520,23 @@ public class ResourceResolverImplTest {
 
         private final Map<String, Resource> resources = new HashMap<String, Resource>();
 
+        public PathBasedResourceResolverImpl(final List<ResourceResolver> resolvers, final ResourceProviderTracker resourceProviderTracker) throws LoginException {
+            this(new CommonResourceResolverFactoryImpl(new ResourceResolverFactoryActivator()) {
+                @Override
+                public ResourceResolver getAdministrativeResourceResolver(
+                        Map<String, Object> authenticationInfo) throws LoginException {
+                    return resolvers.get(0);
+                }
+            }, resourceProviderTracker);            
+        }
+        
         public PathBasedResourceResolverImpl(CommonResourceResolverFactoryImpl factory, ResourceProviderTracker resourceProviderTracker) throws LoginException {
             super(factory, false, null, resourceProviderTracker.getResourceProviderStorage());
         }
 
-        public void setResource(final String path, final Resource r) {
-            this.resources.put(path, r);
+        public Resource add(final Resource r) {
+            this.resources.put(r.getPath(), r);
+            return r;
         }
 
         @Override
@@ -573,4 +550,22 @@ public class ResourceResolverImplTest {
             return this.resources.get(p);
         }
     }
+
+    private static class SyntheticResourceWithSupertype extends SyntheticResource {
+        
+        private final String resourceSuperType;
+        
+        public SyntheticResourceWithSupertype(ResourceResolver resourceResolver, String path,
+                String resourceType, String resourceSuperType) {
+            super(resourceResolver, path, resourceType);
+            this.resourceSuperType = resourceSuperType;
+        }
+     
+        @Override
+        public String getResourceSuperType() {
+            return this.resourceSuperType;
+        }
+        
+    }
+    
 }
