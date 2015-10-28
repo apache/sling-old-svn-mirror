@@ -16,19 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.resourceresolver.impl;
+package org.apache.sling.resourceresolver.impl.providers.stateful;
 
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
-import org.apache.sling.resourceresolver.impl.providers.stateful.CombinedResourceProvider;
-import org.apache.sling.resourceresolver.impl.providers.stateful.StatefulResourceProvider;
 import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 
-// TODO - we should move this to the providers.stateful package
 public class BasicResolveContext<T> implements ResolverContext<T> {
 
     private final String parentPath;
@@ -41,7 +38,7 @@ public class BasicResolveContext<T> implements ResolverContext<T> {
 
     private volatile boolean parentLookupDone = false;
 
-    private volatile ResourceProvider parentProvider;
+    private volatile ResourceProvider<Object> parentProvider;
 
     private volatile ResolverContext<Object> parentResolveContext;
 
