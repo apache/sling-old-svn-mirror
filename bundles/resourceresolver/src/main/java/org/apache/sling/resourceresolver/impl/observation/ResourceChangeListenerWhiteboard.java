@@ -18,100 +18,89 @@
  */
 package org.apache.sling.resourceresolver.impl.observation;
 
-import java.util.Hashtable;
-import java.util.IdentityHashMap;
+import java.util.Collections;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.References;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.resource.observation.ResourceChangeListener;
-import org.apache.sling.resourceresolver.impl.observation.BasicObserverConfiguration.Builder;
-import org.apache.sling.api.resource.LoginException;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.observation.ExternalResourceListener;
+import org.apache.sling.api.resource.observation.ResourceChangeListener;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
 import org.apache.sling.spi.resource.provider.ObservationReporter;
 import org.apache.sling.spi.resource.provider.ObserverConfiguration;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventAdmin;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
-@Component(immediate = true)
-@Service(ResourceChangeListenerWhiteboard.class)
-@References({
-        @Reference(name = "ResourceChangeListener", referenceInterface = ResourceChangeListener.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
-        @Reference(name = "ResourceResolverFactory", referenceInterface = ResourceResolverFactory.class, cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC) })
+/**
+ * Tracker component for the resource change listeners.
+ */
 public class ResourceChangeListenerWhiteboard {
 
-    public static final String TOPIC_RESOURCE_CHANGE_LISTENER_UPDATE = "org/apache/sling/api/resource/ResourceChangeListener/UPDATE";
+    private static final ObservationReporter EMPTY_REPORTER = new BasicObservationReporter(Collections.<ResourceChangeListener, ObserverConfiguration> emptyMap());
 
-    private Map<ResourceChangeListener, ObserverConfiguration> listeners = new IdentityHashMap<ResourceChangeListener, ObserverConfiguration>();
+    private final Map<ServiceReference, ResourceChangeListenerInfo> listeners = new ConcurrentHashMap<ServiceReference, ResourceChangeListenerInfo>();
 
-    private Map<ResourceChangeListener, Builder> pendingListeners = new IdentityHashMap<ResourceChangeListener, Builder>();
+    private volatile String[] searchPaths;
 
-    private String[] searchPaths;
+    private volatile ResourceProviderTracker resourceProviderTracker;
 
-    @Reference
-    private EventAdmin eventAdmin;
+    private volatile ServiceTracker tracker;
 
-    public ObservationReporter getObservationReporter() {
-        return new BasicObservationReporter(listeners);
+    public void activate(final BundleContext bundleContext,
+            final ResourceProviderTracker resourceProviderTracker,
+            final String[] searchPaths) {
+        this.searchPaths = searchPaths;
+        this.resourceProviderTracker = resourceProviderTracker;
+        this.resourceProviderTracker.setObservationReporter(EMPTY_REPORTER);
+        this.tracker = new ServiceTracker(bundleContext,
+                ResourceChangeListener.class.getName(),
+                new ServiceTrackerCustomizer() {
+
+            @Override
+            public void removedService(final ServiceReference reference, final Object service) {
+                final ServiceReference ref = (ServiceReference)service;
+                final ResourceChangeListenerInfo info = listeners.remove(ref);
+                if ( info != null ) {
+                    updateProviderTracker();
+                }
+            }
+
+            @Override
+            public void modifiedService(final ServiceReference reference, final Object service) {
+                removedService(reference, service);
+                addingService(reference);
+            }
+
+            @Override
+            public Object addingService(final ServiceReference reference) {
+                final ResourceChangeListenerInfo info = new ResourceChangeListenerInfo(reference, searchPaths);
+                if ( info.isValid() ) {
+                    final ResourceChangeListener listener = (ResourceChangeListener) bundleContext.getService(reference);
+                    if ( listener != null ) {
+                        info.setExternal(listener instanceof ExternalResourceListener);
+                        listeners.put(reference, info);
+                        updateProviderTracker();
+                    }
+                }
+                return reference;
+            }
+        });
+        this.tracker.open();
     }
 
-    protected void bindResourceChangeListener(ResourceChangeListener listener, Map<String, Object> properties) {
-        Builder builder = new Builder();
-        builder.setFromProperties(properties);
-        builder.setIncludeExternal(listener instanceof ExternalResourceListener);
-
-        if (searchPaths == null) {
-            pendingListeners.put(listener, builder);
-        } else {
-            builder.setSearchPaths(searchPaths);
-            listeners.put(listener, builder.build());
-            postListenersChangedEvent();
+    public void deactivate() {
+        if ( this.tracker != null ) {
+            this.tracker.close();
+            this.tracker = null;
         }
-    }
-
-    protected void unbindResourceChangeListener(ResourceChangeListener listener, Map<String, Object> properties) {
-        if (listeners.remove(listener) != null) {
-            postListenersChangedEvent();
-        }
-        pendingListeners.remove(listener);
-    }
-
-    protected void bindResourceResolverFactory(ResourceResolverFactory factory) throws LoginException {
-        ResourceResolver resolver = factory.getResourceResolver(null);
-        try {
-            this.searchPaths = resolver.getSearchPath();
-            activatePendingListeners();
-        } finally {
-            resolver.close();
-        }
-    }
-
-    protected void unbindResourceResolverFactory(ResourceResolverFactory factory) {
         this.searchPaths = null;
+        this.resourceProviderTracker.setObservationReporter(EMPTY_REPORTER);
+        this.resourceProviderTracker = null;
     }
 
-    private void activatePendingListeners() {
-        boolean added = false;
-        for (Entry<ResourceChangeListener, Builder> e : pendingListeners.entrySet()) {
-            Builder builder = e.getValue();
-            builder.setSearchPaths(searchPaths);
-            listeners.put(e.getKey(), builder.build());
-            added = true;
-        }
-        pendingListeners.clear();
-        if (added) {
-            postListenersChangedEvent();
-        }
-    }
-
-    private void postListenersChangedEvent() {
-        eventAdmin.sendEvent(new Event(TOPIC_RESOURCE_CHANGE_LISTENER_UPDATE, new Hashtable<String, Object>()));
+    private void updateProviderTracker() {
+        // TODO
+        this.resourceProviderTracker.setObservationReporter(EMPTY_REPORTER);
     }
 }

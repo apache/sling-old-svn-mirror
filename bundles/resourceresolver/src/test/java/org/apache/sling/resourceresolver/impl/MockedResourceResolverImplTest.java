@@ -42,6 +42,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
+import org.apache.sling.resourceresolver.impl.observation.ResourceChangeListenerWhiteboard;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
@@ -99,6 +100,9 @@ public class MockedResourceResolverImplTest {
     @Mock
     private ResourceProviderTracker resourceProviderTracker;
 
+    @Mock
+    private ResourceChangeListenerWhiteboard resourceChangeListenerWhiteboard;
+
     @SuppressWarnings("rawtypes")
     @Mock
     private JCRQueryProvider queryProvider;
@@ -146,6 +150,7 @@ public class MockedResourceResolverImplTest {
 
         activator.resourceAccessSecurityTracker = new ResourceAccessSecurityTracker();
         activator.resourceProviderTracker = resourceProviderTracker;
+        activator.changeListenerWhiteboard = resourceChangeListenerWhiteboard;
 
         handlers.add(createRPHandler(resourceProvider, "org.apache.sling.resourceresolver.impl.DummyTestProvider", 10L, "/single"));
 

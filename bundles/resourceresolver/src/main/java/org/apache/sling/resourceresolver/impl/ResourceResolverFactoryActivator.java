@@ -45,6 +45,7 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
+import org.apache.sling.resourceresolver.impl.observation.ResourceChangeListenerWhiteboard;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.framework.Bundle;
@@ -196,7 +197,7 @@ public class ResourceResolverFactoryActivator implements Runnable, EventHandler 
               description = "The maximum number of cached vanity path entries. " +
                             "Default is -1 (no limit)")
     private static final String PROP_MAX_CACHED_VANITY_PATHS = "resource.resolver.vanitypath.maxEntries";
-    
+
     private static final boolean DEFAULT_MAX_CACHED_VANITY_PATHS_STARTUP = true;
     @Property(boolValue = DEFAULT_MAX_CACHED_VANITY_PATHS_STARTUP,
               label = "Limit the maximum number of cached vanity path entries only at startup",
@@ -288,8 +289,9 @@ public class ResourceResolverFactoryActivator implements Runnable, EventHandler 
     @Reference
     ResourceAccessSecurityTracker resourceAccessSecurityTracker;
 
-    @Reference
-    ResourceProviderTracker resourceProviderTracker;
+    volatile ResourceProviderTracker resourceProviderTracker;
+
+    volatile ResourceChangeListenerWhiteboard changeListenerWhiteboard;
 
     /** ComponentContext */
     private volatile ComponentContext componentContext;
@@ -304,7 +306,7 @@ public class ResourceResolverFactoryActivator implements Runnable, EventHandler 
 
     /** max number of cache vanity path entries */
     private long maxCachedVanityPathEntries = DEFAULT_MAX_CACHED_VANITY_PATHS;
-    
+
     /** limit max number of cache vanity path entries only at startup*/
     private boolean maxCachedVanityPathEntriesStartup = DEFAULT_MAX_CACHED_VANITY_PATHS_STARTUP;
 
@@ -411,7 +413,7 @@ public class ResourceResolverFactoryActivator implements Runnable, EventHandler 
     public long getMaxCachedVanityPathEntries() {
         return this.maxCachedVanityPathEntries;
     }
-    
+
     public boolean isMaxCachedVanityPathEntriesStartup() {
         return this.maxCachedVanityPathEntriesStartup;
     }
@@ -477,6 +479,14 @@ public class ResourceResolverFactoryActivator implements Runnable, EventHandler 
         }
         if (searchPath == null) {
             searchPath = new String[] { "/" };
+        }
+        // for testing: if we run unit test, both trackers are set from the outside
+        if ( this.resourceProviderTracker == null ) {
+            this.resourceProviderTracker = new ResourceProviderTracker();
+            this.changeListenerWhiteboard = new ResourceChangeListenerWhiteboard();
+            this.changeListenerWhiteboard.activate(this.componentContext.getBundleContext(),
+                this.resourceProviderTracker, searchPath);
+            this.resourceProviderTracker.activate(this.componentContext.getBundleContext(), this.eventAdmin);
         }
 
         // namespace mangling
@@ -552,6 +562,8 @@ public class ResourceResolverFactoryActivator implements Runnable, EventHandler 
      */
     @Deactivate
     protected void deactivate() {
+        this.changeListenerWhiteboard.deactivate();
+        this.resourceProviderTracker.deactivate();
         this.componentContext = null;
         this.preconds.deactivate();
         this.resourceDecoratorTracker.close();
@@ -607,6 +619,7 @@ public class ResourceResolverFactoryActivator implements Runnable, EventHandler 
             local.factoryRegistration = localContext.getBundleContext().registerService(
                 ResourceResolverFactory.class.getName(), new ServiceFactory() {
 
+                    @Override
                     public Object getService(final Bundle bundle, final ServiceRegistration registration) {
                         final ResourceResolverFactoryImpl r = new ResourceResolverFactoryImpl(
                                 local.commonFactory, bundle,
@@ -614,6 +627,7 @@ public class ResourceResolverFactoryActivator implements Runnable, EventHandler 
                         return r;
                     }
 
+                    @Override
                     public void ungetService(final Bundle bundle, final ServiceRegistration registration, final Object service) {
                         // nothing to do
                     }
@@ -652,6 +666,7 @@ public class ResourceResolverFactoryActivator implements Runnable, EventHandler 
         this.resourceDecoratorTracker.unbindResourceDecorator(decorator, props);
     }
 
+    @Override
     public void run() {
         boolean isRunning = true;
         while ( isRunning ) {

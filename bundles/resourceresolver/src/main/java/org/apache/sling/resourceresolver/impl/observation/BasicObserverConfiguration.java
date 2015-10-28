@@ -27,11 +27,11 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.spi.resource.provider.ObserverConfiguration;
+import org.osgi.framework.ServiceReference;
 
 public class BasicObserverConfiguration implements ObserverConfiguration {
 
@@ -117,15 +117,15 @@ public class BasicObserverConfiguration implements ObserverConfiguration {
             return this;
         }
 
-        public Builder setFromProperties(Map<String, Object> properties) {
-            if (properties.containsKey(PATHS)) {
-                this.paths = new HashSet<String>(asList(toStringArray(properties.get(PATHS))));
+        public Builder setFromServiceReference(final ServiceReference ref) {
+            if (ref.getProperty(PATHS) != null ) {
+                this.paths = new HashSet<String>(asList(toStringArray(ref.getProperty(PATHS))));
             } else {
                 this.paths = Collections.emptySet();
             }
-            if (properties.containsKey(CHANGES)) {
+            if (ref.getProperty(CHANGES) != null ) {
                 this.changeTypes = EnumSet.noneOf(ChangeType.class);
-                for (String changeName : toStringArray(properties.get(CHANGES))) {
+                for (String changeName : toStringArray(ref.getProperty(CHANGES))) {
                     this.changeTypes.add(ChangeType.valueOf(changeName));
                 }
             } else {
