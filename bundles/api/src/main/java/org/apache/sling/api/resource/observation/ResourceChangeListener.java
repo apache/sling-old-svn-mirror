@@ -44,7 +44,7 @@ import aQute.bnd.annotation.ConsumerType;
  * By default a resource listener gets only local events which means events
  * caused by changes persisted on the same instance as this listener is registered.
  * If the resource listener is interested in external events, the implementation
- * should implement the {@link ExternalResourceListener} interface, but still register
+ * should implement the {@link ExternalResourceChangeListener} interface, but still register
  * the service as a {@code ResourceChangeListener} service.
  */
 @ConsumerType

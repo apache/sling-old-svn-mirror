@@ -24,7 +24,7 @@ import aQute.bnd.annotation.ConsumerType;
  * This is a marker interface to receive external events.
  */
 @ConsumerType
-public interface ExternalResourceListener {
+public interface ExternalResourceChangeListener {
 
     // marker interface
 }

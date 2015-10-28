@@ -55,4 +55,12 @@ public interface ObserverConfiguration {
      * @return Non empty set of types
      */
     @Nonnull Set<ResourceChange.ChangeType> getChangeTypes();
+
+    /**
+     * Checks whether a path matches one of the paths of this configuration
+     * but is not in the excluded paths list.
+     * @param path The path to check
+     * @return {@code true} if the path matches the configuration.
+     */
+    boolean matches(String path);
 }
