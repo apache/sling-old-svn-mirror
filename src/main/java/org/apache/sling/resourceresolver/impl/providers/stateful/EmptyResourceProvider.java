@@ -20,7 +20,6 @@ package org.apache.sling.resourceresolver.impl.providers.stateful;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.api.resource.PersistenceException;
@@ -33,6 +32,8 @@ import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 
 public class EmptyResourceProvider implements StatefulResourceProvider {
+
+    public static final StatefulResourceProvider SINGLETON = new EmptyResourceProvider();
 
     @Override
     public ResourceResolver getResourceResolver() {
@@ -53,18 +54,17 @@ public class EmptyResourceProvider implements StatefulResourceProvider {
     }
 
     @Override
-    public Resource getParent(Resource child, List<StatefulResourceProvider> parentProviders) {
+    public Resource getParent(Resource child) {
         return null;
     }
 
     @Override
-    public Resource getResource(String path, Resource parent, Map<String, String> parameters, boolean isResolve,
-            List<StatefulResourceProvider> parentProviders) {
+    public Resource getResource(String path, Resource parent, Map<String, String> parameters, boolean isResolve) {
         return null;
     }
 
     @Override
-    public Iterator<Resource> listChildren(Resource parent, List<StatefulResourceProvider> parentProviders) {
+    public Iterator<Resource> listChildren(Resource parent) {
         return null;
     }
 
@@ -79,13 +79,13 @@ public class EmptyResourceProvider implements StatefulResourceProvider {
     }
 
     @Override
-    public Resource create(String path, Map<String, Object> properties, List<StatefulResourceProvider> parentProviders)
+    public Resource create(String path, Map<String, Object> properties)
             throws PersistenceException {
         return null;
     }
 
     @Override
-    public void delete(Resource resource, List<StatefulResourceProvider> parentProviders) throws PersistenceException {
+    public void delete(Resource resource) throws PersistenceException {
     }
 
     @Override
@@ -127,13 +127,13 @@ public class EmptyResourceProvider implements StatefulResourceProvider {
     }
 
     @Override
-    public boolean copy(String srcAbsPath, String destAbsPath, List<StatefulResourceProvider> parentProviders)
+    public boolean copy(String srcAbsPath, String destAbsPath)
             throws PersistenceException {
         return false;
     }
 
     @Override
-    public boolean move(String srcAbsPath, String destAbsPath, List<StatefulResourceProvider> parentProviders)
+    public boolean move(String srcAbsPath, String destAbsPath)
             throws PersistenceException {
         return false;
     }

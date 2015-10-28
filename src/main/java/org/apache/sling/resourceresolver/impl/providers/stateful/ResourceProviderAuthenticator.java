@@ -62,16 +62,17 @@ public class ResourceProviderAuthenticator {
         this.securityTracker = securityTracker;
     }
 
-    public void authenticateAll(List<ResourceProviderHandler> handlers) throws LoginException {
+    public void authenticateAll(List<ResourceProviderHandler> handlers, CombinedResourceProvider combinedProvider) throws LoginException {
         for (ResourceProviderHandler h : handlers) {
-            authenticate(h);
+            authenticate(h, combinedProvider);
         }
     }
 
-    private StatefulResourceProvider authenticate(ResourceProviderHandler handler) throws LoginException {
+    private StatefulResourceProvider authenticate(final ResourceProviderHandler handler,
+            CombinedResourceProvider combinedProvider) throws LoginException {
         StatefulResourceProvider rp = stateful.get(handler);
         if (rp == null) {
-            rp = createStateful(handler);
+            rp = createStateful(handler, combinedProvider);
             if (rp == null) {
                 return null;
             }
@@ -86,9 +87,9 @@ public class ResourceProviderAuthenticator {
         return rp;
     }
 
-    public StatefulResourceProvider getStateful(ResourceProviderHandler handler) {
+    public StatefulResourceProvider getStateful(ResourceProviderHandler handler, CombinedResourceProvider combinedProvider) {
         try {
-            return authenticate(handler);
+            return authenticate(handler, combinedProvider);
         } catch (LoginException e) {
             throw new SlingException("Can't authenticate provider", e);
         }
@@ -102,22 +103,24 @@ public class ResourceProviderAuthenticator {
         return authenticatedModifiable;
     }
 
-    public Collection<StatefulResourceProvider> getAll(List<ResourceProviderHandler> handlers) {
+    public Collection<StatefulResourceProvider> getAll(List<ResourceProviderHandler> handlers,
+            CombinedResourceProvider combinedProvider) {
         List<StatefulResourceProvider> result = new ArrayList<StatefulResourceProvider>(handlers.size());
         for (ResourceProviderHandler h : handlers) {
-            result.add(getStateful(h));
+            result.add(getStateful(h, combinedProvider));
         }
         return result;
     }
 
-    private StatefulResourceProvider createStateful(ResourceProviderHandler handler) throws LoginException {
+    private StatefulResourceProvider createStateful(ResourceProviderHandler handler,
+            CombinedResourceProvider combinedProvider) throws LoginException {
         ResourceProvider<?> rp = handler.getResourceProvider();
         if (rp == null) {
             logger.warn("Empty resource provider for {}", handler);
             return null;
         }
         StatefulResourceProvider authenticated;
-        authenticated = new AuthenticatedResourceProvider(rp, handler.getInfo(), resolver, authInfo);
+        authenticated = new AuthenticatedResourceProvider(rp, handler.getInfo(), resolver, authInfo, combinedProvider);
         if (handler.getInfo().getUseResourceAccessSecurity()) {
             authenticated = new SecureResourceProvider(authenticated, securityTracker);
         }

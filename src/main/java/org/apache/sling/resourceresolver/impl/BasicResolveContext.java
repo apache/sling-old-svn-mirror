@@ -18,31 +18,47 @@
  */
 package org.apache.sling.resourceresolver.impl;
 
+import org.apache.sling.api.SlingException;
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
+import org.apache.sling.resourceresolver.impl.providers.stateful.CombinedResourceProvider;
+import org.apache.sling.resourceresolver.impl.providers.stateful.StatefulResourceProvider;
 import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 
+// TODO - we should move this to the providers.stateful package
 public class BasicResolveContext<T> implements ResolverContext<T> {
+
+    private final String parentPath;
 
     private final ResourceResolver resourceResolver;
 
     private final T providerState;
 
-    private final ResolverContext<Object> parentResolveContext;
+    private final CombinedResourceProvider combinedProvider;
 
-    private final ResourceProvider<Object> parentResourceProvider;
+    private volatile boolean parentLookupDone = false;
+
+    private volatile ResourceProvider parentProvider;
+
+    private volatile ResolverContext<Object> parentResolveContext;
 
     public BasicResolveContext(ResourceResolver resourceResolver,
-            T providerState, ResourceProvider<Object> parentResourceProvider, ResolverContext<Object> parentResolveContext) {
+            T providerState,
+            String parentPath,
+            CombinedResourceProvider combinedProvider) {
         this.resourceResolver = resourceResolver;
+        this.parentPath = parentPath;
         this.providerState = providerState;
-        this.parentResolveContext = parentResolveContext;
-        this.parentResourceProvider = parentResourceProvider;
+        this.combinedProvider = combinedProvider;
     }
 
     public BasicResolveContext(ResourceResolver resourceResolver,
-            T providerState) {
-        this(resourceResolver, providerState, null, null);
+            T providerState, String parentPath) {
+        this(resourceResolver, providerState, parentPath, null);
     }
 
     @Override
@@ -57,12 +73,44 @@ public class BasicResolveContext<T> implements ResolverContext<T> {
 
     @Override
     public ResolverContext<?> getParentResolveContext() {
+        this.getParentResourceProvider();
         return parentResolveContext;
     }
 
     @Override
     public ResourceProvider<?> getParentResourceProvider() {
-        return parentResourceProvider;
+        if ( ! parentLookupDone ) {
+            synchronized ( this ) {
+                if ( this.parentPath != null ) {
+                    final ResourceProviderStorage storage = this.combinedProvider.getResourceProviderStorage();
+                    String path = this.parentPath;
+                    while ( path != null && this.parentProvider != null ) {
+                        final ResourceProviderHandler handler = storage.getTree().getBestMatchingNode(this.parentPath);
+                        if ( handler != null ) {
+                            try {
+                                final StatefulResourceProvider srp = this.combinedProvider.getStatefulResourceProvider(handler);
+                                if ( srp != null ) {
+                                    this.parentProvider = srp.getResourceProvider();
+                                    this.parentResolveContext = srp.getContext();
+                                }
+                            } catch ( final LoginException se) {
+                                // skip this, try next
+                                this.parentProvider = null;
+                            } catch ( final SlingException se) {
+                                // TODO we should rather catch LoginException from getStatefulResourceProvider
+                            }
+                            if ( this.parentProvider == null ) {
+                                path = ResourceUtil.getParent(path);
+                            }
+                        } else {
+                            path = null;
+                        }
+                    }
+                }
+                parentLookupDone = true;
+            }
+        }
+        return this.parentProvider;
     }
 
 }

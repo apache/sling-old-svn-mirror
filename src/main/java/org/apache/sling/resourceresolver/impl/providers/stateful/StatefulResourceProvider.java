@@ -20,7 +20,6 @@ package org.apache.sling.resourceresolver.impl.providers.stateful;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import javax.annotation.CheckForNull;
@@ -68,21 +67,20 @@ public interface StatefulResourceProvider {
      * @see ResourceProvider#getParent(org.apache.sling.spi.resource.provider.ResolveContext, Resource)
      */
     @CheckForNull
-    Resource getParent(final @Nonnull Resource child, final List<StatefulResourceProvider> parentProviders);
+    Resource getParent(final @Nonnull Resource child);
 
     /**
      * @see ResourceProvider#getResource(org.apache.sling.spi.resource.provider.ResolveContext, String, Resource)
      */
     @CheckForNull
     Resource getResource(@Nonnull final String path, @CheckForNull final Resource parent,
-            final Map<String, String> parameters, final boolean isResolve,
-            final List<StatefulResourceProvider> parentProviders);
+            final Map<String, String> parameters, final boolean isResolve);
 
     /**
      * @see ResourceProvider#listChildren(org.apache.sling.spi.resource.provider.ResolveContext, Resource)
      */
     @CheckForNull
-    Iterator<Resource> listChildren(final @Nonnull Resource parent, final List<StatefulResourceProvider> parentProviders);
+    Iterator<Resource> listChildren(final @Nonnull Resource parent);
 
     /**
      * @see ResourceProvider#getAttributeNames(org.apache.sling.spi.resource.provider.ResolveContext)
@@ -97,12 +95,12 @@ public interface StatefulResourceProvider {
     /**
      * @see ResourceProvider#create(org.apache.sling.spi.resource.provider.ResolveContext, String, Map)
      */
-    Resource create(final String path, final Map<String, Object> properties, final List<StatefulResourceProvider> parentProviders) throws PersistenceException;
+    Resource create(final String path, final Map<String, Object> properties) throws PersistenceException;
 
     /**
      * @see ResourceProvider#delete(org.apache.sling.spi.resource.provider.ResolveContext, Resource)
      */
-    void delete(final @Nonnull Resource resource, final List<StatefulResourceProvider> parentProviders) throws PersistenceException;
+    void delete(final @Nonnull Resource resource) throws PersistenceException;
 
     /**
      * @see ResourceProvider#revert(org.apache.sling.spi.resource.provider.ResolveContext)
@@ -152,12 +150,12 @@ public interface StatefulResourceProvider {
     /**
      * @see ResourceProvider#copy(org.apache.sling.spi.resource.provider.ResolveContext, String, String)
      */
-    boolean copy(final String srcAbsPath, final String destAbsPath, final List<StatefulResourceProvider> parentProviders) throws PersistenceException;
+    boolean copy(final String srcAbsPath, final String destAbsPath) throws PersistenceException;
 
     /**
      * @see ResourceProvider#move(org.apache.sling.spi.resource.provider.ResolveContext, String, String)
      */
-    boolean move(final String srcAbsPath, final String destAbsPath, final List<StatefulResourceProvider> parentProviders) throws PersistenceException;
+    boolean move(final String srcAbsPath, final String destAbsPath) throws PersistenceException;
 
     /**
      * @return Wrapped ResourceProvider
