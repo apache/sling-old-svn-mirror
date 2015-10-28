@@ -143,8 +143,9 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
     private CombinedResourceProvider createProvider(ResourceProviderStorage storage) throws LoginException {
         final ResourceProviderAuthenticator authenticator = new ResourceProviderAuthenticator(this, authenticationInfo, this.factory.getResourceAccessSecurityTracker());
-        authenticator.authenticateAll(storage.getAuthRequiredHandlers());
-        return new CombinedResourceProvider(storage, this, authenticator);
+        final CombinedResourceProvider provider = new CombinedResourceProvider(storage, this, authenticator);
+        authenticator.authenticateAll(storage.getAuthRequiredHandlers(), provider);
+        return provider;
     }
 
     /**

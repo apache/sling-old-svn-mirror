@@ -64,8 +64,6 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventAdmin;
 
 /**
  * This tests the ResourceResolver using mocks. The Unit test is in addition to
@@ -215,14 +213,9 @@ public class MockedResourceResolverImplTest {
         Mockito.when(ref.getProperty(Mockito.eq(ResourceProvider.PROPERTY_ADAPTABLE))).thenReturn(true);
 
         ResourceProviderInfo info = new ResourceProviderInfo(ref);
-        return new ResourceProviderHandler(bc, info, new EventAdmin() {
-            @Override
-            public void sendEvent(Event event) {
-            }
-            @Override
-            public void postEvent(Event event) {
-            }
-        });
+        final ResourceProviderHandler handler = new ResourceProviderHandler(bc, info);
+        handler.activate();
+        return handler;
     }
 
     @SuppressWarnings("unchecked")
