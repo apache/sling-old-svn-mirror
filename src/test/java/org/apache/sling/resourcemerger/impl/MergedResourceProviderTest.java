@@ -36,7 +36,6 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.resourcemerger.impl.picker.MergingResourcePicker;
-import org.apache.sling.resourceresolver.impl.BasicResolveContext;
 import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.testing.resourceresolver.MockHelper;
@@ -88,7 +87,7 @@ public class MergedResourceProviderTest {
                                         .commit();
 
         this.provider = new CRUDMergingResourceProvider("/merged", new MergingResourcePicker(), false);
-        this.ctx = new BasicResolveContext(resolver, null, "/");
+        this.ctx = new BasicResolveContext(resolver);
     }
 
     @Test public void testHideChildren() {
