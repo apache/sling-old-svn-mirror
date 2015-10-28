@@ -19,12 +19,16 @@
 package org.apache.sling.resourceresolver.impl.observation;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.sling.api.resource.observation.ExternalResourceListener;
+import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker.ObservationReporterGenerator;
+import org.apache.sling.resourceresolver.impl.providers.tree.Path;
+import org.apache.sling.resourceresolver.impl.providers.tree.PathSet;
 import org.apache.sling.spi.resource.provider.ObservationReporter;
 import org.apache.sling.spi.resource.provider.ObserverConfiguration;
 import org.osgi.framework.BundleContext;
@@ -35,13 +39,9 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 /**
  * Tracker component for the resource change listeners.
  */
-public class ResourceChangeListenerWhiteboard {
-
-    private static final ObservationReporter EMPTY_REPORTER = new BasicObservationReporter(Collections.<ResourceChangeListener, ObserverConfiguration> emptyMap());
+public class ResourceChangeListenerWhiteboard implements ResourceProviderTracker.ObservationReporterGenerator {
 
     private final Map<ServiceReference, ResourceChangeListenerInfo> listeners = new ConcurrentHashMap<ServiceReference, ResourceChangeListenerInfo>();
-
-    private volatile String[] searchPaths;
 
     private volatile ResourceProviderTracker resourceProviderTracker;
 
@@ -50,9 +50,8 @@ public class ResourceChangeListenerWhiteboard {
     public void activate(final BundleContext bundleContext,
             final ResourceProviderTracker resourceProviderTracker,
             final String[] searchPaths) {
-        this.searchPaths = searchPaths;
         this.resourceProviderTracker = resourceProviderTracker;
-        this.resourceProviderTracker.setObservationReporter(EMPTY_REPORTER);
+        this.resourceProviderTracker.setObservationReporterGenerator(this);
         this.tracker = new ServiceTracker(bundleContext,
                 ResourceChangeListener.class.getName(),
                 new ServiceTrackerCustomizer() {
@@ -78,7 +77,7 @@ public class ResourceChangeListenerWhiteboard {
                 if ( info.isValid() ) {
                     final ResourceChangeListener listener = (ResourceChangeListener) bundleContext.getService(reference);
                     if ( listener != null ) {
-                        info.setExternal(listener instanceof ExternalResourceListener);
+                        info.setListener(listener);
                         listeners.put(reference, info);
                         updateProviderTracker();
                     }
@@ -94,13 +93,47 @@ public class ResourceChangeListenerWhiteboard {
             this.tracker.close();
             this.tracker = null;
         }
-        this.searchPaths = null;
-        this.resourceProviderTracker.setObservationReporter(EMPTY_REPORTER);
+        this.resourceProviderTracker.setObservationReporterGenerator(NOP_GENERATOR);
         this.resourceProviderTracker = null;
     }
 
     private void updateProviderTracker() {
-        // TODO
-        this.resourceProviderTracker.setObservationReporter(EMPTY_REPORTER);
+        this.resourceProviderTracker.setObservationReporterGenerator(this);
     }
+
+    @Override
+    public ObservationReporter create(final Path path, final PathSet excludes) {
+        return new BasicObservationReporter(this.listeners.values(), path, excludes);
+    }
+
+    @Override
+    public ObservationReporter createProviderReporter() {
+        return new BasicObservationReporter(this.listeners.values());
+    }
+
+    private static final ObservationReporter EMPTY_REPORTER = new ObservationReporter() {
+
+        @Override
+        public void reportChanges(Iterable<ResourceChange> changes, boolean distribute) {
+            // ignore
+        }
+
+        @Override
+        public List<ObserverConfiguration> getObserverConfigurations() {
+            return Collections.emptyList();
+        }
+    };
+
+    private static final ObservationReporterGenerator NOP_GENERATOR = new ObservationReporterGenerator() {
+
+        @Override
+        public ObservationReporter create(Path path, PathSet excludes) {
+            return EMPTY_REPORTER;
+        }
+
+        @Override
+        public ObservationReporter createProviderReporter() {
+            return EMPTY_REPORTER;
+        }
+    };
 }

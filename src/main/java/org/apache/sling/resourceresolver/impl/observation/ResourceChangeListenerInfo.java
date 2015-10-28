@@ -27,18 +27,25 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
+import org.apache.sling.api.resource.observation.ResourceChangeListener;
+import org.apache.sling.resourceresolver.impl.providers.tree.PathSet;
 import org.osgi.framework.ServiceReference;
 
 public class ResourceChangeListenerInfo {
 
-    private final Set<String> paths;
+    private final PathSet paths;
 
-    private final Set<ChangeType> changeTypes;
+    private final Set<ChangeType> resourceChangeTypes;
+
+    private final Set<ChangeType> providerChangeTypes;
 
     private final boolean valid;
 
     private volatile boolean external = false;
+
+    private volatile ResourceChangeListener listener;
 
     public ResourceChangeListenerInfo(final ServiceReference ref, final String[] searchPaths) {
         boolean configValid = true;
@@ -80,12 +87,12 @@ public class ResourceChangeListenerInfo {
                 }
             }
         }
-        this.paths = Collections.unmodifiableSet(pathsSet);
+        this.paths = new PathSet(pathsSet);
         final Set<ChangeType> typesSet = new HashSet<ChangeType>();
         if (ref.getProperty(CHANGES) != null ) {
             for (String changeName : toStringArray(ref.getProperty(CHANGES))) {
                 try {
-                    this.changeTypes.add(ChangeType.valueOf(changeName));
+                    typesSet.add(ChangeType.valueOf(changeName));
                 } catch ( final IllegalArgumentException iae) {
                     configValid = false;
                 }
@@ -96,7 +103,27 @@ public class ResourceChangeListenerInfo {
             typesSet.add(ChangeType.CHANGED);
             typesSet.add(ChangeType.REMOVED);
         }
-        this.changeTypes = Collections.unmodifiableSet(typesSet);
+        final Set<ChangeType> rts = new HashSet<ChangeType>();
+        if ( typesSet.contains(ChangeType.ADDED)) {
+            rts.add(ChangeType.ADDED);
+        }
+        if ( typesSet.contains(ChangeType.CHANGED)) {
+            rts.add(ChangeType.CHANGED);
+        }
+        if ( typesSet.contains(ChangeType.REMOVED)) {
+            rts.add(ChangeType.REMOVED);
+        }
+        this.resourceChangeTypes = Collections.unmodifiableSet(rts);
+
+        final Set<ChangeType> pts = new HashSet<ChangeType>();
+        if ( typesSet.contains(ChangeType.PROVIDER_ADDED)) {
+            pts.add(ChangeType.PROVIDER_ADDED);
+        }
+        if ( typesSet.contains(ChangeType.PROVIDER_REMOVED)) {
+            pts.add(ChangeType.PROVIDER_REMOVED);
+        }
+        this.providerChangeTypes = Collections.unmodifiableSet(pts);
+
         this.valid = configValid;
     }
 
@@ -104,19 +131,28 @@ public class ResourceChangeListenerInfo {
         return this.valid;
     }
 
-    public Set<ChangeType> getChangeTypes() {
-        return this.changeTypes;
+    public Set<ChangeType> getResourceChangeTypes() {
+        return this.resourceChangeTypes;
     }
 
-    public Set<String> getPaths() {
+    public Set<ChangeType> getProviderChangeTypes() {
+        return this.providerChangeTypes;
+    }
+
+    public PathSet getPaths() {
         return this.paths;
-    }
-
-    public void setExternal(final boolean flag) {
-        this.external = flag;
     }
 
     public boolean isExternal() {
         return this.external;
+    }
+
+    public ResourceChangeListener getListener() {
+        return listener;
+    }
+
+    public void setListener(final ResourceChangeListener listener) {
+        this.listener = listener;
+        this.external = listener instanceof ExternalResourceChangeListener;
     }
 }

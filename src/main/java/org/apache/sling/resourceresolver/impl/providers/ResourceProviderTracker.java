@@ -38,6 +38,8 @@ import org.apache.sling.api.resource.runtime.dto.ResourceProviderDTO;
 import org.apache.sling.api.resource.runtime.dto.ResourceProviderFailureDTO;
 import org.apache.sling.api.resource.runtime.dto.RuntimeDTO;
 import org.apache.sling.resourceresolver.impl.legacy.LegacyResourceProviderWhiteboard;
+import org.apache.sling.resourceresolver.impl.providers.tree.Path;
+import org.apache.sling.resourceresolver.impl.providers.tree.PathSet;
 import org.apache.sling.spi.resource.provider.ObservationReporter;
 import org.apache.sling.spi.resource.provider.ProviderContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
@@ -56,6 +58,13 @@ import org.slf4j.LoggerFactory;
  */
 public class ResourceProviderTracker {
 
+    public interface ObservationReporterGenerator {
+
+        ObservationReporter create(final Path path, final PathSet excludes);
+
+        ObservationReporter createProviderReporter();
+    }
+
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final Map<ServiceReference, ResourceProviderInfo> infos = new ConcurrentHashMap<ServiceReference, ResourceProviderInfo>();
@@ -70,9 +79,11 @@ public class ResourceProviderTracker {
 
     private volatile EventAdmin eventAdmin;
 
-    private volatile ObservationReporter reporter;
+    private volatile ObservationReporterGenerator reporterGenerator;
 
     private volatile ResourceProviderStorage storage;
+
+    private volatile ObservationReporter providerReporter;
 
     public void activate(final BundleContext bundleContext, final EventAdmin eventAdmin) {
         this.bundleContext = bundleContext;
@@ -117,8 +128,9 @@ public class ResourceProviderTracker {
         this.invalidProviders.clear();
     }
 
-    public void setObservationReporter(final ObservationReporter report) {
-        this.reporter = report;
+    public void setObservationReporterGenerator(final ObservationReporterGenerator generator) {
+        this.reporterGenerator = generator;
+        this.providerReporter = generator.createProviderReporter();
     }
 
     /**
@@ -239,9 +251,14 @@ public class ResourceProviderTracker {
         eventAdmin.postEvent(new Event(topic, eventProps));
     }
 
+    /**
+     * Post a change event for a resource provider change
+     * @param type The change type
+     * @param info The resource provider
+     */
     private void postResourceProviderChange(ChangeType type, final ResourceProviderInfo info) {
         ResourceChange change = new ResourceChange(type, info.getPath(), false, null, null, null);
-        this.reporter.reportChanges(Collections.singletonList(change), false);
+        this.providerReporter.reportChanges(Collections.singletonList(change), false);
     }
 
     /**
@@ -325,13 +342,12 @@ public class ResourceProviderTracker {
 
     private ProviderContext createProviderContext(final ResourceProviderHandler handler) {
         final Set<String> excludedPaths = new HashSet<String>();
-        String path = handler.getInfo().getPath();
-        for (String providerPath : handlers.keySet()) {
-            if (providerPath.startsWith(path)) {
-                excludedPaths.add(providerPath);
+        final Path handlerPath = new Path(handler.getPath());
+        for(final String otherPath : handlers.keySet()) {
+            if ( !handler.getPath().equals(otherPath) && handlerPath.matches(otherPath) ) {
+                excludedPaths.add(otherPath);
             }
         }
-        excludedPaths.remove(path);
-        return new ProviderContextImpl(reporter, excludedPaths);
+        return new ProviderContextImpl(reporterGenerator.create(handlerPath, new PathSet(excludedPaths)), excludedPaths);
     }
 }

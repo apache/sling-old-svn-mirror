@@ -37,7 +37,7 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.api.resource.observation.ExternalResourceListener;
+import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
 @Service(ResourceChangeListener.class)
 @Properties({ @Property(name = ResourceChangeListener.CHANGES, value = { "ADDED", "CHANGED", "REMOVED" }),
         @Property(name = ResourceChangeListener.PATHS, value = ".") })
-public class OsgiObservationBridge implements ResourceChangeListener, ExternalResourceListener {
+public class OsgiObservationBridge implements ResourceChangeListener, ExternalResourceChangeListener {
 
     private static final Logger logger = LoggerFactory.getLogger(OsgiObservationBridge.class);
 
