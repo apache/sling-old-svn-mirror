@@ -532,7 +532,7 @@ public class SlingAuthenticator implements Authenticator,
             final Collection<AbstractAuthenticationHandlerHolder> holderList = holdersArray[m];
             if ( holderList != null ) {
                 for (AbstractAuthenticationHandlerHolder holder : holderList) {
-                    if (path.startsWith(holder.path)) {
+                    if (holder.isWithin(path)) {
                         log.debug("login: requesting authentication using handler: {}",
                             holder);
 
@@ -592,7 +592,7 @@ public class SlingAuthenticator implements Authenticator,
             final Collection<AbstractAuthenticationHandlerHolder> holderSet = holdersArray[m];
             if (holderSet != null) {
                 for (AbstractAuthenticationHandlerHolder holder : holderSet) {
-                    if (path.startsWith(holder.path)) {
+                    if (holder.isWithin(path)) {
                         log.debug("logout: dropping authentication using handler: {}",
                             holder);
 
@@ -709,7 +709,7 @@ public class SlingAuthenticator implements Authenticator,
             final Collection<AbstractAuthenticationHandlerHolder> local = localArray[m];
             if (local != null) {
                 for (AbstractAuthenticationHandlerHolder holder : local) {
-                    if (path.startsWith(holder.path)) {
+                    if (holder.isWithin(path)) {
                         final AuthenticationInfo authInfo = holder.extractCredentials(
                             request, response);
 
@@ -903,7 +903,7 @@ public class SlingAuthenticator implements Authenticator,
             final Collection<AuthenticationRequirementHolder> holders = holderSetArray[m];
             if (holders != null) {
                 for (AuthenticationRequirementHolder holder : holders) {
-                    if (path.startsWith(holder.path)) {
+                    if (holder.isWithin(path)) {
                         return !holder.requiresAuthentication();
                     }
                 }

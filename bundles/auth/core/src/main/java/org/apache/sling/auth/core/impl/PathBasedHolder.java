@@ -182,6 +182,28 @@ public abstract class PathBasedHolder implements Comparable<PathBasedHolder> {
 
         return other.serviceReference.compareTo(serviceReference);
     }
+    
+    
+    /**
+     * returns true if the provided path is concerned by this Handler.
+     * @param otherPath a path
+     * @return true if this handler is concerned by the path
+     */
+    public boolean isWithin(String otherPath){
+    	if( otherPath.startsWith(this.path)){
+    		
+    		if(this.path.endsWith("/")){
+    			return true;
+    		}
+    		//check for same path or children
+    		String pathSuffix= otherPath.substring(this.path.length(), otherPath.length());
+    		return(pathSuffix.isEmpty() || pathSuffix.startsWith("/") || pathSuffix.startsWith("."));
+    		
+    		
+    	}
+    	return false;
+    	
+    }
 
     /**
      * Returns the hash code of the full path.
