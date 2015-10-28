@@ -168,7 +168,7 @@ public class MapEntries implements EventHandler {
         this.vanityBloomFilterFile = null;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "deprecation" })
     public MapEntries(final MapConfigurationProvider factory, final BundleContext bundleContext, final EventAdmin eventAdmin)
                     throws LoginException, IOException {
         this.resolver = factory.getAdministrativeResourceResolver(null);
@@ -854,6 +854,7 @@ public class MapEntries implements EventHandler {
     /**
      * get the vanity paths  Search for all nodes having a specific vanityPath
      */
+    @SuppressWarnings("deprecation")
     private Map<String, List<MapEntry>> getVanityPaths(String vanityPath) {
 
         Map<String, List<MapEntry>> entryMap = new HashMap<String, List<MapEntry>>();    
