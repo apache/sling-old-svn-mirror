@@ -129,8 +129,16 @@ public class ResourceProviderTracker {
     }
 
     public void setObservationReporterGenerator(final ObservationReporterGenerator generator) {
-        this.reporterGenerator = generator;
         this.providerReporter = generator.createProviderReporter();
+        synchronized ( this.handlers ) {
+            this.reporterGenerator = generator;
+            for (List<ResourceProviderHandler> list : handlers.values()) {
+                final ResourceProviderHandler h  = list.get(0);
+                if (h != null) {
+                    h.update();
+                }
+            }
+        }
     }
 
     /**
@@ -228,6 +236,23 @@ public class ResourceProviderTracker {
     }
 
     /**
+     * Activate a resource provider
+     * @param handler The provider handler
+     */
+    private boolean activate(final ResourceProviderHandler handler) {
+        if ( !handler.activate(createProviderContext(handler)) ) {
+            logger.warn("Activating resource provider {} failed", handler.getInfo());
+            this.invalidProviders.put(handler.getInfo(), FailureReason.service_not_gettable);
+
+            return false;
+        }
+        postOSGiEvent(SlingConstants.TOPIC_RESOURCE_PROVIDER_ADDED, handler.getInfo());
+        postResourceProviderChange(ChangeType.PROVIDER_ADDED, handler.getInfo());
+        logger.debug("Activated resource provider {}", handler.getInfo());
+        return true;
+    }
+
+    /**
      * Deactivate a resource provider
      * @param handler The provider handler
      */
@@ -259,23 +284,6 @@ public class ResourceProviderTracker {
     private void postResourceProviderChange(ChangeType type, final ResourceProviderInfo info) {
         ResourceChange change = new ResourceChange(type, info.getPath(), false, null, null, null);
         this.providerReporter.reportChanges(Collections.singletonList(change), false);
-    }
-
-    /**
-     * Activate a resource provider
-     * @param handler The provider handler
-     */
-    private boolean activate(final ResourceProviderHandler handler) {
-        if ( !handler.activate() ) {
-            logger.warn("Activating resource provider {} failed", handler.getInfo());
-            this.invalidProviders.put(handler.getInfo(), FailureReason.service_not_gettable);
-
-            return false;
-        }
-        postOSGiEvent(SlingConstants.TOPIC_RESOURCE_PROVIDER_ADDED, handler.getInfo());
-        postResourceProviderChange(ChangeType.PROVIDER_ADDED, handler.getInfo());
-        logger.debug("Activated resource provider {}", handler.getInfo());
-        return true;
     }
 
     public void fill(final RuntimeDTO dto) {

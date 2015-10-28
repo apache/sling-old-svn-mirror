@@ -219,7 +219,7 @@ public class MockedResourceResolverImplTest {
 
         ResourceProviderInfo info = new ResourceProviderInfo(ref);
         final ResourceProviderHandler handler = new ResourceProviderHandler(bc, info);
-        handler.activate();
+        handler.activate(null);
         return handler;
     }
 
