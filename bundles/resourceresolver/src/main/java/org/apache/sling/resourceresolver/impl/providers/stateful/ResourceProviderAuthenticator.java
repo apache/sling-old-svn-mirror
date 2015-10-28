@@ -63,9 +63,26 @@ public class ResourceProviderAuthenticator {
         this.securityTracker = securityTracker;
     }
 
-    public void authenticateAll(List<ResourceProviderHandler> handlers, CombinedResourceProvider combinedProvider) throws LoginException {
-        for (ResourceProviderHandler h : handlers) {
-            authenticate(h, combinedProvider);
+    /**
+     * Authenticate all handlers
+     * @param handlers
+     * @param combinedProvider
+     * @throws LoginException
+     */
+    public void authenticateAll(final List<ResourceProviderHandler> handlers,
+                                final CombinedResourceProvider combinedProvider)
+    throws LoginException {
+        final List<StatefulResourceProvider> successfulHandlers = new ArrayList<StatefulResourceProvider>();
+        for (final ResourceProviderHandler h : handlers) {
+            try {
+                successfulHandlers.add(authenticate(h, combinedProvider));
+            } catch ( final LoginException le ) {
+                // logout from all successful handlers
+                for(final StatefulResourceProvider handler : successfulHandlers) {
+                    handler.logout();
+                }
+                throw le;
+            }
         }
     }
 

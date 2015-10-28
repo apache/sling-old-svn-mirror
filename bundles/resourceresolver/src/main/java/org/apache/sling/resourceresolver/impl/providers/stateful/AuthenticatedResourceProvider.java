@@ -34,7 +34,6 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.query.Query;
 import org.apache.sling.api.resource.query.QueryInstructions;
 import org.apache.sling.api.resource.runtime.dto.AuthType;
-import org.apache.sling.resourceresolver.impl.BasicResolveContext;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
 import org.apache.sling.spi.resource.provider.JCRQueryProvider;
 import org.apache.sling.spi.resource.provider.QueryProvider;
