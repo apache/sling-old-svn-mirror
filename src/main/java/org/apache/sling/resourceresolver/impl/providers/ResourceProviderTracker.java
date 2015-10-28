@@ -30,24 +30,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
-import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.api.resource.runtime.dto.FailureReason;
 import org.apache.sling.api.resource.runtime.dto.ResourceProviderDTO;
 import org.apache.sling.api.resource.runtime.dto.ResourceProviderFailureDTO;
 import org.apache.sling.api.resource.runtime.dto.RuntimeDTO;
 import org.apache.sling.resourceresolver.impl.legacy.LegacyResourceProviderWhiteboard;
-import org.apache.sling.resourceresolver.impl.observation.BasicObservationReporter;
-import org.apache.sling.resourceresolver.impl.observation.ResourceChangeListenerWhiteboard;
 import org.apache.sling.spi.resource.provider.ObservationReporter;
-import org.apache.sling.spi.resource.provider.ObserverConfiguration;
 import org.apache.sling.spi.resource.provider.ProviderContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
@@ -63,11 +54,7 @@ import org.slf4j.LoggerFactory;
 /**
  * This service keeps track of all resource providers.
  */
-@Component
-@Service(value = ResourceProviderTracker.class)
 public class ResourceProviderTracker {
-
-    private static final ObservationReporter EMPTY_REPORTER = new BasicObservationReporter(Collections.<ResourceChangeListener, ObserverConfiguration> emptyMap());
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -81,19 +68,15 @@ public class ResourceProviderTracker {
 
     private final Map<ResourceProviderInfo, FailureReason> invalidProviders = new ConcurrentHashMap<ResourceProviderInfo, FailureReason>();
 
-    @Reference
-    private EventAdmin eventAdmin;
+    private volatile EventAdmin eventAdmin;
 
-    private ObservationReporter reporter = EMPTY_REPORTER;
-
-    @Reference
-    private ResourceChangeListenerWhiteboard resourceChangeListeners;
+    private volatile ObservationReporter reporter;
 
     private volatile ResourceProviderStorage storage;
 
-    @Activate
-    protected void activate(final BundleContext bundleContext) {
+    public void activate(final BundleContext bundleContext, final EventAdmin eventAdmin) {
         this.bundleContext = bundleContext;
+        this.eventAdmin = eventAdmin;
         this.tracker = new ServiceTracker(bundleContext,
                 ResourceProvider.class.getName(),
                 new ServiceTrackerCustomizer() {
@@ -124,8 +107,7 @@ public class ResourceProviderTracker {
         this.tracker.open();
     }
 
-    @Deactivate
-    protected void deactivate() {
+    public void deactivate() {
         if ( this.tracker != null ) {
             this.tracker.close();
             this.tracker = null;
@@ -133,6 +115,10 @@ public class ResourceProviderTracker {
         this.infos.clear();
         this.handlers.clear();
         this.invalidProviders.clear();
+    }
+
+    public void setObservationReporter(final ObservationReporter report) {
+        this.reporter = report;
     }
 
     /**
