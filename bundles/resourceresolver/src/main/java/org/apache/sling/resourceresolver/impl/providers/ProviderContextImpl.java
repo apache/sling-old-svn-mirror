@@ -28,11 +28,11 @@ import org.apache.sling.spi.resource.provider.ProviderContext;
  */
 public class ProviderContextImpl implements ProviderContext {
 
-    private final ObservationReporter observationReporter;
+    private volatile ObservationReporter observationReporter;
 
-    private final Set<String> excludedPaths;
+    private volatile Set<String> excludedPaths;
 
-    public ProviderContextImpl(final ObservationReporter observationReporter, final Set<String> excludedPaths) {
+    public void update(final ObservationReporter observationReporter, final Set<String> excludedPaths) {
         this.observationReporter = observationReporter;
         this.excludedPaths = excludedPaths;
     }

@@ -19,7 +19,6 @@
 package org.apache.sling.resourceresolver.impl.providers;
 
 import org.apache.sling.resourceresolver.impl.providers.tree.Pathable;
-import org.apache.sling.spi.resource.provider.ProviderContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
 
@@ -34,7 +33,7 @@ public class ResourceProviderHandler implements Comparable<ResourceProviderHandl
 
     private volatile ResourceProvider<?> provider;
 
-    private volatile ProviderContext context;
+    private final ProviderContextImpl context = new ProviderContextImpl();
 
     public ResourceProviderHandler(final BundleContext bc, final ResourceProviderInfo info) {
         this.info = info;
@@ -45,10 +44,9 @@ public class ResourceProviderHandler implements Comparable<ResourceProviderHandl
         return this.info;
     }
 
-    public boolean activate(final ProviderContext context) {
+    public boolean activate() {
         this.provider = (ResourceProvider<?>) this.bundleContext.getService(this.info.getServiceReference());
         if ( this.provider != null ) {
-            this.context = context;
             this.provider.activate(context);
         }
         return this.provider != null;
@@ -62,6 +60,7 @@ public class ResourceProviderHandler implements Comparable<ResourceProviderHandl
         if ( this.provider != null ) {
             this.provider.deactivate(this.context);
             this.provider = null;
+            this.context.update(null, null);
             this.bundleContext.ungetService(this.info.getServiceReference());
         }
     }
@@ -78,8 +77,11 @@ public class ResourceProviderHandler implements Comparable<ResourceProviderHandl
 
     public void update() {
         if ( this.provider != null ) {
-            // TODO - context needs to be updated
             this.provider.update(this.context);
         }
+    }
+
+    public ProviderContextImpl getProviderContext() {
+        return this.context;
     }
 }

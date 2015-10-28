@@ -41,7 +41,6 @@ import org.apache.sling.resourceresolver.impl.legacy.LegacyResourceProviderWhite
 import org.apache.sling.resourceresolver.impl.providers.tree.Path;
 import org.apache.sling.resourceresolver.impl.providers.tree.PathSet;
 import org.apache.sling.spi.resource.provider.ObservationReporter;
-import org.apache.sling.spi.resource.provider.ProviderContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -135,6 +134,7 @@ public class ResourceProviderTracker {
             for (List<ResourceProviderHandler> list : handlers.values()) {
                 final ResourceProviderHandler h  = list.get(0);
                 if (h != null) {
+                    updateProviderContext(h);
                     h.update();
                 }
             }
@@ -240,7 +240,8 @@ public class ResourceProviderTracker {
      * @param handler The provider handler
      */
     private boolean activate(final ResourceProviderHandler handler) {
-        if ( !handler.activate(createProviderContext(handler)) ) {
+        updateProviderContext(handler);
+        if ( !handler.activate() ) {
             logger.warn("Activating resource provider {} failed", handler.getInfo());
             this.invalidProviders.put(handler.getInfo(), FailureReason.service_not_gettable);
 
@@ -348,7 +349,7 @@ public class ResourceProviderTracker {
         d.useResourceAccessSecurity = info.getUseResourceAccessSecurity();
     }
 
-    private ProviderContext createProviderContext(final ResourceProviderHandler handler) {
+    private void updateProviderContext(final ResourceProviderHandler handler) {
         final Set<String> excludedPaths = new HashSet<String>();
         final Path handlerPath = new Path(handler.getPath());
         for(final String otherPath : handlers.keySet()) {
@@ -356,6 +357,8 @@ public class ResourceProviderTracker {
                 excludedPaths.add(otherPath);
             }
         }
-        return new ProviderContextImpl(reporterGenerator.create(handlerPath, new PathSet(excludedPaths)), excludedPaths);
+        handler.getProviderContext().update(
+                reporterGenerator.create(handlerPath, new PathSet(excludedPaths)),
+                excludedPaths);
     }
 }
