@@ -78,8 +78,13 @@ public class ResourceChange {
 
     /**
      * Create a new change object
+     *
      * @param changeType The change type
      * @param path The resource path
+     * @param isExternal {code true} if the change happened on another node
+     * @param addedPropertyName set of added property names, if provided must be immutable
+     * @param changedPropertyNames set of added property names, if provided must be immutable
+     * @param removedPropertyNames set of added property names, if provided must be immutable
      */
     public ResourceChange(final @Nonnull ChangeType changeType,
             final @Nonnull String path,
