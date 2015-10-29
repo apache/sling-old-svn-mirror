@@ -43,21 +43,31 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.testing.jcr.RepositoryProvider;
 import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MockedResourceResolver implements ResourceResolver {
 
-	private final SlingRepository repository;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    private final SlingRepository repository;
 
 	private Session session;
 
     private List<MockedResource> resources = new LinkedList<MockedResource>();
 
+    private final ArtificialDelay delay;
+
     public MockedResourceResolver() throws RepositoryException {
-    	this(null);
+    	this(null, null);
     }
 
     public MockedResourceResolver(SlingRepository repositoryOrNull) throws RepositoryException {
+        this(repositoryOrNull, null);
+    }
+    
+    public MockedResourceResolver(SlingRepository repositoryOrNull, ArtificialDelay delay) throws RepositoryException {
+        this.delay = delay;
     	if (repositoryOrNull==null) {
     		this.repository = RepositoryProvider.instance().getRepository();
     		Session adminSession = null;
@@ -86,7 +96,7 @@ public class MockedResourceResolver implements ResourceResolver {
         }
     }
 
-    private Repository getRepository() {
+    public Repository getRepository() {
     	return repository;
     }
 
@@ -301,6 +311,9 @@ public class MockedResourceResolver implements ResourceResolver {
     }
 
     public void commit() throws PersistenceException {
+        if (delay!=null) {
+            delay.delay("pre.commit");
+        }
         try {
             this.session.save();
         } catch (final RepositoryException re) {

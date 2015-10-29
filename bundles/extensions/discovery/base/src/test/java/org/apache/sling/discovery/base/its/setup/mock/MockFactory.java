@@ -24,11 +24,8 @@ import java.util.Properties;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.settings.SlingSettingsService;
-import org.hamcrest.Description;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
-import org.jmock.api.Action;
-import org.jmock.api.Invocation;
 import org.jmock.integration.junit4.JUnit4Mockery;
 import org.jmock.lib.action.ReturnValueAction;
 import org.jmock.lib.action.VoidAction;
@@ -41,37 +38,14 @@ public class MockFactory {
 
     public static ResourceResolverFactory mockResourceResolverFactory()
             throws Exception {
-    	return mockResourceResolverFactory(null);
+        return mockResourceResolverFactory(null);
     }
 
     public static ResourceResolverFactory mockResourceResolverFactory(final SlingRepository repositoryOrNull)
             throws Exception {
-        Mockery context = new JUnit4Mockery();
-
-        final ResourceResolverFactory resourceResolverFactory = context
-                .mock(ResourceResolverFactory.class);
-        // final ResourceResolver resourceResolver = new MockResourceResolver();
-        // final ResourceResolver resourceResolver = new
-        // MockedResourceResolver();
-
-        context.checking(new Expectations() {
-            {
-                allowing(resourceResolverFactory)
-                        .getAdministrativeResourceResolver(null);
-                will(new Action() {
-
-                    public Object invoke(Invocation invocation)
-                            throws Throwable {
-                    	return new MockedResourceResolver(repositoryOrNull);
-                    }
-
-                    public void describeTo(Description arg0) {
-                        arg0.appendText("whateva - im going to create a new mockedresourceresolver");
-                    }
-                });
-            }
-        });
-        return resourceResolverFactory;
+        DummyResourceResolverFactory factory = new DummyResourceResolverFactory();
+        factory.setSlingRepository(repositoryOrNull);
+        return factory;
     }
 
     public static SlingSettingsService mockSlingSettingsService(
