@@ -21,6 +21,7 @@ package org.apache.sling.discovery.impl.common.heartbeat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -48,6 +49,7 @@ import org.apache.sling.discovery.impl.DiscoveryServiceImpl;
 import org.apache.sling.discovery.impl.cluster.voting.VotingHandler;
 import org.apache.sling.discovery.impl.cluster.voting.VotingHelper;
 import org.apache.sling.discovery.impl.cluster.voting.VotingView;
+import org.apache.sling.discovery.impl.common.View;
 import org.apache.sling.discovery.impl.common.ViewHelper;
 import org.apache.sling.launchpad.api.StartupListener;
 import org.apache.sling.settings.SlingSettingsService;
@@ -108,9 +110,13 @@ public class HeartbeatHandler extends BaseViewChecker {
     private long firstHeartbeatWritten = -1;
 
     /** SLING-2892: remember the value of the heartbeat this instance has written the last time **/
-    private Calendar lastHeartbeatWritten = null;
+    private volatile Calendar lastHeartbeatWritten = null;
 
     private DiscoveryServiceImpl discoveryServiceImpl;
+
+    private String lastEstablishedViewId;
+
+    protected String failedEstablishedViewId;
 
     /** for testing only **/
     public static HeartbeatHandler testConstructor(
@@ -119,7 +125,8 @@ public class HeartbeatHandler extends BaseViewChecker {
             AnnouncementRegistry announcementRegistry, 
             ConnectorRegistry connectorRegistry,
             Config config, 
-            Scheduler scheduler) {
+            Scheduler scheduler,
+            VotingHandler votingHandler) {
         HeartbeatHandler handler = new HeartbeatHandler();
         handler.slingSettingsService = slingSettingsService;
         handler.resourceResolverFactory = factory;
@@ -127,6 +134,7 @@ public class HeartbeatHandler extends BaseViewChecker {
         handler.connectorRegistry = connectorRegistry;
         handler.config = config;
         handler.scheduler = scheduler;
+        handler.votingHandler = votingHandler;
         return handler;
     }
     
@@ -177,6 +185,12 @@ public class HeartbeatHandler extends BaseViewChecker {
         logger.info("doActivate: activated with runtimeId: {}, slingId: {}", runtimeId, slingId);
     }
     
+    @Override
+    protected void deactivate() {
+        super.deactivate();
+        scheduler.removeJob(NAME+".checkForTopologyChange");        
+    }
+    
     /**
      * The initialize method is called by the DiscoveryServiceImpl.activate
      * as we require the discoveryService (and the discoveryService has
@@ -201,12 +215,60 @@ public class HeartbeatHandler extends BaseViewChecker {
         }
 
         try {
-            final long interval = config.getHeartbeatInterval();
+            long interval = config.getHeartbeatInterval();
             logger.info("initialize: starting periodic heartbeat job for "+slingId+" with interval "+interval+" sec.");
             if (interval==0) {
-                logger.warn("initialize: Repeat interval cannot be zero.");
+                logger.warn("initialize: Repeat interval cannot be zero. Defaulting to 10sec");
+                interval = 10;
             }
             scheduler.addPeriodicJob(NAME, this,
+                    null, interval, false);
+        } catch (Exception e) {
+            logger.error("activate: Could not start heartbeat runner: " + e, e);
+        }
+
+        // SLING-5195 - to account for repository delays, the writing of heartbeats and voting
+        // should be done independently of getting the current clusterView and 
+        // potentially sending a topology event.
+        // so this second part is now done (additionally) in a 2nd runner here:
+        try {
+            long interval = config.getHeartbeatInterval();
+            logger.info("initialize: starting periodic heartbeat job for "+slingId+" with interval "+interval+" sec.");
+            if (interval==0) {
+                logger.warn("initialize: Repeat interval cannot be zero. Defaulting to 10sec.");
+                interval = 10;
+            }
+            scheduler.addPeriodicJob(NAME+".checkForTopologyChange", new Runnable() {
+
+                @Override
+                public void run() {
+                    Calendar lastHb = lastHeartbeatWritten;
+                    if (lastHb!=null) {
+                        // check to see when we last wrote a heartbeat
+                        // if it is older than the configured timeout,
+                        // then mark ourselves as in topologyChanging automatically
+                        long timeSinceHb = System.currentTimeMillis() - lastHb.getTimeInMillis();
+                        if (timeSinceHb > config.getHeartbeatTimeoutMillis()) {
+                            logger.info("checkForTopologyChange/.run: time since local instance last wrote a heartbeat is "+timeSinceHb+"ms. Flagging us as (still) changing");
+                            // mark the current establishedView as faulty
+                            invalidateCurrentEstablishedView();
+                            
+                            // then tell the listeners immediately
+                            // note that just calling handleTopologyChanging alone - without the above invalidate -
+                            // won't be sufficient, because that would only affect the listeners, not the
+                            // getTopology() call.
+                            discoveryService.handleTopologyChanging();
+                            return;
+                        }
+                    }
+                    // SLING-5195: guarantee frequent calls to checkForTopologyChange,
+                    // independently of blocked write/save operations
+                    logger.debug("checkForTopologyChange/.run: going to check for topology change...");
+                    discoveryService.checkForTopologyChange();
+                    logger.debug("checkForTopologyChange/.run: check for topology change done.");
+                }
+                
+            },
                     null, interval, false);
         } catch (Exception e) {
             logger.error("activate: Could not start heartbeat runner: " + e, e);
@@ -324,6 +386,7 @@ public class HeartbeatHandler extends BaseViewChecker {
             				// sling instance accessing the same repository (ie in the same cluster)
             				// using the same sling.id - hence writing to the same
             				// resource
+            			    invalidateCurrentEstablishedView();
             			    discoveryServiceImpl.handleTopologyChanging();
             				logger.error("issueClusterLocalHeartbeat: SLING-2892: Detected unexpected, concurrent update of: "+
             						myClusterNodePath+" 'lastHeartbeat'. If not done manually, " +
@@ -344,6 +407,7 @@ public class HeartbeatHandler extends BaseViewChecker {
             	    // someone deleted the resource property
             	    firstHeartbeatWritten = -1;
             	} else if (!runtimeId.equals(readRuntimeId)) {
+            	    invalidateCurrentEstablishedView();
             	    discoveryServiceImpl.handleTopologyChanging();
                     final String slingHomePath = slingSettingsService==null ? "n/a" : slingSettingsService.getSlingHomePath();
                     final String endpointsAsString = getEndpointsAsString();
@@ -390,7 +454,7 @@ public class HeartbeatHandler extends BaseViewChecker {
                 this.newLeaderElectionId = null;
                 resourceMap.put("leaderElectionId", newLeaderElectionId);
                 resourceMap.put("leaderElectionIdCreatedAt", new Date());
-                logger.info("issueClusterLocalHeartbeat: set leaderElectionId to "+newLeaderElectionId);
+                logger.info("issueClusterLocalHeartbeat: set leaderElectionId to "+newLeaderElectionId+" (resetLeaderElectionId: "+resetLeaderElectionId+")");
                 if (votingHandler!=null) {
                     votingHandler.setLeaderElectionId(newLeaderElectionId);
                 }
@@ -493,6 +557,9 @@ public class HeartbeatHandler extends BaseViewChecker {
             }
         }
 
+        final View establishedView = ViewHelper.getEstablishedView(resourceResolver, config);
+        lastEstablishedViewId = establishedView == null ? null : establishedView.getResource().getName();
+
         final VotingView winningVoting = VotingHelper.getWinningVoting(
                 resourceResolver, config);
         int numOpenNonWinningVotes = VotingHelper.listOpenNonWinningVotings(
@@ -503,6 +570,7 @@ public class HeartbeatHandler extends BaseViewChecker {
             
             // but first: make sure we sent the TOPOLOGY_CHANGING
             logger.info("doCheckViewWith: there are pending votings, marking topology as changing...");
+            invalidateCurrentEstablishedView();
             discoveryServiceImpl.handleTopologyChanging();
             
         	if (logger.isDebugEnabled()) {
@@ -518,7 +586,28 @@ public class HeartbeatHandler extends BaseViewChecker {
         final Set<String> liveInstances = ViewHelper.determineLiveInstances(
                 clusterNodesRes, config);
 
-        if (ViewHelper.establishedViewMatches(resourceResolver, config, liveInstances)) {
+        boolean establishedViewMatches;
+        if (lastEstablishedViewId != null && failedEstablishedViewId != null
+                && lastEstablishedViewId.equals(failedEstablishedViewId)) {
+            // SLING-5195 : heartbeat-self-check caused this establishedViewId
+            // to be declared as failed - so we must now cause a new voting
+            logger.info("doCheckView: current establishedViewId ({}) was declared as failed earlier already.", lastEstablishedViewId);
+            establishedViewMatches = false;
+        } else {
+            if (establishedView == null) {
+                establishedViewMatches = false;
+            } else {
+                String mismatchDetails = establishedView.matches(liveInstances);
+                if (mismatchDetails != null) {
+                    logger.info("doCheckView: established view does not match. (details: " + mismatchDetails + ")");
+                } else {
+                    logger.debug("doCheckView: established view matches with expected.");
+                }
+                establishedViewMatches = mismatchDetails == null;
+            }
+        }
+        
+        if (establishedViewMatches) {
             // that's the normal case. the established view matches what we're
             // seeing.
             // all happy and fine
@@ -528,7 +617,14 @@ public class HeartbeatHandler extends BaseViewChecker {
         
         // immediately send a TOPOLOGY_CHANGING - could already be sent, but just to be sure
         logger.info("doCheckViewWith: no matching established view, marking topology as changing");
+        invalidateCurrentEstablishedView();
         discoveryServiceImpl.handleTopologyChanging();
+        
+        List<VotingView> myYesVotes = VotingHelper.getYesVotingsOf(resourceResolver, config, slingId);
+        if (myYesVotes != null && myYesVotes.size() > 0) {
+            logger.info("doCheckViewWith: I have voted yes (" + myYesVotes.size() + "x)- the vote was not yet promoted but expecting it to be soon. Not voting again in the meantime. My yes vote was for: "+myYesVotes);
+            return;
+        }
         
     	if (logger.isDebugEnabled()) {
 	        logger.debug("doCheckViewWith: no pending nor winning votes. But: view does not match established or no established yet. Initiating a new voting");
@@ -554,7 +650,23 @@ public class HeartbeatHandler extends BaseViewChecker {
 
         VotingView.newVoting(resourceResolver, config, votingId, slingId, liveInstances);
     }
-
+    
+    /**
+     * Mark the current establishedView as invalid - requiring it to be
+     * replaced with a new one, be it by another instance or this one,
+     * via a new vote
+     */
+    public void invalidateCurrentEstablishedView() {
+        if (lastEstablishedViewId == null) {
+            logger.info("invalidateCurrentEstablishedView: cannot invalidate, lastEstablishedViewId==null");
+            return;
+        }
+        logger.info("invalidateCurrentEstablishedView: invalidating slingId=" + slingId
+                + ", lastEstablishedViewId=" + lastEstablishedViewId);
+        failedEstablishedViewId = lastEstablishedViewId;
+        discoveryServiceImpl.getClusterViewServiceImpl().invalidateEstablishedViewId(lastEstablishedViewId);
+    }
+    
     /**
      * Management function to trigger the otherwise algorithm-dependent
      * start of a new voting.
