@@ -64,6 +64,7 @@ import org.apache.sling.discovery.commons.providers.base.ViewStateManagerFactory
 import org.apache.sling.discovery.commons.providers.spi.ClusterSyncService;
 import org.apache.sling.discovery.commons.providers.util.PropertyNameHelper;
 import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
+import org.apache.sling.discovery.impl.cluster.ClusterViewServiceImpl;
 import org.apache.sling.discovery.impl.common.heartbeat.HeartbeatHandler;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
@@ -599,11 +600,12 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
                 logger.debug("checkForTopologyChange: not yet activated, ignoring");
                 return;
             }
-            BaseTopologyView t = (BaseTopologyView) getTopology();
+            DefaultTopologyView t = (DefaultTopologyView) getTopology();
             if (t.isCurrent()) {
                 // if we have a valid view, let the viewStateManager do the
                 // comparison and sending of an event, if necessary
                 viewStateManager.handleNewView(t);
+                setOldView(t);
             } else {
                 // if we don't have a view, then we might have to send
                 // a CHANGING event, let that be decided by the viewStateManager as well
