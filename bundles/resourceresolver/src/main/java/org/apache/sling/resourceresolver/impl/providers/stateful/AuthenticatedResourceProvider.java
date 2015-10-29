@@ -356,8 +356,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
         try {
             return rp.copy(getContext(), srcAbsPath, destAbsPath);
         } catch (LoginException e) {
-            logger.error("Can't create context", e);
-            return false;
+            throw new PersistenceException("Unable to create context.", e);
         }
     }
 
@@ -366,8 +365,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
         try {
             return rp.move(getContext(), srcAbsPath, destAbsPath);
         } catch (LoginException e) {
-            logger.error("Can't create context", e);
-            return false;
+            throw new PersistenceException("Unable to create context.", e);
         }
     }
 
