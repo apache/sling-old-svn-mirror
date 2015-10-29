@@ -733,6 +733,7 @@ public interface ResourceResolver extends Adaptable, Closeable {
      * @param srcAbsPath  the path of the resource to be copied.
      * @param destAbsPath the location to which the resource at
      *                    <code>srcAbsPath</code> is to be copied.
+     * @return The destination resource.
      * @throws PersistenceException If an error occurs.
      * @throws UnsupportedOperationException If one of the destination resource providers does
      *                                       not allow to create a resource at that location.
@@ -740,7 +741,7 @@ public interface ResourceResolver extends Adaptable, Closeable {
      *             {@link #close() closed}.
      * @since 2.9 (Sling API Bundle 2.10.0)
      */
-    void copy(final String srcAbsPath,
+    Resource copy(final String srcAbsPath,
               final String destAbsPath) throws PersistenceException;
 
     /**
@@ -760,6 +761,7 @@ public interface ResourceResolver extends Adaptable, Closeable {
      * @param srcAbsPath  the path of the resource to be copied.
      * @param destAbsPath the location to which the resource at
      *                    <code>srcAbsPath</code> is to be moved.
+     * @return The destination resource.
      * @throws PersistenceException If an error occurs.
      * @throws UnsupportedOperationException If one of the destination resource providers does
      *                                       not allow to create a resource at that location.
@@ -767,6 +769,6 @@ public interface ResourceResolver extends Adaptable, Closeable {
      *             {@link #close() closed}.
      * @since 2.9 (Sling API Bundle 2.10.0)
      */
-    void move(final String srcAbsPath,
+    Resource move(final String srcAbsPath,
               final String destAbsPath) throws PersistenceException;
 }

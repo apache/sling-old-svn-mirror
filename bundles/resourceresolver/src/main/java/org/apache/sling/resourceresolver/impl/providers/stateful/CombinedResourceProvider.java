@@ -517,10 +517,10 @@ public class CombinedResourceProvider {
      * {@link StatefulResourceProvider#copy(String, String)} method on it.
      * Returns false if there's no such provider.
      */
-    public void copy(final String srcAbsPath, final String destAbsPath) throws PersistenceException {
+    public Resource copy(final String srcAbsPath, final String destAbsPath) throws PersistenceException {
         final StatefulResourceProvider optimizedSourceProvider = checkSourceAndDest(srcAbsPath, destAbsPath);
         if ( optimizedSourceProvider != null && optimizedSourceProvider.copy(srcAbsPath, destAbsPath) ) {
-            return;
+            return this.getResource(destAbsPath + '/' + ResourceUtil.getName(srcAbsPath), null, null, false);
         }
 
         final Resource srcResource = this.getResource(srcAbsPath, null, null, false);
@@ -529,6 +529,7 @@ public class CombinedResourceProvider {
         try {
             this.copy(srcResource, destAbsPath, newResources);
             rollback = false;
+            return newResources.get(0);
         } finally {
             if ( rollback ) {
                 for(final Resource rsrc : newResources) {
@@ -543,10 +544,10 @@ public class CombinedResourceProvider {
      * {@link StatefulResourceProvider#move(String, String)} method on it.
      * Returns false if there's no such provider.
      */
-    public void move(String srcAbsPath, String destAbsPath) throws PersistenceException {
+    public Resource move(String srcAbsPath, String destAbsPath) throws PersistenceException {
         final StatefulResourceProvider optimizedSourceProvider = checkSourceAndDest(srcAbsPath, destAbsPath);
         if ( optimizedSourceProvider != null && optimizedSourceProvider.move(srcAbsPath, destAbsPath) ) {
-            return;
+            return this.getResource(destAbsPath + '/' + ResourceUtil.getName(srcAbsPath), null, null, false);
         }
         final Resource srcResource = this.getResource(srcAbsPath, null, null, false);
         final List<Resource> newResources = new ArrayList<Resource>();
@@ -555,6 +556,7 @@ public class CombinedResourceProvider {
             this.copy(srcResource, destAbsPath, newResources);
             this.delete(srcResource);
             rollback = false;
+            return newResources.get(0);
         } finally {
             if ( rollback ) {
                 for(final Resource rsrc : newResources) {
