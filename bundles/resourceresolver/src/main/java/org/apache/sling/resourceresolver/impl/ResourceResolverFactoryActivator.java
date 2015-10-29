@@ -37,8 +37,6 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.References;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.ResourceDecorator;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.runtime.RuntimeService;
@@ -48,6 +46,7 @@ import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
 import org.apache.sling.resourceresolver.impl.observation.ResourceChangeListenerWhiteboard;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker.ChangeListener;
 import org.apache.sling.resourceresolver.impl.providers.RuntimeServiceImpl;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.framework.Bundle;
@@ -56,10 +55,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
-import org.osgi.service.event.EventConstants;
-import org.osgi.service.event.EventHandler;
 
 /**
  * The <code>ResourceResolverFactoryActivator/code> keeps track of required services for the
@@ -74,18 +70,15 @@ import org.osgi.service.event.EventHandler;
      label = "Apache Sling Resource Resolver Factory",
      description = "Configures the Resource Resolver for request URL and resource path rewriting.",
      specVersion = "1.1",
-     metatype = true,
-     immediate = true)
+     metatype = true)
 @Properties({
     @Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling Resource Resolver Factory"),
-    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
-    @Property(name = EventConstants.EVENT_TOPIC, value = SlingConstants.TOPIC_RESOURCE_PROVIDER_ADDED, propertyPrivate = true)
+    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation")
 })
 @References({
     @Reference(name = "ResourceDecorator", referenceInterface = ResourceDecorator.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
 })
-@Service(EventHandler.class)
-public class ResourceResolverFactoryActivator implements Runnable, EventHandler {
+public class ResourceResolverFactoryActivator implements Runnable {
 
     private static final class FactoryRegistration {
         /** Registration .*/
@@ -491,7 +484,17 @@ public class ResourceResolverFactoryActivator implements Runnable, EventHandler 
             this.changeListenerWhiteboard = new ResourceChangeListenerWhiteboard();
             this.changeListenerWhiteboard.activate(this.componentContext.getBundleContext(),
                 this.resourceProviderTracker, searchPath);
-            this.resourceProviderTracker.activate(this.componentContext.getBundleContext(), this.eventAdmin);
+            this.resourceProviderTracker.activate(this.componentContext.getBundleContext(),
+                    this.eventAdmin,
+                    new ChangeListener() {
+
+                        @Override
+                        public void providerChanged(final String pid) {
+                            if (ArrayUtils.contains(requiredResourceProviders, pid)) {
+                                checkFactoryPreconditions();
+                            }
+                        }
+                    });
         }
 
         // namespace mangling
@@ -731,12 +734,5 @@ public class ResourceResolverFactoryActivator implements Runnable, EventHandler 
 
     public ResourceProviderTracker getResourceProviderTracker() {
         return resourceProviderTracker;
-    }
-
-    @Override
-    public void handleEvent(Event event) {
-        if (ArrayUtils.contains(requiredResourceProviders, event.getProperty(Constants.SERVICE_PID))) {
-            this.checkFactoryPreconditions();
-        }
     }
 }
