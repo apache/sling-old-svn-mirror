@@ -37,6 +37,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import junitx.util.PrivateAccessor;
+
 public class RepositoryDelaysTest {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -135,6 +137,113 @@ public class RepositoryDelaysTest {
         
         TopologyView t2c = instance2.getDiscoveryService().getTopology();
         assertFalse(t2c.isCurrent());
+    }
+    
+    /**
+     * Tests whether the not-current view returned by getTopology()
+     * matches what listeners get in TOPOLOGY_CHANGING - it should
+     * basically be the same.
+     */
+    @Test
+    public void testOldView() throws Throwable {
+        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        discoveryLogger.setLevel(Level.INFO); // info should do
+        org.apache.log4j.Logger vsmLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery.commons.providers.base.ViewStateManagerImpl");
+        vsmLogger.setLevel(Level.DEBUG);
+        FullJR2VirtualInstanceBuilder builder = newBuilder();
+        builder.setDebugName("firstInstanceA")
+                .newRepository("/var/discovery/impl/", true)
+                .setConnectorPingTimeout(3 /* heartbeat-timeout */)
+                .setMinEventDelay(3 /*min event delay*/);
+        instance1 = builder.fullBuild();
+        instance1.stopVoting();
+        TopologyView t1 = instance1.getDiscoveryService().getTopology();
+        assertFalse(t1.isCurrent()); // current it should not be
+        assertEquals(1, t1.getInstances().size()); // but it can as well contain the local instance
+        AssertingTopologyEventListener l1 = new AssertingTopologyEventListener("instance1.l1");
+        l1.addExpected(Type.TOPOLOGY_INIT);
+        instance1.bindTopologyEventListener(l1);
+        logger.info("testOldView: instance1 created, no events expected yet. slingId="+instance1.slingId);
+        instance1.heartbeatsAndCheckView();
+        Thread.sleep(200);
+        instance1.heartbeatsAndCheckView();
+        Thread.sleep(200);
+        instance1.heartbeatsAndCheckView();
+        Thread.sleep(200);
+        logger.info("testOldView: 2nd/3rd heartbeat sent - now expecting a TOPOLOGY_INIT");
+        instance1.dumpRepo();
+        assertEquals(1, l1.getEvents().size()); // one event
+        assertEquals(0, l1.getRemainingExpectedCount()); // the expected one
+        assertEquals(0, l1.getUnexpectedCount());
+        t1 = instance1.getDiscoveryService().getTopology();
+        assertTrue(t1.isCurrent()); // current it should now be
+        assertEquals(1, t1.getInstances().size()); // and it must contain the local instance
+        
+        logger.info("testOldView: creating instance2");
+        l1.addExpected(Type.TOPOLOGY_CHANGING);
+        FullJR2VirtualInstanceBuilder builder2 = newBuilder();
+        builder2.setDebugName("secondInstanceB")
+                .useRepositoryOf(instance1)
+                .setConnectorPingTimeout(3)
+                .setMinEventDelay(3);
+        instance2 = builder2.fullBuild();
+        instance2.stopVoting();
+        
+        logger.info("testOldView: instance2 created, now issuing one heartbeat with instance2 first, so that instance1 can take note of it");
+        instance2.heartbeatsAndCheckView();
+        logger.info("testOldView: now instance1 is also doing a heartbeat and should see that a new instance is there");
+        instance1.heartbeatsAndCheckView();
+        logger.info("testOldView: 500ms sleep...");
+        Thread.sleep(500); // allow some time for CHANGING to be sent
+        logger.info("testOldView: 500ms sleep done.");
+
+        assertEquals(2, l1.getEvents().size()); // INIT and CHANGING
+        assertEquals(0, l1.getRemainingExpectedCount()); // no remaining expected
+        assertEquals(0, l1.getUnexpectedCount()); // and no unexpected
+        t1 = instance1.getDiscoveryService().getTopology();
+        assertFalse(t1.isCurrent()); // current it should not be
+        assertEquals(1, t1.getInstances().size()); // but it should still contain the local instance from before
+        
+        l1.addExpected(Type.TOPOLOGY_CHANGED);
+        logger.info("testOldView: now issuing 3 rounds of heartbeats/checks and expecting a TOPOLOGY_CHANGED then");
+
+        instance2.heartbeatsAndCheckView();
+//        instance2.analyzeVotings();
+        instance1.heartbeatsAndCheckView();
+//        instance1.analyzeVotings();
+        Thread.sleep(1200);
+        instance2.heartbeatsAndCheckView();
+        instance1.heartbeatsAndCheckView();
+        Thread.sleep(1200);
+        instance2.heartbeatsAndCheckView();
+        instance1.heartbeatsAndCheckView();
+        Thread.sleep(1200);
+        
+        assertEquals(3, l1.getEvents().size()); // INIT, CHANGING and CHANGED
+        assertEquals(0, l1.getRemainingExpectedCount()); // no remaining expected
+        assertEquals(0, l1.getUnexpectedCount()); // and no unexpected
+        t1 = instance1.getDiscoveryService().getTopology();
+        assertTrue(t1.isCurrent()); // and we should be current again
+        assertEquals(2, t1.getInstances().size()); // and contain both instances now
+        
+        // timeout is set to 3sec, so we now do heartbeats for 4sec with only instance1
+        // to let instance2 crash
+        
+        // force instance1 to no longer analyze the votings
+        // since stopVoting() only deactivates the listener, we also
+        // have to set votingHandler of heartbeatHandler to null
+        PrivateAccessor.setField(instance1.getHeartbeatHandler(), "votingHandler", null);
+        l1.addExpected(Type.TOPOLOGY_CHANGING);
+        for(int i=0; i<8; i++) {
+            instance1.getHeartbeatHandler().heartbeatAndCheckView();
+            Thread.sleep(500);
+        }
+        assertEquals(4, l1.getEvents().size()); // INIT, CHANGING, CHANGED and CHANGED
+        assertEquals(0, l1.getRemainingExpectedCount()); // no remaining expected
+        assertEquals(0, l1.getUnexpectedCount()); // and no unexpected
+        t1 = instance1.getDiscoveryService().getTopology();
+        assertFalse(t1.isCurrent()); // we should still be !current
+        assertEquals(2, t1.getInstances().size()); // and contain both instances
     }
     
 }
