@@ -65,6 +65,16 @@ public class ResourceProviderDTO {
     public boolean attributable;
 
     /**
+     * Whether the resource provider supports JCR query.
+     */
+    public boolean supportsJCRQuery;
+
+    /**
+     * Whether the resource provider supports querying.
+     */
+    public boolean supportsQuery;
+
+    /**
      * The service id from the service registry.
      */
     public long serviceId;
