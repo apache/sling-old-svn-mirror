@@ -32,18 +32,25 @@ import org.apache.sling.api.resource.runtime.dto.AuthType;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+/**
+ * The authenticator is a per resource resolver instance.
+ * It keeps track of the used providers, especially the authenticated providers.
+ *
+ * This class is not thread safe (same as the resource resolver).
+ */
 public class ResourceProviderAuthenticator {
 
-    private static final Logger logger = LoggerFactory.getLogger(ResourceProviderAuthenticator.class);
+    /** Set of authenticated resource providers. */
+    private final List<StatefulResourceProvider> authenticated = new ArrayList<StatefulResourceProvider>();
+
+    /** Set of modifiable resource providers. */
+    private final List<StatefulResourceProvider> modifiable = new ArrayList<StatefulResourceProvider>();
+
+    /** Set of refreshable resource providers. */
+    private final List<StatefulResourceProvider> refreshable = new ArrayList<StatefulResourceProvider>();
 
     private final Map<ResourceProviderHandler, StatefulResourceProvider> stateful;
-
-    private final List<StatefulResourceProvider> authenticated;
-
-    private final List<StatefulResourceProvider> authenticatedModifiable;
 
     private final ResourceResolver resolver;
 
@@ -56,8 +63,6 @@ public class ResourceProviderAuthenticator {
     public ResourceProviderAuthenticator(ResourceResolver resolver, Map<String, Object> authInfo,
             ResourceAccessSecurityTracker securityTracker) throws LoginException {
         this.stateful = new IdentityHashMap<ResourceProviderHandler, StatefulResourceProvider>();
-        this.authenticated = new ArrayList<StatefulResourceProvider>();
-        this.authenticatedModifiable = new ArrayList<StatefulResourceProvider>();
         this.resolver = resolver;
         this.authInfo = authInfo;
         this.securityTracker = securityTracker;
@@ -95,8 +100,11 @@ public class ResourceProviderAuthenticator {
             if (handler.getInfo().getAuthType() != AuthType.no) {
                 authenticated.add(rp);
             }
-            if (handler.getInfo().getModifiable()) {
-                authenticatedModifiable.add(rp);
+            if (handler.getInfo().isModifiable()) {
+                modifiable.add(rp);
+            }
+            if (handler.getInfo().isRefreshable()) {
+                refreshable.add(rp);
             }
         }
         return rp;
@@ -116,7 +124,11 @@ public class ResourceProviderAuthenticator {
     }
 
     public Collection<StatefulResourceProvider> getAllUsedModifiable() {
-        return authenticatedModifiable;
+        return modifiable;
+    }
+
+    public Collection<StatefulResourceProvider> getAllUsedRefreshable() {
+        return refreshable;
     }
 
     public Collection<StatefulResourceProvider> getAll(List<ResourceProviderHandler> handlers,

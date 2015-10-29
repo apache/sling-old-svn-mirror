@@ -321,7 +321,7 @@ public class ResourceProviderTracker {
                         ((ResourceProviderFailureDTO)d).reason = FailureReason.shadowed;
                         failures.add((ResourceProviderFailureDTO)d);
                     }
-                    fill(d, h.getInfo());
+                    fill(d, h);
                 }
             }
         }
@@ -357,12 +357,26 @@ public class ResourceProviderTracker {
     }
 
     private void fill(final ResourceProviderDTO d, final ResourceProviderInfo info) {
+        d.adaptable = info.isAdaptable();
+        d.attributable = info.isAttributable();
         d.authType = info.getAuthType();
-        d.modifiable = info.getModifiable();
+        d.modifiable = info.isModifiable();
         d.name = info.getName();
         d.path = info.getPath();
+        d.refreshable = info.isRefreshable();
         d.serviceId = (Long)info.getServiceReference().getProperty(Constants.SERVICE_ID);
+        d.supportsJCRQuery = false;
+        d.supportsQuery = false;
         d.useResourceAccessSecurity = info.getUseResourceAccessSecurity();
+    }
+
+    private void fill(final ResourceProviderDTO d, final ResourceProviderHandler handler) {
+        fill(d, handler.getInfo());
+        final ResourceProvider<?> provider = handler.getResourceProvider();
+        if ( provider != null ) {
+            d.supportsJCRQuery = provider.getJCRQueryProvider() != null;
+            d.supportsQuery = provider.getQueryProvider() != null;
+        }
     }
 
     private void updateProviderContext(final ResourceProviderHandler handler) {

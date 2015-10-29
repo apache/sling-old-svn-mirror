@@ -145,7 +145,7 @@ public class LegacyResourceProviderAdapter extends ResourceProvider<Object> {
     }
 
     @Override
-    public void logout(final @Nonnull Object state) {
+    public void logout(final @Nonnull ResolverContext<Object> ctx) {
         if (rp instanceof DynamicResourceProvider) {
             ((DynamicResourceProvider) rp).close();
         }

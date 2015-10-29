@@ -117,7 +117,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     public void logout() {
         if (authenticated) {
             try {
-                rp.logout(getContext().getProviderState());
+                rp.logout(getContext());
             } catch (LoginException e) {
                 logger.error("Can't create context", e);
             }
