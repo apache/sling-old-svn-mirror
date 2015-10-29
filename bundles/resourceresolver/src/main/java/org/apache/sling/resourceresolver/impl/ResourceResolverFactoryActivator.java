@@ -645,10 +645,14 @@ public class ResourceResolverFactoryActivator implements Runnable {
                 }, serviceProps);
 
             local.runtimeRegistration = localContext.getBundleContext().registerService(RuntimeService.class.getName(),
-                    new RuntimeServiceImpl(this.resourceProviderTracker), null);
+                    this.getRuntimeService(), null);
 
             this.factoryRegistration = local;
         }
+    }
+
+    public RuntimeService getRuntimeService() {
+        return new RuntimeServiceImpl(this.resourceProviderTracker);
     }
 
     /**
