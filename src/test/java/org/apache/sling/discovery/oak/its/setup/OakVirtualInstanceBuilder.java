@@ -57,6 +57,10 @@ public class OakVirtualInstanceBuilder extends VirtualInstanceBuilder {
     private OakBacklogClusterSyncService consistencyService;
     private SyncTokenService syncTokenService;
     
+    public SimulatedLeaseCollection getSimulatedLeaseCollection() {
+        return leaseCollection;
+    }
+    
     @Override
     public VirtualInstanceBuilder createNewRepository() throws Exception {
         nodeStore = new MemoryNodeStore();
