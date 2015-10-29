@@ -44,7 +44,7 @@ public class WithholdingAppender extends WriterAppender {
     public static WithholdingAppender install() {
         LogManager.getRootLogger().removeAllAppenders();
         final WithholdingAppender withholdingAppender = new WithholdingAppender(
-                new PatternLayout("%d{dd.MM.yyyy HH:mm:ss} *%-5p* [%t] %c{1}: %m\n"));
+                new PatternLayout("%d{dd.MM.yyyy HH:mm:ss.SSS} *%-5p* [%t] %c{1}: %m\n"));
         LogManager.getRootLogger().addAppender(withholdingAppender);
         return withholdingAppender;
     }
