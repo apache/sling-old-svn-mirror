@@ -146,30 +146,34 @@ public class VotingView extends View {
 
     @Override
     public String toString() {
-        final Resource members = getResource().getChild("members");
-        String initiatorId = null;
-        final StringBuilder sb = new StringBuilder();
-        if (members != null) {
-            Iterator<Resource> it = members.getChildren().iterator();
-            while (it.hasNext()) {
-                Resource r = it.next();
-                if (sb.length() != 0) {
-                    sb.append(", ");
-                }
-                sb.append(r.getName());
-                ValueMap properties = r.adaptTo(ValueMap.class);
-                if (properties != null) {
-                    Boolean initiator = properties.get("initiator",
-                            Boolean.class);
-                    if (initiator != null && initiator) {
-                        initiatorId = r.getName();
+        try {
+            final Resource members = getResource().getChild("members");
+            String initiatorId = null;
+            final StringBuilder sb = new StringBuilder();
+            if (members != null) {
+                Iterator<Resource> it = members.getChildren().iterator();
+                while (it.hasNext()) {
+                    Resource r = it.next();
+                    if (sb.length() != 0) {
+                        sb.append(", ");
+                    }
+                    sb.append(r.getName());
+                    ValueMap properties = r.adaptTo(ValueMap.class);
+                    if (properties != null) {
+                        Boolean initiator = properties.get("initiator",
+                                Boolean.class);
+                        if (initiator != null && initiator) {
+                            initiatorId = r.getName();
+                        }
                     }
                 }
             }
+            return "a VotingView[viewId=" + getViewId() 
+                    + ", id=" + getResource().getName() + ", initiator="
+                    + initiatorId + ", members=" + sb + "]";
+        } catch(Exception e) {
+            return "a VotingView["+super.toString()+"]";
         }
-        return "a VotingView[viewId=" + getViewId() 
-                + ", id=" + getResource().getName() + ", initiator="
-                + initiatorId + ", members=" + sb + "]";
     }
 
     /**
@@ -349,8 +353,16 @@ public class VotingView extends View {
         final Resource memberResource = members.getChild(
                 slingId);
         if (memberResource == null) {
-            logger.error("vote: no memberResource found for slingId=" + slingId
-                    + ", vote=" + vote + ", resource=" + getResource());
+            if (vote == null || !vote) {
+                // if I wanted to vote no or empty, then it's no big deal
+                // that I can't find my entry ..
+                logger.debug("vote: no memberResource found for slingId=" + slingId
+                        + ", vote=" + vote + ", resource=" + getResource());
+            } else {
+                // if I wanted to vote yes, then it is a big deal that I can't find myself
+                logger.error("vote: no memberResource found for slingId=" + slingId
+                        + ", vote=" + vote + ", resource=" + getResource());
+            }
             return;
         }
         final ModifiableValueMap memberMap = memberResource.adaptTo(ModifiableValueMap.class);
