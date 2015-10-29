@@ -131,11 +131,15 @@ public class ResourceProviderAuthenticator {
         return refreshable;
     }
 
-    public Collection<StatefulResourceProvider> getAll(List<ResourceProviderHandler> handlers,
-            CombinedResourceProvider combinedProvider) throws LoginException {
+    public Collection<StatefulResourceProvider> getAllBestEffort(List<ResourceProviderHandler> handlers,
+            CombinedResourceProvider combinedProvider) {
         List<StatefulResourceProvider> result = new ArrayList<StatefulResourceProvider>(handlers.size());
         for (ResourceProviderHandler h : handlers) {
-            result.add(getStateful(h, combinedProvider));
+            try {
+                result.add(getStateful(h, combinedProvider));
+            } catch ( final LoginException le) {
+                // ignore
+            }
         }
         return result;
     }
