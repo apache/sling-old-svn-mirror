@@ -115,6 +115,7 @@ public class VotingView extends View {
             Map<String, Object> properties = new HashMap<String, Object>();
             if (memberId.equals(initiatorId)) {
                 properties.put("initiator", true);
+                properties.put("vote", true);
                 properties.put("votedAt", Calendar.getInstance());
             }
             Resource instanceResource = ResourceHelper.getOrCreateResource(
@@ -137,6 +138,10 @@ public class VotingView extends View {
      */
     public VotingView(final Resource viewResource) {
         super(viewResource);
+    }
+    
+    public String getVotingId() {
+        return getResource().getName();
     }
 
     @Override
@@ -162,7 +167,8 @@ public class VotingView extends View {
                 }
             }
         }
-        return "a VotingView[viewId=" + getViewId() + ", initiator="
+        return "a VotingView[viewId=" + getViewId() 
+                + ", id=" + getResource().getName() + ", initiator="
                 + initiatorId + ", members=" + sb + "]";
     }
 
@@ -236,6 +242,9 @@ public class VotingView extends View {
         while (it.hasNext()) {
             Resource aMemberRes = it.next();
             ValueMap properties = aMemberRes.adaptTo(ValueMap.class);
+            if (properties == null) {
+                continue;
+            }
             Boolean vote = properties.get("vote", Boolean.class);
             if (vote != null && !vote) {
                 return true;
@@ -245,30 +254,37 @@ public class VotingView extends View {
     }
 
     /**
-     * Checks whether the given slingId has voted yes or is the initiator of this voting
+     * Checks whether the given slingId has voted yes for this voting
      * @param slingId the sling id to check for
-     * @return true if the given slingId has voted yes or is the initiator of this voting
+     * @return true if the given slingId has voted yes for this voting
      */
-    public boolean hasVotedOrIsInitiator(final String slingId) {
+    public boolean hasVotedYes(final String slingId) {
+        final Boolean vote = getVote(slingId);
+        return vote != null && vote;
+    }
+
+    /**
+     * Get the vote of the instance with the given slingId
+     * @param slingId
+     * @return null if that instance did not vote yet (or the structure
+     * is faulty), true if the instance voted yes, false if it voted no
+     */
+    public Boolean getVote(String slingId) {
         Resource members = getResource().getChild("members");
         if (members==null) {
-        	return false;
+            return null;
         }
-		final Resource memberResource = members.getChild(
+        final Resource memberResource = members.getChild(
                 slingId);
         if (memberResource == null) {
-            return false;
+            return null;
         }
         final ValueMap properties = memberResource.adaptTo(ValueMap.class);
         if (properties == null) {
-            return false;
-        }
-        final Boolean initiator = properties.get("initiator", Boolean.class);
-        if (initiator != null && initiator) {
-            return true;
+            return null;
         }
         final Boolean vote = properties.get("vote", Boolean.class);
-        return vote != null && vote;
+        return vote;
     }
 
     /**
@@ -276,7 +292,18 @@ public class VotingView extends View {
      * @return whether this voting was initiated by the given slingId
      */
     public boolean isInitiatedBy(final String slingId) {
-        final Resource memberResource = getResource().getChild("members").getChild(
+        Resource r = getResource();
+        if (r == null) {
+            return false;
+        }
+        Resource members = r.getChild("members");
+        if (members == null) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("isInitiatedBy: slingId=" + slingId + ", members null!");
+            }
+            return false;
+        }
+        final Resource memberResource = members.getChild(
                 slingId);
         if (memberResource == null) {
             if (logger.isDebugEnabled()) {
@@ -309,7 +336,17 @@ public class VotingView extends View {
     	if (logger.isDebugEnabled()) {
     		logger.debug("vote: slingId=" + slingId + ", vote=" + vote);
     	}
-        final Resource memberResource = getResource().getChild("members").getChild(
+        Resource r = getResource();
+        if (r == null) {
+            logger.error("vote: no resource set. slingId = " + slingId + ", vote=" + vote);
+            return;
+        }
+        Resource members = r.getChild("members");
+        if (members == null) {
+            logger.error("vote: no members resource available for " + r + ". slingId = " + slingId + ", vote=" + vote);
+            return;
+        }
+        final Resource memberResource = members.getChild(
                 slingId);
         if (memberResource == null) {
             logger.error("vote: no memberResource found for slingId=" + slingId
@@ -319,7 +356,11 @@ public class VotingView extends View {
         final ModifiableValueMap memberMap = memberResource.adaptTo(ModifiableValueMap.class);
 
         if (vote == null) {
-            logger.trace("vote: removing vote (vote==null)");
+            if (memberMap.containsKey("vote")) {
+                logger.info("vote: removing vote (vote==null) of slingId="+slingId+" on: "+this);
+            } else {
+                logger.debug("vote: removing vote (vote==null) of slingId="+slingId+" on: "+this);
+            }
             memberMap.remove("vote");
         } else {
             boolean shouldVote = true;
@@ -389,12 +430,7 @@ public class VotingView extends View {
 	            Resource aMemberRes = it.next();
 	            try{
 	                ValueMap properties = aMemberRes.adaptTo(ValueMap.class);
-	                Boolean initiator = properties.get("initiator", Boolean.class);
 	                Boolean vote = properties.get("vote", Boolean.class);
-	                if (initiator != null && initiator) {
-	                    isWinning = true;
-	                    continue;
-	                }
 	                if (vote != null && vote) {
 	                    isWinning = true;
 	                    continue;
@@ -417,11 +453,11 @@ public class VotingView extends View {
     /**
      * Checks if this voting matches the current live view
      */
-    public boolean matchesLiveView(final Config config) {
+    public String matchesLiveView(final Config config) {
         Resource clusterNodesRes = getResource().getResourceResolver()
                 .getResource(config.getClusterInstancesPath());
         if (clusterNodesRes == null) {
-            return false;
+            return "no clusterNodesRes["+getResource()+"]";
         }
         return matchesLiveView(clusterNodesRes, config);
     }

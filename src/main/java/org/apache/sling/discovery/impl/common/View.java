@@ -102,11 +102,11 @@ public class View {
     /**
      * Checks whether this view matches the 'live view' as represented in the clusterInstances resource
      * @param clusterInstancesRes the clusterInstances resource against which to check
-     * @return
+     * @return null if view matches, not-null-details about what differs if they don't match
      */
-    public boolean matchesLiveView(final Resource clusterInstancesRes, final Config config) {
+    public String matchesLiveView(final Resource clusterInstancesRes, final Config config) {
         return matches(ViewHelper.determineLiveInstances(clusterInstancesRes,
-                config)) == null;
+                config));
     }
 
     /**
