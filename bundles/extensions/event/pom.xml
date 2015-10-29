@@ -44,12 +44,13 @@
 
     <properties>
         <site.jira.version.id>12315369</site.jira.version.id>
+        <sling.java.version>7</sling.java.version>
         <exam.version>4.4.0</exam.version>
-        <url.version>2.3.0</url.version>
+        <url.version>2.4.3</url.version>
         <bundle.build.dir>${basedir}/target</bundle.build.dir>
         <bundle.file.name>${bundle.build.dir}/${project.build.finalName}.jar</bundle.file.name>
-        <min.port>35000</min.port>
-        <max.port>35999</max.port>
+        <min.port>37000</min.port>
+        <max.port>37999</max.port>
     </properties>
 
 
@@ -180,30 +181,6 @@
         </plugins>
     </build>
     <profiles>
-        <profile>
-            <id>port-java6</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-                <jdk>1.6</jdk>
-            </activation>
-            <properties>
-                <exam.version>3.5.0</exam.version>
-                <url.version>2.1.0</url.version>
-                <min.port>36000</min.port>
-                <max.port>36999</max.port>
-            </properties>
-        </profile>
-        <profile>
-            <id>port-java7</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-                <jdk>1.7</jdk>
-            </activation>
-            <properties>
-                <min.port>37000</min.port>
-                <max.port>37999</max.port>
-            </properties>
-        </profile>
         <profile>
             <id>port-java8</id>
             <activation>
@@ -373,7 +350,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <version>4.4.1</version>
+            <version>5.4.0</version>
             <scope>test</scope>
         </dependency>
 
