@@ -509,12 +509,12 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
             final String srcAbsPath,
             final String destAbsPath) throws PersistenceException {
         final String srcNodePath = pathMapper.mapResourcePathToJCRPath(srcAbsPath);
-        final String dstNodePath = pathMapper.mapResourcePathToJCRPath(destAbsPath);
+        final String dstNodePath = pathMapper.mapResourcePathToJCRPath(destAbsPath + '/' + ResourceUtil.getName(srcAbsPath));
         try {
             ctx.getProviderState().getSession().move(srcNodePath, dstNodePath);
             return true;
-        } catch (RepositoryException e) {
-            throw new PersistenceException("Can't move resource", e);
+        } catch (final RepositoryException e) {
+            throw new PersistenceException("Unable to move resource to " + destAbsPath, e, srcAbsPath, null);
         }
     }
 
