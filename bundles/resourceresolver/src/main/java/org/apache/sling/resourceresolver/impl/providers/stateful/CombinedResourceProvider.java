@@ -285,9 +285,7 @@ public class CombinedResourceProvider {
     }
 
     /**
-     * Create a resource. Iterate over all modifiable ResourceProviders
-     * stopping at the first one which creates the resource and return the
-     * created resource.
+     * Create a resource.
      *
      * @throws UnsupportedOperationException
      *             If creation is not allowed/possible
@@ -297,18 +295,17 @@ public class CombinedResourceProvider {
      */
     public Resource create(String path, Map<String, Object> properties) throws PersistenceException {
         try {
-        List<StatefulResourceProvider> matching = getMatchingModifiableProviders(path);
-        Resource creationResultResource = head(matching).create(path, properties);
-        if (creationResultResource != null) {
-            return creationResultResource;
-        }
-        // If none of the viable handlers could create the resource or if the
-        // list of handlers was empty, throw an Exception
-        throw new UnsupportedOperationException("create '" + getName(path) + "' at " + ResourceUtil.getParent(path));
+            final StatefulResourceProvider provider = getBestMatchingModifiableProvider(path);
+            if ( provider != null ) {
+                final Resource creationResultResource = provider.create(path, properties);
+                if (creationResultResource != null) {
+                    return creationResultResource;
+                }
+            }
         } catch (LoginException le) {
-            // TODO - ignore throw PersistenceException
-            throw new SlingException("Unable to authenticate", le);
+            // ignore and throw (see below)
         }
+        throw new UnsupportedOperationException("create '" + getName(path) + "' at " + ResourceUtil.getParent(path));
     }
 
     /**
@@ -322,29 +319,18 @@ public class CombinedResourceProvider {
      * @throws PersistenceException
      *             If deletion fails
      */
-    public void delete(Resource resource) throws PersistenceException {
-        try {
+    public void delete(final Resource resource) throws PersistenceException {
         final String path = resource.getPath();
-        final Map<String, String> parameters = resource.getResourceMetadata().getParameterMap();
-        boolean anyProviderAttempted = false;
-
-        // Give all viable handlers a chance to delete the resource
-        for (StatefulResourceProvider p : getMatchingModifiableProviders(path)) {
-            Resource providerResource = p.getResource(path, null, parameters, false);
-            if (providerResource != null) {
-                anyProviderAttempted = true;
-                p.delete(providerResource);
+        try {
+            final StatefulResourceProvider provider = getBestMatchingModifiableProvider(path);
+            if ( provider != null ) {
+                provider.delete(resource);
+                return;
             }
+        } catch (LoginException le) {
+            // ignore and throw (see below)
         }
-        // If none of the viable handlers could delete the resource or if the
-        // list of handlers was empty, throw an Exception
-        if (!anyProviderAttempted) {
-            throw new UnsupportedOperationException("delete at '" + path + "'");
-        }
-    } catch (LoginException le) {
-        // TODO - ignore for a single handler
-        throw new SlingException("Unable to authenticate", le);
-    }
+        throw new UnsupportedOperationException("delete at '" + path + "'");
     }
 
     /**
@@ -495,11 +481,24 @@ public class CombinedResourceProvider {
     /**
      * @param path
      * @return
-     * @throws SlingException
+     * @throws LoginException
      */
-    private StatefulResourceProvider getBestMatchingProvider(final String path) throws LoginException {
+    private @Nonnull StatefulResourceProvider getBestMatchingProvider(final String path) throws LoginException {
         final ResourceProviderHandler handler = storage.getTree().getBestMatchingNode(path);
         return handler == null ? EmptyResourceProvider.SINGLETON : authenticator.getStateful(handler, this);
+    }
+
+    /**
+     * @param path
+     * @return The modifiable provider or {@code null}
+     * @throws LoginException
+     */
+    private @CheckForNull StatefulResourceProvider getBestMatchingModifiableProvider(final String path) throws LoginException {
+        final ResourceProviderHandler handler = storage.getTree().getBestMatchingNode(path);
+        if ( handler != null && handler.getInfo().isModifiable() ) {
+            return authenticator.getStateful(handler, this);
+        }
+        return null;
     }
 
     private List<StatefulResourceProvider> getMatchingProviders(String path) throws LoginException {
