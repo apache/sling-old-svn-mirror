@@ -18,8 +18,6 @@
  */
 package org.apache.sling.resourceresolver.impl.providers.stateful;
 
-import static org.apache.commons.collections.IteratorUtils.chainedIterator;
-import static org.apache.commons.collections.IteratorUtils.transformedIterator;
 import static org.apache.sling.api.resource.ResourceUtil.getName;
 import static org.apache.sling.spi.resource.provider.ResourceProvider.RESOURCE_TYPE_SYNTHETIC;
 
@@ -27,8 +25,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +39,7 @@ import javax.annotation.Nonnull;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.collections.ListUtils;
 import org.apache.commons.collections.Transformer;
+import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.LoginException;
@@ -199,6 +198,12 @@ public class CombinedResourceProvider {
     @SuppressWarnings("unchecked")
     public Iterator<Resource> listChildren(final Resource parent) {
         final String parentPath = parent.getPath();
+
+        // 3 sources are combined: children of the provider which owns 'parent',
+        // providers which are directly mounted at a child path,
+        // synthetic resources for providers mounted at a lower level
+
+        // children of the 'parent' provider
         Iterator<Resource> realChildren = null;
         try {
             final StatefulResourceProvider provider = this.getBestMatchingProvider(parentPath);
@@ -206,53 +211,51 @@ public class CombinedResourceProvider {
         } catch ( final LoginException le ) {
             // ignore, realChildren will be null
         }
-        Iterator<Resource> syntheticChildren = getSyntheticChildren(parent);
-        Iterator<Resource> allChildren;
-        if (realChildren == null) {
-            allChildren = syntheticChildren;
-        } else if ( syntheticChildren == null ) {
-            allChildren = realChildren;
-        } else {
-            allChildren = new UniqueIterator(chainedIterator(realChildren, syntheticChildren));
-        }
-        if ( allChildren == null ) {
-            return Collections.EMPTY_LIST.iterator();
-        }
-        return transformedIterator(allChildren, new Transformer() {
-            @Override
-            public Object transform(Object input) {
-                Resource resource = (Resource) input;
-                resource.getResourceMetadata().setResolutionPath(resource.getPath());
-                return resource;
-            }
-        });
-    }
 
-    private Iterator<Resource> getSyntheticChildren(final Resource parent) {
-        final Node<ResourceProviderHandler> node = storage.getTree().getNode(parent.getPath());
-        if (node == null) {
-            return null;
+        final Set<String> visitedNames = new HashSet<String>();
+
+        IteratorChain chain = new IteratorChain();
+        if ( realChildren != null ) {
+            chain.addIterator(realChildren);
         }
-        final List<Resource> children = new ArrayList<Resource>();
-        for (Entry<String, Node<ResourceProviderHandler>> entry : node.getChildren().entrySet()) {
-            final String name = entry.getKey();
-            final ResourceProviderHandler handler = entry.getValue().getValue();
-            final String childPath = new StringBuilder(parent.getPath()).append('/').append(name).toString();
-            Resource child = null;
-            if (handler == null) {
-                child = new SyntheticResource(resolver, childPath, RESOURCE_TYPE_SYNTHETIC);
-            } else {
-                try {
-                    child = authenticator.getStateful(handler, this).getResource(childPath, parent, null, false);
-                } catch ( final LoginException ignore) {
-                    // ignore this
+
+        // synthetic and providers are done in one loop
+        final Node<ResourceProviderHandler> node = storage.getTree().getNode(parent.getPath());
+        if (node != null) {
+            final List<Resource> syntheticList = new ArrayList<Resource>();
+            final List<Resource> providerList = new ArrayList<Resource>();
+
+            for (final Entry<String, Node<ResourceProviderHandler>> entry : node.getChildren().entrySet()) {
+                final String name = entry.getKey();
+                final ResourceProviderHandler handler = entry.getValue().getValue();
+                final String childPath = new StringBuilder(parent.getPath()).append('/').append(name).toString();
+                if (handler == null) {
+                    syntheticList.add(new SyntheticResource(resolver, childPath, RESOURCE_TYPE_SYNTHETIC));
+                } else {
+                    try {
+                        providerList.add(authenticator.getStateful(handler, this).getResource(childPath, parent, null, false));
+                    } catch ( final LoginException ignore) {
+                        // if there is a child provider underneath, we need to create a synthetic resource
+                        // otherwise we need to make sure that no one else is providing this child
+                        if ( entry.getValue().getChildren().isEmpty() ) {
+                            syntheticList.add(new SyntheticResource(resolver, childPath, RESOURCE_TYPE_SYNTHETIC));
+                        } else {
+                            visitedNames.add(name);
+                        }
+                    }
                 }
             }
-            if (child != null) {
-                children.add(child);
+            if ( !providerList.isEmpty() ) {
+                chain.addIterator(providerList.iterator());
+            }
+            if ( !syntheticList.isEmpty() ) {
+                chain.addIterator(syntheticList.iterator());
             }
         }
-        return children.isEmpty() ? null : children.iterator();
+        if ( chain.size() == 0 ) {
+            return Collections.EMPTY_LIST.iterator();
+        }
+        return new UniqueIterator(visitedNames, chain);
     }
 
     /**
@@ -599,41 +602,28 @@ public class CombinedResourceProvider {
 
         private final Iterator<Resource> input;
 
-        private final List<String> visited;
+        private final Set<String> visited;
 
-        private final Map<String, Resource> delayed;
-
-        private Iterator<Resource> delayedIterator;
-
-        public UniqueIterator(Iterator<Resource> input) {
+        public UniqueIterator(Set<String> visited, final Iterator<Resource> input) {
             this.input = input;
-            this.visited = new ArrayList<String>();
-            this.delayed = new LinkedHashMap<String, Resource>();
+            this.visited = visited;
         }
 
         @Override
         protected Resource seek() {
             while (input.hasNext()) {
-                Resource next = input.next();
-                String path = next.getPath();
+                final Resource next = input.next();
+                final String name = next.getPath();
 
-                if (visited.contains(path)) {
+                if (visited.contains(name)) {
                     continue;
-                } else if (next instanceof SyntheticResource) {
-                    delayed.put(path, next);
                 } else {
-                    visited.add(path);
-                    delayed.remove(path);
+                    visited.add(name);
+                    next.getResourceMetadata().setResolutionPath(next.getPath());
                     return next;
                 }
             }
 
-            if (delayedIterator == null) {
-                delayedIterator = delayed.values().iterator();
-            }
-            if (delayedIterator.hasNext()) {
-                return delayedIterator.next();
-            }
             return null;
         }
     }
