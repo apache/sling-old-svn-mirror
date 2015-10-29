@@ -136,7 +136,12 @@ public abstract class AbstractClusterLoadTest {
 
     @Test
     public void testSevenInstances() throws Throwable {
-    	doTest(7, 10);
+        doTest(7, 10);
+    }
+    
+    @Test
+    public void testEightInstances() throws Throwable {
+        doTest(8, 50);
     }
 
     private void doTest(final int size, final int loopCnt) throws Throwable {
@@ -167,7 +172,7 @@ public abstract class AbstractClusterLoadTest {
 		}
         VirtualInstanceBuilder builder = newBuilder()
                 .newRepository("/var/discovery/impl/ClusterLoadTest/doTest-"+size+"-"+loopCnt+"/", true)
-                .setDebugName("firstInstance")
+                .setDebugName("firstInstance-"+size+"_"+loopCnt)
                 .setConnectorPingTimeout(3)
                 .setConnectorPingInterval(20)
                 .setMinEventDelay(0);
@@ -177,7 +182,7 @@ public abstract class AbstractClusterLoadTest {
 		for(int i=1; i<size; i++) {
 		    VirtualInstanceBuilder builder2 = newBuilder()
 		            .useRepositoryOf(builder)
-		            .setDebugName("subsequentInstance-"+i)
+		            .setDebugName("subsequentInstance-"+i+"-"+size+"_"+loopCnt)
 	                .setConnectorPingTimeout(3)
 	                .setMinEventDelay(0)
 	                .setConnectorPingInterval(20);
