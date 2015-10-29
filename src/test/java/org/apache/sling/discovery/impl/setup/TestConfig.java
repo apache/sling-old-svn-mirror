@@ -26,14 +26,14 @@ import org.apache.sling.discovery.impl.Config;
 
 public class TestConfig extends Config implements ModifiableTestBaseConfig {
 
-    long heartbeatTimeout = 20;
-    long heartbeatInterval = 20;
-    int minEventDelay = 1;
     List<String> whitelist;
     private String drPath;
     
     public TestConfig(String path) {
         this.drPath = path;
+        heartbeatTimeout = 20;
+        heartbeatInterval = 20;
+        minEventDelay = 1;
     }
     
     @Override

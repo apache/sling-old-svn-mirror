@@ -62,19 +62,19 @@ public class Config implements BaseConfig, DiscoveryLiteConfig {
     public static final long DEFAULT_HEARTBEAT_TIMEOUT = 120;
     @Property(longValue=DEFAULT_HEARTBEAT_TIMEOUT)
     public static final String HEARTBEAT_TIMEOUT_KEY = "heartbeatTimeout";
-    private long heartbeatTimeout = DEFAULT_HEARTBEAT_TIMEOUT;
+    protected long heartbeatTimeout = DEFAULT_HEARTBEAT_TIMEOUT;
 
     /** Configure the interval (in seconds) according to which the heartbeats are exchanged in the topology. */
     public static final long DEFAULT_HEARTBEAT_INTERVAL = 30;
     @Property(longValue=DEFAULT_HEARTBEAT_INTERVAL)
     public static final String HEARTBEAT_INTERVAL_KEY = "heartbeatInterval";
-    private long heartbeatInterval = DEFAULT_HEARTBEAT_INTERVAL;
+    protected long heartbeatInterval = DEFAULT_HEARTBEAT_INTERVAL;
 
     /** Configure the time (in seconds) which must be passed at minimum between sending TOPOLOGY_CHANGING/_CHANGED (avoid flooding). */
     public static final int DEFAULT_MIN_EVENT_DELAY = 3;
     @Property(intValue=DEFAULT_MIN_EVENT_DELAY)
     public static final String MIN_EVENT_DELAY_KEY = "minEventDelay";
-    private int minEventDelay = DEFAULT_MIN_EVENT_DELAY;
+    protected int minEventDelay = DEFAULT_MIN_EVENT_DELAY;
 
     /** Configure the socket connect timeout for topology connectors. */
     public static final int DEFAULT_CONNECTION_TIMEOUT = 10;
