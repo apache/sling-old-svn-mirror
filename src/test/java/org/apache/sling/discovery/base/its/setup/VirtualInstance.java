@@ -30,23 +30,22 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.jcr.Session;
 import javax.servlet.Servlet;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.commons.testing.jcr.RepositoryProvider;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.PropertyProvider;
 import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.base.commons.BaseDiscoveryService;
 import org.apache.sling.discovery.base.commons.ClusterViewService;
-import org.apache.sling.discovery.base.commons.ViewChecker;
 import org.apache.sling.discovery.base.commons.UndefinedClusterViewException;
+import org.apache.sling.discovery.base.commons.ViewChecker;
 import org.apache.sling.discovery.base.connectors.announcement.AnnouncementRegistry;
 import org.apache.sling.discovery.base.connectors.ping.ConnectorRegistry;
 import org.apache.sling.discovery.base.connectors.ping.TopologyConnectorClientInformation;
 import org.apache.sling.discovery.base.connectors.ping.TopologyConnectorServlet;
+import org.apache.sling.discovery.base.its.setup.mock.ArtificialDelay;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
@@ -100,6 +99,8 @@ public class VirtualInstance {
 
     private final VirtualInstanceBuilder builder;
 
+    private final ArtificialDelay delay;
+
     private class ViewCheckerRunner implements Runnable {
 
     	private final int intervalInSeconds;
@@ -143,6 +144,7 @@ public class VirtualInstance {
         this.builder = builder;
     	this.slingId = builder.getSlingId();
         this.debugName = builder.getDebugName();
+        this.delay = builder.getDelay();
         logger.info("<init>: starting slingId="+slingId+", debugName="+debugName);
 
         osgiMock = new OSGiMock();
@@ -178,6 +180,10 @@ public class VirtualInstance {
         }
 
         osgiMock.activateAll();
+    }
+    
+    public void setDelay(String operationDescriptor, long delayMillis) {
+        delay.setDelay(operationDescriptor, delayMillis);
     }
     
     @Override
@@ -369,6 +375,10 @@ public class VirtualInstance {
 
     public VirtualInstanceBuilder getBuilder() {
         return builder;
+    }
+
+    public String getDebugName() {
+        return debugName;
     }
 
 }

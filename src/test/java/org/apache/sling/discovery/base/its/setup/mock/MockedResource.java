@@ -123,7 +123,7 @@ public class MockedResource extends SyntheticResource {
                 ValueMap valueMap = new ValueMapDecorator(map);
                 return (AdapterType) valueMap;
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("adaptTo failed with : "+e, e);
                 return null;
             }
         } else if (type.equals(ModifiableValueMap.class)) {

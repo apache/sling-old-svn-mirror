@@ -32,6 +32,7 @@ import org.apache.sling.discovery.base.connectors.announcement.AnnouncementRegis
 import org.apache.sling.discovery.base.connectors.announcement.AnnouncementRegistryImpl;
 import org.apache.sling.discovery.base.connectors.ping.ConnectorRegistry;
 import org.apache.sling.discovery.base.connectors.ping.ConnectorRegistryImpl;
+import org.apache.sling.discovery.base.its.setup.mock.ArtificialDelay;
 import org.apache.sling.discovery.base.its.setup.mock.FailingScheduler;
 import org.apache.sling.discovery.commons.providers.spi.base.DummySlingSettingsService;
 import org.apache.sling.settings.SlingSettingsService;
@@ -74,8 +75,13 @@ public abstract class VirtualInstanceBuilder {
     protected boolean ownRepository;
     private int minEventDelay = 1;
     protected VirtualInstanceBuilder hookedToBuilder;
+    protected final ArtificialDelay delay = new ArtificialDelay();
 
     public VirtualInstanceBuilder() {
+    }
+    
+    public ArtificialDelay getDelay() {
+        return delay;
     }
     
     public VirtualInstanceBuilder newRepository(String path, boolean resetRepo) throws Exception {
@@ -170,6 +176,7 @@ public abstract class VirtualInstanceBuilder {
 
     public VirtualInstanceBuilder setDebugName(String debugName) {
         this.debugName = debugName;
+        delay.setDebugName(debugName);
         return this;
     }
 
