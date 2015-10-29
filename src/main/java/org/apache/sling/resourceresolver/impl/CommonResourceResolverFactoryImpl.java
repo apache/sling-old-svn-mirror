@@ -265,7 +265,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     protected void activate(final BundleContext bundleContext) {
         final Logger logger = LoggerFactory.getLogger(getClass());
         try {
-            plugin = new ResourceResolverWebConsolePlugin(bundleContext, this);
+            plugin = new ResourceResolverWebConsolePlugin(bundleContext, this, this.activator.getRuntimeService());
         } catch (final Throwable ignore) {
             // an exception here probably means the web console plugin is not
             // available
