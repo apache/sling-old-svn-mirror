@@ -148,8 +148,6 @@ public class RepositoryDelaysTest {
     public void testOldView() throws Throwable {
         final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
         discoveryLogger.setLevel(Level.INFO); // info should do
-        org.apache.log4j.Logger vsmLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery.commons.providers.base.ViewStateManagerImpl");
-        vsmLogger.setLevel(Level.DEBUG);
         FullJR2VirtualInstanceBuilder builder = newBuilder();
         builder.setDebugName("firstInstanceA")
                 .newRepository("/var/discovery/impl/", true)
