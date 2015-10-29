@@ -29,12 +29,12 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.testing.jcr.RepositoryProvider;
 import org.apache.sling.discovery.base.commons.BaseDiscoveryService;
 import org.apache.sling.discovery.base.commons.ClusterViewService;
-import org.apache.sling.discovery.base.commons.ViewChecker;
 import org.apache.sling.discovery.base.commons.UndefinedClusterViewException;
+import org.apache.sling.discovery.base.commons.ViewChecker;
 import org.apache.sling.discovery.base.its.setup.ModifiableTestBaseConfig;
 import org.apache.sling.discovery.base.its.setup.VirtualInstance;
 import org.apache.sling.discovery.base.its.setup.VirtualInstanceBuilder;
-import org.apache.sling.discovery.base.its.setup.mock.MockFactory;
+import org.apache.sling.discovery.base.its.setup.mock.DummyResourceResolverFactory;
 import org.apache.sling.discovery.impl.DiscoveryServiceImpl;
 import org.apache.sling.discovery.impl.cluster.ClusterViewServiceImpl;
 import org.apache.sling.discovery.impl.cluster.voting.VotingHandler;
@@ -52,10 +52,27 @@ public class FullJR2VirtualInstanceBuilder extends VirtualInstanceBuilder {
     private VotingEventListener observationListener;
 
     private ObservationManager observationManager;
-    
+
+    private VotingHandler votingHandler;
+
     @Override
     public VirtualInstanceBuilder createNewRepository() throws Exception {
-        this.factory = MockFactory.mockResourceResolverFactory();
+        DummyResourceResolverFactory dummyFactory = new DummyResourceResolverFactory();
+        dummyFactory.setArtificialDelay(delay);
+        this.factory = dummyFactory;
+        return this;
+    }
+    
+    @Override
+    public VirtualInstanceBuilder useRepositoryOf(VirtualInstanceBuilder other) throws Exception {
+        super.useRepositoryOf(other);
+        DummyResourceResolverFactory dummyFactory = new DummyResourceResolverFactory();
+        DummyResourceResolverFactory originalFactory = (DummyResourceResolverFactory) this.factory;
+        // force repository to be created now..
+        originalFactory.getAdministrativeResourceResolver(null);
+        dummyFactory.setSlingRepository(originalFactory.getSlingRepository());
+        dummyFactory.setArtificialDelay(getDelay());
+        this.factory = dummyFactory; 
         return this;
     }
 
@@ -90,12 +107,12 @@ public class FullJR2VirtualInstanceBuilder extends VirtualInstanceBuilder {
     
     @Override
     protected ViewChecker createViewChecker() throws Exception {
-        return HeartbeatHandler.testConstructor(getSlingSettingsService(), getResourceResolverFactory(), getAnnouncementRegistry(), getConnectorRegistry(), getConfig(), getScheduler());
+        return HeartbeatHandler.testConstructor(getSlingSettingsService(), getResourceResolverFactory(), getAnnouncementRegistry(), getConnectorRegistry(), getConfig(), getScheduler(), getVotingHandler());
     }
     
     @Override
     protected BaseDiscoveryService createDiscoveryService() throws Exception {
-        return DiscoveryServiceImpl.testConstructor(getResourceResolverFactory(), getAnnouncementRegistry(), getConnectorRegistry(), getClusterViewService(), getHeartbeatHandler(), getSlingSettingsService(), getScheduler(), getConfig());
+        return DiscoveryServiceImpl.testConstructor(getResourceResolverFactory(), getAnnouncementRegistry(), getConnectorRegistry(), (ClusterViewServiceImpl) getClusterViewService(), getHeartbeatHandler(), getSlingSettingsService(), getScheduler(), getConfig());
     }
     
     @Override
@@ -117,12 +134,22 @@ public class FullJR2VirtualInstanceBuilder extends VirtualInstanceBuilder {
         }
         return additionalServices;
     }
+    
+    VotingHandler getVotingHandler() throws Exception {
+        if (votingHandler == null) {
+            votingHandler = createVotingHandler();
+        }
+        return votingHandler;
+    }
+
+    private VotingHandler createVotingHandler() throws Exception {
+        return VotingHandler.testConstructor(getSlingSettingsService(), getResourceResolverFactory(), getConfig());
+    }
 
     private Object[] createAdditionalServices(VirtualInstance instance) throws Exception {
         Object[] additionals = new Object[1];
         
-        VotingHandler votingHandler = VotingHandler.testConstructor(getSlingSettingsService(), getResourceResolverFactory(), getConfig());
-        additionals[0] = votingHandler;
+        additionals[0] = getVotingHandler();
         
         observationListener = new VotingEventListener(instance, votingHandler, getSlingId());
         ResourceResolver resourceResolver = getResourceResolverFactory()
