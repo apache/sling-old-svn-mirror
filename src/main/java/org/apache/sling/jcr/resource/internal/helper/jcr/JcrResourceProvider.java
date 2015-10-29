@@ -246,8 +246,8 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     }
 
     @Override
-    public void logout(final @Nonnull JcrProviderState state) {
-        state.logout();
+    public void logout(final @Nonnull ResolverContext<JcrProviderState> ctx) {
+        ctx.getProviderState().logout();
     }
 
     @Override
