@@ -444,8 +444,22 @@ public abstract class AbstractClusterTest {
         for(int i=0; i<25; i++) {
             runHeartbeatOnceWith(instance1Restarted, instance2, instance3, instance5);
             instance1.getViewChecker().checkView();
-            assertTrue(pingConnector(instance3, instance2));
-            assertTrue(pingConnector(instance5, instance2));
+            // we used to do:
+            //assertTrue(pingConnector(instance3, instance2));
+            // but that could fail with the introduction of marking
+            // an establishedView as failing upon detecting a view change
+            // when the view changes, we're sending TOPOLOGY_CHANGING to listeners
+            // so getTopology() should also return isCurrent==false - which
+            // means that doing a ping will also fail, cos that wants to 
+            // get a current topology to send as an announcement.
+            // which is a long way of saying: we cannot do an assert here
+            // since instance3 *can* have an undefined cluster view..
+            try{
+                pingConnector(instance3, instance2);
+            } catch(UndefinedClusterViewException ucve) {
+                // ignore
+            }
+            pingConnector(instance5, instance2);
             final TopologyView topology = instance3.getDiscoveryService().getTopology();
             InstanceDescription i3 = null;
             for (Iterator<InstanceDescription> it = topology.getInstances().iterator(); it.hasNext();) {
@@ -592,7 +606,17 @@ public abstract class AbstractClusterTest {
                 .setMinEventDelay(MIN_EVENT_DELAY).build();
         for(int i=0; i<3; i++) {
             runHeartbeatOnceWith(instance1Restarted, instance2, instance3, instance4, instance5);
-            assertTrue(pingConnector(instance3, instance2));
+            Thread.sleep(250);
+            // since instance4 just started - hooked to instance3 
+            // it is possible that it doesn't just have a topology
+            // yet - so we cannot do:
+            //assertTrue(pingConnector(instance3, instance2));
+            // but instead do
+            try{
+                pingConnector(instance3, instance2);
+            } catch(UndefinedClusterViewException ucve) {
+                // ignore
+            }
             assertTrue(pingConnector(instance5, instance2));
         }
 
