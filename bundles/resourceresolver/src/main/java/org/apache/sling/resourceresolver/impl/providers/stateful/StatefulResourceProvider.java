@@ -31,6 +31,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.query.Query;
 import org.apache.sling.api.resource.query.QueryInstructions;
+import org.apache.sling.spi.resource.provider.JCRQueryProvider;
 import org.apache.sling.spi.resource.provider.QueryResult;
 import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
@@ -74,7 +75,7 @@ public interface StatefulResourceProvider {
      */
     @CheckForNull
     Resource getResource(@Nonnull final String path, @CheckForNull final Resource parent,
-            final Map<String, String> parameters, final boolean isResolve);
+            @CheckForNull final Map<String, String> parameters, final boolean isResolve);
 
     /**
      * @see ResourceProvider#listChildren(org.apache.sling.spi.resource.provider.ResolveContext, Resource)

@@ -126,16 +126,16 @@ public class CombinedResourceProvider {
         final String path = child.getPath();
         try {
             final StatefulResourceProvider provider = getBestMatchingProvider(path);
-            Resource parentCandidate = provider.getParent(child);
+            final Resource parentCandidate = provider.getParent(child);
             if (parentCandidate != null) {
                 return parentCandidate;
             }
-            String parentPath = ResourceUtil.getParent(path);
-            if (parentPath != null && isIntermediatePath(parentPath)) {
-                return new SyntheticResource(resolver, parentPath, ResourceProvider.RESOURCE_TYPE_SYNTHETIC);
-            }
         } catch ( final LoginException le ) {
-            // ignore, we just return null
+            // ignore
+        }
+        final String parentPath = ResourceUtil.getParent(path);
+        if (parentPath != null && isIntermediatePath(parentPath)) {
+            return new SyntheticResource(resolver, parentPath, ResourceProvider.RESOURCE_TYPE_SYNTHETIC);
         }
         return null;
     }
@@ -166,22 +166,19 @@ public class CombinedResourceProvider {
             if (resourceCandidate != null) {
                 return resourceCandidate;
             }
-
-            // query: /libs/sling/servlet/default
-            // resource Provider: libs/sling/servlet/default/GET.servlet
-            // list will match libs, sling, servlet, default
-            // and there will be no resource provider at the end
-            // SLING-3482 : this is only done for getResource but not resolve
-            //              as it is important e.g. for servlet resolution
-            //              to get the parent resource for resource traversal.
-            if (!isResolve && isIntermediatePath(path)) {
-                logger.debug("Resolved Synthetic {}", path);
-                return new SyntheticResource(resolver, path, ResourceProvider.RESOURCE_TYPE_SYNTHETIC);
-            }
-        } catch (SlingException e) {
-            throw e;
-        } catch (Exception e) {
-            logger.warn("Unexpected exception while trying to get resource for " + path, e);
+        } catch ( LoginException le ) {
+            // ignore
+        }
+        // query: /libs/sling/servlet/default
+        // resource Provider: libs/sling/servlet/default/GET.servlet
+        // list will match libs, sling, servlet, default
+        // and there will be no resource provider at the end
+        // SLING-3482 : this is only done for getResource but not resolve
+        //              as it is important e.g. for servlet resolution
+        //              to get the parent resource for resource traversal.
+        if (!isResolve && isIntermediatePath(path)) {
+            logger.debug("Resolved Synthetic {}", path);
+            return new SyntheticResource(resolver, path, ResourceProvider.RESOURCE_TYPE_SYNTHETIC);
         }
         logger.debug("Resource null {} ", path);
         return null;
@@ -201,51 +198,61 @@ public class CombinedResourceProvider {
      */
     @SuppressWarnings("unchecked")
     public Iterator<Resource> listChildren(final Resource parent) {
+        final String parentPath = parent.getPath();
+        Iterator<Resource> realChildren = null;
         try {
-            List<StatefulResourceProvider> matching = getMatchingProviders(parent.getPath());
-            Iterator<Resource> realChildren = head(matching).listChildren(parent);
-            Iterator<Resource> syntheticChildren = getSyntheticChildren(parent).iterator();
-            Iterator<Resource> allChildren;
-            if (realChildren == null) {
-                allChildren = syntheticChildren;
-            } else {
-                allChildren = new UniqueIterator(chainedIterator(realChildren, syntheticChildren));
-            }
-            return transformedIterator(allChildren, new Transformer() {
-                @Override
-                public Object transform(Object input) {
-                    Resource resource = (Resource) input;
-                    resource.getResourceMetadata().setResolutionPath(resource.getPath());
-                    return resource;
-                }
-            });
+            final StatefulResourceProvider provider = this.getBestMatchingProvider(parentPath);
+            realChildren = provider.listChildren(parent);
         } catch ( final LoginException le ) {
-            // ignore
+            // ignore, realChildren will be null
         }
-        return null;
+        Iterator<Resource> syntheticChildren = getSyntheticChildren(parent);
+        Iterator<Resource> allChildren;
+        if (realChildren == null) {
+            allChildren = syntheticChildren;
+        } else if ( syntheticChildren == null ) {
+            allChildren = realChildren;
+        } else {
+            allChildren = new UniqueIterator(chainedIterator(realChildren, syntheticChildren));
+        }
+        if ( allChildren == null ) {
+            return Collections.EMPTY_LIST.iterator();
+        }
+        return transformedIterator(allChildren, new Transformer() {
+            @Override
+            public Object transform(Object input) {
+                Resource resource = (Resource) input;
+                resource.getResourceMetadata().setResolutionPath(resource.getPath());
+                return resource;
+            }
+        });
     }
 
-    private List<Resource> getSyntheticChildren(Resource parent) throws LoginException {
-        Node<ResourceProviderHandler> node = storage.getTree().getNode(parent.getPath());
+    private Iterator<Resource> getSyntheticChildren(final Resource parent) {
+        final Node<ResourceProviderHandler> node = storage.getTree().getNode(parent.getPath());
         if (node == null) {
-            return Collections.emptyList();
+            return null;
         }
-        List<Resource> children = new ArrayList<Resource>();
+        final List<Resource> children = new ArrayList<Resource>();
         for (Entry<String, Node<ResourceProviderHandler>> entry : node.getChildren().entrySet()) {
             final String name = entry.getKey();
             final ResourceProviderHandler handler = entry.getValue().getValue();
             final String childPath = new StringBuilder(parent.getPath()).append('/').append(name).toString();
-            final Resource child;
+            Resource child = null;
             if (handler == null) {
                 child = new SyntheticResource(resolver, childPath, RESOURCE_TYPE_SYNTHETIC);
             } else {
-                child = authenticator.getStateful(handler, this).getResource(childPath, parent, null, false);
+                try {
+                    child = authenticator.getStateful(handler, this).getResource(childPath, parent, null, false);
+                } catch ( final LoginException ignore) {
+                    // ignore this
+                }
             }
             if (child != null) {
                 children.add(child);
             }
         }
-        return children;
+        return children.isEmpty() ? null : children.iterator();
     }
 
     /**
@@ -253,16 +260,11 @@ public class CombinedResourceProvider {
      */
     public Collection<String> getAttributeNames() {
         final Set<String> names = new LinkedHashSet<String>();
-        try {
-        for (StatefulResourceProvider p : authenticator.getAll(storage.getAttributableHandlers(), this)) {
-            Collection<String> newNames = p.getAttributeNames();
+        for (StatefulResourceProvider p : authenticator.getAllBestEffort(storage.getAttributableHandlers(), this)) {
+            final Collection<String> newNames = p.getAttributeNames();
             if (newNames != null) {
                 names.addAll(newNames);
             }
-        }
-        } catch (LoginException le) {
-            // TODO - ignore for a single handler
-            throw new SlingException("Unable to authenticate", le);
         }
         return names;
     }
@@ -273,16 +275,11 @@ public class CombinedResourceProvider {
      * the providers.
      */
     public Object getAttribute(String name) {
-        try {
-        for (StatefulResourceProvider p : authenticator.getAll(storage.getAttributableHandlers(), this)) {
+        for (StatefulResourceProvider p : authenticator.getAllBestEffort(storage.getAttributableHandlers(), this)) {
             Object attribute = p.getAttribute(name);
             if (attribute != null) {
                 return attribute;
             }
-        }
-        } catch (LoginException le) {
-            // TODO - ignore for a single handler
-            throw new SlingException("Unable to authenticate", le);
         }
         return null;
     }
@@ -391,16 +388,11 @@ public class CombinedResourceProvider {
      * Return the union of query languages supported by the providers.
      */
     public String[] getSupportedLanguages() {
-        try {
         Set<String> supportedLanguages = new LinkedHashSet<String>();
-        for (StatefulResourceProvider p : authenticator.getAll(storage.getJcrQuerableHandlers(), this)) {
+        for (StatefulResourceProvider p : authenticator.getAllBestEffort(storage.getJcrQuerableHandlers(), this)) {
             supportedLanguages.addAll(Arrays.asList(p.getSupportedLanguages()));
         }
         return supportedLanguages.toArray(new String[supportedLanguages.size()]);
-        } catch (LoginException le) {
-            // TODO - ignore for a single handler
-            throw new SlingException("Unable to authenticate", le);
-        }
     }
 
     /**
@@ -416,18 +408,13 @@ public class CombinedResourceProvider {
     }
 
     private List<StatefulResourceProvider> getQuerableProviders(String language) {
-        try {
         List<StatefulResourceProvider> querableProviders = new ArrayList<StatefulResourceProvider>();
-        for (StatefulResourceProvider p : authenticator.getAll(storage.getJcrQuerableHandlers(), this)) {
+        for (StatefulResourceProvider p : authenticator.getAllBestEffort(storage.getJcrQuerableHandlers(), this)) {
             if (ArrayUtils.contains(p.getSupportedLanguages(), language)) {
                 querableProviders.add(p);
             }
         }
         return querableProviders;
-        } catch (LoginException le) {
-            // TODO - ignore for a single handler
-            throw new SlingException("Unable to authenticate", le);
-        }
     }
 
     /**
@@ -448,18 +435,13 @@ public class CombinedResourceProvider {
      */
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
-        try {
-        for (StatefulResourceProvider p : authenticator.getAll(storage.getAdaptableHandlers(), this)) {
+        for (StatefulResourceProvider p : authenticator.getAllBestEffort(storage.getAdaptableHandlers(), this)) {
             final Object adaptee = p.adaptTo(type);
             if (adaptee != null) {
                 return (AdapterType) adaptee;
             }
         }
         return null;
-        } catch (LoginException le) {
-            // TODO - ignore for a single handler
-            throw new SlingException("Unable to authenticate", le);
-        }
     }
 
     /**
@@ -568,9 +550,8 @@ public class CombinedResourceProvider {
 
         @Override
         public Iterator<Resource> iterator() {
-            try {
             @SuppressWarnings("unchecked")
-            Iterator<Iterator<Resource>> iterators = IteratorUtils.transformedIterator(authenticator.getAll(storage.getNativeQuerableHandlers(), CombinedResourceProvider.this).iterator(),
+            Iterator<Iterator<Resource>> iterators = IteratorUtils.transformedIterator(authenticator.getAllBestEffort(storage.getNativeQuerableHandlers(), CombinedResourceProvider.this).iterator(),
                     new Transformer() {
                         @Override
                         public Object transform(Object input) {
@@ -579,10 +560,6 @@ public class CombinedResourceProvider {
                         }
                     });
             return new ChainedIterator<Resource>(iterators);
-            } catch (LoginException le) {
-                // TODO - ignore for a single handler
-                throw new SlingException("Unable to authenticate", le);
-            }
         }
     }
 
