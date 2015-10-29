@@ -50,6 +50,21 @@ public class ResourceProviderDTO {
     public boolean modifiable;
 
     /**
+     * Whether the resource provider supports adaptable.
+     */
+    public boolean adaptable;
+
+    /**
+     * Whether the resource provider supports refreshing.
+     */
+    public boolean refreshable;
+
+    /**
+     * Whether the resource provider supports attributes.
+     */
+    public boolean attributable;
+
+    /**
      * The service id from the service registry.
      */
     public long serviceId;
