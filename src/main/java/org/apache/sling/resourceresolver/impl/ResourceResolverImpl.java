@@ -1302,15 +1302,11 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
     @Override
     public void copy(final String srcAbsPath, final String destAbsPath) throws PersistenceException {
-        if (!this.provider.copy(srcAbsPath, destAbsPath)) {
-            throw new UnsupportedOperationException();
-        }
+        this.provider.copy(srcAbsPath, destAbsPath);
     }
 
     @Override
     public void move(final String srcAbsPath, final String destAbsPath) throws PersistenceException {
-        if (!this.provider.move(srcAbsPath, destAbsPath)) {
-            throw new UnsupportedOperationException();
-        }
+        this.provider.move(srcAbsPath, destAbsPath);
     }
 }
