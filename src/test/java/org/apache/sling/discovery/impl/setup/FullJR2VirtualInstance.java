@@ -18,6 +18,7 @@
  */
 package org.apache.sling.discovery.impl.setup;
 
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.discovery.base.its.setup.VirtualInstance;
 import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.common.heartbeat.HeartbeatHandler;
@@ -37,6 +38,12 @@ public class FullJR2VirtualInstance extends VirtualInstance {
 
     public void stopVoting() {
         fullBuilder.stopVoting();
+    }
+    
+    public void analyzeVotings() throws Exception {
+        ResourceResolver resourceResolver = getResourceResolverFactory().getAdministrativeResourceResolver(null);
+        fullBuilder.getVotingHandler().analyzeVotings(resourceResolver);
+        resourceResolver.close();
     }
 
     public Config getFullConfig() {

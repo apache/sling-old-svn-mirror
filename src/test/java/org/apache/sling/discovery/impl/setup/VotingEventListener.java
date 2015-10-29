@@ -19,6 +19,7 @@
 package org.apache.sling.discovery.impl.setup;
 
 import java.util.Properties;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
@@ -42,11 +43,35 @@ class VotingEventListener implements EventListener {
     private final VotingHandler votingHandler;
     volatile boolean stopped = false;
     private final String slingId;
+    private ConcurrentLinkedQueue<org.osgi.service.event.Event> q = new ConcurrentLinkedQueue<org.osgi.service.event.Event>();
     
-    public VotingEventListener(VirtualInstance instance, VotingHandler votingHandler, String slingId) {
+    public VotingEventListener(VirtualInstance instance, final VotingHandler votingHandler, final String slingId) {
         this.instance = instance;
         this.votingHandler = votingHandler;
         this.slingId = slingId;
+        Thread th = new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                while(!stopped) {
+                    try{
+                        org.osgi.service.event.Event ev = q.poll();
+                        if (ev==null) {
+                            Thread.sleep(10);
+                            continue;
+                        }
+                        logger.debug("async.run: delivering event to listener: "+slingId+", stopped: "+stopped+", event: "+ev);
+                        votingHandler.handleEvent(ev);
+                    } catch(Exception e) {
+                        logger.error("async.run: got Exception: "+e, e);
+                    }
+                }
+            }
+            
+        });
+        th.setName("VotingEventListener-"+instance.getDebugName());
+        th.setDaemon(true);
+        th.start();
     }
     
     public void stop() {
@@ -77,8 +102,8 @@ class VotingEventListener implements EventListener {
                     properties.put("path", event.getPath());
                     org.osgi.service.event.Event osgiEvent = new org.osgi.service.event.Event(
                             topic, properties);
-                    logger.debug("onEvent: delivering event to listener: "+slingId+", stopped: "+stopped+", event: "+osgiEvent);
-                    votingHandler.handleEvent(osgiEvent);
+                    logger.debug("onEvent: enqueuing event to listener: "+slingId+", stopped: "+stopped+", event: "+osgiEvent);
+                    q.add(osgiEvent);
                 } catch (RepositoryException e) {
                     logger.warn("RepositoryException: " + e, e);
                 }
@@ -90,7 +115,7 @@ class VotingEventListener implements EventListener {
             try {
                 this.instance.dumpRepo();
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.info("onEvent: could not dump as part of catching a throwable, e="+e+", th="+th);
             }
             logger.error(
                     "Throwable occurred in onEvent: " + th, th);
