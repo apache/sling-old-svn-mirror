@@ -34,6 +34,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceDecorator;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
@@ -150,6 +151,7 @@ public abstract class ResourceDecoratorTestBase {
     protected Resource mockResource(String path) {
         final Resource result = Mockito.mock(Resource.class);
         Mockito.when(result.getPath()).thenReturn(path);
+        Mockito.when(result.getName()).thenReturn(ResourceUtil.getName(path));
         final ResourceMetadata m = new ResourceMetadata();
         Mockito.when(result.getResourceMetadata()).thenReturn(m);
         return result;

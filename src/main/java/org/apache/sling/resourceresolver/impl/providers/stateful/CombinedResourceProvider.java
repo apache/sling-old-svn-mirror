@@ -232,9 +232,15 @@ public class CombinedResourceProvider {
                 if (handler == null) {
                     syntheticList.add(new SyntheticResource(resolver, childPath, RESOURCE_TYPE_SYNTHETIC));
                 } else {
+                    Resource rsrc = null;
                     try {
-                        providerList.add(authenticator.getStateful(handler, this).getResource(childPath, parent, null, false));
+                        rsrc = authenticator.getStateful(handler, this).getResource(childPath, parent, null, false);
                     } catch ( final LoginException ignore) {
+                        // ignore
+                    }
+                    if ( rsrc != null ) {
+                        providerList.add(rsrc);
+                    } else {
                         // if there is a child provider underneath, we need to create a synthetic resource
                         // otherwise we need to make sure that no one else is providing this child
                         if ( entry.getValue().getChildren().isEmpty() ) {
@@ -604,7 +610,7 @@ public class CombinedResourceProvider {
 
         private final Set<String> visited;
 
-        public UniqueIterator(Set<String> visited, final Iterator<Resource> input) {
+        public UniqueIterator(final Set<String> visited, final Iterator<Resource> input) {
             this.input = input;
             this.visited = visited;
         }
@@ -613,7 +619,7 @@ public class CombinedResourceProvider {
         protected Resource seek() {
             while (input.hasNext()) {
                 final Resource next = input.next();
-                final String name = next.getPath();
+                final String name = next.getName();
 
                 if (visited.contains(name)) {
                     continue;
