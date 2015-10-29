@@ -265,7 +265,7 @@ public class VotingHandler implements EventHandler {
             } // else don't double vote / log
         }
         resourceResolver.commit();
-        logger.info("analyzeVotings: result: my yes vote was for: " + yesVote);
+        logger.debug("analyzeVotings: result: my yes vote was for: " + yesVote);
     }
     
     public void cleanupTimedoutVotings(final ResourceResolver resourceResolver) {
