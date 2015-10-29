@@ -618,8 +618,8 @@ public class HeartbeatTest {
                 assertEquals(1, ongoingVotings.size());
                 VotingView ongoingVote = ongoingVotings.get(0);
                 assertFalse(ongoingVote.isWinning());
-                assertFalse(ongoingVote.hasVotedOrIsInitiator(slowMachine1.getSlingId()));
-                assertTrue(ongoingVote.hasVotedOrIsInitiator(slowMachine2.getSlingId()));
+                assertFalse(ongoingVote.hasVotedYes(slowMachine1.getSlingId()));
+                assertTrue(ongoingVote.hasVotedYes(slowMachine2.getSlingId()));
                 final Resource memberResource = ongoingVote.getResource().getChild("members").getChild(slowMachine2.getSlingId());
                 final ModifiableValueMap memberMap = memberResource.adaptTo(ModifiableValueMap.class);
                 Property vote = (Property) memberMap.get("vote");
