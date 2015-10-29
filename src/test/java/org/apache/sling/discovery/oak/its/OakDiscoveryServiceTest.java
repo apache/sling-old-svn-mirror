@@ -26,6 +26,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyView;
+import org.apache.sling.discovery.base.its.AbstractDiscoveryServiceTest;
 import org.apache.sling.discovery.base.its.setup.VirtualInstance;
 import org.apache.sling.discovery.base.its.setup.VirtualInstanceBuilder;
 import org.apache.sling.discovery.base.its.setup.mock.AssertingTopologyEventListener;
@@ -37,7 +38,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OakDiscoveryServiceTest {
+public class OakDiscoveryServiceTest extends AbstractDiscoveryServiceTest {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -47,7 +48,7 @@ public class OakDiscoveryServiceTest {
 
     private VirtualInstance instance2;
 
-    protected OakVirtualInstanceBuilder newBuilder() {
+    public OakVirtualInstanceBuilder newBuilder() {
         return new OakVirtualInstanceBuilder();
     }
 
@@ -55,7 +56,7 @@ public class OakDiscoveryServiceTest {
     public void setUp() throws Exception {
         final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
         logLevel = discoveryLogger.getLevel();
-        discoveryLogger.setLevel(Level.TRACE);        
+        discoveryLogger.setLevel(Level.INFO);        
     }
     
     @After
