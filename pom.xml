@@ -49,8 +49,8 @@
         <bundle.file.name>
             ${bundle.build.name}/${project.build.finalName}.jar
         </bundle.file.name>
-        <pax-exam.version>4.4.0</pax-exam.version>
-        <pax-link.version>2.3.0</pax-link.version>
+        <pax-exam.version>4.6.0</pax-exam.version>
+        <pax-link.version>2.4.3</pax-link.version>
     </properties>
 
     <build>
@@ -77,44 +77,31 @@
                     </instructions>
                 </configuration>
             </plugin>
+            <plugin>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.12</version>
+                <executions>
+                    <execution>
+                         <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <systemProperties>
+                        <property>
+                            <name>project.bundle.file</name>
+                            <value>${bundle.file.name}</value>
+                        </property>
+                    </systemProperties>
+                    <includes>
+                        <include>**/*IT.java</include>
+                    </includes>
+                </configuration>
+            </plugin>
        </plugins>
     </build>
-    <profiles>
-        <profile>
-            <id>java6plus</id>
-            <activation>
-                <jdk>[1.6,)</jdk>
-            </activation>
-            <build>
-                <plugins>
-                  <!-- integration tests run with pax-exam -->
-                    <plugin>
-                        <artifactId>maven-failsafe-plugin</artifactId>
-                        <version>2.12</version>
-                        <executions>
-                            <execution>
-                                <goals>
-                                    <goal>integration-test</goal>
-                                    <goal>verify</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <systemProperties>
-                                <property>
-                                    <name>project.bundle.file</name>
-                                    <value>${bundle.file.name}</value>
-                                </property>
-                            </systemProperties>
-                            <includes>
-                                <include>**/*IT.java</include>
-                            </includes>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
     <reporting>
         <plugins>
             <plugin>
@@ -216,7 +203,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <version>4.4.1</version>
+            <version>5.4.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
