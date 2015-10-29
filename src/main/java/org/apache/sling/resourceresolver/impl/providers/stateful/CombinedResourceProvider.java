@@ -94,11 +94,10 @@ public class CombinedResourceProvider {
     }
 
     /**
-     * Refreshes all providers.
+     * Refreshes all refreshable providers.
      */
     public void refresh() {
-        for (StatefulResourceProvider p : authenticator.getAllUsed()) {
-            // TODO check for refreshable
+        for (StatefulResourceProvider p : authenticator.getAllUsedRefreshable()) {
             p.refresh();
         }
     }
@@ -535,7 +534,7 @@ public class CombinedResourceProvider {
         List<ResourceProviderHandler> handlers = storage.getTree().getMatchingNodes(path);
         List<StatefulResourceProvider> matching = new ArrayList<StatefulResourceProvider>(handlers.size());
         for (ResourceProviderHandler h : handlers) {
-            if (h.getInfo().getModifiable()) {
+            if (h.getInfo().isModifiable()) {
                 matching.add(authenticator.getStateful(h, this));
             }
         }

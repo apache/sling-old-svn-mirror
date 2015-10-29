@@ -107,7 +107,7 @@ public class ResourceProviderInfo implements Comparable<ResourceProviderInfo> {
         return this.authType;
     }
 
-    public boolean getModifiable() {
+    public boolean isModifiable() {
         return this.modifiable;
     }
 
