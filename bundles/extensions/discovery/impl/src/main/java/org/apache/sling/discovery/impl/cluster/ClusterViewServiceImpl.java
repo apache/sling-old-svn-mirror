@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * currently established view
  */
 @Component
-@Service(value = ClusterViewService.class)
+@Service(value = {ClusterViewService.class, ClusterViewServiceImpl.class})
 public class ClusterViewServiceImpl implements ClusterViewService {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -57,6 +57,8 @@ public class ClusterViewServiceImpl implements ClusterViewService {
 
     @Reference
     private Config config;
+
+    private String failedEstablishedViewId;
 
     public static ClusterViewService testConstructor(SlingSettingsService settingsService,
             ResourceResolverFactory factory, Config config) {
@@ -72,6 +74,15 @@ public class ClusterViewServiceImpl implements ClusterViewService {
     		return null;
     	}
         return settingsService.getSlingId();
+    }
+    
+    public void invalidateEstablishedViewId(String establishedViewId) {
+        if (establishedViewId != null &&
+                (failedEstablishedViewId == null ||
+                !failedEstablishedViewId.equals(establishedViewId))) {
+            logger.info("invalidateEstablishedViewId: marking established view as invalid: "+establishedViewId);;
+        }
+        failedEstablishedViewId = establishedViewId;
     }
 
     public LocalClusterView getLocalClusterView() throws UndefinedClusterViewException {
@@ -91,6 +102,16 @@ public class ClusterViewServiceImpl implements ClusterViewService {
                 throw new UndefinedClusterViewException(Reason.NO_ESTABLISHED_VIEW,
                         "no established view at the moment");
             }
+            
+            if (failedEstablishedViewId != null
+                    && failedEstablishedViewId.equals(view.getResource().getName())) {
+                // SLING-5195 : the heartbeat-handler-self-check has declared the currently
+                // established view as invalid - hence we should now treat this as 
+                // undefined clusterview
+                logger.debug("getClusterView: current establishedView is marked as invalid: "+failedEstablishedViewId);
+                throw new UndefinedClusterViewException(Reason.NO_ESTABLISHED_VIEW,
+                        "current established view was marked as invalid");
+            }
 
             EstablishedClusterView clusterViewImpl = new EstablishedClusterView(
                     config, view, getSlingId());
@@ -106,9 +127,17 @@ public class ClusterViewServiceImpl implements ClusterViewService {
                 throw new UndefinedClusterViewException(Reason.ISOLATED_FROM_TOPOLOGY, 
                         "established view does not include local instance - isolated");
             }
+        } catch (UndefinedClusterViewException e) {
+            // pass through
+            throw e;
         } catch (LoginException e) {
             logger.error(
                     "handleEvent: could not log in administratively: " + e, e);
+            throw new UndefinedClusterViewException(Reason.REPOSITORY_EXCEPTION,
+                    "could not log in administratively: "+e);
+        } catch (Exception e) {
+            logger.error(
+                    "handleEvent: got an exception: " + e, e);
             throw new UndefinedClusterViewException(Reason.REPOSITORY_EXCEPTION,
                     "could not log in administratively: "+e);
         } finally {

@@ -121,7 +121,7 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
     private ConnectorRegistry connectorRegistry;
 
     @Reference
-    private ClusterViewService clusterViewService;
+    private ClusterViewServiceImpl clusterViewService;
 
     @Reference
     private Config config;
@@ -139,7 +139,7 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
     public static BaseDiscoveryService testConstructor(ResourceResolverFactory resourceResolverFactory, 
             AnnouncementRegistry announcementRegistry, 
             ConnectorRegistry connectorRegistry,
-            ClusterViewService clusterViewService,
+            ClusterViewServiceImpl clusterViewService,
             HeartbeatHandler heartbeatHandler,
             SlingSettingsService settingsService,
             Scheduler scheduler,
@@ -651,6 +651,10 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
         return clusterViewService;
     }
     
+    public ClusterViewServiceImpl getClusterViewServiceImpl() {
+        return clusterViewService;
+    }
+
     protected AnnouncementRegistry getAnnouncementRegistry() {
         return announcementRegistry;
     }
