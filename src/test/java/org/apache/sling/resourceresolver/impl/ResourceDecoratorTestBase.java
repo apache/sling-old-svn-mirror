@@ -37,6 +37,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.spi.resource.provider.JCRQueryProvider;
 import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
@@ -136,7 +137,7 @@ public abstract class ResourceDecoratorTestBase {
         };
 
         List<ResourceProviderHandler> list = Arrays.asList(MockedResourceResolverImplTest.createRPHandler(provider, "A-provider", 0L, "/"));
-        resolver = new ResourceResolverImpl(crf, false, null, list);
+        resolver = new ResourceResolverImpl(crf, false, null, new ResourceProviderStorage(list));
     }
 
     protected void assertExistent(Resource r, boolean existent) {

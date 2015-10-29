@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -61,7 +60,6 @@ import org.apache.sling.resourceresolver.impl.helper.URI;
 import org.apache.sling.resourceresolver.impl.helper.URIException;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntry;
 import org.apache.sling.resourceresolver.impl.params.ParsedParameters;
-import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.resourceresolver.impl.providers.stateful.CombinedResourceProvider;
 import org.apache.sling.resourceresolver.impl.providers.stateful.ResourceProviderAuthenticator;
@@ -117,10 +115,6 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         this(factory, isAdmin, authenticationInfo, factory.getResourceProviderTracker().getResourceProviderStorage());
     }
 
-    ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo, final List<ResourceProviderHandler> handlers) throws LoginException {
-        this(factory, isAdmin, authenticationInfo, new ResourceProviderStorage(handlers));
-    }
-
     ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo, final ResourceProviderStorage storage) throws LoginException {
         this.factory = factory;
         this.authenticationInfo = authenticationInfo;
@@ -129,6 +123,12 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         this.factory.register(this, context);
     }
 
+    /**
+     * Constructor for cloning the resource resolver
+     * @param resolver The resolver to clone
+     * @param authenticationInfo The auth info
+     * @throws LoginException if auth to a required provider fails
+     */
     private ResourceResolverImpl(final ResourceResolverImpl resolver, final Map<String, Object> authenticationInfo) throws LoginException {
         this.factory = resolver.factory;
         this.authenticationInfo = new HashMap<String, Object>();
@@ -244,6 +244,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#resolve(javax.servlet.http.HttpServletRequest)
      */
+    @SuppressWarnings("deprecation")
     @Override
     public Resource resolve(final HttpServletRequest request) {
         checkClosed();

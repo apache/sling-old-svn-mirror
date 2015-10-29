@@ -64,6 +64,11 @@ public class ResourceProviderTracker {
         ObservationReporter createProviderReporter();
     }
 
+    public interface ChangeListener {
+
+        void providerChanged(String pid);
+    }
+
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final Map<ServiceReference, ResourceProviderInfo> infos = new ConcurrentHashMap<ServiceReference, ResourceProviderInfo>();
@@ -84,9 +89,12 @@ public class ResourceProviderTracker {
 
     private volatile ObservationReporter providerReporter;
 
-    public void activate(final BundleContext bundleContext, final EventAdmin eventAdmin) {
+    private volatile ChangeListener listener;
+
+    public void activate(final BundleContext bundleContext, final EventAdmin eventAdmin, final ChangeListener listener) {
         this.bundleContext = bundleContext;
         this.eventAdmin = eventAdmin;
+        this.listener = listener;
         this.tracker = new ServiceTracker(bundleContext,
                 ResourceProvider.class.getName(),
                 new ServiceTrackerCustomizer() {
@@ -125,6 +133,7 @@ public class ResourceProviderTracker {
         this.infos.clear();
         this.handlers.clear();
         this.invalidProviders.clear();
+        this.listener = null;
     }
 
     public void setObservationReporterGenerator(final ObservationReporterGenerator generator) {
@@ -148,6 +157,7 @@ public class ResourceProviderTracker {
     private void register(final ResourceProviderInfo info) {
         if ( info.isValid() ) {
            logger.debug("Registering new resource provider {}", info);
+           final List<ProviderEvent> events = new ArrayList<ResourceProviderTracker.ProviderEvent>();
            synchronized ( this.handlers ) {
                List<ResourceProviderHandler> matchingHandlers = this.handlers.get(info.getPath());
                if ( matchingHandlers == null ) {
@@ -164,12 +174,16 @@ public class ResourceProviderTracker {
                            this.handlers.remove(info.getPath());
                        }
                    } else {
+                       events.add(new ProviderEvent(true, info));
                        if ( matchingHandlers.size() > 1 ) {
                            this.deactivate(matchingHandlers.get(1));
+                           events.add(new ProviderEvent(false, matchingHandlers.get(1).getInfo()));
                        }
                    }
                }
            }
+           this.storage = null;
+           this.postEvents(events);
         } else {
             logger.warn("Ignoring invalid resource provider {}", info);
             this.invalidProviders.put(info, FailureReason.invalid);
@@ -188,6 +202,7 @@ public class ResourceProviderTracker {
 
         if ( !isInvalid ) {
             logger.debug("Unregistering resource provider {}", info);
+            final List<ProviderEvent> events = new ArrayList<ResourceProviderTracker.ProviderEvent>();
             synchronized (this.handlers) {
                 final List<ResourceProviderHandler> matchingHandlers = this.handlers.get(info.getPath());
                 if ( matchingHandlers != null ) {
@@ -195,11 +210,13 @@ public class ResourceProviderTracker {
                     if ( matchingHandlers.get(0).getInfo() == info ) {
                         doActivateNext = true;
                         this.deactivate(matchingHandlers.get(0));
+                        events.add(new ProviderEvent(false, matchingHandlers.get(0).getInfo()));
                     }
                     if (removeHandlerByInfo(info, matchingHandlers)) {
                         while (doActivateNext && !matchingHandlers.isEmpty()) {
                             if (this.activate(matchingHandlers.get(0))) {
                                 doActivateNext = false;
+                                events.add(new ProviderEvent(true, matchingHandlers.get(0).getInfo()));
                             } else {
                                 matchingHandlers.remove(0);
                             }
@@ -211,6 +228,7 @@ public class ResourceProviderTracker {
                 }
             }
             storage = null;
+            this.postEvents(events);
         } else {
             logger.debug("Unregistering invalid resource provider {}", info);
         }
@@ -247,8 +265,6 @@ public class ResourceProviderTracker {
 
             return false;
         }
-        postOSGiEvent(SlingConstants.TOPIC_RESOURCE_PROVIDER_ADDED, handler.getInfo());
-        postResourceProviderChange(ChangeType.PROVIDER_ADDED, handler.getInfo());
         logger.debug("Activated resource provider {}", handler.getInfo());
         return true;
     }
@@ -259,22 +275,21 @@ public class ResourceProviderTracker {
      */
     private void deactivate(final ResourceProviderHandler handler) {
         handler.deactivate();
-        postOSGiEvent(SlingConstants.TOPIC_RESOURCE_PROVIDER_REMOVED, handler.getInfo());
-        postResourceProviderChange(ChangeType.PROVIDER_REMOVED, handler.getInfo());
         logger.debug("Deactivated resource provider {}", handler.getInfo());
     }
 
-    private void postOSGiEvent(final String topic, final ResourceProviderInfo info) {
+    /**
+     * Post a change event through the event admin
+     * @param event
+     */
+    private void postOSGiEvent(final ProviderEvent event) {
         final Dictionary<String, Object> eventProps = new Hashtable<String, Object>();
-        eventProps.put(SlingConstants.PROPERTY_PATH, info.getPath());
-        String pid = (String) info.getServiceReference().getProperty(Constants.SERVICE_PID);
-        if (pid == null) {
-            pid = (String) info.getServiceReference().getProperty(LegacyResourceProviderWhiteboard.ORIGINAL_SERVICE_PID);
+        eventProps.put(SlingConstants.PROPERTY_PATH, event.path);
+        if (event.pid != null) {
+            eventProps.put(Constants.SERVICE_PID, event.pid);
         }
-        if (pid != null) {
-            eventProps.put(Constants.SERVICE_PID, pid);
-        }
-        eventAdmin.postEvent(new Event(topic, eventProps));
+        eventAdmin.postEvent(new Event(event.isAdd ? SlingConstants.TOPIC_RESOURCE_PROVIDER_ADDED : SlingConstants.TOPIC_RESOURCE_PROVIDER_REMOVED,
+                eventProps));
     }
 
     /**
@@ -282,8 +297,9 @@ public class ResourceProviderTracker {
      * @param type The change type
      * @param info The resource provider
      */
-    private void postResourceProviderChange(ChangeType type, final ResourceProviderInfo info) {
-        ResourceChange change = new ResourceChange(type, info.getPath(), false, null, null, null);
+    private void postResourceProviderChange(final ProviderEvent event) {
+        final ResourceChange change = new ResourceChange(event.isAdd ? ChangeType.PROVIDER_ADDED : ChangeType.PROVIDER_REMOVED,
+                event.path, false, null, null, null);
         this.providerReporter.reportChanges(Collections.singletonList(change), false);
     }
 
@@ -360,5 +376,44 @@ public class ResourceProviderTracker {
         handler.getProviderContext().update(
                 reporterGenerator.create(handlerPath, new PathSet(excludedPaths)),
                 excludedPaths);
+    }
+
+    private void postEvents(final List<ProviderEvent> events) {
+        if ( events.isEmpty() ) {
+            return;
+        }
+        final Thread t = new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                for(final ProviderEvent e : events) {
+                    postOSGiEvent(e);
+                    postResourceProviderChange(e);
+                    if ( e.pid != null ) {
+                        listener.providerChanged(e.pid);
+                    }
+                }
+            }
+        });
+        t.setName("Apache Sling Resource Provider Change Notifier");
+        t.setDaemon(true);
+
+        t.start();
+    }
+
+    private static final class ProviderEvent {
+        public final boolean isAdd;
+        public final String pid;
+        public final String path;
+
+        public ProviderEvent(final boolean isAdd, final ResourceProviderInfo info) {
+            this.isAdd = isAdd;
+            this.path = info.getPath();
+            String pid = (String) info.getServiceReference().getProperty(Constants.SERVICE_PID);
+            if (pid == null) {
+                pid = (String) info.getServiceReference().getProperty(LegacyResourceProviderWhiteboard.ORIGINAL_SERVICE_PID);
+            }
+            this.pid = pid;
+        }
     }
 }
