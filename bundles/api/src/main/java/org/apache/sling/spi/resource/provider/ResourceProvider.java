@@ -168,18 +168,24 @@ public abstract class ResourceProvider<T> {
     /**
      * If this flag is set to {@code true}, the resource resolver will use this provider
      * for the adaptTo() operation.
+     * Boolean service property, default value is <code>false</true>.
+     * (value is "provider.adaptable")
      */
     public static final String PROPERTY_ADAPTABLE = "provider.adaptable";
 
     /**
      * If this flag is set to {@code true}, the resource resolver will call {@link #refresh(ResourceContext)}
      * when it's refreshed itself.
+     * Boolean service property, default value is <code>false</true>.
+     * (value is "provider.refreshable")
      */
     public static final String PROPERTY_REFRESHABLE = "provider.refreshable";
 
     /**
      * If this flag is set to {@code true}, the resource resolver will try to get the attribute
      * names and the attribute values from this provider.
+     * Boolean service property, default value is <code>false</true>.
+     * (value is "provider.attributable")
      */
     public static final String PROPERTY_ATTRIBUTABLE = "provider.attributable";
 
@@ -310,9 +316,10 @@ public abstract class ResourceProvider<T> {
     /**
      * If the provider requires authentication, this method is called with the state of the user
      * once the resource resolver is closed.
-     * @param state The user state.
+     *
+     * @param ctx The {@link ResolverContext}.
      */
-    public void logout(final @Nonnull T state) {
+    public void logout(final @Nonnull ResolverContext<T> ctx) {
         // do nothing
     }
 
@@ -320,8 +327,11 @@ public abstract class ResourceProvider<T> {
      * The provider is updated to reflect the latest state.
      * Resources which have changes pending are not discarded.
      * {@link #revert(ResourceContext)} can be called to discard changes.
+     * <p>
+     * This method is only called if the provider supports this and indicates
+     * it by setting the {@link #PROPERTY_REFRESHABLE} to the value {@code true}.
      *
-     * @param ctx The {@link ResourceContext} to which the returned {@link Resource} is attached.
+     * @param ctx The {@link ResolverContext}.
      */
     public void refresh(final @Nonnull ResolverContext<T> ctx) {
         // nothing to do here
@@ -333,8 +343,11 @@ public abstract class ResourceProvider<T> {
      * <p>
      * This method will never throw an exception
      * even after the resource provider has been closed
+     * <p>
+     * This method is only called for resource providers which have a state and
+     * require authentication.
      *
-     * @param ctx The {@link ResourceContext} to which the returned {@link Resource} is attached.
+     * @param ctx The {@link ResolverContext}.
      * @return <code>true</code> if the resource provider has not been closed
      *         yet and is still active.. Once the resource provider has been closed
      *         or is not active anymore, this method returns <code>false</code>.
@@ -348,12 +361,12 @@ public abstract class ResourceProvider<T> {
      * the resource provider cannot find it.
      *
      * The resource provider must not return cached instances for a resource as
-     * the resource resolver will update the resource metadata of the resource
-     * at the end of the resolution process and this metadata might be different
+     * the resource resolver will update the resource meta data of the resource
+     * at the end of the resolution process and this meta data might be different
      * depending on the full path of resource resolution passed into the
      * resource resolver.
      *
-     * @param ctx The {@link ResourceContext} to which the returned {@link Resource} is attached.
+     * @param ctx The {@link ResolverContext}.
      * @param child The child resource.
      * @return <code>null</code> if this provider does not have a resource for
      *         the parent.
@@ -374,15 +387,14 @@ public abstract class ResourceProvider<T> {
      * strings as its prefix.
      *
      * The resource provider must not return cached instances for a resource as
-     * the resource resolver will update the resource metadata of the resource
-     * at the end of the resolution process and this metadata might be different
+     * the resource resolver will update the resource meta data of the resource
+     * at the end of the resolution process and this meta data might be different
      * depending on the full path of resource resolution passed into the
      * resource resolver.
      *
-     * @param resourceResolver
-     *            The {@link ResourceResolver} to which the returned {@link Resource} is attached.
+     * @param ctx The {@link ResolverContext}.
      * @param path The full path of the resource.
-     * @param resourceContext Additional information for resolving teh resource
+     * @param resourceContext Additional information for resolving the resource
      * @param parent Optional parent resource
      * @return <code>null</code> If this provider does not have a resource for
      *         the path.
@@ -414,7 +426,7 @@ public abstract class ResourceProvider<T> {
      * As with {@link #getResource(ResourceResolver, String)} the returned Resource objects must
      * not be cached objects.
      *
-     * @param ctx The {@link ResourceContext} to which the returned {@link Resource} is attached.
+     * @param ctx The {@link ResolverContext}.
      * @param parent
      *            The {@link Resource Resource} whose children are requested.
      * @return An <code>Iterator</code> of {@link Resource} objects or <code>null</code> if the resource
@@ -429,8 +441,11 @@ public abstract class ResourceProvider<T> {
     /**
      * Returns a collection of attribute names whose value can be retrieved
      * calling the {@link #getAttribute(ResourceResolver, String)} method.
+     * <p>
+     * This method is only called if the provider supports this and indicates
+     * it by setting the {@link #PROPERTY_ATTRIBUTABLE} to the value {@code true}.
      *
-     * @param ctx The {@link ResourceContext} to which the returned {@link Resource} is attached.
+     * @param ctx The {@link ResolverContext}.
      * @return A collection of attribute names or <code>null</code>
      * @throws IllegalStateException if this resource provider has already been
      *                               closed.
@@ -443,10 +458,12 @@ public abstract class ResourceProvider<T> {
      * Returns the value of the given resource provider attribute or <code>null</code>
      * if the attribute is not set or not visible (as e.g. security
      * sensitive attributes).
+     * <p>
+     * This method is only called if the provider supports this and indicates
+     * it by setting the {@link #PROPERTY_ATTRIBUTABLE} to the value {@code true}.
      *
-     * @param ctx The {@link ResourceContext} to which the returned {@link Resource} is attached.
-     * @param name
-     *            The name of the attribute to access
+     * @param ctx The {@link ResolverContext}.
+     * @param name  The name of the attribute to access
      * @return The value of the attribute or <code>null</code> if the attribute
      *         is not set or not accessible.
      * @throws IllegalStateException
@@ -460,11 +477,14 @@ public abstract class ResourceProvider<T> {
      * Create a new resource at the given path.
      * The new resource is put into the transient space of this provider
      * until {@link #commit(ResourceResolver)} is called.
-     *
-     * A resource provider should value {@link ResourceResolver#PROPERTY_RESOURCE_TYPE}
+     * <p>
+     * A resource provider must value {@link ResourceResolver#PROPERTY_RESOURCE_TYPE}
      * to set the resource type of a resource.
+     * <p>
+     * This method is only called if the provider supports this and indicates
+     * it by setting the {@link #PROPERTY_MODIFIABLE} to the value {@code true}.
      *
-     * @param ctx The {@link ResourceContext} to which the returned {@link Resource} is attached.
+     * @param ctx The {@link ResolverContext}.
      * @param path The resource path.
      * @param properties Optional properties
      * @return The new resource.
@@ -480,8 +500,11 @@ public abstract class ResourceProvider<T> {
      * Delete the resource at the given path.
      * This change is kept in the transient space of this provider
      * until {@link #commit(ResourceResolver)} is called.
+     * <p>
+     * This method is only called if the provider supports this and indicates
+     * it by setting the {@link #PROPERTY_MODIFIABLE} to the value {@code true}.
      *
-     * @param ctx The {@link ResourceContext} to which the returned {@link Resource} is attached.
+     * @param ctx The {@link ResolverContext}.
      * @param resource The resource to delete.
      *
      * @throws PersistenceException If anything fails
@@ -493,8 +516,11 @@ public abstract class ResourceProvider<T> {
 
     /**
      * Revert all transient changes: create, delete and updates.
+     * <p>
+     * This method is only called if the provider supports this and indicates
+     * it by setting the {@link #PROPERTY_MODIFIABLE} to the value {@code true}.
      *
-     * @param ctx The {@link ResourceContext} to which the returned {@link Resource} is attached.
+     * @param ctx The {@link ResolverContext}.
      */
     public void revert(final @Nonnull ResolverContext<T> ctx) {
         // nothing to do here
@@ -502,9 +528,11 @@ public abstract class ResourceProvider<T> {
 
     /**
      * Commit all transient changes: create, delete and updates
+     * <p>
+     * This method is only called if the provider supports this and indicates
+     * it by setting the {@link #PROPERTY_MODIFIABLE} to the value {@code true}.
      *
-     * @param ctx The {@link ResourceContext} to which the returned {@link Resource} is attached.
-     *
+     * @param ctx The {@link ResolverContext}.
      * @throws PersistenceException If anything fails
      */
     public void commit(final @Nonnull ResolverContext<T> ctx)
@@ -514,8 +542,11 @@ public abstract class ResourceProvider<T> {
 
     /**
      * Are there any transient changes?
+     * <p>
+     * This method is only called if the provider supports this and indicates
+     * it by setting the {@link #PROPERTY_MODIFIABLE} to the value {@code true}.
      *
-     * @param ctx The {@link ResourceContext} to which the returned {@link Resource} is attached.
+     * @param ctx The {@link ResolverContext}.
      */
     public boolean hasChanges(final @Nonnull ResolverContext<T> ctx) {
         return false;
@@ -547,10 +578,13 @@ public abstract class ResourceProvider<T> {
      * object or a new object on each call.
      * <p>
      * Implementations of this method should document their adapted types as
-     * well as their behaviour with respect to returning newly created or not
+     * well as their behavior with respect to returning newly created or not
      * instance on each call.
+     * <p>
+     * This method is only called if the provider supports this and indicates
+     * it by setting the {@link #PROPERTY_ADAPTABLE} to the value {@code true}.
      *
-     * @param ctx The {@link ResourceContext}.
+     * @param ctx The {@link ResolverContext}.
      * @param type The generic type to which this resource is adapted to.
      * @return The adapter target or {@code null} if the provider cannot
      *         be adapt to the requested type.
@@ -564,14 +598,18 @@ public abstract class ResourceProvider<T> {
      * This method copies the subgraph rooted at, and including, the resource at
      * <code>srcAbsPath</code> to the new location at <code>destAbsPath</code> and
      * adds it as a child node of the resource at <code>destAbsPath</code>.
-     *
+     * <p>
      * Both resources are resources from this provider and the full tree is
      * provided by this provider as well.
-     *
+     * <p>
      * The resource at <code>destAbsPath</code> needs to exist, if not a {@code PersistenceException}
      * is thrown. If a child resource with the same name already exists at <code>destAbsPath</code>
      * a {@code PersistenceException} is thrown.
+     * <p>
+     * This method is only called if the provider supports this and indicates
+     * it by setting the {@link #PROPERTY_MODIFIABLE} to the value {@code true}.
      *
+     * @param ctx The {@link ResolverContext}.
      * @param srcAbsPath  the path of the resource to be copied.
      * @param destAbsPath the location to which the resource at
      *                    <code>srcAbsPath</code> is to be copied.
@@ -588,21 +626,24 @@ public abstract class ResourceProvider<T> {
      * This method moves the subgraph rooted at, and including, the resource at
      * <code>srcAbsPath</code> to the new location at <code>destAbsPath</code> and
      * adds it as a child node of the resource at <code>destAbsPath</code>.
-     *
+     * <p>
      * Both resources are resources from this provider and the full tree is
      * provided by this provider as well.
-     *
+     * <p>
      * The resource at <code>destAbsPath</code> needs to exist, if not a {@code PersistenceException}
      * is thrown. If a child resource with the same name already exists at <code>destAbsPath</code>
      * a {@code PersistenceException} is thrown.
+     * <p>
+     * This method is only called if the provider supports this and indicates
+     * it by setting the {@link #PROPERTY_MODIFIABLE} to the value {@code true}.
      *
+     * @param ctx The {@link ResolverContext}.
      * @param srcAbsPath  the path of the resource to be copied.
      * @param destAbsPath the location to which the resource at
      *                    <code>srcAbsPath</code> is to be moved.
      * @throws PersistenceException If an error occurs.
      * @return {@code true} if the provider can perform the move
      */
-
     public boolean move(final  @Nonnull ResolverContext<T> ctx,
               final String srcAbsPath,
               final String destAbsPath) throws PersistenceException {
