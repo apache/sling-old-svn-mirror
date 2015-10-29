@@ -619,11 +619,12 @@ public class OakDiscoveryService extends BaseDiscoveryService {
                 logger.debug("checkForTopologyChange: not yet activated, ignoring");
                 return;
             }
-            BaseTopologyView t = (BaseTopologyView) getTopology();
+            DefaultTopologyView t = (DefaultTopologyView) getTopology();
             if (t.isCurrent()) {
                 // if we have a valid view, let the viewStateManager do the
                 // comparison and sending of an event, if necessary
                 viewStateManager.handleNewView(t);
+                setOldView(t);
             } else {
                 // if we don't have a view, then we might have to send
                 // a CHANGING event, let that be decided by the viewStateManager as well

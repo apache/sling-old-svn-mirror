@@ -40,6 +40,8 @@ public class SimulatedLeaseCollection {
     private final String viewId = UUID.randomUUID().toString();
     
     List<SimulatedLease> leases = new LinkedList<SimulatedLease>();
+
+    private volatile boolean isFinal = true;
     
     public SimulatedLeaseCollection() {
         // empty
@@ -66,7 +68,7 @@ public class SimulatedLeaseCollection {
                 new DiscoveryLiteDescriptorBuilder();
         discoBuilder.me(clusterNodeId);
         discoBuilder.id(viewId);
-        discoBuilder.setFinal(true);       
+        discoBuilder.setFinal(isFinal);       
         List<Integer> actives = new LinkedList<Integer>();
         List<Integer> inactives = new LinkedList<Integer>();
         for (Map.Entry<String, Long> entry : leaseUpdates.entrySet()) {
@@ -97,6 +99,10 @@ public class SimulatedLeaseCollection {
 
     public void reset() {
         clusterNodeIds.clear();
+    }
+
+    public void setFinal(boolean isFinal) {
+        this.isFinal = isFinal;
     }
 
 }
