@@ -43,12 +43,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
-    this is to get more assurance that things work:
-        
-        * have an agent that periodically scans getTopology and makes assumptions
-        * have a listener that makes assumptions too
-        * these two might be able to communicate with each other to make even more assumptions..
-        * combine the above with coming and going instances, with slow ones etc etc
+ * This base tests for discovery.impl and .oak simulates instances
+ * that are coming and going, have a slow repository (and other bad-weather
+ * scenarios), and make assumptions on both getTopology() to always be correct
+ * as well as handleTopologyEvent to be properly delivered to.
  */
 public abstract class AbstractDiscoveryServiceTest {
 
