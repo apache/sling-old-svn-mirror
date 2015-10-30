@@ -48,12 +48,12 @@ public class PathTree<T extends Pathable> {
         node.setValue(value);
     }
 
-    public T getBestMatchingNode(final String path) {
+    public Node<T> getBestMatchingNode(final String path) {
         if (path == null || path.isEmpty() || path.charAt(0) != '/') {
             return null;
         }
 
-        T result = root.getValue();
+        Node<T> result = root.getValue() != null ? root : null;
 
         Node<T> node = root;
         Iterator<String> it = new PathSegmentIterator(path, 1);
@@ -64,7 +64,7 @@ public class PathTree<T extends Pathable> {
                 break;
             } else {
                 if (node.getValue() != null) {
-                    result = node.getValue();
+                    result = node;
                 }
             }
         }
