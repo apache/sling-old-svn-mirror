@@ -195,7 +195,7 @@ public class CompositeValueMapTest {
         private final Object defaultValue;
         private final Object extendedValue;
         private final boolean shouldBeDeleted;
-        private final Class expectedNewType;
+        private final Class<?> expectedNewType;
 
         private CompositeValueMapTestResult(String propertyName) {
             this(propertyName, false);
@@ -205,7 +205,7 @@ public class CompositeValueMapTest {
             this(propertyName, shouldBeDeleted, null);
         }
 
-        private CompositeValueMapTestResult(String propertyName, boolean shouldBeDeleted, Class expectedNewType) {
+        private CompositeValueMapTestResult(String propertyName, boolean shouldBeDeleted, Class<?> expectedNewType) {
             this.propertyName = propertyName;
             this.defaultValue = defaultProps.get(propertyName);
             this.extendedValue = extendedProps.get(propertyName);
