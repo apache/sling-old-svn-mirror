@@ -91,7 +91,7 @@ public class ResourceProviderAuthenticator {
         }
     }
 
-    private StatefulResourceProvider authenticate(final ResourceProviderHandler handler,
+    private @Nonnull StatefulResourceProvider authenticate(final ResourceProviderHandler handler,
             CombinedResourceProvider combinedProvider) throws LoginException {
         StatefulResourceProvider rp = stateful.get(handler);
         if (rp == null) {
@@ -114,7 +114,7 @@ public class ResourceProviderAuthenticator {
         return stateful.values();
     }
 
-    public StatefulResourceProvider getStateful(ResourceProviderHandler handler, CombinedResourceProvider combinedProvider)
+    public @Nonnull StatefulResourceProvider getStateful(ResourceProviderHandler handler, CombinedResourceProvider combinedProvider)
     throws LoginException {
         return authenticate(handler, combinedProvider);
     }
