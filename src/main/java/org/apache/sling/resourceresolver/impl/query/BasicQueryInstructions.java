@@ -31,8 +31,16 @@ public class BasicQueryInstructions implements QueryInstructions {
 
     private final List<SortCriteria> sortCriteria;
 
-    public BasicQueryInstructions(final List<SortCriteria> sortCriteria) {
+    private final String continuationKey;
+
+    private final int limit;
+
+    public BasicQueryInstructions(final List<SortCriteria> sortCriteria,
+            final String continuationKey,
+            final int limit) {
         this.sortCriteria = Collections.unmodifiableList(sortCriteria);
+        this.continuationKey = continuationKey;
+        this.limit = limit;
     }
 
     @Override
@@ -43,25 +51,25 @@ public class BasicQueryInstructions implements QueryInstructions {
 
     @Override
     public int getLimit() {
-        // TODO Auto-generated method stub
-        return 0;
+        return this.limit;
     }
 
     @Override
     public String getContinuationKey() {
-        // TODO Auto-generated method stub
-        return null;
+        return this.continuationKey;
     }
 
     @Override
-    public String generateContinuationKey(Resource resource) {
+    public String generateContinuationKey(final Resource resource) {
+        if ( resource == null ) {
+            throw new IllegalArgumentException("No resource provided for continuation key.");
+        }
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public List<SortCriteria> getSortCriteria() {
-        // TODO Auto-generated method stub
         return sortCriteria;
     }
 }

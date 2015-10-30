@@ -19,6 +19,7 @@
 package org.apache.sling.resourceresolver.impl.query;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -30,13 +31,16 @@ import org.apache.sling.api.resource.query.QueryBuilder;
 import org.apache.sling.api.resource.query.QueryInstructions;
 import org.apache.sling.api.resource.query.QueryInstructionsBuilder;
 import org.apache.sling.api.resource.query.QueryManager;
+import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
 
 public class DefaultQueryManager implements QueryManager {
 
     @Override
-    public Iterator<Resource> find(ResourceResolver resolver, Query q, QueryInstructions qi) {
-        // TODO Auto-generated method stub
-        return null;
+    public Iterator<Resource> find(final ResourceResolver resolver, final Query q, final QueryInstructions qi) {
+        if ( !(resolver instanceof ResourceResolverImpl) ) {
+            throw new IllegalArgumentException("Resource resolver is not provided by this bundle.");
+        }
+        return Collections.EMPTY_LIST.iterator();
     }
 
     @Override
@@ -72,7 +76,6 @@ public class DefaultQueryManager implements QueryManager {
 
     @Override
     public QueryInstructionsBuilder instructions() {
-        // TODO Auto-generated method stub
-        return null;
+        return new BasicQueryInstructionsBuilder();
     }
 }

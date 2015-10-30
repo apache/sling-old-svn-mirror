@@ -18,7 +18,11 @@
  */
 package org.apache.sling.resourceresolver.impl.query;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.sling.api.resource.query.QueryInstructions;
+import org.apache.sling.api.resource.query.QueryInstructions.SortCriteria;
 import org.apache.sling.api.resource.query.QueryInstructionsBuilder;
 
 /**
@@ -26,29 +30,38 @@ import org.apache.sling.api.resource.query.QueryInstructionsBuilder;
  */
 public class BasicQueryInstructionsBuilder implements QueryInstructionsBuilder {
 
+    private final List<SortCriteria> sortCriteria = new ArrayList<SortCriteria>();
+
+    private String continuationKey;
+
+    private int limit = -1;
+
     @Override
-    public QueryInstructionsBuilder limit(int limit) {
+    public QueryInstructionsBuilder limit(final int limit) {
+        this.limit = limit;
         return this;
     }
 
     @Override
     public QueryInstructionsBuilder continueAt(String continuationKey) {
+        this.continuationKey = continuationKey;
         return this;
     }
 
     @Override
-    public QueryInstructionsBuilder sortAscendingBy(String propName) {
+    public QueryInstructionsBuilder sortAscendingBy(final String propName) {
+        this.sortCriteria.add(new BasicSortCriteria(propName, true));
         return this;
     }
 
     @Override
-    public QueryInstructionsBuilder sortDescendingBy(String propName) {
+    public QueryInstructionsBuilder sortDescendingBy(final String propName) {
+        this.sortCriteria.add(new BasicSortCriteria(propName, false));
         return this;
     }
 
     @Override
     public QueryInstructions build() {
-        // TODO Auto-generated method stub
-        return null;
+        return new BasicQueryInstructions(sortCriteria, continuationKey, limit);
     }
 }
