@@ -378,7 +378,13 @@ public class CombinedResourceProvider {
     public Result find(final Query q, final QueryInstructions qi) {
         final Set<StatefulResourceProvider> providers = new HashSet<StatefulResourceProvider>();
         collect(providers, q);
-        if ( providers.isEmpty() ) {
+        QueryResult result = null;
+        if ( !providers.isEmpty() ) {
+            // providers contains only a single provider (collect throws an IAE otherwise)
+            final StatefulResourceProvider handler = providers.iterator().next();
+            result = handler.find(q, qi);
+        }
+        if ( result == null ) {
             return new Result() {
 
                 @Override
@@ -393,9 +399,7 @@ public class CombinedResourceProvider {
                 }
             };
         }
-        // providers contains only a single provider (collect throws an IAE otherwise)
-        final StatefulResourceProvider handler = providers.iterator().next();
-        final QueryResult qr = handler.find(q, qi);
+        final QueryResult qr = result;
         return new Result() {
 
             @Override
