@@ -23,6 +23,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
+import org.apache.sling.resourceresolver.impl.providers.tree.Node;
 import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 
@@ -81,10 +82,10 @@ public class BasicResolveContext<T> implements ResolverContext<T> {
                     final ResourceProviderStorage storage = this.combinedProvider.getResourceProviderStorage();
                     String path = this.parentPath;
                     while ( path != null && this.parentProvider != null ) {
-                        final ResourceProviderHandler handler = storage.getTree().getBestMatchingNode(this.parentPath);
-                        if ( handler != null ) {
+                        final Node<ResourceProviderHandler> node = storage.getTree().getBestMatchingNode(this.parentPath);
+                        if ( node != null ) {
                             try {
-                                final StatefulResourceProvider srp = this.combinedProvider.getStatefulResourceProvider(handler);
+                                final StatefulResourceProvider srp = this.combinedProvider.getStatefulResourceProvider(node.getValue());
                                 if ( srp != null ) {
                                     this.parentProvider = srp.getResourceProvider();
                                     this.parentResolveContext = srp.getContext();

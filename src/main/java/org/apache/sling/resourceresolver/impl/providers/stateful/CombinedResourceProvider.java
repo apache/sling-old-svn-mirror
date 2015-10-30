@@ -48,6 +48,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.resource.query.Query;
+import org.apache.sling.api.resource.query.Query.QueryType;
 import org.apache.sling.api.resource.query.QueryInstructions;
 import org.apache.sling.api.resource.query.Result;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
@@ -375,7 +376,50 @@ public class CombinedResourceProvider {
      * Queries all resource providers and combines the results.
      */
     public Result find(final Query q, final QueryInstructions qi) {
+        final Set<ResourceProviderHandler> providers = new HashSet<ResourceProviderHandler>();
+        collect(providers, q);
+        if ( providers.isEmpty() ) {
+            return new Result() {
+
+                @Override
+                public Iterator<Resource> iterator() {
+                    final Collection<Resource> col = Collections.emptyList();
+                    return col.iterator();
+                }
+
+                @Override
+                public String getContinuationKey() {
+                    return null;
+                }
+            };
+        }
         return new CombinedQueryResult(q, qi);
+    }
+
+    private void collect(final Set<ResourceProviderHandler> providers, final Query q) {
+        if ( q.getQueryType() == QueryType.SINGLE ) {
+            if ( q.getPaths().isEmpty() ) {
+                final Node<ResourceProviderHandler> node = storage.getTree().getBestMatchingNode("/");
+                if ( node != null && node.getValue().getResourceProvider().getQueryProvider() != null ) {
+                    if ( providers.add(node.getValue()) && providers.size() > 1 ) {
+                        throw new IllegalArgumentException("More than one provider involved in query.");
+                    }
+                }
+            } else {
+                for(final String p : q.getPaths() ) {
+                    final Node<ResourceProviderHandler> node = storage.getTree().getBestMatchingNode(p);
+                    if ( node != null && node.getValue().getResourceProvider().getQueryProvider() != null ) {
+                        if ( providers.add(node.getValue()) && providers.size() > 1 ) {
+                            throw new IllegalArgumentException("More than one provider involved in query.");
+                        }
+                    }
+                }
+            }
+        } else {
+            for(final Query iq : q.getParts()) {
+                collect(providers, iq);
+            }
+        }
     }
 
     /**
@@ -440,7 +484,7 @@ public class CombinedResourceProvider {
 
     private StatefulResourceProvider checkSourceAndDest(final String srcAbsPath, final String destAbsPath) throws PersistenceException {
         // check source
-        final Node<ResourceProviderHandler> srcNode = storage.getTree().getNode(srcAbsPath);
+        final Node<ResourceProviderHandler> srcNode = storage.getTree().getBestMatchingNode(srcAbsPath);
         if ( srcNode == null ) {
             throw new PersistenceException("Source resource does not exist.", null, srcAbsPath, null);
         }
@@ -459,7 +503,7 @@ public class CombinedResourceProvider {
         }
 
         // check destination
-        final Node<ResourceProviderHandler> destNode = storage.getTree().getNode(destAbsPath);
+        final Node<ResourceProviderHandler> destNode = storage.getTree().getBestMatchingNode(destAbsPath);
         if ( destNode == null ) {
             throw new PersistenceException("Destination resource does not exist.", null, destAbsPath, null);
         }
@@ -584,8 +628,8 @@ public class CombinedResourceProvider {
      * @throws LoginException
      */
     private @Nonnull StatefulResourceProvider getBestMatchingProvider(final String path) throws LoginException {
-        final ResourceProviderHandler handler = storage.getTree().getBestMatchingNode(path);
-        return handler == null ? EmptyResourceProvider.SINGLETON : authenticator.getStateful(handler, this);
+        final Node<ResourceProviderHandler> node = storage.getTree().getBestMatchingNode(path);
+        return node == null ? EmptyResourceProvider.SINGLETON : authenticator.getStateful(node.getValue(), this);
     }
 
     /**
@@ -594,9 +638,9 @@ public class CombinedResourceProvider {
      * @throws LoginException
      */
     private @CheckForNull StatefulResourceProvider getBestMatchingModifiableProvider(final String path) throws LoginException {
-        final ResourceProviderHandler handler = storage.getTree().getBestMatchingNode(path);
-        if ( handler != null && handler.getInfo().isModifiable() ) {
-            return authenticator.getStateful(handler, this);
+        final Node<ResourceProviderHandler> node = storage.getTree().getBestMatchingNode(path);
+        if ( node != null && node.getValue().getInfo().isModifiable() ) {
+            return authenticator.getStateful(node.getValue(), this);
         }
         return null;
     }
