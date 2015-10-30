@@ -71,7 +71,6 @@ import org.apache.sling.api.request.SlingRequestEvent;
 import org.apache.sling.api.request.SlingRequestListener;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -92,6 +91,7 @@ import org.apache.sling.servlets.resolver.internal.helper.SlingServletConfig;
 import org.apache.sling.servlets.resolver.internal.resource.ServletResourceProvider;
 import org.apache.sling.servlets.resolver.internal.resource.ServletResourceProviderFactory;
 import org.apache.sling.servlets.resolver.jmx.SlingServletResolverCacheMBean;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -1000,24 +1000,27 @@ public class SlingServletResolver
             return false;
         }
 
-        final ServiceRegistration reg = context.getBundleContext().registerService(
-            ResourceProvider.SERVICE_NAME,
-            provider,
-            createServiceProperties(reference, provider));
-
+        final List<ServiceRegistration> regs = new ArrayList<ServiceRegistration>();
+        for(final String root : provider.getServletPaths()) {
+            final ServiceRegistration reg = context.getBundleContext().registerService(
+                ResourceProvider.class.getName(),
+                provider,
+                createServiceProperties(reference, provider, root));
+            regs.add(reg);
+        }
         LOGGER.debug("Registered {}", provider.toString());
         synchronized (this.servletsByReference) {
-            servletsByReference.put(reference, new ServletReg(servlet, reg));
+            servletsByReference.put(reference, new ServletReg(servlet, regs));
         }
-
         return true;
     }
 
     private Dictionary<String, Object> createServiceProperties(final ServiceReference reference,
-            final ServletResourceProvider provider) {
+            final ServletResourceProvider provider,
+            final String root) {
 
         final Dictionary<String, Object> params = new Hashtable<String, Object>();
-        params.put(ResourceProvider.ROOTS, provider.getServletPaths());
+        params.put(ResourceProvider.PROPERTY_ROOT, root);
         params.put(Constants.SERVICE_DESCRIPTION,
             "ServletResourceProvider for Servlets at " + Arrays.asList(provider.getServletPaths()));
 
@@ -1043,7 +1046,9 @@ public class SlingServletResolver
         }
         if (registration != null) {
 
-            registration.registration.unregister();
+            for(final ServiceRegistration reg : registration.registrations) {
+                reg.unregister();
+            }
             final String name = RequestUtil.getServletName(registration.servlet);
             LOGGER.debug("unbindServlet: Servlet {} removed", name);
 
@@ -1129,11 +1134,11 @@ public class SlingServletResolver
 
     private static final class ServletReg {
         public final Servlet servlet;
-        public final ServiceRegistration registration;
+        public final List<ServiceRegistration> registrations;
 
-        public ServletReg(final Servlet s, final ServiceRegistration sr) {
+        public ServletReg(final Servlet s, final List<ServiceRegistration> srs) {
             this.servlet = s;
-            this.registration = sr;
+            this.registrations = srs;
         }
     }
 

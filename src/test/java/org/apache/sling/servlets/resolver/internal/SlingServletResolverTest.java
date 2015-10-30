@@ -95,6 +95,7 @@ public class SlingServletResolverTest {
                 throw new LoginException("MockResourceResolver can't be cloned - excepted for this test!");
             }
 
+            @Override
             public void refresh() {
                 // nothing to do
             }
@@ -103,16 +104,31 @@ public class SlingServletResolverTest {
 
         final ResourceResolverFactory factory = new ResourceResolverFactory() {
 
+            @Override
             public ResourceResolver getAdministrativeResourceResolver(
                     Map<String, Object> authenticationInfo)
                     throws LoginException {
                 return mockResourceResolver;
             }
 
+            @Override
             public ResourceResolver getResourceResolver(
                     Map<String, Object> authenticationInfo)
                     throws LoginException {
                 return mockResourceResolver;
+            }
+
+            @Override
+            public ResourceResolver getServiceResourceResolver(Map<String, Object> authenticationInfo)
+                    throws LoginException {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public ResourceResolver getThreadResourceResolver() {
+                // TODO Auto-generated method stub
+                return null;
             }
         };
 
@@ -212,13 +228,13 @@ public class SlingServletResolverTest {
 
         ServletResourceProvider servlet = factory.create(msr);
 
-        Method createServiceProperties = SlingServletResolver.class.getDeclaredMethod("createServiceProperties", ServiceReference.class, ServletResourceProvider.class);
+        Method createServiceProperties = SlingServletResolver.class.getDeclaredMethod("createServiceProperties", ServiceReference.class, ServletResourceProvider.class, String.class);
         createServiceProperties.setAccessible(true);
 
         // no ranking
         assertNull(msr.getProperty(Constants.SERVICE_RANKING));
         @SuppressWarnings("unchecked")
-        final Dictionary<String, Object> p1 = (Dictionary<String, Object>) createServiceProperties.invoke(servletResolver, msr, servlet);
+        final Dictionary<String, Object> p1 = (Dictionary<String, Object>) createServiceProperties.invoke(servletResolver, msr, servlet, "/a");
         assertNull(p1.get(Constants.SERVICE_RANKING));
 
         // illegal type of ranking
@@ -226,7 +242,7 @@ public class SlingServletResolverTest {
         msr.setProperty(Constants.SERVICE_RANKING, nonIntValue);
         assertEquals(nonIntValue, msr.getProperty(Constants.SERVICE_RANKING));
         @SuppressWarnings("unchecked")
-        final Dictionary<String, Object> p2 = (Dictionary<String, Object>) createServiceProperties.invoke(servletResolver, msr, servlet);
+        final Dictionary<String, Object> p2 = (Dictionary<String, Object>) createServiceProperties.invoke(servletResolver, msr, servlet, "/a");
         assertNull(p2.get(Constants.SERVICE_RANKING));
 
         // illegal type of ranking
@@ -234,7 +250,7 @@ public class SlingServletResolverTest {
         msr.setProperty(Constants.SERVICE_RANKING, intValue);
         assertEquals(intValue, msr.getProperty(Constants.SERVICE_RANKING));
         @SuppressWarnings("unchecked")
-        final Dictionary<String, Object> p3 = (Dictionary<String, Object>) createServiceProperties.invoke(servletResolver, msr, servlet);
+        final Dictionary<String, Object> p3 = (Dictionary<String, Object>) createServiceProperties.invoke(servletResolver, msr, servlet, "/a");
         assertEquals(intValue, p3.get(Constants.SERVICE_RANKING));
     }
 
@@ -247,6 +263,7 @@ public class SlingServletResolverTest {
     private static class MockSlingRequestHandlerServlet extends HttpServlet
             implements OptingServlet {
 
+        @Override
         public boolean accepts(SlingHttpServletRequest request) {
             return request.isSecure();
         }
