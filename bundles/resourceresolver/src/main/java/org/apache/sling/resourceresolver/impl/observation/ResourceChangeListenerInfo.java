@@ -27,10 +27,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.apache.sling.api.resource.PathSet;
 import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
-import org.apache.sling.resourceresolver.impl.providers.tree.PathSet;
 import org.osgi.framework.ServiceReference;
 
 public class ResourceChangeListenerInfo {
@@ -87,7 +87,7 @@ public class ResourceChangeListenerInfo {
                 }
             }
         }
-        this.paths = new PathSet(pathsSet);
+        this.paths = PathSet.fromStringCollection(pathsSet);
         final Set<ChangeType> typesSet = new HashSet<ChangeType>();
         if (ref.getProperty(CHANGES) != null ) {
             for (String changeName : toStringArray(ref.getProperty(CHANGES))) {
