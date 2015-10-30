@@ -271,12 +271,12 @@ public class ResourceUtilTest {
         final List<Resource> l = new ArrayList<Resource>();
         l.add(a); l.add(b); l.add(c);
         this.context.checking(new Expectations() {{
-            allowing(a).adaptTo(List.class); will(returnValue(new ArrayList()));
-            allowing(b).adaptTo(List.class); will(returnValue(new ArrayList()));
+            allowing(a).adaptTo(List.class); will(returnValue(new ArrayList<Object>()));
+            allowing(b).adaptTo(List.class); will(returnValue(new ArrayList<Object>()));
             allowing(c).adaptTo(List.class); will(returnValue(null));
-            allowing(a).adaptTo(Map.class); will(returnValue(new HashMap()));
-            allowing(b).adaptTo(Map.class); will(returnValue(new HashMap()));
-            allowing(c).adaptTo(Map.class); will(returnValue(new HashMap()));
+            allowing(a).adaptTo(Map.class); will(returnValue(new HashMap<Object, Object>()));
+            allowing(b).adaptTo(Map.class); will(returnValue(new HashMap<Object, Object>()));
+            allowing(c).adaptTo(Map.class); will(returnValue(new HashMap<Object, Object>()));
             allowing(a).adaptTo(Long.class); will(returnValue(null));
             allowing(b).adaptTo(Long.class); will(returnValue(new Long(1)));
             allowing(c).adaptTo(Long.class); will(returnValue(new Long(2)));
