@@ -36,7 +36,7 @@ public class PathSet implements Iterable<Path> {
      * @param paths The collection of path objects
      * @return The path set
      */
-    public static PathSet fromPathSet(final Collection<Path> paths) {
+    public static PathSet fromPathCollection(final Collection<Path> paths) {
         final Set<Path> set = new HashSet<Path>();
         for(final Path p : paths) {
             set.add(p);
@@ -64,7 +64,7 @@ public class PathSet implements Iterable<Path> {
      * @param paths The collection of strings
      * @return The path set
      */
-    public static PathSet fromStringSet(final Collection<String> paths) {
+    public static PathSet fromStringCollection(final Collection<String> paths) {
         final Set<Path> set = new HashSet<Path>();
         for(final String p : paths) {
             set.add(new Path(p));
@@ -159,6 +159,17 @@ public class PathSet implements Iterable<Path> {
             }
         }
         return new PathSet(result);
+    }
+
+    /**
+     * Create a unmodifiable set of strings
+     */
+    public Set<String> toStringSet() {
+        final Set<String> set = new HashSet<String>();
+        for(final Path p : this) {
+            set.add(p.getPath());
+        }
+        return Collections.unmodifiableSet(set);
     }
 
     /**

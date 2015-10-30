@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -50,7 +51,7 @@ public class PathSetTest {
         strings.add("/a");
         strings.add("/x/y");
         strings.add("/z");
-        final PathSet set = PathSet.fromStringSet(strings);
+        final PathSet set = PathSet.fromStringCollection(strings);
         assertNotNull(set);
         assertEqualSets(set, "/a", "/x/y", "/z");
     }
@@ -66,7 +67,7 @@ public class PathSetTest {
         paths.add(new Path("/a"));
         paths.add(new Path("/x/y"));
         paths.add(new Path("/z"));
-        final PathSet set = PathSet.fromPathSet(paths);
+        final PathSet set = PathSet.fromPathCollection(paths);
         assertNotNull(set);
         assertEqualSets(set, "/a", "/x/y", "/z");
     }
@@ -104,5 +105,21 @@ public class PathSetTest {
         assertEquals(new Path("/x/y"), set.matches("/x/y"));
         assertEquals(new Path("/x/y"), set.matches("/x/y/1"));
         assertEquals(new Path("/x/y"), set.matches("/x/y/g/e"));
+    }
+
+    @Test public void testToStringSet() {
+        final PathSet set = PathSet.fromStrings("/a", "/x/y");
+
+        final Set<String> stringSet = set.toStringSet();
+        assertEquals(2, stringSet.size());
+        assertTrue(stringSet.contains("/a"));
+        assertTrue(stringSet.contains("/x/y"));
+
+        try {
+            stringSet.add("foo");
+            fail();
+        } catch ( final UnsupportedOperationException uoe) {
+            // expected
+        }
     }
 }
