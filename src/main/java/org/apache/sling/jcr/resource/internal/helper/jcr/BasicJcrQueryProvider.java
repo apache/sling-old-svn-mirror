@@ -38,13 +38,14 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.spi.resource.provider.JCRQueryProvider;
+import org.apache.sling.spi.resource.provider.ProviderContext;
 import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class BasicJcrQueryProvider implements JCRQueryProvider<JcrProviderState> {
 
-    private static final Logger log = LoggerFactory.getLogger(BasicJcrQueryProvider.class);
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @SuppressWarnings("deprecation")
     private static final String DEFAULT_QUERY_LANGUAGE = Query.XPATH;
@@ -55,8 +56,15 @@ public class BasicJcrQueryProvider implements JCRQueryProvider<JcrProviderState>
     /** column name for score value */
     private static final String QUERY_COLUMN_SCORE = "jcr:score";
 
+    /** The provider context. */
+    private final ProviderContext providerContext;
+
+    public BasicJcrQueryProvider(final ProviderContext ctx) {
+        this.providerContext = ctx;
+    }
+
     @Override
-    public String[] getSupportedLanguages(ResolverContext<JcrProviderState> ctx) {
+    public String[] getSupportedLanguages(final ResolverContext<JcrProviderState> ctx) {
         try {
             return ctx.getProviderState().getSession().getWorkspace().getQueryManager().getSupportedQueryLanguages();
         } catch (final RepositoryException e) {
@@ -65,10 +73,16 @@ public class BasicJcrQueryProvider implements JCRQueryProvider<JcrProviderState>
     }
 
     @Override
-    public Iterator<Resource> findResources(ResolverContext<JcrProviderState> ctx, String query, String language) {
+    public Iterator<Resource> findResources(final ResolverContext<JcrProviderState> ctx,
+            final String query,
+            final String language) {
         try {
             final QueryResult res = JcrResourceUtil.query(ctx.getProviderState().getSession(), query, language);
-            return new JcrNodeResourceIterator(ctx.getResourceResolver(), res.getNodes(), ctx.getProviderState().getHelperData());
+            return new JcrNodeResourceIterator(ctx.getResourceResolver(),
+                    null, null,
+                    res.getNodes(),
+                    ctx.getProviderState().getHelperData(),
+                    this.providerContext.getExcludedPaths());
         } catch (final javax.jcr.query.InvalidQueryException iqe) {
             throw new QuerySyntaxException(iqe.getMessage(), query, language, iqe);
         } catch (final RepositoryException re) {
@@ -77,7 +91,9 @@ public class BasicJcrQueryProvider implements JCRQueryProvider<JcrProviderState>
     }
 
     @Override
-    public Iterator<ValueMap> queryResources(final ResolverContext<JcrProviderState> ctx, String query, String language) {
+    public Iterator<ValueMap> queryResources(final ResolverContext<JcrProviderState> ctx,
+            final String query,
+            final String language) {
         final String queryLanguage = ArrayUtils.contains(getSupportedLanguages(ctx), language) ? language : DEFAULT_QUERY_LANGUAGE;
 
         try {
@@ -114,7 +130,7 @@ public class BasicJcrQueryProvider implements JCRQueryProvider<JcrProviderState>
                         try {
                             final Row jcrRow = rows.nextRow();
                             final String resourcePath = ctx.getProviderState().getHelperData().pathMapper.mapJCRPathToResourcePath(jcrRow.getPath());
-                            if ( resourcePath != null ) {
+                            if ( resourcePath != null && providerContext.getExcludedPaths().matches(resourcePath) == null) {
                                 final Map<String, Object> row = new HashMap<String, Object>();
 
                                 boolean didPath = false;
@@ -145,7 +161,7 @@ public class BasicJcrQueryProvider implements JCRQueryProvider<JcrProviderState>
                                 result = new ValueMapDecorator(row);
                             }
                         } catch (final RepositoryException re) {
-                            log.error(
+                            logger.error(
                                 "queryResources$next: Problem accessing row values",
                                 re);
                         }

@@ -24,14 +24,14 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 
-import junit.framework.TestCase;
-
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.testing.jcr.MockNode;
 import org.apache.sling.commons.testing.jcr.MockNodeIterator;
 import org.apache.sling.jcr.resource.internal.HelperData;
 import org.apache.sling.jcr.resource.internal.PathMapperImpl;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResourceIterator;
+
+import junit.framework.TestCase;
 
 public class JcrNodeResourceIteratorTest extends TestCase {
 
@@ -41,7 +41,7 @@ public class JcrNodeResourceIteratorTest extends TestCase {
 
     public void testEmpty() {
         NodeIterator ni = new MockNodeIterator(null);
-        JcrNodeResourceIterator ri = new JcrNodeResourceIterator(null, ni, getHelperData());
+        JcrNodeResourceIterator ri = new JcrNodeResourceIterator(null, null, null, ni, getHelperData(), null);
 
         assertFalse(ri.hasNext());
 
@@ -57,7 +57,7 @@ public class JcrNodeResourceIteratorTest extends TestCase {
         String path = "/parent/path/node";
         Node node = new MockNode(path);
         NodeIterator ni = new MockNodeIterator(new Node[] { node });
-        JcrNodeResourceIterator ri = new JcrNodeResourceIterator(null, ni, getHelperData());
+        JcrNodeResourceIterator ri = new JcrNodeResourceIterator(null, null, null, ni, getHelperData(), null);
 
         assertTrue(ri.hasNext());
         Resource res = ri.next();
@@ -82,7 +82,7 @@ public class JcrNodeResourceIteratorTest extends TestCase {
             nodes[i] = new MockNode(pathBase + i, "some:type" + i);
         }
         NodeIterator ni = new MockNodeIterator(nodes);
-        JcrNodeResourceIterator ri = new JcrNodeResourceIterator(null, ni, getHelperData());
+        JcrNodeResourceIterator ri = new JcrNodeResourceIterator(null, null, null, ni, getHelperData(), null);
 
         for (int i=0; i < nodes.length; i++) {
             assertTrue(ri.hasNext());
@@ -105,7 +105,7 @@ public class JcrNodeResourceIteratorTest extends TestCase {
         String path = "/child";
         Node node = new MockNode(path);
         NodeIterator ni = new MockNodeIterator(new Node[] { node });
-        JcrNodeResourceIterator ri = new JcrNodeResourceIterator(null, "/", null, ni, getHelperData());
+        JcrNodeResourceIterator ri = new JcrNodeResourceIterator(null, "/", null, ni, getHelperData(), null);
 
         assertTrue(ri.hasNext());
         Resource res = ri.next();
