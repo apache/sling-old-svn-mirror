@@ -160,7 +160,6 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
         this.optimizeForOak = PropertiesUtil.toBoolean(context.getProperties().get(PROPERTY_OPTIMIZE_FOR_OAK), DEFAULT_OPTIMIZE_FOR_OAK);
         this.root = PropertiesUtil.toString(context.getProperties().get(ResourceProvider.PROPERTY_ROOT), "/");
         this.bundleCtx = context.getBundleContext();
-        registerLegacyListener();
 
         HelperData helperData = new HelperData(dynamicClassLoaderManager.getDynamicClassLoader(), pathMapper);
         this.stateFactory = new JcrProviderStateFactory(repositoryReference, repository, helperData);
@@ -169,6 +168,19 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     @Deactivate
     protected void deactivateComponent() {
         unregisterLegacyListener();
+    }
+
+
+    @Override
+    public void activate(final ProviderContext ctx) {
+        super.activate(ctx);
+        registerLegacyListener();
+    }
+
+    @Override
+    public void deactivate() {
+        unregisterLegacyListener();
+        super.deactivate();
     }
 
     @SuppressWarnings("unused")
@@ -201,7 +213,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
         ObservationListenerSupport support = null;
         boolean closeSupport = true;
         try {
-            support = new ObservationListenerSupport(bundleCtx, repository);
+            support = new ObservationListenerSupport(bundleCtx, repository, this.getProviderContext().getExcludedPaths());
             if (isOak) {
                 try {
                     this.listener = new OakResourceListener(root, support, bundleCtx, executor, pathMapper, observationQueueLength);

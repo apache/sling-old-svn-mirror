@@ -102,6 +102,7 @@ public class JcrResourceListener implements EventListener, Closeable {
 
         this.osgiEventQueue = new LinkedBlockingQueue<Map<String,Object>>();
         final Thread oeqt = new Thread(new Runnable() {
+            @Override
             public void run() {
                 processOsgiEventQueue();
             }
@@ -112,6 +113,7 @@ public class JcrResourceListener implements EventListener, Closeable {
     /**
      * Dispose this listener.
      */
+    @Override
     public void close() throws IOException {
         // unregister from observations
         try {
@@ -130,6 +132,7 @@ public class JcrResourceListener implements EventListener, Closeable {
     /**
      * @see javax.jcr.observation.EventListener#onEvent(javax.jcr.observation.EventIterator)
      */
+    @Override
     public void onEvent(final EventIterator events) {
         // if the event admin is currently not available, we just skip this
         final EventAdmin localEA = this.support.getEventAdmin();
@@ -295,7 +298,7 @@ public class JcrResourceListener implements EventListener, Closeable {
             final ChangedAttributes changedAttributes) {
 
         final String resourcePath = pathMapper.mapJCRPathToResourcePath(path);
-        if ( resourcePath != null ) {
+        if ( resourcePath != null && !this.support.isExcluded(resourcePath)) {
             if (changedAttributes != null) {
                 changedAttributes.mergeAttributesInto(properties);
             }

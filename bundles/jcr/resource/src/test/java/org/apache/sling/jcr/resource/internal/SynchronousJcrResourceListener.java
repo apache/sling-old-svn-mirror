@@ -20,14 +20,14 @@ import java.io.IOException;
 
 import javax.jcr.RepositoryException;
 
-import junitx.util.PrivateAccessor;
-
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.framework.BundleContext;
 import org.osgi.util.tracker.ServiceTracker;
+
+import junitx.util.PrivateAccessor;
 
 /**
  * This class is used to ensure that events are handled during the test.
@@ -44,7 +44,7 @@ public class SynchronousJcrResourceListener extends JcrResourceListener implemen
             final ResourceResolver resolver,
             final ServiceTracker tracker)
             throws LoginException, RepositoryException, NoSuchFieldException {
-        super("/", new ObservationListenerSupport(bundleContext, repo), new PathMapperImpl());
+        super("/", new ObservationListenerSupport(bundleContext, repo, null), new PathMapperImpl());
         PrivateAccessor.setField(this.support, "resourceResolver", resolver);
         PrivateAccessor.setField(this.support, "eventAdminTracker", tracker);
     }
