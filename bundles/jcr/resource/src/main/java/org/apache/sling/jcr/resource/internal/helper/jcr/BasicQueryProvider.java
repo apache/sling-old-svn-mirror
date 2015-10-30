@@ -40,6 +40,7 @@ public class BasicQueryProvider implements QueryProvider<JcrProviderState> {
     public org.apache.sling.spi.resource.provider.QueryResult find(final ResolverContext<JcrProviderState> ctx,
             final org.apache.sling.api.resource.query.Query q,
             final QueryInstructions qi) {
+
         return null;
     }
 }
