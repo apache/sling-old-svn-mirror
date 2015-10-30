@@ -23,8 +23,6 @@ import java.util.List;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
-import org.apache.sling.api.resource.Resource;
-
 import aQute.bnd.annotation.ProviderType;
 
 /**
@@ -59,17 +57,6 @@ public interface QueryInstructions {
      * @return A continuation key or {@code null}.
      */
     @CheckForNull String getContinuationKey();
-
-    /**
-     * Generate a continuation key to be used with {@link QueryInstructionsBuilder#continueAt(String)}.
-     * The continuation can be used for paging: the last resource of a page is feed into this
-     * method to get a key to be used to get the start for the next page.
-     * A continuation key can only be generated if the result is sorted.
-     * @param resource The last resource of a page
-     * @return A continuation key for the next resource after this one, according to the sorting.
-     * @throws IllegalArgumentException if the resource is {@code null}
-     */
-    @Nonnull String generateContinuationKey(Resource resource);
 
     /**
      * Unmodifiable list with the sort criteria.
