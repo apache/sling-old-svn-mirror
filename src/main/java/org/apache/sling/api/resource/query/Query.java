@@ -19,6 +19,7 @@
 package org.apache.sling.api.resource.query;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -100,24 +101,24 @@ public interface Query {
 
     /**
      * Returns constraints on the resource paths.
-     * This method returns an empty list if it's a compound query.
-     * @return The list of paths, might be empty.
+     * This method returns {@code null} if it's a compound query.
+     * @return The list of paths, might be empty or {@code null}.
      */
-    @CheckForNull List<String> getPaths();
+    @CheckForNull Set<String> getPaths();
 
     /**
      * Returns constraints on the resource names.
-     * This method returns an empty list if it's a compound query.
-     * @return The list of names, might be empty.
+     * This method returns {@code null} if it's a compound query.
+     * @return The list of names, might be empty or {@code null}.
      */
-    @CheckForNull List<String> getResourceNames();
+    @CheckForNull Set<String> getResourceNames();
 
     /**
      * Returns constraints on the resource types.
-     * This method returns an empty list if it's a compound query.
-     * @return The list of types, might be empty.
+     * This method returns {@code null} if it's a compound query.
+     * @return The list of types, might be empty or {@code null}.
      */
-    @CheckForNull List<String> getIsA();
+    @CheckForNull Set<String> getIsA();
 
     /**
      * Return the list of property constraints.
@@ -125,11 +126,11 @@ public interface Query {
      * is {@link QueryType#SINGLE}.
      * @return The list of property constraints or {@code null}.
      */
-    @CheckForNull List<PropertyConstraint> getPropertyConstraints();
+    @CheckForNull Set<PropertyConstraint> getPropertyConstraints();
 
     /**
-     * Returns the queries if {@link #getPartOperatorType()} does not
-     * return {@link PartOperatorType#NONE}.
+     * Returns the queries if {@link #getQueryType()} does not
+     * return {@link QueryType#SINGLE}.
      * @return The parts or {@code null} if this query is not an operation
      *         on other queries.
      */

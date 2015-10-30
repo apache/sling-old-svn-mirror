@@ -20,7 +20,10 @@ package org.apache.sling.api.resource.query;
 
 import java.util.List;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+
+import org.apache.sling.api.resource.Resource;
 
 import aQute.bnd.annotation.ProviderType;
 
@@ -35,6 +38,7 @@ public interface QueryInstructions {
         String getPropertyName();
         boolean isAscending();
     }
+
     /**
      * Unique global id.
      * The id can be used by implementations to cache the parsed query.
@@ -51,6 +55,12 @@ public interface QueryInstructions {
     int getLimit();
 
     /**
+     * Get the currently provided continuation key.
+     * @return A continuation key or {@code null}.
+     */
+    @CheckForNull String getContinuationKey();
+
+    /**
      * Generate a continuation key to be used with {@link QueryInstructionsBuilder#continueAt(String)}.
      * The continuation can be used for paging: the last resource of a page is feed into this
      * method to get a key to be used to get the start for the next page.
@@ -59,7 +69,7 @@ public interface QueryInstructions {
      * @return A continuation key for the next resource after this one, according to the sorting.
      * @throws IllegalArgumentException if the resource is {@code null}
      */
-    @Nonnull String getContinuationKey();
+    @Nonnull String generateContinuationKey(Resource resource);
 
     /**
      * Unmodifiable list with the sort criteria.

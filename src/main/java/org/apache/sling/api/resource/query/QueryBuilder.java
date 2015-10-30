@@ -41,7 +41,7 @@ public interface QueryBuilder {
     @Nonnull Query build();
 
     /**
-     * At a path condition to the query.
+     * Add a path condition to the query.
      * If several paths are added to the query, these are handled as an or.
      * If no path is specified for a query, the search paths of the resource
      * resolver are used.
