@@ -59,7 +59,7 @@ public class BasicObservationReporter implements ObservationReporter {
                 fillListeners(info, info.getResourceChangeTypes());
             }
         }
-        final ObserverConfiguration cfg = new BasicObserverConfiguration(paths);
+        final ObserverConfiguration cfg = new BasicObserverConfiguration(PathSet.fromStringCollection(paths));
         this.configs = Collections.singletonList(cfg);
     }
 

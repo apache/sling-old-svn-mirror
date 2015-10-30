@@ -30,28 +30,28 @@ public class BasicObserverConfiguration implements ObserverConfiguration {
 
     private final boolean includeExternal;
 
-    private final Set<String> paths;
+    private final PathSet paths;
 
-    private final Set<String> excludedPaths;
+    private final PathSet excludedPaths;
 
     private final Set<ChangeType> changeTypes;
 
     public BasicObserverConfiguration(final String path, final Set<ChangeType> types,
             final boolean isExternal, final PathSet excludePaths) {
         this.includeExternal = isExternal;
-        this.paths = Collections.singleton(path);
+        this.paths = PathSet.fromStrings(path);
         this.changeTypes = Collections.unmodifiableSet(types);
-        this.excludedPaths = excludePaths.getSubset(path).toStringSet();
+        this.excludedPaths = excludePaths.getSubset(path);
     }
 
-    public BasicObserverConfiguration(final Set<String> paths) {
+    public BasicObserverConfiguration(final PathSet set) {
         this.includeExternal = false;
-        this.paths = Collections.unmodifiableSet(paths);
+        this.paths = set;
         final Set<ChangeType> types = new HashSet<ChangeType>();
         types.add(ChangeType.PROVIDER_ADDED);
         types.add(ChangeType.PROVIDER_REMOVED);
         this.changeTypes = Collections.unmodifiableSet(types);
-        this.excludedPaths = Collections.emptySet();
+        this.excludedPaths = PathSet.EMPTY_SET;
     }
 
     @Override
@@ -60,12 +60,12 @@ public class BasicObserverConfiguration implements ObserverConfiguration {
     }
 
     @Override
-    public Set<String> getPaths() {
+    public PathSet getPaths() {
         return paths;
     }
 
     @Override
-    public Set<String> getExcludedPaths() {
+    public PathSet getExcludedPaths() {
         return excludedPaths;
     }
 
@@ -76,15 +76,8 @@ public class BasicObserverConfiguration implements ObserverConfiguration {
 
     @Override
     public boolean matches(final String path) {
-        for(final String observerPath : this.getPaths()) {
-            if ( observerPath.equals(path) || path.startsWith(observerPath.concat("/"))) {
-                for(final String excludePath : this.excludedPaths) {
-                    if ( excludePath.equals(path) || path.startsWith(excludePath.concat("/")) ) {
-                        return false;
-                    }
-                }
-                return true;
-            }
+        if ( this.paths.matches(path) != null && this.excludedPaths.matches(path) == null ) {
+            return true;
         }
         return false;
     }

@@ -70,10 +70,6 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
 
     private ResolverContext<Object> cachedContext;
 
-    private QueryProvider<Object> cachedQueryProvider;
-
-    private JCRQueryProvider<Object> cachedJcrQueryProvider;
-
     private final CombinedResourceProvider combinedProvider;
 
     @SuppressWarnings("unchecked")
@@ -271,17 +267,11 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     }
 
     private QueryProvider<Object> getQueryProvider() {
-        if (cachedQueryProvider == null) {
-            cachedQueryProvider = rp.getQueryProvider();
-        }
-        return cachedQueryProvider;
+        return rp.getQueryProvider();
     }
 
     private JCRQueryProvider<Object> getJcrQueryProvider() {
-        if (cachedJcrQueryProvider == null) {
-            cachedJcrQueryProvider = rp.getJCRQueryProvider();
-        }
-        return cachedJcrQueryProvider;
+        return rp.getJCRQueryProvider();
     }
 
     @Override
