@@ -66,6 +66,7 @@ import org.apache.sling.jcr.resource.internal.NodeUtil;
 import org.apache.sling.jcr.resource.internal.OakResourceListener;
 import org.apache.sling.jcr.resource.internal.ObservationListenerSupport;
 import org.apache.sling.spi.resource.provider.JCRQueryProvider;
+import org.apache.sling.spi.resource.provider.ProviderContext;
 import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
@@ -520,7 +521,11 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
 
     @Override
     public @CheckForNull JCRQueryProvider<JcrProviderState> getJCRQueryProvider() {
-        return new BasicJcrQueryProvider();
+        final ProviderContext ctx = this.getProviderContext();
+        if ( ctx != null ) {
+            return new BasicJcrQueryProvider(ctx);
+        }
+        return null;
     }
 
     /**

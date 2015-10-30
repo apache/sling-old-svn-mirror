@@ -89,6 +89,7 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
     /**
      * @see org.apache.sling.api.resource.Resource#getResourceType()
      */
+    @Override
     public String getResourceType() {
         if ( this.resourceType == null ) {
             try {
@@ -104,6 +105,7 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
     /**
      * @see org.apache.sling.api.resource.Resource#getResourceSuperType()
      */
+    @Override
     public String getResourceSuperType() {
         // Yes, this isn't how you're supposed to compare Strings, but this is intentional.
         if ( resourceSuperType == UNSET_RESOURCE_SUPER_TYPE ) {
@@ -242,7 +244,7 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
         try {
             if (getNode().hasNodes()) {
                 return new JcrNodeResourceIterator(getResourceResolver(), path, version,
-                    getNode().getNodes(), this.helper);
+                    getNode().getNodes(), this.helper, null);
             }
         } catch (final RepositoryException re) {
             LOGGER.error("listChildren: Cannot get children of " + this, re);
