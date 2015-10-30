@@ -22,8 +22,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.sling.api.resource.PathSet;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
-import org.apache.sling.resourceresolver.impl.providers.tree.PathSet;
 import org.apache.sling.spi.resource.provider.ObserverConfiguration;
 
 public class BasicObserverConfiguration implements ObserverConfiguration {
@@ -41,7 +41,7 @@ public class BasicObserverConfiguration implements ObserverConfiguration {
         this.includeExternal = isExternal;
         this.paths = Collections.singleton(path);
         this.changeTypes = Collections.unmodifiableSet(types);
-        this.excludedPaths = excludePaths.getExcludes(path);
+        this.excludedPaths = excludePaths.getSubset(path).toStringSet();
     }
 
     public BasicObserverConfiguration(final Set<String> paths) {

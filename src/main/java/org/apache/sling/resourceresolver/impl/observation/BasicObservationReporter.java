@@ -27,10 +27,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.sling.api.resource.Path;
+import org.apache.sling.api.resource.PathSet;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
-import org.apache.sling.resourceresolver.impl.providers.tree.Path;
-import org.apache.sling.resourceresolver.impl.providers.tree.PathSet;
 import org.apache.sling.spi.resource.provider.ObservationReporter;
 import org.apache.sling.spi.resource.provider.ObserverConfiguration;
 
@@ -76,7 +76,7 @@ public class BasicObservationReporter implements ObservationReporter {
             if ( !info.getResourceChangeTypes().isEmpty() ) {
                 boolean add = false;
                 for(final Path p : info.getPaths()) {
-                    if ( providerPath.matches(p.getPath()) && !excludePaths.matches(p.getPath()) ) {
+                    if ( providerPath.matches(p.getPath()) && excludePaths.matches(p.getPath()) == null ) {
                         ObserverConfig config = configMap.get(p);
                         if ( config == null ) {
                             config = new ObserverConfig();
@@ -164,7 +164,7 @@ public class BasicObservationReporter implements ObservationReporter {
         if (!config.isExternal && change.isExternal()) {
             return false;
         }
-        if (!config.paths.matches(change.getPath())) {
+        if (config.paths.matches(change.getPath()) == null ) {
             return false;
         }
         return true;

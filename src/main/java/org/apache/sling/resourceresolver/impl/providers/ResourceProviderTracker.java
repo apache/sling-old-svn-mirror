@@ -31,6 +31,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.sling.api.SlingConstants;
+import org.apache.sling.api.resource.Path;
+import org.apache.sling.api.resource.PathSet;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.api.resource.runtime.dto.FailureReason;
@@ -38,8 +40,6 @@ import org.apache.sling.api.resource.runtime.dto.ResourceProviderDTO;
 import org.apache.sling.api.resource.runtime.dto.ResourceProviderFailureDTO;
 import org.apache.sling.api.resource.runtime.dto.RuntimeDTO;
 import org.apache.sling.resourceresolver.impl.legacy.LegacyResourceProviderWhiteboard;
-import org.apache.sling.resourceresolver.impl.providers.tree.Path;
-import org.apache.sling.resourceresolver.impl.providers.tree.PathSet;
 import org.apache.sling.spi.resource.provider.ObservationReporter;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
@@ -388,7 +388,7 @@ public class ResourceProviderTracker {
             }
         }
         handler.getProviderContext().update(
-                reporterGenerator.create(handlerPath, new PathSet(excludedPaths)),
+                reporterGenerator.create(handlerPath, PathSet.fromStringCollection(excludedPaths)),
                 excludedPaths);
     }
 
