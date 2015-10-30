@@ -387,9 +387,10 @@ public class ResourceProviderTracker {
                 excludedPaths.add(otherPath);
             }
         }
+        final PathSet excludedPathSet = PathSet.fromStringCollection(excludedPaths);
         handler.getProviderContext().update(
-                reporterGenerator.create(handlerPath, PathSet.fromStringCollection(excludedPaths)),
-                excludedPaths);
+                reporterGenerator.create(handlerPath, excludedPathSet),
+                excludedPathSet);
     }
 
     private void postEvents(final List<ProviderEvent> events) {
