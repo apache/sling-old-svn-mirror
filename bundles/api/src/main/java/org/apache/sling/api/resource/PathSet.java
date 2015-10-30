@@ -31,6 +31,9 @@ import java.util.Set;
  */
 public class PathSet implements Iterable<Path> {
 
+    /** Empty path set. */
+    public static final PathSet EMPTY_SET = new PathSet(Collections.<Path> emptySet());
+
     /**
      * Create a path set from a collection of path objects
      * @param paths The collection of path objects
