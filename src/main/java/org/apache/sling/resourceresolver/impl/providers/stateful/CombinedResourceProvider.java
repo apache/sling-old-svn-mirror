@@ -49,11 +49,11 @@ import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.resource.query.Query;
 import org.apache.sling.api.resource.query.QueryInstructions;
+import org.apache.sling.api.resource.query.Result;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.resourceresolver.impl.providers.tree.Node;
-import org.apache.sling.spi.resource.provider.QueryResult;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -374,7 +374,7 @@ public class CombinedResourceProvider {
     /**
      * Queries all resource providers and combines the results.
      */
-    public QueryResult find(final Query q, final QueryInstructions qi) {
+    public Result find(final Query q, final QueryInstructions qi) {
         return new CombinedQueryResult(q, qi);
     }
 
@@ -601,20 +601,20 @@ public class CombinedResourceProvider {
         return null;
     }
 
-    private class CombinedQueryResult extends QueryResult implements Iterable<Resource> {
+    private class CombinedQueryResult implements Result {
 
         private final Query q;
 
         private final QueryInstructions qi;
 
-        public CombinedQueryResult(Query q, QueryInstructions qi) {
+        public CombinedQueryResult(final Query q, final QueryInstructions qi) {
             this.q = q;
             this.qi = qi;
         }
 
         @Override
-        public Iterable<Resource> getResources() {
-            return this;
+        public String getContinuationKey() {
+            return null;
         }
 
         @Override

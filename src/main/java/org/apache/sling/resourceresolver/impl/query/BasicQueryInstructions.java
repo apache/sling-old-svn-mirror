@@ -21,7 +21,6 @@ package org.apache.sling.resourceresolver.impl.query;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.query.QueryInstructions;
 
 /**
@@ -57,15 +56,6 @@ public class BasicQueryInstructions implements QueryInstructions {
     @Override
     public String getContinuationKey() {
         return this.continuationKey;
-    }
-
-    @Override
-    public String generateContinuationKey(final Resource resource) {
-        if ( resource == null ) {
-            throw new IllegalArgumentException("No resource provided for continuation key.");
-        }
-        // TODO Auto-generated method stub
-        return null;
     }
 
     @Override

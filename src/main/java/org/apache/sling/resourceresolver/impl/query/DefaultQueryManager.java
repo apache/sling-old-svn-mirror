@@ -19,11 +19,10 @@
 package org.apache.sling.resourceresolver.impl.query;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
-import org.apache.sling.api.resource.Resource;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.query.Query;
 import org.apache.sling.api.resource.query.Query.QueryType;
@@ -31,16 +30,19 @@ import org.apache.sling.api.resource.query.QueryBuilder;
 import org.apache.sling.api.resource.query.QueryInstructions;
 import org.apache.sling.api.resource.query.QueryInstructionsBuilder;
 import org.apache.sling.api.resource.query.QueryManager;
+import org.apache.sling.api.resource.query.Result;
 import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
 
+@Component
+@Service(value = QueryManager.class)
 public class DefaultQueryManager implements QueryManager {
 
     @Override
-    public Iterator<Resource> find(final ResourceResolver resolver, final Query q, final QueryInstructions qi) {
+    public Result find(final ResourceResolver resolver, final Query q, final QueryInstructions qi) {
         if ( !(resolver instanceof ResourceResolverImpl) ) {
-            throw new IllegalArgumentException("Resource resolver is not provided by this bundle.");
+            throw new IllegalArgumentException("Resource resolver is not provided by this implementation.");
         }
-        return Collections.EMPTY_LIST.iterator();
+        return ((ResourceResolverImpl)resolver).find(q, qi);
     }
 
     @Override
