@@ -35,11 +35,15 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tracker component for the resource change listeners.
  */
 public class ResourceChangeListenerWhiteboard implements ResourceProviderTracker.ObservationReporterGenerator {
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final Map<ServiceReference, ResourceChangeListenerInfo> listeners = new ConcurrentHashMap<ServiceReference, ResourceChangeListenerInfo>();
 
@@ -81,6 +85,8 @@ public class ResourceChangeListenerWhiteboard implements ResourceProviderTracker
                         listeners.put(reference, info);
                         updateProviderTracker();
                     }
+                } else {
+                    logger.warn("Ignoring invalid resource change listenr {}", reference);
                 }
                 return reference;
             }

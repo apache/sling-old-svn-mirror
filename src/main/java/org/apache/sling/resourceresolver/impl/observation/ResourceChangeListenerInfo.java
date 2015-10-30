@@ -23,6 +23,7 @@ import static org.apache.sling.api.resource.observation.ResourceChangeListener.P
 import static org.apache.sling.commons.osgi.PropertiesUtil.toStringArray;
 
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -33,7 +34,14 @@ import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.osgi.framework.ServiceReference;
 
+/**
+ * Information about a resource change listener.
+ */
 public class ResourceChangeListenerInfo {
+
+    private static final Set<ChangeType> DEFAULT_CHANGE_TYPES = EnumSet.of(ChangeType.ADDED, ChangeType.REMOVED, ChangeType.CHANGED);
+
+    private static final Set<ChangeType> DEFAULT_CHANGE_PROVIDER_TYPES = EnumSet.of(ChangeType.PROVIDER_ADDED, ChangeType.PROVIDER_REMOVED);
 
     private final PathSet paths;
 
@@ -88,41 +96,40 @@ public class ResourceChangeListenerInfo {
             }
         }
         this.paths = PathSet.fromStringCollection(pathsSet);
-        final Set<ChangeType> typesSet = new HashSet<ChangeType>();
         if (ref.getProperty(CHANGES) != null ) {
-            for (String changeName : toStringArray(ref.getProperty(CHANGES))) {
+            final Set<ChangeType> rts = new HashSet<ChangeType>();
+            final Set<ChangeType> pts = new HashSet<ChangeType>();
+            for (final String changeName : toStringArray(ref.getProperty(CHANGES))) {
                 try {
-                    typesSet.add(ChangeType.valueOf(changeName));
+                    final ChangeType ct = ChangeType.valueOf(changeName);
+                    if ( ct.ordinal() < ChangeType.PROVIDER_ADDED.ordinal()) {
+                        rts.add(ct);
+                    } else {
+                        pts.add(ct);
+                    }
                 } catch ( final IllegalArgumentException iae) {
                     configValid = false;
                 }
             }
+            if ( rts.isEmpty() ) {
+                this.resourceChangeTypes = Collections.emptySet();
+            } else if ( rts.size() == 3 ) {
+                this.resourceChangeTypes = DEFAULT_CHANGE_TYPES;
+            } else {
+                this.resourceChangeTypes = Collections.unmodifiableSet(rts);
+            }
+            if ( pts.isEmpty() ) {
+                this.providerChangeTypes = Collections.emptySet();
+            } else if ( pts.size() == 2 ) {
+                this.providerChangeTypes = DEFAULT_CHANGE_PROVIDER_TYPES;
+            } else {
+                this.providerChangeTypes = Collections.unmodifiableSet(pts);
+            }
         } else {
             // default is added, changed, removed
-            typesSet.add(ChangeType.ADDED);
-            typesSet.add(ChangeType.CHANGED);
-            typesSet.add(ChangeType.REMOVED);
+            this.resourceChangeTypes = DEFAULT_CHANGE_TYPES;
+            this.providerChangeTypes = Collections.emptySet();
         }
-        final Set<ChangeType> rts = new HashSet<ChangeType>();
-        if ( typesSet.contains(ChangeType.ADDED)) {
-            rts.add(ChangeType.ADDED);
-        }
-        if ( typesSet.contains(ChangeType.CHANGED)) {
-            rts.add(ChangeType.CHANGED);
-        }
-        if ( typesSet.contains(ChangeType.REMOVED)) {
-            rts.add(ChangeType.REMOVED);
-        }
-        this.resourceChangeTypes = Collections.unmodifiableSet(rts);
-
-        final Set<ChangeType> pts = new HashSet<ChangeType>();
-        if ( typesSet.contains(ChangeType.PROVIDER_ADDED)) {
-            pts.add(ChangeType.PROVIDER_ADDED);
-        }
-        if ( typesSet.contains(ChangeType.PROVIDER_REMOVED)) {
-            pts.add(ChangeType.PROVIDER_REMOVED);
-        }
-        this.providerChangeTypes = Collections.unmodifiableSet(pts);
 
         this.valid = configValid;
     }
