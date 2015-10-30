@@ -26,6 +26,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.PathSet;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -58,12 +59,17 @@ public class ObservationListenerSupport  {
 
     private final Session session;
 
-    public ObservationListenerSupport(final BundleContext bundleContext, final SlingRepository repository)
+    private final PathSet excludedPaths;
+
+    public ObservationListenerSupport(final BundleContext bundleContext,
+            final SlingRepository repository,
+            final PathSet excludedPaths)
     throws RepositoryException {
         this.bundleContext = bundleContext;
 
         this.eventAdminTracker = new ServiceTracker(bundleContext, EventAdmin.class.getName(), null);
         this.eventAdminTracker.open();
+        this.excludedPaths = excludedPaths;
 
         this.session = repository.loginAdministrative(null);
     }
@@ -84,6 +90,10 @@ public class ObservationListenerSupport  {
         this.eventAdminTracker.close();
 
         this.session.logout();
+    }
+
+    public boolean isExcluded(final String path) {
+        return this.excludedPaths != null && this.excludedPaths.matches(path) != null;
     }
 
     public Session getSession() {

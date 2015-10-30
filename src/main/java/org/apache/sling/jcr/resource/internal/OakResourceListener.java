@@ -265,7 +265,7 @@ public class OakResourceListener extends NodeObserver implements Closeable {
 
                 if ( sendEvent ) {
                     final String resourcePath = pathMapper.mapJCRPathToResourcePath(changes.get(SlingConstants.PROPERTY_PATH).toString());
-                    if ( resourcePath != null ) {
+                    if ( resourcePath != null && !this.support.isExcluded(resourcePath)) {
                         changes.put(SlingConstants.PROPERTY_PATH, resourcePath);
 
                         localEa.sendEvent(new org.osgi.service.event.Event(topic, new EventProperties(changes)));

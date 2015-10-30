@@ -65,7 +65,7 @@ public class JcrResourceListenerScalabilityTest {
         when(bundleContext.getServiceReferences(anyString(), anyString())).thenReturn(serviceRefs);
         when(bundleContext.getService(serviceRef)).thenReturn(eventAdmin);
 
-        jcrResourceListener = new JcrResourceListener("/", new ObservationListenerSupport(bundleContext, repository), new PathMapperImpl());
+        jcrResourceListener = new JcrResourceListener("/", new ObservationListenerSupport(bundleContext, repository, null), new PathMapperImpl());
 
         Event event = mock(MockEvent.class);
         events = mock(EventIterator.class);
@@ -84,6 +84,7 @@ public class JcrResourceListenerScalabilityTest {
     private abstract static class MockEvent implements Event {
         int count;
 
+        @Override
         public String getPath() throws RepositoryException {
             return "path-" + count++;
         }

@@ -21,13 +21,13 @@ import java.util.concurrent.Executor;
 
 import javax.jcr.RepositoryException;
 
-import junitx.util.PrivateAccessor;
-
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.framework.BundleContext;
 import org.osgi.util.tracker.ServiceTracker;
+
+import junitx.util.PrivateAccessor;
 
 /**
  * This class is used to ensure that events are handled during the test.
@@ -45,7 +45,7 @@ public class SynchronousOakResourceListener extends OakResourceListener {
             final ServiceTracker tracker,
             final Executor executor)
             throws LoginException, RepositoryException, NoSuchFieldException {
-        super("/", new ObservationListenerSupport(bundleContext, repo), bundleContext, executor, new PathMapperImpl(), 1000);
+        super("/", new ObservationListenerSupport(bundleContext, repo, null), bundleContext, executor, new PathMapperImpl(), 1000);
         PrivateAccessor.setField(this.support, "resourceResolver", resolver);
         PrivateAccessor.setField(this.support, "eventAdminTracker", tracker);
     }
