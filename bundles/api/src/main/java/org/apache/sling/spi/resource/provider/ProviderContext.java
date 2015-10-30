@@ -18,9 +18,9 @@
  */
 package org.apache.sling.spi.resource.provider;
 
-import java.util.Set;
-
 import javax.annotation.Nonnull;
+
+import org.apache.sling.api.resource.PathSet;
 
 import aQute.bnd.annotation.ProviderType;
 
@@ -43,5 +43,5 @@ public interface ProviderContext {
      * Set of paths which are "hidden" by other resource providers.
      * @return A set of paths. The set might be empty
      */
-    Set<String> getExcludedPaths();
+    PathSet getExcludedPaths();
 }

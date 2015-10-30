@@ -22,6 +22,7 @@ import java.util.Set;
 
 import javax.annotation.Nonnull;
 
+import org.apache.sling.api.resource.PathSet;
 import org.apache.sling.api.resource.observation.ResourceChange;
 
 import aQute.bnd.annotation.ProviderType;
@@ -41,14 +42,14 @@ public interface ObserverConfiguration {
      * The set of paths this listener is interested in. Each entry is absolute.
      * @return Non empty set of paths
      */
-    @Nonnull Set<String> getPaths();
+    @Nonnull PathSet getPaths();
 
     /**
      * The set of excluded paths.
      * All the paths are sub paths from one entry of {@link #getPaths()}
      * @return A set of excluded paths, might be empty.
      */
-    @Nonnull Set<String> getExcludedPaths();
+    @Nonnull PathSet getExcludedPaths();
 
     /**
      * The set of types listeners are interested in.
@@ -58,7 +59,7 @@ public interface ObserverConfiguration {
 
     /**
      * Checks whether a path matches one of the paths of this configuration
-     * but is not in the excluded paths list.
+     * but is not in the excluded paths set.
      * @param path The path to check
      * @return {@code true} if the path matches the configuration.
      */
