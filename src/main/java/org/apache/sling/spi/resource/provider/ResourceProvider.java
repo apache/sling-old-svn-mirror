@@ -56,11 +56,13 @@ import aQute.bnd.annotation.ConsumerType;
  * with the highest service ranking is used.
  * <p>
  * If a provider is used in the resource tree, it gets activated through
- * a call of the {@link #activate(ProviderContext)} method. If the
+ * a call of the {@link #start(ProviderContext)} method. If the
  * provider is not used anymore within the resource tree, the
- * {@link #deactivate(ProviderContext)} method is called. Whenever
+ * {@link #stop()} method is called. Whenever
  * information concerning the provider is changed while the provider
- * is used, the {@link #update(ProviderContext)} method is called.
+ * is used, the {@link #update()} method is called. The provider context
+ * instance which is passed to the {@link #start(ProviderContext} method
+ * contains the updated state.
  * <p>
  * Some resource providers might require (user) authentication. For example
  * the JCR resource provider uses authenticated sessions. If a provider
@@ -232,7 +234,7 @@ public abstract class ResourceProvider<T> {
      * it is used in the resource tree.
      * @param ctx The context for this provider.
      */
-    public void activate(@Nonnull ProviderContext ctx) {
+    public void start(@Nonnull ProviderContext ctx) {
         this.ctx = ctx;
     }
 
@@ -240,7 +242,7 @@ public abstract class ResourceProvider<T> {
      * With a call to this method, the provider implementation is notified
      * that it is not used anymore in the resource tree.
      */
-    public void deactivate() {
+    public void stop() {
         this.ctx = null;
     }
 
