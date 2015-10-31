@@ -48,7 +48,7 @@ public class ResourceProviderHandler implements Comparable<ResourceProviderHandl
     public boolean activate() {
         this.provider = (ResourceProvider<?>) this.bundleContext.getService(this.info.getServiceReference());
         if ( this.provider != null ) {
-            this.provider.activate(context);
+            this.provider.start(context);
         }
         return this.provider != null;
     }
@@ -59,7 +59,7 @@ public class ResourceProviderHandler implements Comparable<ResourceProviderHandl
 
     public void deactivate() {
         if ( this.provider != null ) {
-            this.provider.deactivate();
+            this.provider.stop();
             this.provider = null;
             this.context.update(null, null);
             this.bundleContext.ungetService(this.info.getServiceReference());

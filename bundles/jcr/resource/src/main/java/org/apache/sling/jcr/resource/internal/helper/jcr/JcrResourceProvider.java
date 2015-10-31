@@ -166,21 +166,21 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     }
 
     @Deactivate
-    protected void deactivateComponent() {
+    protected void deactivate() {
         unregisterLegacyListener();
     }
 
 
     @Override
-    public void activate(final ProviderContext ctx) {
-        super.activate(ctx);
+    public void start(final ProviderContext ctx) {
+        super.start(ctx);
         registerLegacyListener();
     }
 
     @Override
-    public void deactivate() {
+    public void stop() {
         unregisterLegacyListener();
-        super.deactivate();
+        super.stop();
     }
 
     @SuppressWarnings("unused")

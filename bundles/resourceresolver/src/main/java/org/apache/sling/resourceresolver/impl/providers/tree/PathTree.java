@@ -20,8 +20,6 @@ package org.apache.sling.resourceresolver.impl.providers.tree;
 
 import static org.apache.commons.lang.StringUtils.split;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -69,32 +67,6 @@ public class PathTree<T extends Pathable> {
             }
         }
         return result;
-    }
-
-    public List<T> getMatchingNodes(String path) {
-        if (path == null || path.isEmpty() || path.charAt(0) != '/') {
-            return Collections.emptyList();
-        }
-        List<T> values = new ArrayList<T>();
-
-        if (root.getValue() != null) {
-            values.add(root.getValue());
-        }
-
-        Node<T> node = root;
-        Iterator<String> it = new PathSegmentIterator(path, 1);
-        while (it.hasNext()) {
-            String segment = it.next();
-            node = node.getChild(segment);
-            if (node == null) {
-                break;
-            } else {
-                if (node.getValue() != null) {
-                    values.add(node.getValue());
-                }
-            }
-        }
-        return values;
     }
 
     public Node<T> getNode(String path) {
