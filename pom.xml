@@ -151,7 +151,7 @@
  		<dependency>
 			<groupId>org.apache.sling</groupId>
 			<artifactId>org.apache.sling.discovery.commons</artifactId>
-			<version>1.0.1-SNAPSHOT</version>
+			<version>1.0.2</version>
   		</dependency>
         <!-- besides including discovery.commons' normal jar above, 
               for testing a few test helper classes are also reused.
@@ -159,7 +159,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.discovery.commons</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
+            <version>1.0.2</version>
             <scope>test</scope>
             <type>test-jar</type>
         </dependency>
