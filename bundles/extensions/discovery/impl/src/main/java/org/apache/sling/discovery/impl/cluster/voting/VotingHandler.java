@@ -21,7 +21,9 @@ package org.apache.sling.discovery.impl.cluster.voting;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -30,8 +32,6 @@ import java.util.UUID;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
@@ -45,7 +45,9 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
 import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.settings.SlingSettingsService;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
@@ -58,16 +60,7 @@ import org.slf4j.LoggerFactory;
  * accordingly
  */
 @Component(immediate = true)
-@Service(value = {EventHandler.class, VotingHandler.class})
-@Properties({
-        @Property(name = Constants.SERVICE_DESCRIPTION, value = "New Voting Event Listener."),
-        @Property(name = EventConstants.EVENT_TOPIC, value = {
-                SlingConstants.TOPIC_RESOURCE_ADDED,
-                SlingConstants.TOPIC_RESOURCE_CHANGED,
-                SlingConstants.TOPIC_RESOURCE_REMOVED }) })
-// ,
-// @Property(name = EventConstants.EVENT_FILTER, value = "(path="
-// + org.apache.sling.discovery.viewmgr.Constants.ROOT_PATH + ")") })
+@Service(value = {VotingHandler.class})
 public class VotingHandler implements EventHandler {
     
     public static enum VotingDetail {
@@ -119,7 +112,11 @@ public class VotingHandler implements EventHandler {
     private volatile String leaderElectionId;
 
     private volatile boolean activated;
+
+    private ComponentContext context;
     
+    private ServiceRegistration eventHandlerRegistration;
+
     /** for testing only **/
     public static VotingHandler testConstructor(SlingSettingsService settingsService,
             ResourceResolverFactory factory, Config config) {
@@ -132,6 +129,11 @@ public class VotingHandler implements EventHandler {
 
     @Deactivate
     protected void deactivate() {
+        if (eventHandlerRegistration != null) {
+            eventHandlerRegistration.unregister();
+            logger.info("deactivate: VotingHandler unregistered as EventHandler");
+            eventHandlerRegistration = null;
+        }
         activated = false;
         logger.info("deactivate: deactivated slingId: {}, this: {}", slingId, this);
     }
@@ -141,8 +143,37 @@ public class VotingHandler implements EventHandler {
         slingId = slingSettingsService.getSlingId();
         logger = LoggerFactory.getLogger(this.getClass().getCanonicalName()
                 + "." + slingId);
+        this.context = context;
         activated = true;
+        
+        // once activated, register the eventHandler so that we can 
+        // start receiving and processing votings...
+        registerEventHandler();
         logger.info("activated: activated ("+slingId+")");
+    }
+
+    private void registerEventHandler() {
+        BundleContext bundleContext = context == null ? null : context.getBundleContext();
+        if (bundleContext == null) {
+            logger.info("registerEventHandler: context or bundleContext is null - cannot register");
+            return;
+        }
+        Dictionary<String,Object> properties = new Hashtable<String,Object>();
+        properties.put(Constants.SERVICE_DESCRIPTION, "Voting Event Listener");
+        String[] topics = new String[] {
+                SlingConstants.TOPIC_RESOURCE_ADDED,
+                SlingConstants.TOPIC_RESOURCE_CHANGED,
+                SlingConstants.TOPIC_RESOURCE_REMOVED };
+        properties.put(EventConstants.EVENT_TOPIC, topics);
+        String path = config.getDiscoveryResourcePath();
+        if (path.endsWith("/")) {
+            path = path.substring(0, path.length()-1);
+        }
+        path = path + "/*";
+        properties.put(EventConstants.EVENT_FILTER, "(&(path="+path+"))");
+        eventHandlerRegistration = bundleContext.registerService(
+                EventHandler.class.getName(), this, properties);
+        logger.info("registerEventHandler: VotingHandler registered as EventHandler");
     }
 
     /**

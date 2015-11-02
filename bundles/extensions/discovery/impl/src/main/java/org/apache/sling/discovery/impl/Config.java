@@ -389,7 +389,7 @@ public class Config implements BaseConfig, DiscoveryLiteConfig {
         return topologyConnectorWhitelist;
     }
 
-    protected String getDiscoveryResourcePath() {
+    public String getDiscoveryResourcePath() {
         return discoveryResourcePath;
     }
     
