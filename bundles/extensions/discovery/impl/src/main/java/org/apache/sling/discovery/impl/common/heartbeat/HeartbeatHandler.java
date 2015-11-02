@@ -350,7 +350,7 @@ public class HeartbeatHandler extends BaseViewChecker {
     }
     
     /** Issue a cluster local heartbeat (into the repository) **/
-    private void issueClusterLocalHeartbeat() {
+    protected void issueClusterLocalHeartbeat() {
         if (logger.isDebugEnabled()) {
             logger.debug("issueClusterLocalHeartbeat: storing cluster-local heartbeat to repository for "+slingId);
         }

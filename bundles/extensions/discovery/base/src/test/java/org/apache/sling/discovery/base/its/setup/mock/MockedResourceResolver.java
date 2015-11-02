@@ -34,6 +34,7 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.Value;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.resource.LoginException;
@@ -287,6 +288,8 @@ public class MockedResourceResolver implements ResourceResolver {
                         child.setProperty(entry.getKey(), (Boolean)entry.getValue());
                     } else if (entry.getValue() instanceof Calendar) {
                         child.setProperty(entry.getKey(), (Calendar)entry.getValue());
+                    } else if (entry.getValue() == null) {
+                        child.setProperty(entry.getKey(), (Value)null);
                     } else {
                         throw new UnsupportedOperationException("Not implemented (entry.getValue(): "+entry.getValue()+")");
                     }
