@@ -37,7 +37,7 @@ public class TestConfig extends Config implements ModifiableTestBaseConfig {
     }
     
     @Override
-    protected String getDiscoveryResourcePath() {
+    public String getDiscoveryResourcePath() {
         return drPath;
     }
     
