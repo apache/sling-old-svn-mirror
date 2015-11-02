@@ -134,7 +134,7 @@ public class TestOakSyncTokenService {
         assertEquals(0, l.countEvents());
         cs.triggerBackgroundCheck();
         DescriptorHelper.setDiscoveryLiteDescriptor(factory1, new DiscoveryLiteDescriptorBuilder().me(1).seq(1).activeIds(1).setFinal(true));
-        assertTrue(idMapService1.waitForInit(2000));
+        assertTrue(idMapService1.waitForInit(5000));
         cs.triggerBackgroundCheck();
         assertEquals(0, vsm.waitForAsyncEvents(1000));
         assertEquals(1, l.countEvents());
@@ -175,15 +175,15 @@ public class TestOakSyncTokenService {
         cs2.triggerBackgroundCheck();
         assertEquals(0, l.countEvents());
         vsm2.handleActivated();
-        assertTrue(idMapService1.waitForInit(2000));
-        assertTrue(idMapService2.waitForInit(2000));
+        assertTrue(idMapService1.waitForInit(5000));
+        assertTrue(idMapService2.waitForInit(5000));
         DummyTopologyView two2 = TestHelper.newView(two1.getLocalClusterSyncTokenId(), two1.getLocalInstance().getClusterView().getId(), true, slingId1, slingId1, slingId1, slingId2);
         vsm2.handleNewView(two2);
         cs1.triggerBackgroundCheck();
         cs1.triggerBackgroundCheck();
         cs2.triggerBackgroundCheck();
         cs2.triggerBackgroundCheck();
-        assertEquals(0, vsm1.waitForAsyncEvents(500));
+        assertEquals(0, vsm1.waitForAsyncEvents(1000));
         assertEquals(1, l.countEvents());
         DummyTopologyView oneLeaving = two1.clone();
         oneLeaving.removeInstance(slingId2);
@@ -191,12 +191,12 @@ public class TestOakSyncTokenService {
         vsm1.handleNewView(oneLeaving);
         cs1.triggerBackgroundCheck();
         cs2.triggerBackgroundCheck();
-        assertEquals(0, vsm1.waitForAsyncEvents(2000));
+        assertEquals(0, vsm1.waitForAsyncEvents(5000));
         assertEquals(2, l.countEvents());
         DescriptorHelper.setDiscoveryLiteDescriptor(factory1, new DiscoveryLiteDescriptorBuilder().setFinal(true).me(1).seq(2).activeIds(1).inactiveIds(2));
         cs1.triggerBackgroundCheck();
         cs2.triggerBackgroundCheck();
-        assertEquals(0, vsm1.waitForAsyncEvents(2000));
+        assertEquals(0, vsm1.waitForAsyncEvents(5000));
         RepositoryTestHelper.dumpRepo(factory1);
         assertEquals(3, l.countEvents());
     }
