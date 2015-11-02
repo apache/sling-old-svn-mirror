@@ -202,7 +202,7 @@ public abstract class AbstractSingleInstanceTest {
         assertingTopologyEventListener.addExpected(Type.TOPOLOGY_INIT);
         logger.info("testTopologyEventListeners: binding the event listener");
         instance.bindTopologyEventListener(assertingTopologyEventListener);
-        Thread.sleep(500); // SLING-4755: async event sending requires some minimal wait time nowadays
+        Thread.sleep(1000); // SLING-4755: async event sending requires some minimal wait time nowadays
         assertEquals(0, assertingTopologyEventListener.getRemainingExpectedCount());
 
         final String propertyName = UUID.randomUUID().toString();
