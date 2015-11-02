@@ -21,8 +21,10 @@ package org.apache.sling.discovery.impl.cluster.voting;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -67,7 +69,16 @@ import org.slf4j.LoggerFactory;
 // @Property(name = EventConstants.EVENT_FILTER, value = "(path="
 // + org.apache.sling.discovery.viewmgr.Constants.ROOT_PATH + ")") })
 public class VotingHandler implements EventHandler {
-
+    
+    public static enum VotingDetail {
+        PROMOTED,
+        WINNING,
+        VOTED_YES,
+        VOTED_NO,
+        UNCHANGED,
+        TIMEDOUT
+    }
+    
     private final static Comparator<VotingView> VOTING_COMPARATOR = new Comparator<VotingView>() {
 
         public int compare(VotingView o1, VotingView o2) {
@@ -184,7 +195,12 @@ public class VotingHandler implements EventHandler {
      * SLING-2885: this method must be synchronized as it can be called concurrently
      * by the HearbeatHandler.doCheckView and the VotingHandler.handleEvent.
      */
-    public synchronized void analyzeVotings(final ResourceResolver resourceResolver) throws PersistenceException {
+    public synchronized Map<VotingView,VotingDetail> analyzeVotings(final ResourceResolver resourceResolver) throws PersistenceException {
+        if (!activated) {
+            logger.info("analyzeVotings: VotingHandler not yet initialized, can't vote.");
+            return null;
+        }
+        Map<VotingView,VotingDetail> result = new HashMap<VotingView,VotingDetail>();
         // SLING-3406: refreshing resourceResolver/session here to get the latest state from the repository
         logger.debug("analyzeVotings: start. slingId: {}", slingId);
         resourceResolver.refresh();
@@ -197,17 +213,23 @@ public class VotingHandler implements EventHandler {
                 promote(resourceResolver, winningVote.getResource());
                 // SLING-3406: committing resourceResolver/session here, while we're in the synchronized
                 resourceResolver.commit();
+                
+                // for test verification
+                result.put(winningVote, VotingDetail.PROMOTED);
+                return result;
             } else {
         		logger.info("analyzeVotings: there is a winning vote. No need to vote any further. Expecting it to get promoted to established: "
             				+ winningVote);
-            	return;
+        		
+        		result.put(winningVote, VotingDetail.WINNING);
+            	return result;
             }
         }
 
         List<VotingView> ongoingVotings = VotingHelper.listVotings(resourceResolver, config);
         if (ongoingVotings == null || ongoingVotings.size() == 0) {
             logger.debug("analyzeVotings: no ongoing votings at the moment. done.");
-            return;
+            return result;
         }
         Collections.sort(ongoingVotings, VOTING_COMPARATOR);
         VotingView yesVote = null;
@@ -219,13 +241,18 @@ public class VotingHandler implements EventHandler {
                 // if a voting has timed out, delete it
                 logger.info("analyzeVotings: deleting a timed out voting: "+voting);
                 voting.remove(false);
+                result.put(voting, VotingDetail.TIMEDOUT);
                 continue;
             }
             if (voting.hasNoVotes()) {
                 if (!votedNo) {
                     logger.info("analyzeVotings: vote already has no votes, so I shall also vote no: "+voting);
                     voting.vote(slingId, false, null);
-                } // else ignore silently
+                    result.put(voting, VotingDetail.VOTED_NO);
+                } else {
+                    // else ignore silently
+                    result.put(voting, VotingDetail.UNCHANGED);
+                }
                 continue;
             }
             String liveComparison = voting.matchesLiveView(config);
@@ -234,6 +261,9 @@ public class VotingHandler implements EventHandler {
                     logger.info("analyzeVotings: vote doesnt match my live view, voting no. "
                             + "comparison result: "+liveComparison+", vote: "+voting);
                     voting.vote(slingId, false, null);
+                    result.put(voting, VotingDetail.VOTED_NO);
+                } else {
+                    result.put(voting, VotingDetail.UNCHANGED);
                 }
                 continue;
             }
@@ -247,7 +277,11 @@ public class VotingHandler implements EventHandler {
                 if (!votedNo) {
                     logger.info("analyzeVotings: already voted yes, so voting no for: "+voting);
                     voting.vote(slingId, false, null);
-                } // else ignore silently
+                    result.put(voting, VotingDetail.VOTED_NO);
+                } else {
+                    // else ignore silently
+                    result.put(voting, VotingDetail.UNCHANGED);
+                }
                 continue;
             }
             if (!votedYes) {
@@ -262,10 +296,15 @@ public class VotingHandler implements EventHandler {
             if (!votedYes) {
                 logger.info("analyzeVotings: declaring my personal winner: "+yesVote);
                 yesVote.vote(slingId, true, leaderElectionId);
-            } // else don't double vote / log
+                result.put(yesVote, VotingDetail.VOTED_YES);
+            } else {
+                // else don't double vote / log
+                result.put(yesVote, VotingDetail.UNCHANGED);
+            }
         }
         resourceResolver.commit();
         logger.debug("analyzeVotings: result: my yes vote was for: " + yesVote);
+        return result;
     }
     
     public void cleanupTimedoutVotings(final ResourceResolver resourceResolver) {
