@@ -276,7 +276,9 @@ public abstract class AbstractSingleInstanceTest {
         Thread.sleep(1000);
         instance.heartbeatsAndCheckView();
         Thread.sleep(1000);
+        logger.info("testBoostrap: dumping repo...");
         instance.dumpRepo();
+        logger.info("testBoostrap: dumping listener...");
         ada.dump();
         assertEquals(0, ada.getUnexpectedCount());
         assertEquals(1, ada.getEvents().size());
