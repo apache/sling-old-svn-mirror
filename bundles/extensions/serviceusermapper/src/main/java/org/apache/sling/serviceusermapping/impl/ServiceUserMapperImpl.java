@@ -157,6 +157,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
         this.executeServiceRegistrationsAsync(registrationSet);
         if (executorService != null) {
             executorService.shutdown();
+            executorService = null;
         }
     }
 
