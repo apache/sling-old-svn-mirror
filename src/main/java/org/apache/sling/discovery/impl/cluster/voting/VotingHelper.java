@@ -72,7 +72,13 @@ public class VotingHelper {
         while (it.hasNext()) {
             Resource aChild = it.next();
             VotingView c = new VotingView(aChild);
-            String matchesLiveView = c.matchesLiveView(config);
+            String matchesLiveView;
+            try {
+                matchesLiveView = c.matchesLiveView(config);
+            } catch (Exception e) {
+                logger.error("listOpenNonWinningVotings: could not compare voting with live view: "+e, e);
+                continue;
+            }
             boolean ongoingVoting = c.isOngoingVoting(config);
             boolean hasNoVotes = c.hasNoVotes();
             boolean isWinning = c.isWinning();
@@ -90,7 +96,7 @@ public class VotingHelper {
             	if (logger.isDebugEnabled()) {
 	                logger.debug("listOpenNonWinningVotings: a non-open voting: "
 	                        + aChild
-	                        + ", matches live: " + c.matchesLiveView(config)
+	                        + ", matches live: " + matchesLiveView
 	                        + ", is ongoing: " + ongoingVoting
 	                        + ", has no votes: " + hasNoVotes
 	                        + ", is winning: " + isWinning

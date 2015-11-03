@@ -597,7 +597,15 @@ public class HeartbeatHandler extends BaseViewChecker {
             if (establishedView == null) {
                 establishedViewMatches = false;
             } else {
-                String mismatchDetails = establishedView.matches(liveInstances);
+                String mismatchDetails;
+                try{
+                    mismatchDetails = establishedView.matches(liveInstances);
+                } catch(Exception e) {
+                    logger.error("doCheckViewWith: could not compare established view with live ones: "+e, e);
+                    invalidateCurrentEstablishedView();
+                    discoveryServiceImpl.handleTopologyChanging();
+                    return;
+                }
                 if (mismatchDetails != null) {
                     logger.info("doCheckView: established view does not match. (details: " + mismatchDetails + ")");
                 } else {

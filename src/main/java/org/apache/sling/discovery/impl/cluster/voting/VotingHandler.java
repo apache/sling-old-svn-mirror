@@ -286,7 +286,17 @@ public class VotingHandler implements EventHandler {
                 }
                 continue;
             }
-            String liveComparison = voting.matchesLiveView(config);
+            if (!voting.isOngoingVoting(config)) {
+                logger.debug("analyzeVotings: vote is not ongoing (ignoring): "+voting);
+                continue;
+            }
+            String liveComparison;
+            try {
+                liveComparison = voting.matchesLiveView(config);
+            } catch (Exception e) {
+                logger.error("analyzeVotings: could not compare voting with live view: "+e, e);
+                continue;
+            }
             if (liveComparison != null) {
                 if (!votedNo) {
                     logger.info("analyzeVotings: vote doesnt match my live view, voting no. "
@@ -296,10 +306,6 @@ public class VotingHandler implements EventHandler {
                 } else {
                     result.put(voting, VotingDetail.UNCHANGED);
                 }
-                continue;
-            }
-            if (!voting.isOngoingVoting(config)) {
-                logger.debug("analyzeVotings: vote is not ongoing (ignoring): "+voting);
                 continue;
             }
             if (yesVote != null) {

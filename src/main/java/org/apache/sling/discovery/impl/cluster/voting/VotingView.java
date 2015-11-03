@@ -464,12 +464,13 @@ public class VotingView extends View {
 
     /**
      * Checks if this voting matches the current live view
+     * @throws Exception when something failed during matching
      */
-    public String matchesLiveView(final Config config) {
+    public String matchesLiveView(final Config config) throws Exception {
         Resource clusterNodesRes = getResource().getResourceResolver()
                 .getResource(config.getClusterInstancesPath());
         if (clusterNodesRes == null) {
-            return "no clusterNodesRes["+getResource()+"]";
+            throw new Exception("no clusterNodesRes["+getResource()+"]");
         }
         return matchesLiveView(clusterNodesRes, config);
     }
