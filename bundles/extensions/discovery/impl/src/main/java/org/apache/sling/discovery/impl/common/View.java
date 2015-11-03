@@ -103,8 +103,11 @@ public class View {
      * Checks whether this view matches the 'live view' as represented in the clusterInstances resource
      * @param clusterInstancesRes the clusterInstances resource against which to check
      * @return null if view matches, not-null-details about what differs if they don't match
+     * @throws Exception thrown the view cannot be properly matched
+     * - eg when the ./members resource doesn't exist at all or
+     * a RuntimeException occurs
      */
-    public String matchesLiveView(final Resource clusterInstancesRes, final Config config) {
+    public String matchesLiveView(final Resource clusterInstancesRes, final Config config) throws Exception {
         return matches(ViewHelper.determineLiveInstances(clusterInstancesRes,
                 config));
     }
@@ -113,12 +116,15 @@ public class View {
      * Compare this view with the given set of slingIds
      * @param view a set of slingIds against which to compare this view
      * @return true if this view matches the given set of slingIds
+     * @throws Exception thrown the view cannot be properly matched
+     * - eg when the ./members resource doesn't exist at all or
+     * a RuntimeException occurs
      */
-    public String matches(final Set<String> view) {
+    public String matches(final Set<String> view) throws Exception {
         final Set<String> viewCopy = new HashSet<String>(view);
         final Resource members = getResource().getChild("members");
         if (members == null) {
-            return "no members resource found";
+            throw new Exception("no members resource found");
         }
         try{
 	        final Iterator<Resource> it = members.getChildren().iterator();
@@ -157,7 +163,7 @@ public class View {
         	//              by another party simultaneously
         	//              so treat this situation nicely
         	logger.info("matches: cannot compare due to "+re);
-        	return "RuntimeException: "+re;
+        	throw new Exception("RuntimeException: "+re, re);
         }
     }
 
