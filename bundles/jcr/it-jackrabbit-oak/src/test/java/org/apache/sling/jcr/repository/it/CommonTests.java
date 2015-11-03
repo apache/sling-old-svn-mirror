@@ -219,8 +219,8 @@ public abstract class CommonTests {
         opt.add(mavenBundle("org.apache.httpcomponents", "httpclient-osgi", "4.4.1"));
 
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.jcr-wrapper", "2.0.0"));
-        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.api", "2.3.1-SNAPSHOT"));
-        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.base", "2.3.1-SNAPSHOT"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.api", "2.3.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.base", "2.3.0"));
         
         opt.add(junitBundles());
         return opt;
