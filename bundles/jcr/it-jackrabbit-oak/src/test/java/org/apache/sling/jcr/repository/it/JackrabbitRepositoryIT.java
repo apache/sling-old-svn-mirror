@@ -41,12 +41,12 @@ public class JackrabbitRepositoryIT extends CommonTests {
         final List<Option> opt = new LinkedList<Option>();
         opt.addAll(commonOptions());
 
-        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-api", "2.10.1"));
-        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-jcr-commons", "2.10.1"));
-        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-spi", "2.10.1"));
-        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-spi-commons", "2.10.1"));
-        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-jcr-rmi", "2.10.1"));
-        opt.add(mavenBundle("org.apache.derby", "derby", "10.5.3.0_1"));
+        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-api", "2.11.2"));
+        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-jcr-commons", "2.11.2"));
+        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-spi", "2.11.2"));
+        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-spi-commons", "2.11.2"));
+        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-jcr-rmi", "2.11.2"));
+        opt.add(mavenBundle("org.apache.derby", "derby", "10.12.1.1"));
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.jackrabbit.server", "2.3.1-SNAPSHOT"));
 
         return opt.toArray(new Option[]{});
