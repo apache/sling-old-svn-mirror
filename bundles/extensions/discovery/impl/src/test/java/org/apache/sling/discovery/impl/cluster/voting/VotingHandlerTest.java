@@ -460,11 +460,21 @@ public class VotingHandlerTest {
             for (Map.Entry<VotingDetail, Integer> anEntry : totalDetails.get(k).entrySet()) {
                 logger.info("testConcurrentVotes: slingId"+(k+1)+", detail="+anEntry.getKey()+", value="+anEntry.getValue());
             }
-            Integer noVotes = totalDetails.get(k).get(VotingDetail.VOTED_NO);
-            int expected = (votingHandler.length-1) * votingsLoopCnt;
-            if (expected>0) {
-                assertEquals(expected, (int)noVotes);
-            }
+            // SLING-5244 : cannot assume that we have '(votingHandler.length-1) * votingsLoopCnt'
+            // because: it can happen that a voting concludes within one j-loop above:
+            // that is the case when the instance that does not initiate the vote comes first, then
+            // the initiator - in that case the initiator finds an already completed vote - and it
+            // will then not do any no-votes ..
+            // so .. this check is a) not possible and b) just also not necessary, cos 
+            // we already make sure that we at least get 'votingHandler.length-1' no votes in the j-loop
+            // and that is precise enough. so as unfortuante as it is, we can't make below assertion..
+            // unless we do more white-box-assertions into analyzeVotings, which is probably not helping
+            // test-stability either..
+//            Integer noVotes = totalDetails.get(k).get(VotingDetail.VOTED_NO);
+//            int expected = (votingHandler.length-1) * votingsLoopCnt;
+//            if (expected>0) {
+//                assertEquals(expected, (int)noVotes);
+//            }
             totalPromotion += totalDetails.get(k).get(VotingDetail.PROMOTED);
         }
         assertEquals((int)votingsLoopCnt, totalPromotion);
