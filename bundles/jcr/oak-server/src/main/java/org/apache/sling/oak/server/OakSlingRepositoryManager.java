@@ -396,6 +396,7 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
                 // various
                 property(index, "event.job.topic", "event.job.topic");
+                property(index, "slingeventEventId", "slingevent:eventId");
                 property(index, "extensionType", "extensionType");
                 property(index, "lockCreated", "lock.created");
                 property(index, "status", "status");
