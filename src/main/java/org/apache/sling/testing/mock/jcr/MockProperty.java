@@ -53,7 +53,7 @@ class MockProperty extends AbstractItem implements Property {
     }
 
     private Value internalGetValue() throws RepositoryException {
-        if (this.itemData.getValues().length > 1) {
+        if (this.itemData.isMultiple()) {
             throw new ValueFormatException(this
                     + " is a multi-valued property, so it's values can only be retrieved as an array");
         } else {
@@ -68,6 +68,9 @@ class MockProperty extends AbstractItem implements Property {
 
     @Override
     public Value[] getValues() throws RepositoryException {
+        if (!this.itemData.isMultiple()) {
+            throw new ValueFormatException("Property is single-valued.");
+        }
         Value[] valuesCopy = new Value[this.itemData.getValues().length];
         for (int i = 0; i < this.itemData.getValues().length; i++) {
             valuesCopy[i] = this.itemData.getValues()[i];
@@ -213,6 +216,9 @@ class MockProperty extends AbstractItem implements Property {
 
     @Override
     public long[] getLengths() throws RepositoryException {
+        if (!this.itemData.isMultiple()) {
+            throw new ValueFormatException("Property is single-valued.");
+        }
         long[] lengths = new long[this.itemData.getValues().length];
         for (int i = 0; i < this.itemData.getValues().length; i++) {
             lengths[i] = this.itemData.getValues()[i].getString().length();
