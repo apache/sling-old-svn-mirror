@@ -54,7 +54,7 @@ final class AsyncTopologyEvent implements AsyncEvent {
         } catch(final Exception e) {
             logger.warn("trigger: handler threw exception. handler: "+listener+", exception: "+e, e);
         }
-        logger.trace("trigger: start: listener: {}, event: {}", listener, event);
+        logger.trace("trigger: end: listener: {}, event: {}", listener, event);
     }
 
 }
