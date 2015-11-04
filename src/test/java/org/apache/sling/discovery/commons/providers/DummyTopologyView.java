@@ -35,13 +35,17 @@ public class DummyTopologyView extends BaseTopologyView {
 
     private List<InstanceDescription> instances = new LinkedList<InstanceDescription>();
 
-    private final String id;
+    private String id;
 
     public DummyTopologyView() {
         id = UUID.randomUUID().toString();
     }
     
     public DummyTopologyView(String id) {
+        this.id = id;
+    }
+    
+    public void setId(String id) {
         this.id = id;
     }
     
@@ -54,7 +58,9 @@ public class DummyTopologyView extends BaseTopologyView {
         if (this==other) {
             return true;
         }
-        if (!id.equals(other.id)) {
+        if ((id == null && other.id != null)
+                || (other.id == null && id != null)
+                || (id != null && !id.equals(other.id))) {
             return false;
         }
         if (this.instances.size()!=other.instances.size()) {
@@ -212,4 +218,5 @@ public class DummyTopologyView extends BaseTopologyView {
     public DummyTopologyView clone() {
         return DummyTopologyView.clone(this);
     }
+
 }
