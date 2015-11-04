@@ -1507,6 +1507,7 @@ public abstract class AbstractClusterTest {
         assertEquals(1, fastListener2.getRemainingExpectedCount());
         // and also listener2 should only get CHANGING, the CHANGED is blocked via changedSemaphore
         assertEquals(1, longRunningListener1.noninitReceived);
+        Thread.sleep(2000);
         assertTrue(longRunningListener1.getChangedSemaphore().hasQueuedThreads());
         Thread.sleep(2000);
         // even after a 2sec sleep things should be unchanged:
