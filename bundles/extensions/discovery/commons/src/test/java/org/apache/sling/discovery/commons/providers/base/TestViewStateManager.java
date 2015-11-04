@@ -86,6 +86,8 @@ public class TestViewStateManager {
     
     private Random defaultRandom;
 
+    private Level logLevel;
+
     @Before
     public void setup() throws Exception {
         mgr = new ViewStateManagerImpl(new ReentrantLock(), new ClusterSyncService() {
@@ -100,6 +102,9 @@ public class TestViewStateManager {
             }
         });
         defaultRandom = new Random(1234123412); // I want randomness yes, but deterministic, for some methods at least
+        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        logLevel = discoveryLogger.getLevel();
+        discoveryLogger.setLevel(Level.INFO);
     }
     
     @After
@@ -110,6 +115,8 @@ public class TestViewStateManager {
         }
         mgr = null;
         defaultRandom= null;
+        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        discoveryLogger.setLevel(logLevel);
     }
     
     void assertEvents(DummyListener listener, TopologyEvent... events) {
@@ -681,6 +688,97 @@ public class TestViewStateManager {
         final TopologyEvent changedEvent = EventHelper.newChangedEvent(view1, view3);
         assertEvents(listener, changedEvent);
         commonsLogger.setLevel(Level.INFO); // back to default
+    }
+
+    @Test
+    public void testOnlyDiffersInProperties() throws Exception {
+        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        discoveryLogger.setLevel(Level.DEBUG);
+        logger.info("testOnlyDiffersInProperties: start");
+        final String slingId1 = UUID.randomUUID().toString();
+        final String slingId2 = UUID.randomUUID().toString();
+        final String slingId3 = UUID.randomUUID().toString();
+        final String clusterId = UUID.randomUUID().toString();
+        final DefaultClusterView cluster = new DefaultClusterView(clusterId);
+        final DummyTopologyView view1 = new DummyTopologyView()
+                .addInstance(slingId1, cluster, true, true)
+                .addInstance(slingId2, cluster, false, false)
+                .addInstance(slingId3, cluster, false, false);
+        final DummyTopologyView view2 = DummyTopologyView.clone(view1).removeInstance(slingId2);
+        final DummyTopologyView view3 = DummyTopologyView.clone(view1).removeInstance(slingId2).removeInstance(slingId3);
+        DummyTopologyView view1Cloned = DummyTopologyView.clone(view1);
+        
+        logger.info("testOnlyDiffersInProperties: handleNewView(view1)");
+        mgr.handleNewView(view1);
+        logger.info("testOnlyDiffersInProperties: handleActivated()");
+        mgr.handleActivated();
+        assertEquals(0, mgr.waitForAsyncEvents(5000));
+        assertFalse(mgr.onlyDiffersInProperties(view1));
+        assertFalse(mgr.onlyDiffersInProperties(view2));
+        assertFalse(mgr.onlyDiffersInProperties(view3));
+        logger.info("testOnlyDiffersInProperties: handleNewView(view2)");
+        mgr.handleNewView(view2);
+        assertEquals(0, mgr.waitForAsyncEvents(5000));
+        assertFalse(mgr.onlyDiffersInProperties(view1));
+        assertFalse(mgr.onlyDiffersInProperties(view2));
+        assertFalse(mgr.onlyDiffersInProperties(view3));
+        logger.info("testOnlyDiffersInProperties: handleNewView(view3)");
+        mgr.handleNewView(view3);
+        assertEquals(0, mgr.waitForAsyncEvents(5000));
+        assertFalse(mgr.onlyDiffersInProperties(view1));
+        assertFalse(mgr.onlyDiffersInProperties(view2));
+        assertFalse(mgr.onlyDiffersInProperties(view3));
+
+        final DummyTopologyView view4 = DummyTopologyView.clone(view1Cloned);
+        final DummyTopologyView view5 = DummyTopologyView.clone(view1Cloned);
+        final DummyTopologyView view6 = DummyTopologyView.clone(view1Cloned);
+        logger.info("testOnlyDiffersInProperties: handleNewView(view1cloned)");
+        mgr.handleNewView(view1Cloned);
+        assertEquals(0, mgr.waitForAsyncEvents(5000));
+        DefaultInstanceDescription i4_1 = (DefaultInstanceDescription) view4.getInstance(slingId1);
+        i4_1.setProperty("a", "b");
+        logger.info("testOnlyDiffersInProperties: onlyDiffersInProperties(view4)");
+        assertTrue(mgr.onlyDiffersInProperties(view4));
+    
+        DefaultInstanceDescription i5_1 = (DefaultInstanceDescription) view5.getInstance(slingId1);
+        i5_1.setProperty("a", "b");
+        logger.info("testOnlyDiffersInProperties: onlyDiffersInProperties(view5)");
+        assertTrue(mgr.onlyDiffersInProperties(view5));
+        DummyTopologyView view4Cloned = DummyTopologyView.clone(view4);
+        mgr.handleNewView(view4);
+        assertEquals(0, mgr.waitForAsyncEvents(5000));
+        logger.info("testOnlyDiffersInProperties: onlyDiffersInProperties(view4Cloned)");
+        assertFalse(mgr.onlyDiffersInProperties(view4Cloned));
+        logger.info("testOnlyDiffersInProperties: onlyDiffersInProperties(view5)");
+        assertFalse(mgr.onlyDiffersInProperties(view5));
+
+        DefaultInstanceDescription i6_1 = (DefaultInstanceDescription) view6.getInstance(slingId1);
+        i6_1.setProperty("a", "c");
+        logger.info("testOnlyDiffersInProperties: onlyDiffersInProperties(view6)");
+        assertTrue(mgr.onlyDiffersInProperties(view6));
+        String originalId = view6.getLocalClusterSyncTokenId();
+        view6.setId(UUID.randomUUID().toString());
+        logger.info("testOnlyDiffersInProperties: onlyDiffersInProperties(view6) [2]");
+        assertFalse(mgr.onlyDiffersInProperties(view6));
+        view6.setId(originalId);
+        logger.info("testOnlyDiffersInProperties: onlyDiffersInProperties(view6) [3]");
+        assertTrue(mgr.onlyDiffersInProperties(view6));
+        view6.setId(null);
+        logger.info("testOnlyDiffersInProperties: onlyDiffersInProperties(view6) [4]");
+        assertFalse(mgr.onlyDiffersInProperties(view6));
+        view6.setId(originalId);
+        logger.info("testOnlyDiffersInProperties: onlyDiffersInProperties(view6) [5]");
+        assertTrue(mgr.onlyDiffersInProperties(view6));
+        
+        // hack: we're modifying the view *in the ViewStateManagerImpl* here!!:
+        view4.setId(null);
+
+        view6.setId(null);
+        logger.info("testOnlyDiffersInProperties: onlyDiffersInProperties(view6) [6]");
+        assertTrue(mgr.onlyDiffersInProperties(view6));
+        view6.setId(originalId);
+        logger.info("testOnlyDiffersInProperties: onlyDiffersInProperties(view6) [7]");
+        assertFalse(mgr.onlyDiffersInProperties(view6));
     }
 
 }

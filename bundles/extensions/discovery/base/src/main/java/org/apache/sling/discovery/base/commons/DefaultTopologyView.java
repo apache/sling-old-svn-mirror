@@ -68,6 +68,12 @@ public class DefaultTopologyView extends BaseTopologyView {
         if (other == null) {
             throw new IllegalArgumentException("other must not be null");
         }
+        if ((localClusterSyncTokenId == null && other.localClusterSyncTokenId != null)
+                || (other.localClusterSyncTokenId == null && localClusterSyncTokenId != null)
+                || (localClusterSyncTokenId != null && !localClusterSyncTokenId.equals(other.localClusterSyncTokenId))) {
+            logger.debug("compareTopology: different localClusterSyncTokenId");
+            return Type.TOPOLOGY_CHANGED;
+        }
         if (this.instances.size() != other.instances.size()) {
         	logger.debug("compareTopology: different number of instances");
             return Type.TOPOLOGY_CHANGED;

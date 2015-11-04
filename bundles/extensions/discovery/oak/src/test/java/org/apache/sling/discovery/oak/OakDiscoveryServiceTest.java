@@ -24,13 +24,18 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.UUID;
 
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.discovery.base.its.setup.VirtualInstance;
 import org.apache.sling.discovery.commons.providers.base.DummyListener;
 import org.apache.sling.discovery.commons.providers.spi.base.DescriptorHelper;
 import org.apache.sling.discovery.commons.providers.spi.base.DiscoveryLiteConfig;
+import org.apache.sling.discovery.commons.providers.spi.base.DiscoveryLiteDescriptor;
 import org.apache.sling.discovery.commons.providers.spi.base.DiscoveryLiteDescriptorBuilder;
 import org.apache.sling.discovery.commons.providers.spi.base.DummySlingSettingsService;
 import org.apache.sling.discovery.commons.providers.spi.base.IdMapService;
 import org.apache.sling.discovery.oak.its.setup.OakVirtualInstanceBuilder;
+import org.apache.sling.discovery.oak.its.setup.SimulatedLeaseCollection;
 import org.junit.Test;
 
 public class OakDiscoveryServiceTest {
@@ -113,4 +118,53 @@ public class OakDiscoveryServiceTest {
         assertEquals(2, listener.countEvents()); // should now have gotten an INIT too
     }
     
+    @Test
+    public void testDescriptorSeqNumChange() throws Exception {
+        OakVirtualInstanceBuilder builder1 = 
+                (OakVirtualInstanceBuilder) new OakVirtualInstanceBuilder()
+                .setDebugName("instance1")
+                .newRepository("/foo/barry/foo/", true)
+                .setConnectorPingInterval(999)
+                .setConnectorPingTimeout(999);
+        VirtualInstance instance1 = builder1.build();
+        OakVirtualInstanceBuilder builder2 = 
+                (OakVirtualInstanceBuilder) new OakVirtualInstanceBuilder()
+                .setDebugName("instance2")
+                .useRepositoryOf(instance1)
+                .setConnectorPingInterval(999)
+                .setConnectorPingTimeout(999);
+        VirtualInstance instance2 = builder2.build();
+        
+        DummyListener listener = new DummyListener();
+        OakDiscoveryService discoveryService = (OakDiscoveryService) instance1.getDiscoveryService();
+        discoveryService.bindTopologyEventListener(listener);
+        
+        assertEquals(0, discoveryService.getViewStateManager().waitForAsyncEvents(2000));
+        assertEquals(0, listener.countEvents());
+        
+        instance1.heartbeatsAndCheckView();
+        instance2.heartbeatsAndCheckView();
+        instance1.heartbeatsAndCheckView();
+        instance2.heartbeatsAndCheckView();
+
+        assertEquals(0, discoveryService.getViewStateManager().waitForAsyncEvents(2000));
+        assertEquals(1, listener.countEvents());
+        
+        ResourceResolverFactory factory = instance1.getResourceResolverFactory();
+        ResourceResolver resolver = factory.getAdministrativeResourceResolver(null);
+        
+        instance1.heartbeatsAndCheckView();
+        assertEquals(0, discoveryService.getViewStateManager().waitForAsyncEvents(2000));
+        assertEquals(1, listener.countEvents());
+        
+        // increment the seqNum by 2 - simulating a coming and going instance
+        // while we were sleeping
+        SimulatedLeaseCollection c = builder1.getSimulatedLeaseCollection();
+        c.incSeqNum(2);
+        
+        instance1.heartbeatsAndCheckView();
+        assertEquals(0, discoveryService.getViewStateManager().waitForAsyncEvents(2000));
+        assertEquals(3, listener.countEvents());
+    }
+
 }

@@ -589,6 +589,23 @@ public class ViewStateManagerImpl implements ViewStateManager {
         if (newView==null) {
             throw new IllegalArgumentException("newView must not be null");
         }
+        String previousSyncTokenId = null;
+        String newSyncTokenId = null;
+        try{
+            previousSyncTokenId = previousView.getLocalClusterSyncTokenId();
+        } catch(IllegalStateException re) {
+            previousSyncTokenId = null;
+        }
+        try{
+            newSyncTokenId = newView.getLocalClusterSyncTokenId();
+        } catch(IllegalStateException re) {
+            newSyncTokenId = null;
+        }
+        if ((previousSyncTokenId == null && newSyncTokenId != null)
+                || (newSyncTokenId == null && previousSyncTokenId != null)
+                || (previousSyncTokenId!=null && !previousSyncTokenId.equals(newSyncTokenId))) {
+            return false;
+        }
         if (previousView.getInstances().size()!=newView.getInstances().size()) {
             return false;
         }
