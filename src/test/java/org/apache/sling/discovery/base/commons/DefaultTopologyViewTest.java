@@ -31,10 +31,12 @@ import java.util.UUID;
 
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.InstanceFilter;
+import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.base.its.setup.TopologyHelper;
 import org.apache.sling.discovery.commons.providers.DefaultClusterView;
 import org.apache.sling.discovery.commons.providers.DefaultInstanceDescription;
+import org.apache.sling.discovery.commons.providers.spi.LocalClusterView;
 import org.junit.Test;
 
 import junitx.util.PrivateAccessor;
@@ -71,6 +73,44 @@ public class DefaultTopologyViewTest {
                 view3.getClusterViews().iterator().next().getLeader().getSlingId());
         // and now test the compare method which should catch the leader change
         assertTrue(view1.compareTopology(view3)==Type.TOPOLOGY_CHANGED);
+    }
+    
+    @Test
+    public void testComparelocalClusterSyncTokenId() throws Exception {
+        String clusterViewId = UUID.randomUUID().toString();
+        String slingId = UUID.randomUUID().toString();
+        String syncTokenId = UUID.randomUUID().toString();
+
+        DefaultTopologyView t1 = createSingleInstanceTopology(slingId, clusterViewId, syncTokenId);
+        DefaultTopologyView t2 = createSingleInstanceTopology(slingId, clusterViewId, syncTokenId);
+
+        assertNull(t1.compareTopology(t2));
+        assertNull(t2.compareTopology(t1));
+        
+        DefaultTopologyView t3 = createSingleInstanceTopology(slingId, clusterViewId, UUID.randomUUID().toString());
+        assertEquals(TopologyEvent.Type.TOPOLOGY_CHANGED, t1.compareTopology(t3));
+        assertEquals(TopologyEvent.Type.TOPOLOGY_CHANGED, t3.compareTopology(t1));
+        assertEquals(TopologyEvent.Type.TOPOLOGY_CHANGED, t2.compareTopology(t3));
+        assertEquals(TopologyEvent.Type.TOPOLOGY_CHANGED, t3.compareTopology(t2));
+        
+        DefaultTopologyView t4 = createSingleInstanceTopology(slingId, clusterViewId, null);
+        assertEquals(TopologyEvent.Type.TOPOLOGY_CHANGED, t1.compareTopology(t4));
+        assertEquals(TopologyEvent.Type.TOPOLOGY_CHANGED, t4.compareTopology(t1));
+        assertEquals(TopologyEvent.Type.TOPOLOGY_CHANGED, t2.compareTopology(t4));
+        assertEquals(TopologyEvent.Type.TOPOLOGY_CHANGED, t4.compareTopology(t2));
+
+        DefaultTopologyView t5 = createSingleInstanceTopology(slingId, clusterViewId, null);
+        assertNull(t5.compareTopology(t4));
+        assertNull(t4.compareTopology(t5));
+    }
+
+    private DefaultTopologyView createSingleInstanceTopology(String slingId, String clusterViewId, String syncTokenId) {
+        LocalClusterView clusterView = new LocalClusterView(clusterViewId, syncTokenId);
+        DefaultInstanceDescription instance = 
+                TopologyHelper.createInstanceDescription(slingId, true, clusterView);
+        DefaultTopologyView t = new DefaultTopologyView();
+        t.setLocalClusterView(clusterView);
+        return t;
     }
     
     @Test
