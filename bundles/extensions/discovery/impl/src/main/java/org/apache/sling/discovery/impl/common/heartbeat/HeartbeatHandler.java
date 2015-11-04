@@ -557,9 +557,6 @@ public class HeartbeatHandler extends BaseViewChecker {
             }
         }
 
-        final View establishedView = ViewHelper.getEstablishedView(resourceResolver, config);
-        lastEstablishedViewId = establishedView == null ? null : establishedView.getResource().getName();
-
         final VotingView winningVoting = VotingHelper.getWinningVoting(
                 resourceResolver, config);
         int numOpenNonWinningVotes = VotingHelper.listOpenNonWinningVotings(
@@ -586,6 +583,8 @@ public class HeartbeatHandler extends BaseViewChecker {
         final Set<String> liveInstances = ViewHelper.determineLiveInstances(
                 clusterNodesRes, config);
 
+        final View establishedView = ViewHelper.getEstablishedView(resourceResolver, config);
+        lastEstablishedViewId = establishedView == null ? null : establishedView.getResource().getName();
         boolean establishedViewMatches;
         if (lastEstablishedViewId != null && failedEstablishedViewId != null
                 && lastEstablishedViewId.equals(failedEstablishedViewId)) {
@@ -598,29 +597,13 @@ public class HeartbeatHandler extends BaseViewChecker {
                 establishedViewMatches = false;
             } else {
                 String mismatchDetails;
-                int retries = 0;
-                while(true) { // a small retry-loop
-                    try{
-                        mismatchDetails = establishedView.matches(liveInstances);
-                        break;
-                    } catch(Exception e) {
-                        logger.error("doCheckViewWith: could not compare established view with live ones: "+e, e);
-                        if (retries++<5) {
-                            // retry
-                            try {
-                                Thread.sleep(500);
-                            } catch (InterruptedException e1) {
-                                logger.info("doCheckViewWith: got interrupted");
-                            }
-                            logger.info("doCheckViewWith: retrying [retries="+retries+"]");
-                            continue;
-                        }
-                        // after 5 retires however
-                        logger.info("doCheckViewWith: invalidating view due to not being able to compare");
-                        invalidateCurrentEstablishedView();
-                        discoveryServiceImpl.handleTopologyChanging();
-                        return;
-                    }
+                try{
+                    mismatchDetails = establishedView.matches(liveInstances);
+                } catch(Exception e) {
+                    logger.error("doCheckViewWith: could not compare established view with live ones: "+e, e);
+                    invalidateCurrentEstablishedView();
+                    discoveryServiceImpl.handleTopologyChanging();
+                    return;
                 }
                 if (mismatchDetails != null) {
                     logger.info("doCheckView: established view does not match. (details: " + mismatchDetails + ")");
