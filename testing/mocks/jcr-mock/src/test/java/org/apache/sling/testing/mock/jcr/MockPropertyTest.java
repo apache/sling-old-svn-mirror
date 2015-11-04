@@ -34,6 +34,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
+import javax.jcr.ValueFormatException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.value.BinaryValue;
@@ -244,6 +245,14 @@ public class MockPropertyTest {
         Property prop1 = this.node1.getProperty("prop1");
         assertTrue(prop1.isMultiple());
         assertEquals(PropertyType.UNDEFINED, prop1.getType());
+    }
+    
+    @Test(expected=ValueFormatException.class)
+    public void testSingleValueAsValueArray() throws RepositoryException {
+        this.node1.setProperty("prop1", this.session.getValueFactory().createValue("value1"));
+        Property prop1 = this.node1.getProperty("prop1");
+        assertFalse(prop1.isMultiple());
+        assertEquals("value1", prop1.getValues()[0].getString());
     }
     
 }
