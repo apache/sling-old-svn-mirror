@@ -30,6 +30,7 @@ import java.util.Calendar;
 
 import javax.jcr.Node;
 import javax.jcr.Property;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
@@ -237,4 +238,12 @@ public class MockPropertyTest {
         assertArrayEquals(new long[] { 2 }, prop1.getLengths());
     }
 
+    @Test
+    public void testEmptyArrayGetType() throws RepositoryException {
+        this.node1.setProperty("prop1", new Value[] {});
+        Property prop1 = this.node1.getProperty("prop1");
+        assertTrue(prop1.isMultiple());
+        assertEquals(PropertyType.UNDEFINED, prop1.getType());
+    }
+    
 }

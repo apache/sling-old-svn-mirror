@@ -25,6 +25,7 @@ import java.util.Calendar;
 import javax.jcr.Binary;
 import javax.jcr.Node;
 import javax.jcr.Property;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
@@ -197,7 +198,12 @@ class MockProperty extends AbstractItem implements Property {
 
     @Override
     public int getType() throws RepositoryException {
-        return this.itemData.getValues()[0].getType();
+        if (this.itemData.getValues().length > 0) {
+            return this.itemData.getValues()[0].getType();
+        }
+        else {
+            return PropertyType.UNDEFINED;
+        }    
     }
 
     @Override
