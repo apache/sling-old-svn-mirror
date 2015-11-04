@@ -441,7 +441,7 @@ public abstract class AbstractClusterTest {
         assertTrue(pingConnector(instance3, instance2));
         assertTrue(pingConnector(instance5, instance2));
         success = false;
-        for(int i=0; i<25; i++) {
+        for(int i=0; i<40; i++) {
             runHeartbeatOnceWith(instance1Restarted, instance2, instance3, instance5);
             instance1.getViewChecker().checkView();
             // we used to do:
@@ -474,15 +474,16 @@ public abstract class AbstractClusterTest {
             final ClusterView i3Cluster = i3.getClusterView();
             final int i3ClusterSize = i3Cluster.getInstances().size();
             if (i3ClusterSize==1) {
-                if (i<20) {
+                if (i<30) {
                     logger.info("testConnectorSwitching4139: [2] min loop cnt not yet reached: i="+i);
-                    Thread.sleep(500); // 20x500ms = 10sec max - (vs 5sec timeout) - should be enough for timing out
+                    Thread.sleep(500); // 30x500ms = 15sec max - (vs 10sec timeout) - should be enough for timing out
                     continue;
                 }
                 success = true;
+                logger.info("testConnectorSwitching4139: i3ClusterSize: "+i3ClusterSize+", i="+i+" (success)");
                 break;
             }
-            logger.info("testConnectorSwitching4139: i3ClusterSize: "+i3ClusterSize);
+            logger.info("testConnectorSwitching4139: i3ClusterSize: "+i3ClusterSize+", i="+i);
             Thread.sleep(500);
         }
 
