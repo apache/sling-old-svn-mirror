@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.sling.discovery.commons.providers.spi.base.DiscoveryLiteDescriptorBuilder;
-import org.apache.sling.discovery.oak.Config;
 
 public class SimulatedLeaseCollection {
 
@@ -42,11 +41,32 @@ public class SimulatedLeaseCollection {
     List<SimulatedLease> leases = new LinkedList<SimulatedLease>();
 
     private volatile boolean isFinal = true;
+
+    private int seqNum = 0;
     
     public SimulatedLeaseCollection() {
         // empty
     }
     
+    public int getSeqNum() {
+        return seqNum;
+    }
+    
+    public void setSeqNum(int seqNum) {
+        this.seqNum = seqNum;
+    }
+    
+    public void incSeqNum() {
+        seqNum++;
+    }
+    
+    public void incSeqNum(int amount) {
+        if (amount<=0) {
+            throw new IllegalArgumentException("amount must be >0, is: "+amount);
+        }
+        seqNum+=amount;
+    }
+
     public synchronized void hooked(SimulatedLease lease) {
         leases.add(lease);
     }
@@ -68,7 +88,8 @@ public class SimulatedLeaseCollection {
                 new DiscoveryLiteDescriptorBuilder();
         discoBuilder.me(clusterNodeId);
         discoBuilder.id(viewId);
-        discoBuilder.setFinal(isFinal);       
+        discoBuilder.setFinal(isFinal);
+        discoBuilder.seq(seqNum);
         List<Integer> actives = new LinkedList<Integer>();
         List<Integer> inactives = new LinkedList<Integer>();
         for (Map.Entry<String, Long> entry : leaseUpdates.entrySet()) {
