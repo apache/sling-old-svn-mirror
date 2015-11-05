@@ -659,4 +659,9 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
         return announcementRegistry;
     }
 
+    /** for testing only 
+     * @return */
+    protected ViewStateManager getViewStateManager() {
+        return viewStateManager;
+    }
 }
