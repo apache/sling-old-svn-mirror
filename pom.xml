@@ -124,6 +124,9 @@
                         
                         <!-- Jenkins Xvfb plugin -->
                         <exclude>.Xauthority-*</exclude>
+                        
+                        <exclude>check_staged_release.sh</exclude>
+                        <exclude>sign.sh</exclude>
                     </excludes>
                 </configuration>
                 <executions>
