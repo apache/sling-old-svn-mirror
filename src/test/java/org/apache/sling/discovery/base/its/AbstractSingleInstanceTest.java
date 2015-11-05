@@ -97,8 +97,8 @@ public abstract class AbstractSingleInstanceTest {
         }
 
         instance.heartbeatsAndCheckView();
-        // wait 100ms for the vote to happen
-        Thread.sleep(100);
+        // wait 4000ms for the vote to happen
+        Thread.sleep(4000);
         
         assertNotNull(instance.getClusterViewService().getLocalClusterView());
         ClusterView cv = instance.getClusterViewService().getLocalClusterView();
@@ -137,8 +137,8 @@ public abstract class AbstractSingleInstanceTest {
         instance.bindPropertyProvider(pp, propertyName);
 
         instance.heartbeatsAndCheckView();
-        // wait 1000ms for the vote to happen
-        Thread.sleep(1000);
+        // wait 4000ms for the vote to happen
+        Thread.sleep(4000);
         assertEquals(propertyValue,
                 instance.getClusterViewService().getLocalClusterView()
                         .getInstances().get(0).getProperty(propertyName));
