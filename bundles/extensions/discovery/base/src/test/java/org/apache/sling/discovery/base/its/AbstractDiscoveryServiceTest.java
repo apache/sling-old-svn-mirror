@@ -252,59 +252,74 @@ public abstract class AbstractDiscoveryServiceTest {
 
     @Test
     public void testSingleInstance() throws Throwable {
+        logger.info("testSingleInstances: start");
         Tester single = newInstance("single", 1, 5, 50, null);
         single.instance.dumpRepo();
+        logger.info("testSingleInstances: starting retry loop (10sec max)");
         startRetryLoop(testers, 10);
         single.assertNoFailures();
         assertStableTopology(single);
+        logger.info("testSingleInstances: end");
     }
     
     @Test
     public void testTwoInstances() throws Throwable {
+        logger.info("testTwoInstances: start");
         Tester i1 = newInstance("i1", 1, 10, 100, null);
         Tester i2 = newInstance("i2", 1, 10, 100, i1.instance);
+        logger.info("testTwoInstances: starting retry loop (15sec max)");
         startRetryLoop(testers, 15);
         i1.instance.dumpRepo();
         i1.assertNoFailures();
         i2.assertNoFailures();
         assertStableTopology(i1, i2);
+        logger.info("testTwoInstances: end");
     }
 
     @Test
     public void testTenInstances() throws Throwable {
+        logger.info("testTenInstances: start");
         Tester i1 = newInstance("i1", 1, 30, 250, null);
         for(int i=2; i<=10; i++) {
             Tester in = newInstance("i"+i, 1, 30, 250, i1.instance);
         }
+        logger.info("testTenInstances: starting retry loop (60sec max)");
         startRetryLoop(testers, 60);
         i1.instance.dumpRepo();
         i1.assertNoFailures();
         assertStableTopology(testers.toArray(new Tester[0]));
+        logger.info("testTenInstances: end");
     }
 
     @Test
     public void testTwentyInstances() throws Throwable {
+        logger.info("testTwentyInstances: start");
         Tester i1 = newInstance("i1", 1, 60, 1000, null);
         for(int i=2; i<=20; i++) {
             Tester in = newInstance("i"+i, 1, 60, 1000, i1.instance);
         }
+        logger.info("testThirtyInstances: starting retry loop (80 sec max)");
         startRetryLoop(testers, 80);
         i1.instance.dumpRepo();
         i1.assertNoFailures();
         assertStableTopology(testers.toArray(new Tester[0]));
+        logger.info("testTwentyInstances: end");
     }
 
     @Test
     public void testThirtyInstances() throws Throwable {
+        logger.info("testThirtyInstances: start");
         Tester i1 = newInstance("i1", 4, 120, 1000, null);
         for(int i=2; i<=30; i++) {
             Tester in = newInstance("i"+i, 4, 120, 2000, i1.instance);
             Thread.sleep(1000);
         }
+        logger.info("testThirtyInstances: starting retry loop (180sec max)");
         startRetryLoop(testers, 180);
         i1.instance.dumpRepo();
         i1.assertNoFailures();
         assertStableTopology(testers.toArray(new Tester[0]));
+        logger.info("testThirtyInstances: end");
     }
     
     private void startRetryLoop(final List<Tester> testers, int retryTimeoutSeconds) {
