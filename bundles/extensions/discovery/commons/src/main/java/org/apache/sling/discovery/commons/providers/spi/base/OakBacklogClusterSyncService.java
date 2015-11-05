@@ -18,6 +18,7 @@
  */
 package org.apache.sling.discovery.commons.providers.spi.base;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -207,7 +208,7 @@ public class OakBacklogClusterSyncService extends AbstractServiceWithBackgroundC
             
             // 1) 'deactivating' must be empty 
             if (deactivatingIds.length!=0) {
-                logger.info("getBacklogStatus: there are deactivating instances: "+deactivatingIds);
+                logger.info("getBacklogStatus: there are deactivating instances: "+Arrays.toString(deactivatingIds));
                 return BacklogStatus.HAS_BACKLOG;
             }
 
