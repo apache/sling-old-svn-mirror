@@ -50,7 +50,7 @@ public class EstablishedClusterView extends LocalClusterView {
     /** Construct a new established cluster view **/
     public EstablishedClusterView(final Config config, final View view,
             final String localId) {
-        super(view.getViewId(), null /* localClusterSyncTokenId not supported */);
+        super(view.getViewId(), view.getResource().getName());
 
         final Resource viewRes = view.getResource();
         if (viewRes == null) {
