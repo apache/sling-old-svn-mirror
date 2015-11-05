@@ -241,7 +241,15 @@ public class VotingHandler implements EventHandler {
             if (winningVote.isInitiatedBy(slingId)) {
                 logger.info("analyzeVotings: my voting was winning. I'll mark it as established then! "
 	                        + winningVote);
-                promote(resourceResolver, winningVote.getResource());
+                try{
+                    promote(resourceResolver, winningVote.getResource());
+                } catch (RuntimeException re) {
+                    logger.error("analyzeVotings: RuntimeException during promotion: "+re, re);
+                    throw re;
+                } catch (Error er) {
+                    logger.error("analyzeVotings: Error during promotion: "+er, er);
+                    throw er;
+                }
                 // SLING-3406: committing resourceResolver/session here, while we're in the synchronized
                 resourceResolver.commit();
                 
@@ -439,8 +447,10 @@ public class VotingHandler implements EventHandler {
                 .getChildren().iterator();
         String leaderElectionId = null;
         String leaderid = null;
+        int membersCount = 0;
         while (it2.hasNext()) {
             Resource aMember = it2.next();
+            membersCount++;
             String leid = aMember.adaptTo(ValueMap.class).get(
                     "leaderElectionId", String.class);
             if (leaderElectionId == null
@@ -462,8 +472,8 @@ public class VotingHandler implements EventHandler {
         // 3b: move the result under /established
         final String newEstablishedViewPath = establishedViewsResource.getPath()
                 + "/" + winningVoteResource.getName();
-        logger.info("promote: promote to new established node "
-	                + newEstablishedViewPath);
+        logger.info("promote: promoting to new established node (#members: " + membersCount + ", path: "
+                + newEstablishedViewPath + ")");
         ResourceHelper.moveResource(winningVoteResource, newEstablishedViewPath);
 
         // step 4: delete all ongoing votings...
@@ -473,6 +483,7 @@ public class VotingHandler implements EventHandler {
             Iterator<Resource> it4 = ongoingVotingsChildren.iterator();
             while (it4.hasNext()) {
                 Resource anOngoingVoting = it4.next();
+                logger.info("promote: deleting ongoing voting: "+anOngoingVoting.getName());
                 resourceResolver.delete(anOngoingVoting);
             }
         }
@@ -502,6 +513,8 @@ public class VotingHandler implements EventHandler {
 
         logger.debug("promote: done with promotiong. saving.");
         resourceResolver.commit();
+        logger.info("promote: promotion done (#members: " + membersCount + ", path: "
+                + newEstablishedViewPath + ")");
     }
 
     public void setLeaderElectionId(String leaderElectionId) {
