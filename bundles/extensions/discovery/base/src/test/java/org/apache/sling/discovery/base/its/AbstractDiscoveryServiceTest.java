@@ -252,7 +252,7 @@ public abstract class AbstractDiscoveryServiceTest {
 
     @Test
     public void testSingleInstance() throws Throwable {
-        Tester single = newInstance("single", 1, 4, 50, null);
+        Tester single = newInstance("single", 1, 5, 50, null);
         single.instance.dumpRepo();
         startRetryLoop(testers, 10);
         single.assertNoFailures();
@@ -261,9 +261,9 @@ public abstract class AbstractDiscoveryServiceTest {
     
     @Test
     public void testTwoInstances() throws Throwable {
-        Tester i1 = newInstance("i1", 1, 4, 100, null);
-        Tester i2 = newInstance("i2", 1, 4, 100, i1.instance);
-        startRetryLoop(testers, 10);
+        Tester i1 = newInstance("i1", 1, 10, 100, null);
+        Tester i2 = newInstance("i2", 1, 10, 100, i1.instance);
+        startRetryLoop(testers, 15);
         i1.instance.dumpRepo();
         i1.assertNoFailures();
         i2.assertNoFailures();
@@ -272,11 +272,11 @@ public abstract class AbstractDiscoveryServiceTest {
 
     @Test
     public void testTenInstances() throws Throwable {
-        Tester i1 = newInstance("i1", 1, 6, 250, null);
+        Tester i1 = newInstance("i1", 1, 30, 250, null);
         for(int i=2; i<=10; i++) {
-            Tester in = newInstance("i"+i, 1, 6, 250, i1.instance);
+            Tester in = newInstance("i"+i, 1, 30, 250, i1.instance);
         }
-        startRetryLoop(testers, 10);
+        startRetryLoop(testers, 60);
         i1.instance.dumpRepo();
         i1.assertNoFailures();
         assertStableTopology(testers.toArray(new Tester[0]));
@@ -284,11 +284,11 @@ public abstract class AbstractDiscoveryServiceTest {
 
     @Test
     public void testTwentyInstances() throws Throwable {
-        Tester i1 = newInstance("i1", 1, 20, 1000, null);
+        Tester i1 = newInstance("i1", 1, 60, 1000, null);
         for(int i=2; i<=20; i++) {
-            Tester in = newInstance("i"+i, 1, 20, 1000, i1.instance);
+            Tester in = newInstance("i"+i, 1, 60, 1000, i1.instance);
         }
-        startRetryLoop(testers, 40);
+        startRetryLoop(testers, 80);
         i1.instance.dumpRepo();
         i1.assertNoFailures();
         assertStableTopology(testers.toArray(new Tester[0]));
@@ -296,12 +296,12 @@ public abstract class AbstractDiscoveryServiceTest {
 
     @Test
     public void testThirtyInstances() throws Throwable {
-        Tester i1 = newInstance("i1", 4, 60, 1000, null);
+        Tester i1 = newInstance("i1", 4, 120, 1000, null);
         for(int i=2; i<=30; i++) {
-            Tester in = newInstance("i"+i, 4, 60, 2000, i1.instance);
+            Tester in = newInstance("i"+i, 4, 120, 2000, i1.instance);
             Thread.sleep(1000);
         }
-        startRetryLoop(testers, 100);
+        startRetryLoop(testers, 180);
         i1.instance.dumpRepo();
         i1.assertNoFailures();
         assertStableTopology(testers.toArray(new Tester[0]));
