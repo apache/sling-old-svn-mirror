@@ -37,7 +37,7 @@ public abstract class AbstractServiceWithBackgroundCheck {
      * calling BackgroundCheck.check and looping until it 
      * returns true
      */
-    private final class BackgroundCheckRunnable implements Runnable {
+    final class BackgroundCheckRunnable implements Runnable {
         private final Runnable callback;
         private final BackgroundCheck check;
         private final long timeoutMillis;
@@ -60,6 +60,12 @@ public abstract class AbstractServiceWithBackgroundCheck {
             }
             this.waitInterval = waitInterval;
             this.threadName = threadName;
+        }
+        
+        boolean isDone() {
+            synchronized(waitObj) {
+                return done;
+            }
         }
 
         @Override
