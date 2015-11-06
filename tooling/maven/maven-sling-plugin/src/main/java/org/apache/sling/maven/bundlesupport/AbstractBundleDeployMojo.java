@@ -147,9 +147,10 @@ abstract class AbstractBundleDeployMojo extends AbstractBundlePostMojo {
         JarInputStream jis = null;
         JarOutputStream jos;
         OutputStream out = null;
+        JarFile sourceJar = null;
         try {
             // now create a temporary file and update the version
-            final JarFile sourceJar = new JarFile(file);
+            sourceJar = new JarFile(file);
             final Manifest manifest = sourceJar.getManifest();
             manifest.getMainAttributes().putValue("Bundle-Version", newVersion);
 
@@ -182,6 +183,14 @@ abstract class AbstractBundleDeployMojo extends AbstractBundlePostMojo {
             throw new MojoExecutionException(
                 "Unable to update version in jar file.", ioe);
         } finally {
+            if (sourceJar != null) {
+                try {
+                    sourceJar.close();
+                }
+                catch (IOException ex) {
+                    // close
+                }
+            }
             IOUtils.closeQuietly(jis);
             IOUtils.closeQuietly(out);
         }
