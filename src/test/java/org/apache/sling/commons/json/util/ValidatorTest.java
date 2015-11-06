@@ -16,30 +16,31 @@
  */
 package org.apache.sling.commons.json.util;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertTrue;
 
 import org.apache.sling.commons.json.JSONException;
+import org.junit.Test;
 
 /**
  * Test the Validator.
  */
-public class ValidatorTest extends TestCase {
+public class ValidatorTest {
 
-    public void testSimpleJSON()
-    throws JSONException {
+    @Test
+    public void testSimpleJSON() throws JSONException {
         Validator.validate("");
         Validator.validate("[]");
         Validator.validate("{}");
     }
 
-    public void testBasicJSON()
-    throws JSONException {
+    @Test
+    public void testBasicJSON() throws JSONException {
         Validator.validate("[1,true,\"hallo\"]");
         Validator.validate("{a:\"you\", b:2, c:true}");
     }
 
-    public void testNestedJSON()
-    throws JSONException {
+    @Test
+    public void testNestedJSON() throws JSONException {
         Validator.validate("[1,true,\"hallo\", {a:1}, [1,2]]");
         Validator.validate("{a:\"you\", b:2, c:true, d: {d:1}, e: []}");
     }
@@ -47,6 +48,7 @@ public class ValidatorTest extends TestCase {
     /**
      * These tests are supposed to fail!
      */
+    @Test
     public void testTrailingChars() {
         try {
             Validator.validate("[1,true,\"hallo\",]");
@@ -61,4 +63,5 @@ public class ValidatorTest extends TestCase {
             // ignore
         }
     }
+
 }
