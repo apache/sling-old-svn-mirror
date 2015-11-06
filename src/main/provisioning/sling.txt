@@ -94,7 +94,6 @@
     org.apache.sling/org.apache.sling.jcr.webconsole/1.0.2
     org.apache.sling/org.apache.sling.extensions.explorer/1.0.4
     org.apache.aries.jmx/org.apache.aries.jmx.api/1.1.0
-    org.apache.aries/org.apache.aries.util/1.1.0
     org.apache.aries.jmx/org.apache.aries.jmx.core/1.1.1
     org.apache.aries.jmx/org.apache.aries.jmx.whiteboard/1.0.0
 
