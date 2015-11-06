@@ -191,7 +191,7 @@ public class JsonItemWriter {
 
     /**
      * Writes the given value to the JSON writer. currently the following
-     * conversions are done: <table>
+     * conversions are done: <table><caption></caption>
      * <tr>
      * <th>JSR Property Type</th>
      * <th>JSON Value Type</th>
@@ -217,7 +217,7 @@ public class JsonItemWriter {
      * <td>double</td>
      * </tr>
      * <tr>
-     * <td><i>all other</li>
+     * <td><i>all other</i>
      * </td>
      * <td>string</td>
      * </tr>
