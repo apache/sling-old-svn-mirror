@@ -16,8 +16,6 @@
  */
 package org.apache.sling.commons.json.util;
 
-import static org.junit.Assert.assertTrue;
-
 import org.apache.sling.commons.json.JSONException;
 import org.junit.Test;
 
@@ -45,23 +43,14 @@ public class ValidatorTest {
         Validator.validate("{a:\"you\", b:2, c:true, d: {d:1}, e: []}");
     }
 
-    /**
-     * These tests are supposed to fail!
-     */
-    @Test
-    public void testTrailingChars() {
-        try {
-            Validator.validate("[1,true,\"hallo\",]");
-            assertTrue("Trailing separator should not be allowed.", false);
-        } catch (JSONException e) {
-            // ignore
-        }
-        try {
-            Validator.validate("{a:\"you\", b:2, c:true,}");
-            assertTrue("Trailing separator should not be allowed.", false);
-        } catch (JSONException e) {
-            // ignore
-        }
+    @Test(expected=JSONException.class)
+    public void testTrailingCharsArray() throws JSONException {
+        Validator.validate("[1,true,\"hallo\",]");
+    }
+
+    @Test(expected=JSONException.class)
+    public void testTrailingCharsObject() throws JSONException {
+        Validator.validate("{a:\"you\", b:2, c:true,}");
     }
 
 }
