@@ -295,9 +295,6 @@ public class JSONRenderer {
      * <p>
      * Warning: This method assumes that the data structure is acyclical.
      * @param value The value to be serialized.
-     * @param indentFactor The number of spaces to add to each level of
-     *  indentation.
-     * @param indent The indentation of the top level.
      * @return a printable, displayable, transmittable
      *  representation of the object, beginning
      *  with <code>{</code>&nbsp;<small>(left brace)</small> and ending
@@ -374,9 +371,6 @@ public class JSONRenderer {
      * Make a prettyprinted JSON text of this JSONObject.
      * <p>
      * Warning: This method assumes that the data structure is acyclical.
-     * @param indentFactor The number of spaces to add to each level of
-     *  indentation.
-     * @param indent The indentation of the top level.
      * @return a printable, displayable, transmittable
      *  representation of the object, beginning
      *  with <code>{</code>&nbsp;<small>(left brace)</small> and ending

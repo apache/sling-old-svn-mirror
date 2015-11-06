@@ -42,7 +42,6 @@ public abstract class JsonObjectCreator {
 
     /**
      * Dump given resource in JSON, optionally recursing into its objects
-     * @param tidy if <code>true</code> the json dump is nicely formatted
      */
     public static JSONObject create(final Resource resource, final int maxRecursionLevels)
             throws JSONException {

@@ -804,7 +804,7 @@ public class JSONArray {
 
     /**
      * Write the contents of the JSONObject as JSON text to a writer
-     * using {@link JSONRenderer#write(JSONArray)}
+     * using {@link JSONRenderer#write(Writer, JSONArray)}
      */
     public Writer write(Writer writer) throws JSONException {
         return renderer.write(writer, this);
