@@ -416,7 +416,7 @@ public class HttpTestBase extends TestCase {
     
     /** retrieve the contents of given URL and assert its content type
      * @param expectedContentType use CONTENT_TYPE_DONTCARE if must not be checked
-     * @param httMethod supports just GET and POST methods
+     * @param httpMethod supports just GET and POST methods
      * @throws IOException
      * @throws HttpException */
     public String getContent(String url, String expectedContentType, List<NameValuePair> params, int expectedStatusCode, String httpMethod) throws IOException {
