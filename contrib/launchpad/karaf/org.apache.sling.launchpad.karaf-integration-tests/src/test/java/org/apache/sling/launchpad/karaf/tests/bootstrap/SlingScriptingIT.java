@@ -19,6 +19,7 @@
 package org.apache.sling.launchpad.karaf.tests.bootstrap;
 
 import org.apache.sling.launchpad.karaf.testing.KarafTestSupport;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -58,6 +59,7 @@ public class SlingScriptingIT extends KarafTestSupport {
     }
 
     @Test
+    @Ignore
     public void testOrgApacheGeronimoSpecsGeronimoServlet_3_0_Spec() {
         final Bundle bundle = findBundle("org.apache.geronimo.specs.geronimo-servlet_3.0_spec");
         assertNotNull(bundle);
