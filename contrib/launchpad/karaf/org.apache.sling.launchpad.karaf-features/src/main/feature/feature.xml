@@ -48,15 +48,15 @@
     <feature>http-whiteboard</feature>
     <feature version="${project.version}">sling-commons-scheduler</feature>
     <feature version="${project.version}">sling-commons-threads</feature>
-    <bundle>mvn:javax.jcr/jcr/2.0</bundle>
-    <bundle>mvn:commons-codec/commons-codec/1.9</bundle>
-    <bundle>mvn:commons-collections/commons-collections/3.2.1</bundle>
-    <bundle>mvn:commons-fileupload/commons-fileupload/1.3.1</bundle>
-    <bundle>mvn:commons-io/commons-io/2.4</bundle>
-    <bundle>mvn:commons-lang/commons-lang/2.6</bundle>
-    <bundle>mvn:org.apache.commons/commons-math/2.2</bundle>
-    <bundle>mvn:org.apache.geronimo.bundles/json/20090211_1</bundle>
-    <bundle>mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
+    <bundle dependency="true">mvn:javax.jcr/jcr/2.0</bundle>
+    <bundle dependency="true">mvn:commons-codec/commons-codec/1.9</bundle>
+    <bundle dependency="true">mvn:commons-collections/commons-collections/3.2.1</bundle>
+    <bundle dependency="true">mvn:commons-fileupload/commons-fileupload/1.3.1</bundle>
+    <bundle dependency="true">mvn:commons-io/commons-io/2.4</bundle>
+    <bundle dependency="true">mvn:commons-lang/commons-lang/2.6</bundle>
+    <bundle dependency="true">mvn:org.apache.commons/commons-math/2.2</bundle>
+    <bundle dependency="true">mvn:org.apache.geronimo.bundles/json/20090211_1</bundle>
+    <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
   </feature>
   <!-- Apache Sling Auth -->
   <feature name="sling-auth-form" version="${project.version}">
@@ -70,8 +70,8 @@
     <!-- dependencies -->
     <feature>scr</feature>
     <feature version="${project.version}">sling-commons-threads</feature>
-    <bundle>mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
-    <bundle>mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
+    <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
+    <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
   </feature>
   <feature name="sling-commons-threads" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.commons.threads/3.2.0</bundle>
@@ -98,8 +98,8 @@
     <!-- dependencies -->
     <feature>webconsole</feature>
     <feature version="${project.version}">sling-extension-discovery</feature>
-    <bundle>mvn:org.apache.httpcomponents/httpcore-osgi/4.4.1</bundle>
-    <bundle>mvn:org.apache.httpcomponents/httpclient-osgi/4.4.1</bundle>
+    <bundle dependency="true">mvn:org.apache.httpcomponents/httpcore-osgi/4.4.1</bundle>
+    <bundle dependency="true">mvn:org.apache.httpcomponents/httpclient-osgi/4.4.1</bundle>
   </feature>
   <feature name="sling-extension-discovery-standalone" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.discovery.standalone/1.0.0</bundle>
@@ -112,7 +112,7 @@
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-extension-discovery</feature>
-    <bundle>mvn:org.apache.felix/org.apache.felix.inventory/1.0.0</bundle>
+    <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.inventory/1.0.0</bundle>
   </feature>
   <feature name="sling-extension-explorer" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.extensions.explorer/1.0.4</bundle>
@@ -149,8 +149,8 @@
     <bundle>mvn:org.apache.sling/org.apache.sling.resource.inventory/1.0.4</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
-    <bundle>mvn:org.apache.felix/org.apache.felix.inventory/1.0.0</bundle>
-    <bundle>mvn:org.apache.commons/commons-lang3/3.3</bundle>
+    <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.inventory/1.0.0</bundle>
+    <bundle dependency="true">mvn:org.apache.commons/commons-lang3/3.3</bundle>
   </feature>
   <feature name="sling-extension-threaddump" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.extensions.threaddump/0.2.2</bundle>
@@ -165,7 +165,7 @@
     <bundle>mvn:org.apache.sling/org.apache.sling.xss/1.0.6</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
-    <bundle>mvn:org.apache.geronimo.bundles/commons-httpclient/3.1_2</bundle>
+    <bundle dependency="true">mvn:org.apache.geronimo.bundles/commons-httpclient/3.1_2</bundle>
   </feature>
   <!-- Apache Sling Installer -->
   <feature name="sling-installer" version="${project.version}">
@@ -224,7 +224,7 @@
     <!-- dependencies -->
     <feature version="${project.version}">sling-jcr</feature>
     <feature version="${project.version}">oak-sling</feature>
-    <bundle>mvn:org.apache.felix/org.apache.felix.jaas/0.0.2</bundle>
+    <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.jaas/0.0.2</bundle>
   </feature>
   <!-- Apache Sling Launchpad -->
   <feature name="sling-launchpad-content" version="${project.version}">
@@ -293,7 +293,7 @@
       db=sling
     </config>
     <feature version="${project.version}">sling-launchpad-oak</feature>
-    <bundle>mvn:org.mongodb/mongo-java-driver/2.13.3</bundle>
+    <bundle dependency="true">mvn:org.mongodb/mongo-java-driver/2.13.3</bundle>
   </feature>
   <!-- Apache Sling Scripting -->
   <feature name="sling-scripting" version="${project.version}">
@@ -302,7 +302,7 @@
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
     <feature>webconsole</feature>
-    <bundle>mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
+    <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
   </feature>
   <feature name="sling-scripting-javascript" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.javascript/2.0.26</bundle>
@@ -326,7 +326,7 @@
     <feature version="${project.version}">sling-extension-i18n</feature>
     <feature version="${project.version}">sling-extension-xss</feature>
     <feature version="${project.version}">sling-jcr-compiler</feature>
-    <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.rhino/1.7R5_1</bundle>
+    <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.rhino/1.7R5_1</bundle>
   </feature>
   <!-- Apache Sling Servlets -->
   <feature name="sling-servlets" version="${project.version}">
@@ -347,22 +347,22 @@
     <bundle>mvn:org.apache.jackrabbit/jackrabbit-spi-commons/${org.apache.jackrabbit.version}</bundle>
     <bundle>mvn:org.apache.jackrabbit/jackrabbit-webdav/${org.apache.jackrabbit.version}</bundle>
     <!-- dependencies -->
-    <bundle>mvn:javax.jcr/jcr/2.0</bundle>
+    <bundle dependency="true">mvn:javax.jcr/jcr/2.0</bundle>
     <!-- TODO... -->
-    <bundle>mvn:commons-codec/commons-codec/1.9</bundle>
-    <bundle>mvn:commons-collections/commons-collections/3.2.1</bundle>
-    <bundle>mvn:commons-fileupload/commons-fileupload/1.3.1</bundle>
-    <bundle>mvn:commons-io/commons-io/2.4</bundle>
-    <bundle>mvn:commons-lang/commons-lang/2.6</bundle>
-    <bundle>mvn:org.apache.geronimo.bundles/commons-httpclient/3.1_2</bundle>
+    <bundle dependency="true">mvn:commons-codec/commons-codec/1.9</bundle>
+    <bundle dependency="true">mvn:commons-collections/commons-collections/3.2.1</bundle>
+    <bundle dependency="true">mvn:commons-fileupload/commons-fileupload/1.3.1</bundle>
+    <bundle dependency="true">mvn:commons-io/commons-io/2.4</bundle>
+    <bundle dependency="true">mvn:commons-lang/commons-lang/2.6</bundle>
+    <bundle dependency="true">mvn:org.apache.geronimo.bundles/commons-httpclient/3.1_2</bundle>
     <!-- ...TODO -->
-    <bundle>mvn:org.apache.geronimo.specs/geronimo-annotation_1.1_spec/1.0.1</bundle>
-    <bundle>mvn:org.apache.geronimo.specs/geronimo-atinject_1.0_spec/1.0</bundle>
-    <bundle>mvn:org.apache.geronimo.specs/geronimo-el_2.2_spec/1.0</bundle>
-    <bundle>mvn:org.apache.geronimo.specs/geronimo-interceptor_1.1_spec/1.0</bundle>
-    <bundle>mvn:org.apache.geronimo.specs/geronimo-jcdi_1.0_spec/1.0</bundle>
-    <bundle>mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
-    <bundle>mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
+    <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-annotation_1.1_spec/1.0.1</bundle>
+    <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-atinject_1.0_spec/1.0</bundle>
+    <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-el_2.2_spec/1.0</bundle>
+    <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-interceptor_1.1_spec/1.0</bundle>
+    <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jcdi_1.0_spec/1.0</bundle>
+    <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
+    <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
   </feature>
   <!-- Apache Jackrabbit Oak-->
   <feature name="oak-sling" version="${project.version}">
@@ -374,7 +374,7 @@
     <feature>scr</feature>
     <feature version="${project.version}">jackrabbit-sling</feature>
     <feature version="${project.version}">tika-sling</feature>
-    <bundle>mvn:com.google.guava/guava/15.0</bundle>
+    <bundle dependency="true">mvn:com.google.guava/guava/15.0</bundle>
   </feature>
   <!-- Apache Tika -->
   <feature name="tika-sling" version="${project.version}">
@@ -399,7 +399,7 @@
     <!- dependencies ->
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-jcr</feature>
-    <bundle>mvn:org.apache.sling/org.apache.sling.auth.xing.api/0.0.2</bundle>
+    <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.auth.xing.api/0.0.2</bundle>
   </feature>
   -->
   <!-- SLING-5123
@@ -408,7 +408,7 @@
     <!- dependencies ->
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-jcr</feature>
-    <bundle>mvn:org.apache.sling/org.apache.sling.auth.xing.api/0.0.2</bundle>
+    <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.auth.xing.api/0.0.2</bundle>
   </feature>
   -->
   <!-- Apache Sling Extensions (contrib) -->
@@ -420,9 +420,9 @@
     <feature version="${project.version}">sling-extension-event</feature>
     <feature version="${project.version}">sling-extension-healthcheck</feature>
     <feature version="${project.version}">jackrabbit-sling</feature>
-    <bundle>mvn:org.apache.httpcomponents/httpcore-osgi/4.4.1</bundle>
-    <bundle>mvn:org.apache.httpcomponents/httpclient-osgi/4.4.1</bundle>
-    <bundle>mvn:org.apache.jackrabbit.vault/org.apache.jackrabbit.vault/3.1.24</bundle>
+    <bundle dependency="true">mvn:org.apache.httpcomponents/httpcore-osgi/4.4.1</bundle>
+    <bundle dependency="true">mvn:org.apache.httpcomponents/httpclient-osgi/4.4.1</bundle>
+    <bundle dependency="true">mvn:org.apache.jackrabbit.vault/org.apache.jackrabbit.vault/3.1.24</bundle>
   </feature>
   <feature name="sling-extension-healthcheck" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.hc.core/1.2.2</bundle>
@@ -453,7 +453,7 @@
     <bundle>mvn:org.apache.sling/org.apache.sling.urlrewriter/0.0.2</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
-    <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.urlrewritefilter/4.0.4_1</bundle>
+    <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.urlrewritefilter/4.0.4_1</bundle>
   </feature>
   <!-- Apache Sling Scripting (contrib) -->
   <feature name="sling-scripting-groovy" version="${project.version}">
@@ -461,14 +461,14 @@
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-scripting</feature>
-    <bundle>mvn:org.codehaus.groovy/groovy-all/1.8.0</bundle>
+    <bundle dependency="true">mvn:org.codehaus.groovy/groovy-all/1.8.0</bundle>
   </feature>
   <feature name="sling-scripting-java" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.java/2.0.12</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-scripting</feature>
-    <bundle>mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
+    <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
   </feature>
   <feature name="sling-scripting-thymeleaf" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.thymeleaf/0.1.7-SNAPSHOT</bundle>
@@ -476,6 +476,6 @@
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-scripting</feature>
     <feature version="${project.version}">sling-extension-i18n</feature>
-    <bundle>mvn:org.javassist/javassist/3.18.2-GA</bundle>
+    <bundle dependency="true">mvn:org.javassist/javassist/3.18.2-GA</bundle>
   </feature>
 </features>
