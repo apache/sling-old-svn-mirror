@@ -17,6 +17,7 @@
 package org.apache.sling.commons.json.util;
 
 import org.apache.sling.commons.json.JSONException;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -113,6 +114,12 @@ public class ValidatorTest {
     public void testTooManyOpeningBracketsObjectNested() throws JSONException {
         Validator.validate("{myobj:{{a:\"you\", b:2, c:true},myobj2:5}");
         //------------------invalid ^ 
+    }
+
+    @Test(expected=JSONException.class)
+    @Ignore
+    public void testSLING_5276() throws JSONException {
+        Validator.validate("[");
     }
 
 }
