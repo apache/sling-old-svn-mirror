@@ -190,10 +190,10 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
             // use 'fireJobAt' here, instead of 'fireJob' to make sure the job can always be triggered
             // 'fireJob' checks for a job from the same job-class to already exist
             // 'fireJobAt' though allows to pass a name for the job - which can be made unique, thus does not conflict/already-exist
-            logger.info("triggerConnectorPing: firing job to trigger heartbeat");
+            logger.info("triggerAsyncConnectorPing: firing job to trigger heartbeat");
             getScheduler().fireJobAt(NAME+UUID.randomUUID(), this, null, new Date(System.currentTimeMillis()-1000 /* make sure it gets triggered immediately*/));
         } catch (Exception e) {
-            logger.info("triggerConnectorPing: Could not trigger heartbeat: " + e);
+            logger.info("triggerAsyncConnectorPing: Could not trigger heartbeat: " + e);
         }
     }
     
