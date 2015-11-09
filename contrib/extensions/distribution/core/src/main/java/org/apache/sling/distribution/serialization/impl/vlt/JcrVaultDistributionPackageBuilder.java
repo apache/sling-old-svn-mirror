@@ -106,7 +106,7 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
             WorkspaceFilter filter = VltUtils.createFilter(request, filters);
             ExportOptions opts = VltUtils.getExportOptions(filter, packageRoots, packageGroup, packageName, VERSION);
 
-            log.debug("assembling package {}", packageGroup + '/' + packageName + "-" + VERSION);
+            log.debug("assembling package {} user {}", packageGroup + '/' + packageName + "-" + VERSION, resourceResolver.getUserID());
 
             vaultPackage = VltUtils.createPackage(packaging.getPackageManager(), session, opts, tempDirectory);
 

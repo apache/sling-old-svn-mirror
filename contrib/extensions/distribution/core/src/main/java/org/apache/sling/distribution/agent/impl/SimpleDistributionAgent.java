@@ -19,6 +19,7 @@
 package org.apache.sling.distribution.agent.impl;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -46,11 +47,9 @@ import org.apache.sling.distribution.DistributionException;
 import org.apache.sling.distribution.impl.SimpleDistributionResponse;
 import org.apache.sling.distribution.log.DistributionLog;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
-import org.apache.sling.distribution.queue.impl.DistributionQueueUtils;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
-import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueEntry;
@@ -70,6 +69,7 @@ import org.apache.sling.distribution.trigger.DistributionTrigger;
  * Basic implementation of a {@link org.apache.sling.distribution.agent.DistributionAgent}
  */
 public class SimpleDistributionAgent implements DistributionAgent {
+    private final static String DEFAULT_AGENT_SERVICE = "defaultAgentService";
 
     private final DistributionQueueProvider queueProvider;
 
@@ -91,6 +91,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
     private boolean active = false;
     private final Set<String> processingQueues;
     private final int retryAttempts;
+    private final boolean impersonateUser;
     private final DefaultDistributionLog log;
     private final DistributionRequestType[] allowedRequests;
     private final String[] allowedRoots;
@@ -116,12 +117,12 @@ public class SimpleDistributionAgent implements DistributionAgent {
         this.allowedRoots = allowedRoots;
         this.processingQueues = processingQueues;
         this.retryAttempts = retryAttempts;
+        this.impersonateUser = subServiceName == null;
 
         // check configuration is valid
         if (name == null
                 || (queueProcessingEnabled && distributionPackageImporter == null)
                 || distributionPackageExporter == null
-                || subServiceName == null
                 || distributionRequestAuthorizationStrategy == null
                 || queueProvider == null
                 || scheduleQueueStrategy == null
@@ -173,24 +174,24 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
             boolean silent = DistributionRequestType.PULL.equals(distributionRequest.getRequestType());
 
-            log.info(silent, "starting request {}", distributionRequest);
+            String callingUser = resourceResolver.getUserID();
 
-            agentResourceResolver = getAgentResourceResolver();
+            log.info(false, "starting request {} by user {}", distributionRequest, callingUser);
+
 
             distributionRequestAuthorizationStrategy.checkPermission(resourceResolver, distributionRequest);
+
+            agentResourceResolver = getAgentResourceResolver(callingUser);
 
             List<DistributionPackage> distributionPackages = exportPackages(agentResourceResolver, distributionRequest);
 
             log.debug("exported packages {}", distributionPackages.size());
 
-            DistributionResponse distributionResponse = scheduleImportPackages(distributionPackages);
+            DistributionResponse distributionResponse = scheduleImportPackages(distributionPackages, callingUser);
 
             log.info(silent, "returning response {}", distributionResponse);
 
             return distributionResponse;
-        } catch (LoginException e) {
-            log.error("Error executing distribution request {} {}", distributionRequest, e);
-            throw new DistributionException(e);
         } finally {
             ungetAgentResourceResolver(agentResourceResolver);
         }
@@ -202,6 +203,8 @@ public class SimpleDistributionAgent implements DistributionAgent {
     }
 
     private List<DistributionPackage> exportPackages(ResourceResolver agentResourceResolver, DistributionRequest distributionRequest) throws DistributionException {
+        log.info("exporting packages for user {}", agentResourceResolver != null ?  agentResourceResolver.getUserID() : "dummy");
+
         List<DistributionPackage> distributionPackages = distributionPackageExporter.exportPackages(agentResourceResolver, distributionRequest);
 
         generatePackageEvent(DistributionEventTopics.AGENT_PACKAGE_CREATED);
@@ -209,21 +212,23 @@ public class SimpleDistributionAgent implements DistributionAgent {
         return distributionPackages;
     }
 
-    private DistributionResponse scheduleImportPackages(List<DistributionPackage> distributionPackages) {
+    private DistributionResponse scheduleImportPackages(List<DistributionPackage> distributionPackages, String callingUser) {
         List<DistributionResponse> distributionResponses = new LinkedList<DistributionResponse>();
 
         for (DistributionPackage distributionPackage : distributionPackages) {
-            Collection<SimpleDistributionResponse> distributionResponsesForPackage = scheduleImportPackage(distributionPackage);
+            Collection<SimpleDistributionResponse> distributionResponsesForPackage = scheduleImportPackage(distributionPackage, callingUser);
             distributionResponses.addAll(distributionResponsesForPackage);
         }
         return distributionResponses.size() == 1 ? distributionResponses.get(0) : new CompositeDistributionResponse(distributionResponses);
     }
 
-    private Collection<SimpleDistributionResponse> scheduleImportPackage(DistributionPackage distributionPackage) {
+    private Collection<SimpleDistributionResponse> scheduleImportPackage(DistributionPackage distributionPackage, String callingUser) {
         Collection<SimpleDistributionResponse> distributionResponses = new LinkedList<SimpleDistributionResponse>();
 
         // dispatch the distribution package to the queue distribution handler
         try {
+            distributionPackage.getInfo().put(DistributionPackageUtils.PACKAGE_INFO_PROPERTY_REQUEST_USER, callingUser);
+
             Iterable<DistributionQueueItemStatus> states = scheduleQueueStrategy.add(distributionPackage, queueProvider);
             for (DistributionQueueItemStatus state : states) {
                 DistributionRequestState requestState = getRequestStateFromQueueState(state.getItemState());
@@ -377,7 +382,8 @@ public class SimpleDistributionAgent implements DistributionAgent {
         DistributionQueueItemStatus queueItemStatus = queueEntry.getStatus();
         try {
 
-            agentResourceResolver = getAgentResourceResolver();
+            String callingUser = queueItem.get(DistributionPackageUtils.PACKAGE_INFO_PROPERTY_REQUEST_USER, String.class);
+            agentResourceResolver = getAgentResourceResolver(callingUser);
 
             distributionPackage = distributionPackageExporter.getPackage(agentResourceResolver, queueItem.getId());
 
@@ -398,9 +404,6 @@ public class SimpleDistributionAgent implements DistributionAgent {
                 success = true; // return success if package does not exist in order to clear the queue.
                 log.error("distribution package with id {} does not exist. the package will be skipped.", queueItem.getId());
             }
-
-        } catch (LoginException e) {
-            log.info("cannot obtain resource resolver", e);
         } finally {
             ungetAgentResourceResolver(agentResourceResolver);
             if (distributionPackage != null) {
@@ -439,14 +442,26 @@ public class SimpleDistributionAgent implements DistributionAgent {
         return true;
     }
 
-    private ResourceResolver getAgentResourceResolver() throws LoginException {
+    private ResourceResolver getAgentResourceResolver(String user) throws DistributionException {
         ResourceResolver resourceResolver;
 
-        Map<String, Object> authenticationInfo = new HashMap<String, Object>();
-        authenticationInfo.put(ResourceResolverFactory.SUBSERVICE, subServiceName);
-        resourceResolver = resourceResolverFactory.getServiceResourceResolver(authenticationInfo);
+        try {
+            Map<String, Object> authenticationInfo = new HashMap<String, Object>();
 
-        return resourceResolver;
+            if (impersonateUser && user != null) {
+                authenticationInfo.put(ResourceResolverFactory.SUBSERVICE, DEFAULT_AGENT_SERVICE);
+                authenticationInfo.put(ResourceResolverFactory.USER_IMPERSONATION, user);
+            } else {
+                authenticationInfo.put(ResourceResolverFactory.SUBSERVICE, subServiceName);
+            }
+
+            resourceResolver = resourceResolverFactory.getServiceResourceResolver(authenticationInfo);
+
+            return resourceResolver;
+        } catch (LoginException le) {
+            throw new DistributionException(le);
+
+        }
     }
 
     private void ungetAgentResourceResolver(ResourceResolver resourceResolver) {
@@ -540,22 +555,34 @@ public class SimpleDistributionAgent implements DistributionAgent {
             this.agent = agent;
         }
 
-        public void handle(@Nonnull DistributionRequest request) {
+        public void handle(@Nullable ResourceResolver resourceResolver, @Nonnull DistributionRequest request) {
 
             if (!active) {
                 log.warn("skipping agent handler as agent is disabled");
                 return;
             }
 
-            ResourceResolver agentResourceResolver = null;
-            try {
-                agentResourceResolver = getAgentResourceResolver();
-                agent.execute(agentResourceResolver, request);
-            } catch (Throwable e) {
-                log.error("Error executing handler", e);
-            } finally {
-                ungetAgentResourceResolver(agentResourceResolver);
+
+            if (resourceResolver != null) {
+                try {
+                    agent.execute(resourceResolver, request);
+                } catch (Throwable t) {
+                    log.error("Error executing handler", t);
+                }
+            } else {
+                ResourceResolver agentResourceResolver = null;
+
+                try {
+                    agentResourceResolver = getAgentResourceResolver(null);
+
+                    agent.execute(agentResourceResolver, request);
+                } catch (Throwable e) {
+                    log.error("Error executing handler", e);
+                } finally {
+                    ungetAgentResourceResolver(agentResourceResolver);
+                }
             }
+
         }
     }
 
