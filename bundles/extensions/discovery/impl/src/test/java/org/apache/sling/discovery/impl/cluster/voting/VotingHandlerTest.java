@@ -126,9 +126,13 @@ public class VotingHandlerTest {
     
     @After
     public void tearDown() throws Exception {
-        resourceResolver.close();
+        if (resourceResolver != null) {
+            resourceResolver.close();
+        }
         
-        threadPool.shutdown();
+        if (threadPool != null) {
+            threadPool.shutdown();
+        }
     }
     
     @Test
