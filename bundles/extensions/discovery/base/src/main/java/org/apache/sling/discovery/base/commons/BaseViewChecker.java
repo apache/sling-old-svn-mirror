@@ -165,11 +165,11 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
     
     @Override
     public void heartbeatAndCheckView() {
-        logger.debug("run: start. [for slingId="+slingId+"]");
+        logger.debug("heartbeatAndCheckView: start. [for slingId="+slingId+"]");
         synchronized(lock) {
         	if (!activated) {
         		// SLING:2895: avoid heartbeats if not activated
-        	    logger.debug("run: not activated yet");
+        	    logger.debug("heartbeatAndCheckView: not activated yet");
         		return;
         	}
 
@@ -179,7 +179,7 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
             // check the view
             doCheckView();
         }
-        logger.debug("run: end. [for slingId="+slingId+"]");
+        logger.debug("heartbeatAndCheckView: end. [for slingId="+slingId+"]");
     }
 
     /** Trigger the issuance of the next heartbeat asap instead of at next heartbeat interval **/
