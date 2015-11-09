@@ -50,7 +50,9 @@ import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.discovery.DiscoveryService;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.PropertyProvider;
+import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEventListener;
+import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.base.commons.BaseDiscoveryService;
 import org.apache.sling.discovery.base.commons.ClusterViewService;
 import org.apache.sling.discovery.base.commons.DefaultTopologyView;
@@ -135,6 +137,18 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
 
     private ReentrantLock viewStateManagerLock; 
     
+    private TopologyEventListener changePropagationListener = new TopologyEventListener() {
+
+        public void handleTopologyEvent(TopologyEvent event) {
+            HeartbeatHandler handler = heartbeatHandler;
+            if (activated && handler != null 
+                    && (event.getType() == Type.TOPOLOGY_CHANGED || event.getType() == Type.PROPERTIES_CHANGED)) {
+                logger.info("changePropagationListener.handleTopologyEvent: topology changed - propagate through connectors");
+                handler.triggerAsyncConnectorPing();
+            }
+        }
+    };
+
     /** for testing only **/
     public static BaseDiscoveryService testConstructor(ResourceResolverFactory resourceResolverFactory, 
             AnnouncementRegistry announcementRegistry, 
@@ -277,6 +291,8 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
             }
             activated = true;
             setOldView(newView);
+
+            viewStateManager.bind(changePropagationListener);
         } finally {
             if (viewStateManagerLock!=null) {
                 viewStateManagerLock.unlock();
@@ -311,6 +327,8 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
         logger.debug("DiscoveryServiceImpl deactivated.");
         viewStateManagerLock.lock();
         try{
+            viewStateManager.unbind(changePropagationListener);
+
             viewStateManager.handleDeactivated();
             
             activated = false;
