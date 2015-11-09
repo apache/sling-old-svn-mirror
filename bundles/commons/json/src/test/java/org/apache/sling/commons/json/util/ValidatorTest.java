@@ -17,7 +17,6 @@
 package org.apache.sling.commons.json.util;
 
 import org.apache.sling.commons.json.JSONException;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -26,21 +25,37 @@ import org.junit.Test;
 public class ValidatorTest {
 
     @Test
-    public void testSimpleJSON() throws JSONException {
+    public void testEmptyString() throws JSONException {
         Validator.validate("");
+    }
+
+    @Test
+    public void testEmptyArray() throws JSONException {
         Validator.validate("[]");
+    }
+
+    @Test
+    public void testEmptyObject() throws JSONException {
         Validator.validate("{}");
     }
 
     @Test
-    public void testBasicJSON() throws JSONException {
+    public void testSimpleArray() throws JSONException {
         Validator.validate("[1,true,\"hallo\"]");
+    }
+
+    @Test
+    public void testSimpleObject() throws JSONException {
         Validator.validate("{a:\"you\", b:2, c:true}");
     }
 
     @Test
-    public void testNestedJSON() throws JSONException {
+    public void testNestedJSONArray() throws JSONException {
         Validator.validate("[1,true,\"hallo\", {a:1}, [1,2]]");
+    }
+
+    @Test
+    public void testNestedJSONObject() throws JSONException {
         Validator.validate("{a:\"you\", b:2, c:true, d: {d:1}, e: []}");
     }
 
@@ -117,9 +132,23 @@ public class ValidatorTest {
     }
 
     @Test(expected=JSONException.class)
-    @Ignore
-    public void testSLING_5276() throws JSONException {
+    public void testOpeningBrackedOnlyArray() throws JSONException {
         Validator.validate("[");
+    }
+
+    @Test(expected=JSONException.class)
+    public void testOpeningBrackedOnlyObject() throws JSONException {
+        Validator.validate("{");
+    }
+
+    @Test(expected=JSONException.class)
+    public void testUnclosedArray() throws JSONException {
+        Validator.validate("[1,true,\"hallo\"");
+    }
+
+    @Test(expected=JSONException.class)
+    public void testUnclosedObject() throws JSONException {
+        Validator.validate("{a:\"you\", b:2, c:true");
     }
 
 }
