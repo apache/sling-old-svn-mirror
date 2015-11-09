@@ -340,4 +340,27 @@ public class DistributionUtils {
         return result;
     }
 
+    public static List<Map<String, Object>> getQueueItems(SlingInstance instance, String queueUrl) throws IOException, JSONException {
+        List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
+
+        JSONObject json = getResource(instance, queueUrl + ".infinity");
+
+        JSONArray items = json.getJSONArray("items");
+
+        for(int i=0; i < items.length(); i++) {
+            String itemId = items.getString(i);
+            JSONObject queueItem = json.getJSONObject(itemId);
+
+
+            Map<String, Object> itemProperties = new HashMap<String, Object>();
+
+            itemProperties.put("itemId", itemId);
+            itemProperties.put("action", queueItem.get("action"));
+
+            result.add(itemProperties);
+        }
+
+        return result;
+    }
+
 }
