@@ -25,6 +25,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.distribution.DistributionException;
@@ -59,12 +60,13 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
 
         DistributionQueue queue = request.getResource().adaptTo(DistributionQueue.class);
 
-        String limitParam = request.getParameter("limit");
-        String[] idParam = request.getParameterValues("id");
 
         ResourceResolver resourceResolver = request.getResourceResolver();
 
+
         if ("delete".equals(operation)) {
+            String limitParam = request.getParameter("limit");
+            String[] idParam = request.getParameterValues("id");
 
             if (idParam != null) {
                 deleteItems(resourceResolver, queue, idParam);
@@ -76,6 +78,33 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
                     log.warn("limit param malformed : "+limitParam, ex);
                 }
                 deleteItems(resourceResolver, queue, limit);
+            }
+        } else if ("copy".equals(operation)) {
+            String sourceQueue = request.getParameter("queuePath");
+            String[] idParam = request.getParameterValues("id");
+
+            if (idParam != null) {
+                addItems(resourceResolver, queue, sourceQueue, idParam);
+            }
+        }
+    }
+
+    private void addItems(ResourceResolver resourceResolver, DistributionQueue targetQueue, String queuePath, String[] ids) {
+        DistributionQueue sourceQueue = null;
+        Resource resource = resourceResolver.getResource(queuePath);
+
+        if (resource != null) {
+            sourceQueue = resource.adaptTo(DistributionQueue.class);
+        }
+
+        if (sourceQueue == null) {
+            log.warn("cannot find source queue {}", queuePath);
+        }
+
+        for (String id: ids) {
+            DistributionQueueEntry entry = sourceQueue.getItem(id);
+            if (entry != null) {
+                targetQueue.add(new DistributionQueueItem(id, entry.getItem()));
             }
         }
     }
