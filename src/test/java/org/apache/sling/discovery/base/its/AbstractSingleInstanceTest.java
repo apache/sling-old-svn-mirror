@@ -235,14 +235,14 @@ public abstract class AbstractSingleInstanceTest {
         logger.info("testTopologyEventListeners: 4th sleep 2s");
         Thread.sleep(2000);
         assertEquals(0, assertingTopologyEventListener.getRemainingExpectedCount());
-        assertEquals(1, pp.getGetCnt());
+        assertEquals(2, pp.getGetCnt());
 
         // a heartbeat repeat should not result in another call though
         instance.heartbeatsAndCheckView();
         logger.info("testTopologyEventListeners: 5th sleep 2s");
         Thread.sleep(2000);
         assertEquals(0, assertingTopologyEventListener.getRemainingExpectedCount());
-        assertEquals(2, pp.getGetCnt());
+        assertEquals(3, pp.getGetCnt());
         logger.info("testTopologyEventListeners: done");
     }
 
