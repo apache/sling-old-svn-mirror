@@ -105,21 +105,37 @@ public class VirtualInstance {
 
     	private final int intervalInSeconds;
 
-    	private boolean stopped_ = false;
+    	private boolean stopping_ = false;
 
-		public ViewCheckerRunner(int intervalInSeconds) {
+        private volatile boolean stopped_ = false;
+
+        public ViewCheckerRunner(int intervalInSeconds) {
     		this.intervalInSeconds = intervalInSeconds;
     	}
 
 		public synchronized void stop() {
 			logger.info("Stopping Instance ["+slingId+"]");
-			stopped_ = true;
+			stopping_ = true;
+			this.notifyAll();
+		}
+		
+		public boolean hasStopped() {
+		    return stopped_;
 		}
 
 		public void run() {
+		    try{
+		        doRun();
+		    } finally {
+		        stopped_ = true;
+                logger.info("Instance ["+slingId+"] stopped.");
+		    }
+		}
+		
+		public void doRun() {
 			while(true) {
 				synchronized(this) {
-					if (stopped_) {
+					if (stopping_) {
 						logger.info("Instance ["+slingId+"] stopps.");
 						return;
 					}
@@ -129,11 +145,13 @@ public class VirtualInstance {
 				} catch(Exception e) {
 				    logger.error("run: ping connector for slingId="+slingId+" threw exception: "+e, e);
 				}
-				try {
-					Thread.sleep(intervalInSeconds*1000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-					return;
+				synchronized(this) {
+    				try {
+    					this.wait(intervalInSeconds*1000);
+    				} catch (InterruptedException e) {
+    					e.printStackTrace();
+    					return;
+    				}
 				}
 			}
 		}
@@ -318,6 +336,11 @@ public class VirtualInstance {
     public void stopViewChecker() throws Throwable {
     	if (viewCheckerRunner!=null) {
     		viewCheckerRunner.stop();
+    		while(!viewCheckerRunner.hasStopped()) {
+    		    logger.info("stopViewChecker: ["+getDebugName()+"] waiting for viewCheckerRunner to stop");
+    		    Thread.sleep(500);
+    		}
+            logger.info("stopViewChecker: ["+getDebugName()+"] viewCheckerRunner stopped");
     		viewCheckerRunner = null;
     	}
         try{
