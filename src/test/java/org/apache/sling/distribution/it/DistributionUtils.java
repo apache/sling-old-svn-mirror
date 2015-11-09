@@ -54,6 +54,9 @@ public class DistributionUtils {
 
     private static final String JSON_SELECTOR = ".json";
     private static final String DISTRIBUTION_ROOT_PATH = "/libs/sling/distribution";
+    private static final String DISTRIBUTOR_USER = "testDistributorUser";
+    private static final String DISTRIBUTOR_PASSWORD = "123";
+
 
     public static JSONObject getResource(SlingInstance slingInstance, String path) throws IOException, JSONException {
         if (!path.endsWith(JSON_SELECTOR)) {
@@ -90,7 +93,7 @@ public class DistributionUtils {
         }
 
         return slingInstance.getRequestExecutor().execute(
-                request.withCredentials(slingInstance.getServerUsername(), slingInstance.getServerPassword())
+                request.withCredentials(DISTRIBUTOR_USER, DISTRIBUTOR_PASSWORD)
         ).assertStatus(status).getContent();
     }
 
