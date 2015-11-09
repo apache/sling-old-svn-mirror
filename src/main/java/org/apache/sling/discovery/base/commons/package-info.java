@@ -21,9 +21,9 @@
  * Provides some common classes for discovery implementors that 
  * choose to extend from discovery.base
  *
- * @version 1.0.0
+ * @version 1.1.0
  */
-@Version("1.0.0")
+@Version("1.1.0")
 package org.apache.sling.discovery.base.commons;
 
 import aQute.bnd.annotation.Version;
