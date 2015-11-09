@@ -1,0 +1,6 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "impersonate-reverse",
+
+    "agent.target": "(name=impersonate-reverse)"
+}
