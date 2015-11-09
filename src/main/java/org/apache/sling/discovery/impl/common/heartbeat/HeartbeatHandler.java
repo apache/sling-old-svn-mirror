@@ -40,6 +40,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.discovery.base.commons.BaseViewChecker;
+import org.apache.sling.discovery.base.commons.PeriodicBackgroundJob;
 import org.apache.sling.discovery.base.connectors.BaseConfig;
 import org.apache.sling.discovery.base.connectors.announcement.AnnouncementRegistry;
 import org.apache.sling.discovery.base.connectors.ping.ConnectorRegistry;
@@ -118,6 +119,8 @@ public class HeartbeatHandler extends BaseViewChecker {
 
     protected String failedEstablishedViewId;
 
+    protected PeriodicBackgroundJob periodicCheckJob;
+
     /** for testing only **/
     public static HeartbeatHandler testConstructor(
             SlingSettingsService slingSettingsService,
@@ -188,7 +191,10 @@ public class HeartbeatHandler extends BaseViewChecker {
     @Override
     protected void deactivate() {
         super.deactivate();
-        scheduler.removeJob(NAME+".checkForTopologyChange");        
+        if (periodicCheckJob != null) {
+            periodicCheckJob.stop();
+            periodicCheckJob = null;
+        }
     }
     
     /**
@@ -221,8 +227,7 @@ public class HeartbeatHandler extends BaseViewChecker {
                 logger.warn("initialize: Repeat interval cannot be zero. Defaulting to 10sec");
                 interval = 10;
             }
-            scheduler.addPeriodicJob(NAME, this,
-                    null, interval, false);
+            periodicPingJob = new PeriodicBackgroundJob(interval, NAME, this);
         } catch (Exception e) {
             logger.error("activate: Could not start heartbeat runner: " + e, e);
         }
@@ -238,7 +243,7 @@ public class HeartbeatHandler extends BaseViewChecker {
                 logger.warn("initialize: Repeat interval cannot be zero. Defaulting to 10sec.");
                 interval = 10;
             }
-            scheduler.addPeriodicJob(NAME+".checkForTopologyChange", new Runnable() {
+            periodicCheckJob = new PeriodicBackgroundJob(interval, NAME+".checkForTopologyChange", new Runnable() {
 
                 @Override
                 public void run() {
@@ -247,9 +252,15 @@ public class HeartbeatHandler extends BaseViewChecker {
                         // check to see when we last wrote a heartbeat
                         // if it is older than the configured timeout,
                         // then mark ourselves as in topologyChanging automatically
-                        long timeSinceHb = System.currentTimeMillis() - lastHb.getTimeInMillis();
-                        if (timeSinceHb > config.getHeartbeatTimeoutMillis()) {
-                            logger.info("checkForTopologyChange/.run: time since local instance last wrote a heartbeat is "+timeSinceHb+"ms. Flagging us as (still) changing");
+                        final long timeSinceHb = System.currentTimeMillis() - lastHb.getTimeInMillis();
+                        // SLING-5285: add a safety-margin for SLING-5195
+                        final long heartbeatTimeoutMillis = config.getHeartbeatTimeoutMillis();
+                        final long heartbeatIntervalMillis = config.getHeartbeatInterval() * 1000;
+                        final long maxTimeSinceHb = heartbeatTimeoutMillis - 2 * heartbeatIntervalMillis;
+                        if (timeSinceHb > maxTimeSinceHb) {
+                            logger.info("checkForTopologyChange/.run: time since local instance last wrote a heartbeat is " + timeSinceHb + "ms"
+                                    + " (heartbeatTimeoutMillis=" + heartbeatTimeoutMillis + ", heartbeatIntervalMillis=" + heartbeatIntervalMillis
+                                    + " => maxTimeSinceHb=" + maxTimeSinceHb + "). Flagging us as (still) changing");
                             // mark the current establishedView as faulty
                             invalidateCurrentEstablishedView();
                             
@@ -268,8 +279,7 @@ public class HeartbeatHandler extends BaseViewChecker {
                     logger.debug("checkForTopologyChange/.run: check for topology change done.");
                 }
                 
-            },
-                    null, interval, false);
+            });
         } catch (Exception e) {
             logger.error("activate: Could not start heartbeat runner: " + e, e);
         }

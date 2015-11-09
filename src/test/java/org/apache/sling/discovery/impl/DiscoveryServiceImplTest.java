@@ -78,7 +78,7 @@ public class DiscoveryServiceImplTest extends AbstractDiscoveryServiceTest {
         Thread.sleep(1000);
         instance1.heartbeatsAndCheckView();
         instance2.heartbeatsAndCheckView();
-        Thread.sleep(1000);
+        Thread.sleep(2000);
 
         logger.info("testLocalClusterSyncTokenIdChange: expecting to have received the INIT...");
         assertEquals(0, discoveryService.getViewStateManager().waitForAsyncEvents(2000));
@@ -108,7 +108,7 @@ public class DiscoveryServiceImplTest extends AbstractDiscoveryServiceTest {
         Thread.sleep(1000);
         instance1.heartbeatsAndCheckView();
         instance2.heartbeatsAndCheckView();
-        Thread.sleep(1000);
+        Thread.sleep(3000);
 
         logger.info("testLocalClusterSyncTokenIdChange: now we should have gotten a CHANGING/CHANGED pair additionally...");
         assertEquals(0, discoveryService.getViewStateManager().waitForAsyncEvents(2000));
