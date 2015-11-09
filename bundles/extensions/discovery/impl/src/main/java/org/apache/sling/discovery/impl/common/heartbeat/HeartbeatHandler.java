@@ -243,7 +243,7 @@ public class HeartbeatHandler extends BaseViewChecker {
                 logger.warn("initialize: Repeat interval cannot be zero. Defaulting to 10sec.");
                 interval = 10;
             }
-            periodicCheckJob = new PeriodicBackgroundJob(interval, NAME+".checkForTopologyChange", new Runnable() {
+            periodicCheckJob = new PeriodicBackgroundJob(interval, NAME+".checkForLocalClusterViewChange", new Runnable() {
 
                 @Override
                 public void run() {
@@ -258,7 +258,7 @@ public class HeartbeatHandler extends BaseViewChecker {
                         final long heartbeatIntervalMillis = config.getHeartbeatInterval() * 1000;
                         final long maxTimeSinceHb = heartbeatTimeoutMillis - 2 * heartbeatIntervalMillis;
                         if (timeSinceHb > maxTimeSinceHb) {
-                            logger.info("checkForTopologyChange/.run: time since local instance last wrote a heartbeat is " + timeSinceHb + "ms"
+                            logger.info("checkForLocalClusterViewChange/.run: time since local instance last wrote a heartbeat is " + timeSinceHb + "ms"
                                     + " (heartbeatTimeoutMillis=" + heartbeatTimeoutMillis + ", heartbeatIntervalMillis=" + heartbeatIntervalMillis
                                     + " => maxTimeSinceHb=" + maxTimeSinceHb + "). Flagging us as (still) changing");
                             // mark the current establishedView as faulty
@@ -272,11 +272,11 @@ public class HeartbeatHandler extends BaseViewChecker {
                             return;
                         }
                     }
-                    // SLING-5195: guarantee frequent calls to checkForTopologyChange,
+                    // SLING-5195: guarantee frequent calls to checkForLocalClusterViewChange,
                     // independently of blocked write/save operations
-                    logger.debug("checkForTopologyChange/.run: going to check for topology change...");
-                    discoveryService.checkForTopologyChange();
-                    logger.debug("checkForTopologyChange/.run: check for topology change done.");
+                    logger.debug("checkForLocalClusterViewChange/.run: going to check for topology change...");
+                    discoveryService.checkForLocalClusterViewChange();
+                    logger.debug("checkForLocalClusterViewChange/.run: check for topology change done.");
                 }
                 
             });

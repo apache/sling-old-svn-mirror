@@ -56,6 +56,8 @@ import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.base.commons.BaseDiscoveryService;
 import org.apache.sling.discovery.base.commons.ClusterViewService;
 import org.apache.sling.discovery.base.commons.DefaultTopologyView;
+import org.apache.sling.discovery.base.commons.UndefinedClusterViewException;
+import org.apache.sling.discovery.base.commons.UndefinedClusterViewException.Reason;
 import org.apache.sling.discovery.base.connectors.announcement.AnnouncementRegistry;
 import org.apache.sling.discovery.base.connectors.ping.ConnectorRegistry;
 import org.apache.sling.discovery.commons.providers.BaseTopologyView;
@@ -64,6 +66,7 @@ import org.apache.sling.discovery.commons.providers.DefaultInstanceDescription;
 import org.apache.sling.discovery.commons.providers.ViewStateManager;
 import org.apache.sling.discovery.commons.providers.base.ViewStateManagerFactory;
 import org.apache.sling.discovery.commons.providers.spi.ClusterSyncService;
+import org.apache.sling.discovery.commons.providers.spi.LocalClusterView;
 import org.apache.sling.discovery.commons.providers.util.PropertyNameHelper;
 import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
 import org.apache.sling.discovery.impl.cluster.ClusterViewServiceImpl;
@@ -605,6 +608,44 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
         @Override
         public int hashCode() {
             return provider.hashCode();
+        }
+    }
+    
+    /** 
+     * only checks for local clusterView changes.
+     * thus eg avoids doing synchronized with annotationregistry 
+     **/
+    public void checkForLocalClusterViewChange() {
+        viewStateManagerLock.lock();
+        try{
+            if (!activated) {
+                logger.debug("checkForLocalClusterViewChange: not yet activated, ignoring");
+                return;
+            }
+            try {
+                ClusterViewService clusterViewService = getClusterViewService();
+                if (clusterViewService == null) {
+                    throw new UndefinedClusterViewException(
+                            Reason.REPOSITORY_EXCEPTION,
+                            "no ClusterViewService available at the moment");
+                }
+                LocalClusterView localClusterView = clusterViewService.getLocalClusterView();
+            } catch (UndefinedClusterViewException e) {
+                // SLING-5030 : when we're cut off from the local cluster we also
+                // treat it as being cut off from the entire topology, ie we don't
+                // update the announcements but just return
+                // the previous oldView marked as !current
+                logger.info("checkForLocalClusterViewChange: undefined cluster view: "+e.getReason()+"] "+e);
+                getOldView().setNotCurrent();
+                viewStateManager.handleChanging();
+                if (e.getReason()==Reason.ISOLATED_FROM_TOPOLOGY) {
+                    handleIsolatedFromTopology();
+                }
+            }
+        } finally {
+            if (viewStateManagerLock!=null) {
+                viewStateManagerLock.unlock();
+            }
         }
     }
 
