@@ -41,6 +41,12 @@ public class DistributionPackageUtils {
     public static String PACKAGE_INFO_PROPERTY_ORIGIN_QUEUE = "internal.origin.queue";
 
     /**
+     * distribution request user
+     */
+    public static String PACKAGE_INFO_PROPERTY_REQUEST_USER = "internal.request.user";
+
+
+    /**
      * Acquires the package if it's a {@link SharedDistributionPackage}, via {@link SharedDistributionPackage#acquire(String)}
      * @param distributionPackage a distribution package
      * @param queueName the name of the queue in which the package should be acquired

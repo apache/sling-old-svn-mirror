@@ -122,7 +122,7 @@ public class ResourceEventDistributionTrigger implements DistributionTrigger {
             Object pathProperty = event.getProperty("path");
             if (pathProperty != null) {
                 String distributingPath = String.valueOf(pathProperty);
-                requestHandler.handle(new SimpleDistributionRequest(action, distributingPath));
+                requestHandler.handle(null, new SimpleDistributionRequest(action, distributingPath));
             }
         }
     }

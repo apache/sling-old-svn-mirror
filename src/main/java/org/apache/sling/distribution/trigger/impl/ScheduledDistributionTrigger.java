@@ -20,16 +20,23 @@ package org.apache.sling.distribution.trigger.impl;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
+import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.distribution.DistributionException;
+import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
+import org.apache.sling.distribution.util.impl.DistributionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,11 +55,15 @@ public class ScheduledDistributionTrigger implements DistributionTrigger {
     private final int secondsInterval;
 
     private final Scheduler scheduler;
+    private final String serviceName;
+    private final ResourceResolverFactory resourceResolverFactory;
 
     private Set<String> registeredJobs = Collections.synchronizedSet(new HashSet<String>());
 
 
-    public ScheduledDistributionTrigger(String distributionActionName, String path, int secondsInterval, Scheduler scheduler) {
+    public ScheduledDistributionTrigger(String distributionActionName, String path, int secondsInterval, String serviceName, Scheduler scheduler, ResourceResolverFactory resourceResolverFactory) {
+        this.serviceName = serviceName;
+        this.resourceResolverFactory = resourceResolverFactory;
         this.distributionAction = DistributionRequestType.fromName(distributionActionName);
         this.path = path;
         this.secondsInterval = secondsInterval;
@@ -122,7 +133,19 @@ public class ScheduledDistributionTrigger implements DistributionTrigger {
         public void run() {
             log.debug("agent {}: scheduling {} distribution of {}", new Object[]{requestHandler, distributionAction, path});
 
-            requestHandler.handle(new SimpleDistributionRequest(distributionAction, path));
+            if (serviceName == null) {
+                requestHandler.handle(null, new SimpleDistributionRequest(distributionAction, path));
+            } else {
+                ResourceResolver resourceResolver = null;
+                try {
+                    resourceResolver = DistributionUtils.loginService(resourceResolverFactory, serviceName);
+                    requestHandler.handle(resourceResolver, new SimpleDistributionRequest(distributionAction, path));
+                } catch (LoginException le) {
+                    log.error("cannot obtain resource resolver for {}", serviceName);
+                } finally {
+                    DistributionUtils.logout(resourceResolver);
+                }
+            }
         }
     }
 

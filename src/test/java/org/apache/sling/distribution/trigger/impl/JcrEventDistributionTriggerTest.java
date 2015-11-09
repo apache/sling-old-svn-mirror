@@ -20,6 +20,7 @@ package org.apache.sling.distribution.trigger.impl;
 
 import javax.jcr.observation.Event;
 
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -39,10 +40,11 @@ public class JcrEventDistributionTriggerTest {
     public void testProcessEventWithoutPathProperty() throws Exception {
         SlingRepository repository = mock(SlingRepository.class);
         Scheduler scheduler = mock(Scheduler.class);
+        ResourceResolverFactory resolverFactory  = mock(ResourceResolverFactory.class);
 
         String path = "/some/path";
         String serviceName = "serviceId";
-        JcrEventDistributionTrigger jcrEventdistributionTrigger = new JcrEventDistributionTrigger(repository, scheduler, path, serviceName, null);
+        JcrEventDistributionTrigger jcrEventdistributionTrigger = new JcrEventDistributionTrigger(repository, scheduler, resolverFactory, path, serviceName, null);
         Event event = mock(Event.class);
         DistributionRequest distributionRequest = jcrEventdistributionTrigger.processEvent(event);
         assertNull(distributionRequest);
@@ -52,10 +54,11 @@ public class JcrEventDistributionTriggerTest {
     public void testProcessEventWithPathProperty() throws Exception {
         SlingRepository repository = mock(SlingRepository.class);
         Scheduler scheduler = mock(Scheduler.class);
+        ResourceResolverFactory resolverFactory  = mock(ResourceResolverFactory.class);
 
         String path = "/some/path";
         String serviceName = "serviceId";
-        JcrEventDistributionTrigger jcrEventdistributionTrigger = new JcrEventDistributionTrigger(repository, scheduler, path, serviceName, null);
+        JcrEventDistributionTrigger jcrEventdistributionTrigger = new JcrEventDistributionTrigger(repository, scheduler, resolverFactory, path, serviceName, null);
         Event event = mock(Event.class);
         when(event.getPath()).thenReturn("/some/path/generating/event");
         DistributionRequest distributionRequest = jcrEventdistributionTrigger.processEvent(event);

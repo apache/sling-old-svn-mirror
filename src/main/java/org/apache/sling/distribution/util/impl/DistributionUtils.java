@@ -16,27 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.trigger;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+package org.apache.sling.distribution.util.impl;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 
-/**
- * An handler for {@link org.apache.sling.distribution.DistributionRequest}s passed to a
- * {@link DistributionTrigger}
- */
-@ConsumerType
-public interface DistributionRequestHandler {
+import java.util.HashMap;
+import java.util.Map;
 
-    /**
-     * handle the request according to the trigger implementation.
-     *
-     * @param request a distribution request
-     */
-    void handle(@Nullable ResourceResolver resourceResolver, @Nonnull DistributionRequest request);
 
+public class DistributionUtils {
+
+    public static ResourceResolver loginService(ResourceResolverFactory resolverFactory, String serviceName) throws LoginException {
+        Map<String, Object> authInfo = new HashMap<String, Object>();
+
+        authInfo.put(ResourceResolverFactory.SUBSERVICE, serviceName);
+
+        ResourceResolver resourceResolver = resolverFactory.getServiceResourceResolver(authInfo);
+
+        return resourceResolver;
+    }
+
+    public static void logout(ResourceResolver resourceResolver) {
+        if (resourceResolver != null) {
+            resourceResolver.close();
+        }
+    }
 }

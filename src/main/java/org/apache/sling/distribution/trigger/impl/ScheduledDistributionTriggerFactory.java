@@ -28,11 +28,14 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.DistributionException;
+import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -69,11 +72,13 @@ public class ScheduledDistributionTriggerFactory implements DistributionTrigger 
     @Property(label = "Interval in Seconds", description = "The number of seconds between executions")
     public static final String SECONDS = "seconds";
 
+    @Property(label = "Service Name", description = "The name of the service used to trigger the distribution requests.")
+    public static final String SERVICE_NAME = "serviceName";
 
     ScheduledDistributionTrigger trigger;
 
     @Reference
-    private SlingRepository repository;
+    private ResourceResolverFactory resolverFactory;
 
     @Reference
     private Scheduler scheduler;
@@ -84,8 +89,9 @@ public class ScheduledDistributionTriggerFactory implements DistributionTrigger 
         String action = PropertiesUtil.toString(config.get(ACTION), DistributionRequestType.PULL.name());
         String path = PropertiesUtil.toString(config.get(PATH), null);
         int interval = PropertiesUtil.toInteger(config.get(SECONDS), 30);
+        String serviceName = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(SERVICE_NAME), null));
 
-        trigger = new ScheduledDistributionTrigger(action, path, interval, scheduler);
+        trigger = new ScheduledDistributionTrigger(action, path, interval, serviceName, scheduler, resolverFactory);
     }
 
     @Deactivate

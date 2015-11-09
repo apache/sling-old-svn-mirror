@@ -19,6 +19,7 @@
 package org.apache.sling.distribution.servlet;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -27,6 +28,7 @@ import java.util.Arrays;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionException;
@@ -77,7 +79,7 @@ public class DistributionTriggerServlet extends SlingAllMethodsServlet {
         final PrintWriter writer = response.getWriter();
 
         DistributionRequestHandler distributionRequestHandler = new DistributionRequestHandler() {
-            public void handle(@Nonnull DistributionRequest request) {
+            public void handle(@Nullable ResourceResolver resourceResolver, @Nonnull DistributionRequest request) {
                 writeEvent(writer, request);
             }
         };

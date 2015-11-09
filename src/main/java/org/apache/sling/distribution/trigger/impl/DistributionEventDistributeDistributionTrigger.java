@@ -114,7 +114,7 @@ public class DistributionEventDistributeDistributionTrigger implements Distribut
                         log.info("triggering chain distribution from event {}", event);
 
                         DistributionRequestType action = DistributionRequestType.valueOf(String.valueOf(actionProperty));
-                        requestHandler.handle(new SimpleDistributionRequest(action, paths));
+                        requestHandler.handle(null, new SimpleDistributionRequest(action, paths));
                         break;
                     }
                 }
