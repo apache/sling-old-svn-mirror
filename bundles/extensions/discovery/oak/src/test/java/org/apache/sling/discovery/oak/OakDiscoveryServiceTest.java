@@ -30,15 +30,18 @@ import org.apache.sling.discovery.base.its.setup.VirtualInstance;
 import org.apache.sling.discovery.commons.providers.base.DummyListener;
 import org.apache.sling.discovery.commons.providers.spi.base.DescriptorHelper;
 import org.apache.sling.discovery.commons.providers.spi.base.DiscoveryLiteConfig;
-import org.apache.sling.discovery.commons.providers.spi.base.DiscoveryLiteDescriptor;
 import org.apache.sling.discovery.commons.providers.spi.base.DiscoveryLiteDescriptorBuilder;
 import org.apache.sling.discovery.commons.providers.spi.base.DummySlingSettingsService;
 import org.apache.sling.discovery.commons.providers.spi.base.IdMapService;
 import org.apache.sling.discovery.oak.its.setup.OakVirtualInstanceBuilder;
 import org.apache.sling.discovery.oak.its.setup.SimulatedLeaseCollection;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OakDiscoveryServiceTest {
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public final class SimpleCommonsConfig implements DiscoveryLiteConfig {
         
@@ -120,6 +123,7 @@ public class OakDiscoveryServiceTest {
     
     @Test
     public void testDescriptorSeqNumChange() throws Exception {
+        logger.info("testDescriptorSeqNumChange: start");
         OakVirtualInstanceBuilder builder1 = 
                 (OakVirtualInstanceBuilder) new OakVirtualInstanceBuilder()
                 .setDebugName("instance1")
@@ -134,19 +138,23 @@ public class OakDiscoveryServiceTest {
                 .setConnectorPingInterval(999)
                 .setConnectorPingTimeout(999);
         VirtualInstance instance2 = builder2.build();
+        logger.info("testDescriptorSeqNumChange: created both instances, binding listener...");
         
         DummyListener listener = new DummyListener();
         OakDiscoveryService discoveryService = (OakDiscoveryService) instance1.getDiscoveryService();
         discoveryService.bindTopologyEventListener(listener);
         
+        logger.info("testDescriptorSeqNumChange: waiting 2sec, listener should not get anything yet");
         assertEquals(0, discoveryService.getViewStateManager().waitForAsyncEvents(2000));
         assertEquals(0, listener.countEvents());
         
+        logger.info("testDescriptorSeqNumChange: issuing 2 heartbeats with each instance should let the topology get established");
         instance1.heartbeatsAndCheckView();
         instance2.heartbeatsAndCheckView();
         instance1.heartbeatsAndCheckView();
         instance2.heartbeatsAndCheckView();
 
+        logger.info("testDescriptorSeqNumChange: listener should get an event within 2sec from now at latest");
         assertEquals(0, discoveryService.getViewStateManager().waitForAsyncEvents(2000));
         assertEquals(1, listener.countEvents());
         
@@ -161,9 +169,15 @@ public class OakDiscoveryServiceTest {
         // while we were sleeping
         SimulatedLeaseCollection c = builder1.getSimulatedLeaseCollection();
         c.incSeqNum(2);
-        
+        logger.info("testDescriptorSeqNumChange: incremented seqnum by 2 - issuing another heartbeat should trigger a topology change");
         instance1.heartbeatsAndCheckView();
+        
+        // due to the nature of the syncService/minEventDelay we now explicitly first sleep 2sec before waiting for async events for another 2sec
+        logger.info("testDescriptorSeqNumChange: sleeping 2sec for topology change to happen");
+        Thread.sleep(2000);
+        logger.info("testDescriptorSeqNumChange: ensuring no async events are still in the pipe - for another 2sec");
         assertEquals(0, discoveryService.getViewStateManager().waitForAsyncEvents(2000));
+        logger.info("testDescriptorSeqNumChange: now listener should have received 3 events, it got: "+listener.countEvents());
         assertEquals(3, listener.countEvents());
     }
 
