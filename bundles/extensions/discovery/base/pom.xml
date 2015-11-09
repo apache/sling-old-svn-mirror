@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.discovery.base</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.1.0-SNAPSHOT</version>
 
     <name>Apache Sling Discovery Base</name>
     <description>Contains Connector and Properties support that some implementations might choose to build upon</description>

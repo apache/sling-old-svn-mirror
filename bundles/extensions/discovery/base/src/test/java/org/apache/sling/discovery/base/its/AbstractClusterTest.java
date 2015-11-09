@@ -1314,7 +1314,7 @@ public abstract class AbstractClusterTest {
         instance2.heartbeatsAndCheckView();
         instance3.heartbeatsAndCheckView();
         logger.info("testAdditionalInstance: 4th 2s sleep");
-        Thread.sleep(2000);
+        Thread.sleep(3000);
         assertEquals(1, acceptsMultiple.getEventCnt(Type.TOPOLOGY_CHANGING));
         assertEquals(1, acceptsMultiple.getEventCnt(Type.TOPOLOGY_CHANGED));
         logger.info("testAdditionalInstance: end");

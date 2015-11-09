@@ -34,6 +34,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.discovery.base.commons.BaseViewChecker;
+import org.apache.sling.discovery.base.commons.PeriodicBackgroundJob;
 import org.apache.sling.discovery.base.connectors.BaseConfig;
 import org.apache.sling.discovery.base.connectors.announcement.AnnouncementRegistry;
 import org.apache.sling.discovery.base.connectors.ping.ConnectorRegistry;
@@ -81,6 +82,8 @@ public class OakViewChecker extends BaseViewChecker {
     private Config config;
 
     private OakDiscoveryService discoveryService;
+
+    protected PeriodicBackgroundJob periodicCheckViewJob;
 
     /** for testing only **/
     public static OakViewChecker testConstructor(
@@ -145,6 +148,15 @@ public class OakViewChecker extends BaseViewChecker {
     }
     
     @Override
+    protected void deactivate() {
+        super.deactivate();
+        if (periodicCheckViewJob != null) {
+            periodicCheckViewJob.stop();
+            periodicCheckViewJob = null;
+        }
+    }
+
+    @Override
     public void startupFinished(StartupMode mode) {
         super.startupFinished(mode);
         
@@ -174,8 +186,7 @@ public class OakViewChecker extends BaseViewChecker {
         try {
             final long interval = config.getConnectorPingInterval();
             logger.info("initialize: starting periodic connectorPing job for "+slingId+" with interval "+interval+" sec.");
-            scheduler.addPeriodicJob(NAME+".connectorPinger", this,
-                    null, interval, false);
+            periodicPingJob = new PeriodicBackgroundJob(interval, NAME+".connectorPinger", this);
         } catch (Exception e) {
             logger.error("activate: Could not start heartbeat runner: " + e, e);
         }
@@ -190,15 +201,14 @@ public class OakViewChecker extends BaseViewChecker {
         try{
             final long interval = config.getDiscoveryLiteCheckInterval();
             logger.info("initialize: starting periodic discoveryLiteCheck job for "+slingId+" with interval "+interval+" sec.");
-            scheduler.addPeriodicJob(NAME+".discoveryLiteCheck", new Runnable() {
+            periodicCheckViewJob = new PeriodicBackgroundJob(interval, NAME+".discoveryLiteCheck", new Runnable() {
 
                 @Override
                 public void run() {
                     discoveryLiteCheck();
                 }
                 
-            },
-                    null, interval, false);
+            });
         } catch (Exception e) {
             logger.error("activate: Could not start heartbeat runner: " + e, e);
         }
