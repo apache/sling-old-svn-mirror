@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.discovery.oak</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.1.0-SNAPSHOT</version>
 
     <name>Apache Sling Oak-Based Discovery Service</name>
     <description>Implementation of Apache Sling Discovery based on Jackrabbit Oak using its discovery-lite descriptor for in-cluster view detection and a TopologyView through HTTP POST heartbeats announcing sub-topologies to each other.</description>
