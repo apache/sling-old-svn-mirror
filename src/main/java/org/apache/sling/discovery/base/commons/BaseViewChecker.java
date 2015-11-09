@@ -89,6 +89,8 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
     /** SLING-4765 : store endpoints to /clusterInstances for more verbose duplicate slingId/ghost detection **/
     protected final Map<Long, String[]> endpoints = new HashMap<Long, String[]>();
 
+    protected PeriodicBackgroundJob periodicPingJob;
+    
     public void inform(StartupMode mode, boolean finished) {
     	if (finished) {
     		startupFinished(mode);
@@ -135,8 +137,7 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
         try {
             final long interval = getConnectorConfig().getConnectorPingInterval();
             logger.info("doActivate: starting periodic connectorPing job for "+slingId+" with interval "+interval+" sec.");
-            getScheduler().addPeriodicJob(NAME, this,
-                    null, interval, false);
+            periodicPingJob = new PeriodicBackgroundJob(interval, NAME, this);
         } catch (Exception e) {
             logger.error("doActivate: Could not start connectorPing runner: " + e, e);
         }
@@ -148,7 +149,10 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
         // SLING-3365 : dont synchronize on deactivate
         activated = false;
         logger.info("deactivate: deactivated slingId: {}, this: {}", slingId, this);
-    	getScheduler().removeJob(NAME);
+        if (periodicPingJob != null) {
+            periodicPingJob.stop();
+            periodicPingJob = null;
+        }
     }
     
     /** for testing only **/
