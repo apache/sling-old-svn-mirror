@@ -105,7 +105,7 @@ public class RepositoryDelaysTest {
         instance1.startViewChecker(1);
         instance2.startViewChecker(1);
         Thread.sleep(5000);
-        // after 3 sec - without the 7sec pre-commit delay
+        // after 3 sec - without the 12sec pre-commit delay
         // the view would normally be established - but this time
         // round instance1 should still be pre-init and instance2
         // should be init but alone
