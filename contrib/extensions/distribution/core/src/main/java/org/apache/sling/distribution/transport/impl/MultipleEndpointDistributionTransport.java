@@ -29,7 +29,6 @@ import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.DistributionException;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
-import org.apache.sling.distribution.queue.impl.DistributionQueueUtils;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.apache.sling.distribution.transport.core.DistributionTransport;
