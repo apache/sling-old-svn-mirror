@@ -545,6 +545,10 @@ public class HeartbeatHandler extends BaseViewChecker {
             logger.error(
                     "checkView: encountered a persistence exception during view check: "
                             + e, e);
+        } catch (RuntimeException e) {
+            logger.error(
+                    "checkView: encountered a runtime exception during view check: "
+                            + e, e);
         } finally {
             if (resourceResolver != null) {
                 resourceResolver.close();
