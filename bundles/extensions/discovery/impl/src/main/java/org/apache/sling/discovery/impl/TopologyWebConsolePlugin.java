@@ -44,6 +44,7 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
@@ -52,14 +53,16 @@ import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.InstanceFilter;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
+import org.apache.sling.discovery.TopologyEventListener;
+import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.discovery.base.commons.ClusterViewService;
 import org.apache.sling.discovery.base.connectors.announcement.Announcement;
 import org.apache.sling.discovery.base.connectors.announcement.AnnouncementRegistry;
 import org.apache.sling.discovery.base.connectors.announcement.CachedAnnouncement;
 import org.apache.sling.discovery.base.connectors.ping.ConnectorRegistry;
 import org.apache.sling.discovery.base.connectors.ping.TopologyConnectorClientInformation;
-import org.apache.sling.discovery.TopologyEventListener;
-import org.apache.sling.discovery.TopologyView;
+import org.apache.sling.discovery.commons.providers.spi.base.ClusterSyncHistory;
+import org.apache.sling.discovery.commons.providers.spi.base.SyncTokenService;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,6 +106,12 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
 
     @Reference
     private ConnectorRegistry connectorRegistry;
+
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY)
+    private SyncTokenService syncTokenService;
+
+    @Reference
+    private Config config;
 
     private TopologyView currentView;
 
@@ -280,6 +289,25 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         }
         pw.println("</pre>");
         pw.println("</br>");
+
+        pw.println("<p class=\"statline ui-state-highlight\">SyncTokenService History</p>");
+        pw.println("<pre>");
+        if (!config.useSyncTokenService()) {
+            pw.println("(disabled - useSyncTokenService flag is false)");
+        } else if (syncTokenService == null) {
+            pw.println("(no SyncTokenService available)");
+        } else {
+            ClusterSyncHistory clusterSyncHistory = syncTokenService.getClusterSyncHistory();
+            if (clusterSyncHistory == null) {
+                pw.println("(no history available)");
+            } else {
+                for (String syncHistoryEntry : clusterSyncHistory.getSyncHistory()) {
+                    pw.println(syncHistoryEntry);
+                }
+            }
+        }
+        pw.println("</pre>");
+        pw.println("<br/>");
     }
 
     /**
@@ -873,6 +901,26 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
             }
             pw.println();
         }
+
+        pw.println("SyncTokenService History");
+        pw.println("---------------------------------------");
+        if (!config.useSyncTokenService()) {
+            pw.println("(disabled - useSyncTokenService flag is false)");
+        } else if (syncTokenService == null) {
+            pw.println("(no SyncTokenService available)");
+        } else {
+            ClusterSyncHistory clusterSyncHistory = syncTokenService.getClusterSyncHistory();
+            if (clusterSyncHistory == null) {
+                pw.println("(no history available)");
+            } else {
+                for (String syncHistoryEntry : clusterSyncHistory.getSyncHistory()) {
+                    pw.println(syncHistoryEntry);
+                }
+            }
+        }
+        pw.println();
+        pw.println();
+    
     }
 
     /**
