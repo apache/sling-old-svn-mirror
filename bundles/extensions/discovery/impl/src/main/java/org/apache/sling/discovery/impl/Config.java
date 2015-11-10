@@ -49,6 +49,12 @@ public class Config implements BaseConfig, DiscoveryLiteConfig {
     /** resource used to keep instance information such as last heartbeat, properties, incoming announcements **/
     private static final String CLUSTERINSTANCES_RESOURCE = "clusterInstances";
 
+    /** resource used to store the sync tokens as part of a topology change **/
+    private static final String SYNC_TOKEN_RESOURCE = "syncTokens";
+
+    /** resource used to store the clusterNodeIds to slingIds map **/
+    private static final String ID_MAP_RESOURCE = "idMap";
+
     /** resource used to keep the currently established view **/
     private static final String ESTABLISHED_VIEW_RESOURCE = "establishedView";
 
@@ -168,6 +174,13 @@ public class Config implements BaseConfig, DiscoveryLiteConfig {
     @Property
     private static final String BACKOFF_STABLE_FACTOR = "backoffStableFactor";
     private static final int DEFAULT_BACKOFF_STABLE_FACTOR = 5;
+    
+    /**
+     * when set to true and the syncTokenService (of discovery.commons) is available,
+     * then it is used
+     */
+    @Property(boolValue=true)
+    private static final String USE_SYNC_TOKEN_SERVICE_ENABLED = "useSyncTokenService";
 
     private String leaderElectionRepositoryDescriptor ;
 
@@ -206,6 +219,12 @@ public class Config implements BaseConfig, DiscoveryLiteConfig {
     
     /** the maximum backoff factor to be used for stable connectors **/
     private int backoffStableFactor = DEFAULT_BACKOFF_STABLE_FACTOR;
+    
+    /**
+     * when set to true and the syncTokenService (of discovery.commons) is available,
+     * then it is used.
+     */
+    private boolean useSyncTokenService = true;
     
     @Activate
     protected void activate(final Map<String, Object> properties) {
@@ -319,6 +338,8 @@ public class Config implements BaseConfig, DiscoveryLiteConfig {
                 DEFAULT_BACKOFF_STANDBY_FACTOR);
         backoffStableFactor = PropertiesUtil.toInteger(properties.get(BACKOFF_STABLE_FACTOR), 
                 DEFAULT_BACKOFF_STABLE_FACTOR);
+        
+        useSyncTokenService = PropertiesUtil.toBoolean(properties.get(USE_SYNC_TOKEN_SERVICE_ENABLED), true);
     }
 
     /**
@@ -534,12 +555,12 @@ public class Config implements BaseConfig, DiscoveryLiteConfig {
 
     @Override
     public String getSyncTokenPath() {
-        return getDiscoveryResourcePath() + "/synctokens";
+        return getDiscoveryResourcePath() + SYNC_TOKEN_RESOURCE;
     }
 
     @Override
     public String getIdMapPath() {
-        return getDiscoveryResourcePath() + "/idmaps";
+        return getDiscoveryResourcePath() + ID_MAP_RESOURCE;
     }
 
     @Override
@@ -550,6 +571,10 @@ public class Config implements BaseConfig, DiscoveryLiteConfig {
     @Override
     public long getClusterSyncServiceIntervalMillis() {
         return 1000;
+    }
+
+    public boolean useSyncTokenService() {
+        return useSyncTokenService;
     }
 
 }
