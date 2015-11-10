@@ -35,6 +35,7 @@ import org.apache.sling.discovery.base.its.setup.ModifiableTestBaseConfig;
 import org.apache.sling.discovery.base.its.setup.VirtualInstance;
 import org.apache.sling.discovery.base.its.setup.VirtualInstanceBuilder;
 import org.apache.sling.discovery.base.its.setup.mock.DummyResourceResolverFactory;
+import org.apache.sling.discovery.commons.providers.spi.base.SyncTokenService;
 import org.apache.sling.discovery.impl.DiscoveryServiceImpl;
 import org.apache.sling.discovery.impl.cluster.ClusterViewServiceImpl;
 import org.apache.sling.discovery.impl.cluster.voting.VotingHandler;
@@ -54,6 +55,8 @@ public class FullJR2VirtualInstanceBuilder extends VirtualInstanceBuilder {
     private ObservationManager observationManager;
 
     private VotingHandler votingHandler;
+
+    private SyncTokenService syncTokenService;
 
     @Override
     public VirtualInstanceBuilder createNewRepository() throws Exception {
@@ -110,9 +113,20 @@ public class FullJR2VirtualInstanceBuilder extends VirtualInstanceBuilder {
         return HeartbeatHandler.testConstructor(getSlingSettingsService(), getResourceResolverFactory(), getAnnouncementRegistry(), getConnectorRegistry(), getConfig(), getScheduler(), getVotingHandler());
     }
     
+    private SyncTokenService getSyncTokenService() throws Exception {
+        if (syncTokenService == null) {
+            syncTokenService = createSyncTokenService();
+        }
+        return syncTokenService;
+    }
+    
+    private SyncTokenService createSyncTokenService() {
+        return SyncTokenService.testConstructorAndActivate(getConfig(), getResourceResolverFactory(), getSlingSettingsService());
+    }
+
     @Override
     protected BaseDiscoveryService createDiscoveryService() throws Exception {
-        return DiscoveryServiceImpl.testConstructor(getResourceResolverFactory(), getAnnouncementRegistry(), getConnectorRegistry(), (ClusterViewServiceImpl) getClusterViewService(), getHeartbeatHandler(), getSlingSettingsService(), getScheduler(), getConfig());
+        return DiscoveryServiceImpl.testConstructor(getResourceResolverFactory(), getAnnouncementRegistry(), getConnectorRegistry(), (ClusterViewServiceImpl) getClusterViewService(), getHeartbeatHandler(), getSlingSettingsService(), getScheduler(), getConfig(), getSyncTokenService());
     }
     
     @Override
