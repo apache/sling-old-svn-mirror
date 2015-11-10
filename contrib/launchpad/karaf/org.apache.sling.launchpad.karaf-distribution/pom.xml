@@ -51,12 +51,7 @@
       <version>4.0.3</version>
       <classifier>features</classifier>
       <type>xml</type>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.launchpad.karaf-features</artifactId>
-      <version>${project.version}</version>
-      <type>kar</type>
+      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.sling</groupId>
@@ -92,7 +87,73 @@
         </executions>
         <configuration>
           <installedFeatures>
+            <!-- Apache Karaf -->
             <feature>wrapper</feature>
+            <!-- Apache Sling -->
+            <feature>sling</feature>
+            <!-- Apache Sling Auth -->
+            <feature>sling-auth-form</feature>
+            <!-- Apache Sling Commons -->
+            <feature>sling-commons-scheduler</feature>
+            <feature>sling-commons-threads</feature>
+            <!-- Apache Sling Extensions -->
+            <feature>sling-extension-adapter</feature>
+            <feature>sling-extension-bundleresource</feature>
+            <feature>sling-extension-discovery</feature>
+            <feature>sling-extension-discovery-impl</feature>
+            <feature>sling-extension-discovery-standalone</feature>
+            <feature>sling-extension-event</feature>
+            <feature>sling-extension-explorer</feature>
+            <feature>sling-extension-featureflags</feature>
+            <feature>sling-extension-fsresource</feature>
+            <feature>sling-extension-i18n</feature>
+            <feature>sling-extension-jmx-provider</feature>
+            <feature>sling-extension-models</feature>
+            <feature>sling-extension-resource-inventory</feature>
+            <feature>sling-extension-threaddump</feature>
+            <feature>sling-extension-validation</feature>
+            <feature>sling-extension-xss</feature>
+            <!-- Apache Sling Installer -->
+            <feature>sling-installer</feature>
+            <feature>sling-installer-provider-file</feature>
+            <feature>sling-installer-provider-jcr</feature>
+            <!-- Apache Sling JCR -->
+            <feature>sling-jcr</feature>
+            <feature>sling-jcr-compiler</feature>
+            <feature>sling-jcr-jackrabbit-security</feature>
+            <feature>sling-jcr-oak</feature>
+            <!-- Apache Sling Launchpad -->
+            <feature>sling-launchpad-content</feature>
+            <feature>sling-launchpad-oak</feature>
+            <feature>sling-launchpad-oak-tar</feature>
+            <feature>sling-launchpad-oak-mongo</feature>
+            <!-- Apache Sling Scripting -->
+            <feature>sling-scripting</feature>
+            <feature>sling-scripting-javascript</feature>
+            <feature>sling-scripting-jsp</feature>
+            <feature>sling-scripting-sightly</feature>
+            <!-- Apache Sling Servlets -->
+            <feature>sling-servlets</feature>
+            <!-- Apache Jackrabbit -->
+            <feature>jackrabbit-sling</feature>
+            <!-- Apache Jackrabbit Oak-->
+            <feature>oak-sling</feature>
+            <!-- Apache Tika -->
+            <feature>tika-sling</feature>
+            <!-- Apache Sling Auth (contrib) -->
+            <feature>sling-auth-openid</feature>
+            <feature>sling-auth-selector</feature>
+            <!-- Apache Sling Extensions (contrib) -->
+            <feature>sling-extension-distribution</feature>
+            <feature>sling-extension-healthcheck</feature>
+            <feature>sling-extension-query</feature>
+            <feature>sling-extension-resourcemerger</feature>
+            <feature>sling-extension-security</feature>
+            <feature>sling-extension-urlrewriter</feature>
+            <!-- Apache Sling Scripting (contrib) -->
+            <feature>sling-scripting-groovy</feature>
+            <feature>sling-scripting-java</feature>
+            <feature>sling-scripting-thymeleaf</feature>
           </installedFeatures>
           <bootFeatures>
             <feature>jaas</feature>
