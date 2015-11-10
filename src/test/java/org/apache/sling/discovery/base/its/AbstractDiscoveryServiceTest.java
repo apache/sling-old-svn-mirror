@@ -307,19 +307,19 @@ public abstract class AbstractDiscoveryServiceTest {
     }
 
     @Test
-    public void testThirtyInstances() throws Throwable {
-        logger.info("testThirtyInstances: start");
+    public void testTwentyFourInstances() throws Throwable {
+        logger.info("testTwentyFourInstances: start");
         Tester i1 = newInstance("i1", 4, 120, 1000, null);
-        for(int i=2; i<=30; i++) {
+        for(int i=2; i<=24; i++) {
             Tester in = newInstance("i"+i, 4, 120, 2000, i1.instance);
             Thread.sleep(1000);
         }
-        logger.info("testThirtyInstances: starting retry loop (180sec max)");
+        logger.info("testTwentyFourInstances: starting retry loop (180sec max)");
         startRetryLoop(testers, 180);
         i1.instance.dumpRepo();
         i1.assertNoFailures();
         assertStableTopology(testers.toArray(new Tester[0]));
-        logger.info("testThirtyInstances: end");
+        logger.info("testTwentyFourInstances: end");
     }
     
     private void startRetryLoop(final List<Tester> testers, int retryTimeoutSeconds) {
