@@ -238,7 +238,11 @@ public class HeartbeatHandler extends BaseViewChecker {
         // so this second part is now done (additionally) in a 2nd runner here:
         try {
             long interval = config.getHeartbeatInterval();
-            logger.info("initialize: starting periodic checkForLocalClusterViewChange job for "+slingId+" with interval "+interval+" sec.");
+            final long heartbeatTimeoutMillis = config.getHeartbeatTimeoutMillis();
+            final long heartbeatIntervalMillis = config.getHeartbeatInterval() * 1000;
+            final long maxMillisSinceHb = Math.max(Math.min(heartbeatTimeoutMillis, 2 * heartbeatIntervalMillis),
+                    heartbeatTimeoutMillis - 2 * heartbeatIntervalMillis);
+            logger.info("initialize: starting periodic checkForLocalClusterViewChange job for "+slingId+" with maxMillisSinceHb=" + maxMillisSinceHb + "ms, interval="+interval+" sec.");
             if (interval==0) {
                 logger.warn("initialize: Repeat interval cannot be zero. Defaulting to 10sec.");
                 interval = 10;
@@ -254,14 +258,10 @@ public class HeartbeatHandler extends BaseViewChecker {
                         // then mark ourselves as in topologyChanging automatically
                         final long timeSinceHb = System.currentTimeMillis() - lastHb.getTimeInMillis();
                         // SLING-5285: add a safety-margin for SLING-5195
-                        final long heartbeatTimeoutMillis = config.getHeartbeatTimeoutMillis();
-                        final long heartbeatIntervalMillis = config.getHeartbeatInterval() * 1000;
-                        final long maxTimeSinceHb = Math.max(Math.min(heartbeatTimeoutMillis, 2 * heartbeatIntervalMillis),
-                                heartbeatTimeoutMillis - 2 * heartbeatIntervalMillis);
-                        if (timeSinceHb > maxTimeSinceHb) {
-                            logger.info("checkForLocalClusterViewChange/.run: time since local instance last wrote a heartbeat is " + timeSinceHb + "ms"
+                        if (timeSinceHb > maxMillisSinceHb) {
+                            logger.warn("checkForLocalClusterViewChange/.run: time since local instance last wrote a heartbeat is " + timeSinceHb + "ms"
                                     + " (heartbeatTimeoutMillis=" + heartbeatTimeoutMillis + ", heartbeatIntervalMillis=" + heartbeatIntervalMillis
-                                    + " => maxTimeSinceHb=" + maxTimeSinceHb + "). Flagging us as (still) changing");
+                                    + " => maxMillisSinceHb=" + maxMillisSinceHb + "). Flagging us as (still) changing");
                             // mark the current establishedView as faulty
                             invalidateCurrentEstablishedView();
                             
