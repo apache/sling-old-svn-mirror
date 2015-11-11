@@ -25,7 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.sling.distribution.DistributionException;
+import org.apache.sling.distribution.impl.DistributionException;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.SharedDistributionPackage;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;

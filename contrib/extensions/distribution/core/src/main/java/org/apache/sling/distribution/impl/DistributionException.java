@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.sling.distribution;
+package org.apache.sling.distribution.impl;
 
 /**
  * Generic checked exception for distribution
