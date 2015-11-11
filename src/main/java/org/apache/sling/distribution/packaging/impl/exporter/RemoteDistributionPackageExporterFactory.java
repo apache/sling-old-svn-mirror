@@ -36,7 +36,7 @@ import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
-import org.apache.sling.distribution.DistributionException;
+import org.apache.sling.distribution.impl.DistributionException;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;

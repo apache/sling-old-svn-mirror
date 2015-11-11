@@ -29,7 +29,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
-import org.apache.sling.distribution.DistributionException;
+import org.apache.sling.distribution.impl.DistributionException;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.osgi.framework.BundleContext;

@@ -24,7 +24,7 @@ import java.io.InputStream;
 
 import aQute.bnd.annotation.ProviderType;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.DistributionException;
+import org.apache.sling.distribution.impl.DistributionException;
 import org.apache.sling.distribution.DistributionRequest;
 
 /**
