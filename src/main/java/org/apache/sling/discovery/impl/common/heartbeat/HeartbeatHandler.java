@@ -238,7 +238,7 @@ public class HeartbeatHandler extends BaseViewChecker {
         // so this second part is now done (additionally) in a 2nd runner here:
         try {
             long interval = config.getHeartbeatInterval();
-            logger.info("initialize: starting periodic heartbeat job for "+slingId+" with interval "+interval+" sec.");
+            logger.info("initialize: starting periodic checkForLocalClusterViewChange job for "+slingId+" with interval "+interval+" sec.");
             if (interval==0) {
                 logger.warn("initialize: Repeat interval cannot be zero. Defaulting to 10sec.");
                 interval = 10;
@@ -256,7 +256,8 @@ public class HeartbeatHandler extends BaseViewChecker {
                         // SLING-5285: add a safety-margin for SLING-5195
                         final long heartbeatTimeoutMillis = config.getHeartbeatTimeoutMillis();
                         final long heartbeatIntervalMillis = config.getHeartbeatInterval() * 1000;
-                        final long maxTimeSinceHb = heartbeatTimeoutMillis - 2 * heartbeatIntervalMillis;
+                        final long maxTimeSinceHb = Math.max(Math.min(heartbeatTimeoutMillis, 2 * heartbeatIntervalMillis),
+                                heartbeatTimeoutMillis - 2 * heartbeatIntervalMillis);
                         if (timeSinceHb > maxTimeSinceHb) {
                             logger.info("checkForLocalClusterViewChange/.run: time since local instance last wrote a heartbeat is " + timeSinceHb + "ms"
                                     + " (heartbeatTimeoutMillis=" + heartbeatTimeoutMillis + ", heartbeatIntervalMillis=" + heartbeatIntervalMillis
