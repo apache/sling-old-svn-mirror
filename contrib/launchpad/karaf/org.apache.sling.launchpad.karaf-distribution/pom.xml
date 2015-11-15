@@ -154,6 +154,8 @@
             <feature>sling-scripting-groovy</feature>
             <feature>sling-scripting-java</feature>
             <feature>sling-scripting-thymeleaf</feature>
+            <!-- Composum -->
+            <feature>composum-sling</feature>
           </installedFeatures>
           <bootFeatures>
             <feature>jaas</feature>
