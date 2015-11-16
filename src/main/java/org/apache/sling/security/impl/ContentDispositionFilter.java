@@ -211,10 +211,13 @@ public class ContentDispositionFilter implements Filter {
         
         /** The current request. */
         private final SlingHttpServletRequest request;
+        
+        private final Resource resource;
 
         public RewriterResponse(SlingHttpServletRequest request, SlingHttpServletResponse wrappedResponse) {
             super(wrappedResponse);            
             this.request = request;
+            this.resource = request.getResource();
         }
         
         /**
@@ -228,7 +231,7 @@ public class ContentDispositionFilter implements Filter {
                     return;
                 }
                 request.setAttribute(ATTRIBUTE_NAME, type);
-                Resource resource = request.getResource();
+                
                 String resourcePath = resource.getPath();
 
                 if (!contentDispositionExcludedPaths.contains(resourcePath)) {
