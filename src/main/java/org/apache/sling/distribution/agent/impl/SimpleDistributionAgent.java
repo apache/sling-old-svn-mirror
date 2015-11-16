@@ -20,6 +20,9 @@ package org.apache.sling.distribution.agent.impl;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -63,6 +66,9 @@ import org.apache.sling.distribution.queue.DistributionQueueState;
 import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
+import org.apache.sling.distribution.util.impl.DistributionUtils;
+import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.resource.JcrResourceConstants;
 
 
 /**
@@ -92,6 +98,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
     private final Set<String> processingQueues;
     private final int retryAttempts;
     private final boolean impersonateUser;
+    private final SlingRepository slingRepository;
     private final DefaultDistributionLog log;
     private final DistributionRequestType[] allowedRequests;
     private final String[] allowedRoots;
@@ -108,10 +115,12 @@ public class SimpleDistributionAgent implements DistributionAgent {
                                    DistributionQueueDispatchingStrategy errorQueueStrategy,
                                    DistributionEventFactory distributionEventFactory,
                                    ResourceResolverFactory resourceResolverFactory,
+                                   SlingRepository slingRepository,
                                    DefaultDistributionLog log,
                                    DistributionRequestType[] allowedRequests,
                                    String[] allowedRoots,
                                    int retryAttempts) {
+        this.slingRepository = slingRepository;
         this.log = log;
         this.allowedRequests = allowedRequests;
         this.allowedRoots = allowedRoots;
@@ -449,18 +458,20 @@ public class SimpleDistributionAgent implements DistributionAgent {
             Map<String, Object> authenticationInfo = new HashMap<String, Object>();
 
             if (impersonateUser && user != null) {
-                authenticationInfo.put(ResourceResolverFactory.SUBSERVICE, DEFAULT_AGENT_SERVICE);
-                authenticationInfo.put(ResourceResolverFactory.USER_IMPERSONATION, user);
+
+                Session session = slingRepository.impersonateFromService(DEFAULT_AGENT_SERVICE, new SimpleCredentials(user, new char[0]), null);
+                authenticationInfo.put(JcrResourceConstants.AUTHENTICATION_INFO_SESSION, session);
+                resourceResolver = resourceResolverFactory.getResourceResolver(authenticationInfo);
             } else {
                 authenticationInfo.put(ResourceResolverFactory.SUBSERVICE, subServiceName);
+                resourceResolver = resourceResolverFactory.getServiceResourceResolver(authenticationInfo);
             }
-
-            resourceResolver = resourceResolverFactory.getServiceResourceResolver(authenticationInfo);
 
             return resourceResolver;
         } catch (LoginException le) {
             throw new DistributionException(le);
-
+        } catch (RepositoryException re) {
+            throw new DistributionException(re);
         }
     }
 
@@ -472,7 +483,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
             } catch (PersistenceException e) {
                 log.error("cannot commit changes to resource resolver", e);
             } finally {
-                resourceResolver.close();
+                DistributionUtils.safelyLogout(resourceResolver);
             }
         }
 

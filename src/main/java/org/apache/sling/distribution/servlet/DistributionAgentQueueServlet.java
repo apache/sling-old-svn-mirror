@@ -105,6 +105,8 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
             DistributionQueueEntry entry = sourceQueue.getItem(id);
             if (entry != null) {
                 targetQueue.add(new DistributionQueueItem(id, entry.getItem()));
+                DistributionPackage distributionPackage = getPackage(resourceResolver, entry.getItem());
+                DistributionPackageUtils.acquire(distributionPackage, targetQueue.getName());
             }
         }
     }
@@ -126,6 +128,12 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
         DistributionQueueItem item = entry.getItem();
         String id = item.getId();
         queue.remove(id);
+
+        DistributionPackage distributionPackage = getPackage(resourceResolver, item);
+        DistributionPackageUtils.releaseOrDelete(distributionPackage, queue.getName());
+    }
+
+    DistributionPackage getPackage(ResourceResolver resourceResolver, DistributionQueueItem item) {
         DistributionPackageInfo info = DistributionPackageUtils.fromQueueItem(item);
         String type = info.getType();
 
@@ -133,15 +141,15 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
 
         if (packageBuilder != null) {
 
-            DistributionPackage distributionPackage = null;
             try {
-                distributionPackage = packageBuilder.getPackage(resourceResolver, id);
+                DistributionPackage distributionPackage = packageBuilder.getPackage(resourceResolver, item.getId());
+
+                return distributionPackage;
             } catch (DistributionException e) {
                 log.error("cannot get package", e);
             }
-
-            DistributionPackageUtils.releaseOrDelete(distributionPackage, queue.getName());
-
         }
+
+        return null;
     }
 }

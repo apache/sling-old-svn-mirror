@@ -140,7 +140,7 @@ public class ScheduledDistributionTrigger implements DistributionTrigger {
                 } catch (LoginException le) {
                     log.error("cannot obtain resource resolver for {}", serviceName);
                 } finally {
-                    DistributionUtils.logout(resourceResolver);
+                    DistributionUtils.safelyLogout(resourceResolver);
                 }
             }
         }
