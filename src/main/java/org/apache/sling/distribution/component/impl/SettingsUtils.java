@@ -34,6 +34,7 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
  */
 public class SettingsUtils {
 
+    public static final String COMPONENT_NAME_DEFAULT = "(name=default)";
     private static final String COMPONENT_ROOT = "";
     private static final char COMPONENT_DELIM = '/';
     private static final char COMPONENT_MAP_BEGIN = '[';
