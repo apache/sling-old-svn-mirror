@@ -22,12 +22,17 @@ package org.apache.sling.distribution.util.impl;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.jcr.Session;
 import java.util.HashMap;
 import java.util.Map;
 
 
 public class DistributionUtils {
+    private static final Logger log = LoggerFactory.getLogger(DistributionUtils.class);
+
 
     public static ResourceResolver loginService(ResourceResolverFactory resolverFactory, String serviceName) throws LoginException {
         Map<String, Object> authInfo = new HashMap<String, Object>();
@@ -39,9 +44,17 @@ public class DistributionUtils {
         return resourceResolver;
     }
 
-    public static void logout(ResourceResolver resourceResolver) {
-        if (resourceResolver != null) {
-            resourceResolver.close();
+    public static void safelyLogout(ResourceResolver resourceResolver) {
+        try {
+            if (resourceResolver != null) {
+                Session session = resourceResolver.adaptTo(Session.class);
+                resourceResolver.close();
+                if (session != null && session.isLive()) {
+                    session.logout();
+                }
+            }
+        } catch (Throwable t) {
+            log.error("cannot safely close resource resolver {}", resourceResolver);
         }
     }
 }

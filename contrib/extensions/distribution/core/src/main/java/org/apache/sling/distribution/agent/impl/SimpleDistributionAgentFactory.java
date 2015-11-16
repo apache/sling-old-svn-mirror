@@ -44,6 +44,7 @@ import org.apache.sling.distribution.queue.impl.SingleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.event.jobs.JobManager;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
@@ -131,7 +132,9 @@ public class SimpleDistributionAgentFactory extends AbstractDistributionAgentFac
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
 
-    private SimpleDistributionAgent agent;
+    @Reference
+    private SlingRepository slingRepository;
+
 
     @Activate
     protected void activate(BundleContext context, Map<String, Object> config) {
@@ -168,7 +171,8 @@ public class SimpleDistributionAgentFactory extends AbstractDistributionAgentFac
 
         return new SimpleDistributionAgent(agentName, queueProcessingEnabled, processingQueues,
                 serviceName, packageImporter, packageExporter, requestAuthorizationStrategy,
-                queueProvider, exportQueueStrategy, importQueueStrategy, distributionEventFactory, resourceResolverFactory, distributionLog, null, null, 0);
+                queueProvider, exportQueueStrategy, importQueueStrategy, distributionEventFactory, resourceResolverFactory, slingRepository,
+                distributionLog, null, null, 0);
 
     }
 }

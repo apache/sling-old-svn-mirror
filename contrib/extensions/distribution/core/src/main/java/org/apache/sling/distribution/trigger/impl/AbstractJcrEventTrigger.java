@@ -268,7 +268,7 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
                     } catch (LoginException le) {
                         log.error("cannot obtain resource resolver for {}", serviceUser);
                     } finally {
-                        DistributionUtils.logout(resourceResolver);
+                        DistributionUtils.safelyLogout(resourceResolver);
                     }
                 }
             }
