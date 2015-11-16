@@ -281,7 +281,7 @@ public class OakViewChecker extends BaseViewChecker {
             resourceMap.put("leaderElectionId", newLeaderElectionId);
             resourceMap.put("leaderElectionIdCreatedAt", leaderElectionCreatedAt);
 
-            logger.info("resetLeaderElectionId: storing my runtimeId: {}, endpoints: {} and sling home path: {}", 
+            logger.info("resetLeaderElectionId: storing my runtimeId: {}, endpoints: {}, sling home path: {}, new leaderElectionId: {}, created at: {}", 
                     new Object[]{runtimeId, endpointsAsString, slingHomePath, newLeaderElectionId, leaderElectionCreatedAt});
             resourceResolver.commit();
         } catch (LoginException e) {
