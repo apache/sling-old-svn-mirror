@@ -1305,16 +1305,14 @@ public abstract class AbstractClusterTest {
         instance3 = newBuilder().setDebugName("thirdInstance")
                 .useRepositoryOf(instance1)
                 .build();
-        instance1.heartbeatsAndCheckView();
-        instance2.heartbeatsAndCheckView();
-        instance3.heartbeatsAndCheckView();
-        logger.info("testAdditionalInstance: 3rd 2s sleep");
-        Thread.sleep(2000);
-        instance1.heartbeatsAndCheckView();
-        instance2.heartbeatsAndCheckView();
-        instance3.heartbeatsAndCheckView();
-        logger.info("testAdditionalInstance: 4th 2s sleep");
-        Thread.sleep(3000);
+        for(int i=0; i<4; i++) {
+            instance1.heartbeatsAndCheckView();
+            instance2.heartbeatsAndCheckView();
+            instance3.heartbeatsAndCheckView();
+            logger.info("testAdditionalInstance: i="+i+", 2s sleep");
+            Thread.sleep(2000);
+        }
+
         assertEquals(1, acceptsMultiple.getEventCnt(Type.TOPOLOGY_CHANGING));
         assertEquals(1, acceptsMultiple.getEventCnt(Type.TOPOLOGY_CHANGED));
         logger.info("testAdditionalInstance: end");
