@@ -60,6 +60,7 @@ public class DiscoveryWithSyncTokenTest {
         b1.setDebugName("i1").newRepository("/var/twon/", true);
         b1.setConnectorPingInterval(1).setMinEventDelay(1).setConnectorPingTimeout(60);
         VirtualInstance i1 = b1.build();
+        instances.add(i1);
         i1.bindTopologyEventListener(new TopologyEventListener() {
             
             @Override
@@ -78,6 +79,7 @@ public class DiscoveryWithSyncTokenTest {
         i1.heartbeatsAndCheckView();
         i2.heartbeatsAndCheckView();
         
-        Thread.sleep(99999);
+        Thread.sleep(999);
+        //TODO: finalize test
     }
 }
