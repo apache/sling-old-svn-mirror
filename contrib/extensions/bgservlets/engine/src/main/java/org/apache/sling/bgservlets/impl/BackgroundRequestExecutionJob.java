@@ -35,7 +35,6 @@ import org.apache.sling.bgservlets.JobProgressInfo;
 import org.apache.sling.bgservlets.JobStatus;
 import org.apache.sling.bgservlets.JobStorage;
 import org.apache.sling.bgservlets.RuntimeState;
-import org.apache.sling.bgservlets.JobStatus.State;
 import org.apache.sling.engine.SlingRequestProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +48,12 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus, RuntimeState
     private final HttpServletRequest request;
     private final BackgroundHttpServletResponse response;
     private final SuspendableOutputStream stream;
-    private final ResourceResolver resourceResolver;
+    
+    /** ResourceResolver used for the job processing */
+    private final ResourceResolver processingResourceResolver;
+    
+    /** ResourceResolver used for the stats and to save the processing output */
+    private final ResourceResolver outputResourceResolver;
     private final SlingRequestProcessor slingRequestProcessor;
     private final String path;
     private final String streamPath;
@@ -70,14 +74,17 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus, RuntimeState
 
         // Need a new ResourceResolver with the same credentials as the
         // current request, for the background request.
-        resourceResolver = request.getResourceResolver().clone(null);
+        processingResourceResolver = request.getResourceResolver().clone(null);
+        
+        // And a dedicated session for the response object
+        outputResourceResolver = request.getResourceResolver().clone(null);
 
         // Get JobData, defines path and used to save servlet output to the repository
-        final Session s = resourceResolver.adaptTo(Session.class);
-        if(s == null) {
-            throw new IOException("Unable to get Session from ResourceResolver " + resourceResolver);
+        final Session outputSession = outputResourceResolver.adaptTo(Session.class);
+        if(outputSession == null) {
+            throw new IOException("Unable to get Session from ResourceResolver " + processingResourceResolver);
         }
-        final JobData d = storage.createJobData(s);
+        final JobData d = storage.createJobData(outputSession);
         final String ext = request.getRequestPathInfo().getExtension();
         if(ext != null) {
             d.setProperty(JobData.PROP_EXTENSION, ext);
@@ -96,7 +103,7 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus, RuntimeState
 
     public void run() {
         try {
-            slingRequestProcessor.processRequest(request, response, resourceResolver);
+            slingRequestProcessor.processRequest(request, response, processingResourceResolver);
         } catch (Exception e) {
             // TODO report errors in the background job's output
             log.error("Exception in background request processing", e);
@@ -108,8 +115,9 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus, RuntimeState
                 log.error("ServletResponseWrapper cleanup failed", ioe);
             }
 
-            // cleanup the resource resolver
-            resourceResolver.close();
+            // cleanup the resource resolvers
+            processingResourceResolver.close();
+            outputResourceResolver.close();
         }
     }
 
