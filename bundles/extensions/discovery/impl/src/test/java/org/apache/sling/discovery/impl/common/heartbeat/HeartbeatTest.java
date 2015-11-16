@@ -232,7 +232,7 @@ public class HeartbeatTest {
         logger.info("doTestPartitioning: letting heartbeats be sent by all instances for a few loops...");
         logger.info("doTestPartitioning: --------------------------------");
         HeartbeatHandler hhSlow = slowMachine.getHeartbeatHandler();
-        for(int i=0; i<3; i++) {
+        for(int i=0; i<5; i++) {
             logger.info("doTestPartitioning: --------------------------------");
             logger.info("doTestPartitioning: doing pinging with hhSlow now...");
             logger.info("doTestPartitioning: --------------------------------");
