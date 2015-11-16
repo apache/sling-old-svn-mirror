@@ -79,7 +79,7 @@ public class ContentDispositionFilter implements Filter {
     @Property(boolValue = DEFAULT_ENABLE_CONTENT_DISPOSTION_ALL_PATHS ,
               label = "Enable Content Disposition for all paths",
               description ="This flag controls whether to enable" +
-                      " Content Disposition for all paths.")
+                      " Content Disposition for all paths, except for the excluded paths defined by sling.content.disposition.excluded.paths")
     private static final String PROP_ENABLE_CONTENT_DISPOSTION_ALL_PATHS = "sling.content.disposition.all.paths";
    
     /**
