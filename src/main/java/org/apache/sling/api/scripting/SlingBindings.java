@@ -27,6 +27,7 @@ import javax.annotation.CheckForNull;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.slf4j.Logger;
 
 /**
@@ -98,6 +99,24 @@ public class SlingBindings extends HashMap<String, Object> {
      * actually evaluating the script.
      */
     public static final String RESOURCE = "resource";
+
+    /**
+     * <p>
+     * The name of the global scripting variable providing the
+     * {@link org.apache.sling.api.resource.ResourceResolver} object (value is
+     * "resolver"). The value of the scripting variable is the same as that
+     * returned by the {@code SlingScriptHelper.getRequest().getResourceResolver()}
+     * method.
+     * </p>
+     * <p>
+     * This bound variable is optional. If existing, the resource resolver must be
+     * bound to the same resolver as returned by the {@code
+     * SlingHttpServletRequest.getResource().getResourceResolver} method. If this
+     * variable is not bound, the script implementation will bind it before actually
+     * evaluating the script.
+     * </p>
+     */
+    public static final String RESOLVER = "resolver";
 
     /**
      * The name of the global scripting variable providing the
@@ -267,6 +286,24 @@ public class SlingBindings extends HashMap<String, Object> {
      */
     public @CheckForNull Resource getResource() {
         return this.get(RESOURCE, Resource.class);
+    }
+
+    /**
+     * Sets the {@link #RESOLVER} property to the provided {@code resourceResolver} if not {@code null}.
+     * @param resourceResolver the Resource Resolver
+     */
+    public void setResourceResolver(ResourceResolver resourceResolver) {
+        this.safePut(RESOLVER, resourceResolver);
+    }
+
+    /**
+     * Returns the {@link #RESOLVER} property if not <code>null</code> and a
+     * <code>ResourceResolver</code> instance. Otherwise <code>null</code> is
+     * returned.
+     * @return the bound {@link ResourceResolver} if one exists, <code>null</code> otherwise
+     */
+    public @CheckForNull ResourceResolver getResourceResolver() {
+        return this.get(RESOLVER, ResourceResolver.class);
     }
 
     /**
