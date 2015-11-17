@@ -26,7 +26,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.discovery.TopologyEvent.Type;
-import org.apache.sling.discovery.base.its.setup.VirtualInstance;
 import org.apache.sling.discovery.base.its.setup.VirtualInstanceBuilder;
 import org.apache.sling.discovery.base.its.setup.mock.AssertingTopologyEventListener;
 import org.apache.sling.discovery.impl.setup.FullJR2VirtualInstance;
@@ -85,7 +84,7 @@ public class RepositoryDelaysTest {
     @Test
     public void testSlowSessionSaves() throws Exception {
         VirtualInstanceBuilder builder1 = newBuilder();
-        VirtualInstance instance1 = builder1
+        instance1 = (FullJR2VirtualInstance) builder1
                 .setDebugName("firstInstance")
                 .newRepository("/var/discovery/impl/", true)
                 .setMinEventDelay(0)
@@ -93,7 +92,7 @@ public class RepositoryDelaysTest {
                 .setConnectorPingTimeout(3)
                 .build();
         VirtualInstanceBuilder builder2 = newBuilder();
-        VirtualInstance instance2 = builder2
+        instance2 = (FullJR2VirtualInstance) builder2
                 .setDebugName("secondInstance")
                 .useRepositoryOf(instance1)
                 .setMinEventDelay(0)
