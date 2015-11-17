@@ -551,7 +551,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
             // although the resource should not exist (according to the first test
             // above)
             // we do a sanety check.
-			final Resource child = resource.getChild(name);
+            final Resource child = resource.getChild(name);
             if (child != null && !ResourceUtil.isSyntheticResource(child)) {
                 resource = child;
                 updateNodeType(resolver, resource.getPath(), reqProperties, changes, versioningConfiguration);
