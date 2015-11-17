@@ -376,8 +376,8 @@
   </feature>
   <!-- Apache Tika -->
   <feature name="tika-sling" version="${feature.version}">
-    <bundle>mvn:org.apache.tika/tika-core/1.10</bundle>
-    <bundle>mvn:org.apache.tika/tika-bundle/1.10</bundle>
+    <bundle>mvn:org.apache.tika/tika-core/${org.apache.tika.version}</bundle>
+    <bundle>mvn:org.apache.tika/tika-bundle/${org.apache.tika.version}</bundle>
   </feature>
   <!-- Apache Sling Auth (contrib) -->
   <feature name="sling-auth-openid" version="${feature.version}">
