@@ -21,6 +21,7 @@ package org.apache.sling.discovery.impl.setup;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.ObservationManager;
@@ -41,8 +42,12 @@ import org.apache.sling.discovery.impl.cluster.ClusterViewServiceImpl;
 import org.apache.sling.discovery.impl.cluster.voting.VotingHandler;
 import org.apache.sling.discovery.impl.common.heartbeat.HeartbeatHandler;
 import org.apache.sling.discovery.impl.common.resource.EstablishedInstanceDescription;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FullJR2VirtualInstanceBuilder extends VirtualInstanceBuilder {
+
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private String path;
 
@@ -184,8 +189,21 @@ public class FullJR2VirtualInstanceBuilder extends VirtualInstanceBuilder {
     
     void stopVoting() {
         if (observationListener!=null) {
+            logger.info("stopVoting: stopping voting of slingId="+getSlingId());
+            if (observationManager != null) {
+                logger.info("stop: removing listener for slingId="+getSlingId()+": "+observationListener);
+                try {
+                    observationManager.removeEventListener(observationListener);
+                } catch (RepositoryException e) {
+                    logger.error("stopVoting: could not remove listener for slingId="+getSlingId()+": "+observationListener+", "+e, e);
+                }
+            }
+            logger.info("stopVoting: stopping observation listener of slingId="+getSlingId());
             observationListener.stop();
             observationListener = null;
+            logger.info("stopVoting: stopped observation listener of slingId="+getSlingId());
+        } else {
+            logger.info("stopVoting: observation listener was null for slingId="+getSlingId());
         }
     }
 
@@ -245,15 +263,23 @@ public class FullJR2VirtualInstanceBuilder extends VirtualInstanceBuilder {
     
     @Override
     protected void resetRepo() throws Exception {
+        logger.info("resetRepo: start, logging in");
         Session l = RepositoryProvider.instance().getRepository()
                 .loginAdministrative(null);
         try {
+            logger.info("resetRepo: removing '/var' ...");
             l.removeItem("/var");
+            logger.info("resetRepo: saving...");
             l.save();
+            logger.info("resetRepo: logging out...");
             l.logout();
+            logger.info("resetRepo: done.");
         } catch (Exception e) {
+            logger.error("resetRepo: Exception while trying to remove /var: "+e, e);
             l.refresh(false);
+            logger.info("resetRepo: logging out after exception");
             l.logout();
+            logger.info("resetRepo: done after exception");
         }
     }
 
