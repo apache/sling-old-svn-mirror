@@ -31,13 +31,11 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.nodetype.NodeType;
-import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
 import org.apache.sling.api.resource.ModifiableValueMap;
-import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -103,12 +101,9 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
     throws PersistenceException, RepositoryException {
 
         final String path = response.getPath();
-		Resource resource = resolver.resolve(null, path);
+        final Resource resource = resolver.resolve(path);
 
-		/*if(ResourceUtil.isSyntheticResource(resource)) {
-			resource = null;
-		}*/
-        if ( resource == null ) {
+        if ( resource == null || ResourceUtil.isSyntheticResource(resource) ) {
             deepGetOrCreateNode(resolver, path, reqProperties, changes, versioningConfiguration);
             response.setCreateRequest(true);
 
@@ -527,7 +522,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
                 if (startingResource == null){
                 	throw new PersistenceException("Access denied for root resource, resource can't be created: " + path);
                 }
-            } else if (resolver.getResource(startingResourcePath) != null && !ResourceUtil.isSyntheticResource(resolver.getResource(startingResourcePath))) {
+            } else if (!ResourceUtil.isSyntheticResource(resolver.resolve(startingResourcePath))) {
                 startingResource = resolver.getResource(startingResourcePath);
                 updateNodeType(resolver, startingResourcePath, reqProperties, changes, versioningConfiguration);
                 updateMixins(resolver, startingResourcePath, reqProperties, changes, versioningConfiguration);
@@ -541,7 +536,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
             }
         }
         // is the searched resource already existing?
-        if (startingResourcePath.length() == path.length() && !ResourceUtil.isSyntheticResource(resolver.getResource(startingResourcePath))) {
+        if (startingResourcePath.length() == path.length()) {
             return startingResource;
         }
         // create nodes
@@ -556,8 +551,9 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
             // although the resource should not exist (according to the first test
             // above)
             // we do a sanety check.
-            if (resource.getChild(name) != null && !ResourceUtil.isSyntheticResource(resource.getChild(name))) {
-                resource = resource.getChild(name);
+			final Resource child = resource.getChild(name);
+            if (child != null && !ResourceUtil.isSyntheticResource(child)) {
+                resource = child;
                 updateNodeType(resolver, resource.getPath(), reqProperties, changes, versioningConfiguration);
                 updateMixins(resolver, resource.getPath(), reqProperties, changes, versioningConfiguration);
             } else {
