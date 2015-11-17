@@ -31,6 +31,7 @@ import org.apache.sling.distribution.DistributionResponse;
 import org.apache.sling.distribution.Distributor;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.component.impl.DistributionComponentProvider;
+import org.apache.sling.distribution.common.DistributionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
