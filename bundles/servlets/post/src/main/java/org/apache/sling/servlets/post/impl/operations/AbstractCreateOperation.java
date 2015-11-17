@@ -103,7 +103,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
         final String path = response.getPath();
         final Resource resource = resolver.resolve(path);
 
-        if ( resource == null || ResourceUtil.isSyntheticResource(resource) ) {
+        if ( ResourceUtil.isSyntheticResource(resource) ) {
             deepGetOrCreateNode(resolver, path, reqProperties, changes, versioningConfiguration);
             response.setCreateRequest(true);
 
