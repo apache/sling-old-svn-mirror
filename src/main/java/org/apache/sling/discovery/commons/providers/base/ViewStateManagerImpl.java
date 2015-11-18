@@ -336,6 +336,10 @@ public class ViewStateManagerImpl implements ViewStateManager {
             if (consistencyService!=null) {
                 consistencyService.cancelSync();
             }
+            
+            if (minEventDelayHandler!=null) {
+                minEventDelayHandler.cancelDelaying();
+            }
             logger.trace("handleDeactivated: setting isChanging to false");
             isChanging = false;
             

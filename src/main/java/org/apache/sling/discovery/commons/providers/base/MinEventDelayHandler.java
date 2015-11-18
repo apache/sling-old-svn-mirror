@@ -49,6 +49,8 @@ class MinEventDelayHandler {
 
     private Lock lock;
     
+    private volatile int cancelCnt = 0;
+    
     MinEventDelayHandler(ViewStateManagerImpl viewStateManager, Lock lock,
             DiscoveryService discoveryService, Scheduler scheduler,
             long minEventDelaySecs) {
@@ -117,11 +119,17 @@ class MinEventDelayHandler {
     }
     
     private boolean triggerAsyncDelaying(BaseTopologyView newView) {
+        final int validCancelCnt = cancelCnt;
         final boolean triggered = runAfter(minEventDelaySecs /*seconds*/ , new Runnable() {
     
             public void run() {
                 lock.lock();
                 try{
+                    if (cancelCnt!=validCancelCnt) {
+                        logger.info("asyncDelay.run: got cancelled (validCancelCnt="+validCancelCnt+", cancelCnt="+cancelCnt+"), quitting.");
+                        return;
+                    }
+                    
                     // unlock the CHANGED event for any subsequent call to handleTopologyChanged()
                     isDelaying = false;
 
@@ -190,6 +198,12 @@ class MinEventDelayHandler {
     /** for testing only **/
     boolean isDelaying() {
         return isDelaying;
+    }
+
+    public void cancelDelaying() {
+        logger.info("cancelDelaying: flagging cancelCnt as invalid: "+cancelCnt);
+        cancelCnt++;
+        isDelaying = false;
     }
 
 }
