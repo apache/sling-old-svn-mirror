@@ -16,6 +16,9 @@
  */
 package org.apache.sling.junit.rules;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.sling.junit.Activator;
 import org.junit.rules.ExternalResource;
 
@@ -42,6 +45,7 @@ public abstract class TeleporterRule extends ExternalResource {
         void customize(TeleporterRule t, String options);
     }
     private String clientSetupOptions;
+    protected List<String> embeddedResourcePaths = new ArrayList<String>();
 
     /** Meant to be instantiated via {@link #forClass} */
     protected TeleporterRule() {
@@ -128,5 +132,15 @@ public abstract class TeleporterRule extends ExternalResource {
     /** If running on the server side, get an OSGi service specified by an LDAP service filter */
     public <T> T getService (Class<T> serviceClass, String ldapFilter) {
         throw new UnsupportedOperationException("This TeleporterRule does not implement getService()");
+    }
+    
+    /** Tell the concrete teleporter to embed resources, based on their path, in
+     *  the test bundle. 
+     *  @param path a path that ends with a / causes all resources found under it
+     *      to be recursively embedded as well.
+     */
+    public TeleporterRule withResources(String path) {
+        embeddedResourcePaths.add(path);
+        return this;
     }
 }
