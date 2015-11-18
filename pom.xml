@@ -68,7 +68,7 @@
                     <instructions>
                         <Bundle-SymbolicName>org.apache.sling.distribution.core</Bundle-SymbolicName>
                         <Export-Package>
-                            org.apache.sling.distribution.util,org.apache.sling.distribution.serialization,org.apache.sling.distribution.common
+                            org.apache.sling.distribution.util
                         </Export-Package>
                         <Embed-Dependency>httpasyncclient</Embed-Dependency>
                     </instructions>
