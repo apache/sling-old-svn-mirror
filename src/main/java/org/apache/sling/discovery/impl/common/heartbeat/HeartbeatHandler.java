@@ -471,7 +471,9 @@ public class HeartbeatHandler extends BaseViewChecker {
                 }
                 resetLeaderElectionId = false;
             }
+            logger.debug("issueClusterLocalHeartbeat: committing cluster-local heartbeat to repository for {}", slingId);
             resourceResolver.commit();
+            logger.debug("issueClusterLocalHeartbeat: committed cluster-local heartbeat to repository for {}", slingId);
 
             // SLING-2892: only in success case: remember the last heartbeat value written
             lastHeartbeatWritten = currentTime;
