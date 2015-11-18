@@ -117,8 +117,10 @@ public class TestMinEventDelayHandler {
         TestHelper.assertNoEvents(listener);
         // make sure the MinEventDelayHandler finds a topology when coming back from the delaying, so:
         sds.setTopoology(view2);
-        logger.info("testReactivate: waiting for async events to have been processed - max 4sec");
-        assertEquals(0, mgr.waitForAsyncEvents(4000));
+        logger.info("testReactivate: waiting for async events to have been processed - 4sec");
+        Thread.sleep(4000);
+        logger.info("testReactivate: waiting for async events to have been processed - max another 2sec");
+        assertEquals(0, mgr.waitForAsyncEvents(2000));
         logger.info("testReactivate: asserting CHANGED event");
         TestHelper.assertEvents(mgr, listener, EventHelper.newChangedEvent(view1, view2));
         
