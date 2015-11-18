@@ -19,6 +19,7 @@
 
 package org.apache.sling.distribution.packaging.impl;
 
+import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.queue.DistributionQueueEntry;
 import org.apache.sling.distribution.queue.DistributionQueueStatus;
 import org.apache.sling.distribution.serialization.DistributionPackage;
@@ -27,6 +28,10 @@ import org.apache.sling.distribution.packaging.SharedDistributionPackage;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 /**
  * Package related utility methods
@@ -116,6 +121,24 @@ public class DistributionPackageUtils {
     public static void mergeQueueEntry(DistributionPackageInfo packageInfo, DistributionQueueEntry entry) {
         packageInfo.putAll(entry.getItem());
         packageInfo.put(PACKAGE_INFO_PROPERTY_ORIGIN_QUEUE, entry.getStatus().getQueueName());
+    }
+
+
+    public static void fillInfo(DistributionPackageInfo info, DistributionRequest request) {
+        info.put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, request.getRequestType());
+        info.put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, request.getPaths());
+        info.put(DistributionPackageInfo.PROPERTY_REQUEST_DEEP_PATHS, getDeepPaths(request));
+    }
+
+    public static String[] getDeepPaths(DistributionRequest request) {
+        List<String> deepPaths = new ArrayList<String>();
+        for (String path : request.getPaths()) {
+            if (request.isDeep(path)) {
+                deepPaths.add(path);
+            }
+        }
+
+        return deepPaths.toArray(new String[0]);
     }
 
 }

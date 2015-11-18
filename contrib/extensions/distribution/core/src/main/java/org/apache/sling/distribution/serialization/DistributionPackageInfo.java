@@ -48,6 +48,12 @@ public final class DistributionPackageInfo extends ValueMapDecorator implements 
     public static String PROPERTY_REQUEST_PATHS = "request.paths";
 
     /**
+     * distribution request deep paths
+     */
+    public static String PROPERTY_REQUEST_DEEP_PATHS = "request.deepPaths";
+
+
+    /**
      * distribution request type
      */
     public static String PROPERTY_REQUEST_TYPE = "request.type";
@@ -105,8 +111,9 @@ public final class DistributionPackageInfo extends ValueMapDecorator implements 
     @Override
     public String toString() {
         return "DistributionPackageInfo{" +
-                " request.type=" + getRequestType() +
-                ", request.paths=" + Arrays.toString(getPaths()) +
+                " request.type=" + get(PROPERTY_REQUEST_TYPE, DistributionRequestType.class) +
+                ", request.paths=" + Arrays.toString(get(PROPERTY_REQUEST_PATHS, String[].class)) +
+                ", request.deepPaths=" + Arrays.toString(get(PROPERTY_REQUEST_DEEP_PATHS, String[].class)) +
                 '}';
     }
 }

@@ -43,6 +43,7 @@ import org.apache.sling.distribution.DistributionResponse;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.agent.DistributionAgentState;
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
+import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.event.DistributionEventTopics;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.impl.CompositeDistributionResponse;
@@ -123,10 +124,8 @@ public class SimpleDistributionAgent implements DistributionAgent {
         this.slingRepository = slingRepository;
         this.log = log;
         this.allowedRequests = allowedRequests;
-        this.allowedRoots = allowedRoots;
         this.processingQueues = processingQueues;
         this.retryAttempts = retryAttempts;
-        this.impersonateUser = subServiceName == null;
 
         // check configuration is valid
         if (name == null
@@ -150,10 +149,12 @@ public class SimpleDistributionAgent implements DistributionAgent {
             throw new IllegalArgumentException("all arguments are required: " + errorMessage);
         }
 
-        this.subServiceName = subServiceName;
+        this.allowedRoots = SettingsUtils.removeEmptyEntries(allowedRoots);
+        this.subServiceName = SettingsUtils.removeEmptyEntry(subServiceName);
+        this.impersonateUser = this.subServiceName == null;
         this.distributionRequestAuthorizationStrategy = distributionRequestAuthorizationStrategy;
         this.resourceResolverFactory = resourceResolverFactory;
-        this.name = name;
+        this.name = SettingsUtils.removeEmptyEntry(name);
         this.queueProcessingEnabled = queueProcessingEnabled;
         this.distributionPackageImporter = distributionPackageImporter;
         this.distributionPackageExporter = distributionPackageExporter;
@@ -212,7 +213,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
     }
 
     private List<DistributionPackage> exportPackages(ResourceResolver agentResourceResolver, DistributionRequest distributionRequest) throws DistributionException {
-        log.info("exporting packages for user {}", agentResourceResolver != null ?  agentResourceResolver.getUserID() : "dummy");
+        log.info("exporting packages with user {}", agentResourceResolver != null ?  agentResourceResolver.getUserID() : "dummy");
 
         List<DistributionPackage> distributionPackages = distributionPackageExporter.exportPackages(agentResourceResolver, distributionRequest);
 
@@ -408,7 +409,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
                     DistributionPackageUtils.releaseOrDelete(distributionPackage, queueName);
                 }
 
-                log.info("processed package {} with info {} from queue {}", distributionPackage.getId(), distributionPackage.getInfo(), queueName);
+                log.info("processed queue {} package {} with info {}", queueName, distributionPackage.getId(), distributionPackage.getInfo());
             } else {
                 success = true; // return success if package does not exist in order to clear the queue.
                 log.error("distribution package with id {} does not exist. the package will be skipped.", queueItem.getId());
@@ -552,8 +553,8 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
                 return success;
 
-            } catch (Throwable e) {
-                log.error("queue {} error while processing item {}", queueName, queueItem);
+            } catch (Throwable t) {
+                log.error("queue {} error while processing item {} {}", new Object[] { queueName, queueItem, t} );
                 return false;
             }
         }

@@ -29,6 +29,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
@@ -74,8 +75,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
             throw new DistributionException("unknown action type " + request.getRequestType());
         }
 
-        distributionPackage.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, request.getRequestType());
-        distributionPackage.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, request.getPaths());
+        DistributionPackageUtils.fillInfo(distributionPackage.getInfo(), request);
 
         return distributionPackage;
     }

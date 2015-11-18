@@ -84,7 +84,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
         URI packageOrigin = distributionPackage.getInfo().get(PACKAGE_INFO_PROPERTY_ORIGIN_URI, URI.class);
 
         if (packageOrigin != null && hostAndPort.equals(getHostAndPort(packageOrigin))) {
-            log.info("skipping distribution of package {} to same origin {}", distributionPackage.getId(), hostAndPort);
+            log.debug("skipping distribution of package {} to same origin {}", distributionPackage.getId(), hostAndPort);
         } else {
 
 
@@ -93,9 +93,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
 
                 DistributionTransportSecret secret = secretProvider.getSecret(distributionEndpoint.getUri());
 
-                log.info("delivering package {} to {} with user {}", distributionPackage.getId(),
-                        distributionEndpoint.getUri(),
-                        secret.asCredentialsMap().get(USERNAME));
+                log.debug("delivering package {} to {} with user {}", distributionPackage.getId(), distributionEndpoint.getUri(), secret.asCredentialsMap().get(USERNAME));
 
                 executor = authenticate(secret, executor);
 
@@ -113,9 +111,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
                 }
 
                 Content content = response.returnContent();
-                log.info("delivered package {} of type {} with paths {}", distributionPackage.getId(),
-                        distributionPackage.getType(),
-                        Arrays.toString(distributionPackage.getInfo().getPaths()));
+                log.debug("delivered package {} to {}", distributionPackage.getId(), distributionEndpoint.getUri());
             } catch (Throwable ex) {
                 throw new DistributionException(ex);
             }
