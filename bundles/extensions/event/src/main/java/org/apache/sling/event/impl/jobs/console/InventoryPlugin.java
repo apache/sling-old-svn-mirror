@@ -88,8 +88,6 @@ public class InventoryPlugin implements InventoryPrinter {
             case ORDERED : return "Ordered";
             case TOPIC_ROUND_ROBIN : return "Topic Round Robin";
             case UNORDERED : return "Parallel";
-            case _UNSUPPORTED_1 : return "????";
-            case _UNSUPPORTED_2 : return "????";
         }
         return type.toString();
     }

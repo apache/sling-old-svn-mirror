@@ -219,10 +219,6 @@ public class InternalQueueConfiguration
      * If it is invalid, it is ignored.
      */
     private boolean checkIsValid() {
-        if ( type == Type._UNSUPPORTED_1 || type == Type._UNSUPPORTED_2 ) {
-            logger.error("Queue is using unsupported queue type. Ignoring queue " + name + " with type " + type);
-            return false;
-        }
         if ( type == null ) {
             return false;
         }
