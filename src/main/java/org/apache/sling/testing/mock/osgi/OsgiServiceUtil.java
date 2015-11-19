@@ -29,10 +29,10 @@ import java.util.SortedSet;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.OsgiMetadata;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.Reference;
+import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.ReferenceCardinality;
+import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.ReferencePolicy;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
