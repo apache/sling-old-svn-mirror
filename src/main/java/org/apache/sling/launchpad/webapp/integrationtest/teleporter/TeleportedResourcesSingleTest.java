@@ -38,7 +38,7 @@ public class TeleportedResourcesSingleTest {
     public final TeleporterRule teleporter = 
         TeleporterRule
             .forClass(getClass(), "Launchpad")
-            .withResources("/teleporter/file2.txt");
+            .withResources("/teleporter/file2.txt","/teleporter/subfolder/thirdfile.txt");
     
     private void assertResource(String path, String expected) throws IOException {
         final InputStream is = getClass().getResourceAsStream(path);
@@ -64,6 +64,6 @@ public class TeleportedResourcesSingleTest {
     
     @Test
     public void testFile3() throws IOException {
-        assertNull(getClass().getResource("/teleporter/subfolder/thirdfile.txt"));
+        assertResource("/teleporter/subfolder/thirdfile.txt", "The third file");
     }
 }
