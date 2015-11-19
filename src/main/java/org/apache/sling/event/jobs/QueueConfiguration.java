@@ -32,9 +32,7 @@ public interface QueueConfiguration {
     static enum Type {
         UNORDERED,          // unordered, parallel processing (push)
         ORDERED,            // ordered, FIFO (push)
-        TOPIC_ROUND_ROBIN,  // unordered, parallel processing, executed based on topic (push)
-        _UNSUPPORTED_1,     // This queue type is not supported anymore
-        _UNSUPPORTED_2      // This queue type is not supported anymore
+        TOPIC_ROUND_ROBIN   // unordered, parallel processing, executed based on topic (push)
     }
 
     /**
