@@ -127,6 +127,7 @@ public class VotingView extends View {
 
             resourceResolver.create(membersResource, memberId, properties);
         }
+        logger.debug("newVoting: committing new voting: newViewId="+newViewId+", initiatorId="+initiatorId+", resource="+votingResource+", #members: "+liveInstances.size()+", members: "+liveInstances);
         resourceResolver.commit();
         logger.info("newVoting: new voting started: newViewId="+newViewId+", initiatorId="+initiatorId+", resource="+votingResource+", #members: "+liveInstances.size()+", members: "+liveInstances);
         return new VotingView(votingResource);
