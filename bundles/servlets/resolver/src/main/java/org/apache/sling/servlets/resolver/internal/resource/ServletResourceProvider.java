@@ -24,24 +24,27 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.servlet.Servlet;
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceProvider;
-import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.spi.resource.provider.ResolverContext;
+import org.apache.sling.spi.resource.provider.ResourceContext;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
 
-public class ServletResourceProvider implements ResourceProvider {
+public class ServletResourceProvider extends ResourceProvider<Object> {
 
     private static final Iterator<Resource> EMPTY_ITERATOR = new Iterator<Resource>() {
 
+        @Override
         public boolean hasNext() {
             return false;
         }
 
+        @Override
         public Resource next() {
             throw new NoSuchElementException();
         }
 
+        @Override
         public void remove() {
             throw new UnsupportedOperationException();
         }
@@ -59,22 +62,19 @@ public class ServletResourceProvider implements ResourceProvider {
         this.servlet = servlet;
     }
 
-    public Resource getResource(ResourceResolver resourceResolver,
-            HttpServletRequest request, String path) {
-        return getResource(resourceResolver, path);
-    }
-
-    public Resource getResource(ResourceResolver resourceResolver, String path) {
+    @Override
+    public Resource getResource(final ResolverContext<Object> ctx, String path, ResourceContext resourceContext, Resource parent) {
         // only return a resource if the servlet has been assigned
         if (servlet != null && resourcePaths.contains(path)) {
-            return new ServletResource(resourceResolver, servlet, path);
+            return new ServletResource(ctx.getResourceResolver(), servlet, path);
         }
 
         return null;
     }
 
-    public Iterator<Resource> listChildren(final Resource parent) {
-        return EMPTY_ITERATOR;
+    @Override
+    public Iterator<Resource> listChildren(ResolverContext<Object> ctx, Resource parent) {
+        return null;
     }
 
     Servlet getServlet() {

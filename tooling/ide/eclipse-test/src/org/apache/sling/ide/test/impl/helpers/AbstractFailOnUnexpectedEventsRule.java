@@ -41,7 +41,7 @@ public abstract class AbstractFailOnUnexpectedEventsRule implements EventHandler
 
     private static final int SETTLE_TIMEOUT_MILLIS = 500;
     private ServiceRegistration<EventHandler> registration;
-    private final List<Event> unexpectedEvents = new CopyOnWriteArrayList<Event>();
+    private final List<Event> unexpectedEvents = new CopyOnWriteArrayList<>();
 
     public Statement apply(Statement base, Description description) {
         return statement(base);
@@ -63,7 +63,7 @@ public abstract class AbstractFailOnUnexpectedEventsRule implements EventHandler
 
     protected void before() {
     
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        Dictionary<String, Object> props = new Hashtable<>();
         props.put("event.topics", "org/apache/sling/ide/transport");
         registration = Activator.getDefault().getBundle().getBundleContext()
                 .registerService(EventHandler.class, this, props);

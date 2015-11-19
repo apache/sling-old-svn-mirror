@@ -40,13 +40,7 @@ public class Poller {
             try {
                 r.run();
                 break;
-            } catch (RuntimeException e) {
-                lastError = e;
-                // skip
-            } catch (AssertionFailedError e) {
-                lastError = e;
-                // skip
-            } catch (AssertionError e) {
+            } catch (RuntimeException| AssertionError e) {
                 lastError = e;
                 // skip
             }

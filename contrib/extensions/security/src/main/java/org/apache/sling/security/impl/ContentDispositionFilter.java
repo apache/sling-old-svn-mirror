@@ -79,7 +79,7 @@ public class ContentDispositionFilter implements Filter {
     @Property(boolValue = DEFAULT_ENABLE_CONTENT_DISPOSTION_ALL_PATHS ,
               label = "Enable Content Disposition for all paths",
               description ="This flag controls whether to enable" +
-                      " Content Disposition for all paths.")
+                      " Content Disposition for all paths, except for the excluded paths defined by sling.content.disposition.excluded.paths")
     private static final String PROP_ENABLE_CONTENT_DISPOSTION_ALL_PATHS = "sling.content.disposition.all.paths";
    
     /**
@@ -211,10 +211,13 @@ public class ContentDispositionFilter implements Filter {
         
         /** The current request. */
         private final SlingHttpServletRequest request;
+        
+        private final Resource resource;
 
         public RewriterResponse(SlingHttpServletRequest request, SlingHttpServletResponse wrappedResponse) {
             super(wrappedResponse);            
             this.request = request;
+            this.resource = request.getResource();
         }
         
         /**
@@ -228,7 +231,7 @@ public class ContentDispositionFilter implements Filter {
                     return;
                 }
                 request.setAttribute(ATTRIBUTE_NAME, type);
-                Resource resource = request.getResource();
+                
                 String resourcePath = resource.getPath();
 
                 if (!contentDispositionExcludedPaths.contains(resourcePath)) {

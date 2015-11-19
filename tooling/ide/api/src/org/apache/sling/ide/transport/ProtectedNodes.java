@@ -24,8 +24,7 @@ public enum ProtectedNodes {
 	
 	JCR_CREATED(Repository.JCR_CREATED),JCR_CREATED_BY(Repository.JCR_CREATED_BY),JCR_PRIMARY_TYPE(Repository.JCR_PRIMARY_TYPE);
 
-	private static final Map<String, ProtectedNodes> nameToValueMap =
-			new HashMap<String, ProtectedNodes>();
+	private static final Map<String, ProtectedNodes> nameToValueMap = new HashMap<>();
 
 	static {
 		for (ProtectedNodes value : EnumSet.allOf(ProtectedNodes.class)) {			 

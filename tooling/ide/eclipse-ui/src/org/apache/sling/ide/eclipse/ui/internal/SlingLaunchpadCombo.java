@@ -65,14 +65,11 @@ public class SlingLaunchpadCombo {
         repositoryCombo.removeAll();
         List<IServer> servers = project != null ? SelectionUtils.getServersLinkedToProject(project, monitor) : Arrays
                 .asList(ServerCore.getServers());
-        if (servers.size() > 1) {
-            repositoryCombo.add(""); // force selection only if there is more than one server
-        }
         for (IServer server : servers) {
             repositoryCombo.add(server.getId());
         }
 
-        if (servers.size() == 1) {
+        if (servers.size() > 0) {
             repositoryCombo.select(0);
         }
     }

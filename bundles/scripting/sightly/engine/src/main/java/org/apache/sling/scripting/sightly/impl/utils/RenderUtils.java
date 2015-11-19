@@ -37,9 +37,12 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.scripting.sightly.Record;
-import org.apache.sling.scripting.sightly.SightlyException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RenderUtils {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RenderUtils.class);
 
     public static final String TO_STRING_METHOD = "toString";
     public static final String PROPERTY_ACCESS = "resolveProperty";
@@ -108,6 +111,7 @@ public class RenderUtils {
      * @param object - the target object
      * @return - a map representation of the object. Default is an empty map
      */
+    @SuppressWarnings("unchecked")
     public static Map toMap(Object object) {
         if (object instanceof Map) {
             return (Map) object;
@@ -242,11 +246,7 @@ public class RenderUtils {
             return ((Iterator<?>) obj).hasNext();
         }
 
-        if (obj instanceof Object[]) {
-            return ((Object[]) obj).length > 0;
-        }
-
-        return true;
+        return !(obj instanceof Object[]) || ((Object[]) obj).length > 0;
     }
 
     private static Object getIndex(Object obj, int index) {
@@ -282,11 +282,11 @@ public class RenderUtils {
     }
 
     private static Object getObjectProperty(Object obj, String property) {
-        try {
-            return getObjectNoArgMethod(obj, property);
-        } catch (NoSuchMethodException nsmex) {
-            return getField(obj, property);
+        Object result = getObjectNoArgMethod(obj, property);
+        if (result == null) {
+            result = getField(obj, property);
         }
+        return result;
     }
 
     private static Object getField(Object obj, String property) {
@@ -303,18 +303,21 @@ public class RenderUtils {
         }
     }
 
-    private static Object getObjectNoArgMethod(Object obj, String property) throws NoSuchMethodException {
+    private static Object getObjectNoArgMethod(Object obj, String property) {
         Class<?> cls = obj.getClass();
         Method method = findMethod(cls, property);
-        try {
+        if (method != null) {
             method = extractMethodInheritanceChain(cls, method);
-            return method.invoke(obj);
-        } catch (Exception e) {
-            throw new SightlyException(e);
+            try {
+                return method.invoke(obj);
+            } catch (Exception e) {
+                LOGGER.error("Cannot access method " + property + " on object " + obj.toString(), e);
+            }
         }
+        return null;
     }
 
-    private static Method findMethod(Class<?> cls, String baseName) throws NoSuchMethodException {
+    private static Method findMethod(Class<?> cls, String baseName) {
         Method[] publicMethods = cls.getMethods();
         String capitalized = StringUtils.capitalize(baseName);
         for (Method m : publicMethods) {
@@ -329,13 +332,13 @@ public class RenderUtils {
                         return m;
                     }
 
-                    // method would match but is not allwed, abort
+                    // method would match but is not allowed, abort
                     break;
                 }
             }
         }
 
-        throw new NoSuchMethodException(baseName);
+        return null;
     }
 
     private static boolean isMethodAllowed(Method method) {
@@ -364,7 +367,7 @@ public class RenderUtils {
 
     private static final Set<Class<?>> primitiveClasses = primitiveClasses();
 
-    private static boolean isPrimitive(Object obj) {
+    public static boolean isPrimitive(Object obj) {
         return primitiveClasses.contains(obj.getClass());
     }
 

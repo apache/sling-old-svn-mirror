@@ -18,6 +18,7 @@
  */
 package org.apache.sling.distribution.serialization.impl.vlt;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.io.InputStream;
 import java.util.Map;
@@ -37,10 +38,9 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
-import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.serialization.DistributionPackageBuildingException;
-import org.apache.sling.distribution.serialization.DistributionPackageReadingException;
 import org.apache.sling.distribution.serialization.impl.ResourceSharedDistributionPackageBuilder;
 
 /**
@@ -108,12 +108,6 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
     @Property(label = "Temp Filesystem Folder", description = "The filesystem folder where the temporary files should be saved.")
     public static final String TEMP_FS_FOLDER = "tempFsFolder";
 
-    /**
-     * Temp file folder
-     */
-    @Property(label = "Temp JCR Folder", description = "The jcr folder where the temporary files should be saved")
-    public static final String TEMP_JCR_FOLDER = "tempJcrFolder";
-
     @Reference
     private Packaging packaging;
 
@@ -132,7 +126,6 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
         String[] packageFilters = SettingsUtils.removeEmptyEntries(PropertiesUtil.toStringArray(config.get(PACKAGE_FILTERS), null));
 
         String tempFsFolder = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(TEMP_FS_FOLDER), null));
-        String tempJcrFolder = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(TEMP_JCR_FOLDER), null));
 
         ImportMode importMode = null;
         if (importModeString != null) {
@@ -147,7 +140,7 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
         if ("filevlt".equals(type)) {
             packageBuilder = new ResourceSharedDistributionPackageBuilder(new FileVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, packageFilters, tempFsFolder));
         } else {
-            packageBuilder = new ResourceSharedDistributionPackageBuilder(new JcrVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, packageFilters, tempFsFolder, tempJcrFolder));
+            packageBuilder = new ResourceSharedDistributionPackageBuilder(new JcrVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, packageFilters, tempFsFolder));
         }
     }
 
@@ -155,19 +148,22 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
         return packageBuilder.getType();
     }
 
-    public DistributionPackage createPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionPackageBuildingException {
+    @Nonnull
+    public DistributionPackage createPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionException {
         return packageBuilder.createPackage(resourceResolver, request);
     }
 
-    public DistributionPackage readPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageReadingException {
+    @Nonnull
+    public DistributionPackage readPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
         return packageBuilder.readPackage(resourceResolver, stream);
     }
 
-    public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String id) {
+    @CheckForNull
+    public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String id) throws DistributionException {
         return packageBuilder.getPackage(resourceResolver, id);
     }
 
-    public boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageReadingException {
+    public boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException {
         return packageBuilder.installPackage(resourceResolver, distributionPackage);
     }
 }

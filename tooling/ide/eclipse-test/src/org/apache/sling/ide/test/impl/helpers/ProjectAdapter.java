@@ -82,7 +82,7 @@ public class ProjectAdapter {
 
         // get dependency to required artifacts
 
-        List<Artifact> resolvedArtifacts = new ArrayList<Artifact>(dependencies.length);
+        List<Artifact> resolvedArtifacts = new ArrayList<>(dependencies.length);
         for (MavenDependency d : dependencies) {
             resolvedArtifacts.add(MavenPlugin.getMaven().resolve(d.getGroupId(), d.getArtifactId(), d.getVersion(),
                     "jar", "", MavenPlugin.getMaven().getArtifactRepositories(), new NullProgressMonitor()));
@@ -90,7 +90,7 @@ public class ProjectAdapter {
 
         // create java project
         javaProject = JavaCore.create(project);
-        Set<IClasspathEntry> entries = new HashSet<IClasspathEntry>();
+        Set<IClasspathEntry> entries = new HashSet<>();
         entries.add(JavaRuntime.getDefaultJREContainerEntry());
         for (Artifact artifact : resolvedArtifacts) {
             entries.add(JavaCore.newLibraryEntry(Path.fromOSString(artifact.getFile().getAbsolutePath()), null, null));

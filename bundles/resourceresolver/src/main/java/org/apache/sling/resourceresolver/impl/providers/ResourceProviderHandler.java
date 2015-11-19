@@ -18,16 +18,23 @@
  */
 package org.apache.sling.resourceresolver.impl.providers;
 
+import org.apache.sling.resourceresolver.impl.providers.tree.Pathable;
+import org.apache.sling.spi.resource.provider.ProviderContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
 
-public class ResourceProviderHandler implements Comparable<ResourceProviderHandler> {
+/**
+ * Holder for a resource provider service.
+ */
+public class ResourceProviderHandler implements Comparable<ResourceProviderHandler>, Pathable {
 
     private final ResourceProviderInfo info;
 
     private final BundleContext bundleContext;
 
     private volatile ResourceProvider<?> provider;
+
+    private final ProviderContextImpl context = new ProviderContextImpl();
 
     public ResourceProviderHandler(final BundleContext bc, final ResourceProviderInfo info) {
         this.info = info;
@@ -38,28 +45,44 @@ public class ResourceProviderHandler implements Comparable<ResourceProviderHandl
         return this.info;
     }
 
-    public ResourceProvider<?> getResourceProvider() {
-        ResourceProvider<?> rp = this.provider;
-        if ( rp == null ) {
-            synchronized ( this ) {
-                if ( this.provider == null ) {
-                    this.provider = (ResourceProvider<?>) this.bundleContext.getService(this.info.getServiceReference());
-                }
-                rp = this.provider;
-            }
+    public boolean activate() {
+        this.provider = (ResourceProvider<?>) this.bundleContext.getService(this.info.getServiceReference());
+        if ( this.provider != null ) {
+            this.provider.start(context);
         }
-        return rp;
+        return this.provider != null;
+    }
+
+    public ResourceProvider<?> getResourceProvider() {
+        return this.provider;
     }
 
     public void deactivate() {
         if ( this.provider != null ) {
+            this.provider.stop();
             this.provider = null;
+            this.context.update(null, null);
             this.bundleContext.ungetService(this.info.getServiceReference());
         }
     }
 
     @Override
     public int compareTo(final ResourceProviderHandler o) {
-        return this.info.compareTo(o.info);
+        return this.getInfo().compareTo(o.getInfo());
+    }
+
+    @Override
+    public String getPath() {
+        return this.getInfo().getPath();
+    }
+
+    public void update() {
+        if ( this.provider != null ) {
+            this.provider.update(ProviderContext.EXCLUDED_PATHS_CHANGED + ProviderContext.OBSERVATION_LISTENER_CHANGED);
+        }
+    }
+
+    public ProviderContextImpl getProviderContext() {
+        return this.context;
     }
 }

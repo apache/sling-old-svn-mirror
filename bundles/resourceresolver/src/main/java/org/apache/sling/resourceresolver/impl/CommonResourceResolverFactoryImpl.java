@@ -32,7 +32,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.collections.BidiMap;
 import org.apache.sling.api.resource.LoginException;
-import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.resourceresolver.impl.console.ResourceResolverWebConsolePlugin;
@@ -41,7 +40,8 @@ import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.apache.sling.resourceresolver.impl.mapping.MapConfigurationProvider;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
-import org.apache.sling.resourceresolver.impl.tree.RootResourceProviderEntry;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,11 +79,14 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     /** Background thread handling disposing of resource resolver instances. */
     private final Thread refQueueThread;
 
+    private boolean logResourceResolverClosing = false;
+
     /**
      * Create a new common resource resolver factory.
      */
     public CommonResourceResolverFactoryImpl(final ResourceResolverFactoryActivator activator) {
         this.activator = activator;
+        this.logResourceResolverClosing = activator.shouldLogResourceResolverClosing();
         this.refQueueThread = new Thread("Apache Sling Resource Resolver Finalizer Thread") {
 
             @Override
@@ -126,10 +129,11 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
 
         // create a copy of the passed authentication info as we modify the map
         final Map<String, Object> authenticationInfo = new HashMap<String, Object>();
+        authenticationInfo.put(ResourceProvider.AUTH_ADMIN, Boolean.TRUE);
         if ( passedAuthenticationInfo != null ) {
             authenticationInfo.putAll(passedAuthenticationInfo);
             // make sure there is no leaking of service bundle and info props
-            authenticationInfo.remove(ResourceProviderFactory.SERVICE_BUNDLE);
+            authenticationInfo.remove(ResourceProvider.AUTH_SERVICE_BUNDLE);
             authenticationInfo.remove(SUBSERVICE);
         }
 
@@ -151,7 +155,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         if ( passedAuthenticationInfo != null ) {
             authenticationInfo.putAll(passedAuthenticationInfo);
             // make sure there is no leaking of service bundle and info props
-            authenticationInfo.remove(ResourceProviderFactory.SERVICE_BUNDLE);
+            authenticationInfo.remove(ResourceProvider.AUTH_SERVICE_BUNDLE);
             authenticationInfo.remove(SUBSERVICE);
         }
 
@@ -206,7 +210,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     /**
      * Inform about a closed resource resolver.
      * Make sure to remove it from the current thread context.
-     * @param resolver The resource resolver
+     * @param resourceResolverImpl The resource resolver
      * @param ctx The resource resolver context
      */
     public void unregister(final ResourceResolver resourceResolverImpl,
@@ -250,13 +254,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
             throw new LoginException("ResourceResolverFactory is deactivated.");
         }
 
-        // create context
-        final ResourceResolverContext ctx = new ResourceResolverContext(isAdmin, authenticationInfo, this.activator.getResourceAccessSecurityTracker());
-
-        // login
-        this.activator.getRootProviderEntry().loginToRequiredFactories(ctx);
-
-        return new ResourceResolverImpl(this, ctx);
+        return new ResourceResolverImpl(this, isAdmin, authenticationInfo);
     }
 
     public MapEntries getMapEntries() {
@@ -267,7 +265,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     protected void activate(final BundleContext bundleContext) {
         final Logger logger = LoggerFactory.getLogger(getClass());
         try {
-            plugin = new ResourceResolverWebConsolePlugin(bundleContext, this);
+            plugin = new ResourceResolverWebConsolePlugin(bundleContext, this, this.activator.getRuntimeService());
         } catch (final Throwable ignore) {
             // an exception here probably means the web console plugin is not
             // available
@@ -326,10 +324,6 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         return this.activator.getVirtualURLMap();
     }
 
-    public RootResourceProviderEntry getRootProviderEntry() {
-        return this.activator.getRootProviderEntry();
-    }
-
     @Override
     public int getDefaultVanityPathRedirectStatus() {
         return this.activator.getDefaultVanityPathRedirectStatus();
@@ -357,7 +351,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     public long getMaxCachedVanityPathEntries() {
         return this.activator.getMaxCachedVanityPathEntries();
     }
-    
+
     @Override
     public boolean isMaxCachedVanityPathEntriesStartup() {
         return this.activator.isMaxCachedVanityPathEntriesStartup();
@@ -405,6 +399,14 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
      */
     public boolean isLive() {
         return this.isActive.get();
+    }
+
+    public boolean shouldLogResourceResolverClosing() {
+        return logResourceResolverClosing;
+    }
+
+    public ResourceProviderTracker getResourceProviderTracker() {
+        return activator.getResourceProviderTracker();
     }
 
     /**

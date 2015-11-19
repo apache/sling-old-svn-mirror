@@ -136,7 +136,6 @@ public abstract class KarafTestSupport {
                 .unpackDirectory(new File("target/paxexam/" + getClass().getSimpleName())),
             keepRuntimeFolder(),
             logLevel(LogLevelOption.LogLevel.INFO),
-            editConfigurationFilePut("etc/org.apache.karaf.features.cfg", "serviceRequirements", "disable"), // TODO OAK-3083
             editConfigurationFilePut("etc/org.apache.karaf.features.cfg", "featuresBoot", "(aries-blueprint, bundle, config, deployer, diagnostic, feature, instance, jaas, kar, log, management, package, service, shell, shell-compat, ssh, system, wrap, eventadmin, webconsole, http, http-whiteboard)"),
             editConfigurationFilePut("etc/org.apache.karaf.management.cfg", "rmiRegistryPort", Integer.toString(rmiRegistryPort)),
             editConfigurationFilePut("etc/org.apache.karaf.management.cfg", "rmiServerPort", Integer.toString(rmiServerPort)),
@@ -146,10 +145,6 @@ public abstract class KarafTestSupport {
             mavenBundle().groupId("biz.aQute.bnd").artifactId("biz.aQute.bndlib").versionAsInProject(),
             karafTestSupportBundle()
         );
-    }
-
-    protected Option withDerby() {
-        return mavenBundle().groupId("org.apache.derby").artifactId("derby").versionAsInProject();
     }
 
 }

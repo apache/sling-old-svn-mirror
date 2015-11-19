@@ -106,6 +106,7 @@
           <module>extensions/obr</module>
           <module>extensions/distribution/api</module>
           <module>extensions/distribution/core</module>
+          <module>extensions/distribution/extensions</module>
           <module>extensions/distribution/sample</module>
           <module>extensions/distribution/it</module>
           <module>extensions/logtail</module>

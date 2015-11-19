@@ -108,9 +108,20 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     /**
      * Instantiate with default resource resolver
+     * @deprecated Please use {@link #MockSlingHttpServletRequest(BundleContext)}
+     *   and shutdown the bundle context after usage.
      */
+    @Deprecated
     public MockSlingHttpServletRequest() {
-        this(MockSling.newResourceResolver());
+        this(MockOsgi.newBundleContext());
+    }
+
+    /**
+     * Instantiate with default resource resolver
+     * @param bundleContext Bundle context
+     */
+    public MockSlingHttpServletRequest(BundleContext bundleContext) {
+        this(MockSling.newResourceResolver(bundleContext));
     }
 
     /**

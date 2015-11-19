@@ -49,6 +49,7 @@ import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.ErrorQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.MultipleQueueDispatchingStrategy;
+import org.apache.sling.distribution.queue.impl.SelectiveQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.SingleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
@@ -56,6 +57,7 @@ import org.apache.sling.distribution.transport.DistributionTransportSecretProvid
 import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyType;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.event.jobs.JobManager;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
@@ -127,6 +129,10 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
             "These queues will gather all the packages until they are removed explicitly.")
     public static final String PASSIVE_QUEUES = "passiveQueues";
 
+    @Property(cardinality = 100, label = "Selective queues", description = "List of selective queues that should used for specific paths." +
+            "The selector format is  {queuePrefix}|{mainQueueMatcher}={pathMatcher}, e.g. french|publish.*=/content/fr.*")
+    public static final String SELECTIVE_QUEUES = "selectiveQueues";
+
     @Property(options = {
             @PropertyOption(name = "none", value = "none"), @PropertyOption(name = "errorQueue", value = "errorQueue")},
             value = "none",
@@ -139,19 +145,19 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
 
 
     @Property(name = "requestAuthorizationStrategy.target", label = "Request Authorization Strategy", description = "The target reference for the DistributionRequestAuthorizationStrategy used to authorize the access to distribution process," +
-            "e.g. use target=(name=...) to bind to services by name.")
+            "e.g. use target=(name=...) to bind to services by name.", value = SettingsUtils.COMPONENT_NAME_DEFAULT)
     @Reference(name = "requestAuthorizationStrategy")
     private DistributionRequestAuthorizationStrategy requestAuthorizationStrategy;
 
 
     @Property(name = "transportSecretProvider.target", label = "Transport Secret Provider", description = "The target reference for the DistributionTransportSecretProvider used to obtain the credentials used for accessing the remote endpoints, " +
-            "e.g. use target=(name=...) to bind to services by name.")
+            "e.g. use target=(name=...) to bind to services by name.", value = SettingsUtils.COMPONENT_NAME_DEFAULT)
     @Reference(name = "transportSecretProvider")
     DistributionTransportSecretProvider transportSecretProvider;
 
 
     @Property(name = "packageBuilder.target", label = "Package Builder", description = "The target reference for the DistributionPackageBuilder used to create distribution packages, " +
-            "e.g. use target=(name=...) to bind to services by name.")
+            "e.g. use target=(name=...) to bind to services by name.", value = SettingsUtils.COMPONENT_NAME_DEFAULT)
     @Reference(name = "packageBuilder")
     private DistributionPackageBuilder packageBuilder;
 
@@ -173,6 +179,9 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
+
+    @Reference
+    private SlingRepository slingRepository;
 
 
     @Activate
@@ -205,29 +214,39 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
         String[] passiveQueues = PropertiesUtil.toStringArray(config.get(PASSIVE_QUEUES), new String[0]);
         passiveQueues = SettingsUtils.removeEmptyEntries(passiveQueues, new String[0]);
 
+        Map<String, String> selectiveQueues = PropertiesUtil.toMap(config.get(SELECTIVE_QUEUES), new String[0]);
+        selectiveQueues = SettingsUtils.removeEmptyEntries(selectiveQueues);
+
 
         DistributionPackageExporter packageExporter = new LocalDistributionPackageExporter(packageBuilder);
         DistributionQueueProvider queueProvider = new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
 
-        DistributionQueueDispatchingStrategy exportQueueStrategy = null;
-        DistributionQueueDispatchingStrategy importQueueStrategy = null;
+        DistributionQueueDispatchingStrategy exportQueueStrategy;
+        DistributionQueueDispatchingStrategy errorQueueStrategy = null;
 
         DistributionPackageImporter packageImporter = null;
         Map<String, String> importerEndpointsMap = SettingsUtils.toUriMap(config.get(IMPORTER_ENDPOINTS));
         boolean useMultipleQueues = PropertiesUtil.toBoolean(config.get(USE_MULTIPLE_QUEUES), false);
         Set<String> processingQueues = new HashSet<String>();
 
-
         if (useMultipleQueues) {
             Set<String> queuesMap = new TreeSet<String>();
             queuesMap.addAll(importerEndpointsMap.keySet());
             queuesMap.addAll(Arrays.asList(passiveQueues));
+            String[] queueNames = queuesMap.toArray(new String[queuesMap.size()]);
+
+            if (selectiveQueues != null) {
+                SelectiveQueueDispatchingStrategy dispatchingStrategy = new SelectiveQueueDispatchingStrategy(selectiveQueues, queueNames);
+                Map<String, String> queueAliases = dispatchingStrategy.getMatchingQueues(null);
+                importerEndpointsMap = SettingsUtils.expandUriMap(importerEndpointsMap, queueAliases);
+                exportQueueStrategy = dispatchingStrategy;
+            } else {
+                exportQueueStrategy = new MultipleQueueDispatchingStrategy(queueNames);
+            }
 
             processingQueues.addAll(importerEndpointsMap.keySet());
             processingQueues.removeAll(Arrays.asList(passiveQueues));
 
-            String[] queueNames = queuesMap.toArray(new String[0]);
-            exportQueueStrategy = new MultipleQueueDispatchingStrategy(queueNames);
             packageImporter = new RemoteDistributionPackageImporter(distributionLog, transportSecretProvider, importerEndpointsMap, TransportEndpointStrategyType.One);
         } else {
             exportQueueStrategy = new SingleQueueDispatchingStrategy();
@@ -237,19 +256,17 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
 
         DistributionRequestType[] allowedRequests = new DistributionRequestType[]{DistributionRequestType.ADD, DistributionRequestType.DELETE};
 
-
         String retryStrategy = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(RETRY_STRATEGY), null));
         int retryAttepts = PropertiesUtil.toInteger(config.get(RETRY_ATTEMPTS), 100);
 
-
         if ("errorQueue".equals(retryStrategy)) {
-            importQueueStrategy = new ErrorQueueDispatchingStrategy(processingQueues.toArray(new String[0]));
+            errorQueueStrategy = new ErrorQueueDispatchingStrategy(processingQueues.toArray(new String[processingQueues.size()]));
         }
-
 
         return new SimpleDistributionAgent(agentName, queueProcessingEnabled, processingQueues,
                 serviceName, packageImporter, packageExporter, requestAuthorizationStrategy,
-                queueProvider, exportQueueStrategy, importQueueStrategy, distributionEventFactory, resourceResolverFactory, distributionLog, allowedRequests, allowedRoots, retryAttepts);
+                queueProvider, exportQueueStrategy, errorQueueStrategy, distributionEventFactory, resourceResolverFactory, slingRepository,
+                distributionLog, allowedRequests, allowedRoots, retryAttepts);
 
 
     }

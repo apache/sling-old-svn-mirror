@@ -1,0 +1,9 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "impersonate-reverse",
+
+    "serviceName" : "distributionService",
+
+    "triggers.target": "(name=reverse-userGeneratedContent)"
+
+}

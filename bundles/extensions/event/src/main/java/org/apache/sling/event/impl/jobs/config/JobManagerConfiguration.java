@@ -147,9 +147,9 @@ public class JobManagerConfiguration implements TopologyEventListener {
     /** The base path for locks - ending with a slash. */
     private String locksPathWithSlash;
 
-    private long backgroundLoadDelay;
+    private volatile long backgroundLoadDelay;
 
-    private boolean disabledDistribution;
+    private volatile boolean disabledDistribution;
 
     private String storedCancelledJobsPath;
 
@@ -518,15 +518,17 @@ public class JobManagerConfiguration implements TopologyEventListener {
 
                     @Override
                     public void run() {
-                        if ( runMaintenanceTasks ) {
-                            if ( newCaps.isLeader() && newCaps.isActive() ) {
-                                mt.assignUnassignedJobs();
+                        if ( newCaps == topologyCapabilities ) {
+                            if ( runMaintenanceTasks ) {
+                                if ( newCaps.isLeader() && newCaps.isActive() ) {
+                                    mt.assignUnassignedJobs();
+                                }
                             }
-                        }
-                        // start listeners
-                        if ( newCaps.isActive() ) {
-                            synchronized ( listeners ) {
-                                notifiyListeners();
+                            // start listeners
+                            if ( newCaps.isActive() ) {
+                                synchronized ( listeners ) {
+                                    notifiyListeners();
+                                }
                             }
                         }
                     }

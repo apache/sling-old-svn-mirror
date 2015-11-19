@@ -89,7 +89,7 @@ public class ConvertProjectsPage extends WizardPage {
 
 	@SuppressWarnings("unchecked")
 	public boolean finish() {
-		resultingSelection = new LinkedList<IProject>(
+		resultingSelection = new LinkedList<>(
 				(Collection<? extends IProject>) Arrays.asList(ctv.getCheckedElements()));
 		return true;
 	}

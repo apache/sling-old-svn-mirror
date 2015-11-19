@@ -29,6 +29,8 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.discovery.base.connectors.BaseConfig;
+import org.apache.sling.discovery.commons.providers.spi.base.DiscoveryLiteConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,13 +41,19 @@ import org.slf4j.LoggerFactory;
  * The properties are described below under.
  */
 @Component(metatype = true, label="%config.name", description="%config.description")
-@Service(value = { Config.class })
-public class Config {
+@Service(value = { Config.class, BaseConfig.class, DiscoveryLiteConfig.class })
+public class Config implements BaseConfig, DiscoveryLiteConfig {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /** resource used to keep instance information such as last heartbeat, properties, incoming announcements **/
     private static final String CLUSTERINSTANCES_RESOURCE = "clusterInstances";
+
+    /** resource used to store the sync tokens as part of a topology change **/
+    private static final String SYNC_TOKEN_RESOURCE = "syncTokens";
+
+    /** resource used to store the clusterNodeIds to slingIds map **/
+    private static final String ID_MAP_RESOURCE = "idMap";
 
     /** resource used to keep the currently established view **/
     private static final String ESTABLISHED_VIEW_RESOURCE = "establishedView";
@@ -60,19 +68,19 @@ public class Config {
     public static final long DEFAULT_HEARTBEAT_TIMEOUT = 120;
     @Property(longValue=DEFAULT_HEARTBEAT_TIMEOUT)
     public static final String HEARTBEAT_TIMEOUT_KEY = "heartbeatTimeout";
-    private long heartbeatTimeout = DEFAULT_HEARTBEAT_TIMEOUT;
+    protected long heartbeatTimeout = DEFAULT_HEARTBEAT_TIMEOUT;
 
     /** Configure the interval (in seconds) according to which the heartbeats are exchanged in the topology. */
     public static final long DEFAULT_HEARTBEAT_INTERVAL = 30;
     @Property(longValue=DEFAULT_HEARTBEAT_INTERVAL)
     public static final String HEARTBEAT_INTERVAL_KEY = "heartbeatInterval";
-    private long heartbeatInterval = DEFAULT_HEARTBEAT_INTERVAL;
+    protected long heartbeatInterval = DEFAULT_HEARTBEAT_INTERVAL;
 
     /** Configure the time (in seconds) which must be passed at minimum between sending TOPOLOGY_CHANGING/_CHANGED (avoid flooding). */
     public static final int DEFAULT_MIN_EVENT_DELAY = 3;
     @Property(intValue=DEFAULT_MIN_EVENT_DELAY)
     public static final String MIN_EVENT_DELAY_KEY = "minEventDelay";
-    private int minEventDelay = DEFAULT_MIN_EVENT_DELAY;
+    protected int minEventDelay = DEFAULT_MIN_EVENT_DELAY;
 
     /** Configure the socket connect timeout for topology connectors. */
     public static final int DEFAULT_CONNECTION_TIMEOUT = 10;
@@ -166,6 +174,13 @@ public class Config {
     @Property
     private static final String BACKOFF_STABLE_FACTOR = "backoffStableFactor";
     private static final int DEFAULT_BACKOFF_STABLE_FACTOR = 5;
+    
+    /**
+     * when set to true and the syncTokenService (of discovery.commons) is available,
+     * then it is used
+     */
+    @Property(boolValue=true)
+    private static final String USE_SYNC_TOKEN_SERVICE_ENABLED = "useSyncTokenService";
 
     private String leaderElectionRepositoryDescriptor ;
 
@@ -204,6 +219,12 @@ public class Config {
     
     /** the maximum backoff factor to be used for stable connectors **/
     private int backoffStableFactor = DEFAULT_BACKOFF_STABLE_FACTOR;
+    
+    /**
+     * when set to true and the syncTokenService (of discovery.commons) is available,
+     * then it is used.
+     */
+    private boolean useSyncTokenService = true;
     
     @Activate
     protected void activate(final Map<String, Object> properties) {
@@ -317,6 +338,8 @@ public class Config {
                 DEFAULT_BACKOFF_STANDBY_FACTOR);
         backoffStableFactor = PropertiesUtil.toInteger(properties.get(BACKOFF_STABLE_FACTOR), 
                 DEFAULT_BACKOFF_STABLE_FACTOR);
+        
+        useSyncTokenService = PropertiesUtil.toBoolean(properties.get(USE_SYNC_TOKEN_SERVICE_ENABLED), true);
     }
 
     /**
@@ -339,7 +362,7 @@ public class Config {
      * Returns the socket connect() timeout used by the topology connector, 0 disables the timeout
      * @return the socket connect() timeout used by the topology connector, 0 disables the timeout
      */
-    public int getConnectionTimeout() {
+    public int getSocketConnectTimeout() {
         return connectionTimeout;
     }
 
@@ -387,12 +410,16 @@ public class Config {
         return topologyConnectorWhitelist;
     }
 
+    public String getDiscoveryResourcePath() {
+        return discoveryResourcePath;
+    }
+    
     /**
      * Returns the resource path where cluster instance informations are stored.
      * @return the resource path where cluster instance informations are stored
      */
     public String getClusterInstancesPath() {
-        return discoveryResourcePath + CLUSTERINSTANCES_RESOURCE;
+        return getDiscoveryResourcePath() + CLUSTERINSTANCES_RESOURCE;
     }
 
     /**
@@ -400,7 +427,7 @@ public class Config {
      * @return the resource path where the established view is stored
      */
     public String getEstablishedViewPath() {
-        return discoveryResourcePath + ESTABLISHED_VIEW_RESOURCE;
+        return getDiscoveryResourcePath() + ESTABLISHED_VIEW_RESOURCE;
     }
 
     /**
@@ -408,7 +435,7 @@ public class Config {
      * @return the resource path where ongoing votings are stored
      */
     public String getOngoingVotingsPath() {
-        return discoveryResourcePath + ONGOING_VOTING_RESOURCE;
+        return getDiscoveryResourcePath() + ONGOING_VOTING_RESOURCE;
     }
 
     /**
@@ -416,7 +443,7 @@ public class Config {
      * @return the resource path where the previous view is stored
      */
     public String getPreviousViewPath() {
-        return discoveryResourcePath + PREVIOUS_VIEW_RESOURCE;
+        return getDiscoveryResourcePath() + PREVIOUS_VIEW_RESOURCE;
     }
 
     /**
@@ -515,4 +542,39 @@ public class Config {
             return factor * getHeartbeatInterval();
         }
     }
+
+    @Override
+    public long getConnectorPingInterval() {
+        return getHeartbeatInterval();
+    }
+
+    @Override
+    public long getConnectorPingTimeout() {
+        return getHeartbeatTimeout();
+    }
+
+    @Override
+    public String getSyncTokenPath() {
+        return getDiscoveryResourcePath() + SYNC_TOKEN_RESOURCE;
+    }
+
+    @Override
+    public String getIdMapPath() {
+        return getDiscoveryResourcePath() + ID_MAP_RESOURCE;
+    }
+
+    @Override
+    public long getClusterSyncServiceTimeoutMillis() {
+        return -1;
+    }
+
+    @Override
+    public long getClusterSyncServiceIntervalMillis() {
+        return 1000;
+    }
+
+    public boolean useSyncTokenService() {
+        return useSyncTokenService;
+    }
+
 }

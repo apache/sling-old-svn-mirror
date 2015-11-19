@@ -25,13 +25,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.distribution.agent.DistributionAgent;
-import org.apache.sling.distribution.agent.DistributionAgentException;
 import org.apache.sling.distribution.agent.DistributionAgentState;
 import org.apache.sling.distribution.component.impl.DistributionComponent;
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.component.impl.DistributionComponentProvider;
 import org.apache.sling.distribution.log.DistributionLog;
-import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueEntry;
@@ -129,8 +128,9 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
             String queueName = queueInfo.getMainResourceName();
             Map<String, Object> result = new HashMap<String, Object>();
 
-            try {
-                DistributionQueue queue = agent.getQueue(queueName);
+            DistributionQueue queue = agent.getQueue(queueName);
+
+            if (queue != null) {
                 DistributionQueueStatus queueStatus = queue.getStatus();
                 result.put(SLING_RESOURCE_TYPE, DistributionResourceTypes.AGENT_QUEUE_RESOURCE_TYPE);
 
@@ -148,11 +148,8 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
                 result.put(ITEMS, nameList.toArray(new String[0]));
                 result.put(INTERNAL_ITEMS_PROPERTIES, propertiesMap);
                 result.put(INTERNAL_ADAPTABLE, queue);
-
-            } catch (DistributionAgentException e) {
-                // do nothing
-
             }
+
 
             return result;
 
@@ -160,17 +157,15 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
             String queueName = queueInfo.getMainResourceName();
             Map<String, Object> result = new HashMap<String, Object>();
 
-            try {
-                DistributionQueue queue = agent.getQueue(queueName);
+            DistributionQueue queue = agent.getQueue(queueName);
+
+            if (queue != null) {
                 String itemId = queueInfo.getChildResourceName();
 
                 DistributionQueueEntry entry = queue.getItem(itemId);
                 result = getItemProperties(entry);
-
-            } catch (DistributionAgentException e) {
-                // do nothing
-
             }
+
             return result;
         }
 

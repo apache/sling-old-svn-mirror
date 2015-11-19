@@ -19,7 +19,6 @@ package org.apache.sling.ide.impl.vlt;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,7 +34,7 @@ import org.apache.sling.ide.util.PathUtil;
 
 public class VltNodeTypeFactory {
 
-    private Map<String,VltNodeType> nodeTypes = new HashMap<String, VltNodeType>();
+    private Map<String,VltNodeType> nodeTypes = new HashMap<>();
     
     Map<String, VltNodeType> getNodeTypes() {
         return nodeTypes;
@@ -54,8 +53,7 @@ public class VltNodeTypeFactory {
             nodeTypes.put(nt.getName(), nt);
         }
         // phase 2: init declared fields
-        for (Iterator<VltNodeType> it = nodeTypes.values().iterator(); it.hasNext();) {
-            VltNodeType nt = it.next();
+        for (VltNodeType nt : nodeTypes.values()) {
             initDeclaredFields(nt);
         }
         
@@ -65,22 +63,19 @@ public class VltNodeTypeFactory {
         // phase 2: initialize the dependency tree (eg superTypes)
         // - this is a separate phase to make sure, all VltNodeType objects have been created (above)
         //   hence initTypeDependencyTree can assume all nodetypes exist
-        for (Iterator<VltNodeType> it = nodeTypes.values().iterator(); it.hasNext();) {
-            VltNodeType nt = it.next();
+        for (VltNodeType nt : nodeTypes.values()) {
             initTypeDependencyTree(nt);
         }
 
         // phase 3: init property definitions
-        for (Iterator<VltNodeType> it = nodeTypes.values().iterator(); it.hasNext();) {
-            VltNodeType nt = it.next();
+        for (VltNodeType nt : nodeTypes.values()) {
             final ResourceProxy child = nt.getResourceProxy();
             initPropertyDefinitions(nt);
             initProperties(nt, child);
         }
         
         // phase 4: initialize the allowed primary childnodetypes
-        for (Iterator<VltNodeType> it = nodeTypes.values().iterator(); it.hasNext();) {
-            VltNodeType nt = it.next();
+        for (VltNodeType nt : nodeTypes.values()) {
             initAllowedPrimaryChildNodeTypes(nt);
         }
     }
@@ -98,26 +93,19 @@ public class VltNodeTypeFactory {
             nt.setDeclaredSupertypes(superTypes);
         }
 
-        Set<VltNodeDefinition> nds = new HashSet<VltNodeDefinition>();
-        for (Iterator<ResourceProxy> it = child.getChildren().iterator(); it
-                .hasNext();) {
-            ResourceProxy ntChild = it.next();
+        Set<VltNodeDefinition> nds = new HashSet<>();
+        for (ResourceProxy ntChild : child.getChildren()) {
             String ntChildName = PathUtil.getName(ntChild.getPath());
             if (ntChildName.startsWith("jcr:childNodeDefinition")) {
                 VltNodeDefinition nd = handleChildNodeDefinition(ntChild);
                 nds.add(nd);
             } else if (ntChildName.startsWith("rep:residualChildNodeDefinitions")) {
                 // go through children
-                List<ResourceProxy> residualChildren = ntChild.getChildren();
-                for (Iterator it2 = residualChildren.iterator(); it2
-                        .hasNext();) {
-                    ResourceProxy residualChild = (ResourceProxy) it2
-                            .next();
-                    VltNodeDefinition nd = handleChildNodeDefinition(residualChild);
-                    nds.add(nd);
+                for (ResourceProxy residualChild : ntChild.getChildren()) {
+                    nds.add(handleChildNodeDefinition(residualChild));
                 }
             }
-        }
+      }
         nt.setDeclaredChildNodeDefinitions(nds.toArray(new NodeDefinition[0]));
         initDeclaredPropertyDefinitions(nt, child);
     }
@@ -130,11 +118,10 @@ public class VltNodeTypeFactory {
     }
     
     private void initDeclaredPropertyDefinitions(VltNodeType nt, ResourceProxy child) {
-        Map<String,VltPropertyDefinition> pds = new HashMap<String,VltPropertyDefinition>();
+        Map<String,VltPropertyDefinition> pds = new HashMap<>();
         
         // load propertyDefinition children
-        for (Iterator<ResourceProxy> it = child.getChildren().iterator(); it.hasNext();) {
-            ResourceProxy aChild = it.next();
+        for (ResourceProxy aChild : child.getChildren()) {
             String childName = PathUtil.getName(aChild.getPath());
             if (childName.startsWith("jcr:propertyDefinition")) {
                 String jcrName = (String)aChild.getProperties().get("jcr:name");
@@ -235,7 +222,7 @@ public class VltNodeTypeFactory {
     }
 
     private void initPropertyDefinitions(VltNodeType nt) {
-        Map<String,VltPropertyDefinition> pds = new HashMap<String,VltPropertyDefinition>();
+        Map<String,VltPropertyDefinition> pds = new HashMap<>();
         
         PropertyDefinition[] declaredPds = nt.getDeclaredPropertyDefinitions();
         if (declaredPds!=null) {
@@ -304,7 +291,7 @@ public class VltNodeTypeFactory {
             return;
         }
         // collect all the supertype names
-        Set<NodeType> allSuperTypes = new HashSet<NodeType>();
+        Set<NodeType> allSuperTypes = new HashSet<>();
         initSuperTypes(allSuperTypes, nt);
         nt.setSupertypes(allSuperTypes.toArray(new NodeType[0]));
     }
@@ -324,7 +311,7 @@ public class VltNodeTypeFactory {
 
     private void initAllowedPrimaryChildNodeTypes(VltNodeType nt0) throws RepositoryException {
         NodeDefinition[] declaredCihldNodeDefinitions = nt0.getDeclaredChildNodeDefinitions();
-        Set<String> allowedChildNodeTypes = new HashSet<String>();
+        Set<String> allowedChildNodeTypes = new HashSet<>();
         if (declaredCihldNodeDefinitions!=null) {
             for (int i = 0; i < declaredCihldNodeDefinitions.length; i++) {
                 NodeDefinition nodeDefinition = declaredCihldNodeDefinitions[i];

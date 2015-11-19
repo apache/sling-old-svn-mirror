@@ -18,6 +18,7 @@
  */
 package org.apache.sling.distribution.trigger.impl;
 
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.DistributionRequestType;
@@ -42,7 +43,7 @@ public class ScheduledDistributionTriggerTest {
             ScheduleOptions options = mock(ScheduleOptions.class);
             when(scheduler.NOW(-1, interval)).thenReturn(options);
             when(options.name(handler.toString())).thenReturn(options);
-            ScheduledDistributionTrigger scheduleddistributionTrigger = new ScheduledDistributionTrigger(action.name(), path, interval, scheduler);
+            ScheduledDistributionTrigger scheduleddistributionTrigger = new ScheduledDistributionTrigger(action.name(), path, interval, null, scheduler, mock(ResourceResolverFactory.class));
             scheduleddistributionTrigger.register(handler);
         }
     }
@@ -53,7 +54,7 @@ public class ScheduledDistributionTriggerTest {
             String path = "/path/to/somewhere";
             int interval = 10;
             Scheduler scheduler = mock(Scheduler.class);
-            ScheduledDistributionTrigger scheduleddistributionTrigger = new ScheduledDistributionTrigger(action.name(), path, interval, scheduler);
+            ScheduledDistributionTrigger scheduleddistributionTrigger = new ScheduledDistributionTrigger(action.name(), path, interval, null, scheduler, mock(ResourceResolverFactory.class));
             DistributionRequestHandler handlerId = mock(DistributionRequestHandler.class);
             scheduleddistributionTrigger.unregister(handlerId);
         }

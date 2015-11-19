@@ -28,6 +28,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
 
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
@@ -120,8 +121,13 @@ abstract class JcrItemResource<T extends Item> // this should be package private
         }
 
         if (result == null || result.length() == 0) {
-            //result = node.getProperty("jcr:primaryType").getString();
-            result = node.getPrimaryNodeType().getName();
+            // Do not load the relatively expensive NodeType object unless necessary. See OAK-2441 for the reason why it
+            // cannot only use getProperty here.
+            if (node.hasProperty(JcrConstants.JCR_PRIMARYTYPE)) {
+                result = node.getProperty(JcrConstants.JCR_PRIMARYTYPE).getString();
+            } else {
+                result = node.getPrimaryNodeType().getName();
+            }
         }
 
         return result;

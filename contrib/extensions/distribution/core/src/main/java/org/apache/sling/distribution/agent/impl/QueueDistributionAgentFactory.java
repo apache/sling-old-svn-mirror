@@ -43,11 +43,14 @@ import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.impl.exporter.LocalDistributionPackageExporter;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
+import org.apache.sling.distribution.queue.impl.MultipleQueueDispatchingStrategy;
+import org.apache.sling.distribution.queue.impl.SelectiveQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.SingleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.event.jobs.JobManager;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
@@ -100,19 +103,24 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
 
 
     @Property(name = "requestAuthorizationStrategy.target", label = "Request Authorization Strategy", description = "The target reference for the DistributionRequestAuthorizationStrategy used to authorize the access to distribution process," +
-            "e.g. use target=(name=...) to bind to services by name.")
+            "e.g. use target=(name=...) to bind to services by name.", value = SettingsUtils.COMPONENT_NAME_DEFAULT)
     @Reference(name = "requestAuthorizationStrategy")
     private DistributionRequestAuthorizationStrategy requestAuthorizationStrategy;
 
 
     @Property(name = "packageBuilder.target", label = "Package Builder", description = "The target reference for the DistributionPackageBuilder used to create distribution packages, " +
-            "e.g. use target=(name=...) to bind to services by name.")
+            "e.g. use target=(name=...) to bind to services by name.", value = SettingsUtils.COMPONENT_NAME_DEFAULT)
     @Reference(name = "packageBuilder")
     private DistributionPackageBuilder packageBuilder;
 
     @Property(value = DEFAULT_TRIGGER_TARGET, label = "Triggers", description = "The target reference for DistributionTrigger used to trigger distribution, " +
             "e.g. use target=(name=...) to bind to services by name.")
     public static final String TRIGGERS_TARGET = "triggers.target";
+
+    @Property(cardinality = 100, label = "Selective queues", description = "List of selective queues that should used for specific paths." +
+            "The selector format is  {queuePrefix}|{mainQueueMatcher}={pathMatcher}, e.g. french|publish.*=/content/fr.*")
+    public static final String SELECTIVE_QUEUES = "selectiveQueues";
+
 
     @Reference
     private Packaging packaging;
@@ -128,6 +136,9 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
+
+    @Reference
+    private SlingRepository slingRepository;
 
     @Activate
     protected void activate(BundleContext context, Map<String, Object> config) {
@@ -155,17 +166,27 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
         String[] allowedRoots = PropertiesUtil.toStringArray(config.get(ALLOWED_ROOTS), null);
         allowedRoots = SettingsUtils.removeEmptyEntries(allowedRoots);
 
+
+        Map<String, String> selectiveQueues = PropertiesUtil.toMap(config.get(SELECTIVE_QUEUES), new String[0]);
+        selectiveQueues = SettingsUtils.removeEmptyEntries(selectiveQueues);
+
+
         DistributionQueueProvider queueProvider = new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
-        DistributionQueueDispatchingStrategy exportQueueStrategy = new SingleQueueDispatchingStrategy();
-        DistributionQueueDispatchingStrategy importQueueStrategy = null;
+        DistributionQueueDispatchingStrategy exportQueueStrategy = null;
+
+
+        if (selectiveQueues != null) {
+            exportQueueStrategy = new SelectiveQueueDispatchingStrategy(selectiveQueues, new String[] { DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME });
+        } else {
+            exportQueueStrategy = new SingleQueueDispatchingStrategy();
+        }
 
         DistributionPackageExporter packageExporter = new LocalDistributionPackageExporter(packageBuilder);
         DistributionRequestType[] allowedRequests = new DistributionRequestType[]{DistributionRequestType.ADD, DistributionRequestType.DELETE};
-        Set<String> processingQueues = new HashSet<String>();
-        processingQueues.addAll(exportQueueStrategy.getQueueNames());
 
-        return new SimpleDistributionAgent(agentName, false, processingQueues,
+        return new SimpleDistributionAgent(agentName, false, null,
                 serviceName, null, packageExporter, requestAuthorizationStrategy,
-                queueProvider, exportQueueStrategy, importQueueStrategy, distributionEventFactory, resourceResolverFactory, distributionLog, allowedRequests, allowedRoots, 0);
+                queueProvider, exportQueueStrategy, null, distributionEventFactory, resourceResolverFactory, slingRepository,
+                distributionLog, allowedRequests, allowedRoots, 0);
     }
 }

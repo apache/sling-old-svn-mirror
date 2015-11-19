@@ -30,6 +30,7 @@ import javax.script.SimpleBindings;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.sightly.Record;
+import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.impl.utils.RenderUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 
@@ -71,7 +72,16 @@ public abstract class RenderUnit implements Record<RenderUnit> {
     @SuppressWarnings({"unused", "unchecked"})
     protected void callUnit(RenderContext renderContext, Object templateObj, Object argsObj) {
         if (!(templateObj instanceof RenderUnit)) {
-            return;
+            if (templateObj == null) {
+                throw new SightlyException("data-sly-call: expression evaluates to null.");
+            }
+            if (RenderUtils.isPrimitive(templateObj)) {
+                throw new SightlyException("data-sly-call: primitive \"" + templateObj.toString() + "\" does not represent a Sightly " +
+                    "template.");
+            } else if (templateObj instanceof String) {
+                throw new SightlyException("data-sly-call: String '" + templateObj.toString() + "' does not represent a Sightly template.");
+            }
+            throw new SightlyException("data-sly-call: " + templateObj.getClass().getName() + " does not represent a Sightly template.");
         }
         RenderUnit unit = (RenderUnit) templateObj;
         SlingScriptHelper ssh = (SlingScriptHelper) renderContext.getBindings().get(SlingBindings.SLING);

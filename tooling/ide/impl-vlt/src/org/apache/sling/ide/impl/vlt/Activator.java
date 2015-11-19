@@ -21,7 +21,6 @@ import org.apache.sling.ide.eclipse.core.debug.PluginLoggerRegistrar;
 import org.apache.sling.ide.log.Logger;
 import org.eclipse.core.runtime.Plugin;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -41,9 +40,9 @@ public class Activator extends Plugin {
 	// The shared instance
 	private static Activator plugin;
 
-    private ServiceTracker<?, ?> tracer;
+    private ServiceTracker<Logger, Logger> tracer;
 
-    private ServiceRegistration<?> tracerRegistration;
+    private ServiceRegistration<Logger> tracerRegistration;
 
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
@@ -51,9 +50,7 @@ public class Activator extends Plugin {
 
         tracerRegistration = PluginLoggerRegistrar.register(this);
 
-        // ugh
-        ServiceReference<Object> reference = (ServiceReference<Object>) tracerRegistration.getReference();
-        tracer = new ServiceTracker<Object, Object>(context, reference, null);
+        tracer = new ServiceTracker<>(context, tracerRegistration.getReference(), null);
         tracer.open();
 	}
 

@@ -28,12 +28,14 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
+import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
-import org.apache.sling.distribution.trigger.DistributionTriggerException;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.framework.BundleContext;
 
@@ -78,15 +80,18 @@ public class PersistedJcrEventDistributionTriggerFactory implements Distribution
     @Reference
     private Scheduler scheduler;
 
+    @Reference
+    private ResourceResolverFactory resolverFactory;
+
 
     @Activate
     public void activate(BundleContext bundleContext, Map<String, Object> config) {
 
         String path = PropertiesUtil.toString(config.get(PATH), null);
-        String serviceName = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
+        String serviceName = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(SERVICE_NAME), null));
         String nuggetsPath = PropertiesUtil.toString(config.get(NUGGETS_PATH), null);
 
-        trigger = new PersistedJcrEventDistributionTrigger(repository, scheduler, path, serviceName, nuggetsPath);
+        trigger = new PersistedJcrEventDistributionTrigger(repository, scheduler, resolverFactory, path, serviceName, nuggetsPath);
         trigger.enable();
     }
 
@@ -95,11 +100,11 @@ public class PersistedJcrEventDistributionTriggerFactory implements Distribution
         trigger.disable();
     }
 
-    public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
+    public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionException {
         trigger.register(requestHandler);
     }
 
-    public void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
+    public void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionException {
         trigger.unregister(requestHandler);
     }
 }

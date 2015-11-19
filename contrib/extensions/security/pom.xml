@@ -23,12 +23,12 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
+        <version>25</version>
         <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.security</artifactId>
-    <version>1.0.17-SNAPSHOT</version>
+    <version>1.0.19-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Security</name>

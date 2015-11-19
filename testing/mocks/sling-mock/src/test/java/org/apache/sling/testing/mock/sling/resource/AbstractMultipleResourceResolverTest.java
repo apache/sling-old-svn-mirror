@@ -27,6 +27,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
+import org.junit.After;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 
@@ -43,6 +44,11 @@ public abstract class AbstractMultipleResourceResolverTest {
     
     protected ResourceResolverFactory newResourceResolerFactory() {
         return MockSling.newResourceResolverFactory(getResourceResolverType(), bundleContext);
+    }
+    
+    @After
+    public void tearDown() {
+        MockOsgi.shutdown(bundleContext);
     }
     
     @Test

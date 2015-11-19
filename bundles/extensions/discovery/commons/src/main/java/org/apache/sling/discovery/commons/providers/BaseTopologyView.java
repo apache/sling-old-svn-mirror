@@ -18,6 +18,7 @@
  */
 package org.apache.sling.discovery.commons.providers;
 
+import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.TopologyView;
 
 /**
@@ -47,6 +48,72 @@ public abstract class BaseTopologyView implements TopologyView {
      */
     public void setNotCurrent() {
         current = false;
+    }
+
+    /**
+     * Returns the id that shall be used in the syncToken
+     * by the ClusterSyncService.
+     * <p>
+     * The clusterSyncId uniquely identifies each change
+     * of the local cluster for all participating instances. 
+     * That means, all participating instances know of the 
+     * clusterSyncId and it is the same for all instances.
+     * Whenever an instance joins/leaves the cluster, this
+     * clusterSyncId must change. 
+     * <p>
+     * Since this method returns the *local* clusterSyncId,
+     * it doesn't care if a remote cluster experienced
+     * changes - it must only change when the local cluster changes.
+     * However, it *can* change when a remote cluster changes too.
+     * So the requirement is just that it changes *at least* when
+     * the local cluster changes - but implementations
+     * can opt to regard this rather as a TopologyView-ID too
+     * (ie an ID that identifies a particular incarnation
+     * of the TopologyView for all participating instances
+     * in the whole topology).
+     * <p>
+     * This id can further safely be used by the ClusterSyncService
+     * to identify a syncToken that it writes and that all
+     * other instances in the lcoal cluster wait for, before
+     * sending a TOPOLOGY_CHANGED event.
+     * <p>
+     * Note that this is obviously not to be confused
+     * with the ClusterView.getId() which is stable throughout
+     * the lifetime of a cluster.
+     */
+    public abstract String getLocalClusterSyncTokenId();
+
+    public String toShortString() {
+        StringBuffer sb = new StringBuffer();
+        for (InstanceDescription instance : getInstances()) {
+            if (sb.length()!=0) {
+                sb.append(",");
+            }
+            sb.append(instance.getSlingId());
+            sb.append("[");
+            sb.append("local=");
+            sb.append(instance.isLocal());
+            sb.append(",leader=");
+            sb.append(instance.isLeader());
+            sb.append("]");
+        }
+        return "DefaultTopologyView[current=" + isCurrent() 
+            + ", num=" + getInstances().size() 
+            + ", instances=" + sb.toString() + "]";
+    }
+
+    /**
+     * Simple getter for a particular slingId
+     * @param slingId the slingId for which to lookup the InstanceDescription
+     * @return the InstanceDescription matching the provided slingId - or null if it doesn't exist
+     */
+    public InstanceDescription getInstance(String slingId) {
+        for (InstanceDescription instance : getInstances()) {
+            if (instance.getSlingId().equals(slingId)) {
+                return instance;
+            }
+        }
+        return null;
     }
 
 }

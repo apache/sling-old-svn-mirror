@@ -16,6 +16,8 @@
  */
 package org.apache.sling.engine.impl;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
 
@@ -28,174 +30,253 @@ import org.apache.sling.engine.jmx.RequestProcessorMBean;
  */
 class RequestProcessorMBeanImpl extends StandardMBean implements RequestProcessorMBean {
 
-    // number of requests
-    private volatile long n;
-
-    // shortest request
-    private volatile long durationMsecMin;
-
-    // longest request
-    private volatile long durationMsecMax;
-
-    // sum of request durations
-    private volatile double durationMsecSumX;
-
-    // sum of squared request durations
-    private volatile double durationMsecSumX2;
-
-    private volatile int servletCallCountMin;
-
-    private volatile int servletCallCountMax;
-
-    private volatile double servletCallCountSumX;
-
-    private volatile double servletCallCountSumX2;
-
-    private volatile int peakRecursionDepthMin;
-
-    private volatile int peakRecursionDepthMax;
-
-    private volatile double peakRecursionDepthSumX;
-
-    private volatile double peakRecursionDepthSumX2;
+    private final AtomicReference<Data> dataRef = new AtomicReference<Data>(new Data());
 
     RequestProcessorMBeanImpl() throws NotCompliantMBeanException {
         super(RequestProcessorMBean.class);
-        resetStatistics();
     }
 
-    synchronized void addRequestData(final RequestData data) {
-        this.n++;
+    void addRequestData(final RequestData data) {
         
-        final long duration = data.getElapsedTimeMsec();
-        final int servletCallCount = data.getServletCallCount();
-        final int peakRecursionDepth = data.getPeakRecusionDepth();
+        // do a non-blocking busy loop and atomically set the new data
+        // the advantage of this algorithm is that there is no blocking
+        // involved
+        // 
+        // there might be some memory churn under high contention, but that
+        // remains to be seen
+        for ( ;; ) {
 
-        if (duration < this.durationMsecMin) {
-            this.durationMsecMin = duration;
-        }
-        if (duration > this.durationMsecMax) {
-            this.durationMsecMax = duration;
-        }
+            Data oldVal = dataRef.get();
+            Data newVal = new Data(oldVal, data);
 
-        this.durationMsecSumX += duration;
-        this.durationMsecSumX2 += (duration * duration);
-        
-        if (servletCallCount < this.servletCallCountMin) {
-            this.servletCallCountMin = servletCallCount;
+            boolean success = dataRef.compareAndSet(oldVal, newVal);
+            if ( success ) {
+                break;
+            }
         }
-        if (servletCallCount > this.servletCallCountMax) {
-            this.servletCallCountMax = servletCallCount;
-        }
-        this.servletCallCountSumX += servletCallCount;
-        this.servletCallCountSumX2 += (servletCallCount * servletCallCount);
-        
-        if (peakRecursionDepth < this.peakRecursionDepthMin) {
-            this.peakRecursionDepthMin = peakRecursionDepth;
-        }
-        if (peakRecursionDepth > this.peakRecursionDepthMax) {
-            this.peakRecursionDepthMax = peakRecursionDepth;
-        }
-        this.peakRecursionDepthSumX += peakRecursionDepth;
-        this.peakRecursionDepthSumX2 += (peakRecursionDepth * peakRecursionDepth);
     }
+    
+    public void resetStatistics() {
+        dataRef.set(new Data());
+    }    
 
     public long getRequestsCount() {
-        return this.n;
+        return dataRef.get().n;
     }
 
     public long getMinRequestDurationMsec() {
-        return this.durationMsecMin;
+        return dataRef.get().durationMsecMin;
     }
 
     public long getMaxRequestDurationMsec() {
-        return this.durationMsecMax;
+        return dataRef.get().durationMsecMax;
     }
 
-    public synchronized double getStandardDeviationDurationMsec() {
-        if (this.n > 1) {
-            // algorithm taken from
-            // http://de.wikipedia.org/wiki/Standardabweichung section
-            // "Berechnung fuer auflaufende Messwerte"
-            return Math.sqrt((this.durationMsecSumX2 - this.durationMsecSumX * this.durationMsecSumX / this.n) / (this.n - 1));
-        }
-
-        // single data point has no deviation
-        return 0;
+    public double getStandardDeviationDurationMsec() {
+        return dataRef.get().standardDeviationDurationMsec;
     }
 
-    public synchronized double getMeanRequestDurationMsec() {
-        if (this.n > 0) {
-            return this.durationMsecSumX / this.n;
-        } else {
-            return 0;
-        }
-    }
-
-    public synchronized void resetStatistics() {
-        this.durationMsecMin = Long.MAX_VALUE;
-        this.durationMsecMax = 0;
-        this.servletCallCountMin = Integer.MAX_VALUE;
-        this.servletCallCountMax = 0;
-        this.peakRecursionDepthMin = Integer.MAX_VALUE;
-        this.peakRecursionDepthMax = 0;
-        this.durationMsecSumX=0d;
-        this.durationMsecSumX2=0d;
-        this.peakRecursionDepthSumX=0d;
-        this.peakRecursionDepthSumX2=0d;
-        this.servletCallCountSumX=0d;
-        this.servletCallCountSumX2=0d;
-        this.n = 0;
+    public double getMeanRequestDurationMsec() {
+        return dataRef.get().meanRequestDurationMsec;
     }
 
     public int getMaxPeakRecursionDepth() {
-        return peakRecursionDepthMax;
+        return dataRef.get().peakRecursionDepthMax;
     }
 
     public int getMinPeakRecursionDepth() {
-        return peakRecursionDepthMin;
+        return dataRef.get().peakRecursionDepthMin;
     }
 
     public double getMeanPeakRecursionDepth() {
-        if (this.n > 0) {
-            return this.peakRecursionDepthSumX / this.n;
-        } else {
-            return 0;
-        }
+        return dataRef.get().meanPeakRecursionDepth;
     }
 
     public double getStandardDeviationPeakRecursionDepth() {
-        if (this.n > 1) {
-            return Math.sqrt((this.peakRecursionDepthSumX2 - this.peakRecursionDepthSumX * this.peakRecursionDepthSumX / this.n) / (this.n - 1));
-        }
-
-        // single data point has no deviation
-        return 0;
+        return dataRef.get().standardDeviationPeakRecursionDepth;
     }
 
     public int getMaxServletCallCount() {
-        return this.servletCallCountMax;
+        return dataRef.get().servletCallCountMax;
     }
 
     public int getMinServletCallCount() {
-        return this.servletCallCountMin;
+        return dataRef.get().servletCallCountMin;
     }
 
     public double getMeanServletCallCount() {
-        if (this.n > 0) {
-            return this.servletCallCountSumX / this.n;
-        } else {
-            return 0;
-        }
+        
+        return dataRef.get().meanServletCallCount;
     }
 
     public double getStandardDeviationServletCallCount() {
-        if (this.n > 1) {
-            return Math.sqrt((this.servletCallCountSumX2 - this.servletCallCountSumX * this.servletCallCountSumX / this.n) / (this.n - 1));
+        
+        return dataRef.get().standardDeviationServletCallCount;
+    }
+    
+    /**
+     * Helper class to atomically hold raw data and compute statistics
+     */
+    private static class Data {
+        
+        // number of requests
+        private final long n;
+
+        // shortest request
+        private final long durationMsecMin;
+
+        // longest request
+        private final long durationMsecMax;
+
+        // sum of request durations
+        private final double durationMsecSumX;
+
+        // sum of squared request durations
+        private final double durationMsecSumX2;
+
+        private final int servletCallCountMin;
+
+        private final int servletCallCountMax;
+
+        private final double servletCallCountSumX;
+
+        private final double servletCallCountSumX2;
+
+        private final int peakRecursionDepthMin;
+
+        private final int peakRecursionDepthMax;
+
+        private final double peakRecursionDepthSumX;
+
+        private final double peakRecursionDepthSumX2;
+
+        private final double standardDeviationDurationMsec;
+
+        private final double meanRequestDurationMsec;
+
+        private final double meanPeakRecursionDepth;
+        
+        private final double standardDeviationPeakRecursionDepth;
+        
+        private final double meanServletCallCount;
+
+        private final double standardDeviationServletCallCount;
+        
+        // computed fields
+        
+        Data() {
+            n = 0;
+            
+            durationMsecMin = Long.MAX_VALUE;
+            durationMsecMax = 0;
+            durationMsecSumX = 0;
+            durationMsecSumX2 = 0;
+            
+            servletCallCountMin = Integer.MAX_VALUE;
+            servletCallCountMax = 0;
+            servletCallCountSumX = 0;
+            servletCallCountSumX2 = 0;
+            
+            peakRecursionDepthMin = Integer.MAX_VALUE;
+            peakRecursionDepthMax = 0;
+            peakRecursionDepthSumX = 0;
+            peakRecursionDepthSumX2 = 0;
+            
+            standardDeviationDurationMsec = computeStandardDeviationDurationMsec();
+            meanRequestDurationMsec = computeMeanRequestDurationMsec();
+            meanPeakRecursionDepth = computeMeanPeakRecursionDepth();
+            standardDeviationPeakRecursionDepth = computeStandardDeviationPeakRecursionDepth();
+            meanServletCallCount = computeMeanServletCallCount();
+            standardDeviationServletCallCount = computeStandardDeviationServletCallCount();
+        }
+        
+        Data(Data other, RequestData data) {
+            if ( other == null || data == null ) {
+                throw new IllegalArgumentException("Neither 'other' nor 'data' may be null");
+            }
+            
+            final long duration = data.getElapsedTimeMsec();
+            final int servletCallCount = data.getServletCallCount();
+            final int peakRecursionDepth = data.getPeakRecusionDepth();
+
+            n = other.n + 1;
+            
+            durationMsecMin = Math.min(duration, other.durationMsecMin);
+            durationMsecMax = Math.max(duration, other.durationMsecMax);
+            durationMsecSumX = other.durationMsecSumX + duration;
+            durationMsecSumX2 = other.durationMsecSumX2 + (duration * duration);
+            
+            servletCallCountMin = Math.min(servletCallCount, other.servletCallCountMin);
+            servletCallCountMax = Math.max(servletCallCount, other.servletCallCountMax);
+            servletCallCountSumX = other.servletCallCountSumX + servletCallCount;
+            servletCallCountSumX2 = other.servletCallCountSumX2 + (servletCallCount * servletCallCount);
+            
+            peakRecursionDepthMin = Math.min(peakRecursionDepth , other.peakRecursionDepthMin);
+            peakRecursionDepthMax = Math.max(peakRecursionDepth , other.peakRecursionDepthMax);
+            peakRecursionDepthSumX = other.peakRecursionDepthSumX + peakRecursionDepth;
+            peakRecursionDepthSumX2 = other.peakRecursionDepthSumX2 + (peakRecursionDepth * peakRecursionDepth);
+            
+            standardDeviationDurationMsec = computeStandardDeviationDurationMsec();
+            meanRequestDurationMsec = computeMeanRequestDurationMsec();
+            meanPeakRecursionDepth = computeMeanPeakRecursionDepth();
+            standardDeviationPeakRecursionDepth = computeStandardDeviationPeakRecursionDepth();
+            meanServletCallCount = computeMeanServletCallCount();
+            standardDeviationServletCallCount = computeStandardDeviationServletCallCount();
         }
 
-        // single data point has no deviation
-        return 0;
+        private double computeStandardDeviationDurationMsec() {
+            if (this.n > 1) {
+                // algorithm taken from
+                // http://de.wikipedia.org/wiki/Standardabweichung section
+                // "Berechnung fuer auflaufende Messwerte"
+                return Math.sqrt((this.durationMsecSumX2 - this.durationMsecSumX * this.durationMsecSumX / this.n) / (this.n - 1));
+            }
+
+            // single data point has no deviation
+            return 0;
+        }
+
+        private double computeMeanRequestDurationMsec() {
+            if (this.n > 0) {
+                return this.durationMsecSumX / this.n;
+            } else {
+                return 0;
+            }
+        }
+        
+        private double computeMeanPeakRecursionDepth() {
+            if (this.n > 0) {
+                return this.peakRecursionDepthSumX / this.n;
+            } else {
+                return 0;
+            }
+        }
+
+        private double computeStandardDeviationPeakRecursionDepth() {
+            if (this.n > 1) {
+                return Math.sqrt((this.peakRecursionDepthSumX2 - this.peakRecursionDepthSumX * this.peakRecursionDepthSumX / this.n) / (this.n - 1));
+            }
+
+            // single data point has no deviation
+            return 0;
+        }
+        
+        private double computeMeanServletCallCount() {
+            if (this.n > 0) {
+                return this.servletCallCountSumX / this.n;
+            } else {
+                return 0;
+            }
+        }
+
+        private double computeStandardDeviationServletCallCount() {
+            if (this.n > 1) {
+                return Math.sqrt((this.servletCallCountSumX2 - this.servletCallCountSumX * this.servletCallCountSumX / this.n) / (this.n - 1));
+            }
+
+            // single data point has no deviation
+            return 0;
+        }
     }
 
 }

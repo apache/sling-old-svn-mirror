@@ -33,6 +33,7 @@ import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.vault.fs.api.ImportMode;
 import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.api.WorkspaceFilter;
@@ -47,10 +48,10 @@ import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
-import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.serialization.DistributionPackageBuildingException;
-import org.apache.sling.distribution.serialization.DistributionPackageReadingException;
+import org.apache.sling.distribution.serialization.impl.AbstractDistributionPackage;
 import org.apache.sling.distribution.serialization.impl.AbstractDistributionPackageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +59,7 @@ import org.slf4j.LoggerFactory;
 /**
  * a {@link org.apache.sling.distribution.serialization.DistributionPackageBuilder} based on Apache Jackrabbit FileVault.
  * <p/>
- * Each {@link org.apache.sling.distribution.packaging.DistributionPackage} created by {@link JcrVaultDistributionPackageBuilder} is
+ * Each {@link DistributionPackage} created by {@link JcrVaultDistributionPackageBuilder} is
  * backed by a {@link org.apache.jackrabbit.vault.packaging.JcrPackage}. 
  */
 public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPackageBuilder implements
@@ -76,7 +77,7 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
     private final File tempDirectory;
     private final TreeMap<String, PathFilterSet> filters;
 
-    public JcrVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots, String[] filterRules, String tempFilesFolder, String tempPackagesNode) {
+    public JcrVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots, String[] filterRules, String tempFilesFolder) {
         super(type);
 
         this.packaging = packaging;
@@ -84,14 +85,14 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
         this.importMode = importMode;
         this.aclHandling = aclHandling;
         this.packageRoots = packageRoots;
-        this.tempPackagesNode = tempPackagesNode;
+        this.tempPackagesNode = AbstractDistributionPackage.PACKAGES_ROOT + "/" + type + "/data";
 
         this.tempDirectory = VltUtils.getTempFolder(tempFilesFolder);
         this.filters = VltUtils.parseFilters(filterRules);
     }
 
     @Override
-    protected DistributionPackage createPackageForAdd(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionPackageBuildingException {
+    protected DistributionPackage createPackageForAdd(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionException {
         Session session = null;
         VaultPackage vaultPackage = null;
         JcrPackage jcrPackage = null;
@@ -105,16 +106,16 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
             WorkspaceFilter filter = VltUtils.createFilter(request, filters);
             ExportOptions opts = VltUtils.getExportOptions(filter, packageRoots, packageGroup, packageName, VERSION);
 
-            log.debug("assembling package {}", packageGroup + '/' + packageName + "-" + VERSION);
+            log.debug("assembling package {} user {}", packageGroup + '/' + packageName + "-" + VERSION, resourceResolver.getUserID());
 
             vaultPackage = VltUtils.createPackage(packaging.getPackageManager(), session, opts, tempDirectory);
 
             jcrPackage = uploadPackage(session, vaultPackage);
 
             return new JcrVaultDistributionPackage(getType(), jcrPackage, session);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             VltUtils.deletePackage(jcrPackage);
-            throw new DistributionPackageBuildingException(e);
+            throw new DistributionException(e);
         } finally {
             ungetSession(session);
             VltUtils.deletePackage(vaultPackage);
@@ -122,7 +123,7 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
     }
 
     @Override
-    protected DistributionPackage readPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageReadingException {
+    protected DistributionPackage readPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
         Session session = null;
         VaultPackage vaultPackage = null;
         JcrPackage jcrPackage = null;
@@ -134,9 +135,9 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
             jcrPackage = uploadPackage(session, vaultPackage);
 
             return new JcrVaultDistributionPackage(getType(), jcrPackage, session);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             VltUtils.deletePackage(jcrPackage);
-            throw new DistributionPackageReadingException(e);
+            throw new DistributionException(e);
         } finally {
             ungetSession(session);
             VltUtils.deletePackage(vaultPackage);
@@ -144,7 +145,7 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
     }
 
     @Override
-    protected boolean installPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageReadingException {
+    protected boolean installPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException {
         Session session = null;
         try {
             session = getSession(resourceResolver);
@@ -157,7 +158,7 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
 
             return true;
         } catch (Exception e) {
-            throw new DistributionPackageReadingException(e);
+            throw new DistributionException(e);
         } finally {
             ungetSession(session);
         }
@@ -187,9 +188,17 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
         PackageId packageId = getPackageId(pack);
 
         InputStream in = FileUtils.openInputStream(pack.getFile());
+
+
+
         try {
             if (packageRoot != null) {
-                JcrPackage jcrPackage = packageManager.create(packageRoot, packageId.getDownloadName());
+                String packageName = packageId.getDownloadName();
+                if (packageRoot.hasNode(packageName)) {
+                    packageRoot.getNode(packageName).remove();
+                }
+
+                JcrPackage jcrPackage = packageManager.create(packageRoot, packageName);
                 Property data = jcrPackage.getData();
                 data.setValue(in);
                 JcrPackageDefinition def = jcrPackage.getDefinition();
@@ -233,8 +242,8 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
 
     private Node getPackageRoot(Session session) throws RepositoryException {
         Node packageRoot = null;
-        if (tempPackagesNode != null && session.nodeExists(tempPackagesNode)) {
-            packageRoot = session.getNode(tempPackagesNode);
+        if (tempPackagesNode != null) {
+            packageRoot = JcrUtils.getOrCreateByPath(tempPackagesNode, "sling:Folder", "sling:Folder", session, true);
         }
         return packageRoot;
     }

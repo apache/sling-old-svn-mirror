@@ -82,6 +82,7 @@ public class RequestHistoryConsolePlugin {
             props.put(Constants.SERVICE_PID, tmp.getClass().getName());
             props.put("felix.webconsole.label", LABEL);
             props.put("felix.webconsole.title", "Recent requests");
+            props.put("felix.webconsole.category", "Sling");
 
             serviceRegistration = context.registerService(
                 "javax.servlet.Servlet", tmp, props);

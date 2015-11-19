@@ -56,7 +56,7 @@ public class JobBuilderImpl implements JobBuilder {
 
     @Override
     public Job add(final List<String> errors) {
-        return this.jobManager.addJob(this.topic, null, this.properties, errors);
+        return this.jobManager.addJob(this.topic, this.properties, errors);
     }
 
     @Override

@@ -19,7 +19,7 @@
 [feature name=launchpad-testing]
 # Dependencies
 [artifacts]
-  org.apache.sling/org.apache.sling.launchpad/8-SNAPSHOT/slingstart
+  org.apache.sling/org.apache.sling.launchpad/8/slingstart
   org.apache.sling/org.apache.sling.bgservlets/1.0.1-SNAPSHOT
 
 # additional configuration for testing

@@ -25,12 +25,15 @@ import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.ServiceUtil;
+import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;
@@ -50,9 +53,19 @@ public final class MockEventAdmin implements EventAdmin {
             cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE, policy=ReferencePolicy.DYNAMIC)
     private final Map<Object, EventHandlerItem> eventHandlers = new TreeMap<Object, EventHandlerItem>();
 
-    private ExecutorService asyncHandler = Executors.newCachedThreadPool();
+    private ExecutorService asyncHandler;
     
     private static final Logger log = LoggerFactory.getLogger(MockEventAdmin.class);
+    
+    @Activate
+    protected void activate(ComponentContext componentContext) {
+        asyncHandler = Executors.newCachedThreadPool();
+    }
+
+    @Deactivate
+    protected void deactivate(ComponentContext componentContext) {
+        asyncHandler.shutdownNow();
+    }
 
     @Override
     public void postEvent(final Event event) {

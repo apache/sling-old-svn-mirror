@@ -51,6 +51,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.i18n.ResourceBundleProvider;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -73,6 +74,11 @@ public class MockSlingHttpServletRequestTest {
     public void setUp() throws Exception {
         request = new MockSlingHttpServletRequest(resourceResolver, bundleContext);
     }
+    
+    @After
+    public void tearDown() {
+        MockOsgi.shutdown(bundleContext);
+    }
 
     @Test
     public void testResourceResolver() {
@@ -81,7 +87,7 @@ public class MockSlingHttpServletRequestTest {
 
     @Test
     public void testDefaultResourceResolver() {
-        assertNotNull(new MockSlingHttpServletRequest().getResourceResolver());
+        assertNotNull(new MockSlingHttpServletRequest(bundleContext).getResourceResolver());
     }
 
     @Test

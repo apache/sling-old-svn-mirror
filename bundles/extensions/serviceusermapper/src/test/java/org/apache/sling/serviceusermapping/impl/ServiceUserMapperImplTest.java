@@ -233,6 +233,7 @@ public class ServiceUserMapperImplTest {
         };
 
         final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
+        sum.registerAsync = false;
         final ServiceRegistrationContextHelper context = new ServiceRegistrationContextHelper();
         sum.configure(context.getBundleContext(), config);
 

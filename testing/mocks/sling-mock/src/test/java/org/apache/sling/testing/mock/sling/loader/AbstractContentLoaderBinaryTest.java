@@ -21,102 +21,78 @@ package org.apache.sling.testing.mock.sling.loader;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Hashtable;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.commons.mime.MimeTypeService;
-import org.apache.sling.testing.mock.osgi.MockOsgi;
-import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
+import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.osgi.framework.BundleContext;
 
 @RunWith(MockitoJUnitRunner.class)
 public abstract class AbstractContentLoaderBinaryTest {
 
     private static final int SAMPLE_IMAGE_FILESIZE = 62;
-
-    private BundleContext bundleContext;
-    private ResourceResolver resourceResolver;
-    private ContentLoader contentLoader;
-
-    @Mock
-    private MimeTypeService mimeTypeService;
+    
+    @Rule
+    public SlingContext context = new SlingContext(getResourceResolverType());
 
     protected abstract ResourceResolverType getResourceResolverType();
-
-    protected ResourceResolver newResourceResolver() {
-        return MockSling.newResourceResolver(getResourceResolverType());
-    }
-
+    
+    private String path;
+    
     @Before
-    public final void setUp() {
-        bundleContext = MockOsgi.newBundleContext();
-        bundleContext.registerService(MimeTypeService.class.getName(), mimeTypeService, new Hashtable());
-        resourceResolver = newResourceResolver();
-        contentLoader = new ContentLoader(this.resourceResolver, this.bundleContext);
-
-        when(mimeTypeService.getMimeType("gif")).thenReturn("image/gif");
+    public void setUp() {
+        path = context.uniqueRoot().content();
     }
 
     @After
     public final void tearDown() throws Exception {
         // make sure all changes from ContentLoader are committed
-        assertFalse(resourceResolver.hasChanges());
-        // remove everything below /content
-        Resource content = resourceResolver.getResource("/content");
-        if (content != null) {
-            resourceResolver.delete(content);
-            resourceResolver.commit();
-        }
-        resourceResolver.close();
+        assertFalse(context.resourceResolver().hasChanges());
     }
     
     @Test
     public void testBinaryFile() throws IOException {
-        contentLoader.binaryFile("/sample-image.gif", "/content/binary/sample-image.gif");
+        context.load().binaryFile("/sample-image.gif", path + "/sample-image.gif");
 
-        Resource fileResource = resourceResolver.getResource("/content/binary/sample-image.gif");
+        Resource fileResource = context.resourceResolver().getResource(path + "/sample-image.gif");
         assertSampleImageFileSize(fileResource);
         assertMimeType(fileResource.getChild(JcrConstants.JCR_CONTENT), "image/gif");
     }
 
     @Test
     public void testBinaryFileWithMimeType() throws IOException {
-        contentLoader.binaryFile("/sample-image.gif", "/content/binary/sample-image.gif", "mime/test");
+        context.load().binaryFile("/sample-image.gif", path + "/sample-image.gif", "mime/test");
 
-        Resource fileResource = resourceResolver.getResource("/content/binary/sample-image.gif");
+        Resource fileResource = context.resourceResolver().getResource(path + "/sample-image.gif");
         assertSampleImageFileSize(fileResource);
         assertMimeType(fileResource.getChild(JcrConstants.JCR_CONTENT), "mime/test");
     }
 
     @Test
     public void testBinaryResource() throws IOException {
-        contentLoader.binaryResource("/sample-image.gif", "/content/binary/sample-image.gif");
+        context.load().binaryResource("/sample-image.gif", path + "/sample-image.gif");
 
-        Resource fileResource = resourceResolver.getResource("/content/binary/sample-image.gif");
+        Resource fileResource = context.resourceResolver().getResource(path + "/sample-image.gif");
         assertSampleImageFileSize(fileResource);
         assertMimeType(fileResource, "image/gif");
     }
 
     @Test
     public void testBinaryResourceWithMimeType() throws IOException {
-        contentLoader.binaryResource("/sample-image.gif", "/content/binary/sample-image.gif", "mime/test");
+        context.load().binaryResource("/sample-image.gif", path + "/sample-image.gif", "mime/test");
 
-        Resource fileResource = resourceResolver.getResource("/content/binary/sample-image.gif");
+        Resource fileResource = context.resourceResolver().getResource(path + "/sample-image.gif");
         assertSampleImageFileSize(fileResource);
         assertMimeType(fileResource, "mime/test");
     }

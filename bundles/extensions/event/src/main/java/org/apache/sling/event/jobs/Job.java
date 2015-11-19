@@ -54,12 +54,6 @@ public interface Job {
     String PROPERTY_JOB_QUEUE_NAME = "event.job.queuename";
 
     /**
-     * @deprecated
-     */
-    @Deprecated
-    String PROPERTY_JOB_PRIORITY = "event.job.priority";
-
-    /**
      * The property to track the retry count for jobs. Value is of type Integer.
      * On first execution the value of this property is zero.
      * This property is managed by the job handling.
@@ -201,14 +195,6 @@ public interface Job {
     String getId();
 
     /**
-     * Optional job name
-     * @return The job name or <code>null</code>
-     * @deprecated
-     */
-    @Deprecated
-    String getName();
-
-    /**
      * Get the value of a property.
      * @param name The property name
      * @return The value of the property or <code>null</code>
@@ -250,13 +236,6 @@ public interface Job {
      *         non existing or can't be converted.
      */
     <T> T getProperty(String name, T defaultValue);
-
-    /**
-     * This property is not supported anymore and always returns {@link JobUtil#JobPriority.NORM}.
-     * @deprecated
-     */
-    @Deprecated
-    JobUtil.JobPriority getJobPriority();
 
     /**
      * On first execution the value of this property is zero.

@@ -84,8 +84,8 @@ import aQute.bnd.annotation.ProviderType;
  * Resource Resolver using any of the factory methods and ends with calling the
  * {@link #close()} method. It is very important to call the {@link #close()}
  * method once the resource resolver is not used any more to ensure any system
- * resources are properly cleaned up. 
- * 
+ * resources are properly cleaned up.
+ *
  * A Resource Resolver may also be closed implicitly if the {@link ResourceResolverFactory}
  * which was used to create this resolver is no longer active.
  * <p>
@@ -545,7 +545,7 @@ public interface ResourceResolver extends Adaptable, Closeable {
      * called, the resource resolver is considered unusable and will throw
      * exceptions if still used - with the exception of this method, which
      * can be called several times with no ill effects.
-     * 
+     *
      * A resource may also be closed implicitly in case when the {@link ResourceResolverFactory}
      * which was used to create this resolver is no longer active.
      *
@@ -682,7 +682,7 @@ public interface ResourceResolver extends Adaptable, Closeable {
      *
      * @param resourceType The resource type whose super type is to be returned.
      * @return the super type of the {@code resourceType} or
-     *         {@code null} if the resource given by the resource type does not exist or 
+     *         {@code null} if the resource given by the resource type does not exist or
      *         if it returns {@code null} for its super type. It also returns
      *         {@code null} if {@code resourceType} is null.
      * @throws IllegalStateException if this resource resolver has already been
@@ -727,17 +727,21 @@ public interface ResourceResolver extends Adaptable, Closeable {
      *
      * The resource at <code>destAbsPath</code> needs to exist, if not a {@code PersistenceException}
      * is thrown. If a child resource with the same name already exists at <code>destAbsPath</code>
+     * a {@code PersistenceException} is thrown. If the resource at {@code srcAbsPath} does not exist,
      * a {@code PersistenceException} is thrown.
      *
      * @param srcAbsPath  the path of the resource to be copied.
      * @param destAbsPath the location to which the resource at
      *                    <code>srcAbsPath</code> is to be copied.
+     * @return The destination resource.
      * @throws PersistenceException If an error occurs.
+     * @throws UnsupportedOperationException If one of the destination resource providers does
+     *                                       not allow to create a resource at that location.
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      * @since 2.9 (Sling API Bundle 2.10.0)
      */
-    void copy(final String srcAbsPath,
+    Resource copy(final String srcAbsPath,
               final String destAbsPath) throws PersistenceException;
 
     /**
@@ -751,16 +755,20 @@ public interface ResourceResolver extends Adaptable, Closeable {
      *
      * The resource at <code>destAbsPath</code> needs to exist, if not a {@code PersistenceException}
      * is thrown. If a child resource with the same name already exists at <code>destAbsPath</code>
+     * a {@code PersistenceException} is thrown. If the resource at {@code srcAbsPath} does not exist,
      * a {@code PersistenceException} is thrown.
      *
      * @param srcAbsPath  the path of the resource to be copied.
      * @param destAbsPath the location to which the resource at
      *                    <code>srcAbsPath</code> is to be moved.
+     * @return The destination resource.
      * @throws PersistenceException If an error occurs.
+     * @throws UnsupportedOperationException If one of the destination resource providers does
+     *                                       not allow to create a resource at that location.
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      * @since 2.9 (Sling API Bundle 2.10.0)
      */
-    void move(final String srcAbsPath,
+    Resource move(final String srcAbsPath,
               final String destAbsPath) throws PersistenceException;
 }

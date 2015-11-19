@@ -65,7 +65,6 @@ public class HttpOsgiClient implements OsgiClient {
 
         GetMethod method = new GetMethod(repositoryInfo.appendPath("system/console/bundles.json"));
         HttpClient client = getHttpClient();
-        InputStream input = null;
 
         try {
             int result = client.executeMethod(method);
@@ -73,30 +72,26 @@ public class HttpOsgiClient implements OsgiClient {
                 throw new HttpException("Got status code " + result + " for call to " + method.getURI());
             }
 
-            input = method.getResponseBodyAsStream();
+            try ( InputStream input = method.getResponseBodyAsStream() ) {
 
-            JSONObject object = new JSONObject(new JSONTokener(new InputStreamReader(input)));
-
-            JSONArray bundleData = object.getJSONArray("data");
-            for (int i = 0; i < bundleData.length(); i++) {
-                JSONObject bundle = bundleData.getJSONObject(i);
-                String remotebundleSymbolicName = bundle.getString("symbolicName");
-                Version bundleVersion = new Version(bundle.getString("version"));
-
-                if (bundleSymbolicName.equals(remotebundleSymbolicName)) {
-                    return bundleVersion;
+                JSONObject object = new JSONObject(new JSONTokener(new InputStreamReader(input)));
+    
+                JSONArray bundleData = object.getJSONArray("data");
+                for (int i = 0; i < bundleData.length(); i++) {
+                    JSONObject bundle = bundleData.getJSONObject(i);
+                    String remotebundleSymbolicName = bundle.getString("symbolicName");
+                    Version bundleVersion = new Version(bundle.getString("version"));
+    
+                    if (bundleSymbolicName.equals(remotebundleSymbolicName)) {
+                        return bundleVersion;
+                    }
                 }
+    
+                return null;
             }
-
-            return null;
-        } catch (HttpException e) {
-            throw new OsgiClientException(e);
-        } catch (IOException e) {
-            throw new OsgiClientException(e);
-        } catch (JSONException e) {
+        } catch (IOException | JSONException e) {
             throw new OsgiClientException(e);
         } finally {
-            IOUtils.closeQuietly(input);
             method.releaseConnection();
         }
     }
@@ -132,7 +127,7 @@ public class HttpOsgiClient implements OsgiClient {
             // set referrer
             filePost.setRequestHeader("referer", "about:blank");
 
-            List<Part> partList = new ArrayList<Part>();
+            List<Part> partList = new ArrayList<>();
             partList.add(new StringPart("action", "install"));
             partList.add(new StringPart("_noredir_", "_noredir_"));
             ByteArrayOutputStream baos = new ByteArrayOutputStream();

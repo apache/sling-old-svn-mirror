@@ -18,14 +18,11 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.impl.engine.extension;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Map;
-
 import javax.script.Bindings;
 import javax.servlet.Servlet;
-import javax.servlet.ServletException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
@@ -68,9 +65,6 @@ public class IncludeRuntimeExtension implements RuntimeExtension {
         String originalPath = RenderUtils.toString(arguments[0]);
         Map options = (Map) arguments[1];
         String path = buildPath(originalPath, options);
-        if (path == null) {
-            throw new SightlyException("Path for data-sly-include is empty");
-        }
         StringWriter output = new StringWriter();
         final Bindings bindings = renderContext.getBindings();
         includeScript(bindings, path, new PrintWriter(output));
@@ -98,8 +92,9 @@ public class IncludeRuntimeExtension implements RuntimeExtension {
 
     private void includeScript(final Bindings bindings, String script, PrintWriter out) {
         if (StringUtils.isEmpty(script)) {
-            LOG.error("Script path cannot be empty");
+            throw new SightlyException("Path for data-sly-include is empty");
         } else {
+            LOG.debug("Attempting to include script {}.", script);
             SlingScriptHelper slingScriptHelper = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
             ServletResolver servletResolver = slingScriptHelper.getService(ServletResolver.class);
             if (servletResolver != null) {
@@ -110,16 +105,14 @@ public class IncludeRuntimeExtension implements RuntimeExtension {
                         SlingHttpServletResponse response = (SlingHttpServletResponse) bindings.get(SlingBindings.RESPONSE);
                         PrintWriterResponseWrapper resWrapper = new PrintWriterResponseWrapper(out, response);
                         servlet.service(request, resWrapper);
-                    } catch (ServletException e) {
-                        throw new SightlyException("Failed to include script " + script, e);
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         throw new SightlyException("Failed to include script " + script, e);
                     }
                 } else {
-                    LOG.error("Failed to locate script {}", script);
+                    throw new SightlyException("Failed to locate script " + script);
                 }
             } else {
-                LOG.error("Sling ServletResolver service is unavailable, failed to include {}", script);
+                throw new SightlyException("Sling ServletResolver service is unavailable, failed to include " + script);
             }
         }
     }

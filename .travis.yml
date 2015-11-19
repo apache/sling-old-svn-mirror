@@ -8,7 +8,7 @@ sudo: false
 
 install: true
 
-script: mvn -q clean install -DobrRepository=false -DHttpTestBase.readyTimeoutSeconds=300 -PwarIntegrationTests -PintegrationTests
+script: mvn -q clean install -DHttpTestBase.readyTimeoutSeconds=300 -PintegrationTests
 
 notifications:
   email: false

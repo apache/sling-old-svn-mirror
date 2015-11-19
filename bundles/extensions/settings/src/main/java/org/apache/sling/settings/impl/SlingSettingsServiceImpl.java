@@ -18,8 +18,6 @@
  */
 package org.apache.sling.settings.impl;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -37,7 +35,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import org.apache.sling.launchpad.api.StartupHandler;
 import org.apache.sling.launchpad.api.StartupMode;
@@ -78,9 +75,6 @@ public class SlingSettingsServiceImpl
 
     /** The name of the data file holding install run mode options */
     private static final String OPTIONS_FILE = "sling.options.file";
-
-    /** The length in bytes of a sling identifier */
-    private static final int SLING_ID_LENGTH = 36;
 
     /** The properties for name, description. */
     private final Map<String, String> slingProps = new HashMap<String, String>();
@@ -129,12 +123,23 @@ public class SlingSettingsServiceImpl
             // the osgi framework does not support storing something in the file system
             throw new RuntimeException("Unable to read from bundle data file.");
         }
-        this.slingId = this.readSlingId(idFile, SLING_ID_LENGTH);
+
+        try {
+            slingId = SlingIdUtil.readSlingId(idFile);
+            logger.info("Read Sling ID {} from file {}", slingId, idFile);
+        } catch (final Throwable t) {
+            logger.error("Failed reading Sling ID from file " + idFile, t);
+        }
 
         // no sling id yet or failure to read file: create an id and store
         if (slingId == null) {
-            slingId = UUID.randomUUID().toString();
-            this.writeSlingId(idFile, this.slingId);
+            slingId = SlingIdUtil.createSlingId();
+            logger.info("Created new Sling ID {}", slingId);
+            try {
+                SlingIdUtil.writeSlingId(idFile, slingId);
+            } catch (final Throwable t) {
+                logger.error("Failed writing Sling ID to file " + idFile, t);
+            }
         }
     }
 
@@ -285,60 +290,6 @@ public class SlingSettingsServiceImpl
             }
             if ( fos != null ) {
                 try { fos.close(); } catch ( final IOException ignore) {}
-            }
-        }
-    }
-
-    /**
-     * Read the id from a file.
-     */
-    String readSlingId(final File idFile, int maxLength) {
-        if (idFile.exists() && idFile.length() >= maxLength) {
-            DataInputStream dis = null;
-            try {
-                final byte[] rawBytes = new byte[maxLength];
-                dis = new DataInputStream(new FileInputStream(idFile));
-                dis.readFully(rawBytes);
-                final String rawString = new String(rawBytes, "ISO-8859-1");
-
-                // roundtrip to ensure correct format of UUID value
-                final String id = UUID.fromString(rawString).toString();
-                logger.debug("Got Sling ID {} from file {}", id, idFile);
-
-                return id;
-            } catch (final Throwable t) {
-                logger.error("Failed reading UUID from id file " + idFile
-                        + ", creating new id", t);
-            } finally {
-                if (dis != null) {
-                    try {
-                        dis.close();
-                    } catch (IOException ignore){}
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Write the sling id file.
-     */
-    void writeSlingId(final File idFile, final String id) {
-        idFile.delete();
-        idFile.getParentFile().mkdirs();
-        DataOutputStream dos = null;
-        try {
-            final byte[] rawBytes = id.getBytes("ISO-8859-1");
-            dos = new DataOutputStream(new FileOutputStream(idFile));
-            dos.write(rawBytes, 0, rawBytes.length);
-            dos.flush();
-        } catch (final Throwable t) {
-            logger.error("Failed writing UUID to id file " + idFile, t);
-        } finally {
-            if (dos != null) {
-                try {
-                    dos.close();
-                } catch (IOException ignore) {}
             }
         }
     }

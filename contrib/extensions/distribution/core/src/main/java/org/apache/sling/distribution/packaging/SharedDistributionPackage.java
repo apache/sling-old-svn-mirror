@@ -21,6 +21,7 @@ package org.apache.sling.distribution.packaging;
 import javax.annotation.Nonnull;
 
 import aQute.bnd.annotation.ConsumerType;
+import org.apache.sling.distribution.serialization.DistributionPackage;
 
 /**
  * A {@link DistributionPackage} that offers basic reference counting

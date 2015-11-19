@@ -30,7 +30,7 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>sling-builder</artifactId>
     <packaging>pom</packaging>
-    <version>7-SNAPSHOT</version>
+    <version>9-SNAPSHOT</version>
 
     <name>Apache Sling (Builder)</name>
     <description>
@@ -84,21 +84,8 @@
         <module>parent</module>
 
         <!-- Tooling Support -->
+        <module>tooling/support/install</module>
         <module>tooling/support/provisioning-model</module>
-        <!-- The Maven Plugins and Archeyptes-->
-        <module>tooling/maven/adapter-annotations</module>
-        <module>tooling/maven/maven-jcrocm-plugin</module>
-        <module>tooling/maven/maven-jspc-plugin</module>
-        <module>tooling/maven/maven-sling-plugin</module>
-        <module>tooling/maven/maven-launchpad-plugin</module>
-        <module>tooling/maven/slingstart-maven-plugin</module>
-        <module>tooling/maven/archetypes/launchpad-standalone</module>
-        <module>tooling/maven/archetypes/launchpad-webapp</module>
-        <module>tooling/maven/archetypes/initial-content</module>
-        <module>tooling/maven/archetypes/servlet</module>
-        <module>tooling/maven/archetypes/bundle</module>
-        <module>tooling/maven/archetypes/bundle-for-jcrinstall</module>
-        <module>tooling/maven/archetypes/taglib</module>
 
         <!-- The Sling API -->
         <module>bundles/api</module>
@@ -175,7 +162,9 @@
         <module>bundles/extensions/dea</module>
         <module>bundles/extensions/discovery/api</module>
         <module>bundles/extensions/discovery/commons</module>
+        <module>bundles/extensions/discovery/base</module>
         <module>bundles/extensions/discovery/impl</module>
+        <module>bundles/extensions/discovery/oak</module>
         <module>bundles/extensions/discovery/support</module>
         <module>bundles/extensions/discovery/standalone</module>
         <module>bundles/extensions/event</module>
@@ -208,6 +197,7 @@
         <module>installer/providers/jcr</module>
         <module>installer/factories/configuration</module>
         <module>installer/factories/deploymentpck</module>
+        <module>installer/factories/subsystem_base</module>
         <module>installer/factories/subsystems</module>
         <module>installer/it</module>
 
@@ -273,6 +263,14 @@
                 <module>performance</module>
             </modules>
         </profile>
+         <!-- Profile for including maven tooling -->
+        <profile>
+            <id>withMaven</id>
+            <modules>
+                <module>tooling/maven</module>
+            </modules>
+        </profile>
+
     </profiles>
 
 </project>

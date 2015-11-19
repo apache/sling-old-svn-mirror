@@ -88,8 +88,6 @@ public class InventoryPlugin implements InventoryPrinter {
             case ORDERED : return "Ordered";
             case TOPIC_ROUND_ROBIN : return "Topic Round Robin";
             case UNORDERED : return "Parallel";
-            case IGNORE : return "Ignore";
-            case DROP : return "Drop";
         }
         return type.toString();
     }
@@ -290,7 +288,7 @@ public class InventoryPlugin implements InventoryPrinter {
         pw.printf("Max Parallel : %s%n", c.getMaxParallel());
         pw.printf("Max Retries : %s%n", c.getMaxRetries());
         pw.printf("Retry Delay : %s ms%n", c.getRetryDelayInMs());
-        pw.printf("Priority : %s%n", c.getPriority());
+        pw.printf("Priority : %s%n", c.getThreadPriority());
         pw.printf("Ranking : %s%n", c.getRanking());
 
         pw.println();
@@ -444,7 +442,7 @@ public class InventoryPlugin implements InventoryPrinter {
         pw.printf("      \"maxParallel\" : %s,%n", c.getMaxParallel());
         pw.printf("      \"maxRetries\" : %s,%n", c.getMaxRetries());
         pw.printf("      \"retryDelayInMs\" : %s,%n", c.getRetryDelayInMs());
-        pw.printf("      \"priority\" : \"%s\",%n", c.getPriority());
+        pw.printf("      \"priority\" : \"%s\",%n", c.getThreadPriority());
         pw.printf("      \"ranking\" : %s%n", c.getRanking());
         pw.print("    }");
     }

@@ -275,18 +275,13 @@
                   </instanceof>
                </or></enablement>
          </commonWizard>
-         <!--org.eclipse.ui.navigator.resourceContent-->
-         <!--org.eclipse.jdt.java.ui.javaContent-->
-         <!--override
-               policy="InvokeAlwaysRegardlessOfSuppressedExt"
-               suppressedExtensionId="org.eclipse.ui.navigator.resourceContent">
-         </override-->
 		   <actionProvider
 		         class="org.apache.sling.ide.eclipse.ui.nav.PackageExplorerOpenActionProvider"
 		         id="org.apache.sling.ide.eclipse.ui.nav.actions.OpenActions"
 		         overrides="org.eclipse.jdt.ui.navigator.actions.OpenActions">
-<!--	         overrides="org.eclipse.ui.navigator.resources.OpenActions"> 
-		         //org.eclipse.jdt.ui.navigator.actions.OpenActions -->
+		         <enablement>
+		         	<instanceof value="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode"/>
+		         </enablement>
 		   </actionProvider>
      <override
            policy="InvokeAlwaysRegardlessOfSuppressedExt"

@@ -26,7 +26,6 @@ import java.util.Calendar;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
-import java.util.TimeZone;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -43,7 +42,6 @@ public abstract class JsonObjectCreator {
 
     /**
      * Dump given resource in JSON, optionally recursing into its objects
-     * @param tidy if <code>true</code> the json dump is nicely formatted
      */
     public static JSONObject create(final Resource resource, final int maxRecursionLevels)
             throws JSONException {
@@ -58,7 +56,6 @@ public abstract class JsonObjectCreator {
     throws JSONException {
         final ValueMap valueMap = resource.adaptTo(ValueMap.class);
 
-        @SuppressWarnings("unchecked")
         final Map propertyMap = (valueMap != null)
                 ? valueMap
                 : resource.adaptTo(Map.class);
@@ -91,7 +88,6 @@ public abstract class JsonObjectCreator {
 
             // the node's actual properties
             while (props.hasNext()) {
-                @SuppressWarnings("unchecked")
                 final Map.Entry prop = props.next();
 
                 if ( prop.getValue() != null ) {

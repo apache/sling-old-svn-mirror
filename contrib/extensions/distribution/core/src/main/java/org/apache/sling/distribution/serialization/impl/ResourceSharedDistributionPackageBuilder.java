@@ -33,42 +33,40 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.distribution.DistributionRequest;
-import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.serialization.DistributionPackageBuildingException;
-import org.apache.sling.distribution.serialization.DistributionPackageReadingException;
 
 public class ResourceSharedDistributionPackageBuilder implements DistributionPackageBuilder {
 
-    private final String PN_ORIGINAL_ID = "original.package.id";
-    private final String PN_ORIGINAL_REQUEST_TYPE = "original.package.request.type";
-    private final String PN_ORIGINAL_PATHS = "original.package.paths";
+    private static final String PN_ORIGINAL_ID = "original.package.id";
+    private static final String PN_ORIGINAL_REQUEST_TYPE = "original.package.request.type";
+    private static final String PN_ORIGINAL_PATHS = "original.package.paths";
 
-    private final String PACKAGE_NAME_PREFIX = "distrpackage";
-    private final String SHARED_PACKAGES_ROOT = "/var/sling/distribution/packages";
+    private static final String PACKAGE_NAME_PREFIX = "distrpackage";
+    private final String sharedPackagesRoot;
+    private final String type;
 
     private final DistributionPackageBuilder distributionPackageBuilder;
 
     // use a global repolock for syncing access to the shared package root
     // TODO: this can be finegrained when we will allow configurable package roots
-    private final static Object repolock = new Object();
+    private final Object repolock = new Object();
 
     public ResourceSharedDistributionPackageBuilder(DistributionPackageBuilder distributionPackageExporter) {
         this.distributionPackageBuilder = distributionPackageExporter;
+        this.type = distributionPackageBuilder.getType();
+        this.sharedPackagesRoot = AbstractDistributionPackage.PACKAGES_ROOT + "/" + type + "/shared";
     }
 
     public String getType() {
-        return distributionPackageBuilder.getType();
+        return type;
     }
 
-    @CheckForNull
-    public DistributionPackage createPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionPackageBuildingException {
+    @Nonnull
+    public DistributionPackage createPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionException {
         DistributionPackage distributionPackage = distributionPackageBuilder.createPackage(resourceResolver, request);
-
-        if (distributionPackage == null) {
-            return null;
-        }
 
         String packageName = null;
         try {
@@ -76,7 +74,7 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
 
         } catch (PersistenceException e) {
             DistributionPackageUtils.deleteSafely(distributionPackage);
-            throw new DistributionPackageBuildingException(e);
+            throw new DistributionException(e);
         }
 
         String packagePath = getPathFromName(packageName);
@@ -84,8 +82,9 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
 
     }
 
+    @Nonnull
     @CheckForNull
-    public DistributionPackage readPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageReadingException {
+    public DistributionPackage readPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
         DistributionPackage distributionPackage = distributionPackageBuilder.readPackage(resourceResolver, stream);
 
         if (distributionPackage == null) {
@@ -98,7 +97,7 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
 
         } catch (PersistenceException e) {
             DistributionPackageUtils.deleteSafely(distributionPackage);
-            throw new DistributionPackageReadingException(e);
+            throw new DistributionException(e);
         }
 
         String packagePath = getPathFromName(packageName);
@@ -106,7 +105,8 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
         return new ResourceSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
     }
 
-    public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String distributionPackageId) {
+    @CheckForNull
+    public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String distributionPackageId) throws DistributionException {
         String packageName = distributionPackageId;
         String originalPackageId = retrieveIdFromName(resourceResolver, packageName);
 
@@ -125,7 +125,7 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
         return new ResourceSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
     }
 
-    public boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageReadingException {
+    public boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException {
         if (!(distributionPackage instanceof ResourceSharedDistributionPackage)) {
             return false;
         }
@@ -172,7 +172,7 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
     }
 
     private String getPathFromName(String name) {
-        String packagePath = SHARED_PACKAGES_ROOT + "/" + name;
+        String packagePath = sharedPackagesRoot + "/" + name;
         return packagePath;
     }
 

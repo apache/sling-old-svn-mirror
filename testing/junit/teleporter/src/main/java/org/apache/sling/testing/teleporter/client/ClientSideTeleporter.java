@@ -48,14 +48,31 @@ public class ClientSideTeleporter extends TeleporterRule {
     private String serverCredentials;
     private final Set<Class<?>> embeddedClasses = new HashSet<Class<?>>();
     
-    private InputStream buildTestBundle(Class<?> c, Collection<Class<?>> embeddedClasses, String bundleSymbolicName) {
+    private InputStream buildTestBundle(Class<?> c, Collection<Class<?>> embeddedClasses, String bundleSymbolicName) throws IOException {
         final TinyBundle b = TinyBundles.bundle()
             .set(Constants.BUNDLE_SYMBOLICNAME, bundleSymbolicName)
             .set("Sling-Test-Regexp", c.getName() + ".*")
             .add(c);
+        
+        // Embed specified classes
         for(Class<?> clz : embeddedClasses) {
             b.add(clz);
         }
+        
+        // Embed specified resources
+        if(!embeddedResourcePaths.isEmpty()) {
+            for(String path : embeddedResourcePaths) {
+                final ClassResourceVisitor.Processor p = new ClassResourceVisitor.Processor() {
+                    @Override
+                    public void process(String resourcePath, InputStream resourceStream) throws IOException {
+                        b.add(resourcePath, resourceStream);
+                    }
+                    
+                };
+                new ClassResourceVisitor(getClass(), path).visit(p);
+            }
+        }
+        
         return b.build(TinyBundles.withBnd());
     }
     

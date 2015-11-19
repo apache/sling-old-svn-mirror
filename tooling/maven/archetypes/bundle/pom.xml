@@ -23,11 +23,11 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling-archetype-parent</artifactId>
         <version>1</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <artifactId>sling-bundle-archetype</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.5-SNAPSHOT</version>
     <packaging>maven-archetype</packaging>
 
     <name>Sling Bundle Archetype</name>

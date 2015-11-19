@@ -32,14 +32,18 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
+import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
-import org.apache.sling.distribution.trigger.DistributionTriggerException;
 import org.apache.sling.distribution.util.DistributionJcrUtils;
+import org.apache.sling.distribution.util.impl.DistributionUtils;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,12 +63,14 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
     private final String serviceUser;
 
     private final SlingRepository repository;
+    private final ResourceResolverFactory resolverFactory;
 
     private Session cachedSession;
 
     private final Scheduler scheduler;
 
-    AbstractJcrEventTrigger(SlingRepository repository, Scheduler scheduler, String path, String serviceUser) {
+    AbstractJcrEventTrigger(SlingRepository repository, Scheduler scheduler, ResourceResolverFactory resolverFactory, String path, String serviceUser) {
+        this.resolverFactory = resolverFactory;
         if (path == null || serviceUser == null) {
             throw new IllegalArgumentException("path and service are required");
         }
@@ -74,7 +80,7 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
         this.scheduler = scheduler;
     }
 
-    public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
+    public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionException {
         Session session;
         try {
             session = getSession();
@@ -83,11 +89,11 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
             session.getWorkspace().getObservationManager().addEventListener(
                     listener, getEventTypes(), path, true, null, null, false);
         } catch (RepositoryException e) {
-            throw new DistributionTriggerException("unable to register handler " + requestHandler, e);
+            throw new DistributionException("unable to register handler " + requestHandler, e);
         }
     }
 
-    public void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
+    public void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionException {
         JcrEventDistributionTriggerListener listener = registeredListeners.get(requestHandler.toString());
         if (listener != null) {
             Session session;
@@ -95,7 +101,7 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
                 session = getSession();
                 session.getWorkspace().getObservationManager().removeEventListener(listener);
             } catch (RepositoryException e) {
-                throw new DistributionTriggerException("unable to unregister handler " + requestHandler, e);
+                throw new DistributionException("unable to unregister handler " + requestHandler, e);
             }
         }
     }
@@ -252,7 +258,19 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
 
         public void run() {
             for (DistributionRequest request : requestList) {
-                requestHandler.handle(request);
+                if (serviceUser == null) {
+                    requestHandler.handle(null, request);
+                } else {
+                    ResourceResolver resourceResolver = null;
+                    try {
+                        resourceResolver = DistributionUtils.loginService(resolverFactory, serviceUser);
+                        requestHandler.handle(resourceResolver, request);
+                    } catch (LoginException le) {
+                        log.error("cannot obtain resource resolver for {}", serviceUser);
+                    } finally {
+                        DistributionUtils.safelyLogout(resourceResolver);
+                    }
+                }
             }
         }
     }

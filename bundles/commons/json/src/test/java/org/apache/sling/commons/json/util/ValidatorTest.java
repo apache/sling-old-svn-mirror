@@ -16,49 +16,139 @@
  */
 package org.apache.sling.commons.json.util;
 
-import junit.framework.TestCase;
-
 import org.apache.sling.commons.json.JSONException;
+import org.junit.Test;
 
 /**
  * Test the Validator.
  */
-public class ValidatorTest extends TestCase {
+public class ValidatorTest {
 
-    public void testSimpleJSON()
-    throws JSONException {
+    @Test
+    public void testEmptyString() throws JSONException {
         Validator.validate("");
+    }
+
+    @Test
+    public void testEmptyArray() throws JSONException {
         Validator.validate("[]");
+    }
+
+    @Test
+    public void testEmptyObject() throws JSONException {
         Validator.validate("{}");
     }
 
-    public void testBasicJSON()
-    throws JSONException {
+    @Test
+    public void testSimpleArray() throws JSONException {
         Validator.validate("[1,true,\"hallo\"]");
+    }
+
+    @Test
+    public void testSimpleObject() throws JSONException {
         Validator.validate("{a:\"you\", b:2, c:true}");
     }
 
-    public void testNestedJSON()
-    throws JSONException {
+    @Test
+    public void testNestedJSONArray() throws JSONException {
         Validator.validate("[1,true,\"hallo\", {a:1}, [1,2]]");
+    }
+
+    @Test
+    public void testNestedJSONObject() throws JSONException {
         Validator.validate("{a:\"you\", b:2, c:true, d: {d:1}, e: []}");
     }
 
-    /**
-     * These tests are supposed to fail!
-     */
-    public void testTrailingChars() {
-        try {
-            Validator.validate("[1,true,\"hallo\",]");
-            assertTrue("Trailing separator should not be allowed.", false);
-        } catch (JSONException e) {
-            // ignore
-        }
-        try {
-            Validator.validate("{a:\"you\", b:2, c:true,}");
-            assertTrue("Trailing separator should not be allowed.", false);
-        } catch (JSONException e) {
-            // ignore
-        }
+    @Test(expected=JSONException.class)
+    public void testTrailingCharsArray() throws JSONException {
+        Validator.validate("[1,true,\"hallo\",]");
+        //---------------------------invalid ^ 
     }
+
+    @Test(expected=JSONException.class)
+    public void testTrailingCharsObject() throws JSONException {
+        Validator.validate("{a:\"you\", b:2, c:true,}");
+        //---------------------------------invalid ^ 
+    }
+
+    @Test(expected=JSONException.class)
+    public void testTooManyClosingBracketsArray1() throws JSONException {
+        Validator.validate("[1,true,\"hallo\"]]");
+        //----------------------------invalid ^ 
+    }
+
+    @Test(expected=JSONException.class)
+    public void testTooManyClosingBracketsArray2() throws JSONException {
+        Validator.validate("[1,true,\"hallo\"]}");
+        //----------------------------invalid ^ 
+    }
+
+    @Test(expected=JSONException.class)
+    public void testTooManyClosingBracketsArrayNested() throws JSONException {
+        Validator.validate("{myobj:[1,true,\"hallo\"]],myobj2:5}");
+        //-----------------------------------invalid ^ 
+    }
+
+    @Test(expected=JSONException.class)
+    public void testTooManyClosingBracketsObject1() throws JSONException {
+        Validator.validate("{a:\"you\", b:2, c:true}}");
+        //----------------------------------invalid ^ 
+    }
+
+    @Test(expected=JSONException.class)
+    public void testTooManyClosingBracketsObject2() throws JSONException {
+        Validator.validate("{a:\"you\", b:2, c:true}]");
+        //----------------------------------invalid ^ 
+    }
+
+    @Test(expected=JSONException.class)
+    public void testTooManyClosingBracketsObjectNested() throws JSONException {
+        Validator.validate("{myobj:{a:\"you\", b:2, c:true}},myobj2:5}");
+        //-----------------------------------------invalid ^ 
+    }
+
+    @Test(expected=JSONException.class)
+    public void testTooManyOpeningBracketsArray() throws JSONException {
+        Validator.validate("[[1,true,\"hallo\"]");
+        //-----------invalid ^ 
+    }
+
+    @Test(expected=JSONException.class)
+    public void testTooManyOpeningBracketsArrayNested() throws JSONException {
+        Validator.validate("{myobj:[[1,true,\"hallo\"],myobj2:5}");
+        //------------------invalid ^ 
+    }
+
+    @Test(expected=JSONException.class)
+    public void testTooManyOpeningBracketsObject() throws JSONException {
+        Validator.validate("{{a:\"you\", b:2, c:true}");
+        //-----------invalid ^ 
+    }
+
+    @Test(expected=JSONException.class)
+    public void testTooManyOpeningBracketsObjectNested() throws JSONException {
+        Validator.validate("{myobj:{{a:\"you\", b:2, c:true},myobj2:5}");
+        //------------------invalid ^ 
+    }
+
+    @Test(expected=JSONException.class)
+    public void testOpeningBrackedOnlyArray() throws JSONException {
+        Validator.validate("[");
+    }
+
+    @Test(expected=JSONException.class)
+    public void testOpeningBrackedOnlyObject() throws JSONException {
+        Validator.validate("{");
+    }
+
+    @Test(expected=JSONException.class)
+    public void testUnclosedArray() throws JSONException {
+        Validator.validate("[1,true,\"hallo\"");
+    }
+
+    @Test(expected=JSONException.class)
+    public void testUnclosedObject() throws JSONException {
+        Validator.validate("{a:\"you\", b:2, c:true");
+    }
+
 }

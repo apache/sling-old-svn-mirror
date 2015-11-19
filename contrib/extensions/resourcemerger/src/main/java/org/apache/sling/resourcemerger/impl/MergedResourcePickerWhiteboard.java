@@ -26,10 +26,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.sling.api.resource.ResourceProvider;
-import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -63,18 +62,23 @@ public class MergedResourcePickerWhiteboard implements ServiceTrackerCustomizer 
         if ( picker != null ) {
             final String mergeRoot = PropertiesUtil.toString(reference.getProperty(MergedResourcePicker.MERGE_ROOT), null);
             if (mergeRoot != null) {
-                final ResourceProviderFactory providerFactory = new MergingResourceProviderFactory(mergeRoot, picker,
-                        PropertiesUtil.toBoolean(reference.getProperty(MergedResourcePicker.READ_ONLY), true),
-                        PropertiesUtil.toBoolean(reference.getProperty(MergedResourcePicker.TRAVERSE_PARENT), false));
+                boolean readOnly = PropertiesUtil.toBoolean(reference.getProperty(MergedResourcePicker.READ_ONLY), true);
+                boolean traverseParent = PropertiesUtil.toBoolean(reference.getProperty(MergedResourcePicker.TRAVERSE_PARENT), false);
+
+                MergingResourceProvider provider = readOnly ?
+                        new MergingResourceProvider(mergeRoot, picker, true, traverseParent) :
+                        new CRUDMergingResourceProvider(mergeRoot, picker, traverseParent);
+
                 final Dictionary<Object, Object> props = new Hashtable<Object, Object>();
-                props.put(ResourceProvider.ROOTS, mergeRoot);
-                props.put(ResourceProvider.OWNS_ROOTS, true);
+                props.put(ResourceProvider.PROPERTY_NAME, readOnly ? "Merging" : "CRUDMerging");
+                props.put(ResourceProvider.PROPERTY_ROOT, mergeRoot);
+                props.put(ResourceProvider.PROPERTY_MODIFIABLE, !readOnly);
+                props.put(ResourceProvider.PROPERTY_AUTHENTICATE, ResourceProvider.AUTHENTICATE_NO);
 
                 final Long key = (Long) reference.getProperty(Constants.SERVICE_ID);
-                final ServiceRegistration reg = bundleContext.registerService(ResourceProviderFactory.class.getName(), providerFactory, props);
+                final ServiceRegistration reg = bundleContext.registerService(ResourceProvider.class.getName(), provider, props);
 
                 serviceRegistrations.put(key, reg);
-
             }
             return picker;
         }

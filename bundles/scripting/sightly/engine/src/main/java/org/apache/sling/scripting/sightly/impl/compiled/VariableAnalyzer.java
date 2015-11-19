@@ -23,11 +23,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 
 import org.apache.sling.scripting.sightly.impl.compiler.SightlyParsingException;
 import org.apache.sling.scripting.sightly.impl.compiler.util.VariableTracker;
+import org.apache.sling.scripting.sightly.impl.utils.JavaEscapeUtils;
 
 /**
  * Data structure used in the analysis of variables
@@ -35,7 +35,6 @@ import org.apache.sling.scripting.sightly.impl.compiler.util.VariableTracker;
  */
 public class VariableAnalyzer {
 
-    private static final HashSet<String> javaKeywords = new HashSet<String>();
     private final VariableTracker<VariableDescriptor> tracker = new VariableTracker<VariableDescriptor>();
     private final List<VariableDescriptor> variables = new ArrayList<VariableDescriptor>();
     private final HashMap<String, VariableDescriptor> dynamicVariables = new HashMap<String, VariableDescriptor>();
@@ -144,28 +143,21 @@ public class VariableAnalyzer {
     }
 
     private String findDynamicName(String original) {
-        return DYNAMIC_PREFIX + syntaxSafeName(original);
+        return DYNAMIC_PREFIX + JavaEscapeUtils.getEscapedToken(original);
     }
 
     private String findGlobalName(String original) {
-        return GLOBAL_PREFIX + syntaxSafeName(original);
+        return GLOBAL_PREFIX + JavaEscapeUtils.getEscapedToken(original);
     }
 
     private String findSafeName(String original) {
         int occurrenceCount = tracker.getOccurrenceCount(original);
-        String syntaxSafe = syntaxSafeName(original);
+        String syntaxSafe = JavaEscapeUtils.getEscapedToken(original);
         if (occurrenceCount == 0) {
             return syntaxSafe; //no other declarations in scope. Use this very name
         } else {
             return original + "_" + occurrenceCount;
         }
-    }
-
-    private String syntaxSafeName(String original) {
-        if (javaKeywords.contains(original)) {
-            return "_" + original;
-        }
-        return original.replaceAll("-", "_");
     }
 
     private String validName(String name) {
@@ -174,58 +166,4 @@ public class VariableAnalyzer {
         }
         return name.toLowerCase();
     }
-
-    static {
-        javaKeywords.add("abstract");
-        javaKeywords.add("continue");
-        javaKeywords.add("for");
-        javaKeywords.add("new");
-        javaKeywords.add("switch");
-        javaKeywords.add("assert");
-        javaKeywords.add("default");
-        javaKeywords.add("goto");
-        javaKeywords.add("package");
-        javaKeywords.add("synchronized");
-        javaKeywords.add("boolean");
-        javaKeywords.add("do");
-        javaKeywords.add("if");
-        javaKeywords.add("private");
-        javaKeywords.add("this");
-        javaKeywords.add("break");
-        javaKeywords.add("double");
-        javaKeywords.add("implements");
-        javaKeywords.add("protected");
-        javaKeywords.add("throw");
-        javaKeywords.add("byte");
-        javaKeywords.add("else");
-        javaKeywords.add("import");
-        javaKeywords.add("public");
-        javaKeywords.add("throws");
-        javaKeywords.add("case");
-        javaKeywords.add("enum");
-        javaKeywords.add("instanceof");
-        javaKeywords.add("return");
-        javaKeywords.add("transient");
-        javaKeywords.add("catch");
-        javaKeywords.add("extends");
-        javaKeywords.add("int");
-        javaKeywords.add("short");
-        javaKeywords.add("try");
-        javaKeywords.add("char");
-        javaKeywords.add("final");
-        javaKeywords.add("interface");
-        javaKeywords.add("static");
-        javaKeywords.add("void");
-        javaKeywords.add("class");
-        javaKeywords.add("finally");
-        javaKeywords.add("long");
-        javaKeywords.add("strictfp");
-        javaKeywords.add("volatile");
-        javaKeywords.add("const");
-        javaKeywords.add("float");
-        javaKeywords.add("native");
-        javaKeywords.add("super");
-        javaKeywords.add("while");
-    }
-
 }

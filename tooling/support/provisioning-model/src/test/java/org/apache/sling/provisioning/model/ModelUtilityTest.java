@@ -41,6 +41,7 @@ public class ModelUtilityTest {
         final List<Artifact> list = U.assertArtifactsInGroup(model.getFeature("f").getRunMode().getArtifactGroup(3), 1);
 
         U.assertArtifact(list.get(0), "g", "a", "2.0.0", "jar", null);
+        assertEquals(FeatureTypes.SUBSYSTEM_COMPOSITE, model.getFeature("f").getType());
     }
 
     @Test public void removeTest() throws Exception {
@@ -51,6 +52,7 @@ public class ModelUtilityTest {
         assertNotNull(model.getFeature("f").getRunMode());
         assertNotNull(model.getFeature("f").getRunMode().getArtifactGroup(5));
         assertNotNull(model.getFeature("f").getRunMode().getArtifactGroup(7));
+        assertEquals(FeatureTypes.PLAIN, model.getFeature("f").getType());
 
         final List<Artifact> group5 = U.assertArtifactsInGroup(model.getFeature("f").getRunMode().getArtifactGroup(5), 1);
         U.assertArtifact(group5.get(0), "g", "a", "1.0.0", "jar", null);

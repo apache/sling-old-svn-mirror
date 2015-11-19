@@ -26,7 +26,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.queue.DistributionQueue;
-import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueProcessor;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.slf4j.Logger;
@@ -56,8 +55,7 @@ public class SimpleDistributionQueueProvider implements DistributionQueueProvide
     }
 
     @Nonnull
-    public DistributionQueue getQueue(@Nonnull String queueName)
-            throws DistributionQueueException {
+    public DistributionQueue getQueue(@Nonnull String queueName) {
         String key = name + queueName;
 
         DistributionQueue queue = queueMap.get(key);

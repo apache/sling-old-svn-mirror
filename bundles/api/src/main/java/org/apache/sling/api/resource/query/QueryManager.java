@@ -18,12 +18,9 @@
  */
 package org.apache.sling.api.resource.query;
 
-import java.util.Iterator;
-
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 
 import aQute.bnd.annotation.ProviderType;
@@ -49,10 +46,10 @@ public interface QueryManager {
      * @param resolver The resource resolver
      * @param q The query
      * @param qi The optional query instructions
-     * @return An iterator of resources - the result might be empty.
+     * @return The query result object.
      * @throws IllegalArgumentException If the query is invalid.
      */
-    @Nonnull Iterator<Resource> find(@Nonnull ResourceResolver resolver,
+    @Nonnull Result find(@Nonnull ResourceResolver resolver,
                                      @Nonnull Query q,
                                      @CheckForNull QueryInstructions qi);
 

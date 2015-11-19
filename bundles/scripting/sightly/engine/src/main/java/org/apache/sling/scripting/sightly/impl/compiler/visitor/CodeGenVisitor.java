@@ -38,7 +38,6 @@ import org.apache.sling.scripting.sightly.impl.compiler.ris.command.OutText;
 import org.apache.sling.scripting.sightly.impl.compiler.ris.command.OutVariable;
 import org.apache.sling.scripting.sightly.impl.compiler.ris.command.Procedure;
 import org.apache.sling.scripting.sightly.impl.compiler.ris.command.VariableBinding;
-import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.impl.utils.RenderUtils;
 
 /**

@@ -20,7 +20,7 @@
 #
 # A feature consists of variables and run mode dependent artifacts.
 #
-[feature name=example]
+[feature name=example type=osgi.subsystem.feature]
 # The variables are global and can be used within artifact definitions, configurations,
 # and settings.
 #

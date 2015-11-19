@@ -30,9 +30,11 @@ import org.apache.sling.provisioning.model.ArtifactGroup;
 import org.apache.sling.provisioning.model.Commentable;
 import org.apache.sling.provisioning.model.Configuration;
 import org.apache.sling.provisioning.model.Feature;
+import org.apache.sling.provisioning.model.FeatureTypes;
 import org.apache.sling.provisioning.model.Model;
 import org.apache.sling.provisioning.model.ModelConstants;
 import org.apache.sling.provisioning.model.RunMode;
+import org.apache.sling.provisioning.model.Section;
 
 /**
  * Simple writer for the a model
@@ -87,6 +89,10 @@ public class ModelWriter {
             writeComment(pw, feature);
             pw.print("[feature name=");
             pw.print(feature.getName());
+            if (! FeatureTypes.PLAIN.equals(feature.getType()) ) {
+                pw.print(" type=");
+                pw.print(feature.getType());
+            }
             pw.println("]");
             pw.println();
 
@@ -231,6 +237,23 @@ public class ModelWriter {
                         pw.println();
                     }
                 }
+            }
+
+            // additional sections
+            for(final Section section : feature.getAdditionalSections()) {
+                pw.print("  [:");
+                pw.print(section.getName());
+                for(final Map.Entry<String, String> entry : section.getAttributes().entrySet()) {
+                    pw.print(' ');
+                    pw.print(entry.getKey());
+                    pw.print('=');
+                    pw.print(entry.getValue());
+                }
+                pw.println("]");
+                if ( section.getContents() != null ) {
+                    pw.println(section.getContents());
+                }
+                pw.println();
             }
         }
     }

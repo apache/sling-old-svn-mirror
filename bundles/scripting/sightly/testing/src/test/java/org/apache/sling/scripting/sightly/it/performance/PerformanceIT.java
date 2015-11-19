@@ -103,7 +103,7 @@ public class PerformanceIT {
             HttpStatus.SC_OK);
     }
 
-    @PerformanceTest(runinvocations = INVOCATIONS, warmupinvocations = WARMUP_INVOCATIONS, threshold = 2)
+    @PerformanceTest(runinvocations = INVOCATIONS, warmupinvocations = WARMUP_INVOCATIONS, threshold = 3)
     public void test5SlyJavaSlingModels() {
         getStringContent("/sightlyperf/loop.html?selector=sly-java-slingmodels&count=" + CONTENT_LOOP_COUNT,
             HttpStatus.SC_OK);

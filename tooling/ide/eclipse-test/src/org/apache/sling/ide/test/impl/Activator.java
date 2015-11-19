@@ -38,16 +38,13 @@ public class Activator extends Plugin {
     public void start(BundleContext context) throws Exception {
         super.start(context);
 
-        artifactLocator = new ServiceTracker<EmbeddedArtifactLocator, EmbeddedArtifactLocator>(context,
-                EmbeddedArtifactLocator.class, null);
+        artifactLocator = new ServiceTracker<>(context, EmbeddedArtifactLocator.class, null);
         artifactLocator.open();
 
-        osgiClientFactory = new ServiceTracker<OsgiClientFactory, OsgiClientFactory>(context, OsgiClientFactory.class,
-                null);
+        osgiClientFactory = new ServiceTracker<>(context, OsgiClientFactory.class, null);
         osgiClientFactory.open();
 
-        serializationManager = new ServiceTracker<SerializationManager, SerializationManager>(context,
-                SerializationManager.class, null);
+        serializationManager = new ServiceTracker<>(context, SerializationManager.class, null);
         serializationManager.open();
 
         INSTANCE = this;

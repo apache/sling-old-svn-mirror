@@ -4,8 +4,6 @@
 
     "serviceName" : "distributionService",
 
-    "requestAuthorizationStrategy.target" : "(name=privilegeRead)",
-
     "packageExporter.endpoints": [
         "http://localhost:4503/libs/sling/distribution/services/exporters/reverse-pubsync",
         "http://localhost:4504/libs/sling/distribution/services/exporters/reverse-pubsync",
@@ -17,9 +15,6 @@
         "http://localhost:4504/libs/sling/distribution/services/importers/default",
         "http://localhost:4505/libs/sling/distribution/services/importers/default"
 
-    ],
-
-    "packageBuilder.target" : "(name=vlt)",
-    "transportSecretProvider.target" : "(name=publishAdmin)",
+    ]
 
 }

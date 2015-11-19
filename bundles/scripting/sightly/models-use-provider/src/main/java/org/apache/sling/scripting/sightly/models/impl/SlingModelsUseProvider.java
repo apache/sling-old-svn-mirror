@@ -45,15 +45,14 @@ import org.slf4j.LoggerFactory;
  * </p>
  * <p>
  * For that it tries to use the {@link ModelFactory#createModel(Object, Class)} first with the adaptable {@link Resource}
- * then with the adaptable {@link SlingHttpServletRequest}.
- * It will always fail with an exception (i.e. no other {@code UseProvider} is asked afterwards and the exception is being rethrown)
- * in case the following two preconditions are fulfilled:
+ * then with the adaptable {@link SlingHttpServletRequest}. It will always fail with an exception (i.e. no other {@code UseProvider} is
+ * asked afterwards and the exception is being rethrown) in case the following two preconditions are fulfilled:
+ * </p>
  * <ol>
  * <li>the given identifier specifies a class which can be loaded by a {@link org.apache.sling.commons.classloader.DynamicClassLoader}</li>
  * <li>the loaded class has a {@link org.apache.sling.models.annotations.Model} annotation</li>
  * </ol>
- * </p>
- * <p>
+ *
  * <p>
  * In case any of those preconditions are not fulfilled the other registered {@link UseProvider}s will be queried.
  * </p>

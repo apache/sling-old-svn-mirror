@@ -26,13 +26,15 @@ import java.util.List;
 import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.distribution.serialization.DistributionPackage;
 
 /**
  * A {@link DistributionPackageExporter ) is responsible of exporting
  * {@link DistributionPackage }s to be then imported by a {@link org.apache.sling.distribution.agent.DistributionAgent }
  * (via a {@link DistributionPackageImporter }).
  * <p/>
- * Exporting a {@link org.apache.sling.distribution.packaging.DistributionPackage} means obtaining that package by either
+ * Exporting a {@link DistributionPackage } means obtaining that package by either
  * directly creating it by bundling local Sling resources together or retrieving it from a remote endpoint, e.g. by
  * executing an HTTP POST request on another Sling instance exposing already created packages (for remotely changed resources).
  */
@@ -51,7 +53,7 @@ public interface DistributionPackageExporter {
      * @return a {@link java.util.List} of {@link DistributionPackage}s
      */
     @Nonnull
-    List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionPackageExportException;
+    List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionException;
 
     /**
      * Retrieves a {@link DistributionPackage} given its identifier, if it already exists.
@@ -63,5 +65,5 @@ public interface DistributionPackageExporter {
      * @return a {@link DistributionPackage} if available, {@code null} otherwise
      */
     @CheckForNull
-    DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String distributionPackageId);
+    DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String distributionPackageId) throws DistributionException;
 }

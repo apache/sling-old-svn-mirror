@@ -19,7 +19,6 @@
 package org.apache.sling.event.it;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -32,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.sling.event.EventPropertiesMap;
 import org.apache.sling.event.impl.jobs.config.ConfigurationConstants;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
@@ -86,7 +84,7 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
         this.removeConfiguration(this.queueConfigPid);
         super.cleanup();
     }
-
+/*
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testSimpleClassloading() throws Exception {
         final AtomicInteger processedJobsCount = new AtomicInteger(0);
@@ -165,7 +163,7 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
             ehReg.unregister();
         }
     }
-
+*/
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testFailedClassloading() throws Exception {
         final AtomicInteger failedJobsCount = new AtomicInteger(0);

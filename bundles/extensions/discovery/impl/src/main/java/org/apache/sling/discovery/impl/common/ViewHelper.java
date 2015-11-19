@@ -117,17 +117,4 @@ public class ViewHelper {
         }
     }
 
-    /**
-     * Check if the established view matches the given set of slingIds
-     */
-    public static boolean establishedViewMatches(
-            final ResourceResolver resourceResolver, final Config config, final Set<String> view) {
-        final View establishedView = ViewHelper.getEstablishedView(resourceResolver, config);
-        if (establishedView == null) {
-            return false;
-        } else {
-            return (establishedView.matches(view));
-        }
-    }
-
 }

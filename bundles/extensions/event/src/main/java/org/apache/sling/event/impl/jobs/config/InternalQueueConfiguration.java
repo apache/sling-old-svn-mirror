@@ -30,10 +30,8 @@ import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.support.TopicMatcher;
 import org.apache.sling.event.impl.support.TopicMatcherHelper;
-import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.osgi.framework.Constants;
 import org.slf4j.Logger;
@@ -221,10 +219,6 @@ public class InternalQueueConfiguration
      * If it is invalid, it is ignored.
      */
     private boolean checkIsValid() {
-        if ( type == Type.IGNORE || type == Type.DROP ) {
-            Utility.logDeprecated(logger, "Queue is using deprecated queue type. Ignoring queue " + name + " with type " + type);
-            return false;
-        }
         if ( type == null ) {
             return false;
         }
@@ -307,25 +301,11 @@ public class InternalQueueConfiguration
     }
 
     /**
-     * @see org.apache.sling.event.jobs.QueueConfiguration#getPriority()
-     */
-    @Override
-    public JobUtil.JobPriority getPriority() {
-        return JobUtil.JobPriority.valueOf(this.priority.name());
-    }
-
-    /**
      * @see org.apache.sling.event.jobs.QueueConfiguration#getMaxParallel()
      */
     @Override
     public int getMaxParallel() {
         return this.maxParallelProcesses;
-    }
-
-    @Override
-    @Deprecated
-    public boolean isLocalQueue() {
-        return false;
     }
 
     /**
@@ -346,12 +326,6 @@ public class InternalQueueConfiguration
 
     public String getPid() {
         return this.pid;
-    }
-
-    @Override
-    @Deprecated
-    public String[] getApplicationIds() {
-        return null;
     }
 
     @Override

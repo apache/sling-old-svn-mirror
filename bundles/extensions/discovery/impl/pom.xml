@@ -23,13 +23,13 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
+        <version>25</version>
         <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.discovery.impl</artifactId>
     <packaging>bundle</packaging>
-    <version>1.1.9-SNAPSHOT</version>
+    <version>1.2.3-SNAPSHOT</version>
 
     <name>Apache Sling Resource-Based Discovery Service</name>
     <description>Implementation of Apache Sling Discovery based on Sling Resource providing a ClusterView through resource-clustering (eg jackrabbit clustering) and a TopologyView through HTTP POST heartbeats announcing sub-topologies to each other.</description>
@@ -57,6 +57,12 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+                <!--  with 3.0.0 the following bundle dependency is failing
+                      on AEM 5.6.1 - thus switching back to 2.5.3 here:
+					javax.servlet,version=[2.6,3) - - Cannot be resolved
+					javax.servlet.http,version=[2.6,3) - - Cannot be resolved
+                       -->
+                <version>2.5.3</version>
                 <extensions>true</extensions>
                 <configuration>
                   <instructions>
@@ -126,6 +132,38 @@
 			<version>1.0.0</version>
             <scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.sling</groupId>
+			<artifactId>org.apache.sling.discovery.commons</artifactId>
+			<version>1.0.5-SNAPSHOT</version>
+            <scope>provided</scope>
+		</dependency>
+        <!-- besides including discovery.commons' normal jar above, 
+              for testing a few test helper classes are also reused.
+              in order to achieve that, also adding a test/test-jar dependency: --> 
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.discovery.commons</artifactId>
+            <version>1.0.5-SNAPSHOT</version>
+            <scope>test</scope>
+            <type>test-jar</type>
+        </dependency>
+		<dependency>
+			<groupId>org.apache.sling</groupId>
+			<artifactId>org.apache.sling.discovery.base</artifactId>
+			<version>1.1.1-SNAPSHOT</version>
+            <scope>provided</scope>
+		</dependency>
+        <!-- besides including discovery.base' normal jar above, 
+              for testing a few test helper classes are also reused.
+              in order to achieve that, also adding a test/test-jar dependency: --> 
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.discovery.base</artifactId>
+            <version>1.1.1-SNAPSHOT</version>
+            <scope>test</scope>
+            <type>test-jar</type>
+        </dependency>
 		<dependency>
 			<groupId>org.apache.sling</groupId>
 			<artifactId>org.apache.sling.api</artifactId>

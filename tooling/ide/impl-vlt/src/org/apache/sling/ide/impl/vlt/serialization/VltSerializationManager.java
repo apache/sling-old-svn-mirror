@@ -31,7 +31,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.vault.fs.Mounter;
 import org.apache.jackrabbit.vault.fs.api.RepositoryAddress;
 import org.apache.jackrabbit.vault.fs.api.SerializationType;
@@ -103,15 +102,12 @@ public class VltSerializationManager implements SerializationManager {
 
         // TODO - refrain from doing I/O here
         // TODO - copied from TransactionImpl
-        InputStream in = null;
-        try {
-            in = new BufferedInputStream(new FileInputStream(file));
+        
+        try (InputStream in = new BufferedInputStream(new FileInputStream(file))) {
             SerializationType serType = XmlAnalyzer.analyze(new InputSource(in));
             return serType == SerializationType.XML_DOCVIEW;
         } catch (IOException e) {
             throw new RuntimeException(e);
-        } finally {
-            IOUtils.closeQuietly(in);
         }
     }
 
@@ -136,9 +132,8 @@ public class VltSerializationManager implements SerializationManager {
 
         // TODO - refrain from doing I/O here
         // TODO - copied from TransactionImpl
-        InputStream in = null;
-        try {
-            in = new BufferedInputStream(new FileInputStream(file));
+        
+        try (InputStream in = new BufferedInputStream(new FileInputStream(file))) {
             SerializationType serType = XmlAnalyzer.analyze(new InputSource(in));
             if (serType == SerializationType.XML_DOCVIEW) {
                 return getPathWithoutXmlExtension(file);
@@ -147,8 +142,6 @@ public class VltSerializationManager implements SerializationManager {
             return file.getAbsolutePath();
         } catch (IOException e) {
             throw new RuntimeException(e);
-        } finally {
-            IOUtils.closeQuietly(in);
         }
     }
 
@@ -252,10 +245,7 @@ public class VltSerializationManager implements SerializationManager {
             parser.parse(source, handler);
 
             return handler.getRoot();
-        } catch (SAXException e) {
-            // TODO proper error handling
-            throw new IOException(e);
-        } catch (ParserConfigurationException e) {
+        } catch (SAXException | ParserConfigurationException e) {
             // TODO proper error handling
             throw new IOException(e);
         }

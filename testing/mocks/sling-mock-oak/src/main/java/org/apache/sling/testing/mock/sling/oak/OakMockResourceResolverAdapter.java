@@ -18,7 +18,6 @@
  */
 package org.apache.sling.testing.mock.sling.oak;
 
-import org.apache.jackrabbit.oak.jcr.Jcr;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.testing.mock.sling.spi.ResourceResolverTypeAdapter;
@@ -35,7 +34,7 @@ public class OakMockResourceResolverAdapter implements ResourceResolverTypeAdapt
 
     @Override
     public SlingRepository newSlingRepository() {
-        return new RepositoryWrapper(new Jcr().createRepository());
+        return new OakMockSlingRepository();
     }
 
 }

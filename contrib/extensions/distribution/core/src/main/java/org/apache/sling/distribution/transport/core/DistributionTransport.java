@@ -22,7 +22,8 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
-import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.distribution.serialization.DistributionPackage;
 
 /**
  * A transport layer implementation to transport data between two (or eventually more) Sling instances.
@@ -33,29 +34,29 @@ import org.apache.sling.distribution.packaging.DistributionPackage;
 public interface DistributionTransport {
 
     /**
-     * Deliver a {@link org.apache.sling.distribution.packaging.DistributionPackage} to a target instance using this
+     * Deliver a {@link DistributionPackage} to a target instance using this
      * transport layer implementation.
      *
      * @param resourceResolver    a resolver used to eventually access local resources needed by the transport algorithm
-     * @param distributionPackage a {@link org.apache.sling.distribution.packaging.DistributionPackage} to transport
-     * @throws DistributionTransportException if the {@link org.apache.sling.distribution.packaging.DistributionPackage}
+     * @param distributionPackage a {@link DistributionPackage} to transport
+     * @throws DistributionException if the {@link DistributionPackage}
      *                                        fails to be delivered to the target instance (e.g. because of network, I/O issues)
      */
-    void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionTransportException;
+    void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException;
 
     /**
-     * Retrieve {@link org.apache.sling.distribution.packaging.DistributionPackage}s from a target Sling instance, which
+     * Retrieve {@link DistributionPackage}s from a target Sling instance, which
      * will create them according to {@link org.apache.sling.distribution.DistributionRequest}.
      *
      * @param resourceResolver a resolver used to eventually access local resources needed by the transport algorithm
      * @param request          a {@link org.apache.sling.distribution.DistributionRequest} to be forwarded to the target
      *                         instance
-     * @return an {@link java.lang.Iterable} of {@link org.apache.sling.distribution.packaging.DistributionPackage}s fetched
+     * @return an {@link java.lang.Iterable} of {@link DistributionPackage}s fetched
      * from the target instance.
-     * @throws DistributionTransportException if the {@link org.apache.sling.distribution.packaging.DistributionPackage}s
+     * @throws DistributionException if the {@link DistributionPackage}s
      *                                        fail to be retrieved from the target instance
      */
     @Nonnull
-    Iterable<DistributionPackage> retrievePackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionTransportException;
+    Iterable<DistributionPackage> retrievePackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionException;
 
 }

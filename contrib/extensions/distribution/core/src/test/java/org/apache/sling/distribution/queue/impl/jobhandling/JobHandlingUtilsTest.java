@@ -21,7 +21,7 @@ package org.apache.sling.distribution.queue.impl.jobhandling;
 import java.util.Map;
 
 import org.apache.sling.distribution.DistributionRequestType;
-import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.junit.Test;
 

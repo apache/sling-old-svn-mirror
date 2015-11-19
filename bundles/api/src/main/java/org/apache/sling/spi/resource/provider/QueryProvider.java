@@ -30,13 +30,17 @@ import aQute.bnd.annotation.ConsumerType;
 public interface QueryProvider <T> {
 
     /**
-     * Execute the query within the context of the provided resource resolver
+     * Execute the query within the context of the provided context.
+     *
+     * The implementation needs to filter the result based on the configuration
+     * from the {@link ProviderContext#getExcludedPaths()}.
+     *
      * @param ctx The resource context-
      * @param q The query
      * @param qi The query instructions
      * @return A query result or {@code null}.
      */
-    @CheckForNull QueryResult find(@Nonnull ResolveContext<T> ctx,
+    @CheckForNull QueryResult find(@Nonnull ResolverContext<T> ctx,
             @Nonnull Query q,
             @Nonnull QueryInstructions qi);
 }

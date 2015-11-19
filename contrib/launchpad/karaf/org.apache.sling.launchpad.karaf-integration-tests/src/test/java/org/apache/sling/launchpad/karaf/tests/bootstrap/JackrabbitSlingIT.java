@@ -19,6 +19,7 @@
 package org.apache.sling.launchpad.karaf.tests.bootstrap;
 
 import org.apache.sling.launchpad.karaf.testing.KarafTestSupport;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -93,6 +94,7 @@ public class JackrabbitSlingIT extends KarafTestSupport {
     }
 
     @Test
+    @Ignore
     public void testOrgApacheGeronimoSpecsGeronimoAnnotation_1_1_Spec() {
         final Bundle bundle = findBundle("org.apache.geronimo.specs.geronimo-annotation_1.1_spec");
         assertNotNull(bundle);
@@ -100,6 +102,7 @@ public class JackrabbitSlingIT extends KarafTestSupport {
     }
 
     @Test
+    @Ignore
     public void testOrgApacheGeronimoSpecsGeronimoAtinject_1_0_Spec() {
         final Bundle bundle = findBundle("org.apache.geronimo.specs.geronimo-atinject_1.0_spec");
         assertNotNull(bundle);
@@ -107,6 +110,7 @@ public class JackrabbitSlingIT extends KarafTestSupport {
     }
 
     @Test
+    @Ignore
     public void testOrgApacheGeronimoSpecsGeronimoEl_2_2_Spec() {
         final Bundle bundle = findBundle("org.apache.geronimo.specs.geronimo-el_2.2_spec");
         assertNotNull(bundle);
@@ -114,6 +118,7 @@ public class JackrabbitSlingIT extends KarafTestSupport {
     }
 
     @Test
+    @Ignore
     public void testOrgApacheGeronimoSpecsGeronimoInterceptor_1_1_Spec() {
         final Bundle bundle = findBundle("org.apache.geronimo.specs.geronimo-interceptor_1.1_spec");
         assertNotNull(bundle);
@@ -121,6 +126,7 @@ public class JackrabbitSlingIT extends KarafTestSupport {
     }
 
     @Test
+    @Ignore
     public void testOrgApacheGeronimoSpecsGeronimoJcdi_1_0_Spec() {
         final Bundle bundle = findBundle("org.apache.geronimo.specs.geronimo-jcdi_1.0_spec");
         assertNotNull(bundle);
@@ -128,6 +134,7 @@ public class JackrabbitSlingIT extends KarafTestSupport {
     }
 
     @Test
+    @Ignore
     public void testOrgApacheGeronimoSpecsGeronimoJta_1_1_Spec() {
         final Bundle bundle = findBundle("org.apache.geronimo.specs.geronimo-jta_1.1_spec");
         assertNotNull(bundle);

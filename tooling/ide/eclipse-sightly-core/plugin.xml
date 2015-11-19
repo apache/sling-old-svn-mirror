@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or
+    more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information regarding
+    copyright ownership. The ASF licenses this file to you under the
+    Apache License, Version 2.0 (the "License"); you may not use
+    this file except in compliance with the License. You may obtain
+    a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0 Unless required by
+    applicable law or agreed to in writing, software distributed
+    under the License is distributed on an "AS IS" BASIS, WITHOUT
+    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions
+    and limitations under the License.
+-->
+<?eclipse version="3.0"?>
+<plugin>
+
+	<!-- Full validation in the editor -->
+	<extension id="org.apache.sling.ide.eclipse.sightly.internal.Validator" name="Sightly Validator" point="org.eclipse.wst.validation.validatorV2">
+      <validator
+            build="true"
+            class="org.apache.sling.ide.eclipse.sightly.internal.Validator"
+            sourceid="org.apache.sling.ide.eclipse.sightly.htmlSyntaxTotalValidator"
+            manual="true"
+            version="1"
+            markerId="org.eclipse.wst.html.core.validationMarker">
+         <include>
+            <rules>
+               <contentType id="org.eclipse.wst.html.core.htmlsource"></contentType>
+               <fileext caseSensitive="false" ext="html"/>
+            </rules>
+         </include>
+         <group id="org.eclipse.wst.sse.core.structuredModelGroup"/>
+      </validator>
+   </extension>
+   
+   <!-- Sightly facets -->
+	<extension point="org.eclipse.wst.common.project.facet.core.facets">
+		<project-facet id="sightly">
+			<label>Sightly</label>
+			<description>Adds enhanced validation and content proposal to the HTML editor, assuming that all HTML files are Sightly templates.</description>
+		</project-facet>
+		
+  		<project-facet-version facet="sightly" version="1.1"/>
+  		
+  		<action facet="sightly" version="1.1" type="INSTALL">
+  			<delegate class="org.apache.sling.ide.eclipse.sightly.internal.SightlyFacetInstallDelegate"/>
+  		</action>
+
+  		<action facet="sightly" version="1.1" type="UNINSTALL">
+  			<delegate class="org.apache.sling.ide.eclipse.sightly.internal.SightlyFacetUninstallDelegate"/>
+  		</action>
+	</extension>
+	
+    <extension
+         point="org.eclipse.ui.trace.traceComponents">
+      <component
+            id="org.eclipse.ui.trace.tracingPrefPage"
+            label="Sling IDE Tooling">
+         <bundle
+               name="org.apache.sling.ide.eclipse-sightly-core"></bundle>
+      </component>
+   </extension>	
+</plugin>

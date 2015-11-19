@@ -4,7 +4,5 @@
 
     "serviceName" : "distributionService",
 
-    "requestAuthorizationStrategy.target" : "(name=privilegeRead)",
-
     "packageBuilder.target" : "(name=tempvlt)"
 }

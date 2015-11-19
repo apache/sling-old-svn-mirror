@@ -44,6 +44,7 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
@@ -54,12 +55,14 @@ import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.TopologyView;
-import org.apache.sling.discovery.impl.cluster.ClusterViewService;
-import org.apache.sling.discovery.impl.topology.announcement.Announcement;
-import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistry;
-import org.apache.sling.discovery.impl.topology.announcement.CachedAnnouncement;
-import org.apache.sling.discovery.impl.topology.connector.ConnectorRegistry;
-import org.apache.sling.discovery.impl.topology.connector.TopologyConnectorClientInformation;
+import org.apache.sling.discovery.base.commons.ClusterViewService;
+import org.apache.sling.discovery.base.connectors.announcement.Announcement;
+import org.apache.sling.discovery.base.connectors.announcement.AnnouncementRegistry;
+import org.apache.sling.discovery.base.connectors.announcement.CachedAnnouncement;
+import org.apache.sling.discovery.base.connectors.ping.ConnectorRegistry;
+import org.apache.sling.discovery.base.connectors.ping.TopologyConnectorClientInformation;
+import org.apache.sling.discovery.commons.providers.spi.base.ClusterSyncHistory;
+import org.apache.sling.discovery.commons.providers.spi.base.SyncTokenService;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,6 +78,7 @@ import org.slf4j.LoggerFactory;
             value="Apache Sling Web Console Plugin to display Background servlets and ExecutionEngine status"),
     @Property(name=WebConsoleConstants.PLUGIN_LABEL, value=TopologyWebConsolePlugin.LABEL),
     @Property(name=WebConsoleConstants.PLUGIN_TITLE, value=TopologyWebConsolePlugin.TITLE),
+    @Property(name="felix.webconsole.category", value="Sling"),
     @Property(name="felix.webconsole.configprinter.modes", value={"zip"})
 })
 @SuppressWarnings("serial")
@@ -102,6 +106,12 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
 
     @Reference
     private ConnectorRegistry connectorRegistry;
+
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY)
+    private SyncTokenService syncTokenService;
+
+    @Reference
+    private Config config;
 
     private TopologyView currentView;
 
@@ -279,6 +289,25 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         }
         pw.println("</pre>");
         pw.println("</br>");
+
+        pw.println("<p class=\"statline ui-state-highlight\">SyncTokenService History</p>");
+        pw.println("<pre>");
+        if (!config.useSyncTokenService()) {
+            pw.println("(disabled - useSyncTokenService flag is false)");
+        } else if (syncTokenService == null) {
+            pw.println("(no SyncTokenService available)");
+        } else {
+            ClusterSyncHistory clusterSyncHistory = syncTokenService.getClusterSyncHistory();
+            if (clusterSyncHistory == null) {
+                pw.println("(no history available)");
+            } else {
+                for (String syncHistoryEntry : clusterSyncHistory.getSyncHistory()) {
+                    pw.println(syncHistoryEntry);
+                }
+            }
+        }
+        pw.println("</pre>");
+        pw.println("<br/>");
     }
 
     /**
@@ -430,8 +459,8 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                 pw.println("<td><b>not connected</b></td>");
                 pw.println("<td"+tooltip+"><b>not ok (HTTP Status-Code: "+statusCode+", "+statusDetails+")</b></td>");
             }
-            pw.println("<td>"+beautifiedTimeDiff(topologyConnectorClient.getLastHeartbeatSent())+"</td>");
-            pw.println("<td>"+beautifiedDueTime(topologyConnectorClient.getNextHeartbeatDue())+"</td>");
+            pw.println("<td>"+beautifiedTimeDiff(topologyConnectorClient.getLastPingSent())+"</td>");
+            pw.println("<td>"+beautifiedDueTime(topologyConnectorClient.getNextPingDue())+"</td>");
             pw.println("<td>"+topologyConnectorClient.getLastRequestEncoding()+"</td>");
             pw.println("<td>"+topologyConnectorClient.getLastResponseEncoding()+"</td>");
             // //TODO fallback urls are not yet implemented!
@@ -525,7 +554,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
             } else {
                 pw.println("<td><i>n/a</i></td>");
             }
-            pw.println("<td>"+beautifiedTimeDiff(incomingCachedAnnouncement.getLastHeartbeat())+"</td>");
+            pw.println("<td>"+beautifiedTimeDiff(incomingCachedAnnouncement.getLastPing())+"</td>");
             pw.println("<td>"+beautifiedDueTime(incomingCachedAnnouncement.getSecondsUntilTimeout())+"</td>");
 
             pw.println("</tr>");
@@ -784,7 +813,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                     pw.print(incomingAnnouncement.getServerInfo());
                     pw.println();
                 }
-                pw.println("Last heartbeat received : "+beautifiedTimeDiff(incomingCachedAnnouncement.getLastHeartbeat()));
+                pw.println("Last heartbeat received : "+beautifiedTimeDiff(incomingCachedAnnouncement.getLastPing()));
                 pw.println("Timeout : "+beautifiedDueTime(incomingCachedAnnouncement.getSecondsUntilTimeout()));
 
                 pw.println();
@@ -845,8 +874,8 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                     }
                     pw.print(" (HTTP StatusCode: "+statusCode+", "+statusDetails+")");
                     pw.println();
-                    pw.println("Last heartbeat sent : "+beautifiedTimeDiff(topologyConnectorClient.getLastHeartbeatSent()));
-                    pw.println("Next heartbeat due : "+beautifiedDueTime(topologyConnectorClient.getNextHeartbeatDue()));
+                    pw.println("Last heartbeat sent : "+beautifiedTimeDiff(topologyConnectorClient.getLastPingSent()));
+                    pw.println("Next heartbeat due : "+beautifiedDueTime(topologyConnectorClient.getNextPingDue()));
                 }
                 pw.println();
             }
@@ -872,6 +901,26 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
             }
             pw.println();
         }
+
+        pw.println("SyncTokenService History");
+        pw.println("---------------------------------------");
+        if (!config.useSyncTokenService()) {
+            pw.println("(disabled - useSyncTokenService flag is false)");
+        } else if (syncTokenService == null) {
+            pw.println("(no SyncTokenService available)");
+        } else {
+            ClusterSyncHistory clusterSyncHistory = syncTokenService.getClusterSyncHistory();
+            if (clusterSyncHistory == null) {
+                pw.println("(no history available)");
+            } else {
+                for (String syncHistoryEntry : clusterSyncHistory.getSyncHistory()) {
+                    pw.println(syncHistoryEntry);
+                }
+            }
+        }
+        pw.println();
+        pw.println();
+    
     }
 
     /**

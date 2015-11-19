@@ -56,7 +56,7 @@ public class NewSlingContentProjectWizard extends AbstractNewSlingApplicationWiz
         }
         IProject project = page.getProjectHandle();
 
-        List<Operation> ops = new ArrayList<Operation>();
+        List<Operation> ops = new ArrayList<>();
 
         ops.add(new CreateProject(project));
         ops.add(new OpenProject(project));
