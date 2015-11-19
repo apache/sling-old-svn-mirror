@@ -339,7 +339,7 @@ public class VotingHandler implements EventHandler {
             Boolean myVote = yesVote.getVote(slingId);
             boolean votedYes = myVote != null && myVote;
             if (!votedYes) {
-                logger.info("analyzeVotings: declaring my personal winner: "+yesVote);
+                logger.info("analyzeVotings: declaring my personal winner: "+yesVote+" (myVote==null: "+(myVote==null)+")");
                 yesVote.vote(slingId, true, leaderElectionId);
                 result.put(yesVote, VotingDetail.VOTED_YES);
             } else {
