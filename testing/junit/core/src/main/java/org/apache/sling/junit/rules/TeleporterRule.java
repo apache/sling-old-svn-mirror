@@ -136,11 +136,14 @@ public abstract class TeleporterRule extends ExternalResource {
     
     /** Tell the concrete teleporter to embed resources, based on their path, in
      *  the test bundle. 
-     *  @param path a path that ends with a / causes all resources found under it
+     *  @param paths 0..N resource paths to add to the current rule. A path that 
+     *      ends with a / causes all resources found under it
      *      to be recursively embedded as well.
      */
-    public TeleporterRule withResources(String path) {
-        embeddedResourcePaths.add(path);
+    public TeleporterRule withResources(String ...paths) {
+        for(String path : paths) {
+            embeddedResourcePaths.add(path);
+        }
         return this;
     }
 }
