@@ -27,9 +27,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.OsgiMetadata;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.Reference;
+import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.ReferenceCardinality;
 import org.junit.Test;
 import org.osgi.framework.Constants;
 
