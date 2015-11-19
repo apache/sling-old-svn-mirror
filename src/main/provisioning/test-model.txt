@@ -20,7 +20,7 @@
 # Dependencies
 [artifacts]
   org.apache.sling/org.apache.sling.launchpad/8/slingstart
-  org.apache.sling/org.apache.sling.bgservlets/1.0.1-SNAPSHOT
+  org.apache.sling/org.apache.sling.bgservlets/1.0.3-SNAPSHOT
 
 # additional configuration for testing
 [configurations]
