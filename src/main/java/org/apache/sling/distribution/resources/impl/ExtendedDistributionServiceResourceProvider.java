@@ -187,7 +187,7 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
             result.put("id", item.getId());
             result.put("paths", packageInfo.getPaths());
             result.put("action", packageInfo.getRequestType());
-            result.put("type", packageInfo.getType());
+            result.put("userid", packageInfo.get(DistributionPackageUtils.PACKAGE_INFO_PROPERTY_REQUEST_USER, String.class));
 
             DistributionQueueItemStatus status = entry.getStatus();
             result.put("attempts", status.getAttempts());
