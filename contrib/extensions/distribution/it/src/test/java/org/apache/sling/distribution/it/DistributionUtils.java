@@ -54,7 +54,7 @@ public class DistributionUtils {
 
     private static final String JSON_SELECTOR = ".json";
     private static final String DISTRIBUTION_ROOT_PATH = "/libs/sling/distribution";
-    private static final String DISTRIBUTOR_USER = "testDistributorUser";
+    public static final String DISTRIBUTOR_USER = "testDistributorUser";
     private static final String DISTRIBUTOR_PASSWORD = "123";
 
 
@@ -354,8 +354,13 @@ public class DistributionUtils {
 
             Map<String, Object> itemProperties = new HashMap<String, Object>();
 
-            itemProperties.put("itemId", itemId);
+            itemProperties.put("id", queueItem.get("id"));
+            itemProperties.put("paths", queueItem.get("paths"));
             itemProperties.put("action", queueItem.get("action"));
+            itemProperties.put("userid", queueItem.get("userid"));
+            itemProperties.put("attempts", queueItem.get("attempts"));
+            itemProperties.put("time", queueItem.get("time"));
+            itemProperties.put("state", queueItem.get("state"));
 
             result.add(itemProperties);
         }

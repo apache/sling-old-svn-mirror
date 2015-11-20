@@ -28,6 +28,7 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
+import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageInfo;
@@ -80,25 +81,23 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
                 deleteItems(resourceResolver, queue, limit);
             }
         } else if ("copy".equals(operation)) {
-            String sourceQueue = request.getParameter("queuePath");
+            String from = request.getParameter("from");
             String[] idParam = request.getParameterValues("id");
 
-            if (idParam != null) {
+            if (idParam != null && from != null) {
+                DistributionAgent agent = request.getResource().getParent().getParent().adaptTo(DistributionAgent.class);
+                DistributionQueue sourceQueue = agent.getQueue(from);
+
                 addItems(resourceResolver, queue, sourceQueue, idParam);
             }
         }
     }
 
-    private void addItems(ResourceResolver resourceResolver, DistributionQueue targetQueue, String queuePath, String[] ids) {
-        DistributionQueue sourceQueue = null;
-        Resource resource = resourceResolver.getResource(queuePath);
+    private void addItems(ResourceResolver resourceResolver, DistributionQueue targetQueue, DistributionQueue sourceQueue, String[] ids) {
 
-        if (resource != null) {
-            sourceQueue = resource.adaptTo(DistributionQueue.class);
-        }
 
         if (sourceQueue == null) {
-            log.warn("cannot find source queue {}", queuePath);
+            log.warn("cannot find source queue {}", sourceQueue);
         }
 
         for (String id: ids) {
@@ -119,8 +118,8 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
 
     protected void deleteItems(ResourceResolver resourceResolver, DistributionQueue queue, String[] ids) {
         for (String id : ids) {
-            DistributionQueueEntry item = queue.getItem(id);
-            deleteItem(resourceResolver, queue, item);
+            DistributionQueueEntry entry = queue.getItem(id);
+            deleteItem(resourceResolver, queue, entry);
         }
     }
 
