@@ -35,6 +35,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
@@ -58,6 +59,14 @@ public final class MongoDBNoSqlAdapter extends AbstractNoSqlAdapter {
     public MongoDBNoSqlAdapter(MongoClient mongoClient, String database, String collection) {
         MongoDatabase db = mongoClient.getDatabase(database);
         this.collection = db.getCollection(collection);
+        //create indexes on key fields #SLING-5078
+        Document parenPathtIndex = new Document("_parentPath", 1);
+        this.collection.createIndex(parenPathtIndex);
+        
+        Document pathIndex = new Document("_path", 1);
+        IndexOptions idxOptions = new IndexOptions();
+        idxOptions.unique(true);
+        this.collection.createIndex(pathIndex, idxOptions);
     }
 
     @Override
