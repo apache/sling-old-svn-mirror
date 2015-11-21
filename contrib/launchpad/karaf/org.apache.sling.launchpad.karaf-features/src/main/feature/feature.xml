@@ -118,6 +118,7 @@
     <bundle>mvn:org.apache.sling/org.apache.sling.extensions.explorer/1.0.4</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
+    <feature version="${feature.version}">sling-scripting-javascript</feature>
   </feature>
   <feature name="sling-extension-featureflags" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.featureflags/1.0.2</bundle>
@@ -230,6 +231,7 @@
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-auth-form</feature>
+    <feature version="${feature.version}">sling-extension-explorer</feature>
   </feature>
   <feature name="sling-launchpad-oak" version="${feature.version}"><!-- hidden="true" -->
     <!-- Sling with Oak Repository and Felix Web Console -->
