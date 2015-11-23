@@ -53,7 +53,6 @@ final class OsgiServiceUtil {
      * @param componentContext Component context
      * @return true if activation/deactivation method was called. False if it failed.
      */
-    @SuppressWarnings("unchecked")
     public static boolean activateDeactivate(Object target, ComponentContext componentContext, boolean activate) {
         Class<?> targetClass = target.getClass();
 
@@ -390,7 +389,7 @@ final class OsgiServiceUtil {
         try {
             ServiceReference[] references = bundleContext.getServiceReferences(type.getName(), null);
             if (references != null) {
-                for (ServiceReference serviceReference : references) {
+                for (ServiceReference<?> serviceReference : references) {
                     Object serviceInstance = bundleContext.getService(serviceReference);
                     Map<String, Object> serviceConfig = new HashMap<String, Object>();
                     String[] keys = serviceReference.getPropertyKeys();
@@ -413,7 +412,7 @@ final class OsgiServiceUtil {
      * @return List of references
      */
     public static List<ReferenceInfo> getMatchingDynamicReferences(SortedSet<MockServiceRegistration> registeredServices,
-            MockServiceRegistration registration) {
+            MockServiceRegistration<?> registration) {
         List<ReferenceInfo> references = new ArrayList<ReferenceInfo>();
         for (MockServiceRegistration existingRegistration : registeredServices) {
             OsgiMetadata metadata = OsgiMetadataUtil.getMetadata(existingRegistration.getService().getClass());
@@ -444,6 +443,7 @@ final class OsgiServiceUtil {
             this.serviceReference = serviceReference;
         }
 
+        @SuppressWarnings("unchecked")
         public ServiceInfo(MockServiceRegistration registration) {
             this.serviceInstance = registration.getService();
             this.serviceConfig = MapUtil.toMap(registration.getProperties());

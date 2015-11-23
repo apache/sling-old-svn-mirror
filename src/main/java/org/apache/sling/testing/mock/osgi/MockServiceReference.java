@@ -28,12 +28,12 @@ import org.osgi.framework.ServiceReference;
 /**
  * Mock {@link ServiceReference} implementation.
  */
-class MockServiceReference implements ServiceReference {
+class MockServiceReference<T> implements ServiceReference<T> {
 
     private final Bundle bundle;
-    private final MockServiceRegistration serviceRegistration;
+    private final MockServiceRegistration<T> serviceRegistration;
 
-    public MockServiceReference(final Bundle bundle, final MockServiceRegistration serviceRegistration) {
+    public MockServiceReference(final Bundle bundle, final MockServiceRegistration<T> serviceRegistration) {
         this.bundle = bundle;
         this.serviceRegistration = serviceRegistration;
     }
@@ -113,7 +113,7 @@ class MockServiceReference implements ServiceReference {
         }
     }
 
-    Object getService() {
+    T getService() {
         return this.serviceRegistration.getService();
     }
 

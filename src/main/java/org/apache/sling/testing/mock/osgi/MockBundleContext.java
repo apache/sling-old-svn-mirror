@@ -47,6 +47,7 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceListener;
+import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -86,6 +87,7 @@ class MockBundleContext implements BundleContext {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public ServiceRegistration registerService(final String clazz, final Object service, final Dictionary properties) {
         String[] clazzes;
@@ -97,8 +99,9 @@ class MockBundleContext implements BundleContext {
         return registerService(clazzes, service, properties);
     }
 
-    // this is part of org.osgi.core 6.0.0
-    public <S> ServiceRegistration registerService(Class<S> clazz, S service, Dictionary<String, ?> properties) {
+    @SuppressWarnings("unchecked")
+    @Override
+    public <S> ServiceRegistration<S> registerService(Class<S> clazz, S service, Dictionary<String, ?> properties) {
         return registerService(clazz.getName(), service, properties);
     }
 
@@ -171,6 +174,7 @@ class MockBundleContext implements BundleContext {
         }
     }
     
+    @SuppressWarnings("unchecked")
     @Override
     public ServiceReference getServiceReference(final String clazz) {
         try {
@@ -185,11 +189,13 @@ class MockBundleContext implements BundleContext {
         return null;
     }
 
-    // this is part of org.osgi.core 6.0.0
-    public ServiceReference getServiceReference(Class clazz) {
+    @SuppressWarnings("unchecked")
+    @Override
+    public <S> ServiceReference<S> getServiceReference(Class<S> clazz) {
         return getServiceReference(clazz.getName());
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public ServiceReference[] getServiceReferences(final String clazz, final String filter) throws InvalidSyntaxException {
         Set<ServiceReference> result = new TreeSet<ServiceReference>();
@@ -205,11 +211,13 @@ class MockBundleContext implements BundleContext {
         }
     }
 
-    // this is part of org.osgi.core 6.0.0
-    public Collection<ServiceReference> getServiceReferences(Class clazz, String filter) throws InvalidSyntaxException {
-        return ImmutableList.<ServiceReference>copyOf(getServiceReferences(clazz.getName(), filter));
+    @SuppressWarnings("unchecked")
+    @Override
+    public <S> Collection<ServiceReference<S>> getServiceReferences(Class<S> clazz, String filter) throws InvalidSyntaxException {
+        return ImmutableList.<ServiceReference<S>>copyOf(getServiceReferences(clazz.getName(), filter));
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public ServiceReference[] getAllServiceReferences(final String clazz, final String filter) throws InvalidSyntaxException {
         // for now just do the same as getServiceReferences
@@ -217,8 +225,8 @@ class MockBundleContext implements BundleContext {
     }
 
     @Override
-    public Object getService(final ServiceReference serviceReference) {
-        return ((MockServiceReference)serviceReference).getService();
+    public <S> S getService(final ServiceReference<S> serviceReference) {
+        return ((MockServiceReference<S>)serviceReference).getService();
     }
 
     @Override
@@ -284,10 +292,11 @@ class MockBundleContext implements BundleContext {
         // accept method, but ignore it
     }
 
-    Object locateService(final String name, final ServiceReference reference) {
-        for (MockServiceRegistration serviceRegistration : this.registeredServices) {
+    @SuppressWarnings("unchecked")
+    <S> S locateService(final String name, final ServiceReference<S> reference) {
+        for (MockServiceRegistration<?> serviceRegistration : this.registeredServices) {
             if (serviceRegistration.getReference() == reference) {
-                return serviceRegistration.getService();
+                return (S)serviceRegistration.getService();
             }
         }
         return null;
@@ -308,7 +317,7 @@ class MockBundleContext implements BundleContext {
      * Deactivates all bundles registered in this mocked bundle context.
      */
     public void shutdown() {
-        for (MockServiceRegistration serviceRegistration : ImmutableList.copyOf(registeredServices).reverse()) {
+        for (MockServiceRegistration<?> serviceRegistration : ImmutableList.copyOf(registeredServices).reverse()) {
             try {
                 MockOsgi.deactivate(serviceRegistration.getService(), this, serviceRegistration.getProperties());
             }
@@ -339,21 +348,19 @@ class MockBundleContext implements BundleContext {
         throw new UnsupportedOperationException();
     }
 
-    // this is part of org.osgi.core 6.0.0
+    @Override
     public Bundle getBundle(String location) {
         throw new UnsupportedOperationException();
     }
 
-    // this is part of org.osgi.core 6.0.0
-    public <S> ServiceRegistration registerService(Class<S> clazz, ServiceFactory factory, Dictionary<String, ?> properties) {
+    @Override
+    public <S> ServiceRegistration<S> registerService(Class<S> clazz, ServiceFactory<S> factory, Dictionary<String, ?> properties) {
         throw new UnsupportedOperationException();
     }
 
-    // this is part of org.osgi.core 6.0.0
-    /* class org.osgi.framework.ServiceObjects does not exist in older OSGi versions
-    public ServiceObjects getServiceObjects(ServiceReference reference) {
+    @Override
+    public <S> ServiceObjects<S> getServiceObjects(ServiceReference<S> reference) {
         throw new UnsupportedOperationException();
     }
-    */
 
 }

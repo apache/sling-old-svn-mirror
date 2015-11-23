@@ -75,7 +75,7 @@ public class OsgiContextImplTest {
         Set<String> myService = new HashSet<String>();
         context.registerService(Set.class, myService, props);
 
-        ServiceReference serviceReference = context.bundleContext().getServiceReference(Set.class.getName());
+        ServiceReference<?> serviceReference = context.bundleContext().getServiceReference(Set.class.getName());
         Object serviceResult = context.bundleContext().getService(serviceReference);
         assertSame(myService, serviceResult);
         assertEquals("value1", serviceReference.getProperty("prop1"));
