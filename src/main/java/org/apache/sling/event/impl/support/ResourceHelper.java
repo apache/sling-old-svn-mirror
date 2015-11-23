@@ -210,16 +210,17 @@ public abstract class ResourceHelper {
                         if ( hasReadError == null ) {
                             hasReadError = new ArrayList<Exception>();
                         }
-                        final int count = hasReadError.size();
                         // let's find out which class might be missing
                         ObjectInputStream ois = null;
                         try {
                             ois = new ObjectInputStream((InputStream)entry.getValue());
                             ois.readObject();
+
+                            hasReadError.add(new Exception("Unable to deserialize property '" + entry.getKey() + "'"));
                         } catch (final ClassNotFoundException cnfe) {
                              hasReadError.add(new Exception("Unable to deserialize property '" + entry.getKey() + "'", cnfe));
                         } catch (final IOException ioe) {
-                            hasReadError.add(new Exception("Unable to deserialize property '" + entry.getKey() + "'", ioe));
+                            hasReadError.add(new RuntimeException("Unable to deserialize property '" + entry.getKey() + "'", ioe));
                         } finally {
                             if ( ois != null ) {
                                 try {
@@ -228,9 +229,6 @@ public abstract class ResourceHelper {
                                     // ignore
                                 }
                             }
-                        }
-                        if ( hasReadError.size() == count ) {
-                            hasReadError.add(new Exception("Unable to deserialize property '" + entry.getKey() + "'"));
                         }
                     }
                 }
