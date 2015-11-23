@@ -71,21 +71,40 @@ public class ValueMapDecorator implements ValueMap {
             } else if (type.isArray()) {
                 return (T) convertToArray(obj, type.getComponentType());
             } else if (type == String.class) {
-                return (T) String.valueOf(obj);
+                return (T) String.valueOf(getSingleValue(obj));
             } else if (type == Integer.class) {
-                return (T) (Integer) Integer.parseInt(obj.toString());
+                return (T) (Integer) Integer.parseInt(getSingleValue(obj));
             } else if (type == Long.class) {
-                return (T) (Long) Long.parseLong(obj.toString());
+                return (T) (Long) Long.parseLong(getSingleValue(obj));
             } else if (type == Double.class) {
-                return (T) (Double) Double.parseDouble(obj.toString());
+                return (T) (Double) Double.parseDouble(getSingleValue(obj));
             } else if (type == Boolean.class) {
-                return (T) (Boolean) Boolean.parseBoolean(obj.toString());
+                return (T) (Boolean) Boolean.parseBoolean(getSingleValue(obj));
             } else {
                 return null;
             }
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+    /**
+     * Gets a single value of String from the object. If the object is an array it returns it's first element.
+     * @param obj object or object array.
+     * @return result of <code>toString()</code> on object or first element of an object array. If @param obj is null
+     * or it's an array with first element that is null, then null is returned.
+     */
+    private String getSingleValue(Object obj) {
+        final String result;
+        if (obj == null) {
+            result = null;
+        } else if (obj.getClass().isArray()) {
+            final Object[] values = (Object[]) obj;
+            result = values[0] != null ? values[0].toString() : null;
+        } else {
+            result = obj.toString();
+        }
+        return result;
     }
 
     /**
@@ -237,6 +256,6 @@ public class ValueMapDecorator implements ValueMap {
     public boolean equals(Object obj) {
         return base.equals(obj);
     }
-    
-    
+
+
 }

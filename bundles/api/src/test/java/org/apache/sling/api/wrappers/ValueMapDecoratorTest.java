@@ -71,14 +71,13 @@ public class ValueMapDecoratorTest {
     }
 
     @Test
-    @Ignore("SLING-4658")
     public void testGettingSingleValuesFromMultiValueEntries() {
         map.put("prop1", new String[] { "test", "test2" });
         map.put("prop2", new String[] { "1", "2" });
         Assert.assertEquals("First element from underlying array should be returned", "test",
                 valueMap.get("prop1", String.class));
         Assert.assertEquals("First element from underlying array should be returned", Integer.valueOf(1),
-                valueMap.get("prop1", Integer.class));
+                valueMap.get("prop2", Integer.class));
     }
 
     @Test
