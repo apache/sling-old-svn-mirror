@@ -67,37 +67,37 @@ public class MockBundleContextTest {
         // prepare test services
         String clazz1 = String.class.getName();
         Object service1 = new Object();
-        Dictionary properties1 = getServiceProperties(null);
+        Dictionary<String, Object> properties1 = getServiceProperties(null);
         ServiceRegistration reg1 = bundleContext.registerService(clazz1, service1, properties1);
 
         String[] clazzes2 = new String[] { String.class.getName(), Integer.class.getName() };
         Object service2 = new Object();
-        Dictionary properties2 = getServiceProperties(null);
+        Dictionary<String, Object> properties2 = getServiceProperties(null);
         ServiceRegistration reg2 = bundleContext.registerService(clazzes2, service2, properties2);
 
         String clazz3 = Integer.class.getName();
         Object service3 = new Object();
-        Dictionary properties3 = getServiceProperties(100L);
+        Dictionary<String, Object> properties3 = getServiceProperties(100L);
         ServiceRegistration reg3 = bundleContext.registerService(clazz3, service3, properties3);
 
         // test get service references
-        ServiceReference refString = bundleContext.getServiceReference(String.class.getName());
+        ServiceReference<?> refString = bundleContext.getServiceReference(String.class.getName());
         assertSame(reg1.getReference(), refString);
 
-        ServiceReference refInteger = bundleContext.getServiceReference(Integer.class.getName());
+        ServiceReference<?> refInteger = bundleContext.getServiceReference(Integer.class.getName());
         assertSame(reg3.getReference(), refInteger);
 
-        ServiceReference[] refsString = bundleContext.getServiceReferences(String.class.getName(), null);
+        ServiceReference<?>[] refsString = bundleContext.getServiceReferences(String.class.getName(), null);
         assertEquals(2, refsString.length);
         assertSame(reg1.getReference(), refsString[0]);
         assertSame(reg2.getReference(), refsString[1]);
 
-        ServiceReference[] refsInteger = bundleContext.getServiceReferences(Integer.class.getName(), null);
+        ServiceReference<?>[] refsInteger = bundleContext.getServiceReferences(Integer.class.getName(), null);
         assertEquals(2, refsInteger.length);
         assertSame(reg3.getReference(), refsInteger[0]);
         assertSame(reg2.getReference(), refsInteger[1]);
 
-        ServiceReference[] allRefsString = bundleContext.getAllServiceReferences(String.class.getName(), null);
+        ServiceReference<?>[] allRefsString = bundleContext.getAllServiceReferences(String.class.getName(), null);
         assertArrayEquals(refsString, allRefsString);
 
         // test get services
@@ -116,7 +116,7 @@ public class MockBundleContextTest {
         // prepare test services
         String clazz1 = String.class.getName();
         Object service1 = new Object();
-        Dictionary properties1 = getServiceProperties(null);
+        Dictionary<String, Object> properties1 = getServiceProperties(null);
         ServiceRegistration reg1 = bundleContext.registerService(clazz1, service1, properties1);
         
         assertNotNull(bundleContext.getServiceReference(clazz1));
@@ -127,7 +127,7 @@ public class MockBundleContextTest {
     }
     
 
-    private Dictionary getServiceProperties(final Long serviceRanking) {
+    private Dictionary<String, Object> getServiceProperties(final Long serviceRanking) {
         Dictionary<String, Object> props = new Hashtable<String, Object>();
         if (serviceRanking != null) {
             props.put(Constants.SERVICE_RANKING, serviceRanking);

@@ -71,7 +71,6 @@ final class MapUtil {
      * @param properties Properties from unit test code or null if none where passed
      * @return Merged properties
      */
-    @SuppressWarnings("unchecked")
     public static Map<String, Object> propertiesMergeWithOsgiMetadata(Object target,
             ConfigurationAdmin configAdmin,
             Map<String, Object> properties) {

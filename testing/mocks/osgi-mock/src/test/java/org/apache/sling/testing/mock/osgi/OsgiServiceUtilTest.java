@@ -251,7 +251,6 @@ public class OsgiServiceUtilTest {
         private ComponentContext componentContext;
         private Map<String, Object> config;
 
-        @SuppressWarnings("unchecked")
         @Activate
         private void activate(ComponentContext ctx) {
             this.componentContext = ctx;
@@ -278,7 +277,7 @@ public class OsgiServiceUtilTest {
 
         public List<ServiceInterface2> getReferences2() {
             List<ServiceInterface2> services = new ArrayList<ServiceInterface2>();
-            for (ServiceReference serviceReference : references2) {
+            for (ServiceReference<?> serviceReference : references2) {
                 services.add((ServiceInterface2)componentContext.getBundleContext().getService(serviceReference));
             }
             return services;
