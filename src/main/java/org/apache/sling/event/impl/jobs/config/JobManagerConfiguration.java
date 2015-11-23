@@ -385,6 +385,10 @@ public class JobManagerConfiguration implements TopologyEventListener {
         return jobPath.startsWith(this.jobsBasePathWithSlash);
     }
 
+    public String getJobsBasePathWithSlash() {
+        return this.jobsBasePathWithSlash;
+    }
+
     public boolean isLock(final String lockPath) {
         return lockPath.startsWith(this.locksPathWithSlash);
     }
