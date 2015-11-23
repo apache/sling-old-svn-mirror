@@ -107,7 +107,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
     @Reference
     private ConnectorRegistry connectorRegistry;
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY)
+    @Reference
     private SyncTokenService syncTokenService;
 
     @Reference
