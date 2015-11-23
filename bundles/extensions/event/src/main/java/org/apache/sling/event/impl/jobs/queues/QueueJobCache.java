@@ -276,11 +276,12 @@ public class QueueJobCache {
                     if ( list.size() == maxPreloadLimit ) {
                         scanTopic.set(true);
                     }
+                } else if ( job.getProcessingStarted() != null ) {
+                    logger.debug("Ignoring job {} - processing already started.", job);
                 } else {
-                    if ( job.hasReadErrors() ) {
-                        scanTopic.set(true);
-                    }
-                    logger.debug("Ignoring job because {} or {}", job.getProcessingStarted(), job.hasReadErrors());
+                    // error reading job
+                    scanTopic.set(true);
+                    logger.debug("Ignoring job {} due to read errors.", job);
                 }
                 return list.size() < maxPreloadLimit;
             }
