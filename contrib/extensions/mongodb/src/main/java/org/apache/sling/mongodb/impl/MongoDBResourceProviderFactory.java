@@ -35,8 +35,10 @@ import org.osgi.service.event.EventAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBAddress;
+import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoOptions;
 
@@ -91,6 +93,7 @@ public class MongoDBResourceProviderFactory implements ResourceProviderFactory {
     @Reference
     private EventAdmin eventAdmin;
 
+    
     @Activate
     protected void activate(final Map<String, Object> props) throws Exception {
         final String[] roots = PropertiesUtil.toStringArray(props.get(ResourceProvider.ROOTS));
@@ -118,12 +121,34 @@ public class MongoDBResourceProviderFactory implements ResourceProviderFactory {
         final DB database = m.getDB( db );
         logger.info("Connected to database {}", database);
 
+        String[] collections = PropertiesUtil.toStringArray(props.get(PROP_FILTER_COLLECTIONS));
+        
         this.context = new MongoDBContext(database,
                 roots[0],
-                PropertiesUtil.toStringArray(props.get(PROP_FILTER_COLLECTIONS)),
+                collections,
                 this.eventAdmin);
+        //SLING-5078
+        buildUniqueIndexes(collections);
     }
 
+    /**
+     * https://issues.apache.org/jira/browse/SLING-5078
+     * @param collections
+     */
+    private void buildUniqueIndexes(String[] collections){
+    	
+    	DBObject parentIndex = new BasicDBObject("_parentPath", 1);
+    	
+    	DBObject pathIndex = new BasicDBObject("_path", 1);
+    	pathIndex.put("unique", true);
+    	
+    	for (String collname: collections){
+    		this.context.getDatabase().getCollection(collname).ensureIndex(parentIndex);
+    		this.context.getDatabase().getCollection(collname).ensureIndex(pathIndex);
+    	}
+    }
+    
+    
     /**
      * @see org.apache.sling.api.resource.ResourceProviderFactory#getResourceProvider(java.util.Map)
      */
