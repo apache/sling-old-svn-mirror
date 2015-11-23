@@ -386,8 +386,11 @@ final class OsgiMetadataUtil {
         private final String interfaceType;
         private final ReferenceCardinality cardinality;
         private final ReferencePolicy policy;
+        private final ReferencePolicyOption policyOption;
         private final String bind;
         private final String unbind;
+        private final String field;
+        private final FieldCollectionType fieldCollectionType;
 
         private Reference(Class<?> clazz, Node node) {
             this.clazz = clazz;
@@ -395,8 +398,11 @@ final class OsgiMetadataUtil {
             this.interfaceType = getAttributeValue(node, "interface");
             this.cardinality = toCardinality(getAttributeValue(node, "cardinality"));
             this.policy = toPolicy(getAttributeValue(node, "policy"));
+            this.policyOption = toPolicyOption(getAttributeValue(node, "policy-option"));
             this.bind = getAttributeValue(node, "bind");
             this.unbind = getAttributeValue(node, "unbind");
+            this.field = getAttributeValue(node, "field");
+            this.fieldCollectionType = toFieldCollectionType(getAttributeValue(node, "field-collection-type"));
         }
 
         public Class<?> getServiceClass() {
@@ -411,12 +417,29 @@ final class OsgiMetadataUtil {
             return this.interfaceType;
         }
 
+        public Class getInterfaceTypeAsClass() {
+            try {
+                return Class.forName(getInterfaceType());
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException("Service reference type not found: " + getInterfaceType());
+            }
+        }
+
         public ReferenceCardinality getCardinality() {
             return this.cardinality;
+        }
+        
+        public boolean isCardinalityMultiple() {
+            return this.cardinality == ReferenceCardinality.OPTIONAL_MULTIPLE
+                    || this.cardinality == ReferenceCardinality.MANDATORY_MULTIPLE;
         }
 
         public ReferencePolicy getPolicy() {
             return policy;
+        }
+
+        public ReferencePolicyOption getPolicyOption() {
+            return policyOption;
         }
 
         public String getBind() {
@@ -425,6 +448,14 @@ final class OsgiMetadataUtil {
 
         public String getUnbind() {
             return this.unbind;
+        }
+
+        public String getField() {
+            return this.field;
+        }
+        
+        public FieldCollectionType getFieldCollectionType() {
+            return this.fieldCollectionType;
         }
 
         private static ReferenceCardinality toCardinality(String value) {
@@ -443,6 +474,24 @@ final class OsgiMetadataUtil {
                 }
             }
             return ReferencePolicy.STATIC;
+        }
+
+        private static ReferencePolicyOption toPolicyOption(String value) {
+            for (ReferencePolicyOption item : ReferencePolicyOption.values()) {
+                if (StringUtils.equalsIgnoreCase(item.name(), value)) {
+                    return item;
+                }
+            }
+            return ReferencePolicyOption.RELUCTANT;
+        }
+
+        private static FieldCollectionType toFieldCollectionType(String value) {
+            for (FieldCollectionType item : FieldCollectionType.values()) {
+                if (StringUtils.equalsIgnoreCase(item.name(), value)) {
+                    return item;
+                }
+            }
+            return null;
         }
 
     }
@@ -511,6 +560,65 @@ final class OsgiMetadataUtil {
          * The service will be made available to the component as it comes and goes.
          */
         DYNAMIC;
+    }
+
+
+    /**
+     * Options for {@link Reference#policyOption()} property.
+     */
+    enum ReferencePolicyOption {
+
+        /**
+         * The reluctant policy option is the default policy option.
+         * When a new target service for a reference becomes available,
+         * references having the reluctant policy option for the static
+         * policy or the dynamic policy with a unary cardinality will
+         * ignore the new target service. References having the dynamic
+         * policy with a multiple cardinality will bind the new
+         * target service
+         */
+        RELUCTANT,
+
+        /**
+         * When a new target service for a reference becomes available,
+         * references having the greedy policy option will bind the new
+         * target service.
+         */
+        GREEDY;
+    }
+
+    /**
+     * Options for {@link Reference#policyOption()} property.
+     */
+    enum FieldCollectionType {
+
+        /**
+         * The bound service object. This is the default field collection type.
+         */
+        SERVICE,
+
+        /**
+         * A Service Reference for the bound service.
+         */
+        REFERENCE,
+
+        /**
+         * A Component Service Objects for the bound service.
+         */
+        SERVICEOBJECTS,
+
+        /**
+         * An unmodifiable Map containing the service properties of the bound service.
+         * This Map must implement Comparable.
+         */
+        PROPERTIES,
+
+        /**
+         * An unmodifiable Map.Entry whose key is an unmodifiable Map containing the 
+         * service properties of the bound service, as above, and whose value is the 
+         * bound service object. This Map.Entry must implement Comparable.
+         */
+        TUPLE;
     }
 
 }

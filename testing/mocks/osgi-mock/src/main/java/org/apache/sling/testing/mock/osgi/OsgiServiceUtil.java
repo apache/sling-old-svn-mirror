@@ -18,10 +18,12 @@
  */
 package org.apache.sling.testing.mock.osgi;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +31,7 @@ import java.util.SortedSet;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.FieldCollectionType;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.OsgiMetadata;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.Reference;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.ReferenceCardinality;
@@ -262,6 +265,49 @@ final class OsgiServiceUtil {
         }
     }
 
+    private static Field getField(Class clazz, String fieldName, Class<?> type) {
+        Field[] fields = clazz.getDeclaredFields();
+        for (Field field : fields) {
+            if (StringUtils.equals(field.getName(), fieldName) && field.getType().equals(type)) {
+                return field;
+            }
+        }
+        // not found? check super classes
+        Class<?> superClass = clazz.getSuperclass();
+        if (superClass != null && superClass != Object.class) {
+            return getField(superClass, fieldName, type);
+        }
+        return null;
+    }
+    
+    private static Field getFieldWithAssignableType(Class clazz, String fieldName, Class<?> type) {
+        Field[] fields = clazz.getDeclaredFields();
+        for (Field field : fields) {
+            if (StringUtils.equals(field.getName(), fieldName) && field.getType().isAssignableFrom(type)) {
+                return field;
+            }
+        }
+        // not found? check super classes
+        Class<?> superClass = clazz.getSuperclass();
+        if (superClass != null && superClass != Object.class) {
+            return getFieldWithAssignableType(superClass, fieldName, type);
+        }
+        return null;
+    }
+    
+    private static void setField(Object target, Field field, Object value) {
+        try {
+            field.setAccessible(true);
+            field.set(target, value);
+        } catch (IllegalAccessException ex) {
+            throw new RuntimeException("Unable to set field '" + field.getName() + "' for class "
+                    + target.getClass().getName(), ex);
+        } catch (IllegalArgumentException ex) {
+            throw new RuntimeException("Unable to set field '" + field.getName() + "' for class "
+                    + target.getClass().getName(), ex);
+        }
+    }
+    
     /**
      * Simulate OSGi service dependency injection. Injects direct references and
      * multiple references.
@@ -294,12 +340,7 @@ final class OsgiServiceUtil {
         Class<?> targetClass = target.getClass();
 
         // get reference type
-        Class<?> type;
-        try {
-            type = Class.forName(reference.getInterfaceType());
-        } catch (ClassNotFoundException ex) {
-            throw new RuntimeException("Unable to instantiate reference type: " + reference.getInterfaceType(), ex);
-        }
+        Class<?> type = reference.getInterfaceTypeAsClass();
 
         // get matching service references
         List<ServiceInfo> matchingServices = getMatchingServices(type, bundleContext);
@@ -330,6 +371,13 @@ final class OsgiServiceUtil {
 
         // try to invoke bind method
         String methodName = bind ? reference.getBind() : reference.getUnbind();
+        String fieldName = reference.getField();
+        
+        if (StringUtils.isEmpty(methodName) && StringUtils.isEmpty(fieldName)) {
+            throw new RuntimeException("No bind/unbind method name or file name defined "
+                    + "for reference '" + reference.getName() + "' for class " +  targetClass.getName());
+        }
+
         if (StringUtils.isNotEmpty(methodName)) {
             
             // 1. ServiceReference
@@ -340,12 +388,7 @@ final class OsgiServiceUtil {
             }
             
             // 2. assignable from service instance
-            Class<?> interfaceType;
-            try {
-                interfaceType = Class.forName(reference.getInterfaceType());
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException("Service reference type not found: " + reference.getInterfaceType());
-            }
+            Class<?> interfaceType = reference.getInterfaceTypeAsClass();
             method = getMethodWithAssignableTypes(targetClass, methodName, new Class<?>[] { interfaceType });
             if (method != null) {
                 invokeMethod(target, method, new Object[] { serviceInfo.getServiceInstance() });
@@ -358,10 +401,112 @@ final class OsgiServiceUtil {
                 invokeMethod(target, method, new Object[] { serviceInfo.getServiceInstance(), serviceInfo.getServiceConfig() });
                 return;
             }
+        
+            throw new RuntimeException((bind ? "Bind" : "Unbind") + " method with name " + methodName + " not found "
+                    + "for reference '" + reference.getName() + "' for class " +  targetClass.getName());
+        }
+        
+        // in OSGi declarative services 1.3 there are no bind/unbind methods - modify the field directly
+        else if (StringUtils.isNotEmpty(fieldName)) {
+            
+            // check for field with list/collection reference
+            if (reference.isCardinalityMultiple()) {
+                switch (reference.getFieldCollectionType()) {
+                    case SERVICE:
+                    case REFERENCE:
+                        Object item = serviceInfo.getServiceInstance();
+                        if (reference.getFieldCollectionType() == FieldCollectionType.REFERENCE) {
+                            item = serviceInfo.getServiceReference();
+                        }
+                        // 1. collection
+                        Field field = getFieldWithAssignableType(targetClass, fieldName, Collection.class);
+                        if (field != null) {
+                            if (bind) {
+                                addToCollection(target, field, item);
+                            }
+                            else {
+                                removeFromCollection(target, field, item);
+                            }
+                            return;
+                        }
+                        
+                        // 2. list
+                        field = getField(targetClass, fieldName, List.class);
+                        if (field != null) {
+                            if (bind) {
+                                addToCollection(target, field, item);
+                            }
+                            else {
+                                removeFromCollection(target, field, item);
+                            }
+                            return;
+                        }
+                        break;
+                    default:
+                        throw new RuntimeException("Field collection type '" + reference.getFieldCollectionType() + "' not supported "
+                                + "for reference '" + reference.getName() + "' for class " +  targetClass.getName());
+                }
+            }
+            
+            // check for single field reference
+            else {
+                // 1. assignable from service instance
+                Class<?> interfaceType = reference.getInterfaceTypeAsClass();
+                Field field = getFieldWithAssignableType(targetClass, fieldName, interfaceType);
+                if (field != null) {
+                    setField(target, field, bind ? serviceInfo.getServiceInstance() : null);
+                    return;
+                }
+                
+                // 2. ServiceReference
+                field = getField(targetClass, fieldName, ServiceReference.class);
+                if (field != null) {
+                    setField(target, field, bind ? serviceInfo.getServiceReference() : null);
+                    return;
+                }
+            }
         }
 
-        throw new RuntimeException((bind ? "Bind" : "Unbind") + " method with name " + methodName + " not found "
-                + "for reference '" + reference.getName() + "' for class " +  targetClass.getName());
+    }
+    
+    @SuppressWarnings("unchecked")
+    private static void addToCollection(Object target, Field field, Object item) {
+        try {
+            field.setAccessible(true);
+            Collection<Object> collection = (Collection<Object>)field.get(target);
+            if (collection == null) {
+                collection = new ArrayList<>();
+            }
+            collection.add(item);
+            field.set(target, collection);
+            
+        } catch (IllegalAccessException ex) {
+            throw new RuntimeException("Unable to set field '" + field.getName() + "' for class "
+                    + target.getClass().getName(), ex);
+        } catch (IllegalArgumentException ex) {
+            throw new RuntimeException("Unable to set field '" + field.getName() + "' for class "
+                    + target.getClass().getName(), ex);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void removeFromCollection(Object target, Field field, Object item) {
+        try {
+            field.setAccessible(true);
+            Collection<Object> collection = (Collection<Object>)field.get(target);
+            if (collection == null) {
+                return;
+            }
+            collection.remove(item);
+            field.set(target, collection);
+            
+        } catch (IllegalAccessException ex) {
+            throw new RuntimeException("Unable to set field '" + field.getName() + "' for class "
+                    + target.getClass().getName(), ex);
+        } catch (IllegalArgumentException ex) {
+            throw new RuntimeException("Unable to set field '" + field.getName() + "' for class "
+                    + target.getClass().getName(), ex);
+        }
     }
 
     /**

@@ -335,6 +335,62 @@ public class OsgiServiceUtilTest {
 
     }
 
+    public static class Service3OsgiR6 {
+
+        private ServiceInterface1 reference1;
+        private ServiceInterface1Optional reference1Optional;
+        private List<ServiceReference> references2 = new ArrayList<ServiceReference>();
+        private List<ServiceSuperInterface3> references3 = new ArrayList<ServiceSuperInterface3>();
+
+        private ComponentContext componentContext;
+        private Map<String, Object> config;
+
+        @Activate
+        private void activate(ComponentContext ctx) {
+            this.componentContext = ctx;
+            this.config = MapUtil.toMap(ctx.getProperties());
+        }
+
+        @Deactivate
+        private void deactivate(ComponentContext ctx) {
+            this.componentContext = null;
+        }
+
+        @Modified
+        private void modified(Map<String,Object> newConfig) {
+            this.config = newConfig;
+        }
+
+        public ServiceInterface1 getReference1() {
+            return this.reference1;
+        }
+
+        public ServiceInterface1Optional getReference1Optional() {
+            return this.reference1Optional;
+        }
+
+        public List<ServiceInterface2> getReferences2() {
+            List<ServiceInterface2> services = new ArrayList<ServiceInterface2>();
+            for (ServiceReference<?> serviceReference : references2) {
+                services.add((ServiceInterface2)componentContext.getBundleContext().getService(serviceReference));
+            }
+            return services;
+        }
+
+        public List<ServiceSuperInterface3> getReferences3() {
+            return this.references3;
+        }
+
+        public ComponentContext getComponentContext() {
+            return this.componentContext;
+        }
+
+        public Map<String, Object> getConfig() {
+            return config;
+        }
+
+    }
+
     @Component
     @Reference(referenceInterface = ServiceInterface1.class, name = "customName", bind = "customBind", unbind = "customUnbind")
     public static class Service4 {
