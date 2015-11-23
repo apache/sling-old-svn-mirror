@@ -137,6 +137,7 @@ public abstract class CommonTests {
     }
     
     public Collection<Option> commonOptions() {
+        final String tikaVersion = System.getProperty("tika.version", "NO_TIKA_VERSION??");
         final String localRepo = System.getProperty("maven.repo.local", "");
         final String paxVmOptions = System.getProperty("pax.vm.options", "");
         final boolean webconsole = "true".equals(System.getProperty("webconsole.active", "false"));
@@ -182,8 +183,8 @@ public abstract class CommonTests {
         opt.add(mavenBundle("org.apache.servicemix.bundles", "org.apache.servicemix.bundles.concurrent", "1.3.4_1"));
 
         opt.add(mavenBundle("org.apache.geronimo.bundles", "commons-httpclient", "3.1_1"));
-        opt.add(mavenBundle("org.apache.tika", "tika-core", "1.10"));
-        opt.add(mavenBundle("org.apache.tika", "tika-bundle", "1.10"));
+        opt.add(mavenBundle("org.apache.tika", "tika-core", tikaVersion));
+        opt.add(mavenBundle("org.apache.tika", "tika-bundle", tikaVersion));
 
         opt.add(mavenBundle("org.apache.felix", "org.apache.felix.http.jetty", "2.2.2"));
         opt.add(mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.3.2"));

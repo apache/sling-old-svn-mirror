@@ -33,7 +33,7 @@
     <!-- P R O J E C T                                                           -->
     <!-- ======================================================================= -->
     <artifactId>org.apache.sling.distribution.sample</artifactId>
-    <version>0.1.3-SNAPSHOT</version>
+    <version>0.1.5-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Distribution Sample</name>

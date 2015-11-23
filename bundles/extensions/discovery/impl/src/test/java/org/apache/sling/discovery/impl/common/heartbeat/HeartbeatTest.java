@@ -55,6 +55,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import junitx.util.PrivateAccessor;
+
 public class HeartbeatTest {
     
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -232,33 +234,43 @@ public class HeartbeatTest {
         logger.info("doTestPartitioning: letting heartbeats be sent by all instances for a few loops...");
         logger.info("doTestPartitioning: --------------------------------");
         HeartbeatHandler hhSlow = slowMachine.getHeartbeatHandler();
-        for(int i=0; i<3; i++) {
+        for(int i=0; i<5; i++) {
             logger.info("doTestPartitioning: --------------------------------");
             logger.info("doTestPartitioning: doing pinging with hhSlow now...");
             logger.info("doTestPartitioning: --------------------------------");
-            hhSlow.issueHeartbeat();
-            hhSlow.doCheckView();
+            synchronized(lock(hhSlow)) {
+                hhSlow.issueHeartbeat();
+                hhSlow.doCheckView();
+            }
             if (!scheduler) {
                 logger.info("doTestPartitioning: --------------------------------");
                 logger.info("doTestPartitioning: doing pinging with fastMachine1 now...");
                 logger.info("doTestPartitioning: --------------------------------");
-                fastMachine1.getHeartbeatHandler().issueHeartbeat();
-                fastMachine1.getHeartbeatHandler().doCheckView();
+                synchronized(lock(fastMachine1.getHeartbeatHandler())) {
+                    fastMachine1.getHeartbeatHandler().issueHeartbeat();
+                    fastMachine1.getHeartbeatHandler().doCheckView();
+                }
                 logger.info("doTestPartitioning: --------------------------------");
                 logger.info("doTestPartitioning: doing pinging with fastMachine2 now...");
                 logger.info("doTestPartitioning: --------------------------------");
-                fastMachine2.getHeartbeatHandler().issueHeartbeat();
-                fastMachine2.getHeartbeatHandler().doCheckView();
+                synchronized(lock(fastMachine2.getHeartbeatHandler())) {
+                    fastMachine2.getHeartbeatHandler().issueHeartbeat();
+                    fastMachine2.getHeartbeatHandler().doCheckView();
+                }
                 logger.info("doTestPartitioning: --------------------------------");
                 logger.info("doTestPartitioning: doing pinging with fastMachine3 now...");
                 logger.info("doTestPartitioning: --------------------------------");
-                fastMachine3.getHeartbeatHandler().issueHeartbeat();
-                fastMachine3.getHeartbeatHandler().doCheckView();
+                synchronized(lock(fastMachine3.getHeartbeatHandler())) {
+                    fastMachine3.getHeartbeatHandler().issueHeartbeat();
+                    fastMachine3.getHeartbeatHandler().doCheckView();
+                }
                 logger.info("doTestPartitioning: --------------------------------");
                 logger.info("doTestPartitioning: doing pinging with fastMachine4 now...");
                 logger.info("doTestPartitioning: --------------------------------");
-                fastMachine4.getHeartbeatHandler().issueHeartbeat();
-                fastMachine4.getHeartbeatHandler().doCheckView();
+                synchronized(lock(fastMachine4.getHeartbeatHandler())) {
+                    fastMachine4.getHeartbeatHandler().issueHeartbeat();
+                    fastMachine4.getHeartbeatHandler().doCheckView();
+                }
             }
             Thread.sleep(1000);
         }
@@ -290,14 +302,22 @@ public class HeartbeatTest {
         logger.info("doTestPartitioning: letting slowMachine NOT send any heartbeats for 12sec, only the fast ones do...");
         for(int i=0; i<12; i++) {
             if (!scheduler) {
-                fastMachine1.getHeartbeatHandler().issueHeartbeat();
-                fastMachine1.getHeartbeatHandler().doCheckView();
-                fastMachine2.getHeartbeatHandler().issueHeartbeat();
-                fastMachine2.getHeartbeatHandler().doCheckView();
-                fastMachine3.getHeartbeatHandler().issueHeartbeat();
-                fastMachine3.getHeartbeatHandler().doCheckView();
-                fastMachine4.getHeartbeatHandler().issueHeartbeat();
-                fastMachine4.getHeartbeatHandler().doCheckView();
+                synchronized(lock(fastMachine1.getHeartbeatHandler())) {
+                    fastMachine1.getHeartbeatHandler().issueHeartbeat();
+                    fastMachine1.getHeartbeatHandler().doCheckView();
+                }
+                synchronized(lock(fastMachine2.getHeartbeatHandler())) {
+                    fastMachine2.getHeartbeatHandler().issueHeartbeat();
+                    fastMachine2.getHeartbeatHandler().doCheckView();
+                }
+                synchronized(lock(fastMachine3.getHeartbeatHandler())) {
+                    fastMachine3.getHeartbeatHandler().issueHeartbeat();
+                    fastMachine3.getHeartbeatHandler().doCheckView();
+                }
+                synchronized(lock(fastMachine4.getHeartbeatHandler())) {
+                    fastMachine4.getHeartbeatHandler().issueHeartbeat();
+                    fastMachine4.getHeartbeatHandler().doCheckView();
+                }
             }
             Thread.sleep(1000);
         }
@@ -346,14 +366,22 @@ public class HeartbeatTest {
             // again, can't make any assertion on how many instances the slow non-current view contains...
             //assertEquals(5, slowTopo.getInstances().size());
             if (!scheduler) {
-                fastMachine1.getHeartbeatHandler().issueHeartbeat();
-                fastMachine1.getHeartbeatHandler().doCheckView();
-                fastMachine2.getHeartbeatHandler().issueHeartbeat();
-                fastMachine2.getHeartbeatHandler().doCheckView();
-                fastMachine3.getHeartbeatHandler().issueHeartbeat();
-                fastMachine3.getHeartbeatHandler().doCheckView();
-                fastMachine4.getHeartbeatHandler().issueHeartbeat();
-                fastMachine4.getHeartbeatHandler().doCheckView();
+                synchronized(lock(fastMachine1.getHeartbeatHandler())) {
+                    fastMachine1.getHeartbeatHandler().issueHeartbeat();
+                    fastMachine1.getHeartbeatHandler().doCheckView();
+                }
+                synchronized(lock(fastMachine2.getHeartbeatHandler())) {
+                    fastMachine2.getHeartbeatHandler().issueHeartbeat();
+                    fastMachine2.getHeartbeatHandler().doCheckView();
+                }
+                synchronized(lock(fastMachine3.getHeartbeatHandler())) {
+                    fastMachine3.getHeartbeatHandler().issueHeartbeat();
+                    fastMachine3.getHeartbeatHandler().doCheckView();
+                }
+                synchronized(lock(fastMachine4.getHeartbeatHandler())) {
+                    fastMachine4.getHeartbeatHandler().issueHeartbeat();
+                    fastMachine4.getHeartbeatHandler().doCheckView();
+                }
             }
         }
 
@@ -361,14 +389,22 @@ public class HeartbeatTest {
             hhSlow.issueHeartbeat();
             hhSlow.doCheckView();
             if (!scheduler) {
-                fastMachine1.getHeartbeatHandler().issueHeartbeat();
-                fastMachine1.getHeartbeatHandler().doCheckView();
-                fastMachine2.getHeartbeatHandler().issueHeartbeat();
-                fastMachine2.getHeartbeatHandler().doCheckView();
-                fastMachine3.getHeartbeatHandler().issueHeartbeat();
-                fastMachine3.getHeartbeatHandler().doCheckView();
-                fastMachine4.getHeartbeatHandler().issueHeartbeat();
-                fastMachine4.getHeartbeatHandler().doCheckView();
+                synchronized(lock(fastMachine1.getHeartbeatHandler())) {
+                    fastMachine1.getHeartbeatHandler().issueHeartbeat();
+                    fastMachine1.getHeartbeatHandler().doCheckView();
+                }
+                synchronized(lock(fastMachine2.getHeartbeatHandler())) {
+                    fastMachine2.getHeartbeatHandler().issueHeartbeat();
+                    fastMachine2.getHeartbeatHandler().doCheckView();
+                }
+                synchronized(lock(fastMachine3.getHeartbeatHandler())) {
+                    fastMachine3.getHeartbeatHandler().issueHeartbeat();
+                    fastMachine3.getHeartbeatHandler().doCheckView();
+                }
+                synchronized(lock(fastMachine4.getHeartbeatHandler())) {
+                    fastMachine4.getHeartbeatHandler().issueHeartbeat();
+                    fastMachine4.getHeartbeatHandler().doCheckView();
+                }
             }
             Thread.sleep(1000);
         }
@@ -449,10 +485,14 @@ public class HeartbeatTest {
         // make few rounds of heartbeats so that the two instances see each other
         logger.info("doTestSlowAndFastMachine: send a couple of heartbeats to connect the two..");
         for(int i=0; i<5; i++) {
-            hhSlow.issueHeartbeat();
-            hhSlow.doCheckView();
-            hhFast.issueHeartbeat();
-            hhFast.doCheckView();
+            synchronized(lock(hhSlow)) {
+                hhSlow.issueHeartbeat();
+                hhSlow.doCheckView();
+            }
+            synchronized(lock(hhFast)) {
+                hhFast.issueHeartbeat();
+                hhFast.doCheckView();
+            }
             Thread.sleep(100);
         }
         logger.info("doTestSlowAndFastMachine: now the two instances should be connected.");
@@ -467,12 +507,16 @@ public class HeartbeatTest {
         
         // now let the slow machine be slow while the fast one updates as expected
         logger.info("doTestSlowAndFastMachine: last heartbeat of slowMachine.");
-        hhSlow.issueHeartbeat();
+        synchronized(lock(hhSlow)) {
+            hhSlow.issueHeartbeat();
+        }
         logger.info("doTestSlowAndFastMachine: while the fastMachine still sends heartbeats...");
         for(int i=0; i<6; i++) {
             Thread.sleep(1500);
-            hhFast.issueHeartbeat();
-            hhFast.doCheckView();
+            synchronized(lock(hhFast)) {
+                hhFast.issueHeartbeat();
+                hhFast.doCheckView();
+            }
         }
         logger.info("doTestSlowAndFastMachine: now the fastMachine should have decoupled the slow one");
         fastMachine.dumpRepo();
@@ -494,7 +538,9 @@ public class HeartbeatTest {
         hhSlow.doCheckView();
         slowMachine.dumpRepo();
         logger.info("doTestSlowAndFastMachine: slowMachine is going to also do a heartbeat next");
-        hhSlow.issueHeartbeat();
+        synchronized(lock(hhSlow)) {
+            hhSlow.issueHeartbeat();
+        }
         assertEquals(TopologyEvent.Type.TOPOLOGY_CHANGED, fastListener.getLastEvent().getType());
         assertEquals(3, fastListener.getEventCount());
         assertEquals(TopologyEvent.Type.TOPOLOGY_CHANGING, slowListener.getLastEvent().getType());
@@ -512,10 +558,14 @@ public class HeartbeatTest {
         // make few rounds of heartbeats so that the two instances see each other again
         logger.info("doTestSlowAndFastMachine: now let both fast and slow issue heartbeats...");
         for(int i=0; i<4; i++) {
-            hhFast.issueHeartbeat();
-            hhFast.doCheckView();
-            hhSlow.issueHeartbeat();
-            hhSlow.doCheckView();
+            synchronized(lock(hhFast)) {
+                hhFast.issueHeartbeat();
+                hhFast.doCheckView();
+            }
+            synchronized(lock(hhSlow)) {
+                hhSlow.issueHeartbeat();
+                hhSlow.doCheckView();
+            }
             Thread.sleep(1000);
         }
         logger.info("doTestSlowAndFastMachine: by now the two should have joined");
@@ -532,6 +582,12 @@ public class HeartbeatTest {
         assertEquals(3, slowListener.getEventCount());
     }
     
+    private Object lock(HeartbeatHandler heartbeatHandler) throws NoSuchFieldException {
+        //TODO: refactor HeartbeatHandler to provide such a synchronized method
+        // rather having the test rely on this
+        return PrivateAccessor.getField(heartbeatHandler, "lock");
+    }
+
     /**
      * SLING-5027 : test to reproduce the voting loop
      * (and verify that it's fixed)

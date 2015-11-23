@@ -41,8 +41,6 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -447,6 +445,72 @@ final class OsgiMetadataUtil {
             return ReferencePolicy.STATIC;
         }
 
+    }
+
+
+    /**
+     * Options for {@link Reference#cardinality()} property.
+     */
+    enum ReferenceCardinality {
+
+        /**
+         * Optional, unary reference: No service required to be available for the
+         * reference to be satisfied. Only a single service is available through this
+         * reference.
+         */
+        OPTIONAL_UNARY("0..1"),
+
+        /**
+         * Mandatory, unary reference: At least one service must be available for
+         * the reference to be satisfied. Only a single service is available through
+         * this reference.
+         */
+        MANDATORY_UNARY("1..1"),
+
+        /**
+         * Optional, multiple reference: No service required to be available for the
+         * reference to be satisfied. All matching services are available through
+         * this reference.
+         */
+        OPTIONAL_MULTIPLE("0..n"),
+
+        /**
+         * Mandatory, multiple reference: At least one service must be available for
+         * the reference to be satisfied. All matching services are available
+         * through this reference.
+         */
+        MANDATORY_MULTIPLE("1..n");
+
+        private final String cardinalityString;
+
+        private ReferenceCardinality(final String cardinalityString) {
+            this.cardinalityString = cardinalityString;
+        }
+
+        /**
+         * @return String representation of cardinality
+         */
+        public String getCardinalityString() {
+            return this.cardinalityString;
+        }
+
+    }
+
+    /**
+     * Options for {@link Reference#policy()} property.
+     */
+    enum ReferencePolicy {
+
+        /**
+         * The component will be deactivated and re-activated if the service comes
+         * and/or goes away.
+         */
+        STATIC,
+
+        /**
+         * The service will be made available to the component as it comes and goes.
+         */
+        DYNAMIC;
     }
 
 }

@@ -21,7 +21,7 @@ package org.apache.sling.distribution.queue;
 import javax.annotation.Nonnull;
 
 import aQute.bnd.annotation.ProviderType;
-import org.apache.sling.distribution.DistributionException;
+import org.apache.sling.distribution.common.DistributionException;
 
 /**
  * A provider for {@link DistributionQueue}s

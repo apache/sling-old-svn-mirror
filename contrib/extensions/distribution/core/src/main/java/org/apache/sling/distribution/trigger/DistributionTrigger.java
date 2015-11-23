@@ -21,7 +21,7 @@ package org.apache.sling.distribution.trigger;
 import javax.annotation.Nonnull;
 
 import aQute.bnd.annotation.ConsumerType;
-import org.apache.sling.distribution.DistributionException;
+import org.apache.sling.distribution.common.DistributionException;
 
 /**
  * A {@link DistributionTrigger} is responsible to trigger

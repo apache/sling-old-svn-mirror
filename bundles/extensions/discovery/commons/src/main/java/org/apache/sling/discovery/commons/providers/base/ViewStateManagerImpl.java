@@ -332,6 +332,14 @@ public class ViewStateManagerImpl implements ViewStateManager {
                 logger.trace("handleDeactivated: setting previousView to null");
                 previousView = null;
             }
+            
+            if (consistencyService!=null) {
+                consistencyService.cancelSync();
+            }
+            
+            if (minEventDelayHandler!=null) {
+                minEventDelayHandler.cancelDelaying();
+            }
             logger.trace("handleDeactivated: setting isChanging to false");
             isChanging = false;
             

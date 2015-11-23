@@ -45,7 +45,7 @@ import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
-import org.apache.sling.distribution.DistributionException;
+import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
@@ -126,7 +126,7 @@ public class RemoteEventDistributionTrigger implements DistributionTrigger {
 
             // TODO : currently it always triggers pull request on /, should this be configurable?
             DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.PULL, "/");
-            handler.handle(distributionRequest);
+            handler.handle(null, distributionRequest);
             log.info("distribution request to agent {} sent ({} {})", new Object[]{
                     handler,
                     distributionRequest.getRequestType(),

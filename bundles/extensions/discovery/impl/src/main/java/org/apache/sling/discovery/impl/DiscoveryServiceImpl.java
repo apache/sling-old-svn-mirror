@@ -26,6 +26,7 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -50,10 +51,14 @@ import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.discovery.DiscoveryService;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.PropertyProvider;
+import org.apache.sling.discovery.TopologyEvent;
+import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.base.commons.BaseDiscoveryService;
 import org.apache.sling.discovery.base.commons.ClusterViewService;
 import org.apache.sling.discovery.base.commons.DefaultTopologyView;
+import org.apache.sling.discovery.base.commons.UndefinedClusterViewException;
+import org.apache.sling.discovery.base.commons.UndefinedClusterViewException.Reason;
 import org.apache.sling.discovery.base.connectors.announcement.AnnouncementRegistry;
 import org.apache.sling.discovery.base.connectors.ping.ConnectorRegistry;
 import org.apache.sling.discovery.commons.providers.BaseTopologyView;
@@ -62,6 +67,8 @@ import org.apache.sling.discovery.commons.providers.DefaultInstanceDescription;
 import org.apache.sling.discovery.commons.providers.ViewStateManager;
 import org.apache.sling.discovery.commons.providers.base.ViewStateManagerFactory;
 import org.apache.sling.discovery.commons.providers.spi.ClusterSyncService;
+import org.apache.sling.discovery.commons.providers.spi.LocalClusterView;
+import org.apache.sling.discovery.commons.providers.spi.base.SyncTokenService;
 import org.apache.sling.discovery.commons.providers.util.PropertyNameHelper;
 import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
 import org.apache.sling.discovery.impl.cluster.ClusterViewServiceImpl;
@@ -83,6 +90,25 @@ import org.slf4j.LoggerFactory;
 public class DiscoveryServiceImpl extends BaseDiscoveryService {
 
     private final static Logger logger = LoggerFactory.getLogger(DiscoveryServiceImpl.class);
+
+    /**
+     * This ClusterSyncService just 'passes the call through', ie it doesn't actually
+     * do anything in sync but just calls callback.run() immediately. It therefore
+     * also doesn't have to do anything on cancelling.
+     */
+    private static final ClusterSyncService PASS_THROUGH_CLUSTER_SYNC_SERVICE = new ClusterSyncService() {
+
+        @Override
+        public void sync(BaseTopologyView view, Runnable callback) {
+            logger.debug("sync: no syncToken applicable");
+            callback.run();
+        }
+        
+        @Override
+        public void cancelSync() {
+            // cancelling not applicable
+        }
+    };
 
     @Reference
     private SlingSettingsService settingsService;
@@ -126,6 +152,9 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
     @Reference
     private Config config;
     
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY)
+    private SyncTokenService syncTokenService;
+
     /** the slingId of the local instance **/
     private String slingId;
 
@@ -133,8 +162,22 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
 
     private ViewStateManager viewStateManager;
 
-    private ReentrantLock viewStateManagerLock; 
+    private final ReentrantLock viewStateManagerLock = new ReentrantLock(); 
     
+    private final List<TopologyEventListener> pendingListeners = new LinkedList<TopologyEventListener>();
+
+    private TopologyEventListener changePropagationListener = new TopologyEventListener() {
+
+        public void handleTopologyEvent(TopologyEvent event) {
+            HeartbeatHandler handler = heartbeatHandler;
+            if (activated && handler != null 
+                    && (event.getType() == Type.TOPOLOGY_CHANGED || event.getType() == Type.PROPERTIES_CHANGED)) {
+                logger.info("changePropagationListener.handleTopologyEvent: topology changed - propagate through connectors");
+                handler.triggerAsyncConnectorPing();
+            }
+        }
+    };
+
     /** for testing only **/
     public static BaseDiscoveryService testConstructor(ResourceResolverFactory resourceResolverFactory, 
             AnnouncementRegistry announcementRegistry, 
@@ -143,7 +186,8 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
             HeartbeatHandler heartbeatHandler,
             SlingSettingsService settingsService,
             Scheduler scheduler,
-            Config config) {
+            Config config,
+            SyncTokenService syncTokenServiceOrNull) {
         DiscoveryServiceImpl discoService = new DiscoveryServiceImpl();
         discoService.resourceResolverFactory = resourceResolverFactory;
         discoService.announcementRegistry = announcementRegistry;
@@ -153,25 +197,11 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
         discoService.settingsService = settingsService;
         discoService.scheduler = scheduler;
         discoService.config = config;
+        discoService.syncTokenService = syncTokenServiceOrNull;
         return discoService;
     }
 
     public DiscoveryServiceImpl() {
-        viewStateManagerLock = new ReentrantLock();
-        final ClusterSyncService consistencyService = new ClusterSyncService() {
-
-            @Override
-            public void sync(BaseTopologyView view, Runnable callback) {
-                logger.debug("sync: no syncToken applicable");
-                callback.run();
-            }
-            
-            @Override
-            public void cancelSync() {
-                // cancelling not applicable
-            }
-        };
-        viewStateManager = ViewStateManagerFactory.newViewStateManager(viewStateManagerLock, consistencyService);
     }
 
     protected void registerMBean(BundleContext bundleContext) {
@@ -231,6 +261,19 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
 
         slingId = settingsService.getSlingId();
 
+        final ClusterSyncService clusterSyncService;
+        if (!config.useSyncTokenService()) {
+            logger.info("activate: useSyncTokenService is configured to false. Using pass-through cluster-sync-service.");
+            clusterSyncService = PASS_THROUGH_CLUSTER_SYNC_SERVICE;
+        } else if (syncTokenService == null) {
+            logger.warn("activate: useSyncTokenService is configured to true but there's no SyncTokenService! Using pass-through cluster-sync-service instead.");
+            clusterSyncService = syncTokenService;
+        } else {
+            logger.info("activate: useSyncTokenService is configured to true, using the available SyncTokenService: " + syncTokenService);
+            clusterSyncService = syncTokenService;
+        }
+        viewStateManager = ViewStateManagerFactory.newViewStateManager(viewStateManagerLock, clusterSyncService);
+
         if (config.getMinEventDelay()>0) {
             viewStateManager.installMinEventDelayHandler(this, scheduler, config.getMinEventDelay());
         }
@@ -277,6 +320,15 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
             }
             activated = true;
             setOldView(newView);
+
+            // in case bind got called before activate we now have pending listeners,
+            // bind them to the viewstatemanager too
+            for (TopologyEventListener listener : pendingListeners) {
+                viewStateManager.bind(listener);
+            }
+            pendingListeners.clear();
+            
+            viewStateManager.bind(changePropagationListener);
         } finally {
             if (viewStateManagerLock!=null) {
                 viewStateManagerLock.unlock();
@@ -311,7 +363,10 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
         logger.debug("DiscoveryServiceImpl deactivated.");
         viewStateManagerLock.lock();
         try{
-            viewStateManager.handleDeactivated();
+            if (viewStateManager != null) {
+                viewStateManager.unbind(changePropagationListener);
+                viewStateManager.handleDeactivated();
+            }
             
             activated = false;
         } finally {
@@ -333,14 +388,36 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
      * bind a topology event listener
      */
     protected void bindTopologyEventListener(final TopologyEventListener eventListener) {
-        viewStateManager.bind(eventListener);
+        viewStateManagerLock.lock();
+        try{
+            if (!activated) {
+                pendingListeners.add(eventListener);
+            } else {
+                viewStateManager.bind(eventListener);
+            }
+        } finally {
+            if (viewStateManagerLock!=null) {
+                viewStateManagerLock.unlock();
+            }
+        }
     }
 
     /**
      * Unbind a topology event listener
      */
     protected void unbindTopologyEventListener(final TopologyEventListener eventListener) {
-        viewStateManager.unbind(eventListener);
+        viewStateManagerLock.lock();
+        try{
+            if (!activated) {
+                pendingListeners.remove(eventListener);
+            } else {
+                viewStateManager.unbind(eventListener);
+            }
+        } finally {
+            if (viewStateManagerLock!=null) {
+                viewStateManagerLock.unlock();
+            }
+        }
     }
 
     /**
@@ -589,6 +666,44 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
             return provider.hashCode();
         }
     }
+    
+    /** 
+     * only checks for local clusterView changes.
+     * thus eg avoids doing synchronized with annotationregistry 
+     **/
+    public void checkForLocalClusterViewChange() {
+        viewStateManagerLock.lock();
+        try{
+            if (!activated) {
+                logger.debug("checkForLocalClusterViewChange: not yet activated, ignoring");
+                return;
+            }
+            try {
+                ClusterViewService clusterViewService = getClusterViewService();
+                if (clusterViewService == null) {
+                    throw new UndefinedClusterViewException(
+                            Reason.REPOSITORY_EXCEPTION,
+                            "no ClusterViewService available at the moment");
+                }
+                LocalClusterView localClusterView = clusterViewService.getLocalClusterView();
+            } catch (UndefinedClusterViewException e) {
+                // SLING-5030 : when we're cut off from the local cluster we also
+                // treat it as being cut off from the entire topology, ie we don't
+                // update the announcements but just return
+                // the previous oldView marked as !current
+                logger.info("checkForLocalClusterViewChange: undefined cluster view: "+e.getReason()+"] "+e);
+                getOldView().setNotCurrent();
+                viewStateManager.handleChanging();
+                if (e.getReason()==Reason.ISOLATED_FROM_TOPOLOGY) {
+                    handleIsolatedFromTopology();
+                }
+            }
+        } finally {
+            if (viewStateManagerLock!=null) {
+                viewStateManagerLock.unlock();
+            }
+        }
+    }
 
     /**
      * Check the current topology for any potential change
@@ -622,8 +737,19 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
      * Handle the fact that the topology has started to change - inform the listeners asap
      */
     public void handleTopologyChanging() {
-        logger.debug("handleTopologyChanging: invoking viewStateManager.handlechanging");
-        viewStateManager.handleChanging();
+        viewStateManagerLock.lock();
+        try{
+            if (!activated) {
+                logger.error("handleTopologyChanging: not yet activated!");
+                return;
+            }
+            logger.debug("handleTopologyChanging: invoking viewStateManager.handlechanging");
+            viewStateManager.handleChanging();
+        } finally {
+            if (viewStateManagerLock!=null) {
+                viewStateManagerLock.unlock();
+            }
+        }
     }
 
     /** SLING-2901 : send a TOPOLOGY_CHANGING event and shutdown the service thereafter **/

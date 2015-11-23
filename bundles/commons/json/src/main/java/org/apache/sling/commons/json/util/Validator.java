@@ -54,8 +54,12 @@ public class Validator {
             // no tokens at all - we consider this valid
             return;
         } else  if (c == '[') {
-            if (x.nextClean() == ']') {
+            char nextChar = x.nextClean();
+            if (nextChar == ']') {
                 return;
+            }
+            else if (nextChar == 0) {
+                throw x.syntaxError("Detected unclosed array.");
             }
             x.back();
             for (;;) {
@@ -66,7 +70,7 @@ public class Validator {
                     c = x.nextClean();
                     x.back();
                     if ( c == '{' || c == '[') {
-                        // recursiv validation for object and array
+                        // recursive validation for object and array
                         validate(x);
                     } else {
                         x.nextValue();

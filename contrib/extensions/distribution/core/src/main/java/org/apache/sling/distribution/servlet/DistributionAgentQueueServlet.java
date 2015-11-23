@@ -25,9 +25,11 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.apache.sling.distribution.DistributionException;
+import org.apache.sling.distribution.agent.DistributionAgent;
+import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
@@ -59,12 +61,13 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
 
         DistributionQueue queue = request.getResource().adaptTo(DistributionQueue.class);
 
-        String limitParam = request.getParameter("limit");
-        String[] idParam = request.getParameterValues("id");
 
         ResourceResolver resourceResolver = request.getResourceResolver();
 
+
         if ("delete".equals(operation)) {
+            String limitParam = request.getParameter("limit");
+            String[] idParam = request.getParameterValues("id");
 
             if (idParam != null) {
                 deleteItems(resourceResolver, queue, idParam);
@@ -77,6 +80,33 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
                 }
                 deleteItems(resourceResolver, queue, limit);
             }
+        } else if ("copy".equals(operation)) {
+            String from = request.getParameter("from");
+            String[] idParam = request.getParameterValues("id");
+
+            if (idParam != null && from != null) {
+                DistributionAgent agent = request.getResource().getParent().getParent().adaptTo(DistributionAgent.class);
+                DistributionQueue sourceQueue = agent.getQueue(from);
+
+                addItems(resourceResolver, queue, sourceQueue, idParam);
+            }
+        }
+    }
+
+    private void addItems(ResourceResolver resourceResolver, DistributionQueue targetQueue, DistributionQueue sourceQueue, String[] ids) {
+
+
+        if (sourceQueue == null) {
+            log.warn("cannot find source queue {}", sourceQueue);
+        }
+
+        for (String id: ids) {
+            DistributionQueueEntry entry = sourceQueue.getItem(id);
+            if (entry != null) {
+                targetQueue.add(new DistributionQueueItem(id, entry.getItem()));
+                DistributionPackage distributionPackage = getPackage(resourceResolver, entry.getItem());
+                DistributionPackageUtils.acquire(distributionPackage, targetQueue.getName());
+            }
         }
     }
 
@@ -88,8 +118,8 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
 
     protected void deleteItems(ResourceResolver resourceResolver, DistributionQueue queue, String[] ids) {
         for (String id : ids) {
-            DistributionQueueEntry item = queue.getItem(id);
-            deleteItem(resourceResolver, queue, item);
+            DistributionQueueEntry entry = queue.getItem(id);
+            deleteItem(resourceResolver, queue, entry);
         }
     }
 
@@ -97,6 +127,12 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
         DistributionQueueItem item = entry.getItem();
         String id = item.getId();
         queue.remove(id);
+
+        DistributionPackage distributionPackage = getPackage(resourceResolver, item);
+        DistributionPackageUtils.releaseOrDelete(distributionPackage, queue.getName());
+    }
+
+    DistributionPackage getPackage(ResourceResolver resourceResolver, DistributionQueueItem item) {
         DistributionPackageInfo info = DistributionPackageUtils.fromQueueItem(item);
         String type = info.getType();
 
@@ -104,15 +140,15 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
 
         if (packageBuilder != null) {
 
-            DistributionPackage distributionPackage = null;
             try {
-                distributionPackage = packageBuilder.getPackage(resourceResolver, id);
+                DistributionPackage distributionPackage = packageBuilder.getPackage(resourceResolver, item.getId());
+
+                return distributionPackage;
             } catch (DistributionException e) {
                 log.error("cannot get package", e);
             }
-
-            DistributionPackageUtils.releaseOrDelete(distributionPackage, queue.getName());
-
         }
+
+        return null;
     }
 }

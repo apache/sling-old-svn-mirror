@@ -32,9 +32,10 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
+import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.event.DistributionEventTopics;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
-import org.apache.sling.distribution.DistributionException;
+import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.serialization.DistributionPackageInfo;
@@ -63,7 +64,7 @@ public class LocalDistributionPackageImporterFactory implements DistributionPack
 
 
     @Property(name = "packageBuilder.target", label = "Package Builder", description = "The target reference for the DistributionPackageBuilder used to create distribution packages, " +
-            "e.g. use target=(name=...) to bind to services by name.")
+            "e.g. use target=(name=...) to bind to services by name.", value = SettingsUtils.COMPONENT_NAME_DEFAULT)
     @Reference(name = "packageBuilder")
     private DistributionPackageBuilder packageBuilder;
 

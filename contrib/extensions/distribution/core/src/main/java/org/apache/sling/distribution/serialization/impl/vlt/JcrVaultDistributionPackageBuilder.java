@@ -48,7 +48,7 @@ import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
-import org.apache.sling.distribution.DistributionException;
+import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.serialization.impl.AbstractDistributionPackage;
@@ -106,7 +106,7 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
             WorkspaceFilter filter = VltUtils.createFilter(request, filters);
             ExportOptions opts = VltUtils.getExportOptions(filter, packageRoots, packageGroup, packageName, VERSION);
 
-            log.debug("assembling package {}", packageGroup + '/' + packageName + "-" + VERSION);
+            log.debug("assembling package {} user {}", packageGroup + '/' + packageName + "-" + VERSION, resourceResolver.getUserID());
 
             vaultPackage = VltUtils.createPackage(packaging.getPackageManager(), session, opts, tempDirectory);
 

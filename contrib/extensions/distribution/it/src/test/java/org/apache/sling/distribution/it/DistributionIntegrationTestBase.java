@@ -62,22 +62,14 @@ public abstract class DistributionIntegrationTestBase {
         try {
 
             String remoteImporterUrl = publish.getServerBaseUrl() + importerUrl("default");
-            String remoteExporterUrl = publish.getServerBaseUrl() + exporterUrl("reverse");
 
 
 
-            {
-                assertExists(authorClient, authorAgentConfigUrl("publish"));
+            registerPublish("publish", "default");
+            registerPublish("impersonate-publish", "default");
 
-                authorClient.setProperties(authorAgentConfigUrl("publish"),
-                        "packageImporter.endpoints", remoteImporterUrl);
-
-
-                Thread.sleep(1000);
-
-                assertExists(authorClient, agentUrl("publish"));
-            }
-
+            registerReverse("publish-reverse", "reverse");
+            registerReverse("impersonate-publish-reverse", "impersonate-reverse");
 
             {
                 assertExists(authorClient, authorAgentConfigUrl("publish-multiple"));
@@ -102,18 +94,7 @@ public abstract class DistributionIntegrationTestBase {
                 assertExists(authorClient, agentUrl("publish-selective"));
             }
 
-            {
-                assertExists(authorClient, authorAgentConfigUrl("publish-reverse"));
 
-                authorClient.setProperties(authorAgentConfigUrl("publish-reverse"), "packageExporter.endpoints", remoteExporterUrl);
-
-                Thread.sleep(1000);
-                assertExists(authorClient, agentUrl("publish-reverse"));
-
-                assertExists(publishClient, exporterUrl("reverse"));
-                assertExists(publishClient, exporterUrl("default"));
-                assertExists(publishClient, importerUrl("default"));
-            }
 
         } catch (Exception ex) {
             throw new RuntimeException(ex);
@@ -134,5 +115,34 @@ public abstract class DistributionIntegrationTestBase {
         assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/vlt/data");
         assertEmptyFolder(publish, publishClient, "/etc/packages/sling/distribution");
     }
-    
+
+    public static void registerPublish(String publishAgent, String remoteImporter) throws Exception {
+        String remoteImporterUrl = publish.getServerBaseUrl() + importerUrl(remoteImporter);
+
+
+        assertExists(authorClient, authorAgentConfigUrl(publishAgent));
+
+        authorClient.setProperties(authorAgentConfigUrl(publishAgent),
+                "packageImporter.endpoints", remoteImporterUrl);
+
+
+        Thread.sleep(1000);
+
+        assertExists(authorClient, agentUrl(publishAgent));
+        assertExists(publishClient, importerUrl(remoteImporter));
+    }
+
+    public static void registerReverse(String reverseAgent, String remoteExporter) throws Exception {
+        String remoteExporterUrl = publish.getServerBaseUrl() + exporterUrl(remoteExporter);
+
+        assertExists(authorClient, authorAgentConfigUrl(reverseAgent));
+
+        authorClient.setProperties(authorAgentConfigUrl(reverseAgent), "packageExporter.endpoints", remoteExporterUrl);
+
+        Thread.sleep(1000);
+        assertExists(authorClient, agentUrl(reverseAgent));
+        assertExists(publishClient, exporterUrl(remoteExporter));
+    }
+
+
 }

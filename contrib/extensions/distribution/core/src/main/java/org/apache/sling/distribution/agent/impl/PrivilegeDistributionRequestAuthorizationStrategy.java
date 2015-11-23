@@ -28,7 +28,7 @@ import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
-import org.apache.sling.distribution.DistributionException;
+import org.apache.sling.distribution.common.DistributionException;
 
 public class PrivilegeDistributionRequestAuthorizationStrategy implements DistributionRequestAuthorizationStrategy {
 

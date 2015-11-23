@@ -33,6 +33,7 @@ import org.apache.sling.discovery.base.its.setup.VirtualInstanceBuilder;
 import org.apache.sling.discovery.base.its.setup.mock.AssertingTopologyEventListener;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -152,7 +153,12 @@ public abstract class AbstractTopologyEventTest {
         assertEquals(0, l1.getUnexpectedCount());
         assertEquals(2, l1.getEvents().size());
         assertEquals(0, l2.getUnexpectedCount());
-        assertEquals(1, l2.getEvents().size());
+        // with the switch to use the SyncTokenService in discovery.impl tests
+        // by default, the following check is no longer possible:
+//        assertEquals(1, l2.getEvents().size());
+        // (this is due to the fact that synching requires some more time
+        // and we're a bit early at this stage - the below same check
+        // is the only one that we can do here really - and that one must work)
         assertEquals(0, l1Two.getUnexpectedCount());
         assertEquals(2, l1Two.getEvents().size());
 

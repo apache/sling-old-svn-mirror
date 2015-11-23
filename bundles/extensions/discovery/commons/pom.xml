@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.discovery.commons</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.5-SNAPSHOT</version>
 
     <name>Apache Sling Discovery Commons</name>
     <description>Common services related to Sling Discovery</description>

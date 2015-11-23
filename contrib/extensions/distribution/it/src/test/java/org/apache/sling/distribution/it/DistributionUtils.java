@@ -54,6 +54,9 @@ public class DistributionUtils {
 
     private static final String JSON_SELECTOR = ".json";
     private static final String DISTRIBUTION_ROOT_PATH = "/libs/sling/distribution";
+    public static final String DISTRIBUTOR_USER = "testDistributorUser";
+    private static final String DISTRIBUTOR_PASSWORD = "123";
+
 
     public static JSONObject getResource(SlingInstance slingInstance, String path) throws IOException, JSONException {
         if (!path.endsWith(JSON_SELECTOR)) {
@@ -90,7 +93,7 @@ public class DistributionUtils {
         }
 
         return slingInstance.getRequestExecutor().execute(
-                request.withCredentials(slingInstance.getServerUsername(), slingInstance.getServerPassword())
+                request.withCredentials(DISTRIBUTOR_USER, DISTRIBUTOR_PASSWORD)
         ).assertStatus(status).getContent();
     }
 
@@ -332,6 +335,34 @@ public class DistributionUtils {
             queueProperties.put("itemsCount", queue.get("itemsCount"));
 
             result.put(queueName, queueProperties);
+        }
+
+        return result;
+    }
+
+    public static List<Map<String, Object>> getQueueItems(SlingInstance instance, String queueUrl) throws IOException, JSONException {
+        List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
+
+        JSONObject json = getResource(instance, queueUrl + ".infinity");
+
+        JSONArray items = json.getJSONArray("items");
+
+        for(int i=0; i < items.length(); i++) {
+            String itemId = items.getString(i);
+            JSONObject queueItem = json.getJSONObject(itemId);
+
+
+            Map<String, Object> itemProperties = new HashMap<String, Object>();
+
+            itemProperties.put("id", queueItem.get("id"));
+            itemProperties.put("paths", queueItem.get("paths"));
+            itemProperties.put("action", queueItem.get("action"));
+            itemProperties.put("userid", queueItem.get("userid"));
+            itemProperties.put("attempts", queueItem.get("attempts"));
+            itemProperties.put("time", queueItem.get("time"));
+            itemProperties.put("state", queueItem.get("state"));
+
+            result.add(itemProperties);
         }
 
         return result;

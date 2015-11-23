@@ -28,6 +28,7 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
+import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.log.DistributionLog;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.resources.impl.OsgiUtils;
@@ -70,7 +71,7 @@ public abstract class AbstractDistributionAgentFactory {
         Dictionary<String, Object> props = new Hashtable<String, Object>();
 
         boolean enabled = PropertiesUtil.toBoolean(config.get(ENABLED), true);
-        String triggersTarget = PropertiesUtil.toString(config.get(TRIGGERS_TARGET), null);
+        String triggersTarget = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(TRIGGERS_TARGET), null));
         triggersEnabled = triggersTarget != null && triggersTarget.trim().length() > 0;
         agentName = PropertiesUtil.toString(config.get(NAME), null);
 

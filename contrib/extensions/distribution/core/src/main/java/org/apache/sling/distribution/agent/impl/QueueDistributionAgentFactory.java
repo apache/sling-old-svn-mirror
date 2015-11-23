@@ -50,6 +50,7 @@ import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistribut
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.event.jobs.JobManager;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
@@ -102,13 +103,13 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
 
 
     @Property(name = "requestAuthorizationStrategy.target", label = "Request Authorization Strategy", description = "The target reference for the DistributionRequestAuthorizationStrategy used to authorize the access to distribution process," +
-            "e.g. use target=(name=...) to bind to services by name.")
+            "e.g. use target=(name=...) to bind to services by name.", value = SettingsUtils.COMPONENT_NAME_DEFAULT)
     @Reference(name = "requestAuthorizationStrategy")
     private DistributionRequestAuthorizationStrategy requestAuthorizationStrategy;
 
 
     @Property(name = "packageBuilder.target", label = "Package Builder", description = "The target reference for the DistributionPackageBuilder used to create distribution packages, " +
-            "e.g. use target=(name=...) to bind to services by name.")
+            "e.g. use target=(name=...) to bind to services by name.", value = SettingsUtils.COMPONENT_NAME_DEFAULT)
     @Reference(name = "packageBuilder")
     private DistributionPackageBuilder packageBuilder;
 
@@ -135,6 +136,9 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
+
+    @Reference
+    private SlingRepository slingRepository;
 
     @Activate
     protected void activate(BundleContext context, Map<String, Object> config) {
@@ -182,6 +186,7 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
 
         return new SimpleDistributionAgent(agentName, false, null,
                 serviceName, null, packageExporter, requestAuthorizationStrategy,
-                queueProvider, exportQueueStrategy, null, distributionEventFactory, resourceResolverFactory, distributionLog, allowedRequests, allowedRoots, 0);
+                queueProvider, exportQueueStrategy, null, distributionEventFactory, resourceResolverFactory, slingRepository,
+                distributionLog, allowedRequests, allowedRoots, 0);
     }
 }

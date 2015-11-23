@@ -387,7 +387,7 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                 <plugin>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-bundle-plugin</artifactId>
-                    <version>3.0.0</version>
+                    <version>3.0.1</version>
                     <inherited>true</inherited>
                     <configuration>
                         <outputDirectory>${basedir}/target/classes</outputDirectory>

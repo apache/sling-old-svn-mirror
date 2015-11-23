@@ -46,11 +46,13 @@
         <!-- Include -Dtest.scale=N to use larger data sets in some tests -->
         <pax.vm.options></pax.vm.options>
 
-        <!-- 
+        <tika.version>1.11</tika.version>
+        <jackrabbit.version>2.11.2</jackrabbit.version>
+        <!--
             WARNING make sure oak.version and sling.oak.server.version 
             are in sync with bundles/jcr/oak-server
         -->
-        <oak.version>1.3.9</oak.version>
+        <oak.version>1.3.10</oak.version>
         <sling.oak.server.version>1.0.1-SNAPSHOT</sling.oak.server.version>
         
         <!-- optionally activate the webconsole -->
@@ -68,6 +70,8 @@
                 <configuration>
                     <argLine>-Xmx1024m -XX:MaxPermSize=368m</argLine>
                     <systemPropertyVariables>
+                        <tika.version>${tika.version}</tika.version>
+                        <jackrabbit.version>${jackrabbit.version}</jackrabbit.version>
                         <oak.version>${oak.version}</oak.version>
                     </systemPropertyVariables>
                 </configuration>
@@ -95,6 +99,14 @@
                         <property>
                             <name>org.osgi.service.http.port</name>
                             <value>${http.port}</value>
+                        </property>
+                        <property>
+                            <name>tika.version</name>
+                            <value>${tika.version}</value>
+                        </property>
+                        <property>
+                            <name>jackrabbit.version</name>
+                            <value>${jackrabbit.version}</value>
                         </property>
                         <property>
                             <name>oak.version</name>
@@ -207,7 +219,7 @@
         <dependency>
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-core</artifactId>
-            <version>1.9</version>
+            <version>${tika.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -285,7 +297,7 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-commons</artifactId>
-            <version>2.11.2</version>
+            <version>${jackrabbit.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

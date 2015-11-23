@@ -24,8 +24,8 @@ import java.io.InputStream;
 
 import aQute.bnd.annotation.ProviderType;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.DistributionException;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.common.DistributionException;
 
 /**
  * A builder for {@link DistributionPackage}s
@@ -45,7 +45,7 @@ public interface DistributionPackageBuilder {
      * @param resourceResolver the resource resolver used to access the resources to be packaged
      * @param request          the {@link org.apache.sling.distribution.DistributionRequest} to create the package for
      * @return a {@link DistributionPackage} or <code>null</code> if it could not be created
-     * @throws DistributionException if any error occurs while creating the package, or if the resource resolver is not authorized to do that
+     * @throws org.apache.sling.distribution.common.DistributionException if any error occurs while creating the package, or if the resource resolver is not authorized to do that
      */
     @Nonnull
     DistributionPackage createPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionException;

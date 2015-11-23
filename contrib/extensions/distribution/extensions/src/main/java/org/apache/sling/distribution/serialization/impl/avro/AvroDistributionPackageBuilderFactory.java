@@ -31,8 +31,9 @@ import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.distribution.DistributionException;
 import org.apache.sling.distribution.DistributionRequest;
+
+import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.slf4j.Logger;

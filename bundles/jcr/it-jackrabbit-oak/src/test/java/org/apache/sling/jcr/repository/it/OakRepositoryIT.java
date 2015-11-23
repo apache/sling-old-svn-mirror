@@ -49,6 +49,7 @@ public class OakRepositoryIT extends CommonTests {
 
     @org.ops4j.pax.exam.Configuration
     public Option[] config() {
+        final String jackrabbitVersion = System.getProperty("jackrabbit.version", "NO_JACKRABBIT_VERSION??");
         final String oakVersion = System.getProperty("oak.version", "NO_OAK_VERSION??");
         final String slingOakServerVersion = System.getProperty("sling.oak.server.version", "NO_OAK_SERVER_VERSION??");
 
@@ -58,9 +59,9 @@ public class OakRepositoryIT extends CommonTests {
         // Oak
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.oak.server", slingOakServerVersion));
         opt.add(mavenBundle("com.google.guava", "guava", "15.0"));
-        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-api", "2.11.2"));
-        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-jcr-commons", "2.11.2"));
-        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-jcr-rmi", "2.11.2"));
+        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-api", jackrabbitVersion));
+        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-jcr-commons", jackrabbitVersion));
+        opt.add(mavenBundle("org.apache.jackrabbit", "jackrabbit-jcr-rmi", jackrabbitVersion));
         opt.add(mavenBundle("org.apache.jackrabbit", "oak-core", oakVersion));
         // embedded for now opt.add(mavenBundle("org.apache.jackrabbit", "oak-jcr", oakVersion));
         opt.add(mavenBundle("org.apache.jackrabbit", "oak-commons", oakVersion));

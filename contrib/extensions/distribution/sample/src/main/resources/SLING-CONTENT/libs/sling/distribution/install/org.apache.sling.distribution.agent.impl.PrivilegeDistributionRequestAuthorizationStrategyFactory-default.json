@@ -1,6 +1,6 @@
 {
     "jcr:primaryType": "sling:OsgiConfig",
-    "name": "privilegeRead",
+    "name": "default",
 
      "type": "privilege",
      "jcrPrivilege": "jcr:read"

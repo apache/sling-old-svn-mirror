@@ -28,7 +28,7 @@ import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.distribution.event.DistributionEventProperties;
 import org.apache.sling.distribution.event.DistributionEventTopics;
-import org.apache.sling.distribution.DistributionException;
+import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.osgi.framework.BundleContext;
@@ -114,7 +114,7 @@ public class DistributionEventDistributeDistributionTrigger implements Distribut
                         log.info("triggering chain distribution from event {}", event);
 
                         DistributionRequestType action = DistributionRequestType.valueOf(String.valueOf(actionProperty));
-                        requestHandler.handle(new SimpleDistributionRequest(action, paths));
+                        requestHandler.handle(null, new SimpleDistributionRequest(action, paths));
                         break;
                     }
                 }

@@ -25,7 +25,7 @@ import aQute.bnd.annotation.ProviderType;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionResponse;
-import org.apache.sling.distribution.DistributionException;
+import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.log.DistributionLog;
 import org.apache.sling.distribution.queue.DistributionQueue;
 

@@ -40,6 +40,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.discovery.base.commons.BaseViewChecker;
+import org.apache.sling.discovery.base.commons.PeriodicBackgroundJob;
 import org.apache.sling.discovery.base.connectors.BaseConfig;
 import org.apache.sling.discovery.base.connectors.announcement.AnnouncementRegistry;
 import org.apache.sling.discovery.base.connectors.ping.ConnectorRegistry;
@@ -118,6 +119,8 @@ public class HeartbeatHandler extends BaseViewChecker {
 
     protected String failedEstablishedViewId;
 
+    protected PeriodicBackgroundJob periodicCheckJob;
+
     /** for testing only **/
     public static HeartbeatHandler testConstructor(
             SlingSettingsService slingSettingsService,
@@ -188,7 +191,10 @@ public class HeartbeatHandler extends BaseViewChecker {
     @Override
     protected void deactivate() {
         super.deactivate();
-        scheduler.removeJob(NAME+".checkForTopologyChange");        
+        if (periodicCheckJob != null) {
+            periodicCheckJob.stop();
+            periodicCheckJob = null;
+        }
     }
     
     /**
@@ -221,8 +227,7 @@ public class HeartbeatHandler extends BaseViewChecker {
                 logger.warn("initialize: Repeat interval cannot be zero. Defaulting to 10sec");
                 interval = 10;
             }
-            scheduler.addPeriodicJob(NAME, this,
-                    null, interval, false);
+            periodicPingJob = new PeriodicBackgroundJob(interval, NAME, this);
         } catch (Exception e) {
             logger.error("activate: Could not start heartbeat runner: " + e, e);
         }
@@ -233,12 +238,16 @@ public class HeartbeatHandler extends BaseViewChecker {
         // so this second part is now done (additionally) in a 2nd runner here:
         try {
             long interval = config.getHeartbeatInterval();
-            logger.info("initialize: starting periodic heartbeat job for "+slingId+" with interval "+interval+" sec.");
+            final long heartbeatTimeoutMillis = config.getHeartbeatTimeoutMillis();
+            final long heartbeatIntervalMillis = config.getHeartbeatInterval() * 1000;
+            final long maxMillisSinceHb = Math.max(Math.min(heartbeatTimeoutMillis, 2 * heartbeatIntervalMillis),
+                    heartbeatTimeoutMillis - 2 * heartbeatIntervalMillis);
+            logger.info("initialize: starting periodic checkForLocalClusterViewChange job for "+slingId+" with maxMillisSinceHb=" + maxMillisSinceHb + "ms, interval="+interval+" sec.");
             if (interval==0) {
                 logger.warn("initialize: Repeat interval cannot be zero. Defaulting to 10sec.");
                 interval = 10;
             }
-            scheduler.addPeriodicJob(NAME+".checkForTopologyChange", new Runnable() {
+            periodicCheckJob = new PeriodicBackgroundJob(interval, NAME+".checkForLocalClusterViewChange", new Runnable() {
 
                 @Override
                 public void run() {
@@ -247,9 +256,12 @@ public class HeartbeatHandler extends BaseViewChecker {
                         // check to see when we last wrote a heartbeat
                         // if it is older than the configured timeout,
                         // then mark ourselves as in topologyChanging automatically
-                        long timeSinceHb = System.currentTimeMillis() - lastHb.getTimeInMillis();
-                        if (timeSinceHb > config.getHeartbeatTimeoutMillis()) {
-                            logger.info("checkForTopologyChange/.run: time since local instance last wrote a heartbeat is "+timeSinceHb+"ms. Flagging us as (still) changing");
+                        final long timeSinceHb = System.currentTimeMillis() - lastHb.getTimeInMillis();
+                        // SLING-5285: add a safety-margin for SLING-5195
+                        if (timeSinceHb > maxMillisSinceHb) {
+                            logger.warn("checkForLocalClusterViewChange/.run: time since local instance last wrote a heartbeat is " + timeSinceHb + "ms"
+                                    + " (heartbeatTimeoutMillis=" + heartbeatTimeoutMillis + ", heartbeatIntervalMillis=" + heartbeatIntervalMillis
+                                    + " => maxMillisSinceHb=" + maxMillisSinceHb + "). Flagging us as (still) changing");
                             // mark the current establishedView as faulty
                             invalidateCurrentEstablishedView();
                             
@@ -261,15 +273,14 @@ public class HeartbeatHandler extends BaseViewChecker {
                             return;
                         }
                     }
-                    // SLING-5195: guarantee frequent calls to checkForTopologyChange,
+                    // SLING-5195: guarantee frequent calls to checkForLocalClusterViewChange,
                     // independently of blocked write/save operations
-                    logger.debug("checkForTopologyChange/.run: going to check for topology change...");
-                    discoveryService.checkForTopologyChange();
-                    logger.debug("checkForTopologyChange/.run: check for topology change done.");
+                    logger.debug("checkForLocalClusterViewChange/.run: going to check for topology change...");
+                    discoveryService.checkForLocalClusterViewChange();
+                    logger.debug("checkForLocalClusterViewChange/.run: check for topology change done.");
                 }
                 
-            },
-                    null, interval, false);
+            });
         } catch (Exception e) {
             logger.error("activate: Could not start heartbeat runner: " + e, e);
         }
@@ -460,7 +471,9 @@ public class HeartbeatHandler extends BaseViewChecker {
                 }
                 resetLeaderElectionId = false;
             }
+            logger.debug("issueClusterLocalHeartbeat: committing cluster-local heartbeat to repository for {}", slingId);
             resourceResolver.commit();
+            logger.debug("issueClusterLocalHeartbeat: committed cluster-local heartbeat to repository for {}", slingId);
 
             // SLING-2892: only in success case: remember the last heartbeat value written
             lastHeartbeatWritten = currentTime;
@@ -534,6 +547,10 @@ public class HeartbeatHandler extends BaseViewChecker {
         } catch (PersistenceException e) {
             logger.error(
                     "checkView: encountered a persistence exception during view check: "
+                            + e, e);
+        } catch (RuntimeException e) {
+            logger.error(
+                    "checkView: encountered a runtime exception during view check: "
                             + e, e);
         } finally {
             if (resourceResolver != null) {

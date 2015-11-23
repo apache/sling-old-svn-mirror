@@ -89,6 +89,8 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
     /** SLING-4765 : store endpoints to /clusterInstances for more verbose duplicate slingId/ghost detection **/
     protected final Map<Long, String[]> endpoints = new HashMap<Long, String[]>();
 
+    protected PeriodicBackgroundJob periodicPingJob;
+    
     public void inform(StartupMode mode, boolean finished) {
     	if (finished) {
     		startupFinished(mode);
@@ -135,8 +137,7 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
         try {
             final long interval = getConnectorConfig().getConnectorPingInterval();
             logger.info("doActivate: starting periodic connectorPing job for "+slingId+" with interval "+interval+" sec.");
-            getScheduler().addPeriodicJob(NAME, this,
-                    null, interval, false);
+            periodicPingJob = new PeriodicBackgroundJob(interval, NAME, this);
         } catch (Exception e) {
             logger.error("doActivate: Could not start connectorPing runner: " + e, e);
         }
@@ -148,7 +149,10 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
         // SLING-3365 : dont synchronize on deactivate
         activated = false;
         logger.info("deactivate: deactivated slingId: {}, this: {}", slingId, this);
-    	getScheduler().removeJob(NAME);
+        if (periodicPingJob != null) {
+            periodicPingJob.stop();
+            periodicPingJob = null;
+        }
     }
     
     /** for testing only **/
@@ -165,11 +169,11 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
     
     @Override
     public void heartbeatAndCheckView() {
-        logger.debug("run: start. [for slingId="+slingId+"]");
+        logger.debug("heartbeatAndCheckView: start. [for slingId="+slingId+"]");
         synchronized(lock) {
         	if (!activated) {
         		// SLING:2895: avoid heartbeats if not activated
-        	    logger.debug("run: not activated yet");
+        	    logger.debug("heartbeatAndCheckView: not activated yet");
         		return;
         	}
 
@@ -179,7 +183,7 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
             // check the view
             doCheckView();
         }
-        logger.debug("run: end. [for slingId="+slingId+"]");
+        logger.debug("heartbeatAndCheckView: end. [for slingId="+slingId+"]");
     }
 
     /** Trigger the issuance of the next heartbeat asap instead of at next heartbeat interval **/
@@ -190,10 +194,10 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
             // use 'fireJobAt' here, instead of 'fireJob' to make sure the job can always be triggered
             // 'fireJob' checks for a job from the same job-class to already exist
             // 'fireJobAt' though allows to pass a name for the job - which can be made unique, thus does not conflict/already-exist
-            logger.info("triggerConnectorPing: firing job to trigger heartbeat");
+            logger.info("triggerAsyncConnectorPing: firing job to trigger heartbeat");
             getScheduler().fireJobAt(NAME+UUID.randomUUID(), this, null, new Date(System.currentTimeMillis()-1000 /* make sure it gets triggered immediately*/));
         } catch (Exception e) {
-            logger.info("triggerConnectorPing: Could not trigger heartbeat: " + e);
+            logger.info("triggerAsyncConnectorPing: Could not trigger heartbeat: " + e);
         }
     }
     

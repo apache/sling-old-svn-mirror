@@ -49,13 +49,14 @@ import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.discovery.DiscoveryService;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.PropertyProvider;
+import org.apache.sling.discovery.TopologyEvent;
+import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.base.commons.BaseDiscoveryService;
 import org.apache.sling.discovery.base.commons.ClusterViewService;
 import org.apache.sling.discovery.base.commons.DefaultTopologyView;
 import org.apache.sling.discovery.base.connectors.announcement.AnnouncementRegistry;
 import org.apache.sling.discovery.base.connectors.ping.ConnectorRegistry;
-import org.apache.sling.discovery.commons.providers.BaseTopologyView;
 import org.apache.sling.discovery.commons.providers.DefaultClusterView;
 import org.apache.sling.discovery.commons.providers.DefaultInstanceDescription;
 import org.apache.sling.discovery.commons.providers.ViewStateManager;
@@ -149,6 +150,18 @@ public class OakDiscoveryService extends BaseDiscoveryService {
     
     private final List<TopologyEventListener> pendingListeners = new LinkedList<TopologyEventListener>();
     
+    private TopologyEventListener changePropagationListener = new TopologyEventListener() {
+
+        public void handleTopologyEvent(TopologyEvent event) {
+            OakViewChecker checker = oakViewChecker;
+            if (activated && checker != null 
+                    && (event.getType() == Type.TOPOLOGY_CHANGED || event.getType() == Type.PROPERTIES_CHANGED)) {
+                logger.info("changePropagationListener.handleTopologyEvent: topology changed - propagate through connectors");
+                checker.triggerAsyncConnectorPing();
+            }
+        }
+    };
+
     public static OakDiscoveryService testConstructor(SlingSettingsService settingsService,
             AnnouncementRegistry announcementRegistry,
             ConnectorRegistry connectorRegistry,
@@ -276,6 +289,8 @@ public class OakDiscoveryService extends BaseDiscoveryService {
                 viewStateManager.bind(listener);
             }
             pendingListeners.clear();
+            
+            viewStateManager.bind(changePropagationListener);
         } finally {
             if (viewStateManagerLock!=null) {
                 viewStateManagerLock.unlock();
@@ -308,6 +323,8 @@ public class OakDiscoveryService extends BaseDiscoveryService {
         logger.debug("OakDiscoveryService deactivated.");
         viewStateManagerLock.lock();
         try{
+            viewStateManager.unbind(changePropagationListener);
+
             viewStateManager.handleDeactivated();
             
             activated = false;

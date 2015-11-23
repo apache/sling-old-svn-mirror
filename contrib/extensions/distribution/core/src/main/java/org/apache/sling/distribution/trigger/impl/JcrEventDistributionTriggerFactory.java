@@ -28,11 +28,12 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
-import org.apache.sling.distribution.DistributionException;
+import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -78,16 +79,19 @@ public class JcrEventDistributionTriggerFactory implements DistributionTrigger {
     @Reference
     private Scheduler scheduler;
 
+    @Reference
+    private ResourceResolverFactory resolverFactory;
+
 
     @Activate
     public void activate(BundleContext bundleContext, Map<String, Object> config) {
         String path = PropertiesUtil.toString(config.get(PATH), null);
-        String serviceName = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
+        String serviceName = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(SERVICE_NAME), null));
         String[] ignoredPathsPatterns = PropertiesUtil.toStringArray(config.get(IGNORED_PATHS_PATTERNS), null);
         ignoredPathsPatterns = SettingsUtils.removeEmptyEntries(ignoredPathsPatterns);
 
 
-        trigger = new JcrEventDistributionTrigger(repository, scheduler, path, serviceName, ignoredPathsPatterns);
+        trigger = new JcrEventDistributionTrigger(repository, scheduler, resolverFactory, path, serviceName, ignoredPathsPatterns);
         trigger.enable();
     }
 

@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
-import org.apache.sling.distribution.DistributionException;
+import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.event.dea.DEAConstants;
@@ -122,7 +122,7 @@ public class ResourceEventDistributionTrigger implements DistributionTrigger {
             Object pathProperty = event.getProperty("path");
             if (pathProperty != null) {
                 String distributingPath = String.valueOf(pathProperty);
-                requestHandler.handle(new SimpleDistributionRequest(action, distributingPath));
+                requestHandler.handle(null, new SimpleDistributionRequest(action, distributingPath));
             }
         }
     }

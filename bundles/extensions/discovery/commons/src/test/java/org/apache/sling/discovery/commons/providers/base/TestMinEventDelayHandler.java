@@ -20,7 +20,9 @@ package org.apache.sling.discovery.commons.providers.base;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
+import java.lang.reflect.Field;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
@@ -86,11 +88,84 @@ public class TestMinEventDelayHandler {
         discoveryLogger.setLevel(logLevel);
     }
     
+    
+    @Test
+    public void testReactivate() throws Exception {
+        logger.info("testReactivate: start");
+        // install a minEventDelayHandler with a longer delay of 2sec
+        mgr.installMinEventDelayHandler(sds, scheduler, 2);
+
+        final DummyListener listener = new DummyListener();
+        logger.info("testReactivate: calling handleActivated");
+        mgr.bind(listener);
+        mgr.handleActivated();
+        TestHelper.assertNoEvents(listener);
+        final DummyTopologyView view1 = new DummyTopologyView().addInstance();
+        final DummyTopologyView view2 = DummyTopologyView.clone(view1).addInstance(UUID.randomUUID().toString(), 
+                (DefaultClusterView) view1.getLocalInstance().getClusterView(), false, false);
+        final DummyTopologyView view3 = DummyTopologyView.clone(view1).addInstance(UUID.randomUUID().toString(), 
+                (DefaultClusterView) view1.getLocalInstance().getClusterView(), false, false);
+        logger.info("testReactivate: calling handleNewView...");
+        mgr.handleNewView(view1);
+        logger.info("testReactivate: asserting init event");
+        TestHelper.assertEvents(mgr, listener, EventHelper.newInitEvent(view1));
+        logger.info("testReactivate: calling handleChanging...");
+        mgr.handleChanging();
+        TestHelper.assertEvents(mgr, listener, EventHelper.newChangingEvent(view1));
+        logger.info("testReactivate: calling handleNewView 2nd time...");
+        mgr.handleNewView(view2);
+        TestHelper.assertNoEvents(listener);
+        // make sure the MinEventDelayHandler finds a topology when coming back from the delaying, so:
+        sds.setTopoology(view2);
+        logger.info("testReactivate: waiting for async events to have been processed - 4sec");
+        Thread.sleep(4000);
+        logger.info("testReactivate: waiting for async events to have been processed - max another 2sec");
+        assertEquals(0, mgr.waitForAsyncEvents(2000));
+        logger.info("testReactivate: asserting CHANGED event");
+        TestHelper.assertEvents(mgr, listener, EventHelper.newChangedEvent(view1, view2));
+        
+        // now do the above again, but this time do a handleDeactivated before receiving another changed event
+        logger.info("testReactivate: calling handleChanging...");
+        mgr.handleChanging();
+        TestHelper.assertEvents(mgr, listener, EventHelper.newChangingEvent(view2));
+        logger.info("testReactivate: calling handleNewView 2nd time...");
+        mgr.handleNewView(view3);
+        TestHelper.assertNoEvents(listener);
+        // make sure the MinEventDelayHandler finds a topology when coming back from the delaying, so:
+        sds.setTopoology(view3);
+        
+        logger.info("testReactivate: doing handleDeactivated");
+        final AsyncEventSender asyncEventSender = mgr.getAsyncEventSender();
+        Field field = mgr.getClass().getDeclaredField("minEventDelayHandler");
+        field.setAccessible(true);
+        MinEventDelayHandler minEventDelayHandler = (MinEventDelayHandler) field.get(mgr);
+        assertNotNull(minEventDelayHandler);
+        
+        // marking view3 as not current
+        view3.setNotCurrent();
+        sds.setTopoology(view3);
+        
+        mgr.handleDeactivated();
+        TestHelper.assertNoEvents(listener);
+        
+        logger.info("testReactivate: now waiting 5 sec to make sure the MinEventDelayHandler would be finished");
+        TestHelper.assertNoEvents(listener);
+        Thread.sleep(5000);
+        logger.info("testReactivate: after those 5 sec there should however still not be any new event");
+        TestHelper.assertNoEvents(listener);
+
+        int cnt = asyncEventSender.getInFlightEventCnt();
+        if (minEventDelayHandler!=null && minEventDelayHandler.isDelaying()) {
+            cnt++;
+        }
+        assertEquals(0, cnt);
+    }
+
     private void assertNoEvents(DummyListener listener) {
         assertEquals(0, listener.countEvents());
     }
 
-    @Test @Ignore
+    @Test
     public void testNormalDelaying() throws Exception {
         final DummyListener listener = new DummyListener();
         // first activate
@@ -115,7 +190,7 @@ public class TestMinEventDelayHandler {
         }
     }
 
-    @Test @Ignore
+    @Test
     public void testFailedDelaying() throws Exception {
         scheduler.failMode();
         final DummyListener listener = new DummyListener();
