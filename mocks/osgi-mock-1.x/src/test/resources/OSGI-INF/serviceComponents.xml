@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+<!-- This file follows the old SCR convention using a fixed name "serviceComponents.xml" -->
+<components xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0">
+  <scr:component name="org.apache.sling.testing.mock.osgi.OsgiMetadataUtilTest$ServiceWithMetadata">
+    <implementation class="org.apache.sling.testing.mock.osgi.OsgiMetadataUtilTest$ServiceWithMetadata"/>
+    <service servicefactory="false">
+      <provide interface="org.apache.sling.models.spi.Injector"/>
+      <provide interface="org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory"/>
+      <provide interface="java.lang.Comparable"/>
+    </service>
+    <property name="service.ranking" type="Integer" value="5000"/>
+    <property name="service.vendor" value="The Apache Software Foundation"/>
+    <property name="service.pid" value="org.apache.sling.testing.mock.osgi.OsgiMetadataUtilTest$ServiceWithMetadata"/>
+    <property name="adaptables">
+       org.apache.sling.api.resource.Resource
+       org.apache.sling.api.resource.ResourceResolver
+    </property>
+  </scr:component>
+</components>
