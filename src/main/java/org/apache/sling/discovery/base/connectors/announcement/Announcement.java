@@ -79,6 +79,10 @@ public class Announcement {
 
     /** SLING-3382: the resetBackoff flag is sent from client to server and indicates that the client wants to start from (backoff) scratch **/
     private boolean resetBackoff = false;
+    
+    private long originallyCreatedAt = -1;
+    
+    private long receivedAt = System.currentTimeMillis();
 
     public Announcement(final String ownerId) {
         this(ownerId, PROTOCOL_VERSION);
@@ -174,6 +178,14 @@ public class Announcement {
         return this.backoffInterval;
     }
     
+    public long getOriginallyCreatedAt() {
+        return this.originallyCreatedAt;
+    }
+    
+    public long getReceivedAt() {
+        return this.receivedAt;
+    }
+    
     /** sets the resetBackoff flag **/
     public void setResetBackoff(boolean resetBackoff) {
         this.resetBackoff = resetBackoff;
@@ -265,6 +277,9 @@ public class Announcement {
             protocolVersion = announcement.getInt("protocolVersion");
         }
         final Announcement result = new Announcement(ownerId, protocolVersion);
+        if (announcement.has("created")) {
+            result.originallyCreatedAt = announcement.getLong("created");
+        }
         if (announcement.has("backoffInterval")) {
             long backoffInterval = announcement.getLong("backoffInterval");
             result.backoffInterval = backoffInterval;
@@ -455,6 +470,11 @@ public class Announcement {
         final JSONObject myJson = asJSONObject(true);
         final JSONObject otherJson = announcement.asJSONObject(true);
         return myJson.toString().equals(otherJson.toString());
+    }
+
+    public void registerPing(Announcement incomingAnnouncement) {
+        originallyCreatedAt = incomingAnnouncement.originallyCreatedAt;
+        receivedAt = incomingAnnouncement.receivedAt;
     }
 
 }
