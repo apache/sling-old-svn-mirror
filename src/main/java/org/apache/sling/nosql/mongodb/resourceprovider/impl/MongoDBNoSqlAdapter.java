@@ -28,13 +28,17 @@ import org.apache.sling.nosql.generic.adapter.AbstractNoSqlAdapter;
 import org.apache.sling.nosql.generic.adapter.MultiValueMode;
 import org.apache.sling.nosql.generic.adapter.NoSqlData;
 import org.bson.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
@@ -50,6 +54,8 @@ public final class MongoDBNoSqlAdapter extends AbstractNoSqlAdapter {
     
     private final MongoCollection<Document> collection;
     
+    private static final Logger log = LoggerFactory.getLogger(MongoDBNoSqlAdapter.class);
+    
     /**
      * @param mongoClient MongoDB client
      * @param database MongoDB database
@@ -58,6 +64,32 @@ public final class MongoDBNoSqlAdapter extends AbstractNoSqlAdapter {
     public MongoDBNoSqlAdapter(MongoClient mongoClient, String database, String collection) {
         MongoDatabase db = mongoClient.getDatabase(database);
         this.collection = db.getCollection(collection);
+        
+        // create index on parent path field (if it does not exist yet)
+        try {
+            Document parenPathtIndex = new Document("_parentPath", 1);
+            this.collection.createIndex(parenPathtIndex);
+        }
+        catch (DuplicateKeyException ex) {
+            // index already exists, ignore
+        }
+        catch (Throwable ex) {
+            log.error("Unable to create index on _parentPath: " + ex.getMessage(), ex);
+        }
+        
+        // create unique index on path field (if it does not exist yet)
+        try {
+            Document pathIndex = new Document("_path", 1);
+            IndexOptions idxOptions = new IndexOptions();
+            idxOptions.unique(true);
+            this.collection.createIndex(pathIndex, idxOptions);
+        }
+        catch (DuplicateKeyException ex) {
+            // index already exists, ignore
+        }
+        catch (Throwable ex) {
+            log.error("Unable to create unique index on _path: " + ex.getMessage(), ex);
+        }
     }
 
     @Override
