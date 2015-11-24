@@ -30,32 +30,35 @@ import org.junit.Test;
 
 import com.mongodb.MongoClient;
 
+/**
+ * Test creation of indexes in MongoDB
+ */
 public class IndexCreationIT {
 
-	private MongoDBNoSqlAdapter obj;
+	private MongoDBNoSqlAdapter underTest;
 	
 	private MongoClient mongoClient;
 	private String database;
 	private String collection;
 		
 	@Before
-	public void setUp() throws Exception {
+	public void setUp() {
 	    String connectionString = System.getProperty("connectionString", "localhost:27017");
         database =  System.getProperty("database", "sling") + "_indextest";
         collection = System.getProperty("collection", "resources");
 		mongoClient = new MongoClient(connectionString);
-		obj = new MongoDBNoSqlAdapter(mongoClient, database, collection);
+		underTest = new MongoDBNoSqlAdapter(mongoClient, database, collection);
 	}
 
 	@After
-	public void tearDown() throws Exception {
+	public void tearDown() {
 		mongoClient.dropDatabase(database);
 		mongoClient.close();
 	}
 
 	@Test
 	public void testIndexesPresent() {
-		assertNotNull(obj);
+		assertNotNull(underTest);
 		
 		//expecting at least 3 indexes (_id, _path, _parentPath)
 		int expected = 3;
