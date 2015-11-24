@@ -21,9 +21,9 @@
  * Provides topology announcement implementations for discovery
  * implementors that choose to extend from discovery.base
  *
- * @version 1.0.0
+ * @version 1.1.2
  */
-@Version("1.0.0")
+@Version("1.1.2")
 package org.apache.sling.discovery.base.connectors.announcement;
 
 import aQute.bnd.annotation.Version;
