@@ -18,19 +18,19 @@
  */
 package org.apache.sling.testing.mock.osgi;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.felix.scr.impl.helper.Annotations;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.FieldCollectionType;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.OsgiMetadata;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.Reference;
@@ -157,7 +157,13 @@ final class OsgiServiceUtil {
         }
         
         // 4. Component property type (annotation lass)
-        // TODO: implement
+        method = getMethod(targetClass, methodName, new Class<?>[] { Annotation.class });
+        if (method != null) {
+            invokeMethod(target, method, new Object[] { Annotations.toObject(method.getParameterTypes()[0],
+                    MapUtil.toMap(componentContext.getProperties()), 
+                    componentContext.getBundleContext().getBundle(), false) });
+            return true;
+        }
         
         // 5. int (deactivation only)
         if (allowIntegerArgument) {
@@ -179,8 +185,8 @@ final class OsgiServiceUtil {
         
         // 7. mixed arguments
         Class<?>[] mixedArgsAllowed = allowIntegerArgument ?
-                new Class<?>[] { ComponentContext.class, BundleContext.class, Map.class, int.class, Integer.class }
-                : new Class<?>[] { ComponentContext.class, BundleContext.class, Map.class };
+                new Class<?>[] { ComponentContext.class, BundleContext.class, Map.class, Annotation.class, int.class, Integer.class }
+                : new Class<?>[] { ComponentContext.class, BundleContext.class, Map.class, Annotation.class };
         method = getMethodWithAnyCombinationArgs(targetClass, methodName, mixedArgsAllowed);
         if (method != null) {
             Object[] args = new Object[method.getParameterTypes().length];
@@ -193,6 +199,11 @@ final class OsgiServiceUtil {
                 }
                 else if (method.getParameterTypes()[i] == Map.class) {
                     args[i] = MapUtil.toMap(componentContext.getProperties());
+                }
+                else if (method.getParameterTypes()[i].isAnnotation()) {
+                    args[i] = Annotations.toObject(method.getParameterTypes()[i],
+                            MapUtil.toMap(componentContext.getProperties()), 
+                            componentContext.getBundleContext().getBundle(), false);
                 }
                 else if (method.getParameterTypes()[i] == int.class || method.getParameterTypes()[i] == Integer.class) {
                     args[i] = 0;
@@ -215,9 +226,18 @@ final class OsgiServiceUtil {
     private static Method getMethod(Class clazz, String methodName, Class<?>[] types) {
         Method[] methods = clazz.getDeclaredMethods();
         for (Method method : methods) {
-            if (StringUtils.equals(method.getName(), methodName)
-                    && Arrays.equals(method.getParameterTypes(), types)) {
-                return method;
+            if (StringUtils.equals(method.getName(), methodName) && method.getParameterTypes().length==types.length) {
+                boolean foundMismatch = false;
+                for (int i=0; i<types.length; i++) {
+                    if (!((method.getParameterTypes()[i]==types[i]) 
+                            || (types[i]==Annotation.class && method.getParameterTypes()[i].isAnnotation()))) {
+                        foundMismatch = true;
+                        break;
+                    }
+                }
+                if (!foundMismatch) {
+                    return method;
+                }
             }
         }
         // not found? check super classes
@@ -235,7 +255,7 @@ final class OsgiServiceUtil {
                 boolean foundMismatch = false;
                 for (int i=0; i<types.length; i++) {
                     if (!method.getParameterTypes()[i].isAssignableFrom(types[i])) {
-                        foundMismatch = false;
+                        foundMismatch = true;
                         break;
                     }
                 }
@@ -256,12 +276,24 @@ final class OsgiServiceUtil {
         Method[] methods = clazz.getDeclaredMethods();
         for (Method method : methods) {
             if (StringUtils.equals(method.getName(), methodName) && method.getParameterTypes().length > 1) {
+                boolean foundMismatch = false;
                 for (Class<?> parameterType : method.getParameterTypes()) {
-                    if (!ArrayUtils.contains(types,  parameterType)) {
-                        return null;
+                    boolean foundAnyMatch = false;
+                    for (int i=0; i<types.length; i++) {
+                        if ((parameterType==types[i]) 
+                                || (types[i]==Annotation.class && parameterType.isAnnotation())) {
+                            foundAnyMatch = true;
+                            break;
+                        }
+                    }
+                    if (!foundAnyMatch) {
+                        foundMismatch = true;
+                        break;
                     }
                 }
-                return method;
+                if (!foundMismatch) {
+                    return method;
+                }
             }
         }
         // not found? check super classes

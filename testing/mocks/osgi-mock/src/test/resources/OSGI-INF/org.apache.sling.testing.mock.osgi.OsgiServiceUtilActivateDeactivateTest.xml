@@ -36,4 +36,7 @@
   <scr:component name="org.apache.sling.testing.mock.osgi.OsgiServiceUtilActivateDeactivateTest$Service6" activate="activate" deactivate="deactivate">
     <implementation class="org.apache.sling.testing.mock.osgi.OsgiServiceUtilActivateDeactivateTest$Service6"/>
   </scr:component>
+  <scr:component name="org.apache.sling.testing.mock.osgi.OsgiServiceUtilActivateDeactivateTest$Service7" activate="activate" deactivate="deactivate">
+    <implementation class="org.apache.sling.testing.mock.osgi.OsgiServiceUtilActivateDeactivateTest$Service7"/>
+  </scr:component>
 </components>
