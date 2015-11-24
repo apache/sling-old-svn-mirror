@@ -232,9 +232,9 @@ public final class MockOsgi {
      * @return Configuration admin or null if not registered.
      */
     private static ConfigurationAdmin getConfigAdmin(BundleContext bundleContext) {
-        ServiceReference<ConfigurationAdmin> ref = bundleContext.getServiceReference(ConfigurationAdmin.class);
+        ServiceReference<?> ref = bundleContext.getServiceReference(ConfigurationAdmin.class.getName());
         if (ref != null) {
-            return bundleContext.getService(ref);
+            return (ConfigurationAdmin)bundleContext.getService(ref);
         }
         return null;
     }

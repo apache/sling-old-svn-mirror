@@ -40,11 +40,6 @@
         <url>http://svn.apache.org/viewvc/sling/trunk/testing/mocks/osgi-mock</url>
     </scm>
     
-    <properties>
-        <!-- OSGi mocks 2.x only support Java 7, 1.x still supports Java 6 -->
-        <sling.java.version>7</sling.java.version>
-    </properties>
-
     <dependencies>
   
         <!-- This version of OSGi mocks is targeted at OSGi R6. osgi-mocks 1.x is compatible with older versions. -->
