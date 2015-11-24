@@ -125,18 +125,20 @@ class MockBundleContext implements BundleContext {
         List<ReferenceInfo> affectedReferences = OsgiServiceUtil.getMatchingDynamicReferences(registeredServices, registration);
         for (ReferenceInfo referenceInfo : affectedReferences) {
             Reference reference = referenceInfo.getReference();
-            switch (reference.getCardinality()) {
-            case MANDATORY_UNARY:
-                throw new ReferenceViolationException("Mandatory unary reference of type " + reference.getInterfaceType() + " already fulfilled "
-                        + "for service " + reference.getServiceClass().getName() + ", registration of new service with this interface failed.");
-            case MANDATORY_MULTIPLE:
-            case OPTIONAL_MULTIPLE:
-            case OPTIONAL_UNARY:
-                OsgiServiceUtil.invokeBindMethod(reference, referenceInfo.getServiceRegistration().getService(),
-                        new ServiceInfo(registration));
-                break;
-            default:
-                throw new RuntimeException("Unepxected cardinality: " + reference.getCardinality());
+            if (reference.matchesTargetFilter(registration.getReference())) {
+                switch (reference.getCardinality()) {
+                case MANDATORY_UNARY:
+                    throw new ReferenceViolationException("Mandatory unary reference of type " + reference.getInterfaceType() + " already fulfilled "
+                            + "for service " + reference.getServiceClass().getName() + ", registration of new service with this interface failed.");
+                case MANDATORY_MULTIPLE:
+                case OPTIONAL_MULTIPLE:
+                case OPTIONAL_UNARY:
+                    OsgiServiceUtil.invokeBindMethod(reference, referenceInfo.getServiceRegistration().getService(),
+                            new ServiceInfo(registration));
+                    break;
+                default:
+                    throw new RuntimeException("Unepxected cardinality: " + reference.getCardinality());
+                }
             }
         }
     }
@@ -156,20 +158,22 @@ class MockBundleContext implements BundleContext {
         List<ReferenceInfo> affectedReferences = OsgiServiceUtil.getMatchingDynamicReferences(registeredServices, registration);
         for (ReferenceInfo referenceInfo : affectedReferences) {
             Reference reference = referenceInfo.getReference();
-            switch (reference.getCardinality()) {
-            case MANDATORY_UNARY:
-                throw new ReferenceViolationException("Reference of type " + reference.getInterfaceType() + " "
-                        + "for service " + reference.getServiceClass().getName() + " is mandatory unary, "
-                        + "unregistration of service with this interface failed.");
-            case MANDATORY_MULTIPLE:
-            case OPTIONAL_MULTIPLE:
-            case OPTIONAL_UNARY:
-                // it is currently not checked if for a MANDATORY_MULTIPLE reference the last reference is removed
-                OsgiServiceUtil.invokeUnbindMethod(reference, referenceInfo.getServiceRegistration().getService(),
-                        new ServiceInfo(registration));
-                break;
-            default:
-                throw new RuntimeException("Unepxected cardinality: " + reference.getCardinality());
+            if (reference.matchesTargetFilter(registration.getReference())) {
+                switch (reference.getCardinality()) {
+                case MANDATORY_UNARY:
+                    throw new ReferenceViolationException("Reference of type " + reference.getInterfaceType() + " "
+                            + "for service " + reference.getServiceClass().getName() + " is mandatory unary, "
+                            + "unregistration of service with this interface failed.");
+                case MANDATORY_MULTIPLE:
+                case OPTIONAL_MULTIPLE:
+                case OPTIONAL_UNARY:
+                    // it is currently not checked if for a MANDATORY_MULTIPLE reference the last reference is removed
+                    OsgiServiceUtil.invokeUnbindMethod(reference, referenceInfo.getServiceRegistration().getService(),
+                            new ServiceInfo(registration));
+                    break;
+                default:
+                    throw new RuntimeException("Unepxected cardinality: " + reference.getCardinality());
+                }
             }
         }
     }

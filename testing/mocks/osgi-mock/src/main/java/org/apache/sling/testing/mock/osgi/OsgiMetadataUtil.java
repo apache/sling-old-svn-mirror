@@ -41,6 +41,10 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.felix.framework.FilterImpl;
+import org.osgi.framework.Filter;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -391,6 +395,8 @@ final class OsgiMetadataUtil {
         private final String unbind;
         private final String field;
         private final FieldCollectionType fieldCollectionType;
+        private final String target;
+        private final Filter targetFilter;
 
         private Reference(Class<?> clazz, Node node) {
             this.clazz = clazz;
@@ -403,6 +409,17 @@ final class OsgiMetadataUtil {
             this.unbind = getAttributeValue(node, "unbind");
             this.field = getAttributeValue(node, "field");
             this.fieldCollectionType = toFieldCollectionType(getAttributeValue(node, "field-collection-type"));
+            this.target = getAttributeValue(node, "target");
+            if (StringUtils.isNotEmpty(this.target)) {
+                try {
+                    this.targetFilter = new FilterImpl(this.target);
+                } catch (InvalidSyntaxException ex) {
+                    throw new RuntimeException("Invalid target filet in reference '" + this.name + "' of class " + clazz.getName(), ex);
+                }
+            }
+            else {
+                this.targetFilter = null;
+            }
         }
 
         public Class<?> getServiceClass() {
@@ -434,6 +451,11 @@ final class OsgiMetadataUtil {
                     || this.cardinality == ReferenceCardinality.MANDATORY_MULTIPLE;
         }
 
+        public boolean isCardinalityOptional() {
+            return this.cardinality == ReferenceCardinality.OPTIONAL_UNARY
+                    || this.cardinality == ReferenceCardinality.OPTIONAL_MULTIPLE;
+        }
+
         public ReferencePolicy getPolicy() {
             return policy;
         }
@@ -452,6 +474,17 @@ final class OsgiMetadataUtil {
 
         public String getField() {
             return this.field;
+        }
+        
+        public String getTarget() {
+            return this.target;
+        }
+        
+        public boolean matchesTargetFilter(ServiceReference<?> serviceReference) {
+            if (targetFilter == null) {
+                return true;
+            }
+            return targetFilter.match(serviceReference);
         }
         
         public FieldCollectionType getFieldCollectionType() {

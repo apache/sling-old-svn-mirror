@@ -34,7 +34,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.FieldCollectionType;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.OsgiMetadata;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.Reference;
-import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.ReferenceCardinality;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.ReferencePolicy;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
@@ -343,20 +342,21 @@ final class OsgiServiceUtil {
         Class<?> type = reference.getInterfaceTypeAsClass();
 
         // get matching service references
-        List<ServiceInfo> matchingServices = getMatchingServices(type, bundleContext);
+        List<ServiceInfo> matchingServices = getMatchingServices(type, bundleContext, reference.getTarget());
 
         // no references found? check if reference was optional
         if (matchingServices.isEmpty()) {
-            boolean isOptional = (reference.getCardinality() == ReferenceCardinality.OPTIONAL_UNARY || reference
-                    .getCardinality() == ReferenceCardinality.OPTIONAL_MULTIPLE);
-            if (!isOptional) {
+            if (!reference.isCardinalityOptional()) {
                 throw new ReferenceViolationException("Unable to inject mandatory reference '" + reference.getName() + "' for class " + targetClass.getName() + " : no matching services were found.");
+            }
+            if (reference.isCardinalityMultiple()) {
+                // make sure at least empty array is set  
+                invokeBindUnbindMethod(reference, target, null, true);
             }
         }
 
         // multiple references found? check if reference is not multiple
-        if (matchingServices.size() > 1
-                && (reference.getCardinality() == ReferenceCardinality.MANDATORY_UNARY || reference.getCardinality() == ReferenceCardinality.OPTIONAL_UNARY)) {
+        if (matchingServices.size() > 1 && !reference.isCardinalityMultiple()) {
             throw new ReferenceViolationException("Multiple matches found for unary reference '" + reference.getName() + "' for class "+ targetClass.getName());
         }
 
@@ -378,7 +378,7 @@ final class OsgiServiceUtil {
                     + "for reference '" + reference.getName() + "' for class " +  targetClass.getName());
         }
 
-        if (StringUtils.isNotEmpty(methodName)) {
+        if (StringUtils.isNotEmpty(methodName) && serviceInfo != null) {
             
             // 1. ServiceReference
             Method method = getMethod(targetClass, methodName, new Class<?>[] { ServiceReference.class });
@@ -414,9 +414,12 @@ final class OsgiServiceUtil {
                 switch (reference.getFieldCollectionType()) {
                     case SERVICE:
                     case REFERENCE:
-                        Object item = serviceInfo.getServiceInstance();
-                        if (reference.getFieldCollectionType() == FieldCollectionType.REFERENCE) {
-                            item = serviceInfo.getServiceReference();
+                        Object item = null;
+                        if (serviceInfo != null) {
+                            item = serviceInfo.getServiceInstance();
+                            if (reference.getFieldCollectionType() == FieldCollectionType.REFERENCE) {
+                                item = serviceInfo.getServiceReference();
+                            }
                         }
                         // 1. collection
                         Field field = getFieldWithAssignableType(targetClass, fieldName, Collection.class);
@@ -454,14 +457,14 @@ final class OsgiServiceUtil {
                 Class<?> interfaceType = reference.getInterfaceTypeAsClass();
                 Field field = getFieldWithAssignableType(targetClass, fieldName, interfaceType);
                 if (field != null) {
-                    setField(target, field, bind ? serviceInfo.getServiceInstance() : null);
+                    setField(target, field, bind && serviceInfo != null ? serviceInfo.getServiceInstance() : null);
                     return;
                 }
                 
                 // 2. ServiceReference
                 field = getField(targetClass, fieldName, ServiceReference.class);
                 if (field != null) {
-                    setField(target, field, bind ? serviceInfo.getServiceReference() : null);
+                    setField(target, field, bind && serviceInfo != null ? serviceInfo.getServiceReference() : null);
                     return;
                 }
             }
@@ -477,7 +480,9 @@ final class OsgiServiceUtil {
             if (collection == null) {
                 collection = new ArrayList<>();
             }
-            collection.add(item);
+            if (item != null) {
+                collection.add(item);
+            }
             field.set(target, collection);
             
         } catch (IllegalAccessException ex) {
@@ -495,9 +500,11 @@ final class OsgiServiceUtil {
             field.setAccessible(true);
             Collection<Object> collection = (Collection<Object>)field.get(target);
             if (collection == null) {
-                return;
+                collection = new ArrayList<>();
             }
-            collection.remove(item);
+            if (item != null) {
+                collection.remove(item);
+            }
             field.set(target, collection);
             
         } catch (IllegalAccessException ex) {
@@ -529,10 +536,10 @@ final class OsgiServiceUtil {
         invokeBindUnbindMethod(reference,  target, serviceInfo, false);
     }
     
-    private static List<ServiceInfo> getMatchingServices(Class<?> type, BundleContext bundleContext) {
+    private static List<ServiceInfo> getMatchingServices(Class<?> type, BundleContext bundleContext, String filter) {
         List<ServiceInfo> matchingServices = new ArrayList<ServiceInfo>();
         try {
-            ServiceReference[] references = bundleContext.getServiceReferences(type.getName(), null);
+            ServiceReference[] references = bundleContext.getServiceReferences(type.getName(), filter);
             if (references != null) {
                 for (ServiceReference<?> serviceReference : references) {
                     Object serviceInstance = bundleContext.getService(serviceReference);

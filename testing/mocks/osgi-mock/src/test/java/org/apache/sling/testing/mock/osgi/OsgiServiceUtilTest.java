@@ -339,8 +339,9 @@ public class OsgiServiceUtilTest {
 
         private ServiceInterface1 reference1;
         private ServiceInterface1Optional reference1Optional;
-        private List<ServiceReference> references2 = new ArrayList<ServiceReference>();
-        private List<ServiceSuperInterface3> references3 = new ArrayList<ServiceSuperInterface3>();
+        private List<ServiceReference> references2;
+        private List<ServiceSuperInterface3> references3;
+        private List<ServiceSuperInterface3> references3Filtered;
 
         private ComponentContext componentContext;
         private Map<String, Object> config;
@@ -379,6 +380,10 @@ public class OsgiServiceUtilTest {
 
         public List<ServiceSuperInterface3> getReferences3() {
             return this.references3;
+        }
+
+        public List<ServiceSuperInterface3> getReferences3Filtered() {
+            return this.references3Filtered;
         }
 
         public ComponentContext getComponentContext() {
