@@ -80,7 +80,61 @@ final class OsgiServiceUtil {
         }
 
         // try to find matching activate/deactivate method and execute it
+        if (invokeLifecycleMethod(target, targetClass, methodName, !activate, 
+                componentContext, MapUtil.toMap(componentContext.getProperties()))) {
+            return true;
+        }
         
+        if (fallbackDefaultName) {
+            return false;
+        }
+        
+        throw new RuntimeException("No matching " + (activate ? "activation" : "deactivation") + " method with name '" + methodName + "' "
+                + " found in class " + targetClass.getName());
+    }
+
+    /**
+     * Simulate modification of configuration of OSGi service instance.
+     * @param target Service instance.
+     * @param properties Updated configuration
+     * @return true if modified method was called. False if it failed.
+     */
+    public static boolean modified(Object target, ComponentContext componentContext, Map<String,Object> properties) {
+        Class<?> targetClass = target.getClass();
+
+        // get method name for activation/deactivation from osgi metadata
+        OsgiMetadata metadata = OsgiMetadataUtil.getMetadata(targetClass);
+        if (metadata == null) {
+            throw new NoScrMetadataException(targetClass);
+        }
+        String methodName = metadata.getModifiedMethodName();
+        if (StringUtils.isEmpty(methodName)) {
+            return false;
+        }
+        
+        // try to find matching modified method and execute it
+        if (invokeLifecycleMethod(target, targetClass, methodName, false, componentContext, properties)) {
+            return true;
+        }
+
+        throw new RuntimeException("No matching modified method with name '" + methodName + "' "
+                + " found in class " + targetClass.getName());
+    }
+    
+    /**
+     * Invokes a lifecycle method (activation, deactivation or modified) with variable method arguments.
+     * @param target Target object
+     * @param targetClass Target object class
+     * @param methodName Method name
+     * @param allowIntegerArgument Allow int or Integer as arguments (only decactivate)
+     * @param componentContext Component context
+     * @param properties Component properties
+     * @return true if a method was found and invoked
+     */
+    private static boolean invokeLifecycleMethod(Object target, Class<?> targetClass, 
+            String methodName, boolean allowIntegerArgument,
+            ComponentContext componentContext, Map<String,Object> properties) {
+
         // 1. componentContext
         Method method = getMethod(targetClass, methodName, new Class<?>[] { ComponentContext.class });
         if (method != null) {
@@ -102,8 +156,11 @@ final class OsgiServiceUtil {
             return true;
         }
         
-        // 4. int (deactivation only)
-        if (!activate) {
+        // 4. Component property type (annotation lass)
+        // TODO: implement
+        
+        // 5. int (deactivation only)
+        if (allowIntegerArgument) {
             method = getMethod(targetClass, methodName, new Class<?>[] { int.class });
             if (method != null) {
                 invokeMethod(target, method, new Object[] { 0 });
@@ -111,8 +168,8 @@ final class OsgiServiceUtil {
             }
         }
         
-        // 5. Integer (deactivation only)
-        if (!activate) {
+        // 6. Integer (deactivation only)
+        if (allowIntegerArgument) {
             method = getMethod(targetClass, methodName, new Class<?>[] { Integer.class });
             if (method != null) {
                 invokeMethod(target, method, new Object[] { 0 });
@@ -120,9 +177,10 @@ final class OsgiServiceUtil {
             }
         }
         
-        // 6. mixed arguments of componentContext, bundleContext and map
-        Class<?>[] mixedArgsAllowed = activate ? new Class<?>[] { ComponentContext.class, BundleContext.class, Map.class }
-                : new Class<?>[] { ComponentContext.class, BundleContext.class, Map.class, int.class, Integer.class };
+        // 7. mixed arguments
+        Class<?>[] mixedArgsAllowed = allowIntegerArgument ?
+                new Class<?>[] { ComponentContext.class, BundleContext.class, Map.class, int.class, Integer.class }
+                : new Class<?>[] { ComponentContext.class, BundleContext.class, Map.class };
         method = getMethodWithAnyCombinationArgs(targetClass, methodName, mixedArgsAllowed);
         if (method != null) {
             Object[] args = new Object[method.getParameterTypes().length];
@@ -144,48 +202,14 @@ final class OsgiServiceUtil {
             return true;
         }
 
-        // 7. noargs
+        // 8. noargs
         method = getMethod(targetClass, methodName, new Class<?>[0]);
         if (method != null) {
             invokeMethod(target, method, new Object[0]);
             return true;
-        }
+        }        
         
-        if (fallbackDefaultName) {
-            return false;
-        }
-        throw new RuntimeException("No matching " + (activate ? "activation" : "deactivation") + " method with name '" + methodName + "' "
-                + " found in class " + targetClass.getName());
-    }
-
-    /**
-     * Simulate modification of configuration of OSGi service instance.
-     * @param target Service instance.
-     * @param properties Updated configuration
-     * @return true if modified method was called. False if it failed.
-     */
-    public static boolean modified(Object target, BundleContext bundleContext, Map<String,Object> properties) {
-        Class<?> targetClass = target.getClass();
-
-        // get method name for activation/deactivation from osgi metadata
-        OsgiMetadata metadata = OsgiMetadataUtil.getMetadata(targetClass);
-        if (metadata == null) {
-            throw new NoScrMetadataException(targetClass);
-        }
-        String methodName = metadata.getModifiedMethodName();
-        if (StringUtils.isEmpty(methodName)) {
-            return false;
-        }
-        
-        // try to find matching modified method and execute it
-        Method method = getMethod(targetClass, methodName, new Class<?>[] { Map.class });
-        if (method != null) {
-            invokeMethod(target, method, new Object[] { properties });
-            return true;
-        }
-        
-        throw new RuntimeException("No matching modified method with name '" + methodName + "' "
-                + " found in class " + targetClass.getName());
+        return false;
     }
 
     private static Method getMethod(Class clazz, String methodName, Class<?>[] types) {
