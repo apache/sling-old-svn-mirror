@@ -33,7 +33,6 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.discovery.base.connectors.announcement.Announcement;
 import org.apache.sling.discovery.base.connectors.announcement.AnnouncementRegistry;
-import org.apache.sling.discovery.base.connectors.announcement.CachedAnnouncement;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.util.FormattingResultLog;
