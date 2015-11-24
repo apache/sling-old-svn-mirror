@@ -215,7 +215,8 @@ public final class MockOsgi {
      */
     public static boolean modified(Object target, BundleContext bundleContext, Map<String, Object> properties) {
         Map<String, Object> mergedProperties = propertiesMergeWithOsgiMetadata(target, getConfigAdmin(bundleContext), properties);
-        return OsgiServiceUtil.modified(target, bundleContext, mergedProperties);
+        ComponentContext componentContext = newComponentContext(bundleContext, mergedProperties);
+        return OsgiServiceUtil.modified(target, componentContext, mergedProperties);
     }
     
     /**
