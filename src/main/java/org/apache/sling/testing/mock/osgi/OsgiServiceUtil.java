@@ -478,7 +478,7 @@ final class OsgiServiceUtil {
             field.setAccessible(true);
             Collection<Object> collection = (Collection<Object>)field.get(target);
             if (collection == null) {
-                collection = new ArrayList<>();
+                collection = new ArrayList<Object>();
             }
             if (item != null) {
                 collection.add(item);
@@ -500,7 +500,7 @@ final class OsgiServiceUtil {
             field.setAccessible(true);
             Collection<Object> collection = (Collection<Object>)field.get(target);
             if (collection == null) {
-                collection = new ArrayList<>();
+                collection = new ArrayList<Object>();
             }
             if (item != null) {
                 collection.remove(item);
