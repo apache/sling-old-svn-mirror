@@ -36,6 +36,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -138,6 +139,19 @@ public class MockBundleContextDynamicReferncesOsgiR6Test {
         assertDependencies2();
     }
     
+    @Test
+    public void testReferenceWithTargetFilter() {
+        assertDependencies3Filtered();
+        
+        bundleContext.registerService(ServiceInterface3.class.getName(), dependency3a, 
+                MapUtil.toDictionary(ImmutableMap.<String, Object>of("prop1", "abc")));
+
+        bundleContext.registerService(ServiceInterface3.class.getName(), dependency3b, 
+                MapUtil.toDictionary(ImmutableMap.<String, Object>of("prop1", "def")));
+        
+        assertDependencies3Filtered(dependency3a);
+    }
+    
     private void assertDependency1(ServiceInterface1 instance) {
         if (instance == null) {
             assertNull(service.getReference1());
@@ -164,6 +178,11 @@ public class MockBundleContextDynamicReferncesOsgiR6Test {
     private void assertDependencies3(ServiceSuperInterface3... instances) {
         assertEquals(ImmutableSet.<ServiceSuperInterface3>copyOf(instances), 
                 ImmutableSet.<ServiceSuperInterface3>copyOf(service.getReferences3()));
+    }
+    
+    private void assertDependencies3Filtered(ServiceSuperInterface3... instances) {
+        assertEquals(ImmutableSet.<ServiceSuperInterface3>copyOf(instances), 
+                ImmutableSet.<ServiceSuperInterface3>copyOf(service.getReferences3Filtered()));
     }
     
 }
