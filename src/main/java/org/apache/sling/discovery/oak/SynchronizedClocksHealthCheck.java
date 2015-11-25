@@ -54,13 +54,13 @@ import org.slf4j.LoggerFactory;
  * info</li>
  * </ul>
  */
-@Component(immediate = true, metatype = true, label = "Apache Sling Discovery Oak Clocks-In-Sync Health Check")
+@Component(immediate = true, metatype = true, label = "Apache Sling Discovery Oak Synchronized Clocks Health Check")
 @Properties({
         @Property(name = HealthCheck.NAME, value = "Synchronized Clocks", description = "Health Check name", label = "Name"),
         @Property(name = HealthCheck.TAGS, unbounded = PropertyUnbounded.ARRAY, description = "Health Check tags", label = "Tags"),
-        @Property(name = HealthCheck.MBEAN_NAME, value = "slingDiscoveryOakClocksInSync", description = "Health Check MBean name", label = "MBean name") })
+        @Property(name = HealthCheck.MBEAN_NAME, value = "slingDiscoveryOakSynchronizedClocks", description = "Health Check MBean name", label = "MBean name") })
 @Service(value = HealthCheck.class)
-public class ClocksInSyncHealthCheck implements HealthCheck {
+public class SynchronizedClocksHealthCheck implements HealthCheck {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
