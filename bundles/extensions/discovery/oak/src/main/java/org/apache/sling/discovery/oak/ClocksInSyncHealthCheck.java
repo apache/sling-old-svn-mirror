@@ -56,7 +56,7 @@ import org.slf4j.LoggerFactory;
  */
 @Component(immediate = true, metatype = true, label = "Apache Sling Discovery Oak Clocks-In-Sync Health Check")
 @Properties({
-        @Property(name = HealthCheck.NAME, value = "SlingDiscoveryOakClocksInSyncHC", description = "Health Check name", label = "Name"),
+        @Property(name = HealthCheck.NAME, value = "Synchronized Clocks", description = "Health Check name", label = "Name"),
         @Property(name = HealthCheck.TAGS, unbounded = PropertyUnbounded.ARRAY, description = "Health Check tags", label = "Tags"),
         @Property(name = HealthCheck.MBEAN_NAME, value = "slingDiscoveryOakClocksInSync", description = "Health Check MBean name", label = "MBean name") })
 @Service(value = HealthCheck.class)
