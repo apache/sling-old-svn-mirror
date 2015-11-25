@@ -144,7 +144,7 @@ public class SynchronizedClocksHealthCheck implements HealthCheck {
                 resultLog.info("No topology connectors connected to local instance.");
             }
             for (Announcement ann : localAnnouncements) {
-                final String peerSlingId = ann.isInherited() ? ann.getServerInfo() : ann.getOwnerId();
+                final String peerSlingId = ann.getOwnerId();
                 final long originallyCreatedAt = ann.getOriginallyCreatedAt();
                 final long receivedAt = ann.getReceivedAt();
                 long diffMillis = Math.abs(originallyCreatedAt - receivedAt);
