@@ -83,6 +83,13 @@ public interface ThreadPoolMBean {
     long getExecutorTaskCount();
 
     /**
+     * Return the configured max thread age.
+     *
+     * @return The configured max thread age.
+     */
+    long getMaxThreadAge();
+
+    /**
      * Return the configured keep alive time.
      * 
      * @return The configured keep alive time.
