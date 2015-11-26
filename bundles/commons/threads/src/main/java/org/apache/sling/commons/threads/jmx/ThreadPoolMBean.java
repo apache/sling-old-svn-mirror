@@ -16,9 +16,12 @@
  */
 package org.apache.sling.commons.threads.jmx;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * This is the management interface for a Sling Thread Pool.
  */
+@ProviderType
 public interface ThreadPoolMBean {
 
     /**

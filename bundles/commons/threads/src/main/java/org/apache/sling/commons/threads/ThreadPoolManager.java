@@ -17,10 +17,13 @@
 package org.apache.sling.commons.threads;
 
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * The <code>ThreadPoolManager</code> manages thread pools.
  *
  */
+@ProviderType
 public interface ThreadPoolManager {
 
     /** The default thread pool name */

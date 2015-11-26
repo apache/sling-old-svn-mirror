@@ -16,11 +16,14 @@
  */
 package org.apache.sling.commons.threads;
 
+import aQute.bnd.annotation.ProviderType;
+
 import java.util.concurrent.ThreadFactory;
 
 /**
  * The thread pool configuration.
  */
+@ProviderType
 public interface ThreadPoolConfig {
 
     /** The thread pool policies. */
