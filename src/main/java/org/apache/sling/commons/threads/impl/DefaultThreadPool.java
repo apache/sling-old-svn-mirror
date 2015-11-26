@@ -126,8 +126,11 @@ public class DefaultThreadPool
                 handler = new ThreadPoolExecutor.CallerRunsPolicy();
                 break;
         }
-        this.executor = new ThreadPoolExecutor(this.configuration.getMinPoolSize(),
+
+        this.executor = new ThreadExpiringThreadPool(this.configuration.getMinPoolSize(),
                 this.configuration.getMaxPoolSize(),
+                this.configuration.getMaxThreadAge(),
+                TimeUnit.MILLISECONDS,
                 this.configuration.getKeepAliveTime(),
                 TimeUnit.MILLISECONDS,
                 queue,
@@ -204,7 +207,7 @@ public class DefaultThreadPool
                         logger.warn("Running commands have not terminated within "
                             + this.configuration.getShutdownWaitTimeMs()
                             + "ms. Will shut them down by interruption");
-                        this.executor.shutdownNow();
+                        this.executor.shutdownNow(); // TODO: shouldn't this be outside the if statement?!
                     }
                 }
             } catch (final InterruptedException ie) {

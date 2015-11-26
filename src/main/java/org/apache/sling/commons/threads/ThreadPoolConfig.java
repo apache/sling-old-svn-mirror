@@ -59,6 +59,12 @@ public interface ThreadPoolConfig {
     int getQueueSize();
 
     /**
+     * Return the maximum age before a thread is retired.
+     * @return The maximum age of a thread in milliseconds.
+     */
+    long getMaxThreadAge();
+
+    /**
      * Return the keep alive time.
      * @return The keep alive time.
      */
