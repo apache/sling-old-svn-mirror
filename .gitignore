@@ -21,3 +21,4 @@ contrib/extensions/distribution/it/sling
 contrib/explorers/resourceeditor/node
 contrib/nosql/launchpad/sling
 launchpad/docker/*.jar
+.jira-url
