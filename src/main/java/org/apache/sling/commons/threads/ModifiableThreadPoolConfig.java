@@ -16,6 +16,8 @@
  */
 package org.apache.sling.commons.threads;
 
+import aQute.bnd.annotation.ProviderType;
+
 import java.util.concurrent.ThreadFactory;
 
 /**
@@ -34,6 +36,7 @@ import java.util.concurrent.ThreadFactory;
  * - daemon: false
  * - factory: null (= default jvm thread factory)
  */
+@ProviderType
 public final class ModifiableThreadPoolConfig implements ThreadPoolConfig {
 
     /** Configuration property for the min pool size. */

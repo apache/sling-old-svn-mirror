@@ -16,6 +16,8 @@
  */
 package org.apache.sling.commons.threads;
 
+import aQute.bnd.annotation.ProviderType;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
@@ -23,6 +25,7 @@ import java.util.concurrent.Future;
  * The thread pool interface allows to start runnables by
  * getting threads from a managed pool.
  */
+@ProviderType
 public interface ThreadPool {
 
     /**
