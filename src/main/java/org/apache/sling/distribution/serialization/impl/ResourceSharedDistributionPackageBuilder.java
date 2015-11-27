@@ -109,7 +109,10 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
 
         String packagePath = getPathFromName(packageName);
 
-        return new ResourceSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
+        DistributionPackage sharedDistributionPackage = new ResourceSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
+
+        log.info("created shared package {} for {}", sharedDistributionPackage.getId(), distributionPackage.getId());
+        return sharedDistributionPackage;
     }
 
     @CheckForNull
