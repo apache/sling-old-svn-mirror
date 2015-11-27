@@ -19,5 +19,5 @@
 /**
  * Mock implementation of selected Servlet-related Sling APIs.
  */
-@aQute.bnd.annotation.Version("1.3")
+@aQute.bnd.annotation.Version("1.4")
 package org.apache.sling.testing.mock.sling.servlet;
