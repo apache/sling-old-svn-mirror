@@ -76,6 +76,7 @@ public class MultipleQueueDispatchingStrategy implements DistributionQueueDispat
                     status = queueEntry.getStatus();
                 } else {
                     DistributionPackageUtils.releaseOrDelete(distributionPackage, queueName);
+                    log.error("cannot add package {} to queue {}", distributionPackage.getId(), queueName);
                 }
 
                 result.add(status);
