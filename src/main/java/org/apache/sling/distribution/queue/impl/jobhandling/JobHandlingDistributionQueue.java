@@ -72,7 +72,7 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
             Map<String, Object> properties = JobHandlingUtils.createFullProperties(item);
 
             Job job = jobManager.createJob(topic).properties(properties).add();
-            log.info("job {} added", job.getId());
+            log.info("job {} added for item {}", job.getId(), item.getId());
         } catch (Exception e) {
             log.error("could not add an item to the queue", e);
             result = false;
@@ -99,7 +99,7 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
         List<Job> jobs = getJobs(0, 1);
         if (jobs.size() > 0) {
             Job firstItem = jobs.get(0);
-            log.info("first item in the queue is {}, retried {} times", firstItem.getId(), firstItem.getRetryCount());
+            log.debug("first item in the queue is {}, retried {} times", firstItem.getId(), firstItem.getRetryCount());
             return firstItem;
         }
         return null;
