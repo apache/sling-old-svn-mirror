@@ -327,12 +327,35 @@ public class MockSlingHttpServletRequestTest {
     }
     
     @Test
-    public void testGetRemoteUserN() {
-        
+    public void testGetRemoteUser() {
         assertNull(null, request.getRemoteUser());
         
         request.setRemoteUser("admin");
         assertEquals("admin", request.getRemoteUser());
     }
-    
+
+    @Test
+    public void testGetRemoteAddr() throws Exception {
+        assertNull(null, request.getRemoteAddr());
+        
+        request.setRemoteAddr("1.2.3.4");
+        assertEquals("1.2.3.4", request.getRemoteAddr());
+    }
+
+    @Test
+    public void testGetRemoteHost() throws Exception {
+        assertNull(null, request.getRemoteHost());
+        
+        request.setRemoteHost("host1");
+        assertEquals("host1", request.getRemoteHost());
+    }
+
+    @Test
+    public void testGetRemotePort() throws Exception {
+        assertEquals(0, request.getRemotePort());
+        
+        request.setRemotePort(1234);
+        assertEquals(1234, request.getRemotePort());
+    }
+
 }

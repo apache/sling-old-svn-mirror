@@ -97,6 +97,10 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
     private String characterEncoding;
     private byte[] content;
     private String remoteUser;
+    private String remoteAddr;
+    private String remoteHost;
+    private int remotePort;
+
     private MockRequestDispatcherFactory requestDispatcherFactory;
     
     private static final ResourceBundle EMPTY_RESOURCE_BUNDLE = new ListResourceBundle() {
@@ -626,6 +630,34 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
         this.remoteUser = remoteUser;
     }
 
+    @Override
+    public String getRemoteAddr() {
+        return remoteAddr;
+    }
+
+    public void setRemoteAddr(String remoteAddr) {
+        this.remoteAddr = remoteAddr;
+    }
+
+    @Override
+    public String getRemoteHost() {
+        return remoteHost;
+    }
+
+    public void setRemoteHost(String remoteHost) {
+        this.remoteHost = remoteHost;
+    }
+
+    @Override
+    public int getRemotePort() {
+        return remotePort;
+    }
+
+    public void setRemotePort(int remotePort) {
+        this.remotePort = remotePort;
+    }
+
+    
     // --- unsupported operations ---
 
     @Override
@@ -740,21 +772,6 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     @Override
     public String getRealPath(String path) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getRemoteAddr() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getRemoteHost() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public int getRemotePort() {
         throw new UnsupportedOperationException();
     }
 
