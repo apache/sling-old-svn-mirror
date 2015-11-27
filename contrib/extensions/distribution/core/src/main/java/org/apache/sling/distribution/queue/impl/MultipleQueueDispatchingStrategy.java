@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.distribution.queue.DistributionQueueEntry;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.SharedDistributionPackage;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
@@ -69,8 +70,10 @@ public class MultipleQueueDispatchingStrategy implements DistributionQueueDispat
                 DistributionQueueItemStatus status = new DistributionQueueItemStatus(DistributionQueueItemState.ERROR, queue.getName());
 
                 DistributionPackageUtils.acquire(distributionPackage, queueName);
-                if (queue.add(queueItem)) {
-                    status = queue.getItem(queueItem.getId()).getStatus();
+                DistributionQueueEntry queueEntry = queue.add(queueItem);
+
+                if (queueEntry != null) {
+                    status = queueEntry.getStatus();
                 } else {
                     DistributionPackageUtils.releaseOrDelete(distributionPackage, queueName);
                 }

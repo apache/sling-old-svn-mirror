@@ -67,8 +67,9 @@ public class ErrorQueueDispatchingStrategy implements DistributionQueueDispatchi
         DistributionQueueItemStatus status = new DistributionQueueItemStatus(DistributionQueueItemState.ERROR, errorQueueName);
 
         DistributionQueueItem queueItem = DistributionPackageUtils.toQueueItem(distributionPackage);
+        DistributionQueueEntry queueEntry = errorQueue.add(queueItem);
 
-        if (errorQueue.add(queueItem)) {
+        if (queueEntry != null) {
             DistributionPackageUtils.acquire(distributionPackage, errorQueueName);
 
             DistributionQueueEntry entry = errorQueue.getItem(queueItem.getId());

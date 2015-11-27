@@ -66,18 +66,18 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
         return name;
     }
 
-    public boolean add(@Nonnull DistributionQueueItem item) {
-        boolean result = true;
+    public DistributionQueueEntry add(@Nonnull DistributionQueueItem item) {
         try {
             Map<String, Object> properties = JobHandlingUtils.createFullProperties(item);
 
             Job job = jobManager.createJob(topic).properties(properties).add();
             log.info("job {} added for item {}", job.getId(), item.getId());
+
+            return JobHandlingUtils.getEntry(job);
         } catch (Exception e) {
             log.error("could not add an item to the queue", e);
-            result = false;
+            return null;
         }
-        return result;
     }
 
 

@@ -66,7 +66,7 @@ public class JobHandlingDistributionQueueTest {
         packageInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, DistributionRequestType.ADD);
 
         DistributionQueueItem distributionQueueItem = new DistributionQueueItem("an-id", packageInfo);
-        assertTrue(queue.add(distributionQueueItem));
+        assertNotNull(queue.add(distributionQueueItem));
     }
 
     @SuppressWarnings("unchecked")
@@ -87,7 +87,7 @@ public class JobHandlingDistributionQueueTest {
         packageInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, new String[]{"/foo"});
         packageInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, DistributionRequestType.ADD);
         DistributionQueueItem distributionQueueItem = new DistributionQueueItem("an-id", packageInfo);
-        assertTrue(queue.add(distributionQueueItem));
+        assertNotNull(queue.add(distributionQueueItem));
         DistributionQueueItemStatus status = queue.getItem(distributionQueueItem.getId()).getStatus();
         assertNotNull(status);
         assertEquals(DistributionQueueItemState.QUEUED, status.getItemState());
