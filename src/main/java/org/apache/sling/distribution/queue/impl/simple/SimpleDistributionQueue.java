@@ -68,7 +68,7 @@ public class SimpleDistributionQueue implements DistributionQueue {
         return name;
     }
 
-    public boolean add(@Nonnull DistributionQueueItem item) {
+    public DistributionQueueEntry add(@Nonnull DistributionQueueItem item) {
         DistributionQueueItemState itemState = DistributionQueueItemState.ERROR;
         boolean result = false;
         try {
@@ -79,7 +79,12 @@ public class SimpleDistributionQueue implements DistributionQueue {
         } finally {
             statusMap.put(item, new DistributionQueueItemStatus(Calendar.getInstance(), itemState, 0, name));
         }
-        return result;
+
+        if (result) {
+            return new DistributionQueueEntry(item, statusMap.get(item));
+        }
+
+        return null;
     }
 
 

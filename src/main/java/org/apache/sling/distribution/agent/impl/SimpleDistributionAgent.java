@@ -579,7 +579,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
                 try {
                     agent.execute(resourceResolver, request);
                 } catch (Throwable t) {
-                    log.error("Error executing handler", t);
+                    log.error("Error executing handler {}", request, t);
                 }
             } else {
                 ResourceResolver agentResourceResolver = null;
@@ -589,7 +589,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
                     agent.execute(agentResourceResolver, request);
                 } catch (Throwable e) {
-                    log.error("Error executing handler", e);
+                    log.error("Error executing handler {}", request, e);
                 } finally {
                     ungetAgentResourceResolver(agentResourceResolver);
                 }

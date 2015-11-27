@@ -50,10 +50,9 @@ public interface DistributionQueue {
      *
      * @param item a distribution item, typically representing a {@link DistributionPackage}
      *             to distribute
-     * @return {@code true} if the item was added correctly to the queue,
-     * {@code false} otherwise
+     * @return the queue entry created for this item or {@code noll} if none is created
      */
-    boolean add(@Nonnull DistributionQueueItem item);
+    DistributionQueueEntry add(@Nonnull DistributionQueueItem item);
 
 
     /**

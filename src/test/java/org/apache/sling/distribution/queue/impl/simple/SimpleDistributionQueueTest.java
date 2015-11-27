@@ -41,7 +41,7 @@ public class SimpleDistributionQueueTest {
     public void testPackageAddition() throws Exception {
         DistributionQueue queue = new SimpleDistributionQueue("agentName", "default");
         DistributionQueueItem pkg = mock(DistributionQueueItem.class);
-        assertTrue(queue.add(pkg));
+        assertNotNull(queue.add(pkg));
         assertFalse(queue.getStatus().isEmpty());
     }
 
@@ -50,7 +50,7 @@ public class SimpleDistributionQueueTest {
         DistributionQueue queue = new SimpleDistributionQueue("agentName", "default");
         DistributionQueueItem pkg = mock(DistributionQueueItem.class);
         when(pkg.getId()).thenReturn("id");
-        assertTrue(queue.add(pkg));
+        assertNotNull(queue.add(pkg));
         assertFalse(queue.getStatus().isEmpty());
         assertNotNull(queue.remove(pkg.getId()));
         assertTrue(queue.getStatus().isEmpty());
@@ -63,7 +63,7 @@ public class SimpleDistributionQueueTest {
         DistributionQueue queue = new SimpleDistributionQueue("agentName", "default");
         DistributionQueueItem pkg = mock(DistributionQueueItem.class);
         when(pkg.getId()).thenReturn("id");
-        assertTrue(queue.add(pkg));
+        assertNotNull(queue.add(pkg));
         assertFalse(queue.getStatus().isEmpty());
         assertEquals(pkg, queue.getHead().getItem());
         assertFalse(queue.getStatus().isEmpty());
