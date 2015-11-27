@@ -88,7 +88,7 @@ public class SightlyScriptEngine extends AbstractSlingScriptEngine {
 
     private void evaluateScript(Resource scriptResource, Bindings bindings, ResourceResolver scriptResourceResolver) throws Exception {
         RenderContextImpl renderContext = new RenderContextImpl(bindings, extensionRegistryService.extensions(), scriptResourceResolver);
-        RenderUnit renderUnit = unitLoader.createUnit(scriptResource, bindings, renderContext);
+        RenderUnit renderUnit = unitLoader.createUnit(scriptResource, renderContext);
         renderUnit.render(renderContext, EMPTY_BINDINGS);
     }
 

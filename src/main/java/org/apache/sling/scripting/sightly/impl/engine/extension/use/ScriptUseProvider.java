@@ -27,11 +27,10 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
-import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyScriptEngineFactory;
+import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.use.ProviderOutcome;
 import org.apache.sling.scripting.sightly.use.UseProvider;
@@ -70,14 +69,12 @@ public class ScriptUseProvider implements UseProvider {
     @Override
     public ProviderOutcome provide(String scriptName, RenderContext renderContext, Bindings arguments) {
         Bindings globalBindings = renderContext.getBindings();
-        Bindings bindings = UseProviderUtils.merge(globalBindings, arguments);
+        Bindings bindings = BindingsUtils.merge(globalBindings, arguments);
         String extension = scriptExtension(scriptName);
         if (extension == null || extension.equals(SightlyScriptEngineFactory.EXTENSION)) {
             return ProviderOutcome.failure();
         }
-        SlingScriptHelper sling = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
-        ResourceResolver adminResolver = renderContext.getScriptResourceResolver();
-        Resource scriptResource = UseProviderUtils.locateScriptResource(adminResolver, sling, scriptName);
+        Resource scriptResource = UseProviderUtils.locateScriptResource(renderContext, scriptName);
         if (scriptResource == null) {
             log.debug("Path does not match an existing resource: {}", scriptName);
             return ProviderOutcome.failure();

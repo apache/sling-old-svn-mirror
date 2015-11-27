@@ -86,29 +86,26 @@ public class UnitLoader {
      * Create a render unit from the given resource
      *
      * @param scriptResource the resource
-     * @param bindings       the bindings
      * @param renderContext  the rendering context
      * @return the render unit
      * @throws Exception if the unit creation fails
      */
-    public RenderUnit createUnit(Resource scriptResource, Bindings bindings, RenderContext renderContext) throws Exception {
+    public RenderUnit createUnit(Resource scriptResource, RenderContext renderContext) throws Exception {
         ResourceResolver adminResolver = renderContext.getScriptResourceResolver();
         SourceIdentifier sourceIdentifier = new SourceIdentifier(sightlyEngineConfiguration, unitChangeMonitor, classLoaderWriter,
             scriptResource, CLASS_NAME_PREFIX);
         Object obj;
-        String encoding;
+        String encoding = unitChangeMonitor.getScriptEncoding(scriptResource.getPath());
         if (sourceIdentifier.needsUpdate()) {
-            encoding = unitChangeMonitor.getScriptEncoding(scriptResource.getPath());
-            String sourceCode = getSourceCodeForScript(adminResolver, sourceIdentifier, bindings, encoding);
+            String sourceCode = getSourceCodeForScript(adminResolver, sourceIdentifier, renderContext.getBindings(), encoding);
             obj = sightlyJavaCompilerService.compileSource(sourceIdentifier, sourceCode, sourceIdentifier.getFullyQualifiedName());
         } else {
-            encoding = unitChangeMonitor.getScriptEncoding(scriptResource.getPath());
-            obj = sightlyJavaCompilerService.getInstance(adminResolver, null, sourceIdentifier.getFullyQualifiedName(), false);
+            obj = sightlyJavaCompilerService.getInstance(renderContext, sourceIdentifier.getFullyQualifiedName(), false);
         }
         if (!(obj instanceof RenderUnit)) {
             throw new SightlyException("Class is not a RenderUnit instance");
         }
-        SlingHttpServletResponse response = (SlingHttpServletResponse) bindings.get(SlingBindings.RESPONSE);
+        SlingHttpServletResponse response = (SlingHttpServletResponse) renderContext.getBindings().get(SlingBindings.RESPONSE);
         response.setCharacterEncoding(encoding);
         return (RenderUnit) obj;
     }
