@@ -133,6 +133,11 @@ public class SlingSpecificsSightlyIT {
         assertEquals("child.javascriptobject", HTMLExtractor.innerHTML(url, pageContent, "#javascriptobj"));
         assertEquals("child.ecmaobject", HTMLExtractor.innerHTML(url, pageContent, "#ecmaobj"));
         assertEquals("child.template", HTMLExtractor.innerHTML(url, pageContent, "#templateobj"));
+        assertEquals("child.partials.javascript", HTMLExtractor.innerHTML(url, pageContent, "#partialsjs"));
+        assertEquals("child.partials.ecmaobject", HTMLExtractor.innerHTML(url, pageContent, "#partialsecma"));
+        assertEquals("child.partials.template", HTMLExtractor.innerHTML(url, pageContent, "#partialstemplate"));
+        assertEquals("child.partials.included", HTMLExtractor.innerHTML(url, pageContent, "#partialsincluded"));
+        assertEquals("child.partials.javaobject", HTMLExtractor.innerHTML(url, pageContent, "#partialsjava"));
     }
 
     @Test

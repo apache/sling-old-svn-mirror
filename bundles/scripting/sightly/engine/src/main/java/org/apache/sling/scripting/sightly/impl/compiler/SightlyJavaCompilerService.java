@@ -45,11 +45,12 @@ import org.apache.sling.commons.compiler.CompilationUnit;
 import org.apache.sling.commons.compiler.CompilerMessage;
 import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.commons.compiler.Options;
-import org.apache.sling.scripting.sightly.ResourceResolution;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyEngineConfiguration;
 import org.apache.sling.scripting.sightly.impl.engine.UnitLoader;
 import org.apache.sling.scripting.sightly.impl.engine.compiled.SourceIdentifier;
+import org.apache.sling.scripting.sightly.impl.engine.extension.use.UseProviderUtils;
+import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,38 +89,32 @@ public class SightlyJavaCompilerService {
      * compilation. In case the requested class does not denote a fully qualified classname, this service will try to find the class through
      * Sling's servlet resolution mechanism and compile the class on-the-fly if required.
      *
-     * @param resolver      a {@link ResourceResolver} with read access to resources from the search path (see {@link
-     *                      ResourceResolver#getSearchPath()})
-     * @param callingScript the lookup will be performed based on this resource only if the {@code className} does not identify a fully
-     *                      qualified class name; otherwise this parameter can be {@code null}
      * @param className     name of class to use for object instantiation
      * @return object instance of the requested class
      * @throws CompilerException in case of any runtime exception
      */
-    public Object getInstance(ResourceResolver resolver, Resource callingScript, String className, boolean pojoHint) {
+    public Object getInstance(RenderContext renderContext, String className, boolean pojoHint) {
         if (className.contains(".")) {
             if (unitChangeMonitor.getLastModifiedDateForJavaUseObject(className) > 0) {
                 // it looks like the POJO comes from the repo and it was changed since it was last loaded
-                Object result = compileRepositoryJavaClass(resolver, className);
+                Object result = compileRepositoryJavaClass(renderContext.getScriptResourceResolver(), className);
                 unitChangeMonitor.clearJavaUseObject(className);
                 return result;
             }
             if (pojoHint) {
-                return compileRepositoryJavaClass(resolver, className);
+                return compileRepositoryJavaClass(renderContext.getScriptResourceResolver(), className);
             }
             try {
                 // the object either comes from a bundle or from the repo but it was not registered by the UnitChangeMonitor
                 return loadObject(className);
             } catch (CompilerException cex) {
                 // the object definitely doesn't come from a bundle so we should attempt to compile it from the repo
-                return compileRepositoryJavaClass(resolver, className);
+                return compileRepositoryJavaClass(renderContext.getScriptResourceResolver(), className);
             }
         } else {
-            if (callingScript != null) {
-                Resource pojoResource = ResourceResolution.getResourceFromSearchPath(callingScript, className + ".java");
-                if (pojoResource != null) {
-                    return getInstance(resolver, null, Utils.getJavaNameFromPath(pojoResource.getPath()), false);
-                }
+            Resource pojoResource = UseProviderUtils.locateScriptResource(renderContext, className + ".java");
+            if (pojoResource != null) {
+                return getInstance(renderContext, Utils.getJavaNameFromPath(pojoResource.getPath()), false);
             }
         }
         throw new SightlyException("Cannot find class " + className + ".");
