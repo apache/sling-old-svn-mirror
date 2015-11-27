@@ -33,8 +33,6 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 
-import org.apache.jackrabbit.util.ISO9075;
-import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
 
@@ -45,23 +43,8 @@ import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
  * @deprecated A (JCR) resource should be adapted to a {@link ValueMap}.
  */
 @Deprecated
-public class JcrPropertyMap
-    implements ValueMap {
+public class JcrPropertyMap extends JcrCacheableValueMap implements ValueMap {
 
-    /** The underlying node. */
-    private final Node node;
-
-    /** A cache for the properties. */
-    final Map<String, JcrPropertyMapCacheEntry> cache;
-
-    /** A cache for the values. */
-    final Map<String, Object> valueCache;
-
-    /** Has the node been read completely? */
-    boolean fullyRead;
-
-    /** keep all prefixes for escaping */
-    private String[] namespacePrefixes;
 
     final ClassLoader dynamicClassLoader;
 
@@ -69,8 +52,8 @@ public class JcrPropertyMap
      * Create a new JCR property map based on a node.
      * @param node The underlying node.
      */
-    public JcrPropertyMap(final Node node) {
-        this(node, null);
+    public JcrPropertyMap(final Node node, final ValueMapCache cache) {
+        this(node, null, cache);
     }
 
     /**
@@ -79,15 +62,12 @@ public class JcrPropertyMap
      * @param dynamicCL Dynamic class loader for loading serialized objects.
      * @since 2.0.8
      */
-    public JcrPropertyMap(final Node node, final ClassLoader dynamicCL) {
-        this.node = node;
-        this.cache = new LinkedHashMap<String, JcrPropertyMapCacheEntry>();
-        this.valueCache = new LinkedHashMap<String, Object>();
-        this.fullyRead = false;
+    public JcrPropertyMap(final Node node, final ClassLoader dynamicCL, final ValueMapCache cache) {
+		super(node, cache);
         this.dynamicClassLoader = dynamicCL;
     }
 
-    /**
+     /**
      * Get the node.
      *
      * @return the node
@@ -171,7 +151,7 @@ public class JcrPropertyMap
      */
     public boolean containsValue(final Object value) {
         readFully();
-        return valueCache.containsValue(value);
+        return cache.getValueCache().containsValue(value);
     }
 
     /**
@@ -186,7 +166,7 @@ public class JcrPropertyMap
      */
     public int size() {
         readFully();
-        return cache.size();
+        return cache.getCache().size();
     }
 
     /**
@@ -195,10 +175,10 @@ public class JcrPropertyMap
     public Set<java.util.Map.Entry<String, Object>> entrySet() {
         readFully();
         final Map<String, Object> sourceMap;
-        if (cache.size() == valueCache.size()) {
-            sourceMap = valueCache;
+        if (cache.getCache().size() == cache.getValueCache().size()) {
+            sourceMap = cache.getValueCache();
         } else {
-            sourceMap = transformEntries(cache);
+            sourceMap = transformEntries(cache.getCache());
         }
         return Collections.unmodifiableSet(sourceMap.entrySet());
     }
@@ -208,7 +188,7 @@ public class JcrPropertyMap
      */
     public Set<String> keySet() {
         readFully();
-        return cache.keySet();
+        return cache.getCache().keySet();
     }
 
     /**
@@ -217,10 +197,10 @@ public class JcrPropertyMap
     public Collection<Object> values() {
         readFully();
         final Map<String, Object> sourceMap;
-        if (cache.size() == valueCache.size()) {
-            sourceMap = valueCache;
+        if (cache.getCache().size() == cache.getValueCache().size()) {
+            sourceMap = cache.getValueCache();
         } else {
-            sourceMap = transformEntries(cache);
+            sourceMap = transformEntries(cache.getCache());
         }
         return Collections.unmodifiableCollection(sourceMap.values());
     }
@@ -242,165 +222,6 @@ public class JcrPropertyMap
     }
 
     // ---------- Helpers to access the node's property ------------------------
-
-    /**
-     * Put a single property into the cache
-     * @param prop
-     * @return the cached property
-     * @throws IllegalArgumentException if a repository exception occurs
-     */
-    private JcrPropertyMapCacheEntry cacheProperty(final Property prop) {
-        try {
-            // calculate the key
-            final String name = prop.getName();
-            String key = null;
-            if ( name.indexOf("_x") != -1 ) {
-                // for compatibility with older versions we use the (wrong)
-                // ISO9075 path encoding
-                key = ISO9075.decode(name);
-                if ( key.equals(name) ) {
-                    key = null;
-                }
-            }
-            if ( key == null ) {
-                key = Text.unescapeIllegalJcrChars(name);
-            }
-            JcrPropertyMapCacheEntry entry = cache.get(key);
-            if ( entry == null ) {
-                entry = new JcrPropertyMapCacheEntry(prop);
-                cache.put(key, entry);
-
-                final Object defaultValue = entry.getPropertyValue();
-                if (defaultValue != null) {
-                    valueCache.put(key, entry.getPropertyValue());
-                }
-            }
-            return entry;
-        } catch (final RepositoryException re) {
-            throw new IllegalArgumentException(re);
-        }
-    }
-
-    /**
-     * Read a single property.
-     * @throws IllegalArgumentException if a repository exception occurs
-     */
-    JcrPropertyMapCacheEntry read(final String name) {
-        // check for empty key
-        if ( name.length() == 0 ) {
-            return null;
-        }
-        // if the name is a path, we should handle this differently
-        if ( name.indexOf('/') != -1 ) {
-            // first a compatibility check with the old (wrong) ISO9075
-            // encoding
-            final String path = ISO9075.encodePath(name);
-            try {
-                if ( node.hasProperty(path) ) {
-                    return new JcrPropertyMapCacheEntry(node.getProperty(path));
-                }
-            } catch (final RepositoryException re) {
-                throw new IllegalArgumentException(re);
-            }
-            // now we do a proper segment by segment encoding
-            final StringBuilder sb = new StringBuilder();
-            int pos = 0;
-            int lastPos = -1;
-            while ( pos < name.length() ) {
-                if ( name.charAt(pos) == '/' ) {
-                    if ( lastPos + 1 < pos ) {
-                        sb.append(Text.escapeIllegalJcrChars(name.substring(lastPos + 1, pos)));
-                    }
-                    sb.append('/');
-                    lastPos = pos;
-                }
-                pos++;
-            }
-            if ( lastPos + 1 < pos ) {
-                sb.append(Text.escapeIllegalJcrChars(name.substring(lastPos + 1)));
-            }
-            final String newPath = sb.toString();
-            try {
-                if ( node.hasProperty(newPath) ) {
-                    return new JcrPropertyMapCacheEntry(node.getProperty(newPath));
-                }
-            } catch (final RepositoryException re) {
-                throw new IllegalArgumentException(re);
-            }
-
-            return null;
-        }
-
-        // check cache
-        JcrPropertyMapCacheEntry cachedValued = cache.get(name);
-        if ( fullyRead || cachedValued != null ) {
-            return cachedValued;
-        }
-
-        final String key;
-        try {
-            key = escapeKeyName(name);
-            if (node.hasProperty(key)) {
-                final Property prop = node.getProperty(key);
-                return cacheProperty(prop);
-            }
-        } catch (final RepositoryException re) {
-            throw new IllegalArgumentException(re);
-        }
-
-        try {
-            // for compatibility with older versions we use the (wrong) ISO9075 path
-            // encoding
-            final String oldKey = ISO9075.encodePath(name);
-            if (!oldKey.equals(key) && node.hasProperty(oldKey)) {
-                final Property prop = node.getProperty(oldKey);
-                return cacheProperty(prop);
-            }
-        } catch (final RepositoryException re) {
-            // we ignore this
-        }
-
-        // property not found
-        return null;
-    }
-
-    /**
-     * Handles key name escaping by taking into consideration if it contains a
-     * registered prefix
-     *
-     * @param key the key to escape
-     * @return escaped key name
-     * @throws RepositoryException if the repository's namespaced prefixes cannot be retrieved
-     */
-    protected String escapeKeyName(final String key) throws RepositoryException {
-        final int indexOfPrefix = key.indexOf(':');
-        // check if colon is neither the first nor the last character
-        if (indexOfPrefix > 0 && key.length() > indexOfPrefix + 1) {
-            final String prefix = key.substring(0, indexOfPrefix);
-            for (final String existingPrefix : getNamespacePrefixes()) {
-                if (existingPrefix.equals(prefix)) {
-                    return prefix
-                            + ":"
-                            + Text.escapeIllegalJcrChars(key
-                                    .substring(indexOfPrefix + 1));
-                }
-            }
-        }
-        return Text.escapeIllegalJcrChars(key);
-    }
-
-    /**
-     * Read namespace prefixes and store as member variable to minimize number of JCR API calls
-     *
-     * @return the namespace prefixes
-     * @throws RepositoryException  if the namespace prefixes cannot be retrieved
-     */
-    protected String[] getNamespacePrefixes() throws RepositoryException {
-        if (this.namespacePrefixes == null) {
-            this.namespacePrefixes = getNode().getSession().getNamespacePrefixes();
-        }
-        return this.namespacePrefixes;
-    }
 
     /**
      * Read all properties.

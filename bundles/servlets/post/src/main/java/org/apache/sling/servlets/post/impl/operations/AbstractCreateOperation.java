@@ -41,6 +41,7 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.servlets.post.AbstractPostOperation;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.NodeNameGenerator;
@@ -53,7 +54,7 @@ import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 
 abstract class AbstractCreateOperation extends AbstractPostOperation {
     private final Random randomCollisionIndex = new Random();
-    
+
     /**
      * The default node name generator
      */
@@ -109,6 +110,11 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
             response.setCreateRequest(true);
 
         } else {
+			final ValueMap vM = resolver.getResource(path).adaptTo(ValueMap.class);
+			final ModifiableValueMap valueMap = resolver.getResource(path).adaptTo(ModifiableValueMap.class);
+			valueMap.put("sling:resourceType", "sling:OrderedFolder");
+
+
             updateNodeType(resolver, path, reqProperties, changes, versioningConfiguration);
             updateMixins(resolver, path, reqProperties, changes, versioningConfiguration);
         }
@@ -693,7 +699,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
 		            break;
 		        }
 		    }
-		    
+
 	        // Give up after MAX_TRIES
 	        if (resolver.getResource(jcrPath) != null ) {
 	            throw new RepositoryException(

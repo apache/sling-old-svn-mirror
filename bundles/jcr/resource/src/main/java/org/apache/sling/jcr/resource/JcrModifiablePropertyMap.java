@@ -20,6 +20,7 @@ package org.apache.sling.jcr.resource;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -50,8 +51,8 @@ public final class JcrModifiablePropertyMap
      * Constructor
      * @param node The underlying node.
      */
-    public JcrModifiablePropertyMap(final Node node) {
-        super(node);
+    public JcrModifiablePropertyMap(final Node node, final ValueMapCache cache) {
+        super(node, cache);
     }
 
     /**
@@ -60,8 +61,8 @@ public final class JcrModifiablePropertyMap
      * @param dynamicCL Dynamic class loader for loading serialized objects.
      * @since 2.0.6
      */
-    public JcrModifiablePropertyMap(final Node node, final ClassLoader dynamicCL) {
-        super(node, dynamicCL);
+    public JcrModifiablePropertyMap(final Node node, final ClassLoader dynamicCL, final ValueMapCache cache) {
+        super(node, dynamicCL, cache);
     }
 
     // ---------- Map
@@ -75,9 +76,9 @@ public final class JcrModifiablePropertyMap
         if ( this.changedProperties == null ) {
             this.changedProperties = new HashSet<String>();
         }
-        this.changedProperties.addAll(this.cache.keySet());
-        this.cache.clear();
-        this.valueCache.clear();
+        this.changedProperties.addAll(this.cache.getCache().keySet());
+        this.cache.getCache().clear();
+        this.cache.getValueCache().clear();
     }
 
     /**
@@ -95,11 +96,11 @@ public final class JcrModifiablePropertyMap
         readFully();
         final Object oldValue = this.get(key);
         try {
-            this.cache.put(key, new JcrPropertyMapCacheEntry(value, this.getNode()));
+            this.cache.getCache().put(key, new JcrPropertyMapCacheEntry(value, this.getNode()));
         } catch (final RepositoryException re) {
             throw new IllegalArgumentException("Value for key " + key + " can't be put into node: " + value, re);
         }
-        this.valueCache.put(key, value);
+        this.cache.getValueCache().put(key, value);
         if ( this.changedProperties == null ) {
             this.changedProperties = new HashSet<String>();
         }
@@ -130,8 +131,8 @@ public final class JcrModifiablePropertyMap
     public Object remove(Object aKey) {
         final String key = checkKey(aKey.toString());
         readFully();
-        final Object oldValue = this.cache.remove(key);
-        this.valueCache.remove(key);
+        final Object oldValue = this.cache.getCache().remove(key);
+        this.cache.getValueCache().remove(key);
         if ( this.changedProperties == null ) {
             this.changedProperties = new HashSet<String>();
         }
@@ -146,8 +147,8 @@ public final class JcrModifiablePropertyMap
         if ( this.changedProperties != null ) {
             this.changedProperties = null;
         }
-        this.cache.clear();
-        this.valueCache.clear();
+        this.cache.getCache().clear();
+        this.cache.getValueCache().clear();
         this.fullyRead = false;
     }
 
@@ -164,8 +165,8 @@ public final class JcrModifiablePropertyMap
             final Node node = getNode();
             // check for mixin types
             if ( this.changedProperties.contains(NodeUtil.MIXIN_TYPES) ) {
-                if ( cache.containsKey(NodeUtil.MIXIN_TYPES) ) {
-                    final JcrPropertyMapCacheEntry entry = cache.get(NodeUtil.MIXIN_TYPES);
+                if ( cache.getCache().containsKey(NodeUtil.MIXIN_TYPES) ) {
+                    final JcrPropertyMapCacheEntry entry = cache.getCache().get(NodeUtil.MIXIN_TYPES);
                     NodeUtil.handleMixinTypes(node, entry.convertToType(String[].class, node, dynamicClassLoader));
                 } else {
                     // remove all mixin types!
@@ -176,8 +177,8 @@ public final class JcrModifiablePropertyMap
             for(final String key : this.changedProperties) {
                 final String name = escapeKeyName(key);
                 if ( !NodeUtil.MIXIN_TYPES.equals(name) ) {
-                    if ( cache.containsKey(key) ) {
-                        final JcrPropertyMapCacheEntry entry = cache.get(key);
+                    if ( cache.getCache().containsKey(key) ) {
+                        final JcrPropertyMapCacheEntry entry = cache.getCache().get(key);
                         if ( entry.isArray() ) {
                             node.setProperty(name, entry.convertToType(Value[].class, node, dynamicClassLoader));
                         } else {

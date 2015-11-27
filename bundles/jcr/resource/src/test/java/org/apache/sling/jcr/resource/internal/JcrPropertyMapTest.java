@@ -24,6 +24,7 @@ import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 
 import javax.jcr.Node;
 import javax.jcr.Property;
@@ -37,12 +38,17 @@ import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.resource.JcrPropertyMap;
+import org.apache.sling.jcr.resource.ValueMapCache;
+import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
 
 public class JcrPropertyMapTest extends RepositoryTestBase {
 
     private static final String PROP_NAME = "prop_name";
 
     private static final String PROP_NAME_NIL = "prop_name_nil";
+
+	private final ValueMapCache cache = new ValueMapCache();
+
 
     private String rootPath;
 
@@ -182,7 +188,7 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
         rootNode.setProperty("bin", valueFactory.createBinary(instream));
         rootNode.getSession().save();
 
-        ValueMap map = new JcrPropertyMap(rootNode);
+        ValueMap map = new JcrPropertyMap(rootNode, cache);
         instream = map.get("bin", InputStream.class);
         assertNotNull(instream);
         String read = IOUtils.toString(instream);
@@ -243,7 +249,7 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
     }
 
     protected JcrPropertyMap createPropertyMap(final Node node) {
-        return new JcrPropertyMap(node);
+        return new JcrPropertyMap(node, cache);
     }
 
     private void testValue(Node node, Object value) throws RepositoryException {

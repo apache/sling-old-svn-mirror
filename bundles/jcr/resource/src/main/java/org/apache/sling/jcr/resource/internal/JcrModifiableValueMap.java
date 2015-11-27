@@ -33,9 +33,9 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 
-import org.apache.jackrabbit.util.ISO9075;
-import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.ModifiableValueMap;
+import org.apache.sling.jcr.resource.JcrCacheableValueMap;
+import org.apache.sling.jcr.resource.ValueMapCache;
 import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
 
 /**
@@ -44,20 +44,7 @@ import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
  *
  * TODO : This adds a lot of duplicate code - we should consolidate.
  */
-public final class JcrModifiableValueMap
-    implements ModifiableValueMap {
-
-    /** The underlying node. */
-    private final Node node;
-
-    /** A cache for the properties. */
-    private final Map<String, JcrPropertyMapCacheEntry> cache;
-
-    /** A cache for the values. */
-    private final Map<String, Object> valueCache;
-
-    /** Has the node been read completely? */
-    private boolean fullyRead;
+public final class JcrModifiableValueMap extends JcrCacheableValueMap implements ModifiableValueMap {
 
     private final HelperData helper;
 
@@ -66,11 +53,8 @@ public final class JcrModifiableValueMap
      * @param node The underlying node.
      * @param helper Helper data object
      */
-    public JcrModifiableValueMap(final Node node, final HelperData helper) {
-        this.node = node;
-        this.cache = new LinkedHashMap<String, JcrPropertyMapCacheEntry>();
-        this.valueCache = new LinkedHashMap<String, Object>();
-        this.fullyRead = false;
+    public JcrModifiableValueMap(final Node node, final HelperData helper, final ValueMapCache cache) {
+		super(node, cache);
         this.helper = helper;
     }
 
@@ -156,7 +140,7 @@ public final class JcrModifiableValueMap
      */
     public boolean containsValue(final Object value) {
         readFully();
-        return valueCache.containsValue(value);
+        return cache.getValueCache().containsValue(value);
     }
 
     /**
@@ -171,7 +155,7 @@ public final class JcrModifiableValueMap
      */
     public int size() {
         readFully();
-        return cache.size();
+        return cache.getCache().size();
     }
 
     /**
@@ -180,10 +164,10 @@ public final class JcrModifiableValueMap
     public Set<java.util.Map.Entry<String, Object>> entrySet() {
         readFully();
         final Map<String, Object> sourceMap;
-        if (cache.size() == valueCache.size()) {
-            sourceMap = valueCache;
+        if (cache.getCache().size() == cache.getValueCache().size()) {
+            sourceMap = cache.getValueCache();
         } else {
-            sourceMap = transformEntries(cache);
+            sourceMap = transformEntries(cache.getCache());
         }
         return Collections.unmodifiableSet(sourceMap.entrySet());
     }
@@ -193,7 +177,7 @@ public final class JcrModifiableValueMap
      */
     public Set<String> keySet() {
         readFully();
-        return Collections.unmodifiableSet(cache.keySet());
+        return Collections.unmodifiableSet(cache.getCache().keySet());
     }
 
     /**
@@ -202,10 +186,10 @@ public final class JcrModifiableValueMap
     public Collection<Object> values() {
         readFully();
         final Map<String, Object> sourceMap;
-        if (cache.size() == valueCache.size()) {
-            sourceMap = valueCache;
+        if (cache.getCache().size() == cache.getValueCache().size()) {
+            sourceMap = cache.getValueCache();
         } else {
-            sourceMap = transformEntries(cache);
+            sourceMap = transformEntries(cache.getCache());
         }
         return Collections.unmodifiableCollection(sourceMap.values());
     }
@@ -225,152 +209,6 @@ public final class JcrModifiableValueMap
     }
 
     // ---------- Helpers to access the node's property ------------------------
-
-    /**
-     * Put a single property into the cache
-     * @param prop
-     * @return
-     * @throws IllegalArgumentException if a repository exception occurs
-     */
-    private JcrPropertyMapCacheEntry cacheProperty(final Property prop) {
-        try {
-            // calculate the key
-            final String name = prop.getName();
-            String key = null;
-            if ( name.indexOf("_x") != -1 ) {
-                // for compatibility with older versions we use the (wrong)
-                // ISO9075 path encoding
-                key = ISO9075.decode(name);
-                if ( key.equals(name) ) {
-                    key = null;
-                }
-            }
-            if ( key == null ) {
-                key = Text.unescapeIllegalJcrChars(name);
-            }
-            JcrPropertyMapCacheEntry entry = cache.get(key);
-            if ( entry == null ) {
-                entry = new JcrPropertyMapCacheEntry(prop);
-                cache.put(key, entry);
-
-                final Object defaultValue = entry.getPropertyValue();
-                if (defaultValue != null) {
-                    valueCache.put(key, entry.getPropertyValue());
-                }
-            }
-            return entry;
-        } catch (final RepositoryException re) {
-            throw new IllegalArgumentException(re);
-        }
-    }
-
-    /**
-     * Read a single property.
-     * @throws IllegalArgumentException if a repository exception occurs
-     */
-    JcrPropertyMapCacheEntry read(final String name) {
-        // check for empty key
-        if ( name.length() == 0 ) {
-            return null;
-        }
-        // if the name is a path, we should handle this differently
-        if ( name.indexOf('/') != -1 ) {
-            // first a compatibility check with the old (wrong) ISO9075
-            // encoding
-            final String path = ISO9075.encodePath(name);
-            try {
-                if ( node.hasProperty(path) ) {
-                    return new JcrPropertyMapCacheEntry(node.getProperty(path));
-                }
-            } catch (final RepositoryException re) {
-                throw new IllegalArgumentException(re);
-            }
-            // now we do a proper segment by segment encoding
-            final StringBuilder sb = new StringBuilder();
-            int pos = 0;
-            int lastPos = -1;
-            while ( pos < name.length() ) {
-                if ( name.charAt(pos) == '/' ) {
-                    if ( lastPos + 1 < pos ) {
-                        sb.append(Text.escapeIllegalJcrChars(name.substring(lastPos + 1, pos)));
-                    }
-                    sb.append('/');
-                    lastPos = pos;
-                }
-                pos++;
-            }
-            if ( lastPos + 1 < pos ) {
-                sb.append(Text.escapeIllegalJcrChars(name.substring(lastPos + 1)));
-            }
-            final String newPath = sb.toString();
-            try {
-                if ( node.hasProperty(newPath) ) {
-                    return new JcrPropertyMapCacheEntry(node.getProperty(newPath));
-                }
-            } catch (final RepositoryException re) {
-                throw new IllegalArgumentException(re);
-            }
-
-            return null;
-        }
-
-        // check cache
-        JcrPropertyMapCacheEntry cachedValued = cache.get(name);
-        if ( fullyRead || cachedValued != null ) {
-            return cachedValued;
-        }
-
-        try {
-            final String key = escapeKeyName(name);
-            if (node.hasProperty(key)) {
-                final Property prop = node.getProperty(key);
-                return cacheProperty(prop);
-            }
-        } catch (final RepositoryException re) {
-            throw new IllegalArgumentException(re);
-        }
-
-        try {
-            // for compatibility with older versions we use the (wrong) ISO9075 path
-            // encoding
-            final String oldKey = ISO9075.encodePath(name);
-            if (node.hasProperty(oldKey)) {
-                final Property prop = node.getProperty(oldKey);
-                return cacheProperty(prop);
-            }
-        } catch (final RepositoryException re) {
-            // we ignore this
-        }
-
-        // property not found
-        return null;
-    }
-
-    /**
-     * Handles key name escaping by taking into consideration if it contains a
-     * registered prefix
-     *
-     * @param key the key to escape
-     * @return escaped key name
-     * @throws RepositoryException if the repository's namespace prefixes cannot be retrieved
-     */
-    protected String escapeKeyName(final String key) throws RepositoryException {
-        final int indexOfPrefix = key.indexOf(':');
-        // check if colon is neither the first nor the last character
-        if (indexOfPrefix > 0 && key.length() > indexOfPrefix + 1) {
-            final String prefix = key.substring(0, indexOfPrefix);
-            for (final String existingPrefix : this.helper.getNamespacePrefixes(this.node.getSession())) {
-                if (existingPrefix.equals(prefix)) {
-                    return prefix
-                            + ":"
-                            + Text.escapeIllegalJcrChars(key
-                                    .substring(indexOfPrefix + 1));
-                }
-            }
-        }
-        return Text.escapeIllegalJcrChars(key);
-    }
-
     /**
      * Read all properties.
      * @throws IllegalArgumentException if a repository exception occurs
@@ -438,7 +276,7 @@ public final class JcrModifiableValueMap
         final Object oldValue = this.get(key);
         try {
             final JcrPropertyMapCacheEntry entry = new JcrPropertyMapCacheEntry(value, this.node);
-            this.cache.put(key, entry);
+            this.cache.getCache().put(key, entry);
             final String name = escapeKeyName(key);
             if ( NodeUtil.MIXIN_TYPES.equals(name) ) {
                 NodeUtil.handleMixinTypes(node, entry.convertToType(String[].class, node, this.helper.dynamicClassLoader));
@@ -452,7 +290,7 @@ public final class JcrModifiableValueMap
         } catch (final RepositoryException re) {
             throw new IllegalArgumentException("Value for key " + key + " can't be put into node: " + value, re);
         }
-        this.valueCache.put(key, value);
+        this.cache.getValueCache().put(key, value);
 
         return oldValue;
     }
@@ -477,8 +315,8 @@ public final class JcrModifiableValueMap
     public Object remove(final Object aKey) {
         final String key = checkKey(aKey.toString());
         readFully();
-        final Object oldValue = this.cache.remove(key);
-        this.valueCache.remove(key);
+        final Object oldValue = this.cache.getCache().remove(key);
+        this.cache.getValueCache().remove(key);
         try {
             final String name = escapeKeyName(key);
             if ( node.hasProperty(name) ) {

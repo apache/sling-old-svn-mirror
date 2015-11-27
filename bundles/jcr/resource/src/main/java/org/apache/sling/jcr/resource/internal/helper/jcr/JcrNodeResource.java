@@ -24,6 +24,7 @@ import static org.apache.jackrabbit.JcrConstants.NT_LINKEDFILE;
 import java.io.InputStream;
 import java.security.AccessControlException;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.jcr.Item;
@@ -41,9 +42,11 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.JcrModifiablePropertyMap;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
+import org.apache.sling.jcr.resource.ValueMapCache;
 import org.apache.sling.jcr.resource.internal.HelperData;
 import org.apache.sling.jcr.resource.internal.JcrModifiableValueMap;
 import org.apache.sling.jcr.resource.internal.JcrValueMap;
+import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,6 +69,8 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
 
     private String resourceSuperType;
 
+	private final ValueMapCache cache;
+
     private final HelperData helper;
 
     /**
@@ -84,6 +89,7 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
         super(resourceResolver, path, version, node, new JcrNodeResourceMetadata(node));
         this.helper = helper;
         this.resourceSuperType = UNSET_RESOURCE_SUPER_TYPE;
+		this.cache = new ValueMapCache();
     }
 
     /**
@@ -131,13 +137,13 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
         } else if (type == InputStream.class) {
             return (Type) getInputStream(); // unchecked cast
         } else if (type == Map.class || type == ValueMap.class) {
-            return (Type) new JcrValueMap(getNode(), this.helper); // unchecked cast
+            return (Type) new JcrValueMap(getNode(), this.helper, cache); // unchecked cast
         } else if (type == PersistableValueMap.class ) {
             // check write
             try {
                 getNode().getSession().checkPermission(getPath(),
                     "set_property");
-                return (Type) new JcrModifiablePropertyMap(getNode(), this.helper.dynamicClassLoader);
+                return (Type) new JcrModifiablePropertyMap(getNode(), this.helper.dynamicClassLoader, cache);
             } catch (AccessControlException ace) {
                 // the user has no write permission, cannot adapt
                 LOGGER.debug(
@@ -154,7 +160,7 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
             try {
                 getNode().getSession().checkPermission(getPath(),
                     "set_property");
-                return (Type) new JcrModifiableValueMap(getNode(), this.helper);
+                return (Type) new JcrModifiableValueMap(getNode(), this.helper, cache);
             } catch (AccessControlException ace) {
                 // the user has no write permission, cannot adapt
                 LOGGER.debug(
