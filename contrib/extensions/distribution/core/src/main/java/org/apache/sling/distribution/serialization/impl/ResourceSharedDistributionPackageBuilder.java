@@ -37,8 +37,12 @@ import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ResourceSharedDistributionPackageBuilder implements DistributionPackageBuilder {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
 
     private static final String PN_ORIGINAL_ID = "original.package.id";
     private static final String PN_ORIGINAL_REQUEST_TYPE = "original.package.request.type";
@@ -78,7 +82,10 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
         }
 
         String packagePath = getPathFromName(packageName);
-        return new ResourceSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
+        DistributionPackage sharedDistributionPackage = new ResourceSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
+
+        log.info("created shared package {} for {}", sharedDistributionPackage.getId(), distributionPackage.getId());
+        return sharedDistributionPackage;
 
     }
 
@@ -130,9 +137,9 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
             return false;
         }
 
-        ResourceSharedDistributionPackage shareddistributionPackage = (ResourceSharedDistributionPackage) distributionPackage;
+        ResourceSharedDistributionPackage sharedistributionPackage = (ResourceSharedDistributionPackage) distributionPackage;
 
-        DistributionPackage originalPackage = shareddistributionPackage.getPackage();
+        DistributionPackage originalPackage = sharedistributionPackage.getPackage();
         return distributionPackageBuilder.installPackage(resourceResolver, originalPackage);
     }
 
@@ -155,13 +162,14 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
 
         String packagePath = getPathFromName(name);
 
-        Resource resource = ResourceUtil.getOrCreateResource(resourceResolver, packagePath,
-                "sling:Folder", "sling:Folder", false);
-
-        ModifiableValueMap valueMap = resource.adaptTo(ModifiableValueMap.class);
-        valueMap.putAll(properties);
 
         synchronized (repolock) {
+            Resource resource = ResourceUtil.getOrCreateResource(resourceResolver, packagePath,
+                    "sling:Folder", "sling:Folder", false);
+
+            ModifiableValueMap valueMap = resource.adaptTo(ModifiableValueMap.class);
+            valueMap.putAll(properties);
+
             resourceResolver.create(resource, ResourceSharedDistributionPackage.REFERENCE_ROOT_NODE,
                     Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object) "sling:Folder"));
 
