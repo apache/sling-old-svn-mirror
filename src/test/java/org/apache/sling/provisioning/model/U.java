@@ -16,6 +16,15 @@
  */
 package org.apache.sling.provisioning.model;
 
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.sling.provisioning.model.io.ModelReader;
+
 import static org.apache.sling.provisioning.model.ModelConstants.DEFAULT_RUN_MODE;
 import static org.apache.sling.provisioning.model.ModelConstants.DEFAULT_START_LEVEL;
 import static org.junit.Assert.assertEquals;
@@ -24,14 +33,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.sling.provisioning.model.io.ModelReader;
-
 /** Test utilities */
 public class U {
 
@@ -39,10 +40,16 @@ public class U {
             new String[] {"boot.txt", "example.txt", "main.txt", "oak.txt"};
 
     public static void assertArtifact(ArtifactGroup g, String mvnUrl) {
+        assertArtifact(g, mvnUrl, Collections.<String,String>emptyMap());
+    }
+
+    public static void assertArtifact(ArtifactGroup g, String mvnUrl, Map<String, String> metadata) {
         final Artifact a = Artifact.fromMvnUrl(mvnUrl);
-        if(!g.items.contains(a)) {
+        int idx = g.items.indexOf(a);
+        if(idx < 0) {
             fail("Expecting ArtifactGroup to contain '" + mvnUrl + "': " + g);
         }
+        assertEquals("Incorrect metadata", metadata, g.items.get(idx).getMetadata());
     }
 
     /** Read our test model by merging our TEST_MODEL_FILENAMES */
@@ -111,7 +118,8 @@ public class U {
 
         {
             final ArtifactGroup g = getGroup(m, "example", DEFAULT_RUN_MODE, DEFAULT_START_LEVEL);
-            U.assertArtifact(g, "mvn:commons-collections/commons-collections/3.2.1/jar");
+            U.assertArtifact(g, "mvn:commons-collections/commons-collections/3.2.1/jar",
+                    Collections.singletonMap("private-packages", "*"));
             U.assertArtifact(g, "mvn:org.example/jar-is-default/1.2/jar");
         }
 
@@ -135,7 +143,7 @@ public class U {
         final Feature exampleFeature = m.getFeature("example");
         final RunMode defaultExampleRM = exampleFeature.getRunMode();
         final List<Configuration> configs = assertConfigurationsInRunMode(defaultExampleRM, 3);
-        assertEquals(FeatureTypes.SUBSYSTEM_FEATURE, exampleFeature.getType());
+        assertEquals(FeatureTypes.SUBSYSTEM_COMPOSITE, exampleFeature.getType());
         final Configuration cfg = assertConfiguration(configs, "org.apache.sling.another.config");
     }
 
