@@ -18,6 +18,7 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest.indexing;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import java.io.InputStream;
@@ -109,7 +110,8 @@ public class FullTextIndexingTest {
             throw new IllegalArgumentException("No resource to upload found at " + localPath);
 
         H.getTestClient().mkdirs(HttpTest.WEBDAV_BASE_URL, uploadPath);
-        H.getTestClient().upload(HttpTest.WEBDAV_BASE_URL + uploadPath + "/" + fileName, resourceToUpload);
+        final int status = H.getTestClient().upload(HttpTest.WEBDAV_BASE_URL + uploadPath + "/" + fileName, resourceToUpload);
+        assertEquals("Upload status code", 201, status);
 
         // Increased the timeout to 45 seconds to avoid failures with Oak - indexes not ready??
         new RetryLoop(c, 45, 50);
