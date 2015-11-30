@@ -19,18 +19,12 @@
 package org.apache.sling.jcr.resource;
 
 import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 import javax.jcr.Node;
 import javax.jcr.Property;
-import javax.jcr.PropertyIterator;
-import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 
 import org.apache.sling.api.resource.ValueMap;
@@ -38,19 +32,21 @@ import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
 
 /**
  * An implementation of the value map based on a JCR node.
+ *
  * @see JcrModifiablePropertyMap
  *
  * @deprecated A (JCR) resource should be adapted to a {@link ValueMap}.
  */
 @Deprecated
-public class JcrPropertyMap extends JcrCacheableValueMap implements ValueMap {
-
+public class JcrPropertyMap extends JcrCacheableValueMap {
 
     final ClassLoader dynamicClassLoader;
 
     /**
      * Create a new JCR property map based on a node.
+     *
      * @param node The underlying node.
+     * @param cache The cache for this valuemap
      */
     public JcrPropertyMap(final Node node, final ValueMapCache cache) {
         this(node, null, cache);
@@ -58,34 +54,24 @@ public class JcrPropertyMap extends JcrCacheableValueMap implements ValueMap {
 
     /**
      * Create a new JCR property map based on a node.
+     *
      * @param node The underlying node.
      * @param dynamicCL Dynamic class loader for loading serialized objects.
+     * @param cache The cache for this valuemap
      * @since 2.0.8
      */
     public JcrPropertyMap(final Node node, final ClassLoader dynamicCL, final ValueMapCache cache) {
-		super(node, cache);
+        super(node, cache);
         this.dynamicClassLoader = dynamicCL;
     }
 
-     /**
+    /**
      * Get the node.
      *
      * @return the node
      */
     protected Node getNode() {
         return node;
-    }
-
-    // ---------- ValueMap
-
-    String checkKey(final String key) {
-        if ( key == null ) {
-            throw new NullPointerException("Key must not be null.");
-        }
-        if ( key.startsWith("./") ) {
-            return key.substring(2);
-        }
-        return key;
     }
 
     /**
@@ -99,7 +85,7 @@ public class JcrPropertyMap extends JcrCacheableValueMap implements ValueMap {
         }
 
         final JcrPropertyMapCacheEntry entry = this.read(key);
-        if ( entry == null ) {
+        if (entry == null) {
             return null;
         }
         return entry.convertToType(type, this.node, this.dynamicClassLoader);
@@ -109,7 +95,7 @@ public class JcrPropertyMap extends JcrCacheableValueMap implements ValueMap {
      * @see org.apache.sling.api.resource.ValueMap#get(java.lang.String, java.lang.Object)
      */
     @SuppressWarnings("unchecked")
-    public <T> T get(final String aKey,final T defaultValue) {
+    public <T> T get(final String aKey, final T defaultValue) {
         final String key = checkKey(aKey);
         if (defaultValue == null) {
             return (T) get(key);
@@ -128,7 +114,6 @@ public class JcrPropertyMap extends JcrCacheableValueMap implements ValueMap {
     }
 
     // ---------- Map
-
     /**
      * @see java.util.Map#get(java.lang.Object)
      */
@@ -139,111 +124,7 @@ public class JcrPropertyMap extends JcrCacheableValueMap implements ValueMap {
         return value;
     }
 
-    /**
-     * @see java.util.Map#containsKey(java.lang.Object)
-     */
-    public boolean containsKey(final Object key) {
-        return get(key) != null;
-    }
-
-    /**
-     * @see java.util.Map#containsValue(java.lang.Object)
-     */
-    public boolean containsValue(final Object value) {
-        readFully();
-        return cache.getValueCache().containsValue(value);
-    }
-
-    /**
-     * @see java.util.Map#isEmpty()
-     */
-    public boolean isEmpty() {
-        return size() == 0;
-    }
-
-    /**
-     * @see java.util.Map#size()
-     */
-    public int size() {
-        readFully();
-        return cache.getCache().size();
-    }
-
-    /**
-     * @see java.util.Map#entrySet()
-     */
-    public Set<java.util.Map.Entry<String, Object>> entrySet() {
-        readFully();
-        final Map<String, Object> sourceMap;
-        if (cache.getCache().size() == cache.getValueCache().size()) {
-            sourceMap = cache.getValueCache();
-        } else {
-            sourceMap = transformEntries(cache.getCache());
-        }
-        return Collections.unmodifiableSet(sourceMap.entrySet());
-    }
-
-    /**
-     * @see java.util.Map#keySet()
-     */
-    public Set<String> keySet() {
-        readFully();
-        return cache.getCache().keySet();
-    }
-
-    /**
-     * @see java.util.Map#values()
-     */
-    public Collection<Object> values() {
-        readFully();
-        final Map<String, Object> sourceMap;
-        if (cache.getCache().size() == cache.getValueCache().size()) {
-            sourceMap = cache.getValueCache();
-        } else {
-            sourceMap = transformEntries(cache.getCache());
-        }
-        return Collections.unmodifiableCollection(sourceMap.values());
-    }
-
-    /**
-     * Return the path of the current node.
-     *
-     * @return the path
-     * @throws IllegalStateException If a repository exception occurs
-     * @deprecated
-     */
-    @Deprecated
-    public String getPath() {
-        try {
-            return node.getPath();
-        } catch (final RepositoryException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    // ---------- Helpers to access the node's property ------------------------
-
-    /**
-     * Read all properties.
-     * @throws IllegalArgumentException if a repository exception occurs
-     */
-    void readFully() {
-        if (!fullyRead) {
-            try {
-                final PropertyIterator pi = node.getProperties();
-                while (pi.hasNext()) {
-                    final Property prop = pi.nextProperty();
-                    this.cacheProperty(prop);
-                }
-                fullyRead = true;
-            } catch (final RepositoryException re) {
-                throw new IllegalArgumentException(re);
-            }
-        }
-    }
-
     // ---------- Unsupported Modification methods
-
     public void clear() {
         throw new UnsupportedOperationException();
     }
@@ -261,7 +142,6 @@ public class JcrPropertyMap extends JcrCacheableValueMap implements ValueMap {
     }
 
     // ---------- Implementation helper
-
     private Class<?> normalizeClass(Class<?> type) {
         if (Calendar.class.isAssignableFrom(type)) {
             type = Calendar.class;
@@ -275,16 +155,6 @@ public class JcrPropertyMap extends JcrCacheableValueMap implements ValueMap {
         return type;
     }
 
-	private Map<String, Object> transformEntries( Map<String, JcrPropertyMapCacheEntry> map) {
-
-		Map<String, Object> transformedEntries = new LinkedHashMap<String, Object>(map.size());
-		for ( Map.Entry<String, JcrPropertyMapCacheEntry> entry : map.entrySet() )
-			transformedEntries.put(entry.getKey(), entry.getValue().getPropertyValueOrNull());
-
-		return transformedEntries;
-	}
-
-
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("JcrPropertyMap [node=");
@@ -292,8 +162,8 @@ public class JcrPropertyMap extends JcrCacheableValueMap implements ValueMap {
         sb.append(", values={");
         final Iterator<Map.Entry<String, Object>> iter = this.entrySet().iterator();
         boolean first = true;
-        while ( iter.hasNext() ) {
-            if ( first ) {
+        while (iter.hasNext()) {
+            if (first) {
                 first = false;
             } else {
                 sb.append(", ");

@@ -26,7 +26,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,7 +41,6 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.jcr.resource.ValueMapCache;
-import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
 
 public class JcrModifiableValueMapTest extends RepositoryTestBase {
 
@@ -50,7 +48,7 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
 
     private Node rootNode;
 
-	private final ValueMapCache cache = new ValueMapCache();
+    private ValueMapCache cache;
 
 
     public static final byte[] TEST_BYTE_ARRAY = {'T', 'e', 's', 't'};
@@ -62,6 +60,7 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
         rootPath = "/test_" + System.currentTimeMillis();
         rootNode = getSession().getRootNode().addNode(rootPath.substring(1),
             "nt:unstructured");
+        cache = new ValueMapCache();
 
         final Map<String, Object> values = this.initialSet();
         for(Map.Entry<String, Object> entry : values.entrySet()) {

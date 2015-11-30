@@ -110,8 +110,10 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
             response.setCreateRequest(true);
 
         } else {
-			final ValueMap vM = resolver.getResource(path).adaptTo(ValueMap.class);
-			final ModifiableValueMap valueMap = resolver.getResource(path).adaptTo(ModifiableValueMap.class);
+            final Resource resource = resolver.getResource(path);
+			final ValueMap vM = resource.adaptTo(ValueMap.class);
+            final ValueMap vm1 = resolver.getResource(path).adaptTo(ValueMap.class);
+			final ModifiableValueMap valueMap = resource.adaptTo(ModifiableValueMap.class);
 			valueMap.put("sling:resourceType", "sling:OrderedFolder");
 
 

@@ -18,6 +18,7 @@ package org.apache.sling.jcr.resource;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
 import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
 
 /**

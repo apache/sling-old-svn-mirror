@@ -24,7 +24,6 @@ import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 
 import javax.jcr.Node;
 import javax.jcr.Property;
@@ -39,7 +38,6 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.resource.JcrPropertyMap;
 import org.apache.sling.jcr.resource.ValueMapCache;
-import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
 
 public class JcrPropertyMapTest extends RepositoryTestBase {
 

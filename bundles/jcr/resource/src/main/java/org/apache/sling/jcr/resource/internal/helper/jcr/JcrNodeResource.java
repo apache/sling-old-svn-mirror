@@ -24,7 +24,6 @@ import static org.apache.jackrabbit.JcrConstants.NT_LINKEDFILE;
 import java.io.InputStream;
 import java.security.AccessControlException;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.jcr.Item;
@@ -46,7 +45,6 @@ import org.apache.sling.jcr.resource.ValueMapCache;
 import org.apache.sling.jcr.resource.internal.HelperData;
 import org.apache.sling.jcr.resource.internal.JcrModifiableValueMap;
 import org.apache.sling.jcr.resource.internal.JcrValueMap;
-import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,7 +87,7 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
         super(resourceResolver, path, version, node, new JcrNodeResourceMetadata(node));
         this.helper = helper;
         this.resourceSuperType = UNSET_RESOURCE_SUPER_TYPE;
-		this.cache = new ValueMapCache();
+        this.cache = new ValueMapCache();
     }
 
     /**
