@@ -109,8 +109,7 @@
                             SLING-INF/nodetypes/mapping.cnd
                         </Sling-Nodetypes>
                     </instructions>
-                                        <failOnError>false</failOnError>
-
+                    <failOnError>false</failOnError>
                 </configuration>
             </plugin>
         </plugins>

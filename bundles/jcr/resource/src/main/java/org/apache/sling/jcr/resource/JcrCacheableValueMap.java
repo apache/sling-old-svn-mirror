@@ -34,9 +34,8 @@ import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
 
-public abstract class JcrCacheableValueMap implements ValueMap {
 
-    protected final ValueMapCache cache;
+public abstract class JcrCacheableValueMap implements ValueMap {
 
     /**
      * keep all prefixes for escaping
@@ -47,6 +46,8 @@ public abstract class JcrCacheableValueMap implements ValueMap {
      * The underlying node.
      */
     protected final Node node;
+
+    protected final ValueMapCache cache;
 
     /**
      * Has the node been read completely?

@@ -26,10 +26,13 @@ import java.util.Set;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import junit.framework.Assert;
 
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.internal.HelperData;
 import org.apache.sling.jcr.resource.internal.PathMapperImpl;
@@ -243,6 +246,31 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         final Set<Object> crossCheck2 = new HashSet<Object>(propsSecond.keySet());
         crossCheck2.removeAll(existingKeys);
         assertTrue(crossCheck2.isEmpty());
+    }
+
+    public void testCommonStateForValueMaps() throws Exception {
+
+        final String name = "valuemapTest";
+        final String resType = "sling:OrderedFolder";
+
+        Node node = rootNode.addNode(name, JcrConstants.NT_UNSTRUCTURED);
+        Node res = node.addNode(JcrConstants.JCR_CONTENT, JcrConstants.NT_RESOURCE);
+        setupResource(res);
+        getSession().save();
+
+        node = rootNode.getNode(name);
+        JcrNodeResource resource = new JcrNodeResource(null, node.getPath(), null, node, getHelperData());
+
+        assertEquals(node.getPath(), resource.getPath());
+
+        final ValueMap valueMap = resource.adaptTo(ValueMap.class);
+        final ModifiableValueMap modifiableValueMap = resource.adaptTo(ModifiableValueMap.class);
+
+        modifiableValueMap.put("sling:resourceType", resType);
+        Assert.assertEquals(resType, valueMap.get("sling:resourceType"));
+
+        Assert.assertTrue(resType.equals(resource.getResourceType()));
+
     }
 
     public void testCorrectUTF8ByteLength() throws Exception {

@@ -41,7 +41,6 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.servlets.post.AbstractPostOperation;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.NodeNameGenerator;
@@ -110,13 +109,6 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
             response.setCreateRequest(true);
 
         } else {
-            final Resource resource = resolver.getResource(path);
-			final ValueMap vM = resource.adaptTo(ValueMap.class);
-            final ValueMap vm1 = resolver.getResource(path).adaptTo(ValueMap.class);
-			final ModifiableValueMap valueMap = resource.adaptTo(ModifiableValueMap.class);
-			valueMap.put("sling:resourceType", "sling:OrderedFolder");
-
-
             updateNodeType(resolver, path, reqProperties, changes, versioningConfiguration);
             updateMixins(resolver, path, reqProperties, changes, versioningConfiguration);
         }
