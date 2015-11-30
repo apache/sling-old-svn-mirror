@@ -557,6 +557,7 @@ public class JobManagerConfiguration implements TopologyEventListener {
 
         boolean runMaintenanceTasks = true;
         // check if there is a change of properties which doesn't affect us
+        // but we need to use the new view !
         if ( event.getType() == Type.PROPERTIES_CHANGED ) {
             final Map<String, String> newAllInstances = TopologyCapabilities.getAllInstancesMap(event.getNewView());
             if ( this.topologyCapabilities != null && this.topologyCapabilities.isSame(newAllInstances) ) {
