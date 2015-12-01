@@ -91,7 +91,12 @@ public class DefaultThreadPool
         }
 
         // Set priority and daemon flag
-        final ExtendedThreadFactory threadFactory = new ExtendedThreadFactory(delegateThreadFactory, this.configuration.getPriority(), this.configuration.isDaemon());
+        final ExtendedThreadFactory threadFactory = new ExtendedThreadFactory(
+                delegateThreadFactory,
+                this.name,
+                this.configuration.getPriority(),
+                this.configuration.isDaemon()
+        );
 
         // Keep alive time
         if (this.configuration.getKeepAliveTime() < 0) {
