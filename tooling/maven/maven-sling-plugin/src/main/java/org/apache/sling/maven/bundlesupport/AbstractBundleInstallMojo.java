@@ -53,6 +53,7 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.osgi.ManifestHeader;
 import org.apache.sling.commons.osgi.ManifestHeader.Entry;
+import org.codehaus.plexus.util.StringUtils;
 
 abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
 
@@ -77,8 +78,7 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
      * in each POM, while using the same common <code>sling.url</code> in a parent
      * POM (eg. <code>sling.url=http://localhost:8080</code> and
      * <code>sling.urlSuffix=/project/specific/path</code>). This is typically used
-     * in conjunction with a HTTP PUT (<code>sling.usePut=true</code>) or with Sling
-     * style POST (<code>sling.useSlingPost=true</code>).
+     * in conjunction with webdav or postServlet deploy methods.
      */
     @Parameter(property="sling.urlSuffix")
     protected String slingUrlSuffix;
@@ -92,10 +92,11 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
     protected boolean usePut;
 
     /**
-     * Whether to POST to Sling (true) or to POST to the Felix Web Console (false)
+     * Bundle Deployment method
+     * @see BundleDeployMethod
      */
-    @Parameter(property="sling.useSlingPost", defaultValue = "false", required = true)
-    protected boolean useSlingPost;
+    @Parameter(property="sling.deploy.method", required = false)
+    protected String deployMethod;
 
     /**
      * The jcr:primaryType to be used when creating intermediate paths for HTTP PUT deployment
@@ -205,21 +206,50 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
 
         String targetURL = getTargetURL();
 
+        BundleDeployMethod deployMethod = getDeployMethod();
         getLog().info(
             "Installing Bundle " + bundleName + "(" + bundleFile + ") to "
-                + targetURL + " via " + (usePut ? "PUT" : "POST"));
+                + targetURL + " via " + deployMethod.value);
 
-        if (usePut) {
-            put(targetURL, bundleFile);
-        } else if (useSlingPost) {
+
+        switch (deployMethod) {
+        case POST_SERVLET:
             postToSling(targetURL, bundleFile);
-        } else {
+            break;
+        case WEBCONSOLE:
             postToFelix(targetURL, bundleFile);
+            break;
+        case WEBDAV:
+            put(targetURL, bundleFile);
+            break;
+        // sanity check to make sure it gets handled in some fashion
+        default:
+            throw new MojoExecutionException("Unrecognized BundleDeployMethod " + deployMethod);
         }
 
         if ( mountByFS ) {
             configure(targetURL, bundleFile);
         }
+    }
+
+    /**
+     * Retrieve the bundle deployment method matching the configuration.
+     * @return bundle deployment method matching the plugin configuration.
+     * @throws MojoExecutionException When the configuration does not match a valid deployment methodology
+     */
+    protected BundleDeployMethod getDeployMethod() throws MojoExecutionException {
+        // utilize deployMethod string if specified
+        if (StringUtils.isNotEmpty(this.deployMethod)) {
+            BundleDeployMethod deployMethod = BundleDeployMethod.fromValue(this.deployMethod);
+            if (deployMethod == null) {
+                throw new MojoExecutionException(this.deployMethod +
+                        " is not a valid bundle deployment method");
+            }
+            return deployMethod;
+        }
+
+        // backwards compatibility - utilize 'usePut' when deployMethod not specified
+        return (usePut) ? BundleDeployMethod.WEBDAV : BundleDeployMethod.WEBCONSOLE;
     }
 
     /**

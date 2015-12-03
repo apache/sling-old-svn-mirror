@@ -65,18 +65,26 @@ public class BundleUninstallMojo extends AbstractBundleInstallMojo {
 
         String targetURL = getTargetURL();
 
+        BundleDeployMethod deployMethod = getDeployMethod();
         getLog().info(
-            "Unistalling Bundle " + bundleName + ") from "
-                + targetURL + " via " + (usePut ? "DELETE" : "POST"));
+            "Unistalling Bundle " + bundleName + " from "
+                + targetURL + " via " + deployMethod.value);
 
         configure(targetURL, bundleFile);
 
-        if (usePut) {
-            delete(targetURL, bundleFile);
-        } else if (useSlingPost) {
+        switch (deployMethod) {
+        case POST_SERVLET:
             postToSling(targetURL, bundleFile);
-        } else {
+            break;
+        case WEBCONSOLE:
             postToFelix(targetURL, bundleName);
+            break;
+        case WEBDAV:
+            delete(targetURL, bundleFile);
+            break;
+        // sanity check to make sure it gets handled in some fashion
+        default:
+            throw new MojoExecutionException("Unrecognized BundleDeployMethod " + deployMethod);
         }
     }
 
