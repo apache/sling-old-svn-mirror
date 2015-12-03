@@ -42,7 +42,6 @@ import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.Thymeleaf;
 import org.thymeleaf.dialect.IDialect;
 import org.thymeleaf.messageresolver.IMessageResolver;
 import org.thymeleaf.standard.StandardDialect;
@@ -190,7 +189,13 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
 
     @Override
     public String getLanguageVersion() {
-        return Thymeleaf.VERSION;
+        try {
+            final java.util.Properties properties = new java.util.Properties();
+            properties.load(getClass().getResourceAsStream("org/thymeleaf/thymeleaf.properties"));
+            return properties.getProperty("version");
+        } catch (Exception e) {
+        }
+        return "";
     }
 
     @Override
