@@ -226,6 +226,12 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
             String propertyName = entry.getKey();
             Object propertyValue = entry.getValue();
             Property property = null;
+            
+            // it is possible that the property definition for 'jcr:mixinTypes' to not yet exist
+            // so make sure that it does not get processed like a regular property
+            if ( JcrConstants.JCR_MIXINTYPES.equals(propertyName) ) {
+                continue;
+            }
 
             if (node.hasProperty(propertyName)) {
                 property = node.getProperty(propertyName);
