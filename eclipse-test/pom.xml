@@ -57,6 +57,11 @@
                                 <id>org.apache.sling.ide.feature</id>
                                 <versionRange>0.0.0</versionRange>
                             </requirement>
+                            <requirement>
+                                <type>eclipse-feature</type>
+                                <id>org.apache.sling.ide.sightly-feature</id>
+                                <versionRange>0.0.0</versionRange>
+                            </requirement>
                         </extraRequirements>
                     </dependency-resolution>
                 </configuration>
