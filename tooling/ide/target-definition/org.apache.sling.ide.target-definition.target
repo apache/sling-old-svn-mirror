@@ -15,7 +15,7 @@
     See the License for the specific language governing permissions
     and limitations under the License.
 -->
-<?pde version="3.8"?><target name="Sling IDE Tools" sequenceNumber="44">
+<?pde version="3.8"?><target name="Sling IDE Tools" sequenceNumber="45">
 <locations>
 <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
 <unit id="org.sonatype.tycho.m2e.feature.feature.group" version="0.6.0.201207302152"/>
@@ -42,6 +42,12 @@
 <unit id="org.eclipse.jst.server_adapters.feature.feature.group" version="3.2.301.v201410241731"/>
 <unit id="org.eclipse.jst.enterprise_ui.feature.feature.group" version="3.6.3.v201501281502"/>
 <repository location="http://download.eclipse.org/releases/luna"/>
+</location>
+<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.swtbot.feature.group" version="2.3.0.201506081302"/>
+<unit id="org.eclipse.swtbot.eclipse.feature.group" version="2.3.0.201506081302"/>
+<unit id="org.eclipse.swtbot.eclipse.test.junit.feature.group" version="2.3.0.201506081302"/>
+<repository location="http://download.eclipse.org/technology/swtbot/releases/2.3.0/"/>
 </location>
 </locations>
 </target>
