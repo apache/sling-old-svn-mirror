@@ -186,10 +186,10 @@ final class AdapterImplementations {
     }
 
     /**
-     * 
      * @param adapterType the type to check
      * @return {@code true} in case the given type is a model (may be with a different adapter class)
      */
+    @SuppressWarnings("unchecked")
     public <ModelType> boolean isModelClass(Class<ModelType> adapterType) {
         String key = adapterType.getName();
         
@@ -206,4 +206,5 @@ final class AdapterImplementations {
         }
         return true;
     }
+
 }

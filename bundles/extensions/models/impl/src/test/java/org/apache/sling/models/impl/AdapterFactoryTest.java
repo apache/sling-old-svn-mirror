@@ -74,6 +74,7 @@ public class AdapterFactoryTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation")
     public void testIsModelClass() {
         Assert.assertTrue(factory.isModelClass(resource, DefaultStringModel.class));
         Assert.assertFalse(factory.isModelClass(resource, InvalidModelWithMissingAnnotation.class));

@@ -176,6 +176,7 @@ public class ImplementsExtendsTest {
      * class is the adapter still works.
      */
     @Test
+    @SuppressWarnings("deprecation")
     public void testImplementsNoPicker() {
         factory.unbindImplementationPicker(firstImplementationPicker, firstImplementationPickerProps);
 
@@ -208,6 +209,7 @@ public class ImplementsExtendsTest {
      * Test implementation class with a mapping that is not valid (an interface that is not implemented).
      */
     @Test
+    @SuppressWarnings("deprecation")
     public void testInvalidImplementsInterfaceModel() {
         Resource res = getMockResourceWithProps();
         InvalidSampleServiceInterface model = factory.getAdapter(res, InvalidSampleServiceInterface.class);
