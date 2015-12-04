@@ -207,6 +207,8 @@
             </executions>
             <configuration>
               <excludes>
+                <!-- requires removed startup handling -->
+                <exclude>**/SlingExtensionDiscoveryImplIT.*</exclude>
                 <!-- SLING-5122, SLING-5123 -->
                 <exclude>**/SlingAuthXing*.*</exclude>
               </excludes>
