@@ -102,6 +102,10 @@
           <installedFeatures>
             <!-- Apache Karaf -->
             <feature>wrapper</feature>
+            <feature>wrap</feature>
+            <feature>aries-blueprint</feature>
+            <feature>shell-compat</feature>
+            <feature>kar</feature>
             <!-- Apache Sling -->
             <feature>sling</feature>
             <!-- Apache Sling Auth -->
@@ -170,10 +174,14 @@
             <!-- Composum -->
             <feature>composum-sling</feature>
           </installedFeatures>
+          <startupFeatures>
+            <!-- <feature>eventadmin</feature> -->
+          </startupFeatures>
           <bootFeatures>
-            <feature>jaas</feature>
+            <feature>eventadmin</feature>
             <feature>shell</feature>
             <feature>feature</feature>
+            <feature>jaas</feature>
             <feature>ssh</feature>
             <feature>management</feature>
             <feature>bundle</feature>
@@ -181,7 +189,6 @@
             <feature>deployer</feature>
             <feature>diagnostic</feature>
             <feature>instance</feature>
-            <feature>kar</feature>
             <feature>log</feature>
             <feature>package</feature>
             <feature>service</feature>
@@ -191,7 +198,6 @@
             <feature>http</feature>
             <feature>http-whiteboard</feature>
             <feature>webconsole</feature>
-            <feature>eventadmin</feature>
           </bootFeatures>
           <libraries>
             <library>xerces-${xerces.version}.jar;url:="wrap:mvn:xerces/xercesImpl/${xerces.version}$Export-Package=org.apache.*;version=${xerces.version}";type:=endorsed;export:=true;delegate:=true</library>
