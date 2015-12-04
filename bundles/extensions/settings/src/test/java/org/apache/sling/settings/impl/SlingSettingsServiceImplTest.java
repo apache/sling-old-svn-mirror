@@ -18,6 +18,11 @@
  */
 package org.apache.sling.settings.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -28,15 +33,9 @@ import java.util.List;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.sling.settings.SlingSettingsService;
 import org.junit.After;
-import org.apache.sling.launchpad.api.StartupHandler;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class SlingSettingsServiceImplTest {
 
@@ -111,7 +110,6 @@ public class SlingSettingsServiceImplTest {
         BundleContext context = mock(BundleContext.class);
         when(context.getDataFile(SLING_ID_FILE_NAME)).thenReturn(slingIdFile);
         when(context.getDataFile(OPTIONS_FILE_NAME)).thenReturn(optionsFile);
-        final StartupHandler handler = mock(StartupHandler.class);
         // write options
         final List<SlingSettingsServiceImpl.Options> options = new ArrayList<SlingSettingsServiceImpl.Options>();
         FileOutputStream fos = null;
@@ -138,7 +136,7 @@ public class SlingSettingsServiceImplTest {
                 }
             }
         }
-        return new SlingSettingsServiceImpl(context, handler);
+        return new SlingSettingsServiceImpl(context);
     }
 
 }

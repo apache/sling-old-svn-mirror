@@ -36,8 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.sling.launchpad.api.StartupHandler;
-import org.apache.sling.launchpad.api.StartupMode;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
@@ -85,16 +83,12 @@ public class SlingSettingsServiceImpl
      * Setup run modes
      * @param context The bundle context
      */
-    public SlingSettingsServiceImpl(final BundleContext context,
-            final StartupHandler handler) {
+    public SlingSettingsServiceImpl(final BundleContext context) {
         this.setupSlingProps(context);
         this.setupSlingHome(context);
         this.setupSlingId(context);
 
-        final StartupMode mode = handler.getMode();
-        logger.debug("Settings: Using startup mode : {}", mode);
-
-        this.setupRunModes(context, mode);
+        this.setupRunModes(context);
 
     }
 
@@ -197,8 +191,7 @@ public class SlingSettingsServiceImpl
     /**
      * Set up run modes.
      */
-    private void setupRunModes(final BundleContext context,
-            final StartupMode startupMode) {
+    private void setupRunModes(final BundleContext context) {
         final Set<String> modesSet = new HashSet<String>();
 
         // check configuration property first
@@ -214,26 +207,21 @@ public class SlingSettingsServiceImpl
         this.handleOptions(modesSet, context.getProperty(RUN_MODE_OPTIONS));
 
         // handle configured install options
-        if ( startupMode != StartupMode.INSTALL ) {
-            // read persisted options if restart or update
-            final List<Options> storedOptions = readOptions(context);
-            if ( storedOptions != null ) {
-                for(final Options o : storedOptions) {
-                    for(final String m : o.modes) {
-                        modesSet.remove(m);
-                    }
-                    modesSet.add(o.selected);
+        // read persisted options if restart or update
+        final List<Options> storedOptions = readOptions(context);
+        if ( storedOptions != null ) {
+            for(final Options o : storedOptions) {
+                for(final String m : o.modes) {
+                    modesSet.remove(m);
                 }
+                modesSet.add(o.selected);
             }
         }
 
         // now install options
-        if ( startupMode != StartupMode.RESTART ) {
-            // process new install options if install or update
-            final List<Options> optionsList = this.handleOptions(modesSet, context.getProperty(RUN_MODE_INSTALL_OPTIONS));
-            // and always save new install options
-            writeOptions(context, optionsList);
-        }
+        final List<Options> optionsList = this.handleOptions(modesSet, context.getProperty(RUN_MODE_INSTALL_OPTIONS));
+        // and always save new install options
+        writeOptions(context, optionsList);
 
         // make the set unmodifiable and synced
         // we probably don't need a synced set as it is read only
