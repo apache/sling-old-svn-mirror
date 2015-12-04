@@ -26,7 +26,7 @@
     <!-- org.apache.sling.resourceresolver requires jcr -->
     <bundle>mvn:org.apache.sling/org.apache.sling.resourceresolver/1.2.6</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.serviceusermapper/1.2.0</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.settings/1.3.6</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.settings/1.3.7-SNAPSHOT</bundle>
     <!-- Apache Sling Commons -->
     <bundle>mvn:org.apache.sling/org.apache.sling.commons.classloader/1.3.2</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.commons.compiler/2.2.0</bundle>
@@ -36,9 +36,6 @@
     <!-- (not using org.apache.sling.commons.logservice) -->
     <bundle>mvn:org.apache.sling/org.apache.sling.commons.mime/2.1.8</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.commons.osgi/2.3.0</bundle>
-    <!-- Apache Sling Launchpad -->
-    <bundle>mvn:org.apache.sling/org.apache.sling.launchpad.api/1.2.0</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.launchpad.karaf/${project.version}</bundle>
     <!-- dependencies -->
     <feature>config</feature>
     <feature>eventadmin</feature>
