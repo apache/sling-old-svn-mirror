@@ -148,7 +148,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     private static final String PROP_MAX_RECURSION_DEPTH = "max.recursion.depth";
 
 
-    private final @Nonnull Map<String, RankedServices<Injector>> injectors = new ConcurrentHashMap<String, RankedServices<Injector>>();
+    private final @Nonnull ConcurrentMap<String, RankedServices<Injector>> injectors = new ConcurrentHashMap<String, RankedServices<Injector>>();
     private final @Nonnull RankedServices<Injector> sortedInjectors = new RankedServices<Injector>();
 
     @Reference(name = "injectAnnotationProcessorFactory", referenceInterface = InjectAnnotationProcessorFactory.class,
@@ -411,32 +411,25 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
         RuntimeException lastInjectionException = null;
         if (injectionAdaptable != null) {
+            
+            // prepare the set of injectors to process. if a source is given only use injectors with this name.
+            final RankedServices<Injector> injectorsToProcess;
+            if (StringUtils.isEmpty(source)) {
+                injectorsToProcess = sortedInjectors;
+            }
+            else {
+                injectorsToProcess = injectors.get(source);
+            }
+            
             // find the right injector
-            if (StringUtils.isNotEmpty(source)) {
-                for (Injector injector : injectors.get(source)) {
-                    if (name != null || injector instanceof AcceptsNullName) {
-                        Object value =
-                            injector.getValue(injectionAdaptable, name, element.getType(), element.getAnnotatedElement(), registry);
-                        if (value != null) {
-                            lastInjectionException = callback.inject(element, value);
-                            if (lastInjectionException == null) {
-                                wasInjectionSuccessful = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-            } else {
-                for (Injector injector : sortedInjectors) {
-                    if (name != null || injector instanceof AcceptsNullName) {
-                        Object value =
-                            injector.getValue(injectionAdaptable, name, element.getType(), element.getAnnotatedElement(), registry);
-                        if (value != null) {
-                            lastInjectionException = callback.inject(element, value);
-                            if (lastInjectionException == null) {
-                                wasInjectionSuccessful = true;
-                                break;
-                            }
+            for (Injector injector : injectorsToProcess) {
+                if (name != null || injector instanceof AcceptsNullName) {
+                    Object value = injector.getValue(injectionAdaptable, name, element.getType(), element.getAnnotatedElement(), registry);
+                    if (value != null) {
+                        lastInjectionException = callback.inject(element, value);
+                        if (lastInjectionException == null) {
+                            wasInjectionSuccessful = true;
+                            break;
                         }
                     }
                 }
@@ -951,24 +944,19 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     }
 
     protected void bindInjector(final Injector injector, final Map<String, Object> props) {
-        String name = injector.getName();
-        RankedServices<Injector> injectorRankedServices = injectors.get(name);
-        if (injectorRankedServices == null) {
-            injectorRankedServices = new RankedServices<Injector>();
-            injectors.put(name, injectorRankedServices);
+        RankedServices<Injector> newRankedServices = new RankedServices<Injector>();
+        RankedServices<Injector> injectorsPerInjectorName = injectors.putIfAbsent(injector.getName(), newRankedServices);
+        if (injectorsPerInjectorName == null) {
+            injectorsPerInjectorName = newRankedServices;
         }
-        injectorRankedServices.bind(injector, props);
+        injectorsPerInjectorName.bind(injector, props);
         sortedInjectors.bind(injector, props);
     }
 
     protected void unbindInjector(final Injector injector, final Map<String, Object> props) {
-        String name = injector.getName();
-        RankedServices<Injector> injectorRankedServices = injectors.get(name);
-        if (injectorRankedServices != null) {
-            injectorRankedServices.unbind(injector, props);
-            if (injectorRankedServices.get().size() == 0) {
-                injectors.remove(name);
-            }
+        RankedServices<Injector> injectorsPerInjectorName = injectors.get(injector.getName());
+        if (injectorsPerInjectorName != null) {
+            injectorsPerInjectorName.unbind(injector, props);
         }
         sortedInjectors.unbind(injector, props);
     }
