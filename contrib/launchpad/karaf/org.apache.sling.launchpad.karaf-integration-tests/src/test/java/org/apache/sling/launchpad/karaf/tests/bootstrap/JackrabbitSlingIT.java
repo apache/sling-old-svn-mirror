@@ -94,6 +94,13 @@ public class JackrabbitSlingIT extends KarafTestSupport {
     }
 
     @Test
+    public void testComGoogleGuava() {
+        final Bundle bundle = findBundle("com.google.guava");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
     @Ignore
     public void testOrgApacheGeronimoSpecsGeronimoAnnotation_1_1_Spec() {
         final Bundle bundle = findBundle("org.apache.geronimo.specs.geronimo-annotation_1.1_spec");

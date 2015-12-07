@@ -27,7 +27,6 @@
     org.apache.felix/org.apache.felix.jaas/0.0.4
 
 [artifacts startLevel=15 runModes=oak]
-    com.google.guava/guava/15.0
     org.apache.jackrabbit/oak-core/${oak.version}
     org.apache.jackrabbit/oak-commons/${oak.version}
     org.apache.jackrabbit/oak-lucene/${oak.version}

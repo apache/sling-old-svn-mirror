@@ -182,6 +182,8 @@ public abstract class CommonTests {
 
         opt.add(mavenBundle("org.apache.servicemix.bundles", "org.apache.servicemix.bundles.concurrent", "1.3.4_1"));
 
+        opt.add(mavenBundle("com.google.guava", "guava", "15.0"));
+
         opt.add(mavenBundle("org.apache.geronimo.bundles", "commons-httpclient", "3.1_1"));
         opt.add(mavenBundle("org.apache.tika", "tika-core", tikaVersion));
         opt.add(mavenBundle("org.apache.tika", "tika-bundle", tikaVersion));
