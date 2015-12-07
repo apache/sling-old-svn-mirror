@@ -25,12 +25,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.scripting.thymeleaf.internal.processor.SlingAddSelectorsAttributeProcessor;
 import org.apache.sling.scripting.thymeleaf.internal.processor.SlingIncludeAttributeTagProcessor;
-import org.apache.sling.scripting.thymeleaf.internal.processor.SlingReplaceSelectorsAttributeTagProcessor;
-import org.apache.sling.scripting.thymeleaf.internal.processor.SlingReplaceSuffixAttributeTagProcessor;
-import org.apache.sling.scripting.thymeleaf.internal.processor.SlingResourceTypeAttributeTagProcessor;
-import org.apache.sling.scripting.thymeleaf.internal.processor.SlingUnwrapAttributeTagProcessor;
 import org.osgi.framework.Constants;
 import org.thymeleaf.dialect.AbstractProcessorDialect;
 import org.thymeleaf.processor.IProcessor;
@@ -62,12 +57,7 @@ public final class SlingDialect extends AbstractProcessorDialect {
     @Override
     public Set<IProcessor> getProcessors(final String prefix) {
         final Set<IProcessor> processors = new HashSet<IProcessor>();
-        processors.add(new SlingAddSelectorsAttributeProcessor(this, prefix));
         processors.add(new SlingIncludeAttributeTagProcessor(this, prefix));
-        processors.add(new SlingReplaceSelectorsAttributeTagProcessor(this, prefix));
-        processors.add(new SlingReplaceSuffixAttributeTagProcessor(this, prefix));
-        processors.add(new SlingResourceTypeAttributeTagProcessor(this, prefix));
-        processors.add(new SlingUnwrapAttributeTagProcessor(this, prefix));
         return processors;
     }
 

@@ -68,6 +68,8 @@ public final class ThymeleafScriptEngine extends AbstractSlingScriptEngine {
 
         try {
             final IContext context = new DefaultSlingContext(resourceResolver, locale, bindings);
+            // TODO optimize, process() calls TemplateManager which does resolving, parsing and processing
+            // resolving is already done by Sling, so we need a parsing and processing only call into TemplateEngine
             thymeleafScriptEngineFactory.getTemplateEngine().process(scriptName, context, writer);
         } catch (Exception e) {
             logger.error("Failure rendering Thymeleaf template '{}': {}", scriptName, e.getMessage());

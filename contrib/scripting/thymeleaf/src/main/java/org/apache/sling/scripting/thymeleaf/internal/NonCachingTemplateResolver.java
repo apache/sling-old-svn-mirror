@@ -21,6 +21,7 @@ package org.apache.sling.scripting.thymeleaf.internal;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -30,8 +31,10 @@ import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
-import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
@@ -41,10 +44,10 @@ import org.thymeleaf.IEngineConfiguration;
 import org.thymeleaf.cache.ICacheEntryValidity;
 import org.thymeleaf.cache.NonCacheableCacheEntryValidity;
 import org.thymeleaf.context.IContext;
-import org.thymeleaf.resourceresolver.IResourceResolver;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ITemplateResolver;
 import org.thymeleaf.templateresolver.TemplateResolution;
+import org.thymeleaf.templateresource.ITemplateResource;
 import org.thymeleaf.util.PatternSpec;
 
 @Component(
@@ -66,22 +69,12 @@ import org.thymeleaf.util.PatternSpec;
 })
 public class NonCachingTemplateResolver implements ITemplateResolver {
 
-    @Reference
-    private IResourceResolver resourceResolver;
-
     private Integer order;
 
     public static final int DEFAULT_ORDER = 0;
 
     @Property(intValue = DEFAULT_ORDER)
     public static final String ORDER_PARAMETER = "org.apache.sling.scripting.thymeleaf.internal.NonCachingTemplateResolver.order";
-
-    private String encoding;
-
-    public static final String DEFAULT_ENCODING = "UTF-8";
-
-    @Property(value = DEFAULT_ENCODING)
-    public static final String ENCODING_PARAMETER = "org.apache.sling.scripting.thymeleaf.internal.NonCachingTemplateResolver.encoding";
 
     private final PatternSpec htmlPatternSpec = new PatternSpec();
 
@@ -108,6 +101,11 @@ public class NonCachingTemplateResolver implements ITemplateResolver {
     @Property(unbounded = PropertyUnbounded.ARRAY)
     public static final String CSS_PATTERNS_PARAMETER = "org.apache.sling.scripting.thymeleaf.internal.NonCachingTemplateResolver.cssPatterns";
 
+    private final PatternSpec rawPatternSpec = new PatternSpec();
+
+    @Property(unbounded = PropertyUnbounded.ARRAY)
+    public static final String RAW_PATTERNS_PARAMETER = "org.apache.sling.scripting.thymeleaf.internal.NonCachingTemplateResolver.rawPatterns";
+
     private final Logger logger = LoggerFactory.getLogger(NonCachingTemplateResolver.class);
 
     public NonCachingTemplateResolver() {
@@ -133,22 +131,30 @@ public class NonCachingTemplateResolver implements ITemplateResolver {
     private void configure(final ComponentContext componentContext) {
         final Dictionary properties = componentContext.getProperties();
         order = PropertiesUtil.toInteger(properties.get(ORDER_PARAMETER), DEFAULT_ORDER);
-        encoding = PropertiesUtil.toString(properties.get(ENCODING_PARAMETER), DEFAULT_ENCODING);
         // HTML
         final String[] htmlPatterns = PropertiesUtil.toStringArray(properties.get(HTML_PATTERNS_PARAMETER), new String[]{});
         setPatterns(htmlPatterns, htmlPatternSpec);
+        logger.debug("HTML Pattern Spec: {}", htmlPatternSpec.getPatterns());
         // XML
         final String[] xmlPatterns = PropertiesUtil.toStringArray(properties.get(XML_PATTERNS_PARAMETER), new String[]{});
-        setPatterns(xmlPatterns, htmlPatternSpec);
+        setPatterns(xmlPatterns, xmlPatternSpec);
+        logger.debug("XML Pattern Spec: {}", xmlPatternSpec.getPatterns());
         // TEXT
         final String[] textPatterns = PropertiesUtil.toStringArray(properties.get(TEXT_PATTERNS_PARAMETER), new String[]{});
         setPatterns(textPatterns, textPatternSpec);
+        logger.debug("TEXT Pattern Spec: {}", textPatternSpec.getPatterns());
         // JAVASCRIPT
         final String[] javascriptPatterns = PropertiesUtil.toStringArray(properties.get(JAVASCRIPT_PATTERNS_PARAMETER), new String[]{});
         setPatterns(javascriptPatterns, javascriptPatternSpec);
+        logger.debug("JAVASCRIPT Pattern Spec: {}", javascriptPatternSpec.getPatterns());
         // CSS
         final String[] cssPatterns = PropertiesUtil.toStringArray(properties.get(CSS_PATTERNS_PARAMETER), new String[]{});
         setPatterns(cssPatterns, cssPatternSpec);
+        logger.debug("CSS Pattern Spec: {}", cssPatternSpec.getPatterns());
+        // RAW
+        final String[] rawPatterns = PropertiesUtil.toStringArray(properties.get(RAW_PATTERNS_PARAMETER), new String[]{});
+        setPatterns(rawPatterns, rawPatternSpec);
+        logger.debug("RAW Pattern Spec: {}", rawPatternSpec.getPatterns());
     }
 
     private void setPatterns(final String[] strings, final PatternSpec patternSpec) {
@@ -168,16 +174,18 @@ public class NonCachingTemplateResolver implements ITemplateResolver {
     }
 
     @Override
-    public TemplateResolution resolveTemplate(final IEngineConfiguration configuration, final IContext context, final String templateName) {
-        final String resourceName = templateName;
-        final String characterEncoding = encoding;
-        final TemplateMode templateMode = computeTemplateMode(templateName);
-        final ICacheEntryValidity cacheEntryValidity = new NonCacheableCacheEntryValidity();
+    public TemplateResolution resolveTemplate(final IEngineConfiguration engineConfiguration, final IContext context, final String ownerTemplate, final String template, final Map<String, Object> templateResolutionAttributes) {
+        logger.debug("resolving template '{}'", template);
+        final TemplateMode templateMode = computeTemplateMode(template);
         if (templateMode != null) {
-            logger.debug("using template mode '{}' for template '{}'", templateMode, templateName);
-            return new TemplateResolution(templateName, resourceName, resourceResolver, characterEncoding, templateMode, cacheEntryValidity);
+            logger.debug("using template mode '{}' for template '{}'", templateMode, template);
+            final ResourceResolver resourceResolver = (ResourceResolver) context.getVariable(SlingScriptConstants.ATTR_SCRIPT_RESOURCE_RESOLVER);
+            final Resource resource = resourceResolver.getResource(template);
+            final ITemplateResource templateResource = new SlingTemplateResource(resource);
+            final ICacheEntryValidity cacheEntryValidity = new NonCacheableCacheEntryValidity();
+            return new TemplateResolution(templateResource, templateMode, cacheEntryValidity);
         } else {
-            logger.warn("no template mode for template '{}'", templateName);
+            logger.warn("no template mode for template '{}'", template);
             return null; // will fail at caller
         }
     }
@@ -197,6 +205,9 @@ public class NonCachingTemplateResolver implements ITemplateResolver {
         }
         if (cssPatternSpec.matches(templateName)) {
             return TemplateMode.CSS;
+        }
+        if (rawPatternSpec.matches(templateName)) {
+            return TemplateMode.RAW;
         }
         return null;
     }

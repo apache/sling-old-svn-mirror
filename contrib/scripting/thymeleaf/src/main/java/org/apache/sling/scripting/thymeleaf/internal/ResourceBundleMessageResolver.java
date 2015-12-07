@@ -18,10 +18,7 @@
  */
 package org.apache.sling.scripting.thymeleaf.internal;
 
-import java.text.MessageFormat;
 import java.util.Dictionary;
-import java.util.Locale;
-import java.util.ResourceBundle;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -37,9 +34,8 @@ import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.thymeleaf.context.ITemplateProcessingContext;
+import org.thymeleaf.context.ITemplateContext;
 import org.thymeleaf.messageresolver.IMessageResolver;
-import org.thymeleaf.messageresolver.MessageResolution;
 
 @Component(
     label = "Apache Sling Scripting Thymeleaf “Resource Bundle Message Resolver”",
@@ -104,6 +100,17 @@ public class ResourceBundleMessageResolver implements IMessageResolver {
     }
 
     @Override
+    public String resolveMessage(ITemplateContext context, Class<?> origin, String key, Object[] messageParameters) {
+        return null;
+    }
+
+    @Override
+    public String createAbsentMessageRepresentation(ITemplateContext context, Class<?> origin, String key, Object[] messageParameters) {
+        return null;
+    }
+
+    /*
+    @Override
     public MessageResolution resolveMessage(final ITemplateProcessingContext processingContext, final String key, final Object[] messageParameters) {
         logger.debug("processingContext: {}, key: {}, message parameters: {}", processingContext, key, messageParameters);
         final Locale locale = processingContext.getLocale();
@@ -113,5 +120,6 @@ public class ResourceBundleMessageResolver implements IMessageResolver {
         final String message = messageFormat.format((messageParameters != null ? messageParameters : EMPTY_MESSAGE_PARAMETERS));
         return new MessageResolution(message);
     }
+    */
 
 }
