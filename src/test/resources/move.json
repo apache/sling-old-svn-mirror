@@ -1,0 +1,13 @@
+{
+  "jcr:primaryType":"nt:unstructured",
+  "moveProperty": {
+    "sling:resourceType":"slingPipes/mv",
+    "path": "/content/fruits/index",
+    "expr": "/content/fruits/fruitsIndex"
+  },
+  "moveNode": {
+    "sling:resourceType":"slingPipes/mv",
+    "path": "/content/fruits/apple",
+    "expr": "/content/fruits/granny"
+  }
+}

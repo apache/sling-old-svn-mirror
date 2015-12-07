@@ -1,0 +1,87 @@
+{
+  "jcr:primaryType":"nt:unstructured",
+  "simple": {
+    "jcr:primaryType":"nt:unstructured",
+    "sling:resourceType":"slingPipes/write",
+    "path":"/content/fruits/apple",
+    "conf": {
+      "jcr:primaryType":"nt:unstructured",
+      "hasSeed":true,
+      "colors":["green","red"]
+    }
+  },
+  "piped": {
+    "jcr:primaryType":"nt:unstructured",
+    "sling:resourceType":"slingPipes/container",
+    "conf":{
+      "jcr:primaryType":"sling:Folder",
+      "fruit":{
+        "sling:resourceType":"slingPipes/dummySearch",
+        "conf":{
+          "jcr:primaryType":"nt:unstructured",
+          "apple":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apple"},
+          "banana":{"jcr:primaryType":"nt:unstructured", "color":"yellow", "name":"banana"}
+        }
+      },
+      "pipedWrite":{
+        "sling:resourceType":"slingPipes/write",
+        "jcr:description": "written resource is fixed here with path property, with a patch on fruits property",
+        "path":"/content/fruits",
+        "conf":{
+          "jcr:primaryType":"nt:unstructured",
+          "fruits": "+[${fruit.name}]",
+          "fixedVegetables":"[cabbage,carrot]"
+        }
+      }
+    }
+  },
+  "variablePipe" : {
+    "jcr:primaryType":"nt:unstructured",
+    "sling:resourceType":"slingPipes/container",
+    "conf":{
+      "jcr:primaryType":"sling:Folder",
+      "fruit":{
+        "sling:resourceType":"slingPipes/dummySearch",
+        "conf":{
+          "jcr:primaryType":"nt:unstructured",
+            "apple":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apple"},
+            "banana":{"jcr:primaryType":"nt:unstructured", "color":"yellow", "name":"banana"}
+          }
+        },
+      "variableInputPipedWrite":{
+        "jcr:primaryType":"nt:unstructured",
+        "sling:resourceType":"slingPipes/write",
+        "jcr:description":"written resource is here is coming from previous pipe",
+        "conf":{
+          "jcr:primaryType":"nt:unstructured",
+          "jcr:description":"${fruit.name} is a fruit and its color is ${fruit.color}"
+        }
+      }
+    }
+  },
+  "simpleTree": {
+    "jcr:primaryType":"nt:unstructured",
+    "sling:resourceType":"slingPipes/write",
+    "path":"/content/fruits/apple",
+    "conf": {
+      "jcr:primaryType":"nt:unstructured",
+      "hasSeed":true,
+      "colors":["green","red"],
+      "components": {
+        "jcr:primaryType":"sling:Folder",
+        "skin": {
+          "jcr:primaryType":"nt:unstructured"
+        },
+        "flesh": {
+          "jcr:primaryType":"nt:unstructured"
+        },
+        "seed": {
+          "jcr:primaryType":"nt:unstructured"
+        },
+        "worm": {
+          "jcr:primaryType":"nt:unstructured"
+        }
+      }
+    }
+  }
+}
