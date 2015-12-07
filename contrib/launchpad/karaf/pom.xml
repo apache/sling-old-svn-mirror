@@ -41,9 +41,6 @@
   </scm>
 
   <modules>
-    <!--
-    <module>org.apache.sling.launchpad.karaf</module>
-    -->
     <module>org.apache.sling.launchpad.karaf-distribution</module>
     <module>org.apache.sling.launchpad.karaf-features</module>
     <module>org.apache.sling.launchpad.karaf-integration-tests</module>
