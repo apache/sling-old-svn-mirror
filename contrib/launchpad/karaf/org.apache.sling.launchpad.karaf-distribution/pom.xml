@@ -171,6 +171,8 @@
             <feature>sling-scripting-groovy</feature>
             <feature>sling-scripting-java</feature>
             <feature>sling-scripting-thymeleaf</feature>
+            <!-- Apache Sling Samples -->
+            <feature>sling-samples-fling</feature>
             <!-- Composum -->
             <feature>composum-sling</feature>
           </installedFeatures>

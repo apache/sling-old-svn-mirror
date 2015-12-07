@@ -476,6 +476,16 @@
     <feature version="${feature.version}">sling-extension-i18n</feature>
     <bundle dependency="true">mvn:org.javassist/javassist/3.18.2-GA</bundle>
   </feature>
+  <!-- Apache Sling Samples -->
+  <feature name="sling-samples-fling" version="${feature.version}">
+    <bundle>mvn:org.apache.sling.samples/org.apache.sling.samples.fling/0.0.1-SNAPSHOT</bundle>
+    <!-- dependencies -->
+    <feature version="${feature.version}">sling</feature>
+    <feature version="${feature.version}">sling-scripting-thymeleaf</feature>
+    <feature version="${feature.version}">sling-extension-models</feature>
+    <feature version="${feature.version}">sling-extension-query</feature>
+    <feature version="${feature.version}">sling-auth-form</feature>
+  </feature>
   <!-- Composum -->
   <feature name="composum-sling" version="${feature.version}">
     <bundle>mvn:com.composum.sling.core/composum-sling-core-commons/1.3.1</bundle>
