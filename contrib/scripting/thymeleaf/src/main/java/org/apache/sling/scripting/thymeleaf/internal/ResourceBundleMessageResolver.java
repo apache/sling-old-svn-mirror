@@ -18,7 +18,10 @@
  */
 package org.apache.sling.scripting.thymeleaf.internal;
 
+import java.text.MessageFormat;
 import java.util.Dictionary;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -100,26 +103,21 @@ public class ResourceBundleMessageResolver implements IMessageResolver {
     }
 
     @Override
-    public String resolveMessage(ITemplateContext context, Class<?> origin, String key, Object[] messageParameters) {
-        return null;
-    }
-
-    @Override
-    public String createAbsentMessageRepresentation(ITemplateContext context, Class<?> origin, String key, Object[] messageParameters) {
-        return null;
-    }
-
-    /*
-    @Override
-    public MessageResolution resolveMessage(final ITemplateProcessingContext processingContext, final String key, final Object[] messageParameters) {
-        logger.debug("processingContext: {}, key: {}, message parameters: {}", processingContext, key, messageParameters);
-        final Locale locale = processingContext.getLocale();
+    public String resolveMessage(final ITemplateContext templateContext, final Class<?> origin, final String key, final Object[] messageParameters) {
+        logger.debug("template context: {}, origin: {}, key: {}, message parameters: {}", templateContext, origin, key, messageParameters);
+        // TODO can origin be useful with Sling i18n?
+        final Locale locale = templateContext.getLocale();
         final ResourceBundle resourceBundle = resourceBundleProvider.getResourceBundle(locale);
         final String string = resourceBundle.getString(key);
         final MessageFormat messageFormat = new MessageFormat(string, locale);
         final String message = messageFormat.format((messageParameters != null ? messageParameters : EMPTY_MESSAGE_PARAMETERS));
-        return new MessageResolution(message);
+        logger.debug("message: '{}'", message);
+        return message;
     }
-    */
+
+    @Override
+    public String createAbsentMessageRepresentation(final ITemplateContext templateContext, final Class<?> origin, final String key, final Object[] messageParameters) {
+        return key; // TODO make configurable
+    }
 
 }

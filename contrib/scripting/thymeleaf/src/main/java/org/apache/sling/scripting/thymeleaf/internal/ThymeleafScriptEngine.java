@@ -33,6 +33,7 @@ import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.thymeleaf.context.Context;
 import org.thymeleaf.context.IContext;
 
 public final class ThymeleafScriptEngine extends AbstractSlingScriptEngine {
@@ -64,12 +65,10 @@ public final class ThymeleafScriptEngine extends AbstractSlingScriptEngine {
         final String scriptName = helper.getScript().getScriptResource().getPath();
         final Writer writer = scriptContext.getWriter();
 
-        bindings.put(SlingScriptConstants.ATTR_SCRIPT_RESOURCE_RESOLVER, resourceResolver); // TODO #388
+        bindings.put(SlingScriptConstants.ATTR_SCRIPT_RESOURCE_RESOLVER, resourceResolver); // TODO SlingBindings.RESOLVER
 
         try {
-            final IContext context = new DefaultSlingContext(resourceResolver, locale, bindings);
-            // TODO optimize, process() calls TemplateManager which does resolving, parsing and processing
-            // resolving is already done by Sling, so we need a parsing and processing only call into TemplateEngine
+            final IContext context = new Context(locale, bindings);
             thymeleafScriptEngineFactory.getTemplateEngine().process(scriptName, context, writer);
         } catch (Exception e) {
             logger.error("Failure rendering Thymeleaf template '{}': {}", scriptName, e.getMessage());
