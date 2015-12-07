@@ -16,6 +16,7 @@
  */
 package org.apache.sling.commons.threads.impl;
 
+import java.util.Locale;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -30,7 +31,7 @@ import org.apache.sling.commons.threads.ThreadPoolConfig;
 public final class ExtendedThreadFactory implements ThreadFactory {
 
     /** Template for thread names, for use with String#format() */
-    private static final String THREAD_NAME_TEMPLATE = "Sling - %s #%d";
+    private static final String THREAD_NAME_TEMPLATE = "sling-%s-%d";
 
     /** The real factory. */
     private final ThreadFactory factory;
@@ -59,10 +60,15 @@ public final class ExtendedThreadFactory implements ThreadFactory {
                                  final ThreadPoolConfig.ThreadPriority priority,
                                  final boolean isDaemon) {
         this.factory = factory;
-        this.name = stripPrefixes(name, "Apache Sling ", "Sling ");
+        this.name = normalizeName(name);
         this.priority = convertPriority(priority);
         this.isDaemon = isDaemon;
         this.threadCounter = new AtomicInteger(1);
+    }
+
+    private String normalizeName(final String name) {
+        final String n = name.toLowerCase(Locale.ENGLISH).replaceAll("\\s+", "-");
+        return stripPrefixes(n, "apache-sling-", "sling-");
     }
 
     private int convertPriority(final ThreadPoolConfig.ThreadPriority priority) {

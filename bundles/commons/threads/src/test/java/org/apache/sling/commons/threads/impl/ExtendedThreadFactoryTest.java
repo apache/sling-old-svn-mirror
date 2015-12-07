@@ -33,20 +33,20 @@ public class ExtendedThreadFactoryTest {
     @Test
     public void informativeThreadNames() {
         final ExtendedThreadFactory tf = factory("Test Pool");
-        assertEquals("Thread name", "Sling - Test Pool #1", tf.newThread(null).getName());
-        assertEquals("Thread name", "Sling - Test Pool #2", tf.newThread(null).getName());
+        assertEquals("Thread name", "sling-test-pool-1", tf.newThread(null).getName());
+        assertEquals("Thread name", "sling-test-pool-2", tf.newThread(null).getName());
     }
 
     @Test
     public void shouldStripSlingPrefixFromThreadNames() {
         final Thread thread = thread("Sling Test Pool");
-        assertEquals("Thread name", "Sling - Test Pool #1", thread.getName());
+        assertEquals("Thread name", "sling-test-pool-1", thread.getName());
     }
 
     @Test
     public void shouldStripApacheSlingPrefixFromThreadNames() {
         final Thread thread = thread("Apache Sling Test Pool");
-        assertEquals("Thread name", "Sling - Test Pool #1", thread.getName());
+        assertEquals("Thread name", "sling-test-pool-1", thread.getName());
     }
 
     @Test
