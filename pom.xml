@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>25</version>
+    <version>26-SNAPSHOT</version>
     <relativePath />
   </parent>
 
@@ -38,8 +38,8 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <org.thymeleaf.version>3.0.0.ALPHA03</org.thymeleaf.version>
-    <org.attoparser.version>2.0.0.BETA3</org.attoparser.version>
+    <org.thymeleaf.version>3.0.0.BETA01</org.thymeleaf.version>
+    <org.attoparser.version>2.0.0.BETA04</org.attoparser.version>
     <org.unbescape.version>1.1.1.RELEASE</org.unbescape.version>
     <ognl.version>3.1</ognl.version>
   </properties>
@@ -79,31 +79,31 @@
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.api</artifactId>
-      <version>2.7.0</version>
+      <version>2.9.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.scripting.api</artifactId>
-      <version>2.1.6</version>
+      <version>2.1.8</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.scripting.core</artifactId>
-      <version>2.0.30</version>
+      <version>2.0.34</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.commons.osgi</artifactId>
-      <version>2.2.0</version>
+      <version>2.3.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.i18n</artifactId>
-      <version>2.2.8</version>
+      <version>2.4.4</version>
       <scope>provided</scope>
     </dependency>
     <!-- Apache Felix -->
@@ -148,7 +148,7 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>1.7.7</version>
+      <version>1.7.13</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
@@ -172,21 +172,14 @@
           <instructions>
             <Export-Package>
               org.apache.sling.scripting.thymeleaf,
-              org.thymeleaf.*;version=${org.thymeleaf.version},
+              org.thymeleaf.*;version=${org.thymeleaf.version};-split-package:=merge-first,
               org.attoparser.*;version=${org.attoparser.version},
               org.unbescape.*;version=${org.unbescape.version},
               ognl.*;version=${ognl.version}
             </Export-Package>
-            <Import-Package>
-              org.apache.commons.io.input;version="1.4.9999",
-              *
-            </Import-Package>
             <DynamicImport-Package>
               *
             </DynamicImport-Package>
-            <Embed-Dependency>
-              *;scope=compile;inline=true
-            </Embed-Dependency>
             <ScriptEngine-Name>${project.name}</ScriptEngine-Name>
             <ScriptEngine-Version>${project.version}</ScriptEngine-Version>
             <_removeheaders>

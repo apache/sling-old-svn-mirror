@@ -29,13 +29,12 @@ import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
+import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.scripting.core.servlet.CaptureResponseWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thymeleaf.IEngineConfiguration;
-import org.thymeleaf.context.ITemplateProcessingContext;
-import org.thymeleaf.context.IVariablesMap;
-import org.thymeleaf.context.IWebVariablesMap;
+import org.thymeleaf.context.ITemplateContext;
 import org.thymeleaf.dialect.IProcessorDialect;
 import org.thymeleaf.engine.AttributeName;
 import org.thymeleaf.model.IProcessableElementTag;
@@ -50,6 +49,16 @@ public class SlingIncludeAttributeTagProcessor extends SlingHtmlAttributeTagProc
 
     public static final String ATTRIBUTE_NAME = "include";
 
+    public static final String ADD_SELECTORS_ATTRIBUTE_NAME = "addSelectors";
+
+    public static final String REPLACE_SELECTORS_ATTRIBUTE_NAME = "replaceSelectors";
+
+    public static final String REPLACE_SUFFIX_ATTRIBUTE_NAME = "replaceSuffix";
+
+    public static final String RESOURCE_TYPE_ATTRIBUTE_NAME = "resourceType";
+
+    public static final String UNWRAP_ATTRIBUTE_NAME = "unwrap";
+
     private final Logger logger = LoggerFactory.getLogger(SlingIncludeAttributeTagProcessor.class);
 
     public SlingIncludeAttributeTagProcessor(final IProcessorDialect processorDialect, final String dialectPrefix) {
@@ -57,18 +66,15 @@ public class SlingIncludeAttributeTagProcessor extends SlingHtmlAttributeTagProc
     }
 
     @Override
-    protected void doProcess(final ITemplateProcessingContext processingContext, final IProcessableElementTag tag, final AttributeName attributeName, final String attributeValue, final String tagTemplateName, final int tagLine, final int tagCol, final IElementTagStructureHandler elementTagStructureHandler) {
-        // final IContext context = arguments.getTemplateProcessingParameters().getContext();
-        // if (context instanceof SlingWebContext) {
+    protected void doProcess(final ITemplateContext templateContext, final IProcessableElementTag processableElementTag, final AttributeName attributeName, final String attributeValue, final String tagTemplateName, final int tagLine, final int tagCol, final IElementTagStructureHandler elementTagStructureHandler) {
         try {
-            final IWebVariablesMap webVariablesMap = (IWebVariablesMap) processingContext.getVariables();
-            final SlingHttpServletRequest slingHttpServletRequest = (SlingHttpServletRequest) webVariablesMap.getRequest();
-            final SlingHttpServletResponse slingHttpServletResponse = (SlingHttpServletResponse) webVariablesMap.getResponse();
+            final SlingHttpServletRequest slingHttpServletRequest = (SlingHttpServletRequest) templateContext.getVariable(SlingBindings.REQUEST);
+            final SlingHttpServletResponse slingHttpServletResponse = (SlingHttpServletResponse) templateContext.getVariable(SlingBindings.RESPONSE);
 
-            final IEngineConfiguration configuration = processingContext.getConfiguration();
+            final IEngineConfiguration configuration = templateContext.getConfiguration();
             final IStandardExpressionParser expressionParser = StandardExpressions.getExpressionParser(configuration);
-            final IStandardExpression expression = expressionParser.parseExpression(processingContext, attributeValue);
-            final Object include = expression.execute(processingContext);
+            final IStandardExpression expression = expressionParser.parseExpression(templateContext, attributeValue);
+            final Object include = expression.execute(templateContext);
 
             String path = null;
             if (include instanceof String) {
@@ -79,14 +85,13 @@ public class SlingIncludeAttributeTagProcessor extends SlingHtmlAttributeTagProc
                 resource = (Resource) include;
             }
             // request dispatcher options
-            final RequestDispatcherOptions requestDispatcherOptions = prepareRequestDispatcherOptions(webVariablesMap);
+            final RequestDispatcherOptions requestDispatcherOptions = prepareRequestDispatcherOptions(expressionParser, templateContext, processableElementTag);
             // dispatch
             final String content = dispatch(resource, path, slingHttpServletRequest, slingHttpServletResponse, requestDispatcherOptions);
-            // cleanup
-            tag.getAttributes().removeAttribute(attributeName);
-            // element.clearChildren();
+            // cleanup TODO: still needed?
+            // processableElementTag.getAttributes().removeAttribute(attributeName);
             // add output
-            final Boolean unwrap = (Boolean) webVariablesMap.getVariable(SlingUnwrapAttributeTagProcessor.NODE_PROPERTY_NAME);
+            final Boolean unwrap = (Boolean) parseAttribute(expressionParser, templateContext, processableElementTag, UNWRAP_ATTRIBUTE_NAME);
             if (unwrap != null && unwrap) {
                 elementTagStructureHandler.replaceWith(content, false);
             } else {
@@ -97,11 +102,27 @@ public class SlingIncludeAttributeTagProcessor extends SlingHtmlAttributeTagProc
         }
     }
 
-    protected RequestDispatcherOptions prepareRequestDispatcherOptions(final IVariablesMap variablesMap) {
-        final String resourceType = (String) variablesMap.getVariable(SlingResourceTypeAttributeTagProcessor.NODE_PROPERTY_NAME);
-        final String replaceSelectors = (String) variablesMap.getVariable(SlingReplaceSelectorsAttributeTagProcessor.NODE_PROPERTY_NAME);
-        final String addSelectors = (String) variablesMap.getVariable(SlingAddSelectorsAttributeProcessor.NODE_PROPERTY_NAME);
-        final String replaceSuffix = (String) variablesMap.getVariable(SlingReplaceSuffixAttributeTagProcessor.NODE_PROPERTY_NAME);
+    protected Object parseAttribute(final IStandardExpressionParser expressionParser, final ITemplateContext templateContext, final IProcessableElementTag processableElementTag, final String name) {
+        final String attributeValue = processableElementTag.getAttributes().getValue(getDialect().getPrefix(), name);
+        final IStandardExpression expression = expressionParser.parseExpression(templateContext, attributeValue);
+        return expression.execute(templateContext);
+    }
+
+    protected RequestDispatcherOptions prepareRequestDispatcherOptions(final IStandardExpressionParser expressionParser, final ITemplateContext templateContext, final IProcessableElementTag processableElementTag) {
+        final String prefix = getDialect().getPrefix();
+
+        final String resourceType = (String) parseAttribute(expressionParser, templateContext, processableElementTag, RESOURCE_TYPE_ATTRIBUTE_NAME);
+        processableElementTag.getAttributes().removeAttribute(prefix, RESOURCE_TYPE_ATTRIBUTE_NAME);
+
+        final String replaceSelectors = (String) parseAttribute(expressionParser, templateContext, processableElementTag, REPLACE_SELECTORS_ATTRIBUTE_NAME);
+        processableElementTag.getAttributes().removeAttribute(prefix, REPLACE_SELECTORS_ATTRIBUTE_NAME);
+
+        final String addSelectors = (String) parseAttribute(expressionParser, templateContext, processableElementTag, ADD_SELECTORS_ATTRIBUTE_NAME);
+        processableElementTag.getAttributes().removeAttribute(prefix, ADD_SELECTORS_ATTRIBUTE_NAME);
+
+        final String replaceSuffix = (String) parseAttribute(expressionParser, templateContext, processableElementTag, REPLACE_SUFFIX_ATTRIBUTE_NAME);
+        processableElementTag.getAttributes().removeAttribute(prefix, REPLACE_SUFFIX_ATTRIBUTE_NAME);
+
         final RequestDispatcherOptions options = new RequestDispatcherOptions();
         options.setForceResourceType(resourceType);
         options.setReplaceSelectors(replaceSelectors);

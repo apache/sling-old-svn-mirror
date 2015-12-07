@@ -163,23 +163,18 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
 
     // the configuration of the Thymeleaf TemplateEngine is static and we need to recreate on modification
     private synchronized void configureTemplateEngine() {
-        logger.info("configure template engine");
-        final TemplateEngine templateEngine = new TemplateEngine();
-        if (templateResolvers.size() > 0) {
-            templateEngine.setTemplateResolvers(templateResolvers);
+        logger.info("configuring template engine");
+        if (templateEngine == null || templateEngine.isInitialized()) {
+            templateEngine = new TemplateEngine();
         }
-        if (messageResolvers.size() > 0) {
-            templateEngine.setMessageResolvers(messageResolvers);
-        }
-        if (dialects.size() > 0) {
-            templateEngine.setDialects(dialects);
-            final IDialect standardDialect = new StandardDialect();
-            templateEngine.addDialect(standardDialect);
-        }
+        templateEngine.setTemplateResolvers(templateResolvers);
+        templateEngine.setMessageResolvers(messageResolvers);
+        templateEngine.setDialects(dialects);
+        final IDialect standardDialect = new StandardDialect();
+        templateEngine.addDialect(standardDialect);
         // TODO
         // final ICacheManager cacheManager = null;
         // templateEngine.setCacheManager(cacheManager);
-        this.templateEngine = templateEngine;
     }
 
     @Override
