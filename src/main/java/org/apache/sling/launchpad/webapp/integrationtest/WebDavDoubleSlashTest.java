@@ -79,9 +79,6 @@ public class WebDavDoubleSlashTest {
 
     @Test
     public void testEmptyWorkspace() throws HttpException, IOException {
-        // An empty JCR workspace name results in a URL like "/dav//test/..."
-        // which correctly returns 404 now, but used to work as the WebDAV
-        // servlets used the default workspace name in that case.
-        assertPropfindStatus(404, "", testPath);
+        assertPropfindStatus(207, "", testPath);
     }
 }
