@@ -24,7 +24,9 @@ import java.net.MalformedURLException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -47,12 +49,17 @@ public class ClientSideTeleporter extends TeleporterRule {
     private String baseUrl;
     private String serverCredentials;
     private final Set<Class<?>> embeddedClasses = new HashSet<Class<?>>();
+    private final Map<String, String> additionalBundleHeaders = new HashMap<String, String>();
     
     private InputStream buildTestBundle(Class<?> c, Collection<Class<?>> embeddedClasses, String bundleSymbolicName) throws IOException {
         final TinyBundle b = TinyBundles.bundle()
             .set(Constants.BUNDLE_SYMBOLICNAME, bundleSymbolicName)
             .set("Sling-Test-Regexp", c.getName() + ".*")
             .add(c);
+
+        for(Map.Entry<String, String> header : additionalBundleHeaders.entrySet()) {
+            b.set(header.getKey(), header.getValue());
+        }
         
         // Embed specified classes
         for(Class<?> clz : embeddedClasses) {
@@ -126,6 +133,11 @@ public class ClientSideTeleporter extends TeleporterRule {
     public ClientSideTeleporter embedClass(Class<?> c) {
         embeddedClasses.add(c);
         return this;
+    }
+    
+    /** Set additional bundle headers on the generated test bundle */
+    public Map<String, String> getAdditionalBundleHeaders() {
+        return additionalBundleHeaders;
     }
     
     private String installTestBundle(TeleporterHttpClient httpClient) throws MalformedURLException, IOException {
