@@ -65,6 +65,7 @@
     <module>samples/sample-tests</module>
     <module>samples/failing-tests</module>
     <module>samples/integration-tests</module>
+    <module>samples/bundle-with-it</module>
   </modules>
 
 </project>
