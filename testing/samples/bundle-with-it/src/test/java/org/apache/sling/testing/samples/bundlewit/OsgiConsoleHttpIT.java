@@ -21,7 +21,10 @@ import org.junit.Test;
 
 /** Simple HTTP test example, checks the validity of some
  *  OSGi webconsole URLs by GETting them and checking
- *  status code 200.
+ *  status code 200. 
+ *  
+ *  This is a general Sling test, it does not test anything 
+ *  from this bundle.
  */
 public class OsgiConsoleHttpIT {
 

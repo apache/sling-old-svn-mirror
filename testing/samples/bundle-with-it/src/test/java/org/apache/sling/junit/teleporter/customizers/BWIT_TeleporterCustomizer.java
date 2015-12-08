@@ -21,6 +21,8 @@ import org.apache.sling.testing.teleporter.client.ClientSideTeleporter;
 import org.apache.sling.testing.tools.sling.SlingTestBase;
 import org.apache.sling.testing.tools.sling.TimeoutsProvider;
 
+import aQute.bnd.osgi.Constants;
+
 /** This is required by the TeleporterRule, to setup the client-side
  *  teleporter with (at least) the test server URL.
  */
@@ -34,5 +36,11 @@ public class BWIT_TeleporterCustomizer implements TeleporterRule.Customizer {
         cst.setBaseUrl(S.getServerBaseUrl());
         cst.setServerCredentials(S.getServerUsername(), S.getServerPassword());
         cst.setTestReadyTimeoutSeconds(TimeoutsProvider.getInstance().getTimeout(5));
+        
+        // Make sure our bundle API is imported instead of embedded
+        final String apiPackage = "org.apache.sling.testing.samples.bundlewit.api";
+        cst.includeDependencyPrefix("org.apache.sling.testing.samples.bundlewit");
+        cst.excludeDependencyPrefix(apiPackage);
+        cst.getAdditionalBundleHeaders().put(Constants.IMPORT_PACKAGE, apiPackage);
     }
 }

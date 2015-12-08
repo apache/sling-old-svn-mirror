@@ -17,36 +17,36 @@
 package org.apache.sling.testing.samples.bundlewit;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+
 import java.io.IOException;
-import java.util.UUID;
 
 import org.apache.sling.junit.rules.TeleporterRule;
+import org.apache.sling.testing.samples.bundlewit.api.ResourceMimeTypeDetector;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.osgi.service.cm.Configuration;
-import org.osgi.service.cm.ConfigurationAdmin;
 
-/** Basic teleported server-side test, demonstrates how
- *  these work.
- *  This is a general Sling test, it does not test anything 
- *  from this bundle.
- */
-public class BasicTeleportedIT {
+/** Server-side test of the ResourceMimeTypeDetector
+ *  provided by this bundle */
+public class ResourceMimeTypeDetectorIT {
+
+    private ResourceMimeTypeDetector detector;
+    
     @Rule
     public final TeleporterRule teleporter = TeleporterRule.forClass(getClass(), "BWIT_Teleporter");
 
+    @Before
+    public void setup() {
+        detector = teleporter.getService(ResourceMimeTypeDetector.class); 
+    }
+    
     @Test
-    public void testConfigAdmin() throws IOException {
-        final String pid = "TEST_" + getClass().getName() + UUID.randomUUID();
-
-        // demonstrate that we can access OSGi services from such 
-        // teleported tests
-        final ConfigurationAdmin ca = teleporter.getService(ConfigurationAdmin.class);
-        assertNotNull("Teleporter should provide a ConfigurationAdmin", ca);
-
-        final Configuration cfg = ca.getConfiguration(pid);
-        assertNotNull("Expecting to get a Configuration", cfg);
-        assertEquals("Expecting the correct pid", pid, cfg.getPid());
-    }    
+    public void textHtml() throws IOException {
+        assertEquals("text/html", detector.getMimeType(new MockResource("/someResource.html")));
+    }
+    
+    @Test
+    public void nullMimeType() throws IOException {
+        assertEquals(null, detector.getMimeType(new MockResource("/someResourceWithNoExtension")));
+    }
 }

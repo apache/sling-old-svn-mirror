@@ -33,24 +33,11 @@
 
     <name>Apache Sling Testing - sample bundle with integration tests</name>
     <description>
-        Sample project that demonstrates a bundle with integration tests
-		in the same Maven module. Uses both HTTP-based and teleported 
-		server-side tests.
+        Sample project that demonstrates a bundle with unit and integration 
+        tests in the same Maven module, running against a full Sling instance. 
+        Uses both HTTP-based and teleported server-side tests.
     </description>
     
-    <!-- 
-        To keep the instance under test running and run individual tests
-        against it, use:
-        
-            mvn clean verify -DkeepJarRunning=true -Dhttp.port=8080
-            
-        optionally using jar.executor.vm.options to enable remote debugging,
-        and in another console:
-        
-            mvn -o verify -Dtest.server.url=http://localhost:8080
-            
-        optionally using -Dmaven.surefire.debug to enable debugging.            
-     -->
     <properties>
         <!-- Set this to run the server on a specific port
         <http.port></http.port>
@@ -113,6 +100,10 @@
                 <extensions>true</extensions>
              </plugin>
             <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+             </plugin>
+            <plugin>
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-plugin</artifactId>
                 <configuration>
@@ -151,7 +142,7 @@
                         </goals>
                             <phase>process-resources</phase>
                         <configuration>
-                            <outputDirectory>${project.build.directory}/sling/additional-bundles</outputDirectory>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
                             <excludeTransitive>true</excludeTransitive>
                             <overWriteReleases>false</overWriteReleases>
                             <overWriteSnapshots>false</overWriteSnapshots>
@@ -196,7 +187,6 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <debugForkedProcess>${maven.surefire.debug}</debugForkedProcess>
                     <systemPropertyVariables>
                         <!-- 
                             TODO this is a fairly complicated setup, we might
@@ -219,7 +209,7 @@
                         <jar.executor.jar.name.regexp>org.apache.sling.launchpad.*jar$</jar.executor.jar.name.regexp>
                         <jar.executor.work.folder>${jar.executor.work.folder}</jar.executor.work.folder>
                         <jar.executor.jar.options>${jar.executor.jar.options}</jar.executor.jar.options>
-                        <additional.bundles.path>${project.basedir}/target/sling/additional-bundles</additional.bundles.path>
+                        <additional.bundles.path>${project.build.directory}</additional.bundles.path>
                         <keepJarRunning>${keepJarRunning}</keepJarRunning>
                         <server.ready.timeout.seconds>60</server.ready.timeout.seconds>
                         <sling.testing.timeout.multiplier>${sling.testing.timeout.multiplier}</sling.testing.timeout.multiplier>
@@ -235,6 +225,9 @@
                             All bundles must be listed as dependencies in this pom, or they won't be installed. 
                         -->
                         <sling.additional.bundle.1>org.apache.sling.junit.core</sling.additional.bundle.1>
+                        
+                        <!--  Install this bundle for integration tests (TODO what's the Maven property for this name??)  -->
+                        <sling.additional.bundle.2>org.apache.sling.testing.samples.bundle-with-it-${project.version}.jar</sling.additional.bundle.2>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
@@ -252,6 +245,27 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.api</artifactId>
+            <version>2.4.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.mime</artifactId>
+            <version>2.1.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.annotations</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.junit.core</artifactId>
             <version>1.0.14</version>
             <scope>provided</scope>
@@ -265,7 +279,8 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.junit.teleporter</artifactId>
-            <version>1.0.2</version>
+            <!-- SNAPSHOT required due to SLING-5365 -->
+            <version>1.0.5-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
