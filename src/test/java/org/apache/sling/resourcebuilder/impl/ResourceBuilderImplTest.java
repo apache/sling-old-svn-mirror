@@ -178,7 +178,7 @@ public class ResourceBuilderImplTest {
     @Test
     public void buildATree() throws PersistenceException {
         getBuilder(testRootPath)
-            .resource("a/b/c", "title", "foo")
+            .resource("a/b/c", "title", "foo", "count", 21)
             .siblingsMode()
             .resource("1")
             .resource("2")
@@ -189,7 +189,7 @@ public class ResourceBuilderImplTest {
             .resource("deepest", "it", "worked")
             .commit();
         
-        assertProperties("a/b/c", "title", "foo");
+        assertProperties("a/b/c", "count", 21, "title", "foo");
         assertProperties("a/b/c/with/more/here", "it", "worked");
         assertResource("a/b/c/with/more/here/deepest");
         assertResource("a/b/c/1");
