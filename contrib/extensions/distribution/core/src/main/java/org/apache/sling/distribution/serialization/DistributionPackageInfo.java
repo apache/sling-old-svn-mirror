@@ -113,7 +113,6 @@ public final class DistributionPackageInfo extends ValueMapDecorator implements 
         return "DistributionPackageInfo{" +
                 " request.type=" + get(PROPERTY_REQUEST_TYPE, DistributionRequestType.class) +
                 ", request.paths=" + Arrays.toString(get(PROPERTY_REQUEST_PATHS, String[].class)) +
-                ", request.deepPaths=" + Arrays.toString(get(PROPERTY_REQUEST_DEEP_PATHS, String[].class)) +
                 '}';
     }
 }

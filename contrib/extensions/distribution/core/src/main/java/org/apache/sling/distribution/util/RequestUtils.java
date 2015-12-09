@@ -43,6 +43,10 @@ public class RequestUtils {
             deep = true;
         }
 
+        if (paths == null) {
+            paths = new String[0];
+        }
+
 
         return new SimpleDistributionRequest(DistributionRequestType.fromName(action), deep, paths);
     }

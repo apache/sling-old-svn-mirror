@@ -23,6 +23,7 @@ import javax.jcr.Session;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.TreeMap;
 import java.util.UUID;
 
@@ -64,7 +65,7 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
 
     private final String[] packageRoots;
     private final File tempDirectory;
-    private final TreeMap<String, PathFilterSet> filters;
+    private final TreeMap<String, List<String>> filters;
 
     public FileVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots, String[] filterRules, String tempFilesFolder) {
         super(type);
