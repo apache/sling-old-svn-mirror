@@ -44,10 +44,12 @@ import org.osgi.framework.Constants;
  */
 public class ClientSideTeleporter extends TeleporterRule {
 
+    public static final String DEFAULT_TEST_SERVLET_PATH = "system/sling/junit";
     private DependencyAnalyzer dependencyAnalyzer;
     private int testReadyTimeoutSeconds = 5;
     private String baseUrl;
     private String serverCredentials;
+    private String testServletPath = DEFAULT_TEST_SERVLET_PATH;
     private final Set<Class<?>> embeddedClasses = new HashSet<Class<?>>();
     private final Map<String, String> additionalBundleHeaders = new HashMap<String, String>();
     
@@ -107,7 +109,15 @@ public class ClientSideTeleporter extends TeleporterRule {
         serverCredentials = username + ":" + password;
     }
     
-    /** Define a prefix for class names that can be embedded
+    /**
+	 * @param testServletPath relative path to the Sling JUnit test servlet. 
+	 *     If null, defaults to DEFAULT_TEST_SERVLET_PATH.
+	 */
+	public void setTestServletPath(String testServletPath) {
+		this.testServletPath = testServletPath == null ? DEFAULT_TEST_SERVLET_PATH : testServletPath;
+	}
+
+	/** Define a prefix for class names that can be embedded
      *  in the test bundle if the {@link DependencyAnalyzer} thinks
      *  they should. Overridden by {@link #excludeDependencyPrefix } if
      *  any conflicts arise.
@@ -168,7 +178,7 @@ public class ClientSideTeleporter extends TeleporterRule {
             embeddedClasses.add(c);
         }
 
-        final TeleporterHttpClient httpClient = new TeleporterHttpClient(baseUrl);
+        final TeleporterHttpClient httpClient = new TeleporterHttpClient(baseUrl, testServletPath);
         httpClient.setCredentials(serverCredentials);
         
         // As this is not a ClassRule (which wouldn't map the test results correctly in an IDE)

@@ -42,9 +42,14 @@ class TeleporterHttpClient {
     private final String CHARSET = "UTF-8";
     private final String baseUrl;
     private String credentials = null;
+    private final String testServletPath;
     
-    TeleporterHttpClient(String baseUrl) {
+    TeleporterHttpClient(String baseUrl, String testServletPath) {
         this.baseUrl = baseUrl;
+        if(!testServletPath.endsWith("/")) {
+            testServletPath += "/";
+        }
+        this.testServletPath = testServletPath;
     }
 
     void setCredentials(String cred) {
@@ -103,6 +108,7 @@ class TeleporterHttpClient {
     
     private int getHttpGetStatus(String url) throws MalformedURLException, IOException {
         final HttpURLConnection c = (HttpURLConnection)new URL(url).openConnection();
+        setConnectionCredentials(c);
         c.setUseCaches(false);
         c.setDoOutput(true);
         c.setDoInput(true);
@@ -115,7 +121,7 @@ class TeleporterHttpClient {
     }
 
     void runTests(String testSelectionPath, int testReadyTimeoutSeconds) throws MalformedURLException, IOException, MultipleFailureException {
-        final String testUrl = baseUrl + "/system/sling/junit/" + testSelectionPath + ".junit_result";
+        final String testUrl = baseUrl + "/" + testServletPath + testSelectionPath + ".junit_result";
         
         // Wait for non-404 response that signals that test bundle is ready
         final long timeout = System.currentTimeMillis() + (testReadyTimeoutSeconds * 1000L);
@@ -131,6 +137,7 @@ class TeleporterHttpClient {
         
         final HttpURLConnection c = (HttpURLConnection)new URL(testUrl).openConnection();
         try {
+        	setConnectionCredentials(c);
             c.setRequestMethod("POST");
             c.setUseCaches(false);
             c.setDoOutput(true);
