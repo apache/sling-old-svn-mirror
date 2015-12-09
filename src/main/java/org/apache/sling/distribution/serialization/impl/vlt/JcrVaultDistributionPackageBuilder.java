@@ -27,6 +27,7 @@ import javax.jcr.Session;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -75,7 +76,7 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
     private final String[] packageRoots;
     private final String tempPackagesNode;
     private final File tempDirectory;
-    private final TreeMap<String, PathFilterSet> filters;
+    private final TreeMap<String, List<String>> filters;
 
     public JcrVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots, String[] filterRules, String tempFilesFolder) {
         super(type);

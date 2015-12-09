@@ -26,8 +26,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Properties;
 import java.util.Set;
@@ -35,7 +38,9 @@ import java.util.TreeMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.vault.fs.api.ImportMode;
+import org.apache.jackrabbit.vault.fs.api.PathFilter;
 import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.api.WorkspaceFilter;
 import org.apache.jackrabbit.vault.fs.config.DefaultMetaInf;
@@ -62,12 +67,12 @@ public class VltUtils {
 
     final static Logger log = LoggerFactory.getLogger(VltUtils.class);
 
-    public static WorkspaceFilter createFilter(DistributionRequest distributionRequest, NavigableMap<String, PathFilterSet> filters) {
+    public static WorkspaceFilter createFilter(DistributionRequest distributionRequest, NavigableMap<String, List<String>> filters) {
         DefaultWorkspaceFilter filter = new DefaultWorkspaceFilter();
 
         for (String path : distributionRequest.getPaths()) {
-            boolean deep = distributionRequest.isDeep(path);
-            PathFilterSet filterSet = createFilterSet(path, deep, filters);
+
+            PathFilterSet filterSet = createFilterSet(path, filters, distributionRequest);
             filter.add(filterSet);
         }
 
@@ -92,23 +97,44 @@ public class VltUtils {
         return paths;
     }
 
-    private static PathFilterSet createFilterSet(String path, boolean deep, NavigableMap<String, PathFilterSet> filters) {
+    private static PathFilterSet createFilterSet(String path, NavigableMap<String, List<String>> globalFilters, DistributionRequest distributionRequest) {
+        boolean deep = distributionRequest.isDeep(path);
         PathFilterSet filterSet = new PathFilterSet(path);
 
         if (!deep) {
             filterSet.addInclude(new DefaultPathFilter(path));
-        } else {
+        }
 
-            // add the most specific filter rules
-            for (String key : filters.descendingKeySet()) {
-                if (path.startsWith(key)) {
-                    filterSet.addAll(filters.get(key));
-                    break;
-                }
+
+        List<String> patterns = new ArrayList<String>();
+
+        // add the most specific filter rules
+        for (String key : globalFilters.descendingKeySet()) {
+            if (path.startsWith(key)) {
+                patterns.addAll(globalFilters.get(key));
+                break;
             }
         }
+
+        String[] requestFilters = distributionRequest.getFilters(path);
+
+        if (requestFilters != null) {
+            patterns.addAll(Arrays.asList(requestFilters));
+        }
+
+        for (String pattern : patterns) {
+            PathFilterSet.Entry<DefaultPathFilter> entry = extractPathPattern(pattern);
+
+            if (entry.isInclude()) {
+                filterSet.addInclude(entry.getFilter());
+            } else {
+                filterSet.addExclude(entry.getFilter());
+            }
+        }
+
         return filterSet;
     }
+
 
     public static ExportOptions getExportOptions(WorkspaceFilter filter, String[] packageRoots,
                                                  String packageGroup,
@@ -271,9 +297,15 @@ public class VltUtils {
         return path.substring(0, idx);
     }
 
-    public static TreeMap<String, PathFilterSet> parseFilters(String[] filters) {
+    public static String appendMatchAll(String path) {
+        path = path.endsWith("/") ? path : path + "/";
+        path = path + ".*";
+        return path;
+    }
 
-        TreeMap<String, PathFilterSet> result = new TreeMap<String, PathFilterSet>();
+    public static TreeMap<String, List<String>> parseFilters(String[] filters) {
+
+        TreeMap<String, List<String>> result = new TreeMap<String, List<String>>();
 
         if (filters == null || filters.length == 0) {
             return result;
@@ -287,7 +319,7 @@ public class VltUtils {
                     continue;
                 }
 
-                PathFilterSet filterSet = new PathFilterSet();
+                List<String> filterSet = new ArrayList<String>();
 
                 for (int i = 1; i < filterParts.length; i++) {
                     String filterPart = SettingsUtils.removeEmptyEntry(filterParts[i]);
@@ -295,11 +327,7 @@ public class VltUtils {
                         continue;
                     }
 
-                    if (filterPart.startsWith("+")) {
-                        filterSet.addInclude(new DefaultPathFilter(filterPart.substring(1)));
-                    } else if (filterPart.startsWith("-")) {
-                        filterSet.addExclude(new DefaultPathFilter(filterPart.substring(1)));
-                    }
+                    filterSet.add(filterPart);
                 }
 
                 result.put(path, filterSet);
@@ -320,6 +348,9 @@ public class VltUtils {
 
         Set<String> deepPaths = new HashSet<String>();
         List<String> paths = new ArrayList<String>();
+        Map<String, String[]> filters = new HashMap<String, String[]>();
+
+
 
         for (String path : request.getPaths()) {
             if (VltUtils.findParent(path, "rep:policy") != null) {
@@ -338,8 +369,24 @@ public class VltUtils {
             } else {
                 paths.add(path);
             }
+
+            filters.put(path, request.getFilters(path));
         }
 
-        return new SimpleDistributionRequest(requestType, paths.toArray(new String[0]), deepPaths);
+        return new SimpleDistributionRequest(requestType, paths.toArray(new String[0]), deepPaths, filters);
+    }
+
+
+    public static PathFilterSet.Entry<DefaultPathFilter> extractPathPattern(String pattern) {
+        PathFilterSet.Entry<DefaultPathFilter> result = null;
+        if (pattern.startsWith("+")) {
+            result = new PathFilterSet.Entry<DefaultPathFilter>(new DefaultPathFilter(pattern.substring(1)), true);
+        } else if (pattern.startsWith("-")) {
+            result = new PathFilterSet.Entry<DefaultPathFilter>(new DefaultPathFilter(pattern.substring(1)), false);
+        } else {
+            result = new PathFilterSet.Entry<DefaultPathFilter>(new DefaultPathFilter(pattern), true);
+        }
+
+        return result;
     }
 }
