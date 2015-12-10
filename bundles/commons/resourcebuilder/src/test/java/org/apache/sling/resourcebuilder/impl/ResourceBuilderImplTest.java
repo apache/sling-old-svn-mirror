@@ -18,24 +18,27 @@
  */
 package org.apache.sling.resourcebuilder.impl;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
+import org.apache.sling.testing.mock.sling.services.MockMimeTypeService;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -44,14 +47,36 @@ public class ResourceBuilderImplTest {
     
     private String testRootPath;
     private ResourceResolver resourceResolver;
+    private long lastModified;
+    private Random random = new Random(System.currentTimeMillis());
+    private static final MimeTypeService mimeTypeService = new MockMimeTypeService();
     
     @Rule
     public SlingContext context = new SlingContext(ResourceResolverType.RESOURCERESOLVER_MOCK);
     
-    private ResourceBuilderImpl getBuilder(String path) throws PersistenceException {
+    private ResourceBuilderImpl getBuilder(String path) throws Exception {
         final Resource root = context.resourceResolver().resolve("/");
         assertNotNull("Expecting non-null root", root);
-        return new ResourceBuilderImpl(resourceResolver.create(root, ResourceUtil.getName(path), null));
+        lastModified = random.nextLong();
+        
+        final Resource parent = resourceResolver.create(root, ResourceUtil.getName(path), null);
+        final ResourceBuilderImpl result = new ResourceBuilderImpl(parent, mimeTypeService) {
+            @Override
+            protected long getLastModified(long userSuppliedValue) {
+                final long now = System.currentTimeMillis();
+                final long superValue = super.getLastModified(-1);
+                final long maxDelta = 60 * 1000L;
+                if(superValue < now || superValue - now > maxDelta) {
+                    fail("getLastModified does not seem to use current time as its default value");
+                }
+                
+                if(userSuppliedValue >= 0) {
+                    return super.getLastModified(userSuppliedValue);
+                }
+                return lastModified;
+            }
+        };
+        return result;
     }
     
     @Before
@@ -113,7 +138,7 @@ public class ResourceBuilderImplTest {
     }
     
     @Test
-    public void basicResource() throws PersistenceException {
+    public void basicResource() throws Exception {
         getBuilder(testRootPath)
             .resource("child", "title", "foo")
             .commit();
@@ -123,11 +148,11 @@ public class ResourceBuilderImplTest {
     }
     
     @Test
-    public void ensureResourceExists() throws PersistenceException {
+    public void ensureResourceExists() throws Exception {
         
         class MyResourceBuilder extends ResourceBuilderImpl {
             MyResourceBuilder() {
-                super(resourceResolver.getResource("/"));
+                super(resourceResolver.getResource("/"), null);
             }
             
             Resource r(String path) {
@@ -142,7 +167,7 @@ public class ResourceBuilderImplTest {
     }
     
     @Test
-    public void deepResource() throws PersistenceException {
+    public void deepResource() throws Exception {
         getBuilder(testRootPath)
             .resource("a/b/c", "title", "foo")
             .commit();
@@ -154,7 +179,7 @@ public class ResourceBuilderImplTest {
     }
     
     @Test
-    public void intermediatePrimaryTypes() throws PersistenceException {
+    public void intermediatePrimaryTypes() throws Exception {
         getBuilder(testRootPath)
             .resource("a/b/c")
             .withIntermediatePrimaryType("foo")
@@ -169,7 +194,7 @@ public class ResourceBuilderImplTest {
     }
     
     @Test
-    public void resetParent() throws PersistenceException {
+    public void resetParent() throws Exception {
         getBuilder(testRootPath)
             .resource("a/b/c")
             .resetParent()
@@ -181,7 +206,7 @@ public class ResourceBuilderImplTest {
     }
     
     @Test
-    public void noResetParent() throws PersistenceException {
+    public void noResetParent() throws Exception {
         getBuilder(testRootPath)
             .resource("a/b/c")
             .resource("d/e")
@@ -192,24 +217,24 @@ public class ResourceBuilderImplTest {
     }
     
     @Test
-    public void getParent() throws PersistenceException {
+    public void getParent() throws Exception {
         final Resource parent = getBuilder(testRootPath).getCurrentParent();
         assertNotNull(parent);
         assertEquals(testRootPath, parent.getPath());
     }
     
     @Test(expected=RuntimeException.class)
-    public void missingParentFails() throws PersistenceException {
-        new ResourceBuilderImpl(null).resource("foo");
+    public void missingParentFails() throws Exception {
+        new ResourceBuilderImpl(null, null).resource("foo");
     }
     
     @Test(expected=IllegalArgumentException.class)
-    public void absolutePathFails() throws PersistenceException {
+    public void absolutePathFails() throws Exception {
         getBuilder(testRootPath).resource("/absolute");
     }
     
     @Test
-    public void simpleTree() throws PersistenceException {
+    public void simpleTree() throws Exception {
         getBuilder(testRootPath)
             .resource("a/b/c", "title", "foo", "count", 21)
             .siblingsMode()
@@ -231,7 +256,7 @@ public class ResourceBuilderImplTest {
     }
     
     @Test
-    public void treeWithFiles() throws PersistenceException, IOException {
+    public void treeWithFiles() throws Exception {
         getBuilder(testRootPath)
             .resource("apps/myapp/components/resource")
             .siblingsMode()
@@ -261,5 +286,25 @@ public class ResourceBuilderImplTest {
                 "MT3", "\"sling:resourceType\":\"its/resource/type\"", 44L);
         assertFile("apps/content/myapp.json", 
                 "MT4", "\"sling:resourceType\":\"its/resource/type\"", 45L);
+    }
+    
+    @Test
+    public void autoMimetype() throws Exception {
+        getBuilder(testRootPath)
+            .file("models.js", getClass().getResourceAsStream("/models.js"), null, 42)
+            .commit()
+            ;
+        assertFile("models.js", 
+                "application/javascript", "function someJavascriptFunction()", 42L);
+    }
+    
+    @Test
+    public void autoLastModified() throws Exception {
+        getBuilder(testRootPath)
+            .file("models.js", getClass().getResourceAsStream("/models.js"), "MT1", -1)
+            .commit()
+            ;
+        assertFile("models.js", 
+                "MT1", "function someJavascriptFunction()", lastModified);
     }
 }

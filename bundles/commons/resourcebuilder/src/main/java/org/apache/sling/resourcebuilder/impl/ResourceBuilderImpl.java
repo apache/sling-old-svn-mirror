@@ -27,6 +27,7 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.resourcebuilder.api.ResourceBuilder;
 
 /** ResourceBuilder implementation */
@@ -44,7 +45,10 @@ public class ResourceBuilderImpl implements ResourceBuilder {
     public static final String JCR_CONTENT = "jcr:content";
     public static final String NT_RESOURCE = "nt:resource";
     
-    public ResourceBuilderImpl(Resource parent) {
+    private final MimeTypeService mimeTypeService;
+    
+    public ResourceBuilderImpl(Resource parent, MimeTypeService mts) {
+        mimeTypeService = mts;
         if(parent == null) {
             throw new IllegalArgumentException("Parent resource is null");
         }
@@ -136,6 +140,20 @@ public class ResourceBuilderImpl implements ResourceBuilder {
         }
     }
     
+    protected String getMimeType(String filename, String userSuppliedMimeType) {
+        if(userSuppliedMimeType != null) {
+            return userSuppliedMimeType;
+        }
+        return mimeTypeService.getMimeType(filename);
+    }
+    
+    protected long getLastModified(long userSuppliedValue) {
+        if(userSuppliedValue < 0) {
+            return System.currentTimeMillis();
+        }
+        return userSuppliedValue;
+    }
+    
     @Override
     public ResourceBuilder file(String filename, InputStream data, String mimeType, long lastModified) {
         Resource file = null;
@@ -157,9 +175,8 @@ public class ResourceBuilderImpl implements ResourceBuilder {
             file = resolver.create(currentParent, name, null);
             final Map<String, Object> props = new HashMap<String, Object>();
             props.put(JCR_PRIMARYTYPE, NT_RESOURCE);
-            // TODO get mime type from MimeTypeService
-            props.put(JCR_MIMETYPE, mimeType);
-            props.put(JCR_LASTMODIFIED, lastModified >= 0 ? lastModified : System.currentTimeMillis());
+            props.put(JCR_MIMETYPE, getMimeType(filename, mimeType));
+            props.put(JCR_LASTMODIFIED, getLastModified(lastModified));
             props.put(JCR_DATA, data);
             resolver.create(file, JCR_CONTENT, props); 
         } catch(PersistenceException pex) {
