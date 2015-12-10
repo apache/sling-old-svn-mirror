@@ -22,7 +22,6 @@ import javax.annotation.Nonnull;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +38,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.distribution.common.RecoverableDistributionException;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
@@ -112,7 +112,10 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
 
                 Content content = response.returnContent();
                 log.debug("delivered package {} to {}", distributionPackage.getId(), distributionEndpoint.getUri());
-            } catch (Throwable ex) {
+            } catch (HttpHostConnectException e) {
+                log.info("could not connect to {} - retrying", distributionEndpoint.getUri());
+                throw new RecoverableDistributionException(e);
+            } catch (Exception ex) {
                 throw new DistributionException(ex);
             }
         }

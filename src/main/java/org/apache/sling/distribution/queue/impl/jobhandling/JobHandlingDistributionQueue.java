@@ -193,7 +193,7 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
 
         DistributionQueueState state = DistributionQueueUtils.calculateState(firstItem, firstItemStatus);
         if (!isActive) {
-            state = DistributionQueueState.PAUSED;
+            state = DistributionQueueState.PASSIVE;
         }
 
         int itemsCount = jobs.size();
