@@ -1,0 +1,1 @@
+function someJavascriptFunction() { return "yes, it worked." }

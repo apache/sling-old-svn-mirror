@@ -18,6 +18,8 @@
  */
 package org.apache.sling.resourcebuilder.api;
 
+import java.io.InputStream;
+
 import org.apache.sling.api.resource.Resource;
 
 /** Builds Sling Resources using a simple fluent API */
@@ -33,6 +35,23 @@ public interface ResourceBuilder {
      * @return this builder
      */
     ResourceBuilder resource(String relativePath, Object ... properties);
+
+    /** Create a file under the current parent resource
+     * @param filename The name of the created file
+     * @param data The file data
+     * @param mimeType If null, use the Sling MimeTypeService to set the mime type
+     * @param lastModified if < 0, current time is used
+     * @return this builder
+     */
+    ResourceBuilder file(String filename, InputStream data, String mimeType, long lastModified);
+    
+    /** Create a file under the current parent resource. Mime type is set using the 
+     *  Sling MimeTypeService, and last modified is set to current time.
+     * @param filename The name of the created file
+     * @param data The file data
+     * @return this builder
+     */
+    ResourceBuilder file(String filename, InputStream data);
     
     /** Commit created resources */
     ResourceBuilder commit();

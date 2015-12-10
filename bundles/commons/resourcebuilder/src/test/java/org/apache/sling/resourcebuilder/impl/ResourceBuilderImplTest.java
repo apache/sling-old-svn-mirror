@@ -18,12 +18,17 @@
  */
 package org.apache.sling.resourcebuilder.impl;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -59,6 +64,34 @@ public class ResourceBuilderImplTest {
         final Resource result =  resourceResolver.resolve(fullPath(path));
         assertNotNull("Expecting resource to exist:" + path, result);
         return result;
+    }
+    
+    /** Assert that a file exists and verify its properties. */
+    private void assertFile(String path, String mimeType, String expectedContent, Long lastModified) throws IOException {
+        final Resource r = assertResource(fullPath(path));
+        assertNotNull("Expecting resource to exist:" + path, r);
+        
+        // Files are stored according to the standard JCR structure
+        final Resource jcrContent = r.getChild(ResourceBuilderImpl.JCR_CONTENT);
+        assertNotNull("Expecting subresource:" + ResourceBuilderImpl.JCR_CONTENT, jcrContent);
+        final ValueMap vm = jcrContent.adaptTo(ValueMap.class);
+        assertNotNull("Expecting ValueMap for " + jcrContent.getPath(), vm);
+        assertEquals("Expecting nt:Resource type for " + jcrContent.getPath(), 
+                ResourceBuilderImpl.NT_RESOURCE, vm.get(ResourceBuilderImpl.JCR_PRIMARYTYPE));
+        assertEquals("Expecting the correct mime-type", mimeType, vm.get(ResourceBuilderImpl.JCR_MIMETYPE));
+        assertEquals("Expecting the correct last modified", lastModified, vm.get(ResourceBuilderImpl.JCR_LASTMODIFIED));
+        
+        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        final InputStream is = vm.get(ResourceBuilderImpl.JCR_DATA, InputStream.class);
+        assertNotNull("Expecting InputStream property on nt:resource:" + ResourceBuilderImpl.JCR_DATA, is);
+        IOUtils.copy(is, bos);
+        try {
+            final String content = new String(bos.toByteArray());
+            assertTrue("Expecting content to contain " + expectedContent, content.contains(expectedContent));
+        } finally {
+            bos.close();
+            is.close();
+        }
     }
     
     private String fullPath(String path) {
@@ -176,7 +209,7 @@ public class ResourceBuilderImplTest {
     }
     
     @Test
-    public void buildATree() throws PersistenceException {
+    public void simpleTree() throws PersistenceException {
         getBuilder(testRootPath)
             .resource("a/b/c", "title", "foo", "count", 21)
             .siblingsMode()
@@ -195,5 +228,38 @@ public class ResourceBuilderImplTest {
         assertResource("a/b/c/1");
         assertResource("a/b/c/2");
         assertResource("a/b/c/3");
+    }
+    
+    @Test
+    public void treeWithFiles() throws PersistenceException, IOException {
+        getBuilder(testRootPath)
+            .resource("apps/myapp/components/resource")
+            .siblingsMode()
+            .file("models.js", getClass().getResourceAsStream("/models.js"), "MT1", 42)
+            .file("text.html", getClass().getResourceAsStream("/text.html"), "MT2", 43)
+            .resetParent()
+            .hierarchyMode()
+            .resource("apps")
+            .file("myapp.json", getClass().getResourceAsStream("/myapp.json"), "MT3", 44)
+            .resetParent()
+            .resource("apps/content/myapp/resource")
+            .resetParent()
+            .resource("apps/content", "title", "foo")
+            .file("myapp.json", getClass().getResourceAsStream("/myapp.json"), "MT4", 45)
+            .commit()
+            ;
+        
+        assertResource("apps/content/myapp/resource");
+        assertResource("apps/myapp/components/resource");
+        assertProperties("apps/content", "title", "foo");
+        
+        assertFile("apps/myapp/components/resource/models.js", 
+                "MT1", "function someJavascriptFunction()", 42L);
+        assertFile("apps/myapp/components/resource/text.html", 
+                "MT2", "This is an html file", 43L);
+        assertFile("apps/myapp.json", 
+                "MT3", "\"sling:resourceType\":\"its/resource/type\"", 44L);
+        assertFile("apps/content/myapp.json", 
+                "MT4", "\"sling:resourceType\":\"its/resource/type\"", 45L);
     }
 }
