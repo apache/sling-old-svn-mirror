@@ -70,6 +70,9 @@
                         <Export-Package>
                             org.apache.sling.distribution.util
                         </Export-Package>
+                        <Import-Package>
+                            org.apache.sling.event.jobs;version="[1.5.0,3.0)",org.apache.sling.event.jobs.consumer;version="[1.1,2)",*
+                        </Import-Package>
                         <Embed-Dependency>httpasyncclient</Embed-Dependency>
                     </instructions>
                 </configuration>
@@ -132,7 +135,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.event</artifactId>
-            <version>3.3.0</version>
+            <version>4.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
