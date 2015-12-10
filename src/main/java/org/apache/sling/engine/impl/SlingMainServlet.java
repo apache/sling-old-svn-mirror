@@ -379,14 +379,14 @@ public class SlingMainServlet extends GenericServlet {
             RequestData.DEFAULT_MAX_CALL_COUNTER));
         RequestData.setSlingMainServlet(this);
 
-        // configure default request parameter encoding
-        // log a message if such configuration exists ....
+        // Warn about the obsolete parameter encoding configuration
         if (componentConfig.get(PROP_DEFAULT_PARAMETER_ENCODING) != null) {
-            log.warn("Configure default request parameter encoding with 'org.apache.sling.parameters.config' configuration; the property "
+            log.warn("Please configure the default request parameter encoding using "
+                + "the 'org.apache.sling.engine.parameters' configuration PID; the property "
                 + PROP_DEFAULT_PARAMETER_ENCODING
                 + "="
                 + componentConfig.get(PROP_DEFAULT_PARAMETER_ENCODING)
-                + " is ignored");
+                + " is obsolete and ignored");
         }
 
         // register the servlet and resources
