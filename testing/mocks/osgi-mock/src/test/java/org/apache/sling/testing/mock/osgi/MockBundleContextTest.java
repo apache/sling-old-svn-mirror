@@ -29,6 +29,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
@@ -92,6 +93,10 @@ public class MockBundleContextTest {
         assertSame(reg1.getReference(), refsString[0]);
         assertSame(reg2.getReference(), refsString[1]);
 
+        Collection<ServiceReference<String>> refColString = bundleContext.getServiceReferences(String.class, null);
+        assertEquals(2, refColString.size());
+        assertSame(reg1.getReference(), refColString.iterator().next());
+
         ServiceReference<?>[] refsInteger = bundleContext.getServiceReferences(Integer.class.getName(), null);
         assertEquals(2, refsInteger.length);
         assertSame(reg3.getReference(), refsInteger[0]);
@@ -109,6 +114,16 @@ public class MockBundleContextTest {
         bundleContext.ungetService(refsString[0]);
         bundleContext.ungetService(refsString[1]);
         bundleContext.ungetService(refInteger);
+    }
+    
+    @Test
+    public void testNoServiceReferences() throws InvalidSyntaxException {
+        ServiceReference<?>[] refs = bundleContext.getServiceReferences(String.class.getName(), null);
+        assertNull(refs);
+
+        Collection<ServiceReference<String>> refCol = bundleContext.getServiceReferences(String.class, null);
+        assertNotNull(refCol);
+        assertTrue(refCol.isEmpty());
     }
     
     @Test
