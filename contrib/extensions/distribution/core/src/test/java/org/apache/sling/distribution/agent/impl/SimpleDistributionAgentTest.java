@@ -154,31 +154,6 @@ public class SimpleDistributionAgentTest {
     }
 
     @Test
-    public void testGetDefaultQueue() throws Exception {
-        String name = "sample-agent";
-        DistributionPackageImporter packageImporter = mock(DistributionPackageImporter.class);
-        DistributionPackageExporter packageExporter = mock(DistributionPackageExporter.class);
-        DistributionRequestAuthorizationStrategy packageExporterStrategy = mock(DistributionRequestAuthorizationStrategy.class);
-
-        DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
-        DistributionQueueDispatchingStrategy dispatchingStrategy = mock(DistributionQueueDispatchingStrategy.class);
-        when(dispatchingStrategy.getQueueNames()).thenReturn(Arrays.asList(new String[]{ DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME }));
-        DistributionEventFactory distributionEventFactory = mock(DistributionEventFactory.class);
-        ResourceResolverFactory resolverFactory = mock(ResourceResolverFactory.class);
-
-        SimpleDistributionAgent agent = new SimpleDistributionAgent(name,
-                false, null, "serviceName", packageImporter,
-                packageExporter, packageExporterStrategy,
-                queueProvider, dispatchingStrategy, null,
-                distributionEventFactory, resolverFactory, mock(SlingRepository.class),
-                mock(DefaultDistributionLog.class), null, null, 0);
-        DistributionQueue queue = mock(DistributionQueue.class);
-        when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME))
-                .thenReturn(queue);
-        assertNotNull(agent.getQueue(""));
-    }
-
-    @Test
     public void testGetExistingNamedQueue() throws Exception {
         String name = "sample-agent";
         DistributionPackageImporter packageImporter = mock(DistributionPackageImporter.class);

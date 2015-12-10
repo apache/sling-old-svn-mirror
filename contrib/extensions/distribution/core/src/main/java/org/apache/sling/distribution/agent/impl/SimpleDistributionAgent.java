@@ -42,6 +42,7 @@ import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.DistributionResponse;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.agent.DistributionAgentState;
+import org.apache.sling.distribution.common.RecoverableDistributionException;
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.event.DistributionEventTopics;
@@ -51,6 +52,8 @@ import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.impl.SimpleDistributionResponse;
 import org.apache.sling.distribution.log.DistributionLog;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
+import org.apache.sling.distribution.queue.DistributionQueueStatus;
+import org.apache.sling.distribution.queue.impl.DistributionQueueWrapper;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
@@ -213,7 +216,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
     }
 
     private List<DistributionPackage> exportPackages(ResourceResolver agentResourceResolver, DistributionRequest distributionRequest) throws DistributionException {
-        log.info("exporting packages with user {}", agentResourceResolver != null ?  agentResourceResolver.getUserID() : "dummy");
+        log.debug("exporting packages with user {}", agentResourceResolver != null ? agentResourceResolver.getUserID() : "dummy");
 
         List<DistributionPackage> distributionPackages = distributionPackageExporter.exportPackages(agentResourceResolver, distributionRequest);
 
@@ -270,8 +273,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
         return queueNames;
     }
 
-    public DistributionQueue getQueue(@Nonnull String queueName) {
-        queueName = queueName.length() > 0 ? queueName : DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME;
+    public DistributionQueue getQueue(@Nonnull final String queueName) {
         Set<String> queues = getQueueNames();
         if (!queues.contains(queueName)) {
             return null;
@@ -284,6 +286,22 @@ public class SimpleDistributionAgent implements DistributionAgent {
         } catch (DistributionException e) {
             log.error("cannot get queue", e);
         }
+
+        if (queue != null) {
+            queue = new DistributionQueueWrapper(queue) {
+                @Nonnull
+                @Override
+                public DistributionQueueStatus getStatus() {
+                    DistributionQueueStatus status = super.getStatus();
+                    if (!queueProcessingEnabled && (processingQueues!= null && processingQueues.contains(queueName))) {
+                        return new DistributionQueueStatus(status.getItemsCount(), DistributionQueueState.PAUSED);
+                    } else {
+                        return status;
+                    }
+                }
+            };
+        }
+
 
         return queue;
     }
@@ -426,6 +444,9 @@ public class SimpleDistributionAgent implements DistributionAgent {
     private boolean processPackage(ResourceResolver resourceResolver, DistributionPackage distributionPackage) {
         try {
             distributionPackageImporter.importPackage(resourceResolver, distributionPackage);
+        } catch (RecoverableDistributionException e) {
+            log.debug("could not deliver package {}", distributionPackage.getId(), e);
+            return false;
         } catch (DistributionException e) {
             log.error("could not deliver package {}", distributionPackage.getId(), e);
             return false;

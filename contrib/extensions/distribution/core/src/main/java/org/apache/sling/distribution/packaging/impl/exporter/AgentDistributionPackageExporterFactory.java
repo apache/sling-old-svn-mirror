@@ -34,6 +34,7 @@ import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilderProvider;
@@ -73,7 +74,7 @@ public class AgentDistributionPackageExporterFactory implements DistributionPack
     @Activate
     public void activate(Map<String, Object> config) throws Exception {
 
-        String queueName = PropertiesUtil.toString(config.get(QUEUE_NAME), "");
+        String queueName = PropertiesUtil.toString(config.get(QUEUE_NAME), DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME);
         String name = PropertiesUtil.toString(config.get(NAME), "");
 
 

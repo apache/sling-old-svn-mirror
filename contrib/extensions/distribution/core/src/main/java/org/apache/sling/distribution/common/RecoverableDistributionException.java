@@ -17,35 +17,21 @@
  * under the License.
  */
 
-package org.apache.sling.distribution.queue;
+package org.apache.sling.distribution.common;
 
 /**
- * The state of a distribution queue.
+ * Generic checked exception for distribution
  */
-public enum DistributionQueueState {
+public class RecoverableDistributionException extends DistributionException {
+    public RecoverableDistributionException(Throwable e) {
+        super(e);
+    }
 
-    /**
-     * The queue is active but processing has been stopped temporarily
-     */
-    PAUSED,
+    public RecoverableDistributionException(String string) {
+        super(string);
+    }
 
-    /**
-     * The queue is active but empty
-     */
-    IDLE,
-
-    /**
-     * The queue is active and there are items in it and it is not blocked.
-     */
-    RUNNING,
-
-    /**
-     * The queue is active, there are items in the queue but it cannot process them.
-     */
-    BLOCKED,
-
-    /**
-     * The queue is passive as it only stores items not process them
-     */
-    PASSIVE
+    public RecoverableDistributionException(String string, Throwable cause) {
+        super(string, cause);
+    }
 }
