@@ -218,7 +218,13 @@ class MockBundleContext implements BundleContext {
     @SuppressWarnings("unchecked")
     @Override
     public <S> Collection<ServiceReference<S>> getServiceReferences(Class<S> clazz, String filter) throws InvalidSyntaxException {
-        return ImmutableList.<ServiceReference<S>>copyOf(getServiceReferences(clazz.getName(), filter));
+        ServiceReference<S>[] result = getServiceReferences(clazz.getName(), filter);
+        if (result == null) {
+            return ImmutableList.<ServiceReference<S>>of();
+        }
+        else {
+            return ImmutableList.<ServiceReference<S>>copyOf(result);
+        }
     }
 
     @SuppressWarnings("unchecked")
