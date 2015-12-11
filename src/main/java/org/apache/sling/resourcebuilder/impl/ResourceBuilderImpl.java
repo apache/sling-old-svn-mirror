@@ -77,6 +77,9 @@ public class ResourceBuilderImpl implements ResourceBuilder {
         if(relativePath.startsWith("/")) {
             throw new IllegalArgumentException("Path is not relative:" + relativePath);
         }
+        if(relativePath.contains("..")) {
+            throw new IllegalArgumentException("Path contains invalid pattern '..': " + relativePath);
+        }
         
         final String fullPath = currentParent.getPath() + "/" + relativePath;
         final String parentPath = ResourceUtil.getParent(fullPath);
