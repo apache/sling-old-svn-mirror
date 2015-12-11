@@ -18,12 +18,19 @@
  */
 package org.apache.sling.resourcebuilder.it;
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
-import java.util.Comparator;
+import java.io.InputStream;
+
+import javax.servlet.ServletException;
 
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.junit.rules.TeleporterRule;
 import org.apache.sling.resourcebuilder.test.ResourceAssertions;
 import org.junit.After;
@@ -31,10 +38,11 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-/** Server-side integration test for the 
- *  ResourceBuilder, acquired via the ResourceBuilderProvider
+/** Verify that our file structure is correct,
+ *  by creating a file and retrieving it via
+ *  a Sling request. 
  */
-public class ResourceBuilderIT {
+public class FileRetrievalIT {
     
     @Rule
     public final TeleporterRule teleporter = 
@@ -56,44 +64,30 @@ public class ResourceBuilderIT {
         E.cleanup();
     }
     
-    
     @Test
-    public void simpleResource() {
-        E.builder
-            .resource("foo", "title", E.testRootPath)
-            .commit();
-        A.assertProperties("foo", "title", E.testRootPath);
-    }
-    
-    @Test
-    public void smallTreeWithFile() throws IOException {
+    public void createAndeRtrieveFile() throws IOException, ServletException {
+        final String expected = "yes, it worked";
+        final long startTime = System.currentTimeMillis();
+        final String mimeType = "application/javascript";
+        
         E.builder
             .resource("somefolder")
-            .file("the-model.js", getClass().getResourceAsStream("/files/models.js"), "foo", 42L)
+            .file("the-model.js", getClass().getResourceAsStream("/files/models.js"))
             .commit();
         
-        A.assertFile("somefolder/the-model.js", "foo", "yes, it worked", 42L);
-    }
-    
-    @Test
-    public void fileAutoValues() throws IOException {
-        final long startTime = System.currentTimeMillis();
-        E.builder
-            .resource("a/b/c")
-            .file("model2.js", getClass().getResourceAsStream("/files/models.js"))
-            .commit();
+        final Resource r = A.assertFile("somefolder/the-model.js", mimeType, expected, -1L);
         
-        final Comparator<Long> moreThanStartTime = new Comparator<Long>() {
-            @Override
-            public int compare(Long expected, Long fromResource) {
-                if(fromResource >= startTime) {
-                    return 0;
-                }
-                fail("last-modified is not >= than current time:" + fromResource + " < " + startTime);
-                return -1;
-            }
-        };
-        
-        A.assertFile("a/b/c/model2.js", "application/javascript", "yes, it worked", startTime, moreThanStartTime);
+        final ResourceMetadata meta = r.getResourceMetadata();
+        assertTrue("Expecting a last modified time >= startTime", meta.getModificationTime() >= startTime);
+        assertEquals("Expecting the correct mime-type", mimeType, meta.getContentType());
+
+        final InputStream is = r.adaptTo(InputStream.class);
+        assertNotNull("Expecting InputStream for file resource " + r.getPath(), is);
+        try {
+            final String content = A.readFully(is);
+            assertTrue("Expecting [" + expected + "] in content", content.contains(expected));
+        } finally {
+            is.close();
+        }
     }
 }
