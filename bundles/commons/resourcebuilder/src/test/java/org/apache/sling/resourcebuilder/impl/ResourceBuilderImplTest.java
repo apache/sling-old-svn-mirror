@@ -307,4 +307,37 @@ public class ResourceBuilderImplTest {
         assertFile("models.js", 
                 "MT1", "function someJavascriptFunction()", lastModified);
     }
+    
+    @Test
+    public void autoEverything() throws Exception {
+        getBuilder(testRootPath)
+            .file("models.js", getClass().getResourceAsStream("/models.js"))
+            .commit()
+            ;
+        assertFile("models.js", 
+                "application/javascript", "function someJavascriptFunction()", lastModified);
+    }
+    
+    @Test(expected=IllegalStateException.class)
+    public void duplicatedFileFails() throws Exception {
+        getBuilder(testRootPath)
+            .siblingsMode()
+            .file("models.js", getClass().getResourceAsStream("/models.js"), null, 42)
+            .file("models.js", getClass().getResourceAsStream("/models.js"), null, 42)
+            ;
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void fileWithPathFails() throws Exception {
+        getBuilder(testRootPath)
+            .file("somewhere/models.js", getClass().getResourceAsStream("/models.js"), null, 42)
+            ;
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void nullDataFails() throws Exception {
+        getBuilder(testRootPath)
+            .file("models.js", null, null, 42)
+            ;
+    }
 }
