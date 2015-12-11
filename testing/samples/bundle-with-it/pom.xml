@@ -226,8 +226,8 @@
                         -->
                         <sling.additional.bundle.1>org.apache.sling.junit.core</sling.additional.bundle.1>
                         
-                        <!--  Install this bundle for integration tests (TODO what's the Maven property for this name??)  -->
-                        <sling.additional.bundle.2>org.apache.sling.testing.samples.bundle-with-it-${project.version}.jar</sling.additional.bundle.2>
+                        <!--  Install this bundle for integration tests -->
+                        <sling.additional.bundle.2>${project.artifactId}-${project.version}.jar</sling.additional.bundle.2>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
