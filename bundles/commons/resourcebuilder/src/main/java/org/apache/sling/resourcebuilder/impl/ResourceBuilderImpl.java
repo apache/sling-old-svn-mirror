@@ -44,6 +44,7 @@ public class ResourceBuilderImpl implements ResourceBuilder {
     public static final String JCR_DATA = "jcr:data";
     public static final String JCR_CONTENT = "jcr:content";
     public static final String NT_RESOURCE = "nt:resource";
+    public static final String NT_FILE = "nt:file";
     
     private final MimeTypeService mimeTypeService;
     
@@ -172,13 +173,16 @@ public class ResourceBuilderImpl implements ResourceBuilder {
             if(resolver.getResource(fullPath) != null) {
                 throw new IllegalStateException("Resource already exists:" + fullPath);
             }
-            file = resolver.create(currentParent, name, null);
-            final Map<String, Object> props = new HashMap<String, Object>();
-            props.put(JCR_PRIMARYTYPE, NT_RESOURCE);
-            props.put(JCR_MIMETYPE, getMimeType(filename, mimeType));
-            props.put(JCR_LASTMODIFIED, getLastModified(lastModified));
-            props.put(JCR_DATA, data);
-            resolver.create(file, JCR_CONTENT, props); 
+            final Map<String, Object> fileProps = new HashMap<String, Object>();
+            fileProps.put(JCR_PRIMARYTYPE, NT_FILE);
+            file = resolver.create(currentParent, name, fileProps);
+            
+            final Map<String, Object> contentProps = new HashMap<String, Object>();
+            contentProps.put(JCR_PRIMARYTYPE, NT_RESOURCE);
+            contentProps.put(JCR_MIMETYPE, getMimeType(filename, mimeType));
+            contentProps.put(JCR_LASTMODIFIED, getLastModified(lastModified));
+            contentProps.put(JCR_DATA, data);
+            resolver.create(file, JCR_CONTENT, contentProps); 
         } catch(PersistenceException pex) {
             throw new RuntimeException("Unable to create file under " + currentParent.getPath(), pex);
         }

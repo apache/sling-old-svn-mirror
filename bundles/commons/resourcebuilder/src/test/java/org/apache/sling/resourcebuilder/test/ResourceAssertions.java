@@ -26,6 +26,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
@@ -57,11 +58,40 @@ public class ResourceAssertions {
     }
     
     /** Assert that a file exists and verify its properties. */
-    public void assertFile(String path, String mimeType, String expectedContent, Long lastModified) throws IOException {
+    public Resource assertFile(String path, String mimeType, String expectedContent, Long lastModified) throws IOException {
+        final Comparator<Long> defaultComparator = new Comparator<Long>() {
+            @Override
+            public int compare(Long expected, Long fromResource) {
+                if(expected == -1) {
+                    return 0;
+                }
+                return expected.compareTo(fromResource);
+            }
+        };
+        return assertFile(path, mimeType, expectedContent, lastModified, defaultComparator);
+    }
+    
+    public String readFully(InputStream is) throws IOException {
+        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try {
+            IOUtils.copy(is, bos);
+            return new String(bos.toByteArray());
+        } finally {
+            bos.close();
+            is.close();
+        }
+    }
+    
+    /** Assert that a file exists and verify its properties. */
+    public Resource assertFile(String path, String mimeType, String expectedContent, Long lastModified, Comparator<Long> lastModifiedComparator) throws IOException {
         final Resource r = assertResource(path);
         assertNotNull("Expecting resource to exist:" + path, r);
         
         // Files are stored according to the standard JCR structure
+        final ValueMap fileVm = r.adaptTo(ValueMap.class);
+        assertNotNull("Expecting ValueMap for " + r.getPath(), fileVm);
+        assertEquals("Expecting an nt:file at " + r.getPath(), 
+                ResourceBuilderImpl.NT_FILE, fileVm.get(ResourceBuilderImpl.JCR_PRIMARYTYPE));
         final Resource jcrContent = r.getChild(ResourceBuilderImpl.JCR_CONTENT);
         assertNotNull("Expecting subresource:" + ResourceBuilderImpl.JCR_CONTENT, jcrContent);
         final ValueMap vm = jcrContent.adaptTo(ValueMap.class);
@@ -69,19 +99,15 @@ public class ResourceAssertions {
         assertEquals("Expecting nt:Resource type for " + jcrContent.getPath(), 
                 ResourceBuilderImpl.NT_RESOURCE, vm.get(ResourceBuilderImpl.JCR_PRIMARYTYPE));
         assertEquals("Expecting the correct mime-type", mimeType, vm.get(ResourceBuilderImpl.JCR_MIMETYPE));
-        assertEquals("Expecting the correct last modified", lastModified, getLastModified(vm));
+        assertEquals("Expecting the correct last modified", 
+                0, lastModifiedComparator.compare(lastModified, getLastModified(vm)));
         
-        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
         final InputStream is = vm.get(ResourceBuilderImpl.JCR_DATA, InputStream.class);
         assertNotNull("Expecting InputStream property on nt:resource:" + ResourceBuilderImpl.JCR_DATA, is);
-        IOUtils.copy(is, bos);
-        try {
-            final String content = new String(bos.toByteArray());
-            assertTrue("Expecting content to contain " + expectedContent, content.contains(expectedContent));
-        } finally {
-            bos.close();
-            is.close();
-        }
+        final String content = readFully(is);
+        assertTrue("Expecting content to contain " + expectedContent, content.contains(expectedContent));
+        
+        return r;
     }
     
     private Long getLastModified(ValueMap vm) {
