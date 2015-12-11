@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Calendar;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
@@ -57,7 +58,7 @@ public class ResourceAssertions {
     
     /** Assert that a file exists and verify its properties. */
     public void assertFile(String path, String mimeType, String expectedContent, Long lastModified) throws IOException {
-        final Resource r = assertResource(fullPath(path));
+        final Resource r = assertResource(path);
         assertNotNull("Expecting resource to exist:" + path, r);
         
         // Files are stored according to the standard JCR structure
@@ -68,7 +69,7 @@ public class ResourceAssertions {
         assertEquals("Expecting nt:Resource type for " + jcrContent.getPath(), 
                 ResourceBuilderImpl.NT_RESOURCE, vm.get(ResourceBuilderImpl.JCR_PRIMARYTYPE));
         assertEquals("Expecting the correct mime-type", mimeType, vm.get(ResourceBuilderImpl.JCR_MIMETYPE));
-        assertEquals("Expecting the correct last modified", lastModified, vm.get(ResourceBuilderImpl.JCR_LASTMODIFIED));
+        assertEquals("Expecting the correct last modified", lastModified, getLastModified(vm));
         
         final ByteArrayOutputStream bos = new ByteArrayOutputStream();
         final InputStream is = vm.get(ResourceBuilderImpl.JCR_DATA, InputStream.class);
@@ -81,6 +82,16 @@ public class ResourceAssertions {
             bos.close();
             is.close();
         }
+    }
+    
+    private Long getLastModified(ValueMap vm) {
+        final Object o = vm.get(ResourceBuilderImpl.JCR_LASTMODIFIED);
+        if(o instanceof Long) {
+            return (Long)o;
+        } else if(o instanceof Calendar) {
+            return ((Calendar)o).getTimeInMillis();
+        }
+        throw new IllegalArgumentException("Unexpected type " + o.getClass().getName());
     }
     
     public void assertProperties(String path, Object ...props) {
