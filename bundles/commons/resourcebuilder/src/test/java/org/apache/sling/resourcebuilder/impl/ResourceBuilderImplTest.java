@@ -189,6 +189,11 @@ public class ResourceBuilderImplTest {
         getBuilder(testRootPath).resource("/absolute");
     }
     
+    @Test(expected=IllegalArgumentException.class)
+    public void aboveParentFails() throws Exception {
+        getBuilder(testRootPath).resource("../foo");
+    }
+    
     @Test
     public void simpleTree() throws Exception {
         getBuilder(testRootPath)
