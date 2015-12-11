@@ -141,12 +141,24 @@ public class ResourceBuilderImplTest {
     public void resetParent() throws Exception {
         getBuilder(testRootPath)
             .resource("a/b/c")
-            .resetParent()
+            .siblingsMode()
+            .resource("one")
+            .resource("two")
+            .resetParent()  // also sets hierarchyMode
             .resource("d/e")
+            .resource("f/g")
+            .siblingsMode()
+            .resource("three")
+            .resource("four")
             .commit();
         
         A.assertResource("a/b/c");
+        A.assertResource("a/b/c/one");
+        A.assertResource("a/b/c/two");
         A.assertResource("d/e");
+        A.assertResource("d/e/f/g");
+        A.assertResource("d/e/f/g/three");
+        A.assertResource("d/e/f/g/four");
     }
     
     @Test
@@ -207,7 +219,6 @@ public class ResourceBuilderImplTest {
             .file("models.js", getClass().getResourceAsStream("/files/models.js"), "MT1", 42)
             .file("text.html", getClass().getResourceAsStream("/files/text.html"), "MT2", 43)
             .resetParent()
-            .hierarchyMode()
             .resource("apps")
             .file("myapp.json", getClass().getResourceAsStream("/files/myapp.json"), "MT3", 44)
             .resetParent()

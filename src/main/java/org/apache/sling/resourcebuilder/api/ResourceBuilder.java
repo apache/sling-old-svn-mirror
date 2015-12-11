@@ -80,6 +80,7 @@ public interface ResourceBuilder {
     /** Return the current parent resource */
     Resource getCurrentParent();
     
-    /** Reset the current parent Resource to the original one */ 
+    /** Reset the current parent Resource to the original one.
+     *  Also activates hierarchyMode which is the default mode. */ 
     ResourceBuilder resetParent();
 }
