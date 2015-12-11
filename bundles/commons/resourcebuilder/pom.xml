@@ -31,7 +31,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling Commons Content Builder</name>
+    <name>Apache Sling Commons Resource Builder</name>
     <description>Utilities to create Sling content</description>
 
     <scm>
