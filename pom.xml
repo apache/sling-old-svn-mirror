@@ -42,7 +42,13 @@
         <!-- Set this to run tests against an existing server instance -->
         <keepJarRunning>false</keepJarRunning>
         
-        <!-- Options for the jar to execute. $JAREXEC_SERVER_PORT$ is replaced by the
+        <!-- 
+            Options for the VM that executes our runnable jar. 
+            Set debugging options here to debug teleported tests.  
+        -->
+        <jar.executor.vm.options>-Xmx512m</jar.executor.vm.options>
+        
+         <!-- Options for the jar to execute. $JAREXEC_SERVER_PORT$ is replaced by the
             selected port number -->
         <jar.executor.jar.options>-p $JAREXEC_SERVER_PORT$</jar.executor.jar.options>
     </properties>
@@ -93,6 +99,20 @@
                 </executions>
             </plugin>
             <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>${basedir}</directory>
+                            <includes>
+                                <!-- sling folder is the workdir of the executable jar that we test -->
+                                <include>sling/**</include>
+                            </includes>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <executions>
@@ -114,6 +134,7 @@
                         <!--  these are the minimal options required for the jar executor, see bundle-with-it module for more -->
                         <keepJarRunning>${keepJarRunning}</keepJarRunning>
                         <jar.executor.jar.options>${jar.executor.jar.options}</jar.executor.jar.options>
+                        <jar.executor.vm.options>${jar.executor.vm.options}</jar.executor.vm.options>
                         <jar.executor.server.port>${http.port}</jar.executor.server.port>
                         <additional.bundles.path>${project.build.directory}</additional.bundles.path>
                         <server.ready.path.1>/:script src="system/sling.js"</server.ready.path.1>
@@ -122,7 +143,7 @@
                         
                         <!-- Additional bundles to install for testing -->
                         <sling.additional.bundle.1>org.apache.sling.junit.core</sling.additional.bundle.1>
-                        <sling.additional.bundle.2>${maven.final.name}.jar</sling.additional.bundle.2>
+                        <sling.additional.bundle.2>${project.artifactId}-${project.version}.jar</sling.additional.bundle.2>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>

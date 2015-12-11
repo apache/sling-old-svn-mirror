@@ -204,17 +204,17 @@ public class ResourceBuilderImplTest {
         getBuilder(testRootPath)
             .resource("apps/myapp/components/resource")
             .siblingsMode()
-            .file("models.js", getClass().getResourceAsStream("/models.js"), "MT1", 42)
-            .file("text.html", getClass().getResourceAsStream("/text.html"), "MT2", 43)
+            .file("models.js", getClass().getResourceAsStream("/files/models.js"), "MT1", 42)
+            .file("text.html", getClass().getResourceAsStream("/files/text.html"), "MT2", 43)
             .resetParent()
             .hierarchyMode()
             .resource("apps")
-            .file("myapp.json", getClass().getResourceAsStream("/myapp.json"), "MT3", 44)
+            .file("myapp.json", getClass().getResourceAsStream("/files/myapp.json"), "MT3", 44)
             .resetParent()
             .resource("apps/content/myapp/resource")
             .resetParent()
             .resource("apps/content", "title", "foo")
-            .file("myapp.json", getClass().getResourceAsStream("/myapp.json"), "MT4", 45)
+            .file("myapp.json", getClass().getResourceAsStream("/files/myapp.json"), "MT4", 45)
             .commit()
             ;
         
@@ -235,7 +235,7 @@ public class ResourceBuilderImplTest {
     @Test
     public void autoMimetype() throws Exception {
         getBuilder(testRootPath)
-            .file("models.js", getClass().getResourceAsStream("/models.js"), null, 42)
+            .file("models.js", getClass().getResourceAsStream("/files/models.js"), null, 42)
             .commit()
             ;
         A.assertFile("models.js", 
@@ -245,7 +245,7 @@ public class ResourceBuilderImplTest {
     @Test
     public void autoLastModified() throws Exception {
         getBuilder(testRootPath)
-            .file("models.js", getClass().getResourceAsStream("/models.js"), "MT1", -1)
+            .file("models.js", getClass().getResourceAsStream("/files/models.js"), "MT1", -1)
             .commit()
             ;
         A.assertFile("models.js", 
@@ -255,7 +255,7 @@ public class ResourceBuilderImplTest {
     @Test
     public void autoEverything() throws Exception {
         getBuilder(testRootPath)
-            .file("models.js", getClass().getResourceAsStream("/models.js"))
+            .file("models.js", getClass().getResourceAsStream("/files/models.js"))
             .commit()
             ;
         A.assertFile("models.js", 
@@ -266,15 +266,15 @@ public class ResourceBuilderImplTest {
     public void duplicatedFileFails() throws Exception {
         getBuilder(testRootPath)
             .siblingsMode()
-            .file("models.js", getClass().getResourceAsStream("/models.js"), null, 42)
-            .file("models.js", getClass().getResourceAsStream("/models.js"), null, 42)
+            .file("models.js", getClass().getResourceAsStream("/files/models.js"), null, 42)
+            .file("models.js", getClass().getResourceAsStream("/files/models.js"), null, 42)
             ;
     }
     
     @Test(expected=IllegalArgumentException.class)
     public void fileWithPathFails() throws Exception {
         getBuilder(testRootPath)
-            .file("somewhere/models.js", getClass().getResourceAsStream("/models.js"), null, 42)
+            .file("somewhere/files/models.js", getClass().getResourceAsStream("/files/models.js"), null, 42)
             ;
     }
     
