@@ -20,22 +20,16 @@ package org.apache.sling.resourcebuilder.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.mime.MimeTypeService;
+import org.apache.sling.resourcebuilder.test.ResourceAssertions;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.apache.sling.testing.mock.sling.services.MockMimeTypeService;
@@ -50,6 +44,7 @@ public class ResourceBuilderImplTest {
     private long lastModified;
     private Random random = new Random(System.currentTimeMillis());
     private static final MimeTypeService mimeTypeService = new MockMimeTypeService();
+    private ResourceAssertions A;
     
     @Rule
     public SlingContext context = new SlingContext(ResourceResolverType.RESOURCERESOLVER_MOCK);
@@ -83,58 +78,7 @@ public class ResourceBuilderImplTest {
     public void setup() {
         testRootPath = "/" + UUID.randomUUID().toString();
         resourceResolver = context.resourceResolver();
-    }
-    
-    private Resource assertResource(String path) {
-        final Resource result =  resourceResolver.resolve(fullPath(path));
-        assertNotNull("Expecting resource to exist:" + path, result);
-        return result;
-    }
-    
-    /** Assert that a file exists and verify its properties. */
-    private void assertFile(String path, String mimeType, String expectedContent, Long lastModified) throws IOException {
-        final Resource r = assertResource(fullPath(path));
-        assertNotNull("Expecting resource to exist:" + path, r);
-        
-        // Files are stored according to the standard JCR structure
-        final Resource jcrContent = r.getChild(ResourceBuilderImpl.JCR_CONTENT);
-        assertNotNull("Expecting subresource:" + ResourceBuilderImpl.JCR_CONTENT, jcrContent);
-        final ValueMap vm = jcrContent.adaptTo(ValueMap.class);
-        assertNotNull("Expecting ValueMap for " + jcrContent.getPath(), vm);
-        assertEquals("Expecting nt:Resource type for " + jcrContent.getPath(), 
-                ResourceBuilderImpl.NT_RESOURCE, vm.get(ResourceBuilderImpl.JCR_PRIMARYTYPE));
-        assertEquals("Expecting the correct mime-type", mimeType, vm.get(ResourceBuilderImpl.JCR_MIMETYPE));
-        assertEquals("Expecting the correct last modified", lastModified, vm.get(ResourceBuilderImpl.JCR_LASTMODIFIED));
-        
-        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        final InputStream is = vm.get(ResourceBuilderImpl.JCR_DATA, InputStream.class);
-        assertNotNull("Expecting InputStream property on nt:resource:" + ResourceBuilderImpl.JCR_DATA, is);
-        IOUtils.copy(is, bos);
-        try {
-            final String content = new String(bos.toByteArray());
-            assertTrue("Expecting content to contain " + expectedContent, content.contains(expectedContent));
-        } finally {
-            bos.close();
-            is.close();
-        }
-    }
-    
-    private String fullPath(String path) {
-        return path.startsWith("/") ? path : testRootPath + "/" + path;
-    }
-    
-    private void assertProperties(String path, Object ...props) {
-        final Map<String, Object> expected = MapArgsConverter.toMap(props);
-        final Resource r = assertResource(path);
-        final ValueMap vm = r.adaptTo(ValueMap.class);
-        for(Map.Entry<String, Object> e : expected.entrySet()) {
-            final Object value = vm.get(e.getKey());
-            assertNotNull("Expecting property " + e.getKey() + " for resource " + r.getPath());
-            assertEquals(
-                    "Expecting value " + e.getValue() 
-                    + " for property " + e.getKey() + " of resource " + r.getPath()
-                    , e.getValue(), value);
-        }
+        A = new ResourceAssertions(testRootPath, resourceResolver);
     }
     
     @Test
@@ -143,8 +87,8 @@ public class ResourceBuilderImplTest {
             .resource("child", "title", "foo")
             .commit();
         
-        assertProperties("child", "title", "foo");
-        assertEquals(fullPath("child"), assertResource("child").getPath());
+        A.assertProperties("child", "title", "foo");
+        assertEquals(A.fullPath("child"), A.assertResource("child").getPath());
     }
     
     @Test
@@ -172,10 +116,10 @@ public class ResourceBuilderImplTest {
             .resource("a/b/c", "title", "foo")
             .commit();
         
-        assertProperties("a/b/c", "title", "foo");
-        assertEquals(fullPath("a/b/c"), assertResource("a/b/c").getPath());
-        assertResource("a/b");
-        assertResource("a");
+        A.assertProperties("a/b/c", "title", "foo");
+        assertEquals(A.fullPath("a/b/c"), A.assertResource("a/b/c").getPath());
+        A.assertResource("a/b");
+        A.assertResource("a");
     }
     
     @Test
@@ -188,9 +132,9 @@ public class ResourceBuilderImplTest {
             .resource("f/g")
             .commit();
         
-        assertProperties("a/b", ResourceBuilderImpl.JCR_PRIMARYTYPE, "nt:unstructured");
-        assertProperties("a/b/c/d", ResourceBuilderImpl.JCR_PRIMARYTYPE, "foo");
-        assertProperties("a/b/c/d/e/f", ResourceBuilderImpl.JCR_PRIMARYTYPE, "nt:unstructured");
+        A.assertProperties("a/b", ResourceBuilderImpl.JCR_PRIMARYTYPE, "nt:unstructured");
+        A.assertProperties("a/b/c/d", ResourceBuilderImpl.JCR_PRIMARYTYPE, "foo");
+        A.assertProperties("a/b/c/d/e/f", ResourceBuilderImpl.JCR_PRIMARYTYPE, "nt:unstructured");
     }
     
     @Test
@@ -201,8 +145,8 @@ public class ResourceBuilderImplTest {
             .resource("d/e")
             .commit();
         
-        assertResource("a/b/c");
-        assertResource("d/e");
+        A.assertResource("a/b/c");
+        A.assertResource("d/e");
     }
     
     @Test
@@ -212,8 +156,8 @@ public class ResourceBuilderImplTest {
             .resource("d/e")
             .commit();
         
-        assertResource("a/b/c");
-        assertResource("a/b/c/d/e");
+        A.assertResource("a/b/c");
+        A.assertResource("a/b/c/d/e");
     }
     
     @Test
@@ -247,12 +191,12 @@ public class ResourceBuilderImplTest {
             .resource("deepest", "it", "worked")
             .commit();
         
-        assertProperties("a/b/c", "count", 21, "title", "foo");
-        assertProperties("a/b/c/with/more/here", "it", "worked");
-        assertResource("a/b/c/with/more/here/deepest");
-        assertResource("a/b/c/1");
-        assertResource("a/b/c/2");
-        assertResource("a/b/c/3");
+        A.assertProperties("a/b/c", "count", 21, "title", "foo");
+        A.assertProperties("a/b/c/with/more/here", "it", "worked");
+        A.assertResource("a/b/c/with/more/here/deepest");
+        A.assertResource("a/b/c/1");
+        A.assertResource("a/b/c/2");
+        A.assertResource("a/b/c/3");
     }
     
     @Test
@@ -274,17 +218,17 @@ public class ResourceBuilderImplTest {
             .commit()
             ;
         
-        assertResource("apps/content/myapp/resource");
-        assertResource("apps/myapp/components/resource");
-        assertProperties("apps/content", "title", "foo");
+        A.assertResource("apps/content/myapp/resource");
+        A.assertResource("apps/myapp/components/resource");
+        A.assertProperties("apps/content", "title", "foo");
         
-        assertFile("apps/myapp/components/resource/models.js", 
+        A.assertFile("apps/myapp/components/resource/models.js", 
                 "MT1", "function someJavascriptFunction()", 42L);
-        assertFile("apps/myapp/components/resource/text.html", 
+        A.assertFile("apps/myapp/components/resource/text.html", 
                 "MT2", "This is an html file", 43L);
-        assertFile("apps/myapp.json", 
+        A.assertFile("apps/myapp.json", 
                 "MT3", "\"sling:resourceType\":\"its/resource/type\"", 44L);
-        assertFile("apps/content/myapp.json", 
+        A.assertFile("apps/content/myapp.json", 
                 "MT4", "\"sling:resourceType\":\"its/resource/type\"", 45L);
     }
     
@@ -294,7 +238,7 @@ public class ResourceBuilderImplTest {
             .file("models.js", getClass().getResourceAsStream("/models.js"), null, 42)
             .commit()
             ;
-        assertFile("models.js", 
+        A.assertFile("models.js", 
                 "application/javascript", "function someJavascriptFunction()", 42L);
     }
     
@@ -304,7 +248,7 @@ public class ResourceBuilderImplTest {
             .file("models.js", getClass().getResourceAsStream("/models.js"), "MT1", -1)
             .commit()
             ;
-        assertFile("models.js", 
+        A.assertFile("models.js", 
                 "MT1", "function someJavascriptFunction()", lastModified);
     }
     
@@ -314,7 +258,7 @@ public class ResourceBuilderImplTest {
             .file("models.js", getClass().getResourceAsStream("/models.js"))
             .commit()
             ;
-        assertFile("models.js", 
+        A.assertFile("models.js", 
                 "application/javascript", "function someJavascriptFunction()", lastModified);
     }
     
