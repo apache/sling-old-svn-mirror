@@ -188,7 +188,7 @@ public class JavaScriptEngineFactory
 
     /**
      * Call the servlet.
-     * @param binding The bindings for the script invocation
+     * @param bindings The bindings for the script invocation
      * @param scriptHelper The script helper.
      * @param context The script context.
      * @throws SlingServletException
