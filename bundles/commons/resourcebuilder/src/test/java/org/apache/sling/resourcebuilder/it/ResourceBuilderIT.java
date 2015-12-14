@@ -96,4 +96,32 @@ public class ResourceBuilderIT {
         
         A.assertFile("a/b/c/model2.js", "application/javascript", "yes, it worked", startTime, moreThanStartTime);
     }
+    
+    @Test
+    public void usingResolver() throws IOException {
+        E.builderService.forResolver(E.resolver).resource("foo/a/b").commit();
+        E.builderService.forResolver(E.resolver).resource("foo/c/d").commit();
+        A.assertResource("/foo/a/b");
+        A.assertResource("/foo/c/d");
+    }
+    
+    @Test(expected=UnsupportedOperationException.class)
+    public void restartFailsA() throws IOException {
+        E.builder.forParent(E.resolver.getResource("/"));
+    }
+    
+    @Test(expected=UnsupportedOperationException.class)
+    public void restartFailsB() throws IOException {
+        E.builder.forResolver(E.resolver);
+    }
+    
+    @Test(expected=IllegalStateException.class)
+    public void notStartedFailsA() throws IOException {
+        E.builderService.resource("foo");
+    }
+    
+    @Test(expected=IllegalStateException.class)
+    public void notStartedFailsB() throws IOException {
+        E.builderService.file("foo", null);
+    }
 }
