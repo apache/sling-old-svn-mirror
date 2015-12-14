@@ -71,7 +71,7 @@ public class SlingLaunchpadOakMongoIT extends KarafTestSupport {
         process = executable.start();
     }
 
-    @AfterClass // TODO does it work?
+    @AfterClass // TODO does it work? (no - not supported by Pax Exam)
     public static void stopMongo() throws Exception {
         if (executable != null) {
             executable.stop();
