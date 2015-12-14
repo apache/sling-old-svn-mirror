@@ -56,7 +56,7 @@ public class ResourceBuilderImpl implements ResourceBuilder {
         originalParent = parent;
         resourceResolver = originalParent.getResourceResolver();
         withIntermediatePrimaryType(null);
-        resetParent();
+        atParent();
     }
 
     @Override
@@ -65,7 +65,7 @@ public class ResourceBuilderImpl implements ResourceBuilder {
     }
 
     @Override
-    public ResourceBuilder resetParent() {
+    public ResourceBuilder atParent() {
         currentParent = originalParent;
         hierarchyMode();
         return this;
