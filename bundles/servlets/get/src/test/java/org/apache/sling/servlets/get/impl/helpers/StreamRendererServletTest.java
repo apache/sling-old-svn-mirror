@@ -26,8 +26,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Random;
-
+import javax.servlet.ServletContext;
+import junitx.util.PrivateAccessor;
+import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceMetadata;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 public class StreamRendererServletTest {
 
@@ -120,5 +125,25 @@ public class StreamRendererServletTest {
         for (int i = a; i < b; i++) {
             assertEquals(expected[i], actual[i - a]);
         }
+    }
+    
+    @Test
+    public void test_setHeaders() throws Throwable {
+        
+        final Resource resource = Mockito.mock(Resource.class);
+        final SlingHttpServletResponse response = Mockito.mock(SlingHttpServletResponse .class);
+        final ResourceMetadata meta = Mockito.mock(ResourceMetadata.class);
+        final ServletContext sc = Mockito.mock(ServletContext.class);
+        
+        StreamRendererServlet streamRendererServlet = new StreamRendererServlet(true,new String []{"/"}) {
+            @Override
+            public ServletContext getServletContext() {
+                return sc;
+            }
+        };        
+
+        Mockito.when(resource.getResourceMetadata()).thenReturn(meta);
+        PrivateAccessor.invoke(streamRendererServlet, "setHeaders", new Class[]{Resource.class, SlingHttpServletResponse.class}, new Object[]{resource, response});
+        Mockito.verify(response,Mockito.times(1)).setContentType("application/octet-stream");
     }
 }
