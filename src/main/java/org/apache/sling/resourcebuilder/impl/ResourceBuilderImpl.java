@@ -46,6 +46,10 @@ public class ResourceBuilderImpl implements ResourceBuilder {
     public static final String NT_RESOURCE = "nt:resource";
     public static final String NT_FILE = "nt:file";
     
+    public static final String CANNOT_RESTART =
+            "Cannot reset the parent resource or resource resolver, please create a new "
+            + "builder using the ResourceBuilder service";
+    
     private final MimeTypeService mimeTypeService;
     
     public ResourceBuilderImpl(Resource parent, MimeTypeService mts) {
@@ -58,7 +62,17 @@ public class ResourceBuilderImpl implements ResourceBuilder {
         withIntermediatePrimaryType(null);
         atParent();
     }
-
+    
+    @Override
+    public ResourceBuilder forParent(Resource parent) {
+        throw new UnsupportedOperationException(CANNOT_RESTART);
+    }
+    
+    @Override
+    public ResourceBuilder forResolver(ResourceResolver v) {
+        throw new UnsupportedOperationException(CANNOT_RESTART);
+    }
+    
     @Override
     public Resource getCurrentParent() {
         return currentParent;

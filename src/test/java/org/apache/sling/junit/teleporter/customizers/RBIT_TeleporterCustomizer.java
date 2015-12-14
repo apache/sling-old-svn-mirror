@@ -17,7 +17,7 @@
 package org.apache.sling.junit.teleporter.customizers;
 
 import org.apache.sling.junit.rules.TeleporterRule;
-import org.apache.sling.resourcebuilder.api.ResourceBuilderProvider;
+import org.apache.sling.resourcebuilder.api.ResourceBuilder;
 import org.apache.sling.testing.teleporter.client.ClientSideTeleporter;
 import org.apache.sling.testing.tools.sling.SlingTestBase;
 import org.apache.sling.testing.tools.sling.TimeoutsProvider;
@@ -38,7 +38,7 @@ public class RBIT_TeleporterCustomizer implements TeleporterRule.Customizer {
         cst.setTestReadyTimeoutSeconds(TimeoutsProvider.getInstance().getTimeout(5));
         
         // Make sure our bundle API is imported instead of embedded
-        final String apiPackage = ResourceBuilderProvider.class.getPackage().getName();
+        final String apiPackage = ResourceBuilder.class.getPackage().getName();
         cst.includeDependencyPrefix("org.apache.sling.resourcebuilder");
         cst.excludeDependencyPrefix(apiPackage);
         cst.getAdditionalBundleHeaders().put(Constants.IMPORT_PACKAGE, apiPackage);

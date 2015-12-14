@@ -21,15 +21,27 @@ package org.apache.sling.resourcebuilder.api;
 import java.io.InputStream;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 
 import aQute.bnd.annotation.ProviderType;
 
 /** Builds Sling Resources using a simple fluent API */
-
 @ProviderType
 public interface ResourceBuilder {
     
+    /** Default primary type for resources created by this builder */
     public static final String DEFAULT_PRIMARY_TYPE = "nt:unstructured";
+    
+    /** Start a ResourceBuilder using the supplied parent resource 
+     *  @return the new builder
+     * */
+    ResourceBuilder forParent(Resource parent);
+    
+    /** Start a ResourceBuilder using the supplied ResourceResolver,
+     *  starting with the root resource as the builder's parent resource. 
+     *  @return the new builder
+     * */
+    ResourceBuilder forResolver(ResourceResolver r);
     
     /** Create a Resource, which optionally becomes the current 
      *  parent Resource. 
