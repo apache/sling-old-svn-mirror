@@ -25,6 +25,7 @@ import static org.junit.Assert.fail;
 import java.util.Random;
 import java.util.UUID;
 
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -49,12 +50,16 @@ public class ResourceBuilderImplTest {
     @Rule
     public SlingContext context = new SlingContext(ResourceResolverType.RESOURCERESOLVER_MOCK);
     
-    private ResourceBuilderImpl getBuilder(String path) throws Exception {
+    private Resource getTestRoot(String path) throws PersistenceException {
         final Resource root = context.resourceResolver().resolve("/");
         assertNotNull("Expecting non-null root", root);
+        return resourceResolver.create(root, ResourceUtil.getName(path), null);
+    }
+    
+    private ResourceBuilderImpl getBuilder(String path) throws Exception {
         lastModified = random.nextLong();
         
-        final Resource parent = resourceResolver.create(root, ResourceUtil.getName(path), null);
+        final Resource parent = getTestRoot(path);
         final ResourceBuilderImpl result = new ResourceBuilderImpl(parent, mimeTypeService) {
             @Override
             protected long getLastModified(long userSuppliedValue) {
@@ -299,5 +304,25 @@ public class ResourceBuilderImplTest {
         getBuilder(testRootPath)
             .file("models.js", null, null, 42)
             ;
+    }
+    
+    @Test
+    public void forParent() throws PersistenceException {
+        new ResourceBuilderService()
+            .forParent(getTestRoot(testRootPath))
+            .resource("a/b/c")
+            .commit();
+        A.assertResource("a/b/c");
+    }
+    
+    @Test
+    public void forResolver() throws PersistenceException {
+        new ResourceBuilderService()
+            .forResolver(resourceResolver)
+            .resource("d/e/f")
+            .commit();
+        
+        // Resource is created at root in this case
+        A.assertResource("/d/e/f");
     }
 }
