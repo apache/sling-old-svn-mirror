@@ -22,7 +22,11 @@ import java.io.InputStream;
 
 import org.apache.sling.api.resource.Resource;
 
+import aQute.bnd.annotation.ProviderType;
+
 /** Builds Sling Resources using a simple fluent API */
+
+@ProviderType
 public interface ResourceBuilder {
     
     public static final String DEFAULT_PRIMARY_TYPE = "nt:unstructured";
