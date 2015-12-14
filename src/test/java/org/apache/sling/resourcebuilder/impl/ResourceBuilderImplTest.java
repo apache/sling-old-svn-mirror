@@ -34,6 +34,7 @@ import org.apache.sling.resourcebuilder.test.ResourceAssertions;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.apache.sling.testing.mock.sling.services.MockMimeTypeService;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -84,6 +85,15 @@ public class ResourceBuilderImplTest {
         testRootPath = "/" + UUID.randomUUID().toString();
         resourceResolver = context.resourceResolver();
         A = new ResourceAssertions(testRootPath, resourceResolver);
+    }
+    
+    @After
+    public void cleanup() throws PersistenceException {
+        final Resource r = resourceResolver.getResource(testRootPath);
+        if(r != null) {
+            resourceResolver.delete(r);
+            resourceResolver.commit();
+        }
     }
     
     @Test
@@ -199,6 +209,11 @@ public class ResourceBuilderImplTest {
         getBuilder(testRootPath).resource("../foo");
     }
     
+    @Test(expected=IllegalArgumentException.class)
+    public void aboveParentFailsFile() throws Exception {
+        getBuilder(testRootPath).file("../foo.js", null);
+    }
+    
     @Test
     public void simpleTree() throws Exception {
         getBuilder(testRootPath)
@@ -229,8 +244,7 @@ public class ResourceBuilderImplTest {
             .file("models.js", getClass().getResourceAsStream("/files/models.js"), "MT1", 42)
             .file("text.html", getClass().getResourceAsStream("/files/text.html"), "MT2", 43)
             .atParent()
-            .resource("apps")
-            .file("myapp.json", getClass().getResourceAsStream("/files/myapp.json"), "MT3", 44)
+            .file("apps/myapp.json", getClass().getResourceAsStream("/files/myapp.json"), "MT3", 44)
             .atParent()
             .resource("apps/content/myapp/resource")
             .atParent()
@@ -276,10 +290,10 @@ public class ResourceBuilderImplTest {
     @Test
     public void autoEverything() throws Exception {
         getBuilder(testRootPath)
-            .file("models.js", getClass().getResourceAsStream("/files/models.js"))
+            .file("a/b/c/models.js", getClass().getResourceAsStream("/files/models.js"))
             .commit()
             ;
-        A.assertFile("models.js", 
+        A.assertFile("a/b/c/models.js", 
                 "application/javascript", "function someJavascriptFunction()", lastModified);
     }
     
@@ -289,13 +303,6 @@ public class ResourceBuilderImplTest {
             .siblingsMode()
             .file("models.js", getClass().getResourceAsStream("/files/models.js"), null, 42)
             .file("models.js", getClass().getResourceAsStream("/files/models.js"), null, 42)
-            ;
-    }
-    
-    @Test(expected=IllegalArgumentException.class)
-    public void fileWithPathFails() throws Exception {
-        getBuilder(testRootPath)
-            .file("somewhere/files/models.js", getClass().getResourceAsStream("/files/models.js"), null, 42)
             ;
     }
     

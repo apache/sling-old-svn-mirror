@@ -84,20 +84,32 @@ public class ResourceBuilderImpl implements ResourceBuilder {
         hierarchyMode();
         return this;
     }
-
-    @Override
-    public ResourceBuilder resource(String relativePath, Object... properties) {
-        Resource r = null;
+    
+    private void checkRelativePath(String relativePath) {
         if(relativePath.startsWith("/")) {
             throw new IllegalArgumentException("Path is not relative:" + relativePath);
         }
         if(relativePath.contains("..")) {
             throw new IllegalArgumentException("Path contains invalid pattern '..': " + relativePath);
         }
-        
-        final String fullPath = currentParent.getPath() + "/" + relativePath;
-        final String parentPath = ResourceUtil.getParent(fullPath);
+    }
+
+    private String parentPath(String relativePath) {
+        final String parentPath = currentParent.getPath();
+        final String fullPath = 
+            parentPath.endsWith("/")  ? 
+            parentPath + relativePath : 
+            parentPath + "/" + relativePath;
+        return ResourceUtil.getParent(fullPath);
+    }
+    
+    @Override
+    public ResourceBuilder resource(String relativePath, Object... properties) {
+        Resource r = null;
+        checkRelativePath(relativePath);
+        final String parentPath = parentPath(relativePath);
         final Resource myParent = ensureResourceExists(parentPath);
+        final String fullPath = currentParent.getPath() + "/" + relativePath;
         
         try {
             r = currentParent.getResourceResolver().getResource(fullPath);
@@ -173,18 +185,18 @@ public class ResourceBuilderImpl implements ResourceBuilder {
     }
     
     @Override
-    public ResourceBuilder file(String filename, InputStream data, String mimeType, long lastModified) {
+    public ResourceBuilder file(String relativePath, InputStream data, String mimeType, long lastModified) {
+        checkRelativePath(relativePath);
+        final String name = ResourceUtil.getName(relativePath);
+        if(data == null) {
+            throw new IllegalArgumentException("Data is null for file " + name);
+        }
+        
         Resource file = null;
         final ResourceResolver resolver = currentParent.getResourceResolver();
-        final String name = ResourceUtil.getName(filename);
+        final String parentPath = parentPath(relativePath);
         
-        if(!filename.equals(name)) {
-            throw new IllegalArgumentException("Filename must not be a path:" + filename + " -> " + name);
-        }
-        if(data == null) {
-            throw new IllegalArgumentException("Data is null for file " + filename);
-        }
-        
+        final Resource parent = ensureResourceExists(parentPath);
         try {
             final String fullPath = currentParent.getPath() + "/" + name;
             if(resolver.getResource(fullPath) != null) {
@@ -192,11 +204,11 @@ public class ResourceBuilderImpl implements ResourceBuilder {
             }
             final Map<String, Object> fileProps = new HashMap<String, Object>();
             fileProps.put(JCR_PRIMARYTYPE, NT_FILE);
-            file = resolver.create(currentParent, name, fileProps);
+            file = resolver.create(parent, name, fileProps);
             
             final Map<String, Object> contentProps = new HashMap<String, Object>();
             contentProps.put(JCR_PRIMARYTYPE, NT_RESOURCE);
-            contentProps.put(JCR_MIMETYPE, getMimeType(filename, mimeType));
+            contentProps.put(JCR_MIMETYPE, getMimeType(name, mimeType));
             contentProps.put(JCR_LASTMODIFIED, getLastModified(lastModified));
             contentProps.put(JCR_DATA, data);
             resolver.create(file, JCR_CONTENT, contentProps); 
@@ -205,7 +217,7 @@ public class ResourceBuilderImpl implements ResourceBuilder {
         }
         
         if(file == null) {
-            throw new RuntimeException("Unable to get or created file resource " + filename + " under " + currentParent.getPath());
+            throw new RuntimeException("Unable to get or created file resource " + relativePath + " under " + currentParent.getPath());
         }
         if(hierarchyMode) {
             currentParent = file;
