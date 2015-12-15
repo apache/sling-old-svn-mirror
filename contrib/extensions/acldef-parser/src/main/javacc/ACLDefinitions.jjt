@@ -152,8 +152,7 @@ void setAclStatement(List<Operation> result) :
 {
     <SET> <ACL> <ON> 
     paths = pathsList() <EOL>
-    ( removeStarLine(lines) ) ?
-    ( privilegesOperationLine(lines) | blankLine() ) +
+    ( removeStarLine(lines) | privilegesOperationLine(lines) | blankLine() ) +
     <END> 
     ( <EOL> | <EOF> )
     

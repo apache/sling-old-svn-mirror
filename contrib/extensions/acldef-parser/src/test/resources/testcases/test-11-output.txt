@@ -1,0 +1,1 @@
+SetAcl on [/libs, /apps] : [REMOVE_ALL null for [user1, user2], ALLOW [jcr:read] for [user1, user2], REMOVE_ALL null for [another], ALLOW [x:y] for [another]]
