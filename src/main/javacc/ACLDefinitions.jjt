@@ -1,0 +1,121 @@
+/* JavaCC grammar for the SLING-5355 ACL definitions language
+ * See https://javacc.java.net/doc/docindex.html for the JavaCC docs
+ */
+ 
+options
+{
+    LOOKAHEAD=2;
+    STATIC=false;
+}
+
+PARSER_BEGIN(ACLDefinitions)
+
+package org.apache.sling.acldef.parser;
+
+import java.util.List;
+import java.util.ArrayList;
+
+import org.apache.sling.acldef.parser.operations.*;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+public class ACLDefinitions
+{
+    private List<Operation> result = null;
+}
+
+PARSER_END(ACLDefinitions)
+
+SKIP :
+{
+    " "
+|   "\r"
+|   "\t"
+|   < COMMENT: "#" (~["\n"])* "\n" >
+}
+
+TOKEN:
+{
+    < NUMBER: (<DIGIT>)+ ( "." (<DIGIT>)+ )? >
+|   < DIGIT: ["0"-"9"] >
+|   < SET: "set" >
+|   < ACL: "ACL" >
+|   < ON: "on" >
+|   < REMOVE: "remove" >
+|   < ALLOW: "allow" >
+|   < DENY: "deny" >
+|   < FOR: "for" >
+|   < CREATE: "create" >
+|   < DELETE: "delete" >
+|   < SERVICE: "service" >
+|   < USER: "user" >
+|   < USERNAME: (["a"-"z"] | ["A"-"Z"] | ["0"-"9"] | "_" | "-")+ >
+|   < COMMA: "," >
+|   < EOL: "\n" >
+}
+
+List<Operation> parse() :
+{}
+{
+    {
+        if(result != null) {
+            throw new IllegalStateException("This parser cannot be reused, please create a new one");
+        }
+        result = new ArrayList<Operation>();
+    }
+    
+    ( blankLine() | serviceUserStatement() ) * <EOF>
+    
+    { return result; }
+}
+
+void blankLine() :
+{}
+{
+    <EOL>
+}
+
+List<String> usernameList() :
+{
+    Token t = null;
+    List<String> usernames = new ArrayList<String>(); 
+    
+}
+{
+    t = <USERNAME> { usernames.add(t.image); } 
+    ( <COMMA> t = <USERNAME> { usernames.add(t.image); } )* 
+    { return usernames; }
+}
+
+void serviceUserStatement() :
+{
+    Token t;
+    List<String> usernames;
+}
+{
+    (t=<CREATE> | t=<DELETE>) <SERVICE> <USER> usernames = usernameList() (<EOL> | <EOF>)
+    {
+        for(String username : usernames) {
+            if(CREATE == t.kind) {
+                result.add(new CreateServiceUser(username));
+            } else {
+                result.add(new DeleteServiceUser(username));
+            }
+        } 
+    }
+}
