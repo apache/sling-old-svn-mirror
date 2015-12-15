@@ -462,7 +462,6 @@
     <bundle dependency="true">mvn:org.codehaus.groovy/groovy/2.4.5</bundle>
     <bundle dependency="true">mvn:org.codehaus.groovy/groovy-json/2.4.5</bundle>
     <bundle dependency="true">mvn:org.codehaus.groovy/groovy-templates/2.4.5</bundle>
-    <bundle dependency="true">mvn:org.codehaus.groovy/groovy-xml/2.4.5</bundle>
   </feature>
   <feature name="sling-scripting-java" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.java/2.0.12</bundle>
