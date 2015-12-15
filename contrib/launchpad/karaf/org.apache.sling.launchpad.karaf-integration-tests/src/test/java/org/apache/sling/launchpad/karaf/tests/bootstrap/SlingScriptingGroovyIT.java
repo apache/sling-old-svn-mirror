@@ -51,8 +51,22 @@ public class SlingScriptingGroovyIT extends KarafTestSupport {
     }
 
     @Test
-    public void testGroovyAll() {
-        final Bundle bundle = findBundle("groovy-all");
+    public void testGroovy() {
+        final Bundle bundle = findBundle("groovy");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
+    public void testGroovyJson() {
+        final Bundle bundle = findBundle("groovy-json");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
+    public void testGroovyTemplates() {
+        final Bundle bundle = findBundle("groovy-templates");
         assertNotNull(bundle);
         assertEquals(Bundle.ACTIVE, bundle.getState());
     }
