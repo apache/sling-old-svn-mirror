@@ -34,6 +34,7 @@ import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
+import org.apache.sling.validation.ValidationFailure;
 import org.apache.sling.validation.ValidationResult;
 import org.apache.sling.validation.ValidationService;
 import org.apache.sling.validation.model.ValidationModel;
@@ -70,16 +71,14 @@ public class ModifyUserServlet extends SlingAllMethodsServlet {
                     JSONObject json = new JSONObject();
                     try {
                         json.put("success", false);
-                        JSONObject messages = new JSONObject();
-                        for (Map.Entry<String, List<String>> entry : vr.getFailureMessages().entrySet()) {
-                            String key = entry.getKey();
-                            JSONArray errors = new JSONArray();
-                            for (String message : entry.getValue()) {
-                                errors.put(message);
-                            }
-                            messages.put(key, errors);
+                        JSONArray failures = new JSONArray();
+                        for (ValidationFailure failure : vr.getFailures()) {
+                            JSONObject failureJson = new JSONObject();
+                            failureJson.put("message", failure.getMessage());
+                            failureJson.put("location", failure.getLocation());
+                            failures.put(failureJson);
                         }
-                        json.put("messages", messages);
+                        json.put("failures", failures);
                         response.getWriter().print(json.toString());
                         response.setStatus(400);
                     } catch (JSONException e) {

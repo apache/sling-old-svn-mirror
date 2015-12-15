@@ -24,14 +24,16 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.validation.Validator;
+import org.apache.sling.validation.ValidationResult;
 import org.apache.sling.validation.exceptions.SlingValidationException;
+import org.apache.sling.validation.spi.DefaultValidationResult;
+import org.apache.sling.validation.spi.Validator;
 
 public class DateValidator implements Validator<Date> {
 
     @Override
-    public String validate(@Nonnull Date data, @Nonnull ValueMap valueMap, Resource resource, @Nonnull ValueMap arguments) throws SlingValidationException {
-        return null;
+    public @Nonnull ValidationResult validate(@Nonnull Date data, @Nonnull ValueMap valueMap, Resource resource, @Nonnull ValueMap arguments) throws SlingValidationException {
+        return DefaultValidationResult.VALID;
     }
 
 }

@@ -16,11 +16,8 @@
  */
 package org.apache.sling.models.validation;
 
-import java.util.List;
-import java.util.Map.Entry;
-
-import org.apache.commons.lang.StringUtils;
 import org.apache.sling.models.factory.InvalidModelException;
+import org.apache.sling.validation.ValidationFailure;
 import org.apache.sling.validation.ValidationResult;
 
 /**
@@ -61,8 +58,8 @@ public class InvalidResourceException extends InvalidModelException {
     public String getMessage() {
         StringBuilder builder = new StringBuilder("Validation errors for ");
         builder.append("'" + path +"':");
-        for (Entry<String, List<String>> entry : result.getFailureMessages().entrySet()) {
-            builder.append("\n" + entry.getKey() + ":" + StringUtils.join(entry.getValue(), "\n\t"));
+        for (ValidationFailure failure : result.getFailures()) {
+            builder.append("\n" + failure.getLocation() + ":" + failure.getMessage() + "\n\t");
         }
         return builder.toString();
     }

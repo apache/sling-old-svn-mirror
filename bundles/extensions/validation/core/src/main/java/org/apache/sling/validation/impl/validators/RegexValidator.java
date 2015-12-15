@@ -27,8 +27,10 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.validation.Validator;
+import org.apache.sling.validation.ValidationResult;
 import org.apache.sling.validation.exceptions.SlingValidationException;
+import org.apache.sling.validation.spi.DefaultValidationResult;
+import org.apache.sling.validation.spi.Validator;
 
 /**
  * Performs regular expressions validation on the supplied data with the help of the {@link Pattern} class. This {@code Validator} expects a
@@ -41,7 +43,7 @@ public class RegexValidator implements Validator<String> {
     public static final String REGEX_PARAM = "regex";
 
     @Override
-    public String validate(@Nonnull String data, @Nonnull ValueMap valueMap, Resource resource, @Nonnull ValueMap arguments)
+    public @Nonnull ValidationResult validate(@Nonnull String data, @Nonnull ValueMap valueMap, Resource resource, @Nonnull ValueMap arguments)
             throws SlingValidationException {
         String regex = arguments.get(REGEX_PARAM, "");
         if (StringUtils.isEmpty(regex)) {
@@ -49,9 +51,9 @@ public class RegexValidator implements Validator<String> {
         }
         Pattern pattern = Pattern.compile(regex);
         if (pattern.matcher((String)data).matches()) {
-            return null;
+            return DefaultValidationResult.VALID;
         }
-        return "Property does not match the pattern " + regex;
+        return new DefaultValidationResult("Property does not match the pattern '" + regex + "'");
     }
 
 }

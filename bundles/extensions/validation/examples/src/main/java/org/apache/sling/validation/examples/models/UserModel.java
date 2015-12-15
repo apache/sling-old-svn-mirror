@@ -18,7 +18,7 @@
  */
 package org.apache.sling.validation.examples.models;
 
-import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -27,6 +27,7 @@ import javax.inject.Inject;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.Model;
+import org.apache.sling.validation.ValidationFailure;
 import org.apache.sling.validation.ValidationResult;
 import org.apache.sling.validation.ValidationService;
 import org.apache.sling.validation.model.ValidationModel;
@@ -37,7 +38,7 @@ public class UserModel {
     private static final String INVALID = "INVALID";
 
     private Resource resource;
-    private Map<String, List<String>> errors = new HashMap<String, List<String>>();
+    private List<ValidationFailure> errors = new LinkedList<ValidationFailure>();
 
     @Inject
     private ValidationService validationService;
@@ -74,7 +75,7 @@ public class UserModel {
         return isAdmin;
     }
 
-    public Map<String, List<String>> getErrors() {
+    public List<ValidationFailure> getErrors() {
         return errors;
     }
 
@@ -84,7 +85,7 @@ public class UserModel {
         if (model != null) {
             ValidationResult result = validationService.validate(resource, model);
             if (!result.isValid()) {
-                errors = result.getFailureMessages();
+                errors = result.getFailures();
             }
         }
     }

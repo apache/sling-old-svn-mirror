@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,31 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation;
-
-import java.util.List;
-import java.util.Map;
+package org.apache.sling.validation.impl;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.validation.spi.Validator;
+import org.apache.sling.validation.ValidationFailure;
 
 /**
- * A {@code ValidationResult} contains validation information either from a single {@link Validator} or from multiple Validator invocations.
+ * Creates wrappers for a {@link ValidationFailure}
+ *
+ * @param <T> the WrapperFactory 
  */
-public interface ValidationResult {
-
-    /**
-     * Tells if the validation was successful or not.
-     *
-     * @return {@code true} for yes, {@code false} otherwise
-     */
-    boolean isValid();
-
-    /**
-     * In case the validation failed (check the {@link ValidationResult#isValid()} method), this method returns the failure's causes.
-     *
-     * @return the validation's failures (never {@code null})
-     */
-    @Nonnull List<ValidationFailure> getFailures();
+public interface ValidationFailureWrapperFactory<T extends ValidationFailure> {
+    
+    T createWrapper(@Nonnull ValidationFailure delegate, String parameter);
 }
