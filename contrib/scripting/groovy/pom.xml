@@ -78,12 +78,6 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.codehaus.groovy</groupId>
-      <artifactId>groovy-xml</artifactId>
-      <version>${groovy.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.scr.annotations</artifactId>
       <scope>provided</scope>
