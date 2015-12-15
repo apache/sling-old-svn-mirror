@@ -60,7 +60,7 @@
     org.apache.sling/org.apache.sling.jcr.resource/2.5.7-SNAPSHOT
     org.apache.sling/org.apache.sling.launchpad.content/2.0.8
     org.apache.sling/org.apache.sling.models.api/1.2.2
-    org.apache.sling/org.apache.sling.models.impl/1.2.3-SNAPSHOT
+    org.apache.sling/org.apache.sling.models.impl/1.2.4
     org.apache.sling/org.apache.sling.resourceresolver/1.2.7-SNAPSHOT
     org.apache.sling/org.apache.sling.scripting.api/2.1.8
     org.apache.sling/org.apache.sling.scripting.core/2.0.34
