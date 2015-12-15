@@ -10,8 +10,10 @@ set ACL on /libs,/apps
 end
 
 create service user bob_the_service
+
+# Verify that indent is not required
 set ACL on /tmp
-    allow some:otherPrivilege for bob_the_service
+allow some:otherPrivilege for bob_the_service
 end
 
 create service user the-last-one
