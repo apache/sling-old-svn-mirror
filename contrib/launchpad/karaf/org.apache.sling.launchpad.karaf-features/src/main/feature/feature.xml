@@ -455,11 +455,14 @@
   </feature>
   <!-- Apache Sling Scripting (contrib) -->
   <feature name="sling-scripting-groovy" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.groovy/1.0.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.groovy/1.0.1-SNAPSHOT</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-scripting</feature>
-    <bundle dependency="true">mvn:org.codehaus.groovy/groovy-all/1.8.0</bundle>
+    <bundle dependency="true">mvn:org.codehaus.groovy/groovy/2.4.5</bundle>
+    <bundle dependency="true">mvn:org.codehaus.groovy/groovy-json/2.4.5</bundle>
+    <bundle dependency="true">mvn:org.codehaus.groovy/groovy-templates/2.4.5</bundle>
+    <bundle dependency="true">mvn:org.codehaus.groovy/groovy-xml/2.4.5</bundle>
   </feature>
   <feature name="sling-scripting-java" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.java/2.0.12</bundle>
