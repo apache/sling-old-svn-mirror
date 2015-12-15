@@ -1,0 +1,17 @@
+# Complete example with several intermixed statement types
+
+create service user user1, u-ser_2
+set ACL on /libs,/apps
+    remove * for user1,u-ser_2
+    allow jcr:read for user1,u-ser_2
+
+    deny jcr:write for u-ser_2
+    deny jcr:lockManagement for user1
+end
+
+create service user bob_the_service
+set ACL on /tmp
+    allow some:otherPrivilege for bob_the_service
+end
+
+create service user the-last-one

@@ -1,0 +1,10 @@
+# Set ACL example from SLING-5355
+# Without the "with glob" option, we're not planning to support
+# that at this time. 
+set ACL on /libs,/apps
+    remove * for user1,user2
+    allow jcr:read for user1,user2
+
+    deny jcr:write for user2
+    deny jcr:lockManagement for user1
+end
