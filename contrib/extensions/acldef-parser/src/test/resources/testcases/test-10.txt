@@ -5,6 +5,6 @@ set ACL on /libs,/apps
     remove * for user1,user2
     allow jcr:read for user1,user2
 
-    deny jcr:write for user2
+    deny jcr:write,something:else,another:one for user2
     deny jcr:lockManagement for user1
 end
