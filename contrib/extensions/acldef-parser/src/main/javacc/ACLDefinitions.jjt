@@ -50,9 +50,7 @@ SKIP :
 
 TOKEN:
 {
-    < NUMBER: (<DIGIT>)+ ( "." (<DIGIT>)+ )? >
-|   < DIGIT: ["0"-"9"] >
-|   < SET: "set" >
+    < SET: "set" >
 |   < ACL: "ACL" >
 |   < ON: "on" >
 |   < REMOVE: "remove" >
