@@ -51,5 +51,4 @@
   org.codehaus.groovy/groovy-all/2.4.5
   org.codehaus.groovy/groovy-json/2.4.5
   org.codehaus.groovy/groovy-templates/2.4.5
-  org.codehaus.groovy/groovy-xml/2.4.5
   org.apache.sling/org.apache.sling.scripting.groovy/1.0.1-SNAPSHOT
