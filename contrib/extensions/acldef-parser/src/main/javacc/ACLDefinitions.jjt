@@ -36,7 +36,6 @@ import org.apache.sling.acldef.parser.operations.*;
 
 public class ACLDefinitions
 {
-    private List<Operation> result = null;
 }
 
 PARSER_END(ACLDefinitions)
@@ -76,14 +75,9 @@ TOKEN:
 List<Operation> parse() :
 {}
 {
-    {
-        if(result != null) {
-            throw new IllegalStateException("This parser cannot be reused, please create a new one");
-        }
-        result = new ArrayList<Operation>();
-    }
+    { final List<Operation> result = new ArrayList<Operation>(); }
     
-    ( serviceUserStatement() | setAclStatement() | blankLine() ) * <EOF>
+    ( serviceUserStatement(result) | setAclStatement(result) | blankLine() ) * <EOF>
     
     { return result; }
 }
@@ -106,7 +100,7 @@ List<String> usernamesList() :
     { return usernames; }
 }
 
-void serviceUserStatement() :
+void serviceUserStatement(List<Operation> result) :
 {
     Token t;
     List<String> usernames;
@@ -148,7 +142,7 @@ List<String> pathsList() :
     { return paths; }
 }
 
-void setAclStatement() :
+void setAclStatement(List<Operation> result) :
 {
     List<String> paths;
     List<AclLine> lines = new ArrayList<AclLine>();
