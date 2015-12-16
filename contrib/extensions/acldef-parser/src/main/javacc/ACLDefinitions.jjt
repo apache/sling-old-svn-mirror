@@ -177,27 +177,21 @@ void removeStarLine(List<AclLine> lines) :
 
 void privilegesOperationLine(List<AclLine> lines) :
 {
-    Token t;
+    AclLine.Action action = AclLine.Action.REMOVE_ALL;
     List<String> privileges;
     List<String> usernames;
 }
 {
-    ( t = <REMOVE> | t = <ALLOW> | t = <DENY> ) 
+    ( 
+        <REMOVE>        { action = AclLine.Action.REMOVE; }
+        | ( <ALLOW>     { action = AclLine.Action.ALLOW; } )
+        | ( <DENY>      { action = AclLine.Action.DENY; } )    
+    ) 
     privileges = privilegesList() 
     <FOR> usernames = usernamesList() 
     <EOL>
-    
-    { 
-        AclLine.Action a = AclLine.Action.REMOVE_ALL;
-        if(t.kind == REMOVE) {
-            a = AclLine.Action.REMOVE;
-        } else if(t.kind == ALLOW) {
-            a = AclLine.Action.ALLOW;
-        } else if(t.kind == DENY) {
-            a = AclLine.Action.DENY;
-        } else {
-            throw new IllegalStateException("Unexpected token kind " + t.kind);
-        }
-        lines.add(new AclLine(a, privileges, usernames)); 
+
+    {    
+        lines.add(new AclLine(action, privileges, usernames)); 
     }
 }
