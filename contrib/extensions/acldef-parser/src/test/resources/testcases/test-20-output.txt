@@ -1,6 +1,6 @@
 CreateServiceUser user1
 CreateServiceUser u-ser_2
-SetAcl on [/libs, /apps] : [REMOVE_ALL null for [user1, u-ser_2], ALLOW [jcr:read] for [user1, u-ser_2], DENY [jcr:write] for [u-ser_2], DENY [jcr:lockManagement] for [user1]]
+SetAcl on [/libs, /apps] : [REMOVE_ALL null for [user1, u-ser_2], ALLOW [jcr:read] for [user1, u-ser_2], DENY [jcr:write] for [u-ser_2], DENY [jcr:lockManagement] for [user1], REMOVE [jcr:understand, some:other] for [u3]]
 CreateServiceUser bob_the_service
 SetAcl on [/tmp] : [ALLOW [some:otherPrivilege] for [bob_the_service]]
 CreateServiceUser the-last-one

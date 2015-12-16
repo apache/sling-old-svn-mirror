@@ -7,6 +7,7 @@ set ACL on /libs,/apps
 
     deny jcr:write for u-ser_2
     deny jcr:lockManagement for user1
+    remove jcr:understand,some:other for u3
 end
 
 create service user bob_the_service
