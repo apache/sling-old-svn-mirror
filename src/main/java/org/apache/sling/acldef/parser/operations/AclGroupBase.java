@@ -17,9 +17,27 @@
 
 package org.apache.sling.acldef.parser.operations;
 
-public interface OperationVisitor {
-    void visitCreateServiceUser(CreateServiceUser s);
-    void visitDeleteServiceUser(DeleteServiceUser s);
-    void visitSetAclPrincipal(SetAclPrincipals s);
-    void visitSetAclPaths(SetAclPaths s);
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
+/** Base class for operations that group AclLines */
+ abstract class AclGroupBase extends Operation {
+    private final List<AclLine> lines;
+    
+    protected AclGroupBase(List<AclLine> lines) {
+        this.lines = Collections.unmodifiableList(lines);
+    }
+    
+    protected String getParametersDescription() {
+        final StringBuilder sb = new StringBuilder();
+        for(AclLine line : lines) {
+            sb.append("\n  ").append(line.toString());
+        }
+        return sb.toString(); 
+    }
+    
+    public Collection<AclLine> getLines() {
+        return lines;
+    }
 }

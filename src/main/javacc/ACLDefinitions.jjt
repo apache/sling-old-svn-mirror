@@ -4,7 +4,7 @@
  
 options
 {
-    LOOKAHEAD=2;
+    LOOKAHEAD=3;
     STATIC=false;
 }
 
@@ -36,7 +36,10 @@ import org.apache.sling.acldef.parser.operations.*;
 
 public class ACLDefinitions
 {
-    private List<Operation> result = null;
+    public static final String PROP_PATHS = "paths";
+    public static final String PROP_PRINCIPALS = "principals";
+    public static final String PROP_PRIVILEGES = "privileges";
+    public static final String PROP_NODETYPES = "nodetypes";
 }
 
 PARSER_END(ACLDefinitions)
@@ -51,9 +54,7 @@ SKIP :
 
 TOKEN:
 {
-    < NUMBER: (<DIGIT>)+ ( "." (<DIGIT>)+ )? >
-|   < DIGIT: ["0"-"9"] >
-|   < SET: "set" >
+    < SET: "set" >
 |   < ACL: "ACL" >
 |   < ON: "on" >
 |   < REMOVE: "remove" >
@@ -63,23 +64,29 @@ TOKEN:
 |   < CREATE: "create" >
 |   < DELETE: "delete" >
 |   < SERVICE: "service" >
+|   < END: "end" >
 |   < USER: "user" >
-|   < USERNAME: (["a"-"z"] | ["A"-"Z"] | ["0"-"9"] | "_" | "-")+ >
+|   < NODETYPES: "nodetypes" >
+|   < PRINCIPAL: (["a"-"z"] | ["A"-"Z"] | ["0"-"9"] | "_" | "-")+ >
 |   < COMMA: "," >
+|   < STAR: "*" >
+|   < NAMESPACED_ITEM: (["a"-"z"] | ["A"-"Z"])+ ":" (["a"-"z"] | ["A"-"Z"])+ >
+|   < PATH: "/" (["a"-"z"] | ["A"-"Z"] | ["0"-"9"] | ["-"] | ["_"] | ["."] | ["/"]) * >
 |   < EOL: "\n" >
 }
 
 List<Operation> parse() :
 {}
 {
-    {
-        if(result != null) {
-            throw new IllegalStateException("This parser cannot be reused, please create a new one");
-        }
-        result = new ArrayList<Operation>();
-    }
+    { final List<Operation> result = new ArrayList<Operation>(); }
     
-    ( blankLine() | serviceUserStatement() ) * <EOF>
+    ( 
+        serviceUserStatement(result) 
+        | setAclPaths(result) 
+        | setAclPrincipals(result) 
+        | blankLine() 
+    ) * 
+    <EOF>
     
     { return result; }
 }
@@ -90,32 +97,154 @@ void blankLine() :
     <EOL>
 }
 
-List<String> usernameList() :
+List<String> principalsList() :
 {
     Token t = null;
-    List<String> usernames = new ArrayList<String>(); 
+    List<String> principals = new ArrayList<String>(); 
+}
+{
+    t = <PRINCIPAL> { principals.add(t.image); } 
+    ( <COMMA> t = <PRINCIPAL> { principals.add(t.image); } )* 
+    { return principals; }
+}
+
+void serviceUserStatement(List<Operation> result) :
+{
+    Token t;
+    List<String> principals;
+}
+{
+    (t=<CREATE> | t=<DELETE>) 
+    <SERVICE> <USER> 
+    principals = principalsList() 
+    (<EOL> | <EOF>)
+    
+    {
+        for(String PRINCIPAL : principals) {
+            if(CREATE == t.kind) {
+                result.add(new CreateServiceUser(PRINCIPAL));
+            } else {
+                result.add(new DeleteServiceUser(PRINCIPAL));
+            }
+        } 
+    }
+}
+
+List<String> namespacedItemsList() :
+{
+    Token t = null;
+    List<String> priv = new ArrayList<String>(); 
     
 }
 {
-    t = <USERNAME> { usernames.add(t.image); } 
-    ( <COMMA> t = <USERNAME> { usernames.add(t.image); } )* 
-    { return usernames; }
+    t = <NAMESPACED_ITEM> { priv.add(t.image); } 
+    ( <COMMA> t = <NAMESPACED_ITEM> { priv.add(t.image); } )* 
+    { return priv; }
 }
 
-void serviceUserStatement() :
+List<String> pathsList() :
 {
-    Token t;
-    List<String> usernames;
+    Token t = null;
+    List<String> paths = new ArrayList<String>(); 
+    
 }
 {
-    (t=<CREATE> | t=<DELETE>) <SERVICE> <USER> usernames = usernameList() (<EOL> | <EOF>)
+    t = <PATH> { paths.add(t.image); } 
+    ( <COMMA> t = <PATH> { paths.add(t.image); } )* 
+    { return paths; }
+}
+
+void setAclPaths(List<Operation> result) :
+{
+    List<String> paths;
+    List<AclLine> lines = new ArrayList<AclLine>();
+} 
+{
+    <SET> <ACL> <ON> paths  = pathsList() <EOL>
+    ( removeStarLine(lines) | userPrivilegesLine(lines) | blankLine() ) +
+    <END> 
+    ( <EOL> | <EOF> )
+    
     {
-        for(String username : usernames) {
-            if(CREATE == t.kind) {
-                result.add(new CreateServiceUser(username));
-            } else {
-                result.add(new DeleteServiceUser(username));
-            }
-        } 
+        result.add(new SetAclPaths(paths, lines));
+    }
+}
+
+void removeStarLine(List<AclLine> lines) : 
+{
+    List<String> tmp = null;
+    AclLine line = new AclLine(AclLine.Action.REMOVE_ALL);
+}
+{
+    <REMOVE> <STAR> 
+    (
+        <FOR> tmp = principalsList() { line.setProperty(PROP_PRINCIPALS, tmp); }
+        
+        | <ON> tmp = pathsList() { line.setProperty(PROP_PATHS, tmp); }
+    )     
+    <EOL>
+    
+    {
+        lines.add(line);
+    }
+}
+
+AclLine privilegesLineOperation() :
+{}
+{
+    ( 
+        <REMOVE>        { return new AclLine(AclLine.Action.REMOVE); }
+        | ( <ALLOW>     { return new AclLine(AclLine.Action.ALLOW); } )
+        | ( <DENY>      { return new AclLine(AclLine.Action.DENY); } )    
+    ) 
+}
+
+void userPrivilegesLine(List<AclLine> lines) :
+{
+    AclLine line;
+    List<String> tmp;
+}
+{
+    line = privilegesLineOperation()
+    tmp = namespacedItemsList() { line.setProperty(PROP_PRIVILEGES, tmp); } 
+    <FOR>
+    tmp = principalsList() { line.setProperty(PROP_PRINCIPALS, tmp); }
+    <EOL>
+
+    {   
+        lines.add(line); 
+    }
+}
+
+void pathPrivilegesLine(List<AclLine> lines) : 
+{
+    AclLine line;
+    List<String> tmp;
+}
+{
+    line = privilegesLineOperation()
+    tmp = namespacedItemsList() { line.setProperty(PROP_PRIVILEGES, tmp); } 
+    <ON> tmp = pathsList() { line.setProperty(PROP_PATHS, tmp); }
+    ( <NODETYPES> tmp = namespacedItemsList() { line.setProperty(PROP_NODETYPES, tmp); }) ?
+    <EOL>
+    
+    {    
+        lines.add(line); 
+    }
+}
+
+void setAclPrincipals(List<Operation> result) :
+{
+    List <String> principals;
+    List<AclLine> lines = new ArrayList<AclLine>();
+}
+{
+    <SET> <ACL> <FOR> principals = principalsList() <EOL>
+    ( removeStarLine(lines) | pathPrivilegesLine(lines) | blankLine() ) +
+    <END> 
+    ( <EOL> | <EOF> )
+    
+    {
+        result.add(new SetAclPrincipals(principals, lines));
     }
 }

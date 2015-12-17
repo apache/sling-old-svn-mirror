@@ -21,6 +21,8 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -29,13 +31,16 @@ import org.apache.commons.io.IOUtils;
 import org.apache.sling.acldef.parser.ACLDefinitions;
 import org.apache.sling.acldef.parser.ParseException;
 import org.apache.sling.acldef.parser.operations.Operation;
+import org.apache.sling.acldef.parser.operations.OperationVisitor;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-/** Test the parser using our test-* 
- *  input/expected output files.
+/** Test the parser using our test-* input/expected output files. 
+ *  The code of this class doesn't contain any actual tests, it
+ *  just looks for test-*.txt files, parses them and verifies the
+ *  results according to the test-*-output.txt files.
  */
 @RunWith(Parameterized.class)
 public class ParserTest {
@@ -105,12 +110,14 @@ public class ParserTest {
     public void checkResult() throws ParseException, IOException {
         final String expected = IOUtils.toString(tc.expected, DEFAULT_ENCODING).trim();
         try {
-            final StringBuilder sb = new StringBuilder();
+            final StringWriter sw = new StringWriter();
+            final OperationVisitor v = new OperationToStringVisitor(new PrintWriter(sw)); 
             final List<Operation> result = new ACLDefinitions(tc.input).parse(); 
             for(Operation o : result) {
-                sb.append(o.toString()).append("\n");
+                o.accept(v);
             }
-            assertEquals(expected, sb.toString().trim());
+            sw.flush();
+            assertEquals(expected, sw.toString().trim());
         } finally {
             tc.close();
         }

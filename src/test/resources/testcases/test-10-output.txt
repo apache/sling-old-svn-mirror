@@ -1,0 +1,5 @@
+SetAclPaths on /libs /apps / /content/example.com/some-other_path 
+  AclLine REMOVE_ALL {principals=[user1, user2]}
+  AclLine ALLOW {principals=[user1, user2], privileges=[jcr:read]}
+  AclLine DENY {principals=[user2], privileges=[jcr:write, something:else, another:one]}
+  AclLine DENY {principals=[user1], privileges=[jcr:lockManagement]}
