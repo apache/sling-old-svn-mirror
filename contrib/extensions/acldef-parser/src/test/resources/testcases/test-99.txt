@@ -17,4 +17,12 @@ set ACL on /tmp
 allow some:otherPrivilege for bob_the_service
 end
 
+set ACL for alice, bob,fred
+    remove * on /
+    allow jcr:read on /content,/var
+    deny jcr:write on /content/example.com
+    deny jcr:all on / nodetypes example:Page
+    
+end
+
 create service user the-last-one

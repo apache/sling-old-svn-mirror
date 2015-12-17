@@ -1,1 +1,5 @@
-SetAcl on [/libs, /apps] : [REMOVE_ALL null for [user1, user2], ALLOW [jcr:read] for [user1, user2], REMOVE_ALL null for [another], ALLOW [x:y] for [another]]
+SetAclPaths on /libs /apps 
+  AclLine REMOVE_ALL {principals=[user1, user2]}
+  AclLine ALLOW {principals=[user1, user2], privileges=[jcr:read]}
+  AclLine REMOVE_ALL {principals=[another]}
+  AclLine ALLOW {principals=[another], privileges=[x:y]}

@@ -17,31 +17,34 @@
 
 package org.apache.sling.acldef.parser.operations;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-public class SetAcl extends Operation {
-    private final List<String> paths;
-    private final List<AclLine> lines;
+/** Set ACL statement that groups a set of AclLines
+ *  that all refer to the same set of principals.
+ */
+public class SetAclPrincipals extends AclGroupBase {
     
-    public SetAcl(List<String> paths, List<AclLine> lines) {
-        this.paths = Collections.unmodifiableList(paths);
-        this.lines = Collections.unmodifiableList(lines);
-    }
+    private final List<String> principals;
     
-    public void accept(OperationVisitor v) {
-        v.visitSetAcl(this);
+    public SetAclPrincipals(List<String> principals, List<AclLine> lines) {
+        super(lines);
+        this.principals = Collections.unmodifiableList(principals);
     }
     
     protected String getParametersDescription() {
-        return "on " + paths.toString() + " : " + lines.toString(); 
+        final StringBuilder sb = new StringBuilder();
+        sb.append(principals);
+        sb.append(super.getParametersDescription());
+        return sb.toString(); 
     }
     
-    public Collection<String> getPaths() {
-        return paths;
+    public List<String> getPrincipals() {
+        return principals;
     }
-    public Collection<AclLine> getLines() {
-        return lines;
+
+    @Override
+    public void accept(OperationVisitor v) {
+        v.visitSetAclPrincipal(this);
     }
 }

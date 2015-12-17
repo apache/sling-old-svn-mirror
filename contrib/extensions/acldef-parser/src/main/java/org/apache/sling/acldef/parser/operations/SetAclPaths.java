@@ -17,9 +17,34 @@
 
 package org.apache.sling.acldef.parser.operations;
 
-public interface OperationVisitor {
-    void visitCreateServiceUser(CreateServiceUser s);
-    void visitDeleteServiceUser(DeleteServiceUser s);
-    void visitSetAclPrincipal(SetAclPrincipals s);
-    void visitSetAclPaths(SetAclPaths s);
+import java.util.Collections;
+import java.util.List;
+
+/** Set ACL statement that groups a set of AclLines
+ *  that all refer to the same set of paths.
+ */
+public class SetAclPaths extends AclGroupBase {
+    
+    private final List<String> paths;
+    
+    public SetAclPaths(List<String> paths, List<AclLine> lines) {
+        super(lines);
+        this.paths = Collections.unmodifiableList(paths);
+    }
+    
+    protected String getParametersDescription() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(paths);
+        sb.append(super.getParametersDescription());
+        return sb.toString(); 
+    }
+    
+    public List<String> getPaths() {
+        return paths;
+    }
+
+    @Override
+    public void accept(OperationVisitor v) {
+        v.visitSetAclPaths(this);
+    }
 }

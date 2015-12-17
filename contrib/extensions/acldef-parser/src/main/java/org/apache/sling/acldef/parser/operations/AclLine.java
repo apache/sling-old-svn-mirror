@@ -17,13 +17,17 @@
 
 package org.apache.sling.acldef.parser.operations;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
+/** A single "set ACL" line */
 public class AclLine {
     
     private final Action action;
+    private static final List<String> EMPTY_LIST = Collections.unmodifiableList(new ArrayList<String>());
     
     public enum Action {
         REMOVE,
@@ -32,25 +36,31 @@ public class AclLine {
         ALLOW
     };
     
-    private final List<String> privileges;
-    private final List<String> usernames;
+    private final Map<String, List<String>> properties;
     
-    public AclLine(Action a, List<String> privileges, List<String> usernames) {
+    public AclLine(Action a) {
         action = a;
-        this.usernames = usernames == null ? null : Collections.unmodifiableList(usernames);
-        this.privileges = privileges == null ? null : Collections.unmodifiableList(privileges);
+        properties = new TreeMap<String, List<String>>();
     }
     
     public Action getAction() {
         return action;
     }
     
-    public Collection<String> getUsernames() {
-        return usernames;
+    /** Return the named multi-value property, or an empty list
+     *  if not found. 
+     */
+    public List<String> getProperty(String name) {
+        List<String> value = properties.get(name);
+        return value != null ? value : EMPTY_LIST;
+    }
+    
+    public void setProperty(String name, List<String> values) {
+        properties.put(name, Collections.unmodifiableList(values));
     }
     
     @Override
     public String toString() {
-        return action + " " + privileges + " for " + usernames;
+        return getClass().getSimpleName() + " " + action + " " + properties;
     }
 }

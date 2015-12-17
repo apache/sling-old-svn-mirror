@@ -18,35 +18,64 @@
 package org.apache.sling.acldef.parser.test;
 
 import java.io.PrintWriter;
+import java.util.Collection;
 
+import org.apache.sling.acldef.parser.operations.AclLine;
 import org.apache.sling.acldef.parser.operations.CreateServiceUser;
 import org.apache.sling.acldef.parser.operations.DeleteServiceUser;
 import org.apache.sling.acldef.parser.operations.OperationVisitor;
-import org.apache.sling.acldef.parser.operations.SetAcl;
+import org.apache.sling.acldef.parser.operations.SetAclPaths;
+import org.apache.sling.acldef.parser.operations.SetAclPrincipals;
 
 /** OperationVisitor that dumps the operations using
  *  their toString() methods
  */
 class OperationToStringVisitor implements OperationVisitor {
 
-    private final PrintWriter output;
+    private final PrintWriter out;
     
     OperationToStringVisitor(PrintWriter pw) {
-        output = pw;
+        out = pw;
     }
     
     @Override
     public void visitCreateServiceUser(CreateServiceUser s) {
-        output.println(s.toString());
+        out.println(s.toString());
     }
 
     @Override
     public void visitDeleteServiceUser(DeleteServiceUser s) {
-        output.println(s.toString());
+        out.println(s.toString());
     }
 
     @Override
-    public void visitSetAcl(SetAcl s) {
-        output.println(s.toString());
+    public void visitSetAclPrincipal(SetAclPrincipals s) {
+        out.print(s.getClass().getSimpleName());
+        out.print(" for ");
+        for(String p : s.getPrincipals()) {
+            out.print(p);
+            out.print(' ');
+        }
+        out.println();
+        dumpAclLines(s.getLines());
+    }
+    
+    @Override
+    public void visitSetAclPaths(SetAclPaths s) {
+        out.print(s.getClass().getSimpleName());
+        out.print(" on ");
+        for(String p : s.getPaths()) {
+            out.print(p);
+            out.print(' ');
+        }
+        out.println();
+        dumpAclLines(s.getLines());
+    }
+    
+    private void dumpAclLines(Collection<AclLine> c) {
+        for(AclLine line : c) {
+            out.print("  ");
+            out.println(line);
+        }
     }
 }
