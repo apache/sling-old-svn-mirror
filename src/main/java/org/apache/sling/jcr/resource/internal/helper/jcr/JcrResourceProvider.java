@@ -76,7 +76,9 @@ import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(immediate = true)
+@Component(immediate = true, metatype = true,
+        label = "Apache Sling JCR Resource Provider Factory",
+        description = "This provider adds  JCR resources to the resource tree")
 @Service(value = ResourceProvider.class)
 @Properties({ @Property(name = ResourceProvider.PROPERTY_NAME, value = "JCR"),
         @Property(name = ResourceProvider.PROPERTY_ROOT, value = "/"),

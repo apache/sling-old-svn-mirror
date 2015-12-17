@@ -17,9 +17,11 @@
 package org.apache.sling.jcr.resource.internal;
 
 import static org.apache.jackrabbit.oak.spi.whiteboard.WhiteboardUtils.registerObserver;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -33,6 +35,7 @@ import javax.jcr.Session;
 import org.apache.jackrabbit.oak.Oak;
 import org.apache.jackrabbit.oak.jcr.Jcr;
 import org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStore;
+import org.apache.jackrabbit.oak.spi.commit.BackgroundObserverMBean;
 import org.apache.jackrabbit.oak.spi.commit.Observer;
 import org.apache.jackrabbit.oak.spi.whiteboard.Whiteboard;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -96,11 +99,21 @@ public class OakResourceListenerTest extends AbstractListenerTest {
         when(bundleContext.createFilter(any(String.class))).thenReturn(null);
         when(bundleContext.getServiceReference(any(String.class))).thenReturn(null);
         when(bundleContext.getService(null)).thenReturn(mockEA);
-        when(bundleContext.registerService(any(String.class), any(Object.class), any(Dictionary.class)))
+        when(bundleContext.registerService(eq(Observer.class.getName()), any(Object.class), any(Dictionary.class)))
                 .thenAnswer(new Answer<ServiceRegistration>() {
                     public ServiceRegistration answer(InvocationOnMock invocation) throws Throwable {
                         Object[] arguments = invocation.getArguments();
                         registerObserver(whiteboard, (Observer) arguments[1]);
+                        return mock(ServiceRegistration.class);
+                    }
+                });
+
+        when(bundleContext.registerService(eq(BackgroundObserverMBean.class.getName()), any(Object.class), any
+                (Dictionary.class)))
+                .thenAnswer(new Answer<ServiceRegistration>() {
+                    public ServiceRegistration answer(InvocationOnMock invocation) throws Throwable {
+                        Object[] arguments = invocation.getArguments();
+                        assertNotNull(((Dictionary)arguments[2]).get("jmx.objectname"));
                         return mock(ServiceRegistration.class);
                     }
                 });
