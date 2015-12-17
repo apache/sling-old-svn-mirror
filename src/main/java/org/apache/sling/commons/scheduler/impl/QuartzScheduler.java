@@ -144,6 +144,7 @@ public class QuartzScheduler implements BundleListener {
     /**
      * @see org.osgi.framework.BundleListener#bundleChanged(org.osgi.framework.BundleEvent)
      */
+    @Override
     public void bundleChanged(final BundleEvent event) {
         if ( event.getType() == BundleEvent.STOPPED ) {
             final Long bundleId = event.getBundle().getBundleId();
@@ -157,14 +158,16 @@ public class QuartzScheduler implements BundleListener {
                             final Set<JobKey> keys = s.getJobKeys(GroupMatcher.jobGroupEquals(group));
                             for(final JobKey key : keys) {
                                 final JobDetail detail = s.getJobDetail(key);
-                                final String jobName = (String) detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_NAME);
-                                final Object job = detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_OBJECT);
+                                if ( detail != null ) {
+                                    final String jobName = (String) detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_NAME);
+                                    final Object job = detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_OBJECT);
 
-                                if ( jobName != null && job != null ) {
-                                    final Long jobBundleId = (Long) detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_BUNDLE_ID);
-                                    if ( jobBundleId != null && jobBundleId.equals(bundleId) ) {
-                                        s.deleteJob(key);
-                                        this.logger.debug("Unscheduling job with name {}", jobName);
+                                    if ( jobName != null && job != null ) {
+                                        final Long jobBundleId = (Long) detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_BUNDLE_ID);
+                                        if ( jobBundleId != null && jobBundleId.equals(bundleId) ) {
+                                            s.deleteJob(key);
+                                            this.logger.debug("Unscheduling job with name {}", jobName);
+                                        }
                                     }
                                 }
                             }
@@ -457,6 +460,7 @@ public class QuartzScheduler implements BundleListener {
         /**
          * @see org.quartz.spi.QuartzThreadPool#getPoolSize()
          */
+        @Override
         public int getPoolSize() {
             return this.executor.getConfiguration().getMaxPoolSize();
         }
@@ -464,6 +468,7 @@ public class QuartzScheduler implements BundleListener {
         /**
          * @see org.quartz.spi.QuartzThreadPool#initialize()
          */
+        @Override
         public void initialize() {
             // nothing to do
         }
@@ -471,6 +476,7 @@ public class QuartzScheduler implements BundleListener {
         /**
          * @see org.quartz.spi.ThreadPool#setInstanceId(java.lang.String)
          */
+        @Override
         public void setInstanceId(final String id) {
             // we ignore this
         }
@@ -478,6 +484,7 @@ public class QuartzScheduler implements BundleListener {
         /**
          * @see org.quartz.spi.ThreadPool#setInstanceName(java.lang.String)
          */
+        @Override
         public void setInstanceName(final String name) {
             // we ignore this
         }
@@ -485,6 +492,7 @@ public class QuartzScheduler implements BundleListener {
         /**
          * @see org.quartz.spi.QuartzThreadPool#runInThread(java.lang.Runnable)
          */
+        @Override
         public boolean runInThread(final Runnable job) {
             this.executor.execute(job);
 
@@ -494,6 +502,7 @@ public class QuartzScheduler implements BundleListener {
         /**
          * @see org.quartz.spi.ThreadPool#blockForAvailableThreads()
          */
+        @Override
         public int blockForAvailableThreads() {
             return this.executor.getConfiguration().getMaxPoolSize() - this.executor.getConfiguration().getQueueSize();
         }
@@ -501,6 +510,7 @@ public class QuartzScheduler implements BundleListener {
         /**
          * @see org.quartz.spi.QuartzThreadPool#shutdown(boolean)
          */
+        @Override
         public void shutdown(final boolean waitForJobsToComplete) {
             // the pool is managed by the thread pool manager,
             // so we can just return
