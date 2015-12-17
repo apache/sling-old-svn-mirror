@@ -30,7 +30,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
  * <p>
  * During a request the <code>SlingPostOperation</code> service is called
  * with a list of registered post processors. After the operation has performed
- * its changes but before the changes are persistet, all post processors
+ * its changes but before the changes are persisted, all post processors
  * are called.
  */
 public interface SlingPostProcessor {
