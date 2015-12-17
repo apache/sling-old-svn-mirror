@@ -1,0 +1,1 @@
+SetAcl on [user1, u2] : [ALLOW [jcr:read] for null, DENY [jcr:write] for null, DENY [jcr:lockManagement] for null, REMOVE [jcr:understand, some:other] for null]

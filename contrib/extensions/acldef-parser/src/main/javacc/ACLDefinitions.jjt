@@ -4,7 +4,7 @@
  
 options
 {
-    LOOKAHEAD=2;
+    LOOKAHEAD=3;
     STATIC=false;
 }
 
@@ -62,6 +62,7 @@ TOKEN:
 |   < SERVICE: "service" >
 |   < END: "end" >
 |   < USER: "user" >
+|   < NODETYPES: "nodetypes" >
 |   < USERNAME: (["a"-"z"] | ["A"-"Z"] | ["0"-"9"] | "_" | "-")+ >
 |   < COMMA: "," >
 |   < STAR: "*" >
@@ -75,7 +76,13 @@ List<Operation> parse() :
 {
     { final List<Operation> result = new ArrayList<Operation>(); }
     
-    ( serviceUserStatement(result) | setAclStatement(result) | blankLine() ) * <EOF>
+    ( 
+        serviceUserStatement(result) 
+        | pathsAclStatement(result) 
+        | principalAclStatement(result) 
+        | blankLine() 
+    ) * 
+    <EOF>
     
     { return result; }
 }
@@ -120,7 +127,7 @@ void serviceUserStatement(List<Operation> result) :
     }
 }
 
-List<String> privilegesList() :
+List<String> namespacedItemsList() :
 {
     Token t = null;
     List<String> priv = new ArrayList<String>(); 
@@ -144,15 +151,14 @@ List<String> pathsList() :
     { return paths; }
 }
 
-void setAclStatement(List<Operation> result) :
+void pathsAclStatement(List<Operation> result) :
 {
     List<String> paths;
     List<AclLine> lines = new ArrayList<AclLine>();
 } 
 {
-    <SET> <ACL> <ON> 
-    paths = pathsList() <EOL>
-    ( removeStarLine(lines) | privilegesOperationLine(lines) | blankLine() ) +
+    <SET> <ACL> <ON> paths = pathsList() <EOL>
+    ( removeStarLine(lines) | userPrivilegesLine(lines) | blankLine() ) +
     <END> 
     ( <EOL> | <EOF> )
     
@@ -163,19 +169,19 @@ void setAclStatement(List<Operation> result) :
 
 void removeStarLine(List<AclLine> lines) : 
 {
-    List<String> usernames;
+    List<String> usernames = null;
+    List<String> paths = null;
 }
 {
     <REMOVE> <STAR> 
-    <FOR> usernames = usernamesList() 
+    (
+        <FOR> usernames = usernamesList() { lines.add(new AclLine(AclLine.Action.REMOVE_ALL, null, usernames)); }
+        | <ON> paths = pathsList()
+    )     
     <EOL>
-    
-    { 
-        lines.add(new AclLine(AclLine.Action.REMOVE_ALL, null, usernames)); 
-    }
 }
 
-void privilegesOperationLine(List<AclLine> lines) :
+void userPrivilegesLine(List<AclLine> lines) :
 {
     AclLine.Action action = AclLine.Action.REMOVE_ALL;
     List<String> privileges;
@@ -187,11 +193,49 @@ void privilegesOperationLine(List<AclLine> lines) :
         | ( <ALLOW>     { action = AclLine.Action.ALLOW; } )
         | ( <DENY>      { action = AclLine.Action.DENY; } )    
     ) 
-    privileges = privilegesList() 
-    <FOR> usernames = usernamesList() 
+    privileges = namespacedItemsList() 
+    <FOR>
+    usernames = usernamesList() 
     <EOL>
 
     {    
         lines.add(new AclLine(action, privileges, usernames)); 
+    }
+}
+
+void pathPrivilegesLine(List<AclLine> lines) : 
+{
+    AclLine.Action action = AclLine.Action.REMOVE_ALL;
+    List<String> privileges;
+}
+{
+    ( 
+        <REMOVE>        { action = AclLine.Action.REMOVE; }
+        | ( <ALLOW>     { action = AclLine.Action.ALLOW; } )
+        | ( <DENY>      { action = AclLine.Action.DENY; } )    
+    ) 
+    privileges = namespacedItemsList() 
+    <ON> pathsList()
+    ( <NODETYPES> namespacedItemsList() ) ?
+    <EOL>
+    
+    {    
+        lines.add(new AclLine(action, privileges, null)); 
+    }
+}
+
+void principalAclStatement(List<Operation> result) :
+{
+    List <String> usernames;
+    List<AclLine> lines = new ArrayList<AclLine>();
+}
+{
+    <SET> <ACL> <FOR> usernames = usernamesList() <EOL>
+    ( removeStarLine(lines) | pathPrivilegesLine(lines) | blankLine() ) +
+    <END> 
+    ( <EOL> | <EOF> )
+    
+    {
+        result.add(new SetAcl(usernames, lines));
     }
 }

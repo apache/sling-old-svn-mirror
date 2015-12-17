@@ -37,7 +37,7 @@ public class AclLine {
     
     public AclLine(Action a, List<String> privileges, List<String> usernames) {
         action = a;
-        this.usernames = Collections.unmodifiableList(usernames);
+        this.usernames = usernames == null ? null : Collections.unmodifiableList(usernames);
         this.privileges = privileges == null ? null : Collections.unmodifiableList(privileges);
     }
     
