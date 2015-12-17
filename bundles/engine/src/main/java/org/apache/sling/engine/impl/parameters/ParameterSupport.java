@@ -98,6 +98,12 @@ public class ParameterSupport {
      */
     private static int fileSizeThreshold = 256000;
 
+    /**
+     * Check for additional parameters from the container.
+     * TODO - We can remove this once we move engine to Servlet 3.1
+     */
+    private static boolean checkForAdditionalParameters = false;
+
     private final HttpServletRequest servletRequest;
 
     private ParameterMap postParameterMap;
@@ -139,11 +145,13 @@ public class ParameterSupport {
     }
 
     static void configure(final long maxRequestSize, final String location, final long maxFileSize,
-            final int fileSizeThreshold) {
+            final int fileSizeThreshold,
+            final boolean checkForAdditionalParameters) {
         ParameterSupport.maxRequestSize = (maxRequestSize > 0) ? maxRequestSize : -1;
         ParameterSupport.location = (location != null) ? new File(location) : null;
         ParameterSupport.maxFileSize = (maxFileSize > 0) ? maxFileSize : -1;
         ParameterSupport.fileSizeThreshold = (fileSizeThreshold > 0) ? fileSizeThreshold : 256000;
+        ParameterSupport.checkForAdditionalParameters = checkForAdditionalParameters;
     }
 
     private ParameterSupport(HttpServletRequest servletRequest) {
@@ -230,12 +238,14 @@ public class ParameterSupport {
 
             // fallback is only used if this request has been started by a service call
             boolean useFallback = getServletRequest().getAttribute(MARKER_IS_SERVICE_PROCESSING) != null;
+            boolean addContainerParameters = false;
             // Query String
             final String query = getServletRequest().getQueryString();
             if (query != null) {
                 try {
                     InputStream input = Util.toInputStream(query);
                     Util.parseQueryString(input, encoding, parameters, false);
+                    addContainerParameters = checkForAdditionalParameters;
                 } catch (IllegalArgumentException e) {
                     this.log.error("getRequestParameterMapInternal: Error parsing request", e);
                 } catch (UnsupportedEncodingException e) {
@@ -244,6 +254,9 @@ public class ParameterSupport {
                     this.log.error("getRequestParameterMapInternal: Error parsing request", e);
                 }
                 useFallback = false;
+            } else {
+                addContainerParameters = checkForAdditionalParameters;
+                useFallback = true;
             }
 
             // POST requests
@@ -254,6 +267,7 @@ public class ParameterSupport {
                     try {
                         InputStream input = this.getServletRequest().getInputStream();
                         Util.parseQueryString(input, encoding, parameters, false);
+                        addContainerParameters = checkForAdditionalParameters;
                     } catch (IllegalArgumentException e) {
                         this.log.error("getRequestParameterMapInternal: Error parsing request", e);
                     } catch (UnsupportedEncodingException e) {
@@ -269,13 +283,15 @@ public class ParameterSupport {
                 if (ServletFileUpload.isMultipartContent(new ServletRequestContext(this.getServletRequest()))) {
                     this.parseMultiPartPost(parameters);
                     this.requestDataUsed = true;
+                    addContainerParameters = checkForAdditionalParameters;
                     useFallback = false;
                 }
             }
             if ( useFallback ) {
-                getContainerParameters(parameters, encoding);
+                getContainerParameters(parameters, encoding, true);
+            } else  if ( addContainerParameters ) {
+                getContainerParameters(parameters, encoding, false);
             }
-
             // apply any form encoding (from '_charset_') in the parameter map
             Util.fixEncoding(parameters);
 
@@ -284,18 +300,19 @@ public class ParameterSupport {
         return this.postParameterMap;
     }
 
-    private void getContainerParameters(final ParameterMap parameters, final String encoding) {
+    private void getContainerParameters(final ParameterMap parameters, final String encoding, final boolean alwaysAdd) {
         final Map<?, ?> pMap = getServletRequest().getParameterMap();
         for (Map.Entry<?, ?> entry : pMap.entrySet()) {
 
             final String name = (String) entry.getKey();
-            final String[] values = (String[]) entry.getValue();
+            if ( alwaysAdd || !parameters.containsKey(name) ) {
+                final String[] values = (String[]) entry.getValue();
 
-            for (int i = 0; i < values.length; i++) {
-                parameters.addParameter(new ContainerRequestParameter(
-                    name, values[i], encoding), false);
+                for (int i = 0; i < values.length; i++) {
+                    parameters.addParameter(new ContainerRequestParameter(
+                        name, values[i], encoding), false);
+                }
             }
-
         }
     }
 
