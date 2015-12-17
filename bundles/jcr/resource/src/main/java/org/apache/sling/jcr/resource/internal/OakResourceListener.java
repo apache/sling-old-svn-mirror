@@ -42,6 +42,7 @@ import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.oak.plugins.observation.NodeObserver;
 import org.apache.jackrabbit.oak.spi.commit.BackgroundObserver;
+import org.apache.jackrabbit.oak.spi.commit.BackgroundObserverMBean;
 import org.apache.jackrabbit.oak.spi.commit.CommitInfo;
 import org.apache.jackrabbit.oak.spi.commit.Observer;
 import org.apache.sling.api.SlingConstants;
@@ -69,6 +70,8 @@ public class OakResourceListener extends NodeObserver implements Closeable {
 
     private final ServiceRegistration serviceRegistration;
 
+    private final ServiceRegistration mbeanRegistration;
+
     /** Helper object. */
     final ObservationListenerSupport support;
 
@@ -87,11 +90,11 @@ public class OakResourceListener extends NodeObserver implements Closeable {
         this.pathMapper = pathMapper;
         this.mountPrefix = (mountPrefix == null || mountPrefix.length() == 0 || mountPrefix.equals("/") ? null : mountPrefix);
 
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        final Hashtable<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling JCR Observation Listener for Oak");
 
-        final Observer observer = new BackgroundObserver(this, executor, observationQueueLength) {
+        final BackgroundObserver observer = new BackgroundObserver(this, executor, observationQueueLength) {
             @Override
             protected void added(int queueSize) {
                 if (queueSize == observationQueueLength) {
@@ -101,6 +104,13 @@ public class OakResourceListener extends NodeObserver implements Closeable {
             }
         };
         serviceRegistration = bundleContext.registerService(Observer.class.getName(), observer, props);
+
+        final Dictionary<String, Object> mbeanProps = new Hashtable<String, Object>(props);
+        String objectName = String.format("org.apache.sling:type=%s,name=SlingResourceListener",
+                BackgroundObserverMBean.TYPE);
+        mbeanProps.put("jmx.objectname", objectName);
+
+        mbeanRegistration = bundleContext.registerService(BackgroundObserverMBean.class.getName(), observer.getMBean(), mbeanProps);
     }
 
     /**
@@ -108,6 +118,7 @@ public class OakResourceListener extends NodeObserver implements Closeable {
      */
     @Override
     public void close() throws IOException {
+        mbeanRegistration.unregister();
         serviceRegistration.unregister();
         this.support.dispose();
     }
