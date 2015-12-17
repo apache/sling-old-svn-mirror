@@ -17,13 +17,6 @@
  */
 package org.apache.sling.oak.server;
 
-import static com.google.common.collect.ImmutableSet.of;
-import static java.util.Collections.singleton;
-import static org.apache.felix.scr.annotations.ReferencePolicy.STATIC;
-import static org.apache.felix.scr.annotations.ReferencePolicyOption.GREEDY;
-import static org.apache.jackrabbit.oak.plugins.index.IndexConstants.INDEX_DEFINITIONS_NAME;
-import static org.apache.jackrabbit.oak.plugins.index.IndexUtils.createIndexDefinition;
-
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -86,6 +79,13 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static com.google.common.collect.ImmutableSet.of;
+import static java.util.Collections.singleton;
+import static org.apache.felix.scr.annotations.ReferencePolicy.STATIC;
+import static org.apache.felix.scr.annotations.ReferencePolicyOption.GREEDY;
+import static org.apache.jackrabbit.oak.plugins.index.IndexConstants.INDEX_DEFINITIONS_NAME;
+import static org.apache.jackrabbit.oak.plugins.index.IndexUtils.createIndexDefinition;
 
 /**
  * A Sling repository implementation that wraps the Oak OSGi repository
@@ -155,6 +155,13 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
                 + "name is used to implement the SlingRepository.loginAdministrative(String)"
                 + "method. It is intended for this user to provide full read/write access to repository.")
     public static final String PROPERTY_ADMIN_USER = "admin.name";
+
+    @Property(
+        value = "oak-sling-repository",
+        label = "Repository Name",
+        description = "The name under which the repository will be registered in JNDI and RMI registries."
+    )
+    public static final String REPOSITORY_REGISTRATION_NAME = "name";
 
     @Reference
     private ServiceUserMapper serviceUserMapper;
