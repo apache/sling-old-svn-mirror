@@ -18,13 +18,10 @@
  */
 package org.apache.sling.validation.spi;
 
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.ValidationResult;
-import org.apache.sling.validation.ValidationService;
 import org.apache.sling.validation.exceptions.SlingValidationException;
 
 import aQute.bnd.annotation.ConsumerType;
@@ -70,11 +67,10 @@ public interface Validator <T> {
      * If the data cannot be converted into the type {@code T} the validator is not called, but validation fails.
      *
      * @param data the data to validate (primary property), never {@code null}.
-     * @param valueMap all properties of the validated resource/valuemap (only used for validations considering multiple properties), never {@code null}.
-     * @param resource the resource on which the validation was triggered. {@code null} in case the validation was triggered on a {@link ValueMap} (via {@link ValidationService#validate(ValueMap, org.apache.sling.validation.model.ValidationModel)}).
+     * @param context the validation context contains additional information about the data to be validated, never {@code null}.
      * @param arguments the parameterization of the validator. Never {@code null} but might be the empty map.
      * @return the validation result (encapsulates the validation status as well as messages).
      * @throws org.apache.sling.validation.exceptions.SlingValidationException if some expected arguments are missing from the arguments map
      */
-    @Nonnull ValidationResult validate(@Nonnull T data, @Nonnull ValueMap valueMap, Resource resource, @Nonnull ValueMap arguments) throws SlingValidationException;
+    @Nonnull ValidationResult validate(@Nonnull T data, @Nonnull ValidationContext context, @Nonnull ValueMap arguments) throws SlingValidationException;
 }

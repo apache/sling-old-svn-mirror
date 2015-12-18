@@ -25,11 +25,11 @@ import javax.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.ValidationResult;
 import org.apache.sling.validation.exceptions.SlingValidationException;
 import org.apache.sling.validation.spi.DefaultValidationResult;
+import org.apache.sling.validation.spi.ValidationContext;
 import org.apache.sling.validation.spi.Validator;
 
 /**
@@ -43,7 +43,7 @@ public class RegexValidator implements Validator<String> {
     public static final String REGEX_PARAM = "regex";
 
     @Override
-    public @Nonnull ValidationResult validate(@Nonnull String data, @Nonnull ValueMap valueMap, Resource resource, @Nonnull ValueMap arguments)
+    public @Nonnull ValidationResult validate(@Nonnull String data, @Nonnull ValidationContext context, @Nonnull ValueMap arguments)
             throws SlingValidationException {
         String regex = arguments.get(REGEX_PARAM, "");
         if (StringUtils.isEmpty(regex)) {
@@ -53,7 +53,7 @@ public class RegexValidator implements Validator<String> {
         if (pattern.matcher((String)data).matches()) {
             return DefaultValidationResult.VALID;
         }
-        return new DefaultValidationResult("Property does not match the pattern '" + regex + "'");
+        return new DefaultValidationResult("Property does not match the pattern '" + regex + "'", context.getLocation());
     }
 
 }

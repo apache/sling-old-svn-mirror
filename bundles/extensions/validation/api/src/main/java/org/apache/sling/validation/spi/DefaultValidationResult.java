@@ -38,15 +38,6 @@ public class DefaultValidationResult implements ValidationResult {
     }
 
     /** 
-     * Constructs a result with one failure message.
-     * The location is later on added by the calling service!
-     * @param message the failure message
-     */
-    public DefaultValidationResult(@Nonnull String message) {
-        this(message, null);
-    }
-    
-    /** 
      * Constructs a result with one failure message and an according location
      * @param message the failure message
      * @param location the location

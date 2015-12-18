@@ -22,7 +22,6 @@ import java.util.Collection;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.ValidationResult;
 import org.apache.sling.validation.exceptions.SlingValidationException;
@@ -34,6 +33,7 @@ import org.apache.sling.validation.impl.util.examplevalidators.StringArrayValida
 import org.apache.sling.validation.impl.util.examplevalidators.StringValidator;
 import org.apache.sling.validation.impl.validators.RegexValidator;
 import org.apache.sling.validation.spi.DefaultValidationResult;
+import org.apache.sling.validation.spi.ValidationContext;
 import org.apache.sling.validation.spi.Validator;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matchers;
@@ -64,7 +64,7 @@ public class ValidatorTypeUtilTest {
     
     private class InnerStringValidator implements Validator<String> {
         @Override
-        public @Nonnull ValidationResult validate(@Nonnull String data, @Nonnull ValueMap valueMap, Resource resource, @Nonnull ValueMap arguments)
+        public @Nonnull ValidationResult validate(@Nonnull String data, @Nonnull ValidationContext context, @Nonnull ValueMap arguments)
                 throws SlingValidationException {
             return DefaultValidationResult.VALID;
         }
@@ -81,7 +81,7 @@ public class ValidatorTypeUtilTest {
     public void testGetValidatorTypeWithAnonymousClass() {
         Assert.assertThat((Class<String>)ValidatorTypeUtil.getValidatorType(new Validator<String>() {
             @Override
-            public @Nonnull ValidationResult validate(@Nonnull String data, @Nonnull ValueMap valueMap, Resource resource, @Nonnull ValueMap arguments)
+            public @Nonnull ValidationResult validate(@Nonnull String data, @Nonnull ValidationContext context, @Nonnull ValueMap arguments)
                     throws SlingValidationException {
                 return DefaultValidationResult.VALID;
             }
@@ -99,7 +99,7 @@ public class ValidatorTypeUtilTest {
     public void testGetValidatorTypeWithCollectionType() {
         ValidatorTypeUtil.getValidatorType(new Validator<Collection<String>>() {
             @Override
-            public @Nonnull ValidationResult validate(@Nonnull Collection<String> data, @Nonnull ValueMap valueMap, Resource resource, @Nonnull ValueMap arguments)
+            public @Nonnull ValidationResult validate(@Nonnull Collection<String> data, @Nonnull ValidationContext context, @Nonnull ValueMap arguments)
                     throws SlingValidationException {
                 return DefaultValidationResult.VALID;
             }
@@ -108,7 +108,7 @@ public class ValidatorTypeUtilTest {
     
     private class InnerStringValidatorWithAdditionalBaseClass extends GenericTypeParameterBaseClass<Integer> implements Validator<String> {
         @Override
-        public @Nonnull ValidationResult validate(@Nonnull String data, @Nonnull ValueMap valueMap, Resource resource, @Nonnull ValueMap arguments)
+        public @Nonnull ValidationResult validate(@Nonnull String data, @Nonnull ValidationContext context, @Nonnull ValueMap arguments)
                 throws SlingValidationException {
             return DefaultValidationResult.VALID;
         }

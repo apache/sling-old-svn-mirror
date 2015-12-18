@@ -38,15 +38,11 @@ public class CompositeValidationResult implements ValidationResult {
     public CompositeValidationResult() {
         results = new ArrayList<ValidationResult>();
     }
-    
-    public void addValidationResultWithLocationFallback(ValidationResult result, String location) {
-        results.add(new ValidationResultFailureWrapper<LocationFallbackValidationFailureWrapper>(result, location, new LocationFallbackValidationFailureWrapper.Factory()));
-    }
-    
+
     public void addValidationResult(ValidationResult result) {
         results.add(result);
     }
-    
+
     public void addFailure(@Nonnull String message, String location) {
         results.add(new DefaultValidationResult(message, location));
     }

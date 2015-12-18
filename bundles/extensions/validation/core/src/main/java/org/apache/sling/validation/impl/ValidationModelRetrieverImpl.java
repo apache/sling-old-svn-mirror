@@ -73,7 +73,7 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever, E
      * List of all known validators (key=classname of validator)
      */
     @Reference(name = "validator", referenceInterface = Validator.class, policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE)
-    Map<String, Validator<?>> validators = new ConcurrentHashMap<String, Validator<?>>();
+    @Nonnull Map<String, Validator<?>> validators = new ConcurrentHashMap<String, Validator<?>>();
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory;

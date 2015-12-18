@@ -20,16 +20,16 @@ package org.apache.sling.validation.impl.util.examplevalidators;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.ValidationResult;
 import org.apache.sling.validation.exceptions.SlingValidationException;
 import org.apache.sling.validation.spi.DefaultValidationResult;
+import org.apache.sling.validation.spi.ValidationContext;
 
 public class ExtendedStringValidator extends AbstractValidatorWithAdditionalType<Boolean, String, Integer> {
 
     @Override
-    public @Nonnull ValidationResult validate(@Nonnull String data, @Nonnull ValueMap valueMap, Resource resource, @Nonnull ValueMap arguments)
+    public @Nonnull ValidationResult validate(@Nonnull String data, @Nonnull ValidationContext context, @Nonnull ValueMap arguments)
             throws SlingValidationException {
         return DefaultValidationResult.VALID;
     }

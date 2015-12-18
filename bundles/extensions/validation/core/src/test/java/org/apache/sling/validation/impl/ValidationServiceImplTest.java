@@ -53,6 +53,7 @@ import org.apache.sling.validation.model.ResourceProperty;
 import org.apache.sling.validation.model.ValidationModel;
 import org.apache.sling.validation.spi.DefaultValidationFailure;
 import org.apache.sling.validation.spi.DefaultValidationResult;
+import org.apache.sling.validation.spi.ValidationContext;
 import org.apache.sling.validation.spi.Validator;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
@@ -103,11 +104,12 @@ public class ValidationServiceImplTest {
     public void testValidateNeverCalledWithNullValues() throws Exception {
         Validator<String> myValidator = new Validator<String>() {
             @Override
-            public @Nonnull ValidationResult validate(@Nonnull String data, @Nonnull ValueMap valueMap, Resource resource, @Nonnull ValueMap arguments)
+            public @Nonnull ValidationResult validate(@Nonnull String data, @Nonnull ValidationContext context, @Nonnull ValueMap arguments)
                     throws SlingValidationException {
                 Assert.assertNotNull("data parameter for validate should never be null", data);
-                Assert.assertNotNull("valueMap parameter for validate should never be null", valueMap);
-                Assert.assertNull("resource cannot be set if validate was called only with a value map", resource);
+                Assert.assertNotNull("location of context parameter for validate should never be null", context.getLocation());
+                Assert.assertNotNull("valueMap of context parameter for validate should never be null", context.getValueMap());
+                Assert.assertNull("resource of context parameter for validate cannot be set if validate was called only with a value map", context.getResource());
                 Assert.assertNotNull("arguments parameter for validate should never be null", arguments);
                 return DefaultValidationResult.VALID;
             }
@@ -271,9 +273,14 @@ public class ValidationServiceImplTest {
         Validator<String> extendedValidator = new Validator<String>() {
             @Override
             @Nonnull
-            public ValidationResult validate(String data, ValueMap valueMap, Resource resource, ValueMap arguments)
+            public ValidationResult validate(@Nonnull String data, @Nonnull ValidationContext context, @Nonnull ValueMap arguments)
                     throws SlingValidationException {
-                Assert.assertThat(resource.getPath(), Matchers.equalTo("/content/validation/1/resource"));
+                Resource resource = context.getResource();
+                if (resource == null) {
+                    Assert.fail("Resource must not be null");
+                } else {
+                    Assert.assertThat(resource.getPath(), Matchers.equalTo("/content/validation/1/resource"));
+                }
                 return DefaultValidationResult.VALID;
             }
             

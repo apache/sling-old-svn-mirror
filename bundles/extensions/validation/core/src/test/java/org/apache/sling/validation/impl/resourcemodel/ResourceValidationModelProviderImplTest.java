@@ -47,7 +47,6 @@ import org.apache.sling.testing.mock.jcr.MockQueryResult;
 import org.apache.sling.testing.mock.jcr.MockQueryResultHandler;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
-import org.apache.sling.validation.impl.Constants;
 import org.apache.sling.validation.impl.model.ChildResourceImpl;
 import org.apache.sling.validation.impl.model.ResourcePropertyBuilder;
 import org.apache.sling.validation.impl.model.ValidationModelBuilder;
@@ -299,10 +298,10 @@ public class ResourceValidationModelProviderImplTest {
     private Resource createValidationModelResource(ResourceResolver rr, String root, String name, ValidationModel model)
             throws Exception {
         Map<String, Object> modelProperties = new HashMap<String, Object>();
-        modelProperties.put(Constants.VALIDATED_RESOURCE_TYPE, model.getValidatedResourceType());
-        modelProperties.put(Constants.APPLICABLE_PATHS, model.getApplicablePaths());
+        modelProperties.put(ResourceValidationModelProviderImpl.VALIDATED_RESOURCE_TYPE, model.getValidatedResourceType());
+        modelProperties.put(ResourceValidationModelProviderImpl.APPLICABLE_PATHS, model.getApplicablePaths());
         modelProperties
-                .put(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY, Constants.VALIDATION_MODEL_RESOURCE_TYPE);
+                .put(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY, ResourceValidationModelProviderImpl.VALIDATION_MODEL_RESOURCE_TYPE);
         modelProperties.put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
         Resource modelResource = ResourceUtil.getOrCreateResource(rr, root + "/" + name, modelProperties,
                 JcrResourceConstants.NT_SLING_FOLDER, true);
@@ -333,7 +332,7 @@ public class ResourceValidationModelProviderImplTest {
             return;
         }
         Resource propertiesResource = ResourceUtil.getOrCreateResource(rr,
-                model.getPath() + "/" + Constants.PROPERTIES, JcrConstants.NT_UNSTRUCTURED, null, true);
+                model.getPath() + "/" + ResourceValidationModelProviderImpl.PROPERTIES, JcrConstants.NT_UNSTRUCTURED, null, true);
         for (ResourceProperty property : properties) {
             Map<String, Object> modelPropertyJCRProperties = new HashMap<String, Object>();
             modelPropertyJCRProperties.put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
@@ -343,12 +342,12 @@ public class ResourceValidationModelProviderImplTest {
                 ModifiableValueMap values = propertyResource.adaptTo(ModifiableValueMap.class);
                 Pattern pattern = property.getNamePattern();
                 if (pattern != null) {
-                    values.put(Constants.NAME_REGEX, pattern.pattern());
+                    values.put(ResourceValidationModelProviderImpl.NAME_REGEX, pattern.pattern());
                 }
-                values.put(Constants.PROPERTY_MULTIPLE, property.isMultiple());
-                values.put(Constants.OPTIONAL, !property.isRequired());
+                values.put(ResourceValidationModelProviderImpl.PROPERTY_MULTIPLE, property.isMultiple());
+                values.put(ResourceValidationModelProviderImpl.OPTIONAL, !property.isRequired());
                 Resource validators = ResourceUtil.getOrCreateResource(rr, propertyResource.getPath() + "/"
-                        + Constants.VALIDATORS, JcrConstants.NT_UNSTRUCTURED, null, true);
+                        + ResourceValidationModelProviderImpl.VALIDATORS, JcrConstants.NT_UNSTRUCTURED, null, true);
                 if (validators != null) {
                     for (ParameterizedValidator validator : property.getValidators()) {
                         Map<String, Object> validatorProperties = new HashMap<String, Object>();
@@ -356,7 +355,7 @@ public class ResourceValidationModelProviderImplTest {
                         Map<String, Object> parameters = validator.getParameters();
                         if (!parameters.isEmpty()) {
                             // convert to right format
-                            validatorProperties.put(Constants.VALIDATOR_ARGUMENTS,
+                            validatorProperties.put(ResourceValidationModelProviderImpl.VALIDATOR_ARGUMENTS,
                                     convertMapToJcrValidatorArguments(parameters));
                         }
                         ResourceUtil.getOrCreateResource(rr, validators.getPath() + "/"
@@ -383,13 +382,13 @@ public class ResourceValidationModelProviderImplTest {
 
     private Resource createValidationModelChildResource(Resource parentResource, ChildResource child) throws PersistenceException {
         ResourceResolver rr = parentResource.getResourceResolver();
-        Resource modelChildren = rr.create(parentResource, Constants.CHILDREN, primaryTypeUnstructuredMap);
+        Resource modelChildren = rr.create(parentResource, ResourceValidationModelProviderImpl.CHILDREN, primaryTypeUnstructuredMap);
         Resource modelResource = rr.create(modelChildren, child.getName(), primaryTypeUnstructuredMap);
         ModifiableValueMap mvm = modelResource.adaptTo(ModifiableValueMap.class);
         if (child.getNamePattern() != null) {
-            mvm.put(Constants.NAME_REGEX, child.getNamePattern() );
+            mvm.put(ResourceValidationModelProviderImpl.NAME_REGEX, child.getNamePattern() );
         }
-        mvm.put(Constants.OPTIONAL, !child.isRequired());
+        mvm.put(ResourceValidationModelProviderImpl.OPTIONAL, !child.isRequired());
         createValidationModelProperties(modelResource, child.getProperties());
         // recursion for all childs
         for (ChildResource grandChild : child.getChildren()) {

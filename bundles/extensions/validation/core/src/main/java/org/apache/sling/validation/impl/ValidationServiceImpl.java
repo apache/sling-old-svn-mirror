@@ -45,6 +45,7 @@ import org.apache.sling.validation.model.ChildResource;
 import org.apache.sling.validation.model.ParameterizedValidator;
 import org.apache.sling.validation.model.ResourceProperty;
 import org.apache.sling.validation.model.ValidationModel;
+import org.apache.sling.validation.spi.ValidationContext;
 import org.apache.sling.validation.spi.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -287,8 +288,9 @@ public class ValidationServiceImpl implements ValidationService{
     private void validateValue(CompositeValidationResult result, @Nonnull Object value, String property, String relativePath, @Nonnull ValueMap valueMap, Resource resource, ParameterizedValidator validator) {
         try {
             @SuppressWarnings("unchecked")
-            ValidationResult validatorResult = ((Validator)validator.getValidator()).validate(value, valueMap, resource, validator.getParameters());
-            result.addValidationResultWithLocationFallback(validatorResult, relativePath + property);
+            ValidationContext validationContext = new DefaultValidationContext(relativePath + property, valueMap, resource);
+            ValidationResult validatorResult = ((Validator)validator.getValidator()).validate(value, validationContext, validator.getParameters());
+            result.addValidationResult(validatorResult);
         } catch (SlingValidationException e) {
             // wrap in another SlingValidationException to include information about the property
             throw new SlingValidationException("Could not call validator " + validator

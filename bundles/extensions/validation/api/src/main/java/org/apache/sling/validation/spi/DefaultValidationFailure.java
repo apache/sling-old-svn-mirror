@@ -25,13 +25,9 @@ import org.apache.sling.validation.ValidationFailure;
 public class DefaultValidationFailure implements ValidationFailure {
 
     private final @Nonnull String message;
-    private final String location;
+    private final @Nonnull String location;
 
-    public DefaultValidationFailure(@Nonnull String message) {
-        this(message, null);
-    }
-
-    public DefaultValidationFailure(@Nonnull String message, String location) {
+    public DefaultValidationFailure(@Nonnull String message, @Nonnull String location) {
         this.message = message;
         this.location = location;
     }
@@ -42,7 +38,7 @@ public class DefaultValidationFailure implements ValidationFailure {
     }
 
     @Override
-    public String getLocation() {
+    public @Nonnull String getLocation() {
         return location;
     }
 
