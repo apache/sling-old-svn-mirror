@@ -27,9 +27,9 @@ import javax.annotation.Nonnull;
 import org.apache.sling.validation.ValidationFailure;
 import org.apache.sling.validation.ValidationResult;
 import org.apache.sling.validation.spi.DefaultValidationResult;
+
 /**
- * Aggregates multiple {@link ValidationResult}s, optionally adjusting the locations of the embedded {@link ValidationFailure}s.
- *
+ * Aggregates multiple {@link ValidationResult}s.
  */
 public class CompositeValidationResult implements ValidationResult {
 
@@ -49,6 +49,7 @@ public class CompositeValidationResult implements ValidationResult {
 
     @Override
     public boolean isValid() {
+        // this is only valid iff all aggregated results are valid
         for (ValidationResult result : results) {
             if (!result.isValid()) {
                 return false;
@@ -60,7 +61,6 @@ public class CompositeValidationResult implements ValidationResult {
     @Override
     @Nonnull
     public List<ValidationFailure> getFailures() {
-        // go through all failures
         List<ValidationFailure> failures = new LinkedList<ValidationFailure>();
         for (ValidationResult result : results) {
             for (ValidationFailure failure : result.getFailures()) {

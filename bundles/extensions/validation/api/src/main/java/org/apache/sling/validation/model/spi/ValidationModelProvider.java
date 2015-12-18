@@ -35,7 +35,7 @@ import org.apache.sling.validation.spi.Validator;
 public interface ValidationModelProvider {
 
     /**
-     * Retrieves the model responsible for validating the given resourceType.
+     * Retrieves the models responsible for validating the given resourceType.
      * 
      * @param relativeResourceType
      * @param validatorsMap

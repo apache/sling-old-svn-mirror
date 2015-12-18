@@ -25,13 +25,13 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.spi.ValidationContext;
 
-public class DefaultValidationContext implements ValidationContext {
+public class ValidationContextImpl implements ValidationContext {
 
     private final @Nonnull String location;
     private final @Nonnull ValueMap valueMap;
     private final Resource resource;
 
-    public DefaultValidationContext(@Nonnull String location, @Nonnull ValueMap valueMap, Resource resource) {
+    public ValidationContextImpl(@Nonnull String location, @Nonnull ValueMap valueMap, Resource resource) {
         super();
         this.location = location;
         this.valueMap = valueMap;

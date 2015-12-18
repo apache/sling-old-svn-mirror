@@ -71,6 +71,19 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
     static final String MODEL_XPATH_QUERY = "/jcr:root%s/*[@sling:resourceType=\""+ResourceValidationModelProviderImpl.VALIDATION_MODEL_RESOURCE_TYPE+"\" and @"+ResourceValidationModelProviderImpl.VALIDATED_RESOURCE_TYPE+"=\"%s\"]";
     static final String[] TOPICS = { SlingConstants.TOPIC_RESOURCE_REMOVED, SlingConstants.TOPIC_RESOURCE_CHANGED,
             SlingConstants.TOPIC_RESOURCE_ADDED };
+    
+    public static final String NAME_REGEX = "nameRegex";
+    public static final String CHILDREN = "children";
+    public static final String VALIDATOR_ARGUMENTS = "validatorArguments";
+    public static final String VALIDATORS = "validators";
+    public static final String OPTIONAL = "optional";
+    public static final String PROPERTY_MULTIPLE = "propertyMultiple";
+    public static final String PROPERTY_TYPE = "propertyType";
+    public static final String PROPERTIES = "properties";
+    public static final String VALIDATION_MODEL_RESOURCE_TYPE = "sling/validation/model";
+    public static final String MODELS_HOME = "validation/";
+    public static final String APPLICABLE_PATHS = "applicablePaths";
+    public static final String VALIDATED_RESOURCE_TYPE = "validatedResourceType";
 
     @Reference
     private ResourceResolverFactory rrf = null;
@@ -86,18 +99,6 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
     private ThreadPool threadPool;
 
     private ServiceRegistration eventHandlerRegistration;
-    public static final String NAME_REGEX = "nameRegex";
-    public static final String CHILDREN = "children";
-    public static final String VALIDATOR_ARGUMENTS = "validatorArguments";
-    public static final String VALIDATORS = "validators";
-    public static final String OPTIONAL = "optional";
-    public static final String PROPERTY_MULTIPLE = "propertyMultiple";
-    public static final String PROPERTY_TYPE = "propertyType";
-    public static final String PROPERTIES = "properties";
-    public static final String VALIDATION_MODEL_RESOURCE_TYPE = "sling/validation/model";
-    public static final String MODELS_HOME = "validation/";
-    public static final String APPLICABLE_PATHS = "applicablePaths";
-    public static final String VALIDATED_RESOURCE_TYPE = "validatedResourceType";
 
     @Activate
     protected void activate(ComponentContext componentContext) throws LoginException {
@@ -155,31 +156,9 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
     }
 
     /**
-     * Searches for valid validation models in the JCR repository for a certain resource type. All validation models
+     * Searches for validation models bound to a specific resource type in the repository. All validation models
      * will be returned in a {@link Trie} data structure for easy retrieval of the models using their
      * {@code applicable paths} as trie keys.
-     * <p/>
-     * A valid content-tree {@code ValidationModel} has the following structure:
-     * 
-     * <pre>
-     * validationModel
-     *      &#064;validatedResourceType
-     *      &#064;applicablePaths = [path1,path2,...] (optional)
-     *      &#064;sling:resourceType = sling/validation/model
-     *      fields
-     *          field1
-     *              &#064;fieldType
-     *              validators
-     *                  validator1
-     *                      &#064;validatorArguments = [key=value,key=value...] (optional)
-     *                  validatorN
-     *                      #064;validatorArguments = [key=value,key=value...] (optional)
-     *          fieldN
-     *              &#064;fieldType
-     *              validators
-     *                  validator1
-     *                  &#064;validatorArguments = [key=value,key=value...] (optional)
-     * </pre>
      *
      * @param relativeResourceType
      *            {@inheritDoc}
@@ -188,7 +167,6 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
      * @return {@inheritDoc}
      * @throws {@inheritDoc}
      */
-
     @Override
     @Nonnull
     public Collection<ValidationModel> getModel(@Nonnull String relativeResourceType, @Nonnull Map<String, Validator<?>> validatorsMap, @Nonnull ResourceResolver resourceResolver) {

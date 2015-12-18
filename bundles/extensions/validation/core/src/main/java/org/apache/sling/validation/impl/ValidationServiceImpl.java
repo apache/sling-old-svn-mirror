@@ -288,7 +288,7 @@ public class ValidationServiceImpl implements ValidationService{
     private void validateValue(CompositeValidationResult result, @Nonnull Object value, String property, String relativePath, @Nonnull ValueMap valueMap, Resource resource, ParameterizedValidator validator) {
         try {
             @SuppressWarnings("unchecked")
-            ValidationContext validationContext = new DefaultValidationContext(relativePath + property, valueMap, resource);
+            ValidationContext validationContext = new ValidationContextImpl(relativePath + property, valueMap, resource);
             ValidationResult validatorResult = ((Validator)validator.getValidator()).validate(value, validationContext, validator.getParameters());
             result.addValidationResult(validatorResult);
         } catch (SlingValidationException e) {
