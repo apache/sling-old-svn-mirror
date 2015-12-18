@@ -36,7 +36,7 @@
   <description>Integration Tests for Apache Sling Launchpad Karaf</description>
 
   <properties>
-    <org.ops4j.pax.exam.version>4.6.0</org.ops4j.pax.exam.version>
+    <org.ops4j.pax.exam.version>4.7.0</org.ops4j.pax.exam.version>
   </properties>
 
   <dependencies>
