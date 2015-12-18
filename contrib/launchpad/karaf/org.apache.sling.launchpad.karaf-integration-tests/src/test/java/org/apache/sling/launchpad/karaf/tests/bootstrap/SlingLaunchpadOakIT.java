@@ -19,6 +19,7 @@
 package org.apache.sling.launchpad.karaf.tests.bootstrap;
 
 import org.apache.sling.launchpad.karaf.testing.KarafTestSupport;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -34,32 +35,56 @@ import static org.junit.Assert.assertNotNull;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class SlingExtensionEventIT extends KarafTestSupport {
+public class SlingLaunchpadOakIT extends KarafTestSupport {
 
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addSlingFeatures("sling-extension-event")
+            addSlingFeatures("sling-launchpad-oak")
         );
-    }
-
-    @Test
-    public void testOrgApacheSlingEvent() {
-        final Bundle bundle = findBundle("org.apache.sling.event");
-        assertNotNull(bundle);
-        assertEquals(Bundle.ACTIVE, bundle.getState());
-    }
-
-    @Test
-    public void testOrgApacheSlingEventDea() {
-        final Bundle bundle = findBundle("org.apache.sling.event.dea");
-        assertNotNull(bundle);
-        assertEquals(Bundle.ACTIVE, bundle.getState());
     }
 
     @Test
     public void testOrgApacheFelixInventory() {
         final Bundle bundle = findBundle("org.apache.felix.inventory");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
+    public void testOrgApacheFelixPrefs() {
+        final Bundle bundle = findBundle("org.apache.felix.prefs");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
+    public void testOrgApacheFelixWebconsolePluginsEvent() {
+        final Bundle bundle = findBundle("org.apache.felix.webconsole.plugins.event");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
+    @Ignore // TODO
+    public void testOrgApacheFelixWebconsolePluginsDs() {
+        final Bundle bundle = findBundle("org.apache.felix.webconsole.plugins.ds");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
+    @Ignore // TODO
+    public void testOrgApacheFelixWebconsolePluginsMemoryusage() {
+        final Bundle bundle = findBundle("org.apache.felix.webconsole.plugins.memoryusage");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
+    @Ignore // TODO
+    public void testOrgApacheFelixWebconsolePluginsPackageadmin() {
+        final Bundle bundle = findBundle("org.apache.felix.webconsole.plugins.packageadmin");
         assertNotNull(bundle);
         assertEquals(Bundle.ACTIVE, bundle.getState());
     }

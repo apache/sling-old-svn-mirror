@@ -268,6 +268,7 @@
       userPrivilegeNames=["jcr:all"]
       groupPrivilegeNames=["jcr:read"]
     </config>
+    <!-- dependencies -->
     <feature>webconsole</feature>
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-servlets</feature>
@@ -276,6 +277,15 @@
     <feature version="${feature.version}">sling-installer</feature>
     <feature version="${feature.version}">sling-extension-adapter</feature>
     <feature version="${feature.version}">sling-extension-bundleresource</feature>
+    <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.inventory/1.0.4</bundle>
+    <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.prefs/1.0.6</bundle>
+    <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.webconsole.plugins.event/1.1.4</bundle>
+    <!-- TODO issue with Karaf Web Console?-->
+    <!--
+    <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.webconsole.plugins.ds/2.0.2</bundle>
+    <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.webconsole.plugins.memoryusage/1.0.6</bundle>
+    <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.webconsole.plugins.packageadmin/1.0.2</bundle>
+    -->
   </feature>
   <feature name="sling-launchpad-oak-tar" version="${feature.version}">
     <config name="org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService">
