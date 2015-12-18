@@ -19,6 +19,7 @@
     java.util.Map,
     java.util.List,
     org.apache.sling.api.resource.Resource,
+    org.apache.sling.validation.ValidationFailure,
     org.apache.sling.validation.examples.models.UserModel
     "%>
 <%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling" %>
@@ -46,14 +47,10 @@
 </table>
 <h3>Validation Errors</h3>
 <%
-    for (Map.Entry<String, List<String>> entry : user.getErrors().entrySet()) {
+    for (ValidationFailure error : user.getErrors()) {
 %>
-<span><strong>Key:</strong> <%= entry.getKey() %></span><br>
+<span><strong>Key:</strong> <%= error.getLocation() %></span><br>
+<span><%= error.getMessage() %></span><br>
 <%
-        for (String message : entry.getValue()) {
-%>
-<span><%= message %></span><br>
-<%
-        }
     }
 %>

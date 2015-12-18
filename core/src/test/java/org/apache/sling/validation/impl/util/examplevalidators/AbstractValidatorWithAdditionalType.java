@@ -18,7 +18,7 @@
  */
 package org.apache.sling.validation.impl.util.examplevalidators;
 
-import org.apache.sling.validation.Validator;
+import org.apache.sling.validation.spi.Validator;
 
 public abstract class AbstractValidatorWithAdditionalType<A,T,B> implements Validator<T>{
     public abstract A getA();

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,23 +16,44 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.impl.util.examplevalidators;
+package org.apache.sling.validation.impl;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.validation.ValidationResult;
-import org.apache.sling.validation.exceptions.SlingValidationException;
-import org.apache.sling.validation.spi.DefaultValidationResult;
 import org.apache.sling.validation.spi.ValidationContext;
-import org.apache.sling.validation.spi.Validator;
 
-public class IntegerValidator implements Validator<Integer> {
+public class ValidationContextImpl implements ValidationContext {
+
+    private final @Nonnull String location;
+    private final @Nonnull ValueMap valueMap;
+    private final Resource resource;
+
+    public ValidationContextImpl(@Nonnull String location, @Nonnull ValueMap valueMap, Resource resource) {
+        super();
+        this.location = location;
+        this.valueMap = valueMap;
+        this.resource = resource;
+    }
 
     @Override
-    public @Nonnull ValidationResult validate(@Nonnull Integer data, @Nonnull ValidationContext context, @Nonnull ValueMap arguments)
-            throws SlingValidationException {
-        return DefaultValidationResult.VALID;
+    @Nonnull
+    public String getLocation() {
+        return location;
+    }
+
+    @Override
+    @Nonnull
+    public ValueMap getValueMap() {
+        return valueMap;
+    }
+
+    @Override
+    @CheckForNull
+    public Resource getResource() {
+        return resource;
     }
 
 }
