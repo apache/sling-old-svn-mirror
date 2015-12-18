@@ -63,7 +63,7 @@
   </feature>
   <!-- Apache Sling Commons -->
   <feature name="sling-commons-scheduler" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.commons.scheduler/2.4.10</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.commons.scheduler/2.4.12</bundle>
     <!-- dependencies -->
     <feature>scr</feature>
     <feature version="${feature.version}">sling-commons-threads</feature>
@@ -139,7 +139,7 @@
   </feature>
   <feature name="sling-extension-models" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.models.api/1.2.2</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.models.impl/1.2.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.models.impl/1.2.4</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
   </feature>
@@ -411,8 +411,8 @@
   -->
   <!-- Apache Sling Extensions (contrib) -->
   <feature name="sling-extension-distribution" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.distribution.api/0.2.0</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.distribution.core/0.1.10</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.distribution.api/0.3.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.distribution.core/0.1.12</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-jcr</feature>
