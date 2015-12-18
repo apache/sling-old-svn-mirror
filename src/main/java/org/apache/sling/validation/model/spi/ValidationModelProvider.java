@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.spi;
+package org.apache.sling.validation.model.spi;
 
 import java.util.Collection;
 import java.util.Map;
@@ -24,8 +24,8 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.validation.Validator;
 import org.apache.sling.validation.model.ValidationModel;
+import org.apache.sling.validation.spi.Validator;
 
 /**
  * All providers of {@link ValidationModel}s must implement this interface. In addition if the model might become
@@ -35,7 +35,7 @@ import org.apache.sling.validation.model.ValidationModel;
 public interface ValidationModelProvider {
 
     /**
-     * Retrieves the model responsible for validating the given resourceType.
+     * Retrieves the models responsible for validating the given resourceType.
      * 
      * @param relativeResourceType
      * @param validatorsMap
