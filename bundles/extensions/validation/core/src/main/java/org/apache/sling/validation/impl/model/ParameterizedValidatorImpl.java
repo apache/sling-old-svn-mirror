@@ -24,9 +24,9 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
-import org.apache.sling.validation.Validator;
 import org.apache.sling.validation.impl.util.ValidatorTypeUtil;
 import org.apache.sling.validation.model.ParameterizedValidator;
+import org.apache.sling.validation.spi.Validator;
 
 public class ParameterizedValidatorImpl implements ParameterizedValidator {
     private final @Nonnull Validator<?> validator;

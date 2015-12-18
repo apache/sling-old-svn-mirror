@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.spi;
+package org.apache.sling.validation.model.spi;
 
 /**
  * Validation models are cached until explicitly invalidated through this OSGi service.

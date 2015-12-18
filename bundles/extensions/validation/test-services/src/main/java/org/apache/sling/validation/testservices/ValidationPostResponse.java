@@ -25,9 +25,11 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.servlets.post.AbstractPostResponse;
+import org.apache.sling.validation.ValidationFailure;
 import org.apache.sling.validation.ValidationResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,9 +52,14 @@ public class ValidationPostResponse extends AbstractPostResponse {
         if (validationResult != null) {
             try {
                 jsonResponse.put("valid", validationResult.isValid());
-                for (Map.Entry<String, List<String>> entry : validationResult.getFailureMessages().entrySet()) {
-                    jsonResponse.put(entry.getKey(), entry.getValue());
+                JSONArray failures = new JSONArray();
+                for (ValidationFailure failure : validationResult.getFailures()) {
+                    JSONObject failureJson = new JSONObject();
+                    failureJson.put("message", failure.getMessage());
+                    failureJson.put("location", failure.getLocation());
+                    failures.put(failureJson);
                 }
+                jsonResponse.put("failures", failures);
             } catch (JSONException e) {
                 LOG.error("JSON error during response send operation.", e);
             }

@@ -18,9 +18,6 @@
  */
 package org.apache.sling.validation.impl;
 
-import java.util.List;
-import java.util.Map.Entry;
-
 import javax.annotation.Nonnull;
 
 import org.apache.commons.collections.Predicate;
@@ -36,7 +33,7 @@ public class ValidationResourceVisitor extends AbstractResourceVisitor {
     private final String rootResourcePath;
     private final boolean enforceValidation;
     private final boolean considerResourceSuperTypeModels;
-    private final @Nonnull ValidationResultImpl result;
+    private final @Nonnull CompositeValidationResult result;
     private final Predicate filter;
 
     public ValidationResourceVisitor(ValidationServiceImpl validationService, String rootResourcePath, boolean enforceValidation, Predicate filter,  boolean considerResourceSuperTypeModels) {
@@ -46,7 +43,7 @@ public class ValidationResourceVisitor extends AbstractResourceVisitor {
         this.enforceValidation = enforceValidation;
         this.considerResourceSuperTypeModels = considerResourceSuperTypeModels;
         this.filter = filter;
-        this.result = new ValidationResultImpl();
+        this.result = new CompositeValidationResult();
     }
 
     @Override
@@ -60,6 +57,7 @@ public class ValidationResourceVisitor extends AbstractResourceVisitor {
                 }
                 return;
             }
+            // calculate the property name correctly from the root
             // the relative path must end with a slash and not start with a slash
             final String relativePath;
             if (resource.getPath().startsWith(rootResourcePath)) {
@@ -68,12 +66,7 @@ public class ValidationResourceVisitor extends AbstractResourceVisitor {
                 relativePath = "";
             }
             ValidationResult localResult = validationService.validate(resource, model, relativePath);
-            for (Entry<String, List<String>> entry : localResult.getFailureMessages().entrySet()) {
-                for (String message : entry.getValue()) {
-                    // calculate the property name correctly from the root
-                    result.addFailureMessage(entry.getKey(), message);
-                }
-            }
+            result.addValidationResult(localResult);
         }
     }
     
@@ -91,7 +84,7 @@ public class ValidationResourceVisitor extends AbstractResourceVisitor {
         return true;
     }
 
-    public @Nonnull ValidationResultImpl getResult() {
+    public @Nonnull CompositeValidationResult getResult() {
         return result;
     }
 
