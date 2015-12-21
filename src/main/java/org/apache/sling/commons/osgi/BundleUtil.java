@@ -48,7 +48,9 @@ public class BundleUtil {
      * @throws IOException If something goes wrong reading or writing.
      */
     public static File renameBSN(File bundleFile, String newBSN, File tempDir) throws IOException {
-        try (JarInputStream jis = new JarInputStream(new FileInputStream(bundleFile))) {
+        JarInputStream jis = null;
+        try {
+            jis = new JarInputStream(new FileInputStream(bundleFile));
             Manifest inputMF = jis.getManifest();
 
             Attributes inputAttrs = inputMF.getMainAttributes();
@@ -64,7 +66,9 @@ public class BundleUtil {
             outputAttrs.putValue("Bundle-SymbolicName", newBSN);
             outputAttrs.putValue("X-Original-Bundle-SymbolicName", orgBSN);
 
-            try (JarOutputStream jos = new JarOutputStream(new FileOutputStream(newBundle), newMF)) {
+            JarOutputStream jos = null;
+            try {
+                jos = new JarOutputStream(new FileOutputStream(newBundle), newMF);
                 JarEntry je = null;
                 while ((je = jis.getNextJarEntry()) != null) {
                     try {
@@ -76,9 +80,16 @@ public class BundleUtil {
                         jis.closeEntry();;
                     }
                 }
+            } finally {
+                if(jos != null) {
+                    jos.close();
+                }
             }
-
             return newBundle;
+        } finally {
+            if(jis != null) {
+                jis.close();
+            }
         }
     }
 

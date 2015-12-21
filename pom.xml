@@ -41,7 +41,6 @@
     </scm>
     
     <properties>
-        <sling.java.version>7</sling.java.version>
         <test.jars.folder>${project.build.directory}/testjars</test.jars.folder>
     </properties>
 
