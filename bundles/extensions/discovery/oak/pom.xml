@@ -279,7 +279,6 @@
         	<groupId>org.apache.sling</groupId>
         	<artifactId>org.apache.sling.commons.threads</artifactId>
         	<version>3.1.0</version>
-        	<type>bundle</type>
         	<scope>test</scope>
         </dependency>
         <dependency>
@@ -297,14 +296,12 @@
         	<groupId>org.apache.jackrabbit</groupId>
         	<artifactId>jackrabbit-jcr-commons</artifactId>
         	<version>2.11.0</version>
-        	<type>bundle</type>
         	<scope>test</scope>
         </dependency>
         <dependency>
         	<groupId>org.apache.jackrabbit</groupId>
         	<artifactId>jackrabbit-api</artifactId>
         	<version>2.11.0</version>
-        	<type>bundle</type>
         	<scope>test</scope>
         </dependency>
         <dependency>
@@ -323,7 +320,6 @@
         	<groupId>org.apache.sling</groupId>
         	<artifactId>org.apache.sling.hc.core</artifactId>
         	<version>1.0.6</version>
-        	<type>bundle</type>
         </dependency>
     </dependencies>
 </project>
