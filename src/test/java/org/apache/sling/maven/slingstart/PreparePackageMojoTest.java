@@ -17,6 +17,7 @@
 package org.apache.sling.maven.slingstart;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -27,7 +28,9 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.jar.Attributes;
+import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 
@@ -52,7 +55,87 @@ import static org.junit.Assert.assertEquals;
 
 public class PreparePackageMojoTest {
     @Test
-    public void testSubsystemBaseGeneration1() throws Exception {
+    public void testBSNRenaming() throws Exception {
+        // Provide the system with some artifacts that are known to be in the local .m2 repo
+        // These are explicitly included in the test section of the pom.xml
+        PreparePackageMojo ppm = getMojoUnderTest(
+                "org.apache.sling/org.apache.sling.commons.classloader/1.3.2",
+                "org.apache.sling/org.apache.sling.commons.classloader/1.3.2/app",
+                "org.apache.sling/org.apache.sling.commons.json/2.0.12");
+        try {
+            String modelTxt = "[feature name=:launchpad]\n" +
+                    "[artifacts]\n" +
+                    "  org.apache.sling/org.apache.sling.commons.classloader/1.3.2\n" +
+                    "" +
+                    "[feature name=rename_test]\n" +
+                    "  org.apache.sling/org.apache.sling.commons.json/2.0.12 [bundle:rename-bsn=r-foo.bar.renamed.sling.commons.json]\n";
+
+            Model model = ModelReader.read(new StringReader(modelTxt), null);
+            ppm.execute(model);
+
+            File orgJar = getMavenArtifactFile(getMavenRepoRoot(), "org.apache.sling", "org.apache.sling.commons.json", "2.0.12");
+            File generatedJar = new File(ppm.getTmpDir() + "/r-foo.bar.renamed.sling.commons.json-2.0.12.jar");
+
+            compareJarContents(orgJar, generatedJar);
+
+            try (JarFile jfOrg = new JarFile(orgJar);
+                JarFile jfNew = new JarFile(generatedJar)) {
+                Manifest mfOrg = jfOrg.getManifest();
+                Manifest mfNew = jfNew.getManifest();
+
+                Attributes orgAttrs = mfOrg.getMainAttributes();
+                Attributes newAttrs = mfNew.getMainAttributes();
+                for (Object key : orgAttrs.keySet()) {
+                    String orgVal = orgAttrs.getValue(key.toString());
+                    String newVal = newAttrs.getValue(key.toString());
+
+                    if ("Bundle-SymbolicName".equals(key.toString())) {
+                        assertEquals("Should have recorded the original Bundle-SymbolicName",
+                                orgVal, newAttrs.getValue("X-Original-Bundle-SymbolicName"));
+
+                        assertEquals("r-foo.bar.renamed.sling.commons.json", newVal);
+                    } else {
+                        assertEquals("Different keys: " + key, orgVal, newVal);
+                    }
+                }
+            }
+        } finally {
+            FileUtils.deleteDirectory(new File(ppm.project.getBuild().getDirectory()));
+        }
+    }
+
+    private static void compareJarContents(File orgJar, File actualJar) throws IOException {
+        try (JarInputStream jis1 = new JarInputStream(new FileInputStream(orgJar));
+            JarInputStream jis2 = new JarInputStream(new FileInputStream(actualJar))) {
+            JarEntry je1 = null;
+            while ((je1 = jis1.getNextJarEntry()) != null) {
+                if (je1.isDirectory())
+                    continue;
+
+                JarEntry je2 = null;
+                while((je2 = jis2.getNextJarEntry()) != null) {
+                    if (!je2.isDirectory())
+                        break;
+                }
+
+                assertEquals(je1.getName(), je2.getName());
+                assertEquals(je1.getSize(), je2.getSize());
+
+                try {
+                    byte[] buf1 = IOUtils.toByteArray(jis1);
+                    byte[] buf2 = IOUtils.toByteArray(jis2);
+
+                    assertArrayEquals("Contents not equal: " + je1.getName(), buf1, buf2);
+                } finally {
+                    jis1.closeEntry();
+                    jis2.closeEntry();
+                }
+            }
+        }
+    }
+
+    @Test
+    public void testSubsystemBaseGeneration() throws Exception {
         // Provide the system with some artifacts that are known to be in the local .m2 repo
         // These are explicitly included in the test section of the pom.xml
         PreparePackageMojo ppm = getMojoUnderTest(
@@ -84,7 +167,7 @@ public class PreparePackageMojoTest {
                     "  org.apache.sling/org.apache.sling.commons.json/2.0.12\n" +
                     "  org.apache.sling/org.apache.sling.commons.mime/2.1.8\n" +
                     "" +
-                    "[artifacts startLevel=20 runModes=foo,bar]\n" +
+                    "[artifacts startLevel=20 runModes=foo,bar,:blah]\n" +
                     "  org.apache.sling/org.apache.sling.commons.threads/3.2.0\n" +
                     "" +
                     "[artifacts startLevel=100 runModes=bar]\n" +
