@@ -48,7 +48,7 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.sling.commons.osgi.BundleUtil;
+import org.apache.sling.commons.osgi.BundleFileProcessor;
 import org.apache.sling.provisioning.model.ArtifactGroup;
 import org.apache.sling.provisioning.model.Configuration;
 import org.apache.sling.provisioning.model.Feature;
@@ -86,6 +86,34 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
     private static final String BOOTSTRAP_FILE = "sling_bootstrap.txt";
 
     private static final String PROPERTIES_FILE = "sling_install.properties";
+
+    /** BundleFileProcessor that can change the bundle symbolic name */ 
+    static class BSNRenamer extends BundleFileProcessor {
+        private final String newBSN;
+        
+        BSNRenamer(File input, File outputFolder, String newBSN) {
+            super(input, outputFolder);
+            this.newBSN = newBSN;
+        }
+        
+        protected Manifest processManifest(Manifest inputMF) {
+            Attributes inputAttrs = inputMF.getMainAttributes();
+            String orgBSN = inputAttrs.getValue("Bundle-SymbolicName");
+            Manifest newMF = new Manifest(inputMF);
+            Attributes outputAttrs = newMF.getMainAttributes();
+            outputAttrs.putValue("Bundle-SymbolicName", newBSN);
+            outputAttrs.putValue("X-Original-Bundle-SymbolicName", orgBSN);
+            return newMF;
+        }
+        
+        protected String getTargetFilename(Manifest inputJarManifest) {
+            String bver = inputJarManifest.getMainAttributes().getValue("Bundle-Version");
+            if (bver == null) {
+                bver = "0.0.0";
+            }
+            return newBSN + "-" + bver + ".jar";
+        }
+    }
 
     /**
      * To look up Archiver/UnArchiver implementations
@@ -238,7 +266,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
                 if (newBSN != null) {
                     try {
                         getTmpDir().mkdirs();
-                        artifactFile = BundleUtil.renameBSN(artifactFile, newBSN, getTmpDir());
+                        artifactFile = new BSNRenamer(artifactFile, getTmpDir(), newBSN).process();
                     } catch (IOException e) {
                         throw new MojoExecutionException("Unable to rename bundle BSN to " + newBSN + " for " + artifactFile, e);
                     }
