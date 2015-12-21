@@ -18,7 +18,12 @@
  */
 package org.apache.sling.commons.osgi;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -32,11 +37,15 @@ import java.util.jar.Manifest;
 
 import org.junit.Test;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 public class BundleUtilTest {
+    
+    private static void closeQuietly(Closeable c) {
+        try {
+            c.close();
+        } catch(IOException ignore) {
+        }
+    }
+    
     @Test
     public void testBSNRenaming() throws IOException {
         File tempDir = new File(System.getProperty("java.io.tmpdir"));
@@ -49,8 +58,11 @@ public class BundleUtilTest {
         try {
             compareJarContents(originalFile, generatedFile);
 
-            try (JarFile jfOrg = new JarFile(originalFile);
-                    JarFile jfNew = new JarFile(generatedFile)) {
+            JarFile jfOrg = null;
+            JarFile jfNew = null;
+            try {
+                    jfOrg = new JarFile(originalFile);
+                    jfNew = new JarFile(generatedFile);
                     Manifest mfOrg = jfOrg.getManifest();
                     Manifest mfNew = jfNew.getManifest();
 
@@ -69,6 +81,9 @@ public class BundleUtilTest {
                             assertEquals("Different keys: " + key, orgVal, newVal);
                         }
                     }
+                } finally {
+                    closeQuietly(jfOrg);
+                    closeQuietly(jfNew);
                 }
 
         } finally {
@@ -77,8 +92,11 @@ public class BundleUtilTest {
     }
 
     private static void compareJarContents(File orgJar, File actualJar) throws IOException {
-        try (JarInputStream jis1 = new JarInputStream(new FileInputStream(orgJar));
-            JarInputStream jis2 = new JarInputStream(new FileInputStream(actualJar))) {
+        JarInputStream jis1 = null;
+        JarInputStream jis2 = null;
+        try {
+            jis1 = new JarInputStream(new FileInputStream(orgJar));
+            jis2 = new JarInputStream(new FileInputStream(actualJar));
             JarEntry je1 = null;
             while ((je1 = jis1.getNextJarEntry()) != null) {
                 if (je1.isDirectory())
@@ -103,6 +121,9 @@ public class BundleUtilTest {
                     jis2.closeEntry();
                 }
             }
+        } finally {
+            closeQuietly(jis1);
+            closeQuietly(jis2);
         }
     }
 
