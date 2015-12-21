@@ -161,6 +161,7 @@
                         <include>org.apache.jackrabbit:*</include>
                     </includes>
                 </artifactSet>
+                <createSourcesJar>true</createSourcesJar>
               </configuration>
               <executions>
                 <execution>
