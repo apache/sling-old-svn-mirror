@@ -48,6 +48,7 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.sling.commons.osgi.BundleUtil;
 import org.apache.sling.provisioning.model.ArtifactGroup;
 import org.apache.sling.provisioning.model.Configuration;
 import org.apache.sling.provisioning.model.Feature;
@@ -231,7 +232,18 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
             for(final org.apache.sling.provisioning.model.Artifact a : group) {
                 final Artifact artifact = ModelUtils.getArtifact(this.project, this.mavenSession, this.artifactHandlerManager, this.resolver,
                         a.getGroupId(), a.getArtifactId(), a.getVersion(), a.getType(), a.getClassifier());
-                final File artifactFile = artifact.getFile();
+                File artifactFile = artifact.getFile();
+
+                String newBSN = a.getMetadata().get("bundle:rename-bsn");
+                if (newBSN != null) {
+                    try {
+                        getTmpDir().mkdirs();
+                        artifactFile = BundleUtil.renameBSN(artifactFile, newBSN, getTmpDir());
+                    } catch (IOException e) {
+                        throw new MojoExecutionException("Unable to rename bundle BSN to " + newBSN + " for " + artifactFile, e);
+                    }
+                }
+
                 contentsMap.put(getPathForArtifact(group.getStartLevel(), artifactFile.getName(), runMode, isBoot), artifactFile);
             }
         }
@@ -263,7 +275,6 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
             contentsMap.put(BASE_DESTINATION, rootConfDir);
         }
     }
-
 
     private File createSubsystemBaseFile(Feature feature, AtomicInteger startLevelHolder) throws MojoExecutionException {
         File subsystemFile = new File(getTmpDir(), feature.getName() + ".subsystem-base");
@@ -354,7 +365,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
         attrs.putValue("Manifest-Version", "1.0"); // Manifest does not work without this value
         attrs.putValue("About-This-Manifest", "This is not a real manifest, it is used as information when this archive is transformed into a real subsystem .esa file");
         for (Map.Entry<String, StringBuilder> entry : runModes.entrySet()) {
-            attrs.putValue(entry.getKey(), entry.getValue().toString());
+            attrs.putValue(entry.getKey().replace(':', '_'), entry.getValue().toString());
         }
         return mf;
     }
