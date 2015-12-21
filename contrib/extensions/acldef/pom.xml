@@ -35,5 +35,6 @@
 
   <modules>
     <module>parser</module>
+    <module>jcr</module>
   </modules>
 </project>
