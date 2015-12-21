@@ -24,47 +24,46 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
 /**
- * The <code>BundleUtil</code> is a utility class providing some
- * useful utility methods for bundle handling.
+ * The <code>BundleFileProcessor</code> can transform a bundle Manifest
+ * by creating a modified copy of the bundle file. 
  * @since 2.4
  */
-public class BundleUtil {
+public abstract class BundleFileProcessor {
+    
+    private final File input;
+    private final File outputFolder;
+    
+    public BundleFileProcessor(File input, File outputFolder) {
+        this.input = input;
+        this.outputFolder = outputFolder;
+    }
+    
+    /** Process the bundle Manifest. Can return the original
+     *  one if no changes are needed */
+    protected abstract Manifest processManifest(Manifest originalManifest);
+
+    /** Return the filename to use for the newly created bundle file */
+    protected abstract String getTargetFilename(Manifest inputJarManifest);
+    
     /**
-     * Creates a new OSGi Bundle from a given bundle with the only difference that the
-     * symbolic name is changed. The original symbolic name is recorded in the Manifest
-     * using the {@code X-Original-Bundle-SymbolicName} header.
-     * @param bundleFile The original bundle file. This file will not be modified.
-     * @param newBSN The new Bundle-SymbolicName
-     * @param tempDir The temporary directory to use. This is where the new bundle will be
-     * written. This directory must exist.
-     * @return The new bundle with the altered Symbolic Name.
+     * Creates a new OSGi Bundle from a given bundle, processing its manifest
+     * using the processManifest method.
+     * @return The new bundle file
      * @throws IOException If something goes wrong reading or writing.
      */
-    public static File renameBSN(File bundleFile, String newBSN, File tempDir) throws IOException {
+    public File process() throws IOException {
         JarInputStream jis = null;
         try {
-            jis = new JarInputStream(new FileInputStream(bundleFile));
-            Manifest inputMF = jis.getManifest();
-
-            Attributes inputAttrs = inputMF.getMainAttributes();
-            String bver = inputAttrs.getValue("Bundle-Version");
-            String orgBSN = inputAttrs.getValue("Bundle-SymbolicName");
-            if (bver == null)
-                bver = "0.0.0";
-
-            File newBundle = new File(tempDir, newBSN + "-" + bver + ".jar");
-
-            Manifest newMF = new Manifest(inputMF);
-            Attributes outputAttrs = newMF.getMainAttributes();
-            outputAttrs.putValue("Bundle-SymbolicName", newBSN);
-            outputAttrs.putValue("X-Original-Bundle-SymbolicName", orgBSN);
+            jis = new JarInputStream(new FileInputStream(input));
+            Manifest oldMF = jis.getManifest();
+            Manifest newMF = processManifest(oldMF);
+            File newBundle = new File(outputFolder, getTargetFilename(oldMF));
 
             JarOutputStream jos = null;
             try {
