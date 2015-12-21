@@ -27,19 +27,19 @@
     <relativePath/>
   </parent>
 
-  <artifactId>org.apache.sling.acldef.jcr</artifactId>
+  <artifactId>org.apache.sling.acldef.oak-jcr</artifactId>
   <packaging>bundle</packaging>
   <version>0.0.1-SNAPSHOT</version>
-  <name>Apache Sling ACL Definitions JCR module</name>
+  <name>Apache Sling ACL Definitions Oak/JCR module</name>
   <description>
-	  Applies ACLs to a JCR repository based on the output
+	  Applies ACLs to an Oak JCR repository based on the output
 	  of the ACL Definition Language parser.
   </description>
 
   <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/acldef-jcr</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/acldef-jcr</developerConnection>
-    <url>https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/acldef-jcr</url>
+    <connection>scm:svn: https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/acldef/oak-jcr</connection>
+    <developerConnection>scm:svn: https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/acldef/oak-jcr</developerConnection>
+    <url> https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/acldef/oak-jcr</url>
   </scm>
   
   <build>
