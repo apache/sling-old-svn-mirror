@@ -46,33 +46,6 @@ public class BundleFileProcessorTest {
         }
     }
     
-    static class BSNRenamer extends BundleFileProcessor {
-        private final String newBSN;
-        
-        BSNRenamer(File input, File outputFolder, String newBSN) {
-            super(input, outputFolder);
-            this.newBSN = newBSN;
-        }
-        
-        protected Manifest processManifest(Manifest inputMF) {
-            Attributes inputAttrs = inputMF.getMainAttributes();
-            String orgBSN = inputAttrs.getValue("Bundle-SymbolicName");
-            Manifest newMF = new Manifest(inputMF);
-            Attributes outputAttrs = newMF.getMainAttributes();
-            outputAttrs.putValue("Bundle-SymbolicName", newBSN);
-            outputAttrs.putValue("X-Original-Bundle-SymbolicName", orgBSN);
-            return newMF;
-        }
-        
-        protected String getTargetFilename(Manifest inputJarManifest) {
-            String bver = inputJarManifest.getMainAttributes().getValue("Bundle-Version");
-            if (bver == null) {
-                bver = "0.0.0";
-            }
-            return newBSN + "-" + bver + ".jar";
-        }
-    }
-    
     @Test
     public void testBSNRenaming() throws IOException {
         File tempDir = new File(System.getProperty("java.io.tmpdir"));
