@@ -35,6 +35,6 @@
 
   <modules>
     <module>parser</module>
-    <module>jcr</module>
+    <module>oak-jcr</module>
   </modules>
 </project>
