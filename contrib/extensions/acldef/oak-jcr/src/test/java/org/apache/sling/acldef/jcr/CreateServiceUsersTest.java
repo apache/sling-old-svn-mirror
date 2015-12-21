@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNull;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.Random;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -49,8 +49,8 @@ public class CreateServiceUsersTest {
     
     private Session session;
     private UserManager userManager;
-    private AtomicLong counter = new AtomicLong(System.currentTimeMillis());
-    private long id; 
+    private static final Random random = new Random(42);
+    private String namePrefix;
     
     private List<Operation> parse(String input) throws ParseException {
         final Reader r = new StringReader(input);
@@ -63,16 +63,14 @@ public class CreateServiceUsersTest {
 
     @Before
     public void setup() throws RepositoryException {
+        // We don't need to logout this session, the Sling Mocks library
+        // takes care of that
         session = context.resourceResolver().adaptTo(Session.class);
+        
         userManager = ServiceUserUtil.getUserManager(session);
-        id = counter.incrementAndGet();
+        namePrefix = "user_" + random.nextInt();
     }
 
-    @After
-    public void cleanup() {
-        session.logout();
-    }
-    
     private void assertServiceUser(String info, String id, boolean expectToExist) throws RepositoryException {
         final Authorizable a = userManager.getAuthorizable(id);
         if(!expectToExist) {
@@ -92,12 +90,44 @@ public class CreateServiceUsersTest {
     }
 
     @Test
-    public void createDeleteTest() throws Exception {
-        final String userId = "bob_" + id;
+    public void createDeleteSingleTest() throws Exception {
+        final String userId = namePrefix + "_cdst";
         assertServiceUser("at start of test", userId, false);
         exec("create service user " + userId);
         assertServiceUser("affter creating user", userId, true);
         exec("delete service user " + userId);
         assertServiceUser("after deleting user", userId, false);
+    }
+    
+    private String user(int index) {
+        return namePrefix + "_" + index;
+    }
+    
+    @Test
+    public void createDeleteMultipleTest() throws Exception {
+        final int n = 50;
+        
+        {
+            final StringBuilder input = new StringBuilder();
+            for(int i=0; i < n; i++) {
+                assertServiceUser("at start of test", user(i), false);
+                input.append("create service user ").append(user(i)).append("\n");
+            }
+            exec(input.toString());
+        }
+        
+        {
+            final StringBuilder input = new StringBuilder();
+            for(int i=0; i < n; i++) {
+                assertServiceUser("before deleting user", user(i), true);
+                input.append("delete service user ").append(user(i)).append("\n");
+            }
+            exec(input.toString());
+        }
+        
+
+        for(int i=0; i < n; i++) {
+            assertServiceUser("after deleting users", user(i), false);
+        }
     }
 }
