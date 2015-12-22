@@ -33,10 +33,10 @@ import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
-import org.apache.sling.distribution.transport.DistributionTransportContext;
-import org.apache.sling.distribution.transport.DistributionTransport;
+import org.apache.sling.distribution.transport.impl.DistributionTransportContext;
+import org.apache.sling.distribution.transport.impl.DistributionTransport;
 import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
-import org.apache.sling.distribution.transport.DistributionPackageProxy;
+import org.apache.sling.distribution.transport.impl.DistributionPackageProxy;
 import org.apache.sling.distribution.transport.impl.SimpleHttpDistributionTransport;
 
 /**

@@ -44,9 +44,6 @@ import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
-import org.apache.sling.distribution.transport.DistributionTransportContext;
-import org.apache.sling.distribution.transport.DistributionTransport;
-import org.apache.sling.distribution.transport.DistributionPackageProxy;
 import org.apache.sling.distribution.util.RequestUtils;
 
 /**
