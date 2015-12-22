@@ -27,7 +27,10 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
+import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogEntry;
@@ -36,17 +39,13 @@ import org.osgi.service.startlevel.StartLevel;
 import org.slf4j.Logger;
 
 public class LogSupportTest {
-    @Test @SuppressWarnings("unchecked")
+    @Test
     public void testServiceEvent() throws Exception {
         StartLevel startLevel = Mockito.mock(StartLevel.class);
         LogSupport ls = new LogSupport(startLevel);
-        Field lf = LogSupport.class.getDeclaredField("loggers");
-        lf.setAccessible(true);
-        Map<Long, Logger> loggers = (Map<Long, Logger>) lf.get(ls);
+        Map<Long, Logger> loggers = getMockLoggerMap(ls);
 
-        Bundle b = Mockito.mock(Bundle.class);
-        Mockito.when(b.getSymbolicName()).thenReturn("foo.bundle");
-        Mockito.when(b.getBundleId()).thenReturn(42L);
+        Bundle b = getMockedBundle();
 
         final Map<String, Object> props = new HashMap<String, Object>();
         props.put(Constants.OBJECTCLASS, new String [] {"some.class.Name"});
@@ -123,7 +122,65 @@ public class LogSupportTest {
 
         Mockito.verify(testLogger).error("my-error-msg (java.lang.Exception)", e);
     }
+    
 
+	@Test
+	public void testBundleChanges() throws Exception {
+        StartLevel startLevel = Mockito.mock(StartLevel.class);
+        LogSupport logSupport = new LogSupport(startLevel);
+        Map<Long, Logger> loggers = getMockLoggerMap(logSupport);
+
+        Bundle bundle = getMockedBundle();
+
+        BundleEvent bundleEvent = new BundleEvent(BundleEvent.INSTALLED, bundle);
+
+        Logger testLogger = getMockInfoLogger();
+        loggers.put(42L, testLogger);
+
+        logSupport.bundleChanged(bundleEvent);
+
+        Mockito.verify(testLogger).info("BundleEvent INSTALLED", (Throwable) null);
+	}
+	
+	@Test
+	public void testFrameworkEventStarted() throws Exception {
+        StartLevel startLevel = Mockito.mock(StartLevel.class);
+        LogSupport logSupport = new LogSupport(startLevel);
+        Map<Long, Logger> loggers = getMockLoggerMap(logSupport);
+        
+        Bundle bundle = getMockedBundle();
+        
+        Logger testLogger = getMockInfoLogger();
+        loggers.put(42L, testLogger);
+        
+        FrameworkEvent frameworkEvent = new FrameworkEvent(FrameworkEvent.STARTED, bundle, null);
+        
+        logSupport.frameworkEvent(frameworkEvent);
+        
+        Mockito.verify(testLogger).info("FrameworkEvent STARTED", (Throwable) null);
+	}
+	
+	@Test
+	public void testFrameworkEventError() throws Exception {
+		
+        StartLevel startLevel = Mockito.mock(StartLevel.class);
+        LogSupport logSupport = new LogSupport(startLevel);
+        Map<Long, Logger> loggers = getMockLoggerMap(logSupport);
+        
+        Bundle bundle = getMockedBundle();
+        
+        Logger testLogger = getMockInfoLogger();
+        loggers.put(42L, testLogger);
+        
+        BundleException bundleException = new BundleException("my bundle exception", BundleException.ACTIVATOR_ERROR);
+        FrameworkEvent frameworkEvent = new FrameworkEvent(
+        		FrameworkEvent.ERROR, bundle, bundleException);
+        
+        logSupport.frameworkEvent(frameworkEvent);
+        
+        Mockito.verify(testLogger).error("FrameworkEvent ERROR (org.osgi.framework.BundleException: my bundle exception)", bundleException);
+	}
+	
     @Test
     public void testGetLevels() {
         Logger traceLogger = Mockito.mock(Logger.class);
@@ -155,5 +212,20 @@ public class LogSupportTest {
         Mockito.when(testLogger.isWarnEnabled()).thenReturn(true);
         Mockito.when(testLogger.isErrorEnabled()).thenReturn(true);
         return testLogger;
+    }
+    
+    @SuppressWarnings("unchecked")
+	private Map<Long, Logger> getMockLoggerMap(LogSupport logSupport) throws Exception {
+        Field loggerField = LogSupport.class.getDeclaredField("loggers");
+        loggerField.setAccessible(true);
+        Map<Long, Logger> loggers = (Map<Long, Logger>) loggerField.get(logSupport);
+        return loggers;
+    }
+    
+    private Bundle getMockedBundle() {
+        Bundle bundle = Mockito.mock(Bundle.class);
+        Mockito.when(bundle.getSymbolicName()).thenReturn("foo.bundle");
+        Mockito.when(bundle.getBundleId()).thenReturn(42L);
+        return bundle;
     }
 }
