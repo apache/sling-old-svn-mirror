@@ -40,8 +40,6 @@ import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
-import org.apache.sling.distribution.transport.DistributionTransportContext;
-import org.apache.sling.distribution.transport.DistributionPackageProxy;
 import org.junit.Ignore;
 import org.junit.Test;
 

@@ -17,12 +17,15 @@
  * under the License.
  */
 
-package org.apache.sling.distribution.transport;
+package org.apache.sling.distribution.transport.impl;
 
-import org.apache.sling.distribution.serialization.DistributionPackage;
+import java.util.HashMap;
 
+import org.apache.sling.api.wrappers.ValueMapDecorator;
 
-public interface DistributionPackageProxy {
-    public DistributionPackage getPackage();
-    public void deletePackage();
+public class DistributionTransportContext extends ValueMapDecorator {
+
+    public DistributionTransportContext() {
+        super(new HashMap<String, Object>());
+    }
 }
