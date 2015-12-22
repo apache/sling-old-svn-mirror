@@ -40,7 +40,6 @@ import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
-import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,22 +70,6 @@ public class RemoteDistributionPackageImporterFactory implements DistributionPac
     @Property(cardinality = 100, label = "Endpoints", description = "The list of endpoints to which the packages will be imported.")
     public static final String ENDPOINTS = "endpoints";
 
-    /**
-     * endpoint strategy property
-     */
-    @Property(options = {
-            @PropertyOption(name = "All",
-                    value = "all endpoints"
-            ),
-            @PropertyOption(name = "One",
-                    value = "one endpoint"
-            )},
-            value = "One",
-            label = "Endpoint Strategy", description = "Specifies whether to import packages to all endpoints or just to one."
-    )
-    public static final String ENDPOINTS_STRATEGY = "endpoints.strategy";
-
-
     @Property(name = "transportSecretProvider.target", label = "Transport Secret Provider", description = "The target reference for the DistributionTransportSecretProvider used to obtain the credentials used for accessing the remote endpoints, " +
             "e.g. use target=(name=...) to bind to services by name.")
     @Reference(name = "transportSecretProvider")
@@ -98,16 +81,13 @@ public class RemoteDistributionPackageImporterFactory implements DistributionPac
     protected void activate(Map<String, Object> config) {
 
         Map<String, String> endpoints = SettingsUtils.toUriMap(config.get(ENDPOINTS));
-        String endpointStrategyName = PropertiesUtil.toString(config.get(ENDPOINTS_STRATEGY), "One");
-
-        TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(endpointStrategyName);
 
         String importerName = PropertiesUtil.toString(config.get(NAME), null);
 
         DefaultDistributionLog distributionLog = new DefaultDistributionLog(DistributionComponentKind.IMPORTER, importerName, RemoteDistributionPackageImporter.class, DefaultDistributionLog.LogLevel.ERROR);
 
 
-        importer = new RemoteDistributionPackageImporter(distributionLog, transportSecretProvider, endpoints, transportEndpointStrategyType);
+        importer = new RemoteDistributionPackageImporter(distributionLog, transportSecretProvider, endpoints);
 
     }
 

@@ -16,12 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.transport.impl;
+package org.apache.sling.distribution.serialization.impl;
+
+import javax.annotation.Nonnull;
+
+import aQute.bnd.annotation.ConsumerType;
+import aQute.bnd.annotation.ProviderType;
+import org.apache.sling.distribution.serialization.DistributionPackage;
 
 /**
- * Strategy options enum for transport
+ * A {@link DistributionPackage} that offers basic reference counting
  */
-public enum TransportEndpointStrategyType {
-    One,
-    All
+@ProviderType
+public interface SharedDistributionPackage extends DistributionPackage {
+
+    /**
+     * acquire a reference to this package and increase the reference count.
+     */
+    void acquire(@Nonnull String holderName);
+
+    /**
+     * release a reference to this package and decrease the reference count.
+     * when no more references are hold the package {@code DistributionPackage#delete} method is called.
+     */
+    void release(@Nonnull String holderName);
+
 }

@@ -40,7 +40,7 @@ import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ResourceSharedDistributionPackageBuilder implements DistributionPackageBuilder {
+public class DefaultSharedDistributionPackageBuilder implements DistributionPackageBuilder {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
 
@@ -58,7 +58,7 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
     // TODO: this can be finegrained when we will allow configurable package roots
     private final Object repolock = new Object();
 
-    public ResourceSharedDistributionPackageBuilder(DistributionPackageBuilder distributionPackageExporter) {
+    public DefaultSharedDistributionPackageBuilder(DistributionPackageBuilder distributionPackageExporter) {
         this.distributionPackageBuilder = distributionPackageExporter;
         this.type = distributionPackageBuilder.getType();
         this.sharedPackagesRoot = AbstractDistributionPackage.PACKAGES_ROOT + "/" + type + "/shared";
@@ -73,6 +73,8 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
         DistributionPackage distributionPackage = distributionPackageBuilder.createPackage(resourceResolver, request);
 
         String packageName = null;
+        log.info("mydebug1 create {}", distributionPackage.getId());
+
         try {
             packageName = generateNameFromId(resourceResolver, distributionPackage);
 
@@ -82,9 +84,9 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
         }
 
         String packagePath = getPathFromName(packageName);
-        DistributionPackage sharedDistributionPackage = new ResourceSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
+        DistributionPackage sharedDistributionPackage = new DefaultSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
 
-        log.debug("created shared package {} for {}", sharedDistributionPackage.getId(), distributionPackage.getId());
+        log.info("mydebug2 created shared package {} for {}", sharedDistributionPackage.getId(), distributionPackage.getId());
         return sharedDistributionPackage;
 
     }
@@ -93,6 +95,8 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
     @CheckForNull
     public DistributionPackage readPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
         DistributionPackage distributionPackage = distributionPackageBuilder.readPackage(resourceResolver, stream);
+
+        log.info("mydebug4 read shared package {}", distributionPackage);
 
         if (distributionPackage == null) {
             return null;
@@ -109,9 +113,9 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
 
         String packagePath = getPathFromName(packageName);
 
-        DistributionPackage sharedDistributionPackage = new ResourceSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
+        DistributionPackage sharedDistributionPackage = new DefaultSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
 
-        log.debug("created shared package {} for {}", sharedDistributionPackage.getId(), distributionPackage.getId());
+        log.info("mydebug3 created shared package {} for {}", sharedDistributionPackage.getId(), distributionPackage.getId());
         return sharedDistributionPackage;
     }
 
@@ -120,11 +124,15 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
         String packageName = distributionPackageId;
         String originalPackageId = retrieveIdFromName(resourceResolver, packageName);
 
+        log.info("mydebug {} {}", packageName, originalPackageId);
+
         if (originalPackageId == null) {
             return null;
         }
 
         DistributionPackage distributionPackage = distributionPackageBuilder.getPackage(resourceResolver, originalPackageId);
+
+        log.info("mydebug2 {}", distributionPackage);
 
         if (distributionPackage == null) {
             return null;
@@ -132,15 +140,15 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
 
         String packagePath = getPathFromName(packageName);
 
-        return new ResourceSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
+        return new DefaultSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
     }
 
     public boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException {
-        if (!(distributionPackage instanceof ResourceSharedDistributionPackage)) {
+        if (!(distributionPackage instanceof DefaultSharedDistributionPackage)) {
             return false;
         }
 
-        ResourceSharedDistributionPackage sharedistributionPackage = (ResourceSharedDistributionPackage) distributionPackage;
+        DefaultSharedDistributionPackage sharedistributionPackage = (DefaultSharedDistributionPackage) distributionPackage;
 
         DistributionPackage originalPackage = sharedistributionPackage.getPackage();
         return distributionPackageBuilder.installPackage(resourceResolver, originalPackage);
@@ -173,7 +181,7 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
             ModifiableValueMap valueMap = resource.adaptTo(ModifiableValueMap.class);
             valueMap.putAll(properties);
 
-            resourceResolver.create(resource, ResourceSharedDistributionPackage.REFERENCE_ROOT_NODE,
+            resourceResolver.create(resource, DefaultSharedDistributionPackage.REFERENCE_ROOT_NODE,
                     Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object) "sling:Folder"));
 
             resourceResolver.commit();

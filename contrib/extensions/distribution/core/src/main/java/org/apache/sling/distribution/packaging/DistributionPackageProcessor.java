@@ -16,28 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.sling.distribution.packaging;
 
-import javax.annotation.Nonnull;
 
-import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 
-/**
- * A {@link DistributionPackage} that offers basic reference counting
- */
-@ConsumerType
-public interface SharedDistributionPackage extends DistributionPackage {
+public interface DistributionPackageProcessor {
 
-    /**
-     * acquire a reference to this package and increase the reference count.
-     */
-    void acquire(@Nonnull String holderName);
-
-    /**
-     * release a reference to this package and decrease the reference count.
-     * when no more references are hold the package {@code DistributionPackage#delete} method is called.
-     */
-    void release(@Nonnull String holderName);
-
+    void process(DistributionPackage distributionPackage);
 }

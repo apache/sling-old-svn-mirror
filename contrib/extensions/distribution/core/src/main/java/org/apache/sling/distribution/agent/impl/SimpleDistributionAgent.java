@@ -23,6 +23,7 @@ import javax.annotation.Nullable;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -52,6 +53,7 @@ import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.impl.SimpleDistributionResponse;
 import org.apache.sling.distribution.log.DistributionLog;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
+import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
 import org.apache.sling.distribution.queue.DistributionQueueStatus;
 import org.apache.sling.distribution.queue.impl.DistributionQueueWrapper;
 import org.apache.sling.distribution.serialization.DistributionPackage;
@@ -196,11 +198,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
             agentResourceResolver = getAgentResourceResolver(callingUser);
 
-            List<DistributionPackage> distributionPackages = exportPackages(agentResourceResolver, distributionRequest);
-
-            log.debug("exported packages {}", distributionPackages.size());
-
-            DistributionResponse distributionResponse = scheduleImportPackages(distributionPackages, callingUser);
+            DistributionResponse distributionResponse = exportPackages(agentResourceResolver, distributionRequest, callingUser);
 
             log.info(silent, "returning response {}", distributionResponse);
 
@@ -215,25 +213,18 @@ public class SimpleDistributionAgent implements DistributionAgent {
         return !queueProcessingEnabled;
     }
 
-    private List<DistributionPackage> exportPackages(ResourceResolver agentResourceResolver, DistributionRequest distributionRequest) throws DistributionException {
-        log.debug("exporting packages with user {}", agentResourceResolver != null ? agentResourceResolver.getUserID() : "dummy");
-
-        List<DistributionPackage> distributionPackages = distributionPackageExporter.exportPackages(agentResourceResolver, distributionRequest);
+    private DistributionResponse exportPackages(ResourceResolver agentResourceResolver, DistributionRequest distributionRequest, String callingUser) throws DistributionException {
+        String actualUser =  agentResourceResolver != null ? agentResourceResolver.getUserID() : "N/A";
+        log.debug("exporting packages with user {} on behalf of {}", actualUser, callingUser);
+        PackageExporterProcessor packageProcessor =  new PackageExporterProcessor(callingUser);
+        distributionPackageExporter.exportPackages(agentResourceResolver, distributionRequest, packageProcessor);
 
         generatePackageEvent(DistributionEventTopics.AGENT_PACKAGE_CREATED);
+        List<DistributionResponse> distributionResponses = packageProcessor.getAllResponses();
 
-        return distributionPackages;
-    }
-
-    private DistributionResponse scheduleImportPackages(List<DistributionPackage> distributionPackages, String callingUser) {
-        List<DistributionResponse> distributionResponses = new LinkedList<DistributionResponse>();
-
-        for (DistributionPackage distributionPackage : distributionPackages) {
-            Collection<SimpleDistributionResponse> distributionResponsesForPackage = scheduleImportPackage(distributionPackage, callingUser);
-            distributionResponses.addAll(distributionResponsesForPackage);
-        }
         return distributionResponses.size() == 1 ? distributionResponses.get(0) : new CompositeDistributionResponse(distributionResponses);
     }
+
 
     private Collection<SimpleDistributionResponse> scheduleImportPackage(DistributionPackage distributionPackage, String callingUser) {
         Collection<SimpleDistributionResponse> distributionResponses = new LinkedList<SimpleDistributionResponse>();
@@ -578,6 +569,30 @@ public class SimpleDistributionAgent implements DistributionAgent {
                 log.error("queue {} error while processing item {} {}", new Object[] { queueName, queueItem, t} );
                 return false;
             }
+        }
+    }
+
+
+    class PackageExporterProcessor implements DistributionPackageProcessor {
+
+        private final String callingUser;
+
+        public List<DistributionResponse> getAllResponses() {
+            return allResponses;
+        }
+
+        private final List<DistributionResponse> allResponses = new ArrayList<DistributionResponse>();
+
+        PackageExporterProcessor(String callingUser) {
+
+            this.callingUser = callingUser;
+        }
+
+        @Override
+        public void process(DistributionPackage distributionPackage) {
+            Collection<SimpleDistributionResponse> responses = scheduleImportPackage(distributionPackage, callingUser);
+
+            allResponses.addAll(responses);
         }
     }
 

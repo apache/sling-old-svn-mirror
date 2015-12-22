@@ -23,7 +23,6 @@ import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
-import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyType;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -41,14 +40,13 @@ public class RemoteDistributionPackageImporterTest {
     public void testDummyImport() throws Exception {
         DistributionTransportSecretProvider distributionTransportSecretProvider = mock(DistributionTransportSecretProvider.class);
         Map<String, String> endpoints = new HashMap<String, String>();
-        for (TransportEndpointStrategyType strategy : TransportEndpointStrategyType.values()) {
-            RemoteDistributionPackageImporter remotedistributionPackageImporter = new RemoteDistributionPackageImporter(mock(DefaultDistributionLog.class),
-                    distributionTransportSecretProvider, endpoints, strategy);
-            ResourceResolver resourceResolver = mock(ResourceResolver.class);
-            DistributionPackage distributionPackage = mock(DistributionPackage.class);
-            DistributionPackageInfo info = new DistributionPackageInfo("/foo");
-            when(distributionPackage.getInfo()).thenReturn(info);
-            remotedistributionPackageImporter.importPackage(resourceResolver, distributionPackage);
-        }
+        RemoteDistributionPackageImporter remotedistributionPackageImporter = new RemoteDistributionPackageImporter(mock(DefaultDistributionLog.class),
+                distributionTransportSecretProvider, endpoints);
+        endpoints.put("default","http://endpoint");
+        ResourceResolver resourceResolver = mock(ResourceResolver.class);
+        DistributionPackage distributionPackage = mock(DistributionPackage.class);
+        DistributionPackageInfo info = new DistributionPackageInfo("/foo");
+        when(distributionPackage.getInfo()).thenReturn(info);
+        remotedistributionPackageImporter.importPackage(resourceResolver, distributionPackage);
     }
 }
