@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHost;
@@ -43,7 +44,7 @@ import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
-import org.apache.sling.distribution.transport.core.DistributionContext;
+import org.apache.sling.distribution.transport.core.DistributionTransportContext;
 import org.apache.sling.distribution.transport.core.DistributionTransport;
 import org.apache.sling.distribution.transport.core.DistributionPackageProxy;
 import org.apache.sling.distribution.util.RequestUtils;
@@ -55,7 +56,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
 
     private static final String USERNAME = "username";
     private static final String PASSWORD = "password";
-    private static final String EXECUTOR_CONTEXT_KEY = "executorContextKey";
+    private static final String EXECUTOR_CONTEXT_KEY_PREFIX = "ExecutorContextKey";
 
 
     /**
@@ -67,6 +68,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
     private final DistributionEndpoint distributionEndpoint;
     private final DistributionPackageBuilder packageBuilder;
     protected final DistributionTransportSecretProvider secretProvider;
+    private final String contextKeyExecutor;
 
     public SimpleHttpDistributionTransport(DefaultDistributionLog log, DistributionEndpoint distributionEndpoint,
                                            DistributionPackageBuilder packageBuilder,
@@ -76,9 +78,10 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
         this.distributionEndpoint = distributionEndpoint;
         this.packageBuilder = packageBuilder;
         this.secretProvider = secretProvider;
+        this.contextKeyExecutor = EXECUTOR_CONTEXT_KEY_PREFIX + "_" + getHostAndPort(distributionEndpoint.getUri()) + "_" + UUID.randomUUID();
     }
 
-    public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage, @Nonnull DistributionContext distributionContext) throws DistributionException {
+    public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage, @Nonnull DistributionTransportContext distributionContext) throws DistributionException {
         String hostAndPort = getHostAndPort(distributionEndpoint.getUri());
 
         URI packageOrigin = distributionPackage.getInfo().get(PACKAGE_INFO_PROPERTY_ORIGIN_URI, URI.class);
@@ -117,7 +120,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
     }
 
     @Nonnull
-    public DistributionPackageProxy retrievePackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest, @Nonnull DistributionContext distributionContext) throws DistributionException {
+    public DistributionPackageProxy retrievePackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest, @Nonnull DistributionTransportContext distributionContext) throws DistributionException {
         log.debug("pulling from {}", distributionEndpoint.getUri());
         List<DistributionPackage> result = new ArrayList<DistributionPackage>();
 
@@ -183,9 +186,9 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
     }
 
 
-    private Executor getExecutor(DistributionContext distributionContext) {
-        if (distributionContext.containsKey(EXECUTOR_CONTEXT_KEY)) {
-            return distributionContext.get(EXECUTOR_CONTEXT_KEY, Executor.class);
+    private Executor getExecutor(DistributionTransportContext distributionContext) {
+        if (distributionContext.containsKey(contextKeyExecutor)) {
+            return distributionContext.get(contextKeyExecutor, Executor.class);
         }
 
         Executor executor = Executor.newInstance();
@@ -193,7 +196,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
         DistributionTransportSecret secret = secretProvider.getSecret(distributionEndpoint.getUri());
         executor = authenticate(secret, executor);
 
-        distributionContext.put(EXECUTOR_CONTEXT_KEY, executor);
+        distributionContext.put(contextKeyExecutor, executor);
 
         return executor;
 

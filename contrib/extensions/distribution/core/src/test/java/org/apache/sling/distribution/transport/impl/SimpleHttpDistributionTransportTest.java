@@ -40,7 +40,7 @@ import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
-import org.apache.sling.distribution.transport.core.DistributionContext;
+import org.apache.sling.distribution.transport.core.DistributionTransportContext;
 import org.apache.sling.distribution.transport.core.DistributionPackageProxy;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -82,7 +82,7 @@ public class SimpleHttpDistributionTransportTest {
         when(distributionPackage.getInfo()).thenReturn(new DistributionPackageInfo("type"));
         InputStream stream = mock(InputStream.class);
         when(distributionPackage.createInputStream()).thenReturn(stream);
-        simpleHttpDistributionTransport.deliverPackage(resourceResolver, distributionPackage, new DistributionContext());
+        simpleHttpDistributionTransport.deliverPackage(resourceResolver, distributionPackage, new DistributionTransportContext());
     }
 
     @Test
@@ -109,7 +109,7 @@ public class SimpleHttpDistributionTransportTest {
                 endpoint, packageBuilder, secretProvider);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
-        DistributionPackageProxy retrievedPackage = simpleHttpDistributionTransport.retrievePackage(resourceResolver, distributionRequest, new DistributionContext());
+        DistributionPackageProxy retrievedPackage = simpleHttpDistributionTransport.retrievePackage(resourceResolver, distributionRequest, new DistributionTransportContext());
         assertNull(retrievedPackage);
     }
 
@@ -144,7 +144,7 @@ public class SimpleHttpDistributionTransportTest {
                 endpoint, packageBuilder, secretProvider);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
-        DistributionPackageProxy retrievedPackage = simpleHttpDistributionTransport.retrievePackage(resourceResolver, distributionRequest, new DistributionContext());
+        DistributionPackageProxy retrievedPackage = simpleHttpDistributionTransport.retrievePackage(resourceResolver, distributionRequest, new DistributionTransportContext());
         assertNotNull(retrievedPackage);
     }
 }

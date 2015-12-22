@@ -33,7 +33,7 @@ import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
-import org.apache.sling.distribution.transport.core.DistributionContext;
+import org.apache.sling.distribution.transport.core.DistributionTransportContext;
 import org.apache.sling.distribution.transport.core.DistributionTransport;
 import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
 import org.apache.sling.distribution.transport.core.DistributionPackageProxy;
@@ -49,6 +49,8 @@ public class RemoteDistributionPackageExporter implements DistributionPackageExp
     private final DistributionTransportSecretProvider secretProvider;
     private final DefaultDistributionLog log;
     private final int maxPullItems;
+    private final DistributionTransportContext distributionContext = new DistributionTransportContext();
+
 
     private List<DistributionTransport> transportHandlers = new ArrayList<DistributionTransport>();
 
@@ -83,7 +85,6 @@ public class RemoteDistributionPackageExporter implements DistributionPackageExp
         for (DistributionTransport distributionTransport : transportHandlers) {
             int noPackages = 0;
 
-            DistributionContext distributionContext = new DistributionContext();
             DistributionPackageProxy retrievedPackage;
             while (noPackages < maxNumberOfPackages && ((retrievedPackage = distributionTransport.retrievePackage(resourceResolver, distributionRequest, distributionContext)) != null)) {
 

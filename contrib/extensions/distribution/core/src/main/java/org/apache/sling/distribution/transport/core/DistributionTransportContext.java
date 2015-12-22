@@ -23,9 +23,9 @@ import org.apache.sling.api.wrappers.ValueMapDecorator;
 
 import java.util.HashMap;
 
-public class DistributionContext extends ValueMapDecorator {
+public class DistributionTransportContext extends ValueMapDecorator {
 
-    public DistributionContext() {
+    public DistributionTransportContext() {
         super(new HashMap<String, Object>());
     }
 }
