@@ -271,7 +271,7 @@ public class FSClassLoaderWebConsole extends AbstractWebConsolePlugin {
 			File parent = file.getCanonicalFile().getAbsoluteFile()
 					.getParentFile();
 			while (parent != null) {
-				if (parent.getAbsolutePath().equals(root.getAbsolutePath())) {
+				if (parent.getCanonicalPath().equals(root.getCanonicalPath())) {
 					return true;
 				}
 				parent = parent.getParentFile();
