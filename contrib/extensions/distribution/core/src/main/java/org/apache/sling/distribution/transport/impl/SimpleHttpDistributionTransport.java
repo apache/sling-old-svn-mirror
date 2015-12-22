@@ -44,9 +44,9 @@ import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
-import org.apache.sling.distribution.transport.core.DistributionTransportContext;
-import org.apache.sling.distribution.transport.core.DistributionTransport;
-import org.apache.sling.distribution.transport.core.DistributionPackageProxy;
+import org.apache.sling.distribution.transport.DistributionTransportContext;
+import org.apache.sling.distribution.transport.DistributionTransport;
+import org.apache.sling.distribution.transport.DistributionPackageProxy;
 import org.apache.sling.distribution.util.RequestUtils;
 
 /**
@@ -110,7 +110,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
                 Content content = response.returnContent();
                 log.debug("delivered package {} to {}", distributionPackage.getId(), distributionEndpoint.getUri());
             } catch (HttpHostConnectException e) {
-                log.info("could not connect to {} - retrying", distributionEndpoint.getUri());
+                log.debug("could not connect to {} - retrying", distributionEndpoint.getUri());
                 throw new RecoverableDistributionException(e);
             } catch (Exception ex) {
                 throw new DistributionException(ex);
@@ -162,7 +162,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
                 log.warn("responsePackage is null");
             }
         } catch (HttpHostConnectException e) {
-            log.info("could not connect to {} - skipping", distributionEndpoint.getUri());
+            log.debug("could not connect to {} - skipping", distributionEndpoint.getUri());
         } catch (Exception ex) {
             log.error("cannot retrieve packages", ex);
         }

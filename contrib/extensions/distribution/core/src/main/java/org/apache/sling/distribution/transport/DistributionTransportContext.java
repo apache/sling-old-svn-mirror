@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.sling.distribution.transport.core;
+package org.apache.sling.distribution.transport;
 
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 

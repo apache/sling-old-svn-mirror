@@ -57,7 +57,7 @@ public class SimpleDistributionQueue implements DistributionQueue {
     private final Map<DistributionQueueItem, DistributionQueueItemStatus> statusMap;
 
     public SimpleDistributionQueue(String agentName, String name) {
-        log.info("starting a simple queue for agent {}", agentName);
+        log.debug("starting a simple queue for agent {}", agentName);
         this.name = name;
         this.queue = new LinkedBlockingQueue<DistributionQueueItem>();
         this.statusMap = new WeakHashMap<DistributionQueueItem, DistributionQueueItemStatus>(10);
@@ -145,7 +145,7 @@ public class SimpleDistributionQueue implements DistributionQueue {
         if (toRemove != null) {
             removed = queue.remove(toRemove.getItem());
         }
-        log.info("item with id {} removed from the queue: {}", id, removed);
+        log.debug("item with id {} removed from the queue: {}", id, removed);
         if (removed) {
             return toRemove;
         } else {

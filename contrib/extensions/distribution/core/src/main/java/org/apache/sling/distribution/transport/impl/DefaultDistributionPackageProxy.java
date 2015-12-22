@@ -21,7 +21,7 @@ package org.apache.sling.distribution.transport.impl;
 
 import org.apache.http.client.fluent.Executor;
 import org.apache.sling.distribution.serialization.DistributionPackage;
-import org.apache.sling.distribution.transport.core.DistributionPackageProxy;
+import org.apache.sling.distribution.transport.DistributionPackageProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

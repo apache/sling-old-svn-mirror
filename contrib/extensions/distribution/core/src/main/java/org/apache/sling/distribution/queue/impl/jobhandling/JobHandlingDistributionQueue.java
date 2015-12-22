@@ -71,7 +71,7 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
             Map<String, Object> properties = JobHandlingUtils.createFullProperties(item);
 
             Job job = jobManager.createJob(topic).properties(properties).add();
-            log.info("job {} added for item {}", job.getId(), item.getId());
+            log.debug("job {} added for item {}", job.getId(), item.getId());
 
             return JobHandlingUtils.getEntry(job);
         } catch (Exception e) {
@@ -177,7 +177,7 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
             removed = jobManager.removeJobById(job.getId());
         }
 
-        log.info("item with id {} removed from the queue: {}", id, removed);
+        log.debug("item with id {} removed from the queue: {}", id, removed);
         return entry;
     }
 
