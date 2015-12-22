@@ -31,7 +31,7 @@ import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
-import org.apache.sling.distribution.transport.core.DistributionContext;
+import org.apache.sling.distribution.transport.core.DistributionTransportContext;
 import org.apache.sling.distribution.transport.core.DistributionTransport;
 import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
 import org.apache.sling.distribution.transport.impl.SimpleHttpDistributionTransport;
@@ -43,6 +43,8 @@ public class RemoteDistributionPackageImporter implements DistributionPackageImp
 
 
     Map<String, DistributionTransport> transportHandlers = new HashMap<String, DistributionTransport>();
+    private final DistributionTransportContext distributionContext = new DistributionTransportContext();
+
 
 
     public RemoteDistributionPackageImporter(DefaultDistributionLog log, DistributionTransportSecretProvider distributionTransportSecretProvider,
@@ -68,10 +70,10 @@ public class RemoteDistributionPackageImporter implements DistributionPackageImp
         DistributionTransport distributionTransport = transportHandlers.get(queueName);
 
         if (distributionTransport != null) {
-            distributionTransport.deliverPackage(resourceResolver, distributionPackage, new DistributionContext());
+            distributionTransport.deliverPackage(resourceResolver, distributionPackage, distributionContext);
         } else {
             for(DistributionTransport transportHandler: transportHandlers.values()) {
-                transportHandler.deliverPackage(resourceResolver, distributionPackage, new DistributionContext());
+                transportHandler.deliverPackage(resourceResolver, distributionPackage, distributionContext);
             }
         }
     }
