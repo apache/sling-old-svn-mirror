@@ -21,16 +21,14 @@ package org.apache.sling.distribution.packaging.impl;
 
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.queue.DistributionQueueEntry;
-import org.apache.sling.distribution.queue.DistributionQueueStatus;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageInfo;
-import org.apache.sling.distribution.packaging.SharedDistributionPackage;
+import org.apache.sling.distribution.serialization.impl.SharedDistributionPackage;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 /**
@@ -91,6 +89,16 @@ public class DistributionPackageUtils {
                 distributionPackage.delete();
             } catch (Throwable t) {
                 log.error("error deleting package", t);
+            }
+        }
+    }
+
+    public static void closeSafely(DistributionPackage distributionPackage) {
+        if (distributionPackage != null) {
+            try {
+                distributionPackage.close();
+            } catch (Throwable t) {
+                log.error("error closing package", t);
             }
         }
     }

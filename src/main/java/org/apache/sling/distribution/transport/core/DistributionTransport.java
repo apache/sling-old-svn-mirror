@@ -19,6 +19,7 @@
 package org.apache.sling.distribution.transport.core;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
@@ -42,7 +43,7 @@ public interface DistributionTransport {
      * @throws DistributionException if the {@link DistributionPackage}
      *                                        fails to be delivered to the target instance (e.g. because of network, I/O issues)
      */
-    void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException;
+    void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage, @Nonnull DistributionContext context) throws DistributionException;
 
     /**
      * Retrieve {@link DistributionPackage}s from a target Sling instance, which
@@ -56,7 +57,7 @@ public interface DistributionTransport {
      * @throws DistributionException if the {@link DistributionPackage}s
      *                                        fail to be retrieved from the target instance
      */
-    @Nonnull
-    Iterable<DistributionPackage> retrievePackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionException;
+    @Nullable
+    DistributionPackageProxy retrievePackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request, @Nonnull DistributionContext context) throws DistributionException;
 
 }

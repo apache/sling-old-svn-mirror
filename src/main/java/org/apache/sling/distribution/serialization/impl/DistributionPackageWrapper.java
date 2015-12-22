@@ -32,38 +32,44 @@ import org.apache.sling.distribution.serialization.DistributionPackageInfo;
  */
 public class DistributionPackageWrapper implements DistributionPackage {
 
-    protected final DistributionPackage distributionPackage;
 
-    protected DistributionPackageWrapper(DistributionPackage distributionPackage) {
+    protected final DistributionPackage wrappedPackage;
 
-        this.distributionPackage = distributionPackage;
+    protected DistributionPackageWrapper(DistributionPackage wrappedPackage) {
+
+        this.wrappedPackage = wrappedPackage;
     }
 
     @Nonnull
     public String getId() {
-        return distributionPackage.getId();
+        return wrappedPackage.getId();
     }
 
     @Nonnull
     public String getType() {
-        return distributionPackage.getId();
+        return wrappedPackage.getType();
     }
 
     @Nonnull
     public InputStream createInputStream() throws IOException {
-        return distributionPackage.createInputStream();
+        return wrappedPackage.createInputStream();
     }
 
     public void close() {
-        distributionPackage.close();
+        wrappedPackage.close();
     }
 
     public void delete() {
-        distributionPackage.delete();
+        wrappedPackage.delete();
     }
 
     @Nonnull
     public DistributionPackageInfo getInfo() {
-        return distributionPackage.getInfo();
+        return wrappedPackage.getInfo();
     }
+
+    public DistributionPackage getWrappedPackage() {
+        return wrappedPackage;
+    }
+
 }

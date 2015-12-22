@@ -24,17 +24,20 @@ import java.util.List;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
+import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
+import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
+import org.apache.sling.distribution.transport.core.DistributionContext;
 import org.apache.sling.distribution.transport.core.DistributionTransport;
 import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
-import org.apache.sling.distribution.transport.impl.MultipleEndpointDistributionTransport;
+import org.apache.sling.distribution.transport.core.DistributionPackageProxy;
 import org.apache.sling.distribution.transport.impl.SimpleHttpDistributionTransport;
-import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyType;
 
 /**
  * Default implementation of {@link org.apache.sling.distribution.packaging.DistributionPackageExporter}
@@ -45,15 +48,16 @@ public class RemoteDistributionPackageExporter implements DistributionPackageExp
     private final DistributionPackageBuilder packageBuilder;
     private final DistributionTransportSecretProvider secretProvider;
     private final DefaultDistributionLog log;
+    private final int maxPullItems;
 
-    private DistributionTransport transportHandler;
+    private List<DistributionTransport> transportHandlers = new ArrayList<DistributionTransport>();
 
     public RemoteDistributionPackageExporter(DefaultDistributionLog log, DistributionPackageBuilder packageBuilder,
                                              DistributionTransportSecretProvider secretProvider,
                                              String[] endpoints,
-                                             TransportEndpointStrategyType transportEndpointStrategyType,
-                                             int pullItems) {
+                                             int maxPullItems) {
         this.log = log;
+        this.maxPullItems = maxPullItems;
         if (packageBuilder == null) {
             throw new IllegalArgumentException("packageBuilder is required");
         }
@@ -66,24 +70,38 @@ public class RemoteDistributionPackageExporter implements DistributionPackageExp
         this.packageBuilder = packageBuilder;
         this.secretProvider = secretProvider;
 
-        List<DistributionTransport> transportHandlers = new ArrayList<DistributionTransport>();
-
         for (String endpoint : endpoints) {
             if (endpoint != null && endpoint.length() > 0) {
-                transportHandlers.add(new SimpleHttpDistributionTransport(log, new DistributionEndpoint(endpoint), packageBuilder, secretProvider, pullItems));
+                transportHandlers.add(new SimpleHttpDistributionTransport(log, new DistributionEndpoint(endpoint), packageBuilder, secretProvider));
             }
         }
-        transportHandler = new MultipleEndpointDistributionTransport(transportHandlers,
-                transportEndpointStrategyType);
     }
 
     @Nonnull
-    public List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionException {
-        List<DistributionPackage> packages = new ArrayList<DistributionPackage>();
-        for (DistributionPackage distributionPackage : transportHandler.retrievePackages(resourceResolver, distributionRequest)) {
-            packages.add(distributionPackage);
+    public void exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest, @Nonnull DistributionPackageProcessor packageProcessor) throws DistributionException {
+        int maxNumberOfPackages = DistributionRequestType.PULL.equals(distributionRequest.getRequestType()) ? maxPullItems : 1;
+        for (DistributionTransport distributionTransport : transportHandlers) {
+            int noPackages = 0;
+
+            DistributionContext distributionContext = new DistributionContext();
+            DistributionPackageProxy retrievedPackage;
+            while (noPackages < maxNumberOfPackages && ((retrievedPackage = distributionTransport.retrievePackage(resourceResolver, distributionRequest, distributionContext)) != null)) {
+
+
+                DistributionPackage distributionPackage = retrievedPackage.getPackage();
+
+                try {
+                    packageProcessor.process(distributionPackage);
+
+                    retrievedPackage.deletePackage();
+
+                } finally {
+                    DistributionPackageUtils.closeSafely(distributionPackage);
+                }
+
+                noPackages++;
+            }
         }
-        return packages;
     }
 
     public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String distributionPackageId) throws DistributionException {

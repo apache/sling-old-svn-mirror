@@ -28,11 +28,10 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageInfo;
-import org.apache.sling.distribution.packaging.SharedDistributionPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ResourceSharedDistributionPackage implements SharedDistributionPackage {
+public class DefaultSharedDistributionPackage implements SharedDistributionPackage {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     protected static final String REFERENCE_ROOT_NODE = "refs";
@@ -43,7 +42,7 @@ public class ResourceSharedDistributionPackage implements SharedDistributionPack
     private final DistributionPackage distributionPackage;
     private final String packageName;
 
-    public ResourceSharedDistributionPackage(Object lock, ResourceResolver resourceResolver, String packageName, String packagePath, DistributionPackage distributionPackage) {
+    public DefaultSharedDistributionPackage(Object lock, ResourceResolver resourceResolver, String packageName, String packagePath, DistributionPackage distributionPackage) {
         this.resourceResolver = resourceResolver;
         this.packageName = packageName;
         this.packagePath = packagePath;
