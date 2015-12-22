@@ -32,14 +32,14 @@ import java.util.Map;
 import java.util.TreeMap;
 
 
-public class SelectiveQueueDispatchingStrategy implements DistributionQueueDispatchingStrategy {
+public class PriorityQueueDispatchingStrategy implements DistributionQueueDispatchingStrategy {
 
     private final Map<String, String> selectors;
     private final List<String> mainQueues;
     private final Map<String, String> selectorQueues;
     private final List<String> allQueues = new ArrayList<String>();
 
-    public SelectiveQueueDispatchingStrategy(Map<String, String> selectors, String[] queueNames) {
+    public PriorityQueueDispatchingStrategy(Map<String, String> selectors, String[] queueNames) {
 
         this.selectors = selectors;
         this.mainQueues = Arrays.asList(queueNames);
@@ -57,7 +57,7 @@ public class SelectiveQueueDispatchingStrategy implements DistributionQueueDispa
         if (matchingQueues.size() > 0) {
             dispatchingStrategy = new MultipleQueueDispatchingStrategy(matchingQueues.keySet().toArray(new String[0]));
         } else {
-            dispatchingStrategy = new MultipleQueueDispatchingStrategy(mainQueues.toArray(new String[0]));;
+            dispatchingStrategy = new MultipleQueueDispatchingStrategy(mainQueues.toArray(new String[0]));
         }
 
         return dispatchingStrategy.add(distributionPackage, queueProvider);
@@ -93,14 +93,10 @@ public class SelectiveQueueDispatchingStrategy implements DistributionQueueDispa
             for (String path : paths) {
                 if (path == null || path.matches(pathMatcher)) {
 
-                    if (queueMatcher != null) {
-                        for (String mainQueue : mainQueues) {
-                            if (mainQueue.matches(queueMatcher)) {
-                                result.put(queuePrefix + "-" + mainQueue, mainQueue);
-                            }
+                    for (String mainQueue : mainQueues) {
+                        if (queueMatcher == null || mainQueue.matches(queueMatcher)) {
+                            result.put(queuePrefix + "-" + mainQueue, mainQueue);
                         }
-                    } else {
-                        result.put(queuePrefix, null);
                     }
                 }
             }

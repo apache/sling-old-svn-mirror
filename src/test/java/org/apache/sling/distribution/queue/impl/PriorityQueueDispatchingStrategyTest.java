@@ -39,7 +39,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-public class SelectiveQueueDispatchingStrategyTest {
+public class PriorityQueueDispatchingStrategyTest {
 
     static String[] queueNames;
     static Map<String, String> selectors;
@@ -51,22 +51,23 @@ public class SelectiveQueueDispatchingStrategyTest {
 
         selectors.put("news|publish.*", "/content/news.*");
         selectors.put("notes|publish1", "/content/notes");
-        selectors.put("passive", "/content/passive");
+        selectors.put("important", "/content/important");
     }
 
     @Test
     public void testQueueExpansion() throws Exception {
-        SelectiveQueueDispatchingStrategy dispatchingStrategy = new SelectiveQueueDispatchingStrategy(selectors, queueNames);
+        PriorityQueueDispatchingStrategy dispatchingStrategy = new PriorityQueueDispatchingStrategy(selectors, queueNames);
 
         List<String> queues = dispatchingStrategy.getQueueNames();
 
-        assertEquals(6, queues.size());
+        assertEquals(7, queues.size());
         assertTrue(queues.contains("publish1"));
         assertTrue(queues.contains("news-publish1"));
         assertTrue(queues.contains("publish2"));
         assertTrue(queues.contains("news-publish2"));
         assertTrue(queues.contains("notes-publish1"));
-        assertTrue(queues.contains("passive"));
+        assertTrue(queues.contains("important-publish1"));
+        assertTrue(queues.contains("important-publish2"));
 
     }
 
@@ -74,22 +75,22 @@ public class SelectiveQueueDispatchingStrategyTest {
 
     @Test
     public void testQueueMatching() throws Exception {
-        SelectiveQueueDispatchingStrategy dispatchingStrategy = new SelectiveQueueDispatchingStrategy(selectors, queueNames);
+        PriorityQueueDispatchingStrategy dispatchingStrategy = new PriorityQueueDispatchingStrategy(selectors, queueNames);
 
         Map<String, String> matchedQueues = dispatchingStrategy.getMatchingQueues(null);
 
-        assertEquals(4, matchedQueues.size());
+        assertEquals(5, matchedQueues.size());
         assertEquals("publish1", matchedQueues.get("news-publish1"));
         assertEquals("publish1", matchedQueues.get("notes-publish1"));
         assertEquals("publish2", matchedQueues.get("news-publish2"));
-        assertEquals(null, matchedQueues.get("passive"));
-
+        assertEquals("publish1", matchedQueues.get("important-publish1"));
+        assertEquals("publish2", matchedQueues.get("important-publish2"));
     }
 
 
     @Test
     public void testPathQueueMatching() throws Exception {
-        SelectiveQueueDispatchingStrategy dispatchingStrategy = new SelectiveQueueDispatchingStrategy(selectors, queueNames);
+        PriorityQueueDispatchingStrategy dispatchingStrategy = new PriorityQueueDispatchingStrategy(selectors, queueNames);
 
         Map<String, String> matchedQueues = dispatchingStrategy.getMatchingQueues(new String[] { "/content/news/a" });
 
@@ -109,16 +110,18 @@ public class SelectiveQueueDispatchingStrategyTest {
         matchedQueues = dispatchingStrategy.getMatchingQueues(new String[] { "/content/other" });
         assertEquals(0, matchedQueues.size());
 
-        matchedQueues = dispatchingStrategy.getMatchingQueues(new String[] { "/content/passive" });
-        assertEquals(1, matchedQueues.size());
-        assertEquals(null, matchedQueues.get("passive"));
+        matchedQueues = dispatchingStrategy.getMatchingQueues(new String[] { "/content/important" });
+        assertEquals(2, matchedQueues.size());
+        assertEquals("publish1", matchedQueues.get("important-publish1"));
+        assertEquals("publish2", matchedQueues.get("important-publish2"));
+
     }
 
 
 
     @Test
     public void testMatchingDispatching() throws Exception {
-        SelectiveQueueDispatchingStrategy dispatchingStrategy = new SelectiveQueueDispatchingStrategy(selectors, queueNames);
+        PriorityQueueDispatchingStrategy dispatchingStrategy = new PriorityQueueDispatchingStrategy(selectors, queueNames);
 
 
         DistributionPackage distributionPackage = mock(SharedDistributionPackage.class);
@@ -145,7 +148,7 @@ public class SelectiveQueueDispatchingStrategyTest {
 
     @Test
     public void testNoMatchingDispatching() throws Exception {
-        SelectiveQueueDispatchingStrategy dispatchingStrategy = new SelectiveQueueDispatchingStrategy(selectors, queueNames);
+        PriorityQueueDispatchingStrategy dispatchingStrategy = new PriorityQueueDispatchingStrategy(selectors, queueNames);
 
 
         DistributionPackage distributionPackage = mock(SharedDistributionPackage.class);
