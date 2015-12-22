@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.transport.core;
+package org.apache.sling.distribution.transport;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

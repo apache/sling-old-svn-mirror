@@ -247,7 +247,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
             distributionPackage.close();
         }
 
-        log.info("scheduled package {} with info {}", distributionPackage.getId(), distributionPackage.getInfo());
+        log.debug("scheduled package {} with info {}", distributionPackage.getId(), distributionPackage.getInfo());
 
 
         return distributionResponses;
@@ -418,7 +418,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
                     DistributionPackageUtils.releaseOrDelete(distributionPackage, queueName);
                 }
 
-                log.info("processed queue {} package {} with info {}", queueName, distributionPackage.getId(), distributionPackage.getInfo());
+                log.debug("processed queue {} package {} with info {}", queueName, distributionPackage.getId(), distributionPackage.getInfo());
             } else {
                 success = true; // return success if package does not exist in order to clear the queue.
                 log.error("distribution package with id {} does not exist. the package will be skipped.", queueItem.getId());
@@ -460,7 +460,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
             return false;
         }
 
-        log.info("distribution package {} was reenqueued", distributionPackage.getId());
+        log.debug("distribution package {} was reenqueued", distributionPackage.getId());
         return true;
     }
 

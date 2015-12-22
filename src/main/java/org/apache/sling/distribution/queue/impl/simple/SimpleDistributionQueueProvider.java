@@ -60,10 +60,10 @@ public class SimpleDistributionQueueProvider implements DistributionQueueProvide
 
         DistributionQueue queue = queueMap.get(key);
         if (queue == null) {
-            log.info("creating a queue with key {}", key);
+            log.debug("creating a queue with key {}", key);
             queue = new SimpleDistributionQueue(name, queueName);
             queueMap.put(key, queue);
-            log.info("queue created {}", queue);
+            log.debug("queue created {}", queue);
         }
         return queue;
     }

@@ -122,7 +122,7 @@ public class DistributionPackageExporterServlet extends SlingAllMethodsServlet {
 
                     // everything ok
                     response.setStatus(200);
-                    log.info("exported package {} was sent (and deleted={}), bytes written {}", new Object[]{packageId, delete, bytesCopied});
+                    log.debug("exported package {} was sent (and deleted={}), bytes written {}", new Object[]{packageId, delete, bytesCopied});
                 }
             });
 
@@ -154,7 +154,7 @@ public class DistributionPackageExporterServlet extends SlingAllMethodsServlet {
 
         if (distributionPackage != null) {
             distributionPackage.delete();
-            log.info("exported package {} was deleted", distributionPackage.getId());
+            log.debug("exported package {} was deleted", distributionPackage.getId());
 
             response.setStatus(200);
         } else {

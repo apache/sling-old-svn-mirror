@@ -84,7 +84,7 @@ public class RepositoryDistributionPackageImporter implements DistributionPackag
                         IOUtils.closeQuietly(inputStream);
                     }
                 }
-                log.info("package {} imported into the repository as node {} ",
+                log.debug("package {} imported into the repository as node {} ",
                         distributionPackage.getId(), addedNode.getPath());
 
             } else {

@@ -73,7 +73,7 @@ public class DefaultSharedDistributionPackageBuilder implements DistributionPack
         DistributionPackage distributionPackage = distributionPackageBuilder.createPackage(resourceResolver, request);
 
         String packageName = null;
-        log.info("mydebug1 create {}", distributionPackage.getId());
+        log.debug("create {}", distributionPackage.getId());
 
         try {
             packageName = generateNameFromId(resourceResolver, distributionPackage);
@@ -86,7 +86,7 @@ public class DefaultSharedDistributionPackageBuilder implements DistributionPack
         String packagePath = getPathFromName(packageName);
         DistributionPackage sharedDistributionPackage = new DefaultSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
 
-        log.info("mydebug2 created shared package {} for {}", sharedDistributionPackage.getId(), distributionPackage.getId());
+        log.debug("created shared package {} for {}", sharedDistributionPackage.getId(), distributionPackage.getId());
         return sharedDistributionPackage;
 
     }
@@ -96,7 +96,7 @@ public class DefaultSharedDistributionPackageBuilder implements DistributionPack
     public DistributionPackage readPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
         DistributionPackage distributionPackage = distributionPackageBuilder.readPackage(resourceResolver, stream);
 
-        log.info("mydebug4 read shared package {}", distributionPackage);
+        log.debug("read shared package {}", distributionPackage);
 
         if (distributionPackage == null) {
             return null;
@@ -115,7 +115,7 @@ public class DefaultSharedDistributionPackageBuilder implements DistributionPack
 
         DistributionPackage sharedDistributionPackage = new DefaultSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
 
-        log.info("mydebug3 created shared package {} for {}", sharedDistributionPackage.getId(), distributionPackage.getId());
+        log.debug("created shared package {} for {}", sharedDistributionPackage.getId(), distributionPackage.getId());
         return sharedDistributionPackage;
     }
 
@@ -124,7 +124,7 @@ public class DefaultSharedDistributionPackageBuilder implements DistributionPack
         String packageName = distributionPackageId;
         String originalPackageId = retrieveIdFromName(resourceResolver, packageName);
 
-        log.info("mydebug {} {}", packageName, originalPackageId);
+        log.debug("getting package {} {}", packageName, originalPackageId);
 
         if (originalPackageId == null) {
             return null;
@@ -132,7 +132,7 @@ public class DefaultSharedDistributionPackageBuilder implements DistributionPack
 
         DistributionPackage distributionPackage = distributionPackageBuilder.getPackage(resourceResolver, originalPackageId);
 
-        log.info("mydebug2 {}", distributionPackage);
+        log.debug("obtained package {}", distributionPackage);
 
         if (distributionPackage == null) {
             return null;
