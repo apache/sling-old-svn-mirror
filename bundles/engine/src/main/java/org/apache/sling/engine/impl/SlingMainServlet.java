@@ -111,7 +111,7 @@ public class SlingMainServlet extends GenericServlet {
     private static final String PROP_SERVER_INFO = "sling.serverinfo";
 
 
-    @Property(value = {"X-Content-Type-Options=nosniff"},
+    @Property(value = {"X-Content-Type-Options=nosniff", "X-Frame-Options=SAMEORIGIN"},
             label = "Additional response headers",
             description = "Provides mappings for additional response headers "
                 + "Each entry is of the form 'bundleId [ \":\" responseHeaderName ] \"=\" responseHeaderValue' ",
