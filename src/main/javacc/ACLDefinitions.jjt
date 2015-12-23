@@ -8,9 +8,9 @@ options
     STATIC=false;
 }
 
-PARSER_BEGIN(ACLDefinitions)
+PARSER_BEGIN(ACLDefinitionsParserImpl)
 
-package org.apache.sling.acldef.parser;
+package org.apache.sling.acldef.parser.impl;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -34,15 +34,10 @@ import org.apache.sling.acldef.parser.operations.*;
  * limitations under the License.
  */
 
-public class ACLDefinitions
+public class ACLDefinitionsParserImpl 
 {
-    public static final String PROP_PATHS = "paths";
-    public static final String PROP_PRINCIPALS = "principals";
-    public static final String PROP_PRIVILEGES = "privileges";
-    public static final String PROP_NODETYPES = "nodetypes";
 }
-
-PARSER_END(ACLDefinitions)
+PARSER_END(ACLDefinitionsParserImpl)
 
 SKIP :
 {
@@ -178,9 +173,9 @@ void removeStarLine(List<AclLine> lines) :
 {
     <REMOVE> <STAR> 
     (
-        <FOR> tmp = principalsList() { line.setProperty(PROP_PRINCIPALS, tmp); }
+        <FOR> tmp = principalsList() { line.setProperty(AclLine.PROP_PRINCIPALS, tmp); }
         
-        | <ON> tmp = pathsList() { line.setProperty(PROP_PATHS, tmp); }
+        | <ON> tmp = pathsList() { line.setProperty(AclLine.PROP_PATHS, tmp); }
     )     
     <EOL>
     
@@ -206,9 +201,9 @@ void userPrivilegesLine(List<AclLine> lines) :
 }
 {
     line = privilegesLineOperation()
-    tmp = namespacedItemsList() { line.setProperty(PROP_PRIVILEGES, tmp); } 
+    tmp = namespacedItemsList() { line.setProperty(AclLine.PROP_PRIVILEGES, tmp); } 
     <FOR>
-    tmp = principalsList() { line.setProperty(PROP_PRINCIPALS, tmp); }
+    tmp = principalsList() { line.setProperty(AclLine.PROP_PRINCIPALS, tmp); }
     <EOL>
 
     {   
@@ -223,9 +218,9 @@ void pathPrivilegesLine(List<AclLine> lines) :
 }
 {
     line = privilegesLineOperation()
-    tmp = namespacedItemsList() { line.setProperty(PROP_PRIVILEGES, tmp); } 
-    <ON> tmp = pathsList() { line.setProperty(PROP_PATHS, tmp); }
-    ( <NODETYPES> tmp = namespacedItemsList() { line.setProperty(PROP_NODETYPES, tmp); }) ?
+    tmp = namespacedItemsList() { line.setProperty(AclLine.PROP_PRIVILEGES, tmp); } 
+    <ON> tmp = pathsList() { line.setProperty(AclLine.PROP_PATHS, tmp); }
+    ( <NODETYPES> tmp = namespacedItemsList() { line.setProperty(AclLine.PROP_NODETYPES, tmp); }) ?
     <EOL>
     
     {    
