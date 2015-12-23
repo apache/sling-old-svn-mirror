@@ -31,8 +31,8 @@ import javax.jcr.SimpleCredentials;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.User;
-import org.apache.sling.acldef.parser.ACLDefinitions;
-import org.apache.sling.acldef.parser.ParseException;
+import org.apache.sling.acldef.parser.AclParsingException;
+import org.apache.sling.acldef.parser.impl.ACLDefinitionsParserService;
 import org.apache.sling.acldef.parser.operations.Operation;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 
@@ -49,10 +49,10 @@ class TestUtil {
         username = "user_" + id;
     }
     
-    List<Operation> parse(String input) throws ParseException {
+    List<Operation> parse(String input) throws AclParsingException {
         final Reader r = new StringReader(input);
         try {
-            return new ACLDefinitions(r).parse();
+            return new ACLDefinitionsParserService().parse(r);
         } finally {
             IOUtils.closeQuietly(r);
         }
@@ -69,7 +69,7 @@ class TestUtil {
         }
     }
     
-    void parseAndExecute(String input) throws ParseException, RepositoryException {
+    void parseAndExecute(String input) throws RepositoryException, AclParsingException {
         final AclOperationVisitor v = new AclOperationVisitor(adminSession);
         for(Operation o : parse(input)) {
             o.accept(v);
@@ -77,7 +77,7 @@ class TestUtil {
         adminSession.save();
     }
     
-    void cleanupUser() throws ParseException, RepositoryException {
+    void cleanupUser() throws RepositoryException, AclParsingException {
         parseAndExecute("delete service user " + username);
         assertServiceUser("in cleanupUser()", username, false);
     }

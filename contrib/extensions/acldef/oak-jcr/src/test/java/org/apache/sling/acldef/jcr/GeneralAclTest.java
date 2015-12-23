@@ -26,7 +26,7 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.sling.acldef.parser.ParseException;
+import org.apache.sling.acldef.parser.AclParsingException;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.After;
@@ -44,14 +44,14 @@ public class GeneralAclTest {
     private Session s;
     
     @Before
-    public void setup() throws ParseException, RepositoryException {
+    public void setup() throws RepositoryException, AclParsingException {
         U = new TestUtil(context);
         U.parseAndExecute("create service user " + U.username);
         s = U.loginService(U.username);
     }
 
     @After
-    public void cleanup() throws ParseException, RepositoryException {
+    public void cleanup() throws RepositoryException, AclParsingException {
         U.cleanupUser();
         s.logout();
     }

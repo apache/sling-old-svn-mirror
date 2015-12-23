@@ -28,8 +28,8 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.sling.acldef.parser.ACLDefinitions;
-import org.apache.sling.acldef.parser.ParseException;
+import org.apache.sling.acldef.parser.impl.ACLDefinitionsParserImpl;
+import org.apache.sling.acldef.parser.impl.ParseException;
 import org.apache.sling.acldef.parser.operations.Operation;
 import org.apache.sling.acldef.parser.operations.OperationVisitor;
 import org.junit.Test;
@@ -112,7 +112,7 @@ public class ParserTest {
         try {
             final StringWriter sw = new StringWriter();
             final OperationVisitor v = new OperationToStringVisitor(new PrintWriter(sw)); 
-            final List<Operation> result = new ACLDefinitions(tc.input).parse(); 
+            final List<Operation> result = new ACLDefinitionsParserImpl(tc.input).parse(); 
             for(Operation o : result) {
                 o.accept(v);
             }

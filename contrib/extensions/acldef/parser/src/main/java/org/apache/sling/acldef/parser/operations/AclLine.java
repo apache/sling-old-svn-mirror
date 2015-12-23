@@ -29,6 +29,11 @@ public class AclLine {
     private final Action action;
     private static final List<String> EMPTY_LIST = Collections.unmodifiableList(new ArrayList<String>());
     
+    public static final String PROP_PATHS = "paths";
+    public static final String PROP_PRINCIPALS = "principals";
+    public static final String PROP_PRIVILEGES = "privileges";
+    public static final String PROP_NODETYPES = "nodetypes";
+
     public enum Action {
         REMOVE,
         REMOVE_ALL,
