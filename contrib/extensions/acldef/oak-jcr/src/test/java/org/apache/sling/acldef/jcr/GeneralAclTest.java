@@ -34,8 +34,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-/** Test root node and node creation privileges */
-public class RootAddChildNodeTest {
+/** Various ACL-related tests */
+public class GeneralAclTest {
 
     @Rule
     public final SlingContext context = new SlingContext(ResourceResolverType.JCR_OAK);
@@ -52,17 +52,17 @@ public class RootAddChildNodeTest {
 
     @After
     public void cleanup() throws ParseException, RepositoryException {
-        U.parseAndExecute("delete service user " + U.username);
+        U.cleanupUser();
         s.logout();
     }
     
     @Test(expected=AccessDeniedException.class)
-    public void getRootNodeFails() throws Exception {
+    public void getRootNodeIntiallyFails() throws Exception {
         s.getRootNode();
     }
     
     @Test
-    public void readOnlyThenWrite() throws Exception {
+    public void readOnlyThenWriteThenDeny() throws Exception {
         final Node tmp = U.adminSession.getRootNode().addNode("tmp_" + U.id);
         U.adminSession.save();
         final String path = tmp.getPath();
@@ -84,7 +84,7 @@ public class RootAddChildNodeTest {
         try {
             n.setProperty("U.id", U.id);
             s.save();
-            fail("Expected write access to be denied:" + path);
+            fail("Expected write access to be initially denied:" + path);
         } catch(AccessDeniedException ignore) {
         }
         s.refresh(false);
@@ -97,6 +97,18 @@ public class RootAddChildNodeTest {
         U.parseAndExecute(allowWrite);
         n.setProperty("U.id", U.id);
         s.save();
+        
+        final String deny = 
+                "set ACL for " + U.username + "\n"
+                + "deny jcr:all on " + path + "\n"
+                + "end"
+                ;
+        U.parseAndExecute(deny);
+        try {
+            s.getNode(path);
+            fail("Expected access to be denied again:" + path);
+        } catch(PathNotFoundException ignore) {
+        }
     }
     
     @Test

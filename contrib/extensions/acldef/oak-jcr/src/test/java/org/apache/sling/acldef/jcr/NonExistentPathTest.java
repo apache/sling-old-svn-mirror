@@ -48,7 +48,7 @@ public class NonExistentPathTest {
 
     @After
     public void cleanup() throws ParseException, RepositoryException {
-        U.parseAndExecute("delete service user " + U.username);
+        U.cleanupUser();
         s.logout();
     }
     
