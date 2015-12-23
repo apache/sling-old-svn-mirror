@@ -113,4 +113,33 @@ public class SlingAuthenticatorTest extends TestCase {
         assertTrue(allowed);
     }
     
+    public void testSimilarPath() throws Throwable{
+    	 SlingAuthenticator slingAuthenticator = new SlingAuthenticator();
+         
+         PathBasedHolderCache<AuthenticationRequirementHolder> authRequiredCache = new PathBasedHolderCache<AuthenticationRequirementHolder>();
+         
+         authRequiredCache.addHolder(new AuthenticationRequirementHolder("/", false, null));
+         authRequiredCache.addHolder(new AuthenticationRequirementHolder("/content/path", true, null));
+         PrivateAccessor.setField(slingAuthenticator, "authRequiredCache", authRequiredCache);
+         final HttpServletRequest request = context.mock(HttpServletRequest.class);
+         context.checking(new Expectations() {
+             {
+                 allowing(request).getServletPath();
+                 will(returnValue(null));
+                 allowing(request).getPathInfo();
+                 will(returnValue("/content/path-public"));
+                 allowing(request).getServerName();
+                 will(returnValue("localhost"));
+                 allowing(request).getServerPort();
+                 will(returnValue(80));
+                 allowing(request).getScheme();
+                 will(returnValue("http"));
+             }
+         });     
+         
+         Boolean allowed = (Boolean) PrivateAccessor.invoke(slingAuthenticator,"isAnonAllowed",  new Class[]{HttpServletRequest.class},new Object[]{request});
+         assertTrue(allowed);
+    	
+    }
+    
 }
