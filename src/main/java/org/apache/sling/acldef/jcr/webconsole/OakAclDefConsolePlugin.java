@@ -41,8 +41,8 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.acldef.jcr.AclOperationVisitor;
-import org.apache.sling.acldef.parser.ACLDefinitions;
-import org.apache.sling.acldef.parser.ParseException;
+import org.apache.sling.acldef.parser.AclDefinitionsParser;
+import org.apache.sling.acldef.parser.AclParsingException;
 import org.apache.sling.acldef.parser.operations.Operation;
 import org.apache.sling.acldef.parser.operations.OperationVisitor;
 import org.apache.sling.api.request.ResponseUtil;
@@ -79,6 +79,9 @@ public class OakAclDefConsolePlugin extends HttpServlet {
     
     @Reference
     private SlingRepository repository;
+
+    @Reference
+    private AclDefinitionsParser parser;
 
     private String thisPath(HttpServletRequest request) {
         return request.getContextPath() + request.getServletPath() + request.getPathInfo();
@@ -157,13 +160,13 @@ public class OakAclDefConsolePlugin extends HttpServlet {
         }
     }
     
-    private void setAcl(String aclDef) throws RepositoryException, IOException, ParseException {
+    private void setAcl(String aclDef) throws RepositoryException, IOException, AclParsingException {
         final Reader r = new StringReader(aclDef);
         Session s = null;
         try {
             s = repository.loginAdministrative(null);
             final OperationVisitor v = new AclOperationVisitor(s);
-            for(Operation op : new ACLDefinitions(r).parse()) {
+            for(Operation op : parser.parse(r)) {
                 op.accept(v);
             }
             s.save();

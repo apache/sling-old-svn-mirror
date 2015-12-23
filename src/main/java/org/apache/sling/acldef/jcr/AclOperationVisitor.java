@@ -16,9 +16,9 @@
  */
 package org.apache.sling.acldef.jcr;
 
-import static org.apache.sling.acldef.parser.ACLDefinitions.PROP_PATHS;
-import static org.apache.sling.acldef.parser.ACLDefinitions.PROP_PRINCIPALS;
-import static org.apache.sling.acldef.parser.ACLDefinitions.PROP_PRIVILEGES;
+import static org.apache.sling.acldef.parser.operations.AclLine.PROP_PATHS;
+import static org.apache.sling.acldef.parser.operations.AclLine.PROP_PRINCIPALS;
+import static org.apache.sling.acldef.parser.operations.AclLine.PROP_PRIVILEGES;
 
 import java.util.List;
 
