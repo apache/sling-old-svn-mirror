@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNull;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
+import java.util.UUID;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -39,9 +40,13 @@ import org.apache.sling.testing.mock.sling.junit.SlingContext;
 class TestUtil {
     
     final Session adminSession;
+    final String id;
+    final String username;
     
     TestUtil(SlingContext ctx) {
-        adminSession = ctx.resourceResolver().adaptTo(Session.class); 
+        adminSession = ctx.resourceResolver().adaptTo(Session.class);
+        id = UUID.randomUUID().toString();
+        username = "user_" + id;
     }
     
     List<Operation> parse(String input) throws ParseException {
@@ -64,14 +69,15 @@ class TestUtil {
         }
     }
     
-    void parseAndExecute(String input) throws ParseException {
+    void parseAndExecute(String input) throws ParseException, RepositoryException {
         final AclOperationVisitor v = new AclOperationVisitor(adminSession);
         for(Operation o : parse(input)) {
             o.accept(v);
         }
+        adminSession.save();
     }
     
-    Session getServiceSession(String serviceUsername) throws RepositoryException {
+    Session loginService(String serviceUsername) throws RepositoryException {
         final SimpleCredentials cred = new SimpleCredentials(serviceUsername, new char[0]);
         return adminSession.impersonate(cred);
     }
