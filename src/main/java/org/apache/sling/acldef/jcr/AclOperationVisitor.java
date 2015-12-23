@@ -89,7 +89,7 @@ public class AclOperationVisitor implements OperationVisitor {
         try {
             AclUtil.setAcl(s, principals, paths, privileges, isAllow);
         } catch(Exception e) {
-            throw new RuntimeException("Failed to set ACL (" + e.getClass().getSimpleName() + ") " + line, e);
+            throw new RuntimeException("Failed to set ACL (" + e.toString() + ") " + line, e);
         }
     }
     
