@@ -77,6 +77,11 @@ class TestUtil {
         adminSession.save();
     }
     
+    void cleanupUser() throws ParseException, RepositoryException {
+        parseAndExecute("delete service user " + username);
+        assertServiceUser("in cleanupUser()", username, false);
+    }
+    
     Session loginService(String serviceUsername) throws RepositoryException {
         final SimpleCredentials cred = new SimpleCredentials(serviceUsername, new char[0]);
         return adminSession.impersonate(cred);
