@@ -33,6 +33,10 @@ public class ServiceUserUtil {
         return ((JackrabbitSession)session).getUserManager();
     }
     
+    public static Authorizable getAuthorizable(Session session, String username) throws RepositoryException {
+        return getUserManager(session).getAuthorizable(username);
+    }
+    
     public static void createServiceUser(Session s, String username) throws RepositoryException {
         getUserManager(s).createSystemUser(username, null);
     }

@@ -35,6 +35,10 @@
 	  Applies ACLs to an Oak JCR repository based on the output
 	  of the ACL Definition Language parser.
   </description>
+  
+  <properties>
+    <jackrabbit.version>2.10.0</jackrabbit.version>
+  </properties>
 
   <scm>
     <connection>scm:svn: https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/acldef/oak-jcr</connection>
@@ -75,13 +79,29 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-api</artifactId>
-      <version>2.11.3</version>
+      <version>${jackrabbit.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-commons</artifactId>
-      <version>2.2.9</version>
+      <version>${jackrabbit.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+    </dependency>
+     <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.api</artifactId>
+      <version>2.4.0</version>
+      <scope>provided</scope>
+    </dependency>
+     <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.jcr.api</artifactId>
+      <version>2.0.4</version>
       <scope>provided</scope>
     </dependency>
      <dependency>
