@@ -24,10 +24,13 @@ import java.util.regex.Pattern;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Defines the validation rules for a child resource, allowing {@link ValidationModel}s to be applied to {@link
  * org.apache.sling.api.resource.Resource} trees.
  */
+@ProviderType
 public interface ChildResource {
 
     /**

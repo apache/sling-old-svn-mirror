@@ -19,7 +19,7 @@
 package org.apache.sling.validation.exceptions;
 
 /**
- * Exception that is thrown for Validator inconsistencies.
+ * Exception that is thrown for Validator inconsistencies, e.g. if a mandatory parameter for a validator is missing.
  */
 public class SlingValidationException extends RuntimeException {
 

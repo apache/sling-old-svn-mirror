@@ -19,15 +19,17 @@
 package org.apache.sling.validation;
 
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.Nonnull;
 
 import org.apache.sling.validation.spi.Validator;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * A {@code ValidationResult} contains validation information either from a single {@link Validator} or from multiple Validator invocations.
  */
+@ProviderType
 public interface ValidationResult {
 
     /**
