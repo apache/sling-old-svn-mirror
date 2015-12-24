@@ -27,15 +27,34 @@
     <relativePath/>
   </parent>
 
-  <artifactId>org.apache.sling.acldef.reactor</artifactId>
-  <packaging>pom</packaging>
+  <artifactId>org.apache.sling.acldef.provisioning</artifactId>
+  <packaging>jar</packaging>
   <version>0.0.1-SNAPSHOT</version>
-  <name>Apache Sling ACL Definitions Reactor</name>
-  <description>ACL Definition Language used in Sling</description>
+  <name>Apache Sling ACL Definitions Provisioning Support</name>
+  <description>
+	  Support for 'accesscontrol' sections in Sling 
+	  provisioning models
+  </description>
+  
+  <properties>
+    <jackrabbit.version>2.10.0</jackrabbit.version>
+  </properties>
 
-  <modules>
-    <module>parser</module>
-    <module>oak-jcr</module>
-    <module>provisioning</module>
-  </modules>
+  <scm>
+    <connection>scm:svn: https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/acldef/provisioning</connection>
+    <developerConnection>scm:svn: https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/acldef/provisioning</developerConnection>
+    <url> https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/acldef/provisioning</url>
+  </scm>
+  
+  <dependencies>
+     <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.provisioning.model</artifactId>
+      <version>1.4.1-SNAPSHOT</version>
+    </dependency>
+     <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+  </dependencies>
 </project>
