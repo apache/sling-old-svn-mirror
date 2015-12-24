@@ -20,6 +20,9 @@ package org.apache.sling.validation;
 
 import javax.annotation.Nonnull;
 
+import aQute.bnd.annotation.ProviderType;
+
+@ProviderType
 public interface ValidationFailure {
 
     /**

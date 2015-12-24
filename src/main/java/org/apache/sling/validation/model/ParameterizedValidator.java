@@ -23,10 +23,13 @@ import javax.annotation.Nonnull;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.spi.Validator;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Defines a validator instance with information about the type and the parameterization of the validator.
  *
  */
+@ProviderType
 public interface ParameterizedValidator {
 
     /**

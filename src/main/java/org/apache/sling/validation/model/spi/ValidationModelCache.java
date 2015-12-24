@@ -18,9 +18,12 @@
  */
 package org.apache.sling.validation.model.spi;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Validation models are cached until explicitly invalidated through this OSGi service.
  */
+@ProviderType
 public interface ValidationModelCache {
     public void invalidate();
 }
