@@ -22,9 +22,12 @@ import java.util.Collection;
 
 import javax.annotation.Nonnull;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * A {@code ValidationModel} defines the validation rules that a resource tree has to pass.
  */
+@ProviderType
 public interface ValidationModel {
 
     /**

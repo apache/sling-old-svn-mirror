@@ -28,9 +28,12 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.exceptions.SlingValidationException;
 import org.apache.sling.validation.model.ValidationModel;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * The {@code ValidationService} provides methods for finding {@link ValidationModel} services.
  */
+@ProviderType
 public interface ValidationService {
 
     /**

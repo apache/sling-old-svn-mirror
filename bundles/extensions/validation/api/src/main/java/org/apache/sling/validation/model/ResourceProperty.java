@@ -24,9 +24,12 @@ import java.util.regex.Pattern;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Describes a {@link org.apache.sling.api.resource.Resource} property.
  */
+@ProviderType
 public interface ResourceProperty {
 
     /**
