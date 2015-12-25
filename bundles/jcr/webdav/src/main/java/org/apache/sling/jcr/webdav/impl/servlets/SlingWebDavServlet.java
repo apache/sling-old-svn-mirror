@@ -278,7 +278,6 @@ public class SlingWebDavServlet extends SimpleWebdavServlet {
     }
 
     public void bindCopyMoveHandler(final ServiceReference copyMoveHandlerReference) {
-
         this.copyMoveManager.bindCopyMoveHandler(copyMoveHandlerReference);
     }
 
