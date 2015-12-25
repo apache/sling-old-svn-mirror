@@ -258,6 +258,7 @@ public class SlingWebDavServlet extends SimpleWebdavServlet {
         this.ioManager.setComponentContext(null);
         this.propertyManager.setComponentContext(null);
         this.copyMoveManager.setComponentContext(null);
+        this.deleteManager.setComponentContext(null);
     }
 
     public void bindIOHandler(final ServiceReference ioHandlerReference) {
