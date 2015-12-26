@@ -20,6 +20,7 @@ package org.apache.sling.commons.osgi;
 
 import java.util.Map;
 
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
@@ -31,22 +32,41 @@ import org.osgi.framework.ServiceReference;
 public class ServiceUtil {
 
     /**
+     * @deprecated Use {@link #getComparableForServiceRanking(Map, Order)} instead.
+     * @param props The service properties.
+     * @return the same comparable as returned by {@link #getComparableForServiceRanking(Map, Order.ASCENDING)}
+     * @see #getComparableForServiceRanking(Map, Order)
+     */
+    @Deprecated
+    public static Comparable<Object> getComparableForServiceRanking(final Map<String, Object> props) {
+        return getComparableForServiceRanking(props, Order.ASCENDING);
+    }
+
+    /**
      * Create a comparable object out of the service properties. With the result
      * it is possible to compare service properties based on the service ranking
-     * of a service. Therefore this object acts like {@link ServiceReference#compareTo(Object)}.
+     * of a service. This object acts like {@link ServiceReference#compareTo(Object)}.
+     * The comparator will return the services in the given order. In ascending order the 
+     * service with the lowest ranking comes first, in descending order the service with the 
+     * highest ranking comes first. The latter is useful if you want to have the service 
+     * returned first which is also chosen by {@link BundleContext#getServiceReference(String)}).
      * @param props The service properties.
+     * @param order The order (either ascending or descending).
      * @return A comparable for the ranking of the service
+     * @since 2.4
      */
-    public static Comparable<Object> getComparableForServiceRanking(final Map<String, Object> props) {
-        return new ComparableImplementation(props);
+    public static Comparable<Object> getComparableForServiceRanking(final Map<String, Object> props, Order order) {
+        return new ComparableImplementation(props, order);
     }
 
     private static final class ComparableImplementation implements Comparable<Object> {
 
         private final Map<String, Object> props;
+        private final Order order;
 
-        private ComparableImplementation(Map<String, Object> props) {
+        private ComparableImplementation(Map<String, Object> props, Order order) {
             this.props = props;
+            this.order = order;
         }
 
         @SuppressWarnings("unchecked")
@@ -83,15 +103,15 @@ public class ServiceUtil {
             Integer otherRank = (otherRankObj instanceof Integer)
                 ? (Integer) otherRankObj : new Integer(0);
 
-            // Sort by rank in ascending order.
+            // Sort by rank.
             if (rank.compareTo(otherRank) < 0) {
-                return -1; // lower rank
+                return order.lessThan; // lower rank
             } else if (rank.compareTo(otherRank) > 0) {
-                return 1; // higher rank
+                return order.greaterThan; // higher rank
             }
 
-            // If ranks are equal, then sort by service id in descending order.
-            return (id.compareTo(otherId) < 0) ? 1 : -1;
+            // If ranks are equal, then sort by service id.
+            return (id.compareTo(otherId) < 0) ? order.greaterThan : order.lessThan;
         }
 
         @Override

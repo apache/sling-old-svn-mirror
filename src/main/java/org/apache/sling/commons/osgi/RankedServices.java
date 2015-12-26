@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import org.osgi.framework.BundleContext;
+
 import aQute.bnd.annotation.ConsumerType;
 import aQute.bnd.annotation.ProviderType;
 
@@ -39,7 +41,7 @@ import aQute.bnd.annotation.ProviderType;
  * <pre>
  * &#64;Reference(name = "myService", referenceInterface = MyService.class,
  *     cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
- * private final RankedServices&lt;MyService&gt; myServices = new RankedServices&lt;MyService&gt;();
+ * private final RankedServices&lt;MyService&gt; myServices = new RankedServices&lt;MyService&gt;(Order.DESCENDING);
  * </pre>
  * <p>2. Define bind/unbind methods that delegate to the RankedServices instance:</p>
  * <pre>
@@ -67,19 +69,50 @@ public final class RankedServices<T> implements Iterable<T> {
   private final ChangeListener changeListener;
   private final SortedMap<Comparable<Object>, T> serviceMap = new TreeMap<Comparable<Object>, T>();
   private volatile Collection<T> sortedServices = Collections.emptyList();
+  private final Order order;
 
   /**
-   * Instantiate without change listener.
+   * Instantiate without change listener in ascending order (lowest service ranking first).
+   * @deprecated Use {@link #RankedService(Order)}) to explicitly give the order.
    */
+  @Deprecated
   public RankedServices() {
-    this(null);
+    this(Order.ASCENDING, null);
+  }
+  
+  /**
+   * Instantiate with change listener in ascending order ((lowest service ranking first).
+   * @param changeListener Change listener
+   * @deprecated use {@link #RankedServices(Order order, ChangeListener changeListener)}  instead 
+   */
+  @Deprecated
+  public RankedServices(ChangeListener changeListener) {
+    this(Order.ASCENDING, changeListener);
+  }
+  
+  /**
+   * Instantiate without change listener but with a given order.
+   * @param order the order in which the services should be returned in {@link #iterator()} and {@link #get()}. 
+   *              Either {@link Order#ASCENDING} or {@link Order#DESCENDING}.
+   *              Use {@link Order#DESCENDING} if you want to have the service with the highest ranking returned first
+   *              (this is the service which would also be chosen by {@link BundleContext#getServiceReference(String)}).
+   * @since 2.4
+   */
+  public RankedServices(Order order) {
+    this(order, null);
   }
 
   /**
    * Instantiate with change listener.
+   * @param order the order in which the services should be returned in {@link #iterator()} and {@link #get()}. 
+   *              Either {@link Order#ASCENDING} or {@link Order#DESCENDING}.
+   *              Use {@link Order#DESCENDING} if you want to have the service with the highest ranking returned first
+   *              (this is the service which would also be chosen by {@link BundleContext#getServiceReference(String)}).
    * @param changeListener Change listener
+   * @since 2.4
    */
-  public RankedServices(ChangeListener changeListener) {
+  public RankedServices(Order order, ChangeListener changeListener) {
+    this.order = order;
     this.changeListener = changeListener;
   }
 
@@ -90,7 +123,7 @@ public final class RankedServices<T> implements Iterable<T> {
    */
   public void bind(T service, Map<String, Object> props) {
     synchronized (serviceMap) {
-      serviceMap.put(ServiceUtil.getComparableForServiceRanking(props), service);
+      serviceMap.put(ServiceUtil.getComparableForServiceRanking(props, order), service);
       updateSortedServices();
     }
   }
@@ -102,7 +135,7 @@ public final class RankedServices<T> implements Iterable<T> {
    */
   public void unbind(T service, Map<String, Object> props) {
     synchronized (serviceMap) {
-      serviceMap.remove(ServiceUtil.getComparableForServiceRanking(props));
+      serviceMap.remove(ServiceUtil.getComparableForServiceRanking(props, order));
       updateSortedServices();
     }
   }
@@ -119,7 +152,8 @@ public final class RankedServices<T> implements Iterable<T> {
   }
 
   /**
-   * Lists all services registered in OSGi, sorted by service ranking.
+   * Lists all services registered in OSGi, sorted by service ranking
+   * (either ascending or descending depending on the order given in the constructor).
    * @return Collection of service instances
    */
   public Collection<T> get() {
@@ -127,7 +161,8 @@ public final class RankedServices<T> implements Iterable<T> {
   }
 
   /**
-   * Iterates all services registered in OSGi, sorted by service ranking.
+   * Iterates all services registered in OSGi, sorted by service ranking
+   * (either ascending or descending depending on the order given in the constructor).
    * @return Iterator with service instances.
    */
   public Iterator<T> iterator() {
