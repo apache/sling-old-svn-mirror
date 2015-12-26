@@ -68,7 +68,7 @@ public final class RankedServices<T> implements Iterable<T> {
 
   private final ChangeListener changeListener;
   private final SortedMap<Comparable<Object>, T> serviceMap = new TreeMap<Comparable<Object>, T>();
-  private volatile Collection<T> sortedServices = Collections.emptyList();
+  private volatile List<T> sortedServices = Collections.emptyList();
   private final Order order;
 
   /**
@@ -156,7 +156,7 @@ public final class RankedServices<T> implements Iterable<T> {
    * (either ascending or descending depending on the order given in the constructor).
    * @return Collection of service instances
    */
-  public Collection<T> get() {
+  public List<T> get() {
     return sortedServices;
   }
 
