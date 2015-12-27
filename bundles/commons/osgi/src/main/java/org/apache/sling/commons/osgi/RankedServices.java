@@ -155,8 +155,18 @@ public final class RankedServices<T> implements Iterable<T> {
    * Lists all services registered in OSGi, sorted by service ranking
    * (either ascending or descending depending on the order given in the constructor).
    * @return Collection of service instances
+   * @deprecated Use {@link #getList()} instead
    */
   public Collection<T> get() {
+    return sortedServices;
+  }
+  
+  /**
+   * Lists all services registered in OSGi, sorted by service ranking
+   * (either ascending or descending depending on the order given in the constructor).
+   * @return List of service instances
+   */
+  public List<T> getList() {
     return sortedServices;
   }
 
