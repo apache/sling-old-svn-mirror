@@ -19,6 +19,7 @@
 package org.apache.sling.commons.osgi;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -155,7 +156,7 @@ public final class RankedServices<T> implements Iterable<T> {
    * (either ascending or descending depending on the order given in the constructor).
    * @return Collection of service instances
    */
-  public List<T> get() {
+  public Collection<T> get() {
     return sortedServices;
   }
 
