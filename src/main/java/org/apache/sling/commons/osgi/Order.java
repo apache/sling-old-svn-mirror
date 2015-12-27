@@ -23,7 +23,7 @@ package org.apache.sling.commons.osgi;
  * or {@link RankedServices}. Either {@link #ASCENDING} meaning services with lowest service ranking first or 
  * {@link #DESCENDING} meaning services with highest service ranking first.
  */
-enum Order {
+public enum Order {
     ASCENDING(-1, 1),
     DESCENDING(1, -1);
 
