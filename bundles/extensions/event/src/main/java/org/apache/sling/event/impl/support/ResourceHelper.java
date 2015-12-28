@@ -48,8 +48,6 @@ public abstract class ResourceHelper {
 
     public static final String RESOURCE_TYPE_JOB = "slingevent:Job";
 
-    public static final String RESOURCE_TYPE_EVENT = "slingevent:Event";
-
     /** We use the same resource type as for timed events. */
     public static final String RESOURCE_TYPE_SCHEDULED_JOB = "slingevent:TimedEvent";
 
