@@ -253,12 +253,7 @@ public abstract class Compiler {
             smapStr = SmapUtil.generateSmap(ctxt, pageNodes);
         }
 
-        // If any proto type .java and .class files was generated,
-        // the prototype .java may have been replaced by the current
-        // compilation (if the tag file is self referencing), but the
-        // .class file need to be removed, to make sure that javac would
-        // generate .class again from the new .java file just generated.
-        tfp.removeProtoTypeFiles(ctxt.getClassFileName());
+        tfp.removeProtoTypeFiles();
 
         return smapStr;
     }
@@ -313,7 +308,7 @@ public abstract class Compiler {
             }
         } finally {
             if (tfp != null) {
-                tfp.removeProtoTypeFiles(null);
+                tfp.removeProtoTypeFiles();
             }
             // Make sure these object which are only used during the
             // generation and compilation of the JSP page get
@@ -398,13 +393,14 @@ public abstract class Compiler {
         }
 
     }
-    
+
     protected boolean getDefaultIsSession() {
         return defaultIsSession;
     }
 
     private static final class CleanVisitor extends Node.Visitor {
 
+        @Override
         public void visit(final CustomTag n) throws JasperException {
             n.clean();
             visitBody(n);
