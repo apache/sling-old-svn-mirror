@@ -40,10 +40,6 @@ import org.slf4j.Logger;
 
 public abstract class Utility {
 
-    public static final String PROPERTY_LOCK_CREATED = "lock.created";
-    public static final String PROPERTY_LOCK_CREATED_APP = "lock.created.app";
-    public static final String RESOURCE_TYPE_LOCK = "slingevent:Lock";
-
     public static volatile boolean LOG_DEPRECATION_WARNINGS = true;
 
     /**
