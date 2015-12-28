@@ -137,15 +137,9 @@ public class JobManagerConfiguration implements TopologyEventListener {
     /** The base path for assigned jobs to the current instance - ending with a slash. */
     private String localJobsPathWithSlash;
 
-    /** The base path for locks. */
-    private String locksPath;
-
     private String previousVersionAnonPath;
 
     private String previousVersionIdentifiedPath;
-
-    /** The base path for locks - ending with a slash. */
-    private String locksPathWithSlash;
 
     private volatile long backgroundLoadDelay;
 
@@ -199,8 +193,6 @@ public class JobManagerConfiguration implements TopologyEventListener {
         // create initial resources
         this.assignedJobsPath = this.jobsBasePathWithSlash + "assigned";
         this.unassignedJobsPath = this.jobsBasePathWithSlash + "unassigned";
-        this.locksPath = this.jobsBasePathWithSlash + "locks";
-        this.locksPathWithSlash = this.locksPath.concat("/");
 
         this.localJobsPath = this.assignedJobsPath.concat("/").concat(Environment.APPLICATION_ID);
         this.localJobsPathWithSlash = this.localJobsPath.concat("/");
@@ -220,7 +212,6 @@ public class JobManagerConfiguration implements TopologyEventListener {
         try {
             ResourceHelper.getOrCreateBasePath(resolver, this.getLocalJobsPath());
             ResourceHelper.getOrCreateBasePath(resolver, this.getUnassignedJobsPath());
-            ResourceHelper.getOrCreateBasePath(resolver, this.getLocksPath());
         } catch ( final PersistenceException pe ) {
             logger.error("Unable to create default paths: " + pe.getMessage(), pe);
             throw new RuntimeException(pe);
@@ -319,14 +310,6 @@ public class JobManagerConfiguration implements TopologyEventListener {
         return this.localJobsPath;
     }
 
-    /**
-     * Get the resource path for all locks
-     * @return The path - does not end with a slash
-     */
-    public String getLocksPath() {
-        return this.locksPath;
-    }
-
     /** Counter for jobs without an id. */
     private final AtomicLong jobCounter = new AtomicLong(0);
 
@@ -387,10 +370,6 @@ public class JobManagerConfiguration implements TopologyEventListener {
 
     public String getJobsBasePathWithSlash() {
         return this.jobsBasePathWithSlash;
-    }
-
-    public boolean isLock(final String lockPath) {
-        return lockPath.startsWith(this.locksPathWithSlash);
     }
 
     public String getPreviousVersionAnonPath() {
