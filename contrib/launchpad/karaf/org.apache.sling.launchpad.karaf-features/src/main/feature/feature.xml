@@ -63,7 +63,7 @@
   </feature>
   <!-- Apache Sling Commons -->
   <feature name="sling-commons-scheduler" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.commons.scheduler/2.4.12</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.commons.scheduler/2.4.14</bundle>
     <!-- dependencies -->
     <feature>scr</feature>
     <feature version="${feature.version}">sling-commons-threads</feature>
@@ -104,7 +104,7 @@
     <feature version="${feature.version}">sling-extension-discovery</feature>
   </feature>
   <feature name="sling-extension-event" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.event/3.7.6</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.event/4.0.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.event.dea/1.0.4</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
@@ -337,7 +337,7 @@
   </feature>
   <!-- Apache Sling Servlets -->
   <feature name="sling-servlets" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.servlets.get/2.1.12</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.servlets.get/2.1.14</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.servlets.post/2.3.8</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.servlets.resolver/2.3.8</bundle>
     <!-- dependencies -->
