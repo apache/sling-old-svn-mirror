@@ -136,7 +136,6 @@ public abstract class KarafTestSupport {
                 .unpackDirectory(new File("target/paxexam/" + getClass().getSimpleName())),
             keepRuntimeFolder(),
             logLevel(LogLevelOption.LogLevel.INFO),
-            editConfigurationFilePut("etc/org.apache.karaf.features.cfg", "featuresBoot", "(aries-blueprint, bundle, config, deployer, diagnostic, feature, instance, jaas, kar, log, management, package, service, shell, shell-compat, ssh, system, wrap, eventadmin, webconsole, http, http-whiteboard)"),
             editConfigurationFilePut("etc/org.apache.karaf.management.cfg", "rmiRegistryPort", Integer.toString(rmiRegistryPort)),
             editConfigurationFilePut("etc/org.apache.karaf.management.cfg", "rmiServerPort", Integer.toString(rmiServerPort)),
             editConfigurationFilePut("etc/org.apache.karaf.shell.cfg", "sshPort", Integer.toString(sshPort)),
