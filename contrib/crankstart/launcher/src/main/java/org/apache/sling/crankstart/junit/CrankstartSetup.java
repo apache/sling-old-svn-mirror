@@ -24,10 +24,12 @@ import org.junit.rules.ExternalResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Setup a Crankstart-launched instance for our tests */ 
+/** JUnit Rule that starts a Crankstart instance, using a set of provisioning
+ *  models. See our integration tests for examples. 
+ */
 public class CrankstartSetup extends ExternalResource {
     
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger log = LoggerFactory.getLogger(CrankstartSetup.class);
     private final int port = getAvailablePort();
     private final String storagePath = getOsgiStoragePath(); 
     private Thread crankstartThread;
@@ -35,14 +37,32 @@ public class CrankstartSetup extends ExternalResource {
     private final Properties replacementProps = new Properties();
     
     private static List<CrankstartSetup> toCleanup = new ArrayList<CrankstartSetup>();
+    private static Thread shutdownHook;
     
     private VariableResolver variablesResolver = new PropertiesVariableResolver(replacementProps, Launcher.VARIABLE_OVERRIDE_PREFIX);
     
     private String [] classpathModelPaths;
     
+    
     @Override
     public String toString() {
         return getClass().getSimpleName() + ", port " + port + ", OSGi storage " + storagePath;
+    }
+    
+    public CrankstartSetup() {
+        synchronized (getClass()) {
+            if(shutdownHook == null) {
+                shutdownHook = new Thread(CrankstartSetup.class.getSimpleName() + " shutdown thread") {
+                    @Override
+                    public void run() {
+                        log.info("Starting cleanup");
+                        cleanup();
+                        log.info("Cleanup done");
+                    }
+                };
+                Runtime.getRuntime().addShutdownHook(shutdownHook);
+            }
+        }
     }
     
     public CrankstartSetup withModelResources(String ... classpathModelPaths) {
@@ -84,6 +104,20 @@ public class CrankstartSetup extends ExternalResource {
         return baseUrl;
     }
     
+    private static void cleanup() {
+        synchronized (toCleanup) {
+            if(toCleanup.isEmpty()) {
+                log.info("No Crankstart instances to cleanup");
+                return;
+            }
+            log.info("Stopping {} running Crankstart instances...", toCleanup.size());
+            for(CrankstartSetup s : toCleanup) {
+                s.stopCrankstartInstance();
+            }
+            toCleanup.clear();
+        }
+    }
+    
     @Override
     protected void before() throws Throwable {
         if(crankstartThread != null) {
@@ -91,15 +125,7 @@ public class CrankstartSetup extends ExternalResource {
             return;
         }
         
-        synchronized (toCleanup) {
-            if(!toCleanup.isEmpty()) {
-                log.info("Stopping other Crankstart instances before starting this one...");
-            }
-            for(CrankstartSetup s : toCleanup) {
-                s.stopCrankstartInstance();
-            }
-            toCleanup.clear();
-        }
+        cleanup();
         
         log.info("Starting {}", this);
         
