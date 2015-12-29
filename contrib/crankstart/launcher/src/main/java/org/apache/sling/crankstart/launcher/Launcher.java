@@ -55,21 +55,17 @@ public class Launcher {
     
     public static final String VARIABLE_OVERRIDE_PREFIX = "crankstart.model.";
 
-    /** Allow for overriding model variables with system properties */ 
-    private final VariableResolver overridingVariableResolver = new VariableResolver() {
-        @Override
-        public String resolve(Feature f, String variableName) {
-            final String overrideKey = VARIABLE_OVERRIDE_PREFIX + variableName;
-            final String sysProp = System.getProperty(overrideKey);
-            if(sysProp == null) {
-                return f.getVariables().get(variableName);
-            } else {
-                log.info("Overriding model variable {}={} (from system property {})", variableName, sysProp, overrideKey);
-                return sysProp;
+    /** Default variable resolver using system properties */
+    public static final VariableResolver DEFAULT_VARIABLE_RESOLVER = 
+        new PropertiesVariableResolver(System.getProperties(), VARIABLE_OVERRIDE_PREFIX) {
+            @Override
+            protected void onOverride(String variableName, String value, String propertyName) {
+                log.info("Overriding model variable {}={} (from system property {})", variableName, value, propertyName);
             }
-        }
-        
-    };
+        };
+    
+    /** Allow for overriding model variables */ 
+    private VariableResolver variableResolver; 
     
     public static final FeatureFilter NOT_CRANKSTART_FILTER = new FeatureFilter() {
         @Override
@@ -87,7 +83,16 @@ public class Launcher {
     
     public Launcher(String ... args) throws Exception {
         MavenResolver.setup();
+        withVariableResolver(null);
         withModelPaths(args);
+    }
+    
+    /** Use the supplied VariableResolver. Defaults to DEFAULT_VARIABLE_RESOLVER if v
+     *  is null or if this is not called. 
+     */
+    public Launcher withVariableResolver(VariableResolver v) {
+        variableResolver = (v == null ? DEFAULT_VARIABLE_RESOLVER : v);
+        return this;
     }
 
     /** Add models from the supplied paths, can be either files or folders */ 
@@ -118,7 +123,7 @@ public class Launcher {
     
     public void computeEffectiveModel() throws Exception {
         new NestedModelsMerger(model).visit();
-        model = ModelUtility.getEffectiveModel(model, overridingVariableResolver);
+        model = ModelUtility.getEffectiveModel(model, variableResolver);
     }
     
     public Model getModel() {

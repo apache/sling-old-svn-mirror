@@ -11,12 +11,15 @@ import java.io.Reader;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
+import java.util.Properties;
+import java.util.UUID;
 
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.sling.crankstart.launcher.Launcher;
+import org.apache.sling.crankstart.launcher.PropertiesVariableResolver;
+import org.apache.sling.provisioning.model.ModelUtility.VariableResolver;
 import org.junit.rules.ExternalResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,8 +32,11 @@ public class CrankstartSetup extends ExternalResource {
     private final String storagePath = getOsgiStoragePath(); 
     private Thread crankstartThread;
     private final String baseUrl = "http://localhost:" + port;
+    private final Properties replacementProps = new Properties();
     
     private static List<CrankstartSetup> toCleanup = new ArrayList<CrankstartSetup>();
+    
+    private VariableResolver variablesResolver = new PropertiesVariableResolver(replacementProps, Launcher.VARIABLE_OVERRIDE_PREFIX);
     
     private String [] modelPaths;
     
@@ -101,8 +107,8 @@ public class CrankstartSetup extends ExternalResource {
         log.info("Starting {}", this);
         
         final HttpUriRequest get = new HttpGet(baseUrl);
-        System.setProperty("crankstart.model.http.port", String.valueOf(port));
-        System.setProperty("crankstart.model.osgi.storage.path", storagePath);
+        replacementProps.setProperty("crankstart.model.http.port", String.valueOf(port));
+        replacementProps.setProperty("crankstart.model.osgi.storage.path", storagePath);
         
         try {
             new DefaultHttpClient().execute(get);
@@ -110,7 +116,7 @@ public class CrankstartSetup extends ExternalResource {
         } catch(IOException expected) {
         }
         
-        final Launcher launcher = new Launcher();
+        final Launcher launcher = new Launcher().withVariableResolver(variablesResolver);
         for(String path : modelPaths) {
             mergeModelResource(launcher, path);
         }
@@ -154,8 +160,7 @@ public class CrankstartSetup extends ExternalResource {
     
     private static String getOsgiStoragePath() {
         final File tmpRoot = new File(System.getProperty("java.io.tmpdir"));
-        final Random random = new Random();
-        final File tmpFolder = new File(tmpRoot, System.currentTimeMillis() + "_" + random.nextInt());
+        final File tmpFolder = new File(tmpRoot, CrankstartSetup.class.getSimpleName() + "_" + UUID.randomUUID());
         if(!tmpFolder.mkdir()) {
             fail("Failed to create " + tmpFolder.getAbsolutePath());
         }
