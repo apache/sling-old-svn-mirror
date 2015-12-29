@@ -19,8 +19,7 @@ package org.apache.sling.event.impl.jobs.jmx;
 
 import java.util.Date;
 
-import junitx.util.PrivateAccessor;
-
+import org.apache.sling.event.impl.TestUtil;
 import org.apache.sling.event.jobs.JobManager;
 import org.junit.Assert;
 import org.junit.Before;
@@ -43,7 +42,7 @@ public class AllJobStatisticsMBeanTest {
     @Before
     public void setup() throws NoSuchFieldException {
         mbean = new AllJobStatisticsMBean();
-        PrivateAccessor.setField(mbean, "jobManager", jobManager);
+        TestUtil.setFieldValue(mbean, "jobManager", jobManager);
         seed = System.currentTimeMillis();
         Mockito.when(jobManager.getStatistics()).thenReturn(
                 new DummyStatistics(seed));

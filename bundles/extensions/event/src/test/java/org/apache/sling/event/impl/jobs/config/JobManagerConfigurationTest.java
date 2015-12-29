@@ -41,10 +41,9 @@ import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyView;
+import org.apache.sling.event.impl.TestUtil;
 import org.junit.Test;
 import org.mockito.Mockito;
-
-import junitx.util.PrivateAccessor;
 
 public class JobManagerConfigurationTest {
 
@@ -205,8 +204,8 @@ public class JobManagerConfigurationTest {
         // add change listener and verify
         ccl.init(1);
         final JobManagerConfiguration config = new JobManagerConfiguration();
-        PrivateAccessor.setField(config, "scheduler", scheduler);
-        ((AtomicBoolean)PrivateAccessor.getField(config, "active")).set(true);
+        TestUtil.setFieldValue(config, "scheduler", scheduler);
+        ((AtomicBoolean)TestUtil.getFieldValue(config, "active")).set(true);
 
         config.addListener(ccl);
         ccl.await();
