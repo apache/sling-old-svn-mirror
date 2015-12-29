@@ -57,6 +57,17 @@ public class CreateServiceUsersTest {
     }
     
     @Test
+    public void createUserMultipleTimes() throws Exception {
+        final String username = namePrefix + "_multiple";
+        U.assertServiceUser("before test", username, false);
+        final String input = "create service user " + username;
+        for(int i=0; i < 50; i++) {
+            U.parseAndExecute(input);
+        }
+        U.assertServiceUser("after creating it multiple times", username, true);
+    }
+    
+    @Test
     public void createDeleteMultipleTest() throws Exception {
         final int n = 50;
         

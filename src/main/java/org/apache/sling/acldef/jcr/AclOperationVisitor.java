@@ -58,9 +58,13 @@ public class AclOperationVisitor implements OperationVisitor {
     @Override
     public void visitCreateServiceUser(CreateServiceUser s) {
         final String id = s.getUsername();
-        log.info("Creating service user {}", id);
         try {
-            ServiceUserUtil.createServiceUser(session, id);
+            if(!ServiceUserUtil.serviceUserExists(session, id)) {
+                log.info("Creating service user {}", id);
+                ServiceUserUtil.createServiceUser(session, id);
+            } else {
+                log.info("Service user {} already exists, no changes made", id);
+            }
         } catch(Exception e) {
             report(e, "Unable to create service user [" + id + "]:" + e);
         }
