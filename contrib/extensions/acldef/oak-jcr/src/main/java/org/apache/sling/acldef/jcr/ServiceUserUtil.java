@@ -21,6 +21,7 @@ import javax.jcr.Session;
 
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 
 /** Utilities for Service Users management */
@@ -37,8 +38,20 @@ public class ServiceUserUtil {
         return getUserManager(session).getAuthorizable(username);
     }
     
+    /** Create a service user - fails if it already exists */
     public static void createServiceUser(Session s, String username) throws RepositoryException {
         getUserManager(s).createSystemUser(username, null);
+    }
+    
+    /** True if specified service user exists */
+    public static boolean serviceUserExists(Session session, String username) throws RepositoryException {
+        boolean result = false;
+        final Authorizable a = getAuthorizable(session, username);
+        if(a != null) {
+            final User u = (User)a;
+            result = u.isSystemUser();
+        }
+        return result;
     }
     
     public static void deleteServiceUser(Session s, String username) throws RepositoryException {
