@@ -27,7 +27,7 @@
   </parent>
 
   <artifactId>org.apache.sling.junit.teleporter</artifactId>
-  <version>1.0.6</version>
+  <version>1.0.7-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>Apache Sling JUnit Tests Teleporter</name>
   <description>Client-side implementation of the Teleporter mechanism for server-side JUnit tests</description>
@@ -71,8 +71,8 @@
   </dependencies>
 
   <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.junit.teleporter-1.0.6</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.junit.teleporter-1.0.6</developerConnection>
-    <url>https://svn.apache.org/viewvc/sling/tags/org.apache.sling.junit.teleporter-1.0.6</url>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/junit/teleporter</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/junit/teleporter</developerConnection>
+    <url>https://svn.apache.org/viewvc/sling/trunk/testing/junit/teleporter</url>
   </scm>
 </project>
