@@ -55,7 +55,6 @@ public class TopologyHandler implements TopologyEventListener, Runnable {
     @Activate
     protected void activate() {
         this.isActive.set(true);
-        this.configuration.getQueueConfigurationManager().addListener(this);
         final Thread thread = new Thread(this, "Apache Sling Job Topology Listener Thread");
         thread.setDaemon(true);
 
@@ -64,7 +63,6 @@ public class TopologyHandler implements TopologyEventListener, Runnable {
 
     @Deactivate
     protected void deactivate() {
-        this.configuration.getQueueConfigurationManager().removeListener();
         this.isActive.set(false);
         this.queue.clear();
         try {
@@ -87,20 +85,6 @@ public class TopologyHandler implements TopologyEventListener, Runnable {
         }
     }
 
-    /**
-     * This method is invoked by the queue configuration manager
-     * whenever the queue configuration changes.
-     */
-    public void queueConfigurationChanged() {
-        final QueueItem item = new QueueItem();
-        try {
-            this.queue.put(item);
-        } catch ( final InterruptedException ie) {
-            logger.warn("Thread got interrupted.", ie);
-            Thread.currentThread().interrupt();
-        }
-    }
-
     @Override
     public void run() {
         while ( isActive.get() ) {
@@ -112,7 +96,7 @@ public class TopologyHandler implements TopologyEventListener, Runnable {
                 Thread.currentThread().interrupt();
                 isActive.set(false);
             }
-            if ( isActive.get() && item != null ) {
+            if ( isActive.get() && item != null && item.event != null ) {
                 final JobManagerConfiguration config = this.configuration;
                 if ( config != null ) {
                     config.handleTopologyEvent(item.event);

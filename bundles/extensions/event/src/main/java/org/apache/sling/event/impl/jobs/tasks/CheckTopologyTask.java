@@ -318,16 +318,13 @@ public class CheckTopologyTask {
     /**
      * One maintenance run
      */
-    public void fullRun(final boolean topologyChanged,
-                        final boolean configChanged) {
+    public void fullRun() {
         if ( this.caps != null ) {
-            // if topology changed, reschedule assigned jobs for stopped instances
-            if ( topologyChanged ) {
-                this.reassignJobsFromStoppedInstances();
-            }
+            this.reassignJobsFromStoppedInstances();
+
             // check for all topics
             this.reassignStaleJobs();
-    
+
             // try to assign unassigned jobs
             this.assignUnassignedJobs();
         }

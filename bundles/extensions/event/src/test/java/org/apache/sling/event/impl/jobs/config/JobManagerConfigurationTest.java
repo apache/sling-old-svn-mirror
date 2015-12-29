@@ -76,8 +76,8 @@ public class JobManagerConfigurationTest {
         }
 
         public void await() throws Exception {
-            if ( !latch.await(5000, TimeUnit.MILLISECONDS) ) {
-                throw new Exception("No configuration event within 5 seconds.");
+            if ( !latch.await(8000, TimeUnit.MILLISECONDS) ) {
+                throw new Exception("No configuration event within 8 seconds.");
             }
         }
 
@@ -108,6 +108,7 @@ public class JobManagerConfigurationTest {
                             ((Runnable)job).run();
                         }
                     }, 3000);
+                    return true;
                 }
                 return false;
             }
@@ -224,7 +225,7 @@ public class JobManagerConfigurationTest {
         assertTrue(ccl.events.get(0));
 
         // change view, followed by change props
-        ccl.init(3);
+        ccl.init(2);
         final TopologyView view2 = createView();
         Mockito.when(initView.isCurrent()).thenReturn(false);
         final TopologyEvent change1 = new TopologyEvent(TopologyEvent.Type.TOPOLOGY_CHANGED, initView, view2);
@@ -236,14 +237,13 @@ public class JobManagerConfigurationTest {
         config.handleTopologyEvent(change2);
 
         ccl.await();
-        assertEquals(3, ccl.events.size());
+        assertEquals(2, ccl.events.size());
         assertFalse(ccl.events.get(0));
-        assertFalse(ccl.events.get(1));
-        assertTrue(ccl.events.get(2));
+        assertTrue(ccl.events.get(1));
 
         // we wait another 4 secs to see if there is no another event
         Thread.sleep(4000);
-        assertEquals(3, ccl.events.size());
+        assertEquals(2, ccl.events.size());
 
     }
 }
