@@ -19,6 +19,7 @@
 package org.apache.sling.event.it;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -84,12 +85,12 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
         this.removeConfiguration(this.queueConfigPid);
         super.cleanup();
     }
-/*
+
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testSimpleClassloading() throws Exception {
         final AtomicInteger processedJobsCount = new AtomicInteger(0);
         final List<Event> finishedEvents = Collections.synchronizedList(new ArrayList<Event>());
-        final ServiceRegistration jcReg = this.registerJobConsumer(TOPIC,
+        final ServiceRegistration<JobConsumer> jcReg = this.registerJobConsumer(TOPIC,
                 new JobConsumer() {
                     @Override
                     public JobResult process(Job job) {
@@ -97,7 +98,7 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
                         return JobResult.OK;
                     }
                 });
-        final ServiceRegistration ehReg = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
+        final ServiceRegistration<EventHandler> ehReg = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
                 new EventHandler() {
 
                     @Override
@@ -112,7 +113,7 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
             list.add("1");
             list.add("2");
 
-            final EventPropertiesMap map = new EventPropertiesMap();
+            final Map<String, String> map = new HashMap<String, String>();
             map.put("a", "a1");
             map.put("b", "b2");
 
@@ -163,12 +164,12 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
             ehReg.unregister();
         }
     }
-*/
+
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testFailedClassloading() throws Exception {
         final AtomicInteger failedJobsCount = new AtomicInteger(0);
         final List<Event> finishedEvents = Collections.synchronizedList(new ArrayList<Event>());
-        final ServiceRegistration jcReg = this.registerJobConsumer(TOPIC + "/failed",
+        final ServiceRegistration<JobConsumer> jcReg = this.registerJobConsumer(TOPIC + "/failed",
                 new JobConsumer() {
 
                     @Override
@@ -177,7 +178,7 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
                         return JobResult.OK;
                     }
                 });
-        final ServiceRegistration ehReg = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
+        final ServiceRegistration<EventHandler> ehReg = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
                 new EventHandler() {
 
                     @Override

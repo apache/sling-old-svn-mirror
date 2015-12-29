@@ -271,11 +271,11 @@ public abstract class AbstractJobHandlingTest {
     /**
      * Helper method to register an event handler
      */
-    protected ServiceRegistration registerEventHandler(final String topic,
+    protected ServiceRegistration<EventHandler> registerEventHandler(final String topic,
             final EventHandler handler) {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(EventConstants.EVENT_TOPIC, topic);
-        final ServiceRegistration reg = this.bc.registerService(EventHandler.class.getName(),
+        final ServiceRegistration<EventHandler> reg = this.bc.registerService(EventHandler.class,
                 handler, props);
         return reg;
     }
@@ -308,12 +308,12 @@ public abstract class AbstractJobHandlingTest {
     /**
      * Helper method to register a job consumer
      */
-    protected ServiceRegistration registerJobConsumer(final String topic,
+    protected ServiceRegistration<JobConsumer> registerJobConsumer(final String topic,
             final JobConsumer handler) {
         long cc = this.getConsumerChangeCount();
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(JobConsumer.PROPERTY_TOPICS, topic);
-        final ServiceRegistration reg = this.bc.registerService(JobConsumer.class.getName(),
+        final ServiceRegistration<JobConsumer> reg = this.bc.registerService(JobConsumer.class,
                 handler, props);
         this.waitConsumerChangeCount(cc + 1);
         return reg;
@@ -322,12 +322,12 @@ public abstract class AbstractJobHandlingTest {
     /**
      * Helper method to register a job executor
      */
-    protected ServiceRegistration registerJobExecutor(final String topic,
+    protected ServiceRegistration<JobExecutor> registerJobExecutor(final String topic,
             final JobExecutor handler) {
         long cc = this.getConsumerChangeCount();
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(JobConsumer.PROPERTY_TOPICS, topic);
-        final ServiceRegistration reg = this.bc.registerService(JobExecutor.class.getName(),
+        final ServiceRegistration<JobExecutor> reg = this.bc.registerService(JobExecutor.class,
                 handler, props);
         this.waitConsumerChangeCount(cc + 1);
         return reg;

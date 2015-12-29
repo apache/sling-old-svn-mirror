@@ -93,7 +93,7 @@ public class OrderedQueueTest extends AbstractJobHandlingTest {
         final Barrier cb = new Barrier(2);
         final AtomicInteger count = new AtomicInteger(0);
         final AtomicInteger parallelCount = new AtomicInteger(0);
-        final ServiceRegistration jcReg = this.registerJobConsumer("sling/orderedtest/*",
+        final ServiceRegistration<JobConsumer> jcReg = this.registerJobConsumer("sling/orderedtest/*",
                 new JobConsumer() {
 
                     private volatile int lastCounter = -1;
@@ -130,7 +130,7 @@ public class OrderedQueueTest extends AbstractJobHandlingTest {
                         return JobResult.OK;
                     }
                 });
-        final ServiceRegistration ehReg = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
+        final ServiceRegistration<EventHandler> ehReg = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
                 new EventHandler() {
 
                     @Override

@@ -62,7 +62,7 @@ public class TopicMatchingTest extends AbstractJobHandlingTest {
     public void testSimpleMatching() throws Exception {
         final Barrier barrier = new Barrier(2);
 
-        final ServiceRegistration reg = this.registerJobExecutor("sling/test/*",
+        final ServiceRegistration<JobExecutor> reg = this.registerJobExecutor("sling/test/*",
                 new JobExecutor() {
 
                     @Override
@@ -70,7 +70,7 @@ public class TopicMatchingTest extends AbstractJobHandlingTest {
                         return context.result().succeeded();
                     }
                 });
-        final ServiceRegistration eventHandler = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
+        final ServiceRegistration<EventHandler> eventHandler = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
                 new EventHandler() {
 
                     @Override
@@ -95,7 +95,7 @@ public class TopicMatchingTest extends AbstractJobHandlingTest {
     public void testDeepMatching() throws Exception {
         final Barrier barrier = new Barrier(2);
 
-        final ServiceRegistration reg = this.registerJobExecutor("sling/**",
+        final ServiceRegistration<JobExecutor> reg = this.registerJobExecutor("sling/**",
                 new JobExecutor() {
 
                     @Override
@@ -103,7 +103,7 @@ public class TopicMatchingTest extends AbstractJobHandlingTest {
                         return context.result().succeeded();
                     }
                 });
-        final ServiceRegistration eventHandler = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
+        final ServiceRegistration<EventHandler> eventHandler = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
                 new EventHandler() {
 
                     @Override
@@ -130,7 +130,7 @@ public class TopicMatchingTest extends AbstractJobHandlingTest {
         final Barrier barrier2 = new Barrier(2);
         final Barrier barrier3 = new Barrier(2);
 
-        final ServiceRegistration reg1 = this.registerJobExecutor("sling/**",
+        final ServiceRegistration<JobExecutor> reg1 = this.registerJobExecutor("sling/**",
                 new JobExecutor() {
 
                     @Override
@@ -139,7 +139,7 @@ public class TopicMatchingTest extends AbstractJobHandlingTest {
                         return context.result().succeeded();
                     }
                 });
-        final ServiceRegistration reg2 = this.registerJobExecutor("sling/test/*",
+        final ServiceRegistration<JobExecutor> reg2 = this.registerJobExecutor("sling/test/*",
                 new JobExecutor() {
 
                     @Override
@@ -148,7 +148,7 @@ public class TopicMatchingTest extends AbstractJobHandlingTest {
                         return context.result().succeeded();
                     }
                 });
-        final ServiceRegistration reg3 = this.registerJobExecutor(TOPIC,
+        final ServiceRegistration<JobExecutor> reg3 = this.registerJobExecutor(TOPIC,
                 new JobExecutor() {
 
                     @Override
