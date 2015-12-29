@@ -176,8 +176,6 @@ public class JobManagerConfiguration {
     /** The topology capabilities. */
     private volatile TopologyCapabilities topologyCapabilities;
 
-    private final AtomicBoolean firstTopologyEvent = new AtomicBoolean(true);
-
     /**
      * Activate this component.
      * @param props Configuration properties
@@ -239,6 +237,10 @@ public class JobManagerConfiguration {
         this.stopProcessing();
     }
 
+    /**
+     * Is this component still active?
+     * @return Active?
+     */
     public boolean isActive() {
         return this.active.get();
     }
@@ -452,11 +454,8 @@ public class JobManagerConfiguration {
      * Start processing
      * @param eventType The event type
      * @param newCaps The new capabilities
-     * @param isConfigChange If a configuration change occured.
      */
-    private void startProcessing(final Type eventType, final TopologyCapabilities newCaps,
-            final boolean isConfigChange,
-            final boolean runMaintenanceTasks) {
+    private void startProcessing(final Type eventType, final TopologyCapabilities newCaps) {
         logger.debug("Starting job processing...");
         // create new capabilities and update view
         this.topologyCapabilities = newCaps;
@@ -468,48 +467,48 @@ public class JobManagerConfiguration {
 
             final FindUnfinishedJobsTask rt = new FindUnfinishedJobsTask(this);
             rt.run();
-        }
 
-        final CheckTopologyTask mt = new CheckTopologyTask(this);
-        if ( runMaintenanceTasks ) {
-            // we run the checker task twice, now and shortly after the topology has changed.
-            mt.fullRun(!isConfigChange, isConfigChange);
-        }
+            final CheckTopologyTask mt = new CheckTopologyTask(this);
+            mt.fullRun();
 
-        if ( eventType == Type.TOPOLOGY_INIT ) {
             notifiyListeners();
         } else {
             // and run checker again in some seconds (if leader)
             // notify listeners afterwards
             final Scheduler local = this.scheduler;
             if ( local != null ) {
-                local.schedule(new Runnable() {
+                final Runnable r = new Runnable() {
 
                     @Override
                     public void run() {
-                        if ( newCaps == topologyCapabilities ) {
-                            if ( runMaintenanceTasks ) {
-                                if ( newCaps.isLeader() && newCaps.isActive() ) {
-                                    mt.assignUnassignedJobs();
-                                }
-                            }
+                        if ( newCaps == topologyCapabilities && newCaps.isActive()) {
                             // start listeners
-                            if ( newCaps.isActive() ) {
-                                synchronized ( listeners ) {
-                                    notifiyListeners();
-                                }
+                            notifiyListeners();
+                            if ( newCaps.isLeader() && newCaps.isActive() ) {
+                                final CheckTopologyTask mt = new CheckTopologyTask(JobManagerConfiguration.this);
+                                mt.fullRun();
                             }
                         }
                     }
-                }, local.AT(new Date(System.currentTimeMillis() + this.backgroundLoadDelay * 1000)));
+                };
+                if ( !local.schedule(r, local.AT(new Date(System.currentTimeMillis() + this.backgroundLoadDelay * 1000))) ) {
+                    // if for whatever reason scheduling doesn't work, let's run now
+                    r.run();
+                }
             }
         }
         logger.debug("Job processing started");
     }
 
+    /**
+     * Notify all listeners
+     */
     private void notifiyListeners() {
-        for(final ConfigurationChangeListener l : this.listeners) {
-            l.configurationChanged(this.topologyCapabilities != null);
+        synchronized ( this.listeners ) {
+            final TopologyCapabilities caps = this.topologyCapabilities;
+            for(final ConfigurationChangeListener l : this.listeners) {
+                l.configurationChanged(caps != null);
+            }
         }
     }
 
@@ -521,46 +520,31 @@ public class JobManagerConfiguration {
     public void handleTopologyEvent(final TopologyEvent event) {
         this.logger.debug("Received topology event {}", event);
 
-        // queue configuration changed?
-        if ( event == null ) {
-            final TopologyCapabilities caps = this.topologyCapabilities;
-            if ( caps != null && this.isActive() ) {
-                this.startProcessing(Type.PROPERTIES_CHANGED, caps, true, true);
-            }
-            return;
-        }
-
-        boolean runMaintenanceTasks = true;
         // check if there is a change of properties which doesn't affect us
         // but we need to use the new view !
+        boolean stopProcessing = true;
         if ( event.getType() == Type.PROPERTIES_CHANGED ) {
             final Map<String, String> newAllInstances = TopologyCapabilities.getAllInstancesMap(event.getNewView());
             if ( this.topologyCapabilities != null && this.topologyCapabilities.isSame(newAllInstances) ) {
-                logger.debug("No changes in capabilities - restarting without maintenance tasks");
-                runMaintenanceTasks = false;
+                logger.debug("No changes in capabilities - updating topology capabilities with new view");
+                stopProcessing = false;
             }
         }
 
-        TopologyEvent.Type eventType = event.getType();
-        if( this.firstTopologyEvent.compareAndSet(true, false) ) {
-            if ( eventType == Type.TOPOLOGY_CHANGED ) {
-                eventType = Type.TOPOLOGY_INIT;
-            }
-        }
-        synchronized ( this.listeners ) {
+        final TopologyEvent.Type eventType = event.getType();
 
-            if ( eventType == Type.TOPOLOGY_CHANGING ) {
-               this.stopProcessing();
+        if ( eventType == Type.TOPOLOGY_CHANGING ) {
+           this.stopProcessing();
 
-            } else if ( eventType == Type.TOPOLOGY_INIT
-                || event.getType() == Type.TOPOLOGY_CHANGED
-                || event.getType() == Type.PROPERTIES_CHANGED ) {
+        } else if ( eventType == Type.TOPOLOGY_INIT
+            || event.getType() == Type.TOPOLOGY_CHANGED
+            || event.getType() == Type.PROPERTIES_CHANGED ) {
 
+            if ( stopProcessing ) {
                 this.stopProcessing();
-
-                this.startProcessing(eventType, new TopologyCapabilities(event.getNewView(), this), false, runMaintenanceTasks);
             }
 
+            this.startProcessing(eventType, new TopologyCapabilities(event.getNewView(), this));
         }
     }
 
