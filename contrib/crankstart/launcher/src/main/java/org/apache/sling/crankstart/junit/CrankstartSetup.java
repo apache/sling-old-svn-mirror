@@ -1,4 +1,4 @@
-package org.apache.sling.crankstart.launcher;
+package org.apache.sling.crankstart.junit;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -16,11 +16,13 @@ import java.util.Random;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.sling.crankstart.launcher.Launcher;
+import org.junit.rules.ExternalResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Setup a Crankstart-launched instance for our tests */ 
-public class CrankstartSetup {
+public class CrankstartSetup extends ExternalResource {
     
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final int port = getAvailablePort();
@@ -30,17 +32,16 @@ public class CrankstartSetup {
     
     private static List<CrankstartSetup> toCleanup = new ArrayList<CrankstartSetup>();
     
-    public static final String [] MODEL_PATHS = {
-        "/crankstart-model.txt",
-        "/provisioning-model/base.txt",
-        "/provisioning-model/sling-extensions.txt",
-        "/provisioning-model/start-level-99.txt",
-        "/provisioning-model/crankstart-tests.txt"
-    };
+    private String [] modelPaths;
     
     @Override
     public String toString() {
         return getClass().getSimpleName() + ", port " + port + ", OSGi storage " + storagePath;
+    }
+    
+    public CrankstartSetup withModels(String ... modelPaths) {
+        this.modelPaths = modelPaths;
+        return this;
     }
             
     private static int getAvailablePort() {
@@ -73,11 +74,16 @@ public class CrankstartSetup {
         }
     }
     
-    String getBaseUrl() {
+    public String getBaseUrl() {
         return baseUrl;
     }
+    
+    @Override
+    protected void before() throws Throwable {
+        setup();
+    }
      
-    synchronized void setup() throws Exception {
+    public synchronized void setup() throws Exception {
         if(crankstartThread != null) {
             return;
         }
@@ -105,7 +111,7 @@ public class CrankstartSetup {
         }
         
         final Launcher launcher = new Launcher();
-        for(String path : MODEL_PATHS) {
+        for(String path : modelPaths) {
             mergeModelResource(launcher, path);
         }
         launcher.computeEffectiveModel();
