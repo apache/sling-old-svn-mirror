@@ -29,25 +29,27 @@ import org.apache.sling.provisioning.model.Section;
  *  the required services and content to be available. 
  */
 public class AclConfigsProvider {
-    /** The default OSGi configuration factory PID of the configs that we supply */
-    public static final String DEFAULT_CONFIG_FACTORY_PID = "org.apache.sling.acldef.jcr.handler.AclDefConfigHandler";
-    
     /** The default name of our ACL definitions sections */
     public static final String DEFAULT_ACLDEF_SECTION_NAME = "accesscontrol";
     
     /** Name Prefix for property for the created Configurations: text of the ACL definition */
     public static final String PROP_ACLDEFTEXT_PREFIX = "acldef.text.";
     
+    private final String configFactoryPid;
     private final String sectionName;
 
     /** Create a provider with a specific config PID and model section name */
-    public AclConfigsProvider(String configPid, String aclDefSectionName) {
+    public AclConfigsProvider(String configFactoryPid, String aclDefSectionName) {
+        this.configFactoryPid = configFactoryPid;
+        if(configFactoryPid == null || configFactoryPid.trim().length() == 0) {
+            throw new IllegalArgumentException("config factory PID is empty");
+        }
         sectionName = aclDefSectionName == null ? DEFAULT_ACLDEF_SECTION_NAME : aclDefSectionName;
     }
     
-    /** Create a provider with the default config PID and model section name */
-    public AclConfigsProvider() {
-        this(null, null);
+    /** Create a provider with the default model section name */
+    public AclConfigsProvider(String configFactoryPid) {
+        this(configFactoryPid, null);
     }
     
     /** Create a Configuration with one property for each additional accesscontrol
@@ -88,13 +90,8 @@ public class AclConfigsProvider {
         return sb.toString();
     }
     
-    /** Return the model section name to use to extract ACL definitions */
-    protected String getModelSectionName() {
-        return DEFAULT_ACLDEF_SECTION_NAME;
-    }
-    
     /** Create a Configuration with the appropriate PIDs */
     protected Configuration createConfiguration() {
-        return new Configuration(null, DEFAULT_CONFIG_FACTORY_PID);
+        return new Configuration(null, configFactoryPid);
     }
 }

@@ -16,6 +16,7 @@
  */
 package org.apache.sling.acldef.provisioning;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -24,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.UUID;
 
 import org.apache.sling.provisioning.model.Configuration;
 import org.apache.sling.provisioning.model.MergeUtility;
@@ -34,6 +36,7 @@ import org.junit.Test;
 
 public class AclModelTest {
     
+    private static final String FACTORY_PID = UUID.randomUUID().toString();
     private Model model;
     
     private void readModel(String resourcePath) throws IOException {
@@ -64,9 +67,58 @@ public class AclModelTest {
     }
     
     @Test
+    public void defaultFactoryPid() throws IOException {
+        readModel("/models/aclmodel.txt");
+        final Configuration cfg = new AclConfigsProvider(FACTORY_PID).getAclDefConfigs(model);
+        assertNull(cfg.getPid());
+        assertEquals(FACTORY_PID, cfg.getFactoryPid());
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void nullFactoryPid() throws IOException {
+        new AclConfigsProvider(null);
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void emptyFactoryPid() throws IOException {
+        new AclConfigsProvider("\t\n  ");
+    }
+    
+    @Test
+    public void customPids() throws IOException {
+        final String pid = "thepid";
+        final String factoryPid = "theFactoryPid";
+        final AclConfigsProvider p = new AclConfigsProvider("foo") {
+
+            @Override
+            protected Configuration createConfiguration() {
+                return new Configuration(pid, factoryPid);
+            }
+        };
+        
+        readModel("/models/aclmodel.txt");
+        final Configuration cfg = p.getAclDefConfigs(model);
+        assertEquals(pid, cfg.getPid());
+        assertEquals(factoryPid, cfg.getFactoryPid());
+    }
+    
+    @Test
     public void singleFeature() throws IOException {
         readModel("/models/aclmodel.txt");
-        final Configuration cfg = new AclConfigsProvider().getAclDefConfigs(model);
+        final Configuration cfg = new AclConfigsProvider(FACTORY_PID).getAclDefConfigs(model);
+        
+        assertConfig(cfg, 1, 
+                "feature testfeature", "model AclModelTest", 
+                "\nset ACL for someuser", "allow line1", "\nend"); 
+        assertConfig(cfg, 2, 
+                "feature testfeature", "model AclModelTest", 
+                "\nset ACL for another\nend"); 
+    }
+    
+    @Test
+    public void customSectionName() throws IOException {
+        readModel("/models/custom-section-name.txt");
+        final Configuration cfg = new AclConfigsProvider(FACTORY_PID, "custom").getAclDefConfigs(model);
         
         assertConfig(cfg, 1, 
                 "feature testfeature", "model AclModelTest", 
@@ -79,14 +131,14 @@ public class AclModelTest {
     @Test
     public void noAcl() throws IOException {
         readModel("/models/noacl.txt");
-        assertNull("Expecting no Configuration", new AclConfigsProvider().getAclDefConfigs(model));
+        assertNull("Expecting no Configuration", new AclConfigsProvider(FACTORY_PID).getAclDefConfigs(model));
     }
     
     @Test
     public void mergedModels() throws IOException {
         readModel("/models/aclmodel.txt");
         readModel("/models/moreacls.txt");
-        final Configuration cfg = new AclConfigsProvider().getAclDefConfigs(model);
+        final Configuration cfg = new AclConfigsProvider(FACTORY_PID).getAclDefConfigs(model);
         
         // TODO make test more robust against section indexes
         assertConfig(cfg, 3, 
