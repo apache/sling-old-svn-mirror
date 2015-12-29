@@ -87,11 +87,15 @@ public class Launcher {
     
     public Launcher(String ... args) throws Exception {
         MavenResolver.setup();
+        withModelPaths(args);
+    }
 
+    /** Add models from the supplied paths, can be either files or folders */ 
+    public Launcher withModelPaths(String ... paths) throws Exception {
         // Find all files to read and sort the list, to be deterministic
         final SortedSet<File> toRead = new TreeSet<File>();
         
-        for(String name : args) {
+        for(String name : paths) {
             final File f = new File(name);
             if(f.isDirectory()) {
                 final String [] list = f.list();
@@ -109,6 +113,7 @@ public class Launcher {
         }
         
         computeEffectiveModel();
+        return this;
     }
     
     public void computeEffectiveModel() throws Exception {
