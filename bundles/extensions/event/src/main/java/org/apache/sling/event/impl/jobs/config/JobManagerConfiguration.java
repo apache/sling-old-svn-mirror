@@ -43,7 +43,6 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
-import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.event.impl.EnvironmentComponent;
 import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.jobs.tasks.CheckTopologyTask;
@@ -81,7 +80,7 @@ import org.slf4j.LoggerFactory;
     @Property(name=JobManagerConfiguration.PROPERTY_BACKGROUND_LOAD_DELAY,
               longValue=JobManagerConfiguration.DEFAULT_BACKGROUND_LOAD_DELAY, propertyPrivate=true),
 })
-public class JobManagerConfiguration implements TopologyEventListener {
+public class JobManagerConfiguration {
 
     /** Logger. */
     private final Logger logger = LoggerFactory.getLogger("org.apache.sling.event.impl.jobs");
@@ -219,7 +218,6 @@ public class JobManagerConfiguration implements TopologyEventListener {
             resolver.close();
         }
         this.active.set(true);
-        this.queueConfigManager.addListener(this);
     }
 
     /**
@@ -239,7 +237,6 @@ public class JobManagerConfiguration implements TopologyEventListener {
     protected void deactivate() {
         this.active.set(false);
         this.stopProcessing();
-        this.queueConfigManager.removeListener();
     }
 
     public boolean isActive() {
@@ -433,17 +430,6 @@ public class JobManagerConfiguration implements TopologyEventListener {
     }
 
     /**
-     * This method is invoked by the queue configuration manager
-     * whenever the queue configuration changes.
-     */
-    public void queueConfigurationChanged() {
-        final TopologyCapabilities caps = this.topologyCapabilities;
-        if ( caps != null && this.isActive() ) {
-            this.startProcessing(Type.PROPERTIES_CHANGED, caps, true, true);
-        }
-    }
-
-    /**
      * Stop processing
      * @param deactivate Whether to deactivate the capabilities
      */
@@ -528,11 +514,21 @@ public class JobManagerConfiguration implements TopologyEventListener {
     }
 
     /**
+     * This method is invoked asynchronously from the TopologyHandler.
+     * Therefore this method can't be invoked concurrently
      * @see org.apache.sling.discovery.TopologyEventListener#handleTopologyEvent(org.apache.sling.discovery.TopologyEvent)
      */
-    @Override
     public void handleTopologyEvent(final TopologyEvent event) {
         this.logger.debug("Received topology event {}", event);
+
+        // queue configuration changed?
+        if ( event == null ) {
+            final TopologyCapabilities caps = this.topologyCapabilities;
+            if ( caps != null && this.isActive() ) {
+                this.startProcessing(Type.PROPERTIES_CHANGED, caps, true, true);
+            }
+            return;
+        }
 
         boolean runMaintenanceTasks = true;
         // check if there is a change of properties which doesn't affect us
