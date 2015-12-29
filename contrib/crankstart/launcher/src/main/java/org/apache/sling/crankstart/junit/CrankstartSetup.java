@@ -38,15 +38,15 @@ public class CrankstartSetup extends ExternalResource {
     
     private VariableResolver variablesResolver = new PropertiesVariableResolver(replacementProps, Launcher.VARIABLE_OVERRIDE_PREFIX);
     
-    private String [] modelPaths;
+    private String [] classpathModelPaths;
     
     @Override
     public String toString() {
         return getClass().getSimpleName() + ", port " + port + ", OSGi storage " + storagePath;
     }
     
-    public CrankstartSetup withModels(String ... modelPaths) {
-        this.modelPaths = modelPaths;
+    public CrankstartSetup withModelResources(String ... classpathModelPaths) {
+        this.classpathModelPaths = classpathModelPaths;
         return this;
     }
             
@@ -86,11 +86,8 @@ public class CrankstartSetup extends ExternalResource {
     
     @Override
     protected void before() throws Throwable {
-        setup();
-    }
-     
-    public synchronized void setup() throws Exception {
         if(crankstartThread != null) {
+            log.debug("Already running");
             return;
         }
         
@@ -117,7 +114,7 @@ public class CrankstartSetup extends ExternalResource {
         }
         
         final Launcher launcher = new Launcher().withVariableResolver(variablesResolver);
-        for(String path : modelPaths) {
+        for(String path : classpathModelPaths) {
             mergeModelResource(launcher, path);
         }
         launcher.computeEffectiveModel();

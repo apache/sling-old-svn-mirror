@@ -29,7 +29,7 @@ import org.junit.Test;
 public class BasicLauncherIT {
     
     @ClassRule
-    public static CrankstartSetup C = new CrankstartSetup().withModels(U.DEFAULT_MODELS);
+    public static CrankstartSetup C = new CrankstartSetup().withModelResources(U.DEFAULT_MODELS);
     
     private DefaultHttpClient client;
     private static WebconsoleClient osgiConsole;

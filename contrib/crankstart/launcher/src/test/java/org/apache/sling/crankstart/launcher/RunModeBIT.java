@@ -20,7 +20,7 @@ import org.junit.Test;
 public class RunModeBIT {
     
     @ClassRule
-    public static CrankstartSetup C = new CrankstartSetup().withModels(U.DEFAULT_MODELS);
+    public static CrankstartSetup C = new CrankstartSetup().withModelResources(U.DEFAULT_MODELS);
     
     private WebconsoleClient osgiConsole;
     private DefaultHttpClient client;
