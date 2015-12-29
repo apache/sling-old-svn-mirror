@@ -38,6 +38,7 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.discovery.PropertyProvider;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
@@ -48,6 +49,7 @@ import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -96,22 +98,24 @@ public abstract class AbstractJobHandlingTest {
                 ),
                 when( System.getProperty(PORT_CONFIG) != null ).useOptions(
                         systemProperty(PORT_CONFIG).value(System.getProperty(PORT_CONFIG))),
-                mavenBundle("org.apache.sling", "org.apache.sling.fragment.xml", "1.0.2"),
-                mavenBundle("org.apache.sling", "org.apache.sling.fragment.transaction", "1.0.0"),
-                mavenBundle("org.apache.sling", "org.apache.sling.fragment.activation", "1.0.2"),
-                mavenBundle("org.apache.sling", "org.apache.sling.fragment.ws", "1.0.2"),
+                systemProperty("pax.exam.osgi.unresolved.fail").value("true"),
 
-                mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "4.0.0"),
-                mavenBundle("org.apache.sling", "org.apache.sling.commons.logservice", "1.0.2"),
+                // logging
+                systemProperty("pax.exam.logging").value("none"),
+                mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "4.0.6"),
+                mavenBundle("org.apache.sling", "org.apache.sling.commons.logservice", "1.0.6"),
+                mavenBundle("org.slf4j", "slf4j-api", "1.7.13"),
+                mavenBundle("org.slf4j", "jcl-over-slf4j", "1.7.13"),
+                mavenBundle("org.slf4j", "log4j-over-slf4j", "1.7.13"),
 
-                mavenBundle("org.slf4j", "slf4j-api", "1.6.4"),
-                mavenBundle("org.slf4j", "jcl-over-slf4j", "1.6.4"),
-                mavenBundle("org.slf4j", "log4j-over-slf4j", "1.6.4"),
+                // launchpad api and settings
+                mavenBundle("org.apache.sling", "org.apache.sling.launchpad.api", "1.1.0"),
+                mavenBundle("org.apache.sling", "org.apache.sling.settings", "1.3.4"),
 
-                mavenBundle("commons-io", "commons-io", "1.4"),
+                mavenBundle("commons-io", "commons-io", "2.4"),
                 mavenBundle("commons-fileupload", "commons-fileupload", "1.3.1"),
-                mavenBundle("commons-collections", "commons-collections", "3.2.1"),
-                mavenBundle("commons-codec", "commons-codec", "1.9"),
+                mavenBundle("commons-collections", "commons-collections", "3.2.2"),
+                mavenBundle("commons-codec", "commons-codec", "1.10"),
                 mavenBundle("commons-lang", "commons-lang", "2.6"),
                 mavenBundle("commons-pool", "commons-pool", "1.6"),
 
@@ -121,29 +125,27 @@ public abstract class AbstractJobHandlingTest {
                 mavenBundle("org.apache.tika", "tika-core", "1.9"),
                 mavenBundle("org.apache.tika", "tika-bundle", "1.9"),
 
-                mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", "1.0.0"),
-                mavenBundle("org.apache.felix", "org.apache.felix.http.api", "2.3.0"),
-                //mavenBundle("org.apache.felix", "org.apache.felix.http.jetty", "2.3.0"),
-                mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.4.2"),
-                mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.8.2"),
-                mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.0"),
+                // infrastructure
+                mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", "1.1.2"),
+                mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.4.4"),
+                mavenBundle("org.apache.felix", "org.apache.felix.scr", "2.0.2"),
+                mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.8"),
                 mavenBundle("org.apache.felix", "org.apache.felix.inventory", "1.0.4"),
-//                mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.0.6"),
+                mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.1.2"),
 
-                mavenBundle("org.apache.sling", "org.apache.sling.commons.osgi", "2.2.0"),
-                mavenBundle("org.apache.sling", "org.apache.sling.commons.json", "2.0.6"),
-                mavenBundle("org.apache.sling", "org.apache.sling.commons.mime", "2.1.4"),
+                // sling
+                mavenBundle("org.apache.sling", "org.apache.sling.commons.osgi", "2.3.0"),
+                mavenBundle("org.apache.sling", "org.apache.sling.commons.json", "2.0.16"),
+                mavenBundle("org.apache.sling", "org.apache.sling.commons.mime", "2.1.8"),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.classloader", "1.3.2"),
-                mavenBundle("org.apache.sling", "org.apache.sling.commons.scheduler", "2.4.4"),
-                mavenBundle("org.apache.sling", "org.apache.sling.commons.threads", "3.2.0"),
+                mavenBundle("org.apache.sling", "org.apache.sling.commons.scheduler", "2.4.14"),
+                mavenBundle("org.apache.sling", "org.apache.sling.commons.threads", "3.2.2"),
 
-                mavenBundle("org.apache.sling", "org.apache.sling.launchpad.api", "1.1.0"),
-                mavenBundle("org.apache.sling", "org.apache.sling.auth.core", "1.3.0"),
+                mavenBundle("org.apache.sling", "org.apache.sling.auth.core", "1.3.12"),
                 mavenBundle("org.apache.sling", "org.apache.sling.discovery.api", "1.0.2"),
                 mavenBundle("org.apache.sling", "org.apache.sling.discovery.standalone", "1.0.0"),
 
                 mavenBundle("org.apache.sling", "org.apache.sling.api", "2.8.0"),
-                mavenBundle("org.apache.sling", "org.apache.sling.settings", "1.3.4"),
                 mavenBundle("org.apache.sling", "org.apache.sling.resourceresolver", "1.1.6"),
                 mavenBundle("org.apache.sling", "org.apache.sling.adapter", "2.1.2"),
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.resource", "2.3.12"),
@@ -174,8 +176,22 @@ public abstract class AbstractJobHandlingTest {
     }
 
     protected JobManager getJobManager() {
-        final ServiceReference sr = this.bc.getServiceReference(JobManager.class.getName());
-        return (JobManager)this.bc.getService(sr);
+        JobManager result = null;
+        int count = 0;
+        do {
+            final ServiceReference sr = this.bc.getServiceReference(JobManager.class.getName());
+            if ( sr != null ) {
+                result = (JobManager)this.bc.getService(sr);
+            } else {
+                count++;
+                if ( count == 10 ) {
+                    break;
+                }
+                sleep(500);
+            }
+
+        } while ( result == null );
+        return result;
     }
 
     protected void sleep(final long time) {
@@ -264,15 +280,42 @@ public abstract class AbstractJobHandlingTest {
         return reg;
     }
 
+    protected long getConsumerChangeCount() {
+        long result = -1;
+        try {
+            final ServiceReference[] refs = this.bc.getServiceReferences(PropertyProvider.class.getName(), "(changeCount=*)");
+            if ( refs != null && refs.length > 0 ) {
+                result = (Long)refs[0].getProperty("changeCount");
+            }
+        } catch ( final InvalidSyntaxException ignore ) {
+            // ignore
+        }
+        return result;
+    }
+
+    protected void waitConsumerChangeCount(final long minimum) {
+        do {
+            final long cc = getConsumerChangeCount();
+            if ( cc >= minimum ) {
+                // we need to wait for the topology events (TODO)
+                sleep(200);
+                return;
+            }
+            sleep(50);
+        } while ( true );
+    }
+
     /**
      * Helper method to register a job consumer
      */
     protected ServiceRegistration registerJobConsumer(final String topic,
             final JobConsumer handler) {
+        long cc = this.getConsumerChangeCount();
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(JobConsumer.PROPERTY_TOPICS, topic);
         final ServiceRegistration reg = this.bc.registerService(JobConsumer.class.getName(),
                 handler, props);
+        this.waitConsumerChangeCount(cc + 1);
         return reg;
     }
 
@@ -281,10 +324,12 @@ public abstract class AbstractJobHandlingTest {
      */
     protected ServiceRegistration registerJobExecutor(final String topic,
             final JobExecutor handler) {
+        long cc = this.getConsumerChangeCount();
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(JobConsumer.PROPERTY_TOPICS, topic);
         final ServiceRegistration reg = this.bc.registerService(JobExecutor.class.getName(),
                 handler, props);
+        this.waitConsumerChangeCount(cc + 1);
         return reg;
     }
 

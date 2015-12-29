@@ -62,7 +62,7 @@ public abstract class TopicMatcherHelper {
                }
            }
            matchers = newMatchers;
-       }
+        }
         return matchers;
     }
 
