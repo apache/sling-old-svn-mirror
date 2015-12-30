@@ -37,13 +37,13 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
-import org.apache.sling.spi.resource.provider.JCRQueryProvider;
+import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
 import org.apache.sling.spi.resource.provider.ProviderContext;
 import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BasicJcrQueryProvider implements JCRQueryProvider<JcrProviderState> {
+public class BasicQueryLanguageProvider implements QueryLanguageProvider<JcrProviderState> {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -59,7 +59,7 @@ public class BasicJcrQueryProvider implements JCRQueryProvider<JcrProviderState>
     /** The provider context. */
     private final ProviderContext providerContext;
 
-    public BasicJcrQueryProvider(final ProviderContext ctx) {
+    public BasicQueryLanguageProvider(final ProviderContext ctx) {
         this.providerContext = ctx;
     }
 
