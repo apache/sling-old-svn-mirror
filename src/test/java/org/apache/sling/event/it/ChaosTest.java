@@ -398,7 +398,7 @@ public class ChaosTest extends AbstractJobHandlingTest {
                 final Iterator<String> iter = allTopics.iterator();
                 while ( iter.hasNext() ) {
                     final String topic = iter.next();
-                    if ( finished.get(topic).get() == created.get(topic).get() ) {
+                    if ( finished.get(topic).get() >= created.get(topic).get() ) {
                         iter.remove();
                     }
                 }
