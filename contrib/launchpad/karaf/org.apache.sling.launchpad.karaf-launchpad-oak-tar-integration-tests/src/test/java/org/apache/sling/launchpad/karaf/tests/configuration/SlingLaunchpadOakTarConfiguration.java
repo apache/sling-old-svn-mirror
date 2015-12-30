@@ -18,28 +18,58 @@
  */
 package org.apache.sling.launchpad.karaf.tests.configuration;
 
-import org.apache.sling.launchpad.karaf.testing.SlingLaunchpadConfiguration;
+import org.apache.sling.launchpad.karaf.testing.KarafTestSupport;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.OptionUtils;
 
+import static org.ops4j.pax.exam.CoreOptions.cleanCaches;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 
-public class SlingLaunchpadOakTarConfiguration extends SlingLaunchpadConfiguration {
+public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
 
     @Configuration
     public Option[] configuration() {
-        return OptionUtils.combine(launchpadConfiguration(),
-            editConfigurationFilePut("etc/custom.properties", "sling.run.modes", "oak,oak_tar"),
-            addSlingFeatures(
-                "sling-launchpad-oak-tar"
-            ),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.jackrabbit.accessmanager").version("2.1.2"),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.jackrabbit.usermanager").version("2.2.2"),
+        final int httpPort = 8888; // TODO findFreePort();
+        return OptionUtils.combine(baseConfiguration(),
+            cleanCaches(true),
+            editConfigurationFilePut("etc/org.ops4j.pax.logging.cfg", "log4j.rootLogger", "ERROR, out, sift, osgi:*"),
             // configurations for tests
+            editConfigurationFilePut("etc/custom.properties", "sling.run.modes", "oak,oak_tar"),
+            editConfigurationFilePut("etc/users.properties", "admin", "admin,_g_:admingroup"), // Sling’s default admin credentials used in tests
+            editConfigurationFilePut("etc/org.ops4j.pax.web.cfg", "org.osgi.service.http.port", Integer.toString(httpPort)),
             editConfigurationFilePut("etc/integrationTestsConfig.cfg", "message", "This test config should be loaded at startup"),
-            editConfigurationFilePut("etc/org.apache.sling.servlets.resolver.SlingServletResolver.cfg", "servletresolver.cacheSize", "0")
+            editConfigurationFilePut("etc/org.apache.sling.servlets.resolver.SlingServletResolver.cfg", "servletresolver.cacheSize", "0"),
+            // TODO PAXWEB-935 editConfigurationFilePut("etc/org.apache.sling.jcr.webdav.impl.servlets.SimpleWebDavServlet.cfg", "dav.root", "/dav"),
+            editConfigurationFilePut("etc/org.apache.sling.jcr.davex.impl.servlets.SlingDavExServlet.cfg", "alias", "/server"),
+            addSlingFeatures(
+                "sling-launchpad-oak-tar",
+                "sling-extension-discovery-standalone",
+                "sling-extension-event",
+                "sling-launchpad-content",
+                "sling-auth-form",
+                "sling-auth-openid",
+                "sling-auth-selector",
+                "sling-scripting-groovy",
+                "sling-scripting-javascript",
+                "sling-scripting-jsp",
+                "sling-installer-provider-jcr",
+                "sling-jcr-jackrabbit-security"
+            ),
+            // misc (legacy, snapshots, ...) stuff
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.servlets.compat").versionAsInProject(),
+            // test support
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.junit.core").versionAsInProject(),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.junit.remote").versionAsInProject(),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.junit.scriptable").versionAsInProject(),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.launchpad.test-services").versionAsInProject(),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.launchpad.test-fragment").versionAsInProject(),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.testing.tools").versionAsInProject(),
+            mavenBundle().groupId("org.apache.httpcomponents").artifactId("httpcore-osgi").versionAsInProject(),
+            mavenBundle().groupId("org.apache.httpcomponents").artifactId("httpclient-osgi").versionAsInProject(),
+            // TODO PAXWEB-935
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.webdav").version("2.2.2")
         );
     }
 
