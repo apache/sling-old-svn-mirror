@@ -22,8 +22,8 @@ import java.util.Set;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.api.resource.PathSet;
 import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.util.PathSet;
 
 import aQute.bnd.annotation.ProviderType;
 

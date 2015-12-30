@@ -27,6 +27,8 @@ import static org.junit.Assert.fail;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.sling.api.resource.util.Path;
+import org.apache.sling.api.resource.util.PathSet;
 import org.junit.Test;
 
 public class PathSetTest {
