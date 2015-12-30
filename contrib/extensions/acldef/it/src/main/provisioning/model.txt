@@ -22,6 +22,7 @@
   org.apache.sling/org.apache.sling.launchpad/8/slingstart
   org.apache.sling/org.apache.sling.junit.core/1.0.14
   org.apache.sling/org.apache.sling.acldef.oak-jcr/0.0.1-SNAPSHOT
+  org.apache.sling/org.apache.sling.acldef.parser/0.0.1-SNAPSHOT
 
 [configurations]
 

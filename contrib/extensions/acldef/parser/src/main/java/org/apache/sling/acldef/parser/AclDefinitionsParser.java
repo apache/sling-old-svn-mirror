@@ -25,5 +25,10 @@ import org.apache.sling.acldef.parser.operations.Operation;
 
 /** ACL definitions parser service interface */
 public interface AclDefinitionsParser {
+    /** Parse the supplied input.
+     * @param r Input in ACL definitions format. The reader is closed
+     *  by this method. 
+     * @throws AclParsingException on parsing errors
+     */
     List<Operation> parse(Reader r) throws AclParsingException;
 }
