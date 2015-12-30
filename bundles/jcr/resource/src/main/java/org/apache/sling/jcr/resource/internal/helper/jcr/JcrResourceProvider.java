@@ -65,7 +65,7 @@ import org.apache.sling.jcr.resource.internal.JcrResourceListener;
 import org.apache.sling.jcr.resource.internal.NodeUtil;
 import org.apache.sling.jcr.resource.internal.OakResourceListener;
 import org.apache.sling.jcr.resource.internal.ObservationListenerSupport;
-import org.apache.sling.spi.resource.provider.JCRQueryProvider;
+import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
 import org.apache.sling.spi.resource.provider.ProviderContext;
 import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
@@ -534,10 +534,10 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     }
 
     @Override
-    public @CheckForNull JCRQueryProvider<JcrProviderState> getJCRQueryProvider() {
+    public @CheckForNull QueryLanguageProvider<JcrProviderState> getQueryLanguageProvider() {
         final ProviderContext ctx = this.getProviderContext();
         if ( ctx != null ) {
-            return new BasicJcrQueryProvider(ctx);
+            return new BasicQueryLanguageProvider(ctx);
         }
         return null;
     }

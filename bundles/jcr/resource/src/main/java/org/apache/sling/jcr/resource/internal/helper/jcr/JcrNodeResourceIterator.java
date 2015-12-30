@@ -25,9 +25,9 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 
-import org.apache.sling.api.resource.PathSet;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.util.PathSet;
 import org.apache.sling.jcr.resource.internal.HelperData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
