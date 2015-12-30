@@ -18,7 +18,7 @@
  */
 package org.apache.sling.resourceresolver.impl.providers;
 
-import org.apache.sling.api.resource.PathSet;
+import org.apache.sling.api.resource.util.PathSet;
 import org.apache.sling.spi.resource.provider.ObservationReporter;
 import org.apache.sling.spi.resource.provider.ProviderContext;
 

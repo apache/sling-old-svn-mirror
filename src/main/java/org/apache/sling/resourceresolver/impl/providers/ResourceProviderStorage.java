@@ -36,9 +36,7 @@ public class ResourceProviderStorage {
 
     private final List<ResourceProviderHandler> refreshableHandlers;
 
-    private final List<ResourceProviderHandler> jcrQuerableHandlers;
-
-    private final List<ResourceProviderHandler> nativeQuerableHandlers;
+    private final List<ResourceProviderHandler> languageQuerableHandlers;
 
     private final PathTree<ResourceProviderHandler> handlersTree;
 
@@ -48,8 +46,7 @@ public class ResourceProviderStorage {
         this.adaptableHandlers = new ArrayList<ResourceProviderHandler>();
         this.attributableHandlers = new ArrayList<ResourceProviderHandler>();
         this.refreshableHandlers = new ArrayList<ResourceProviderHandler>();
-        this.jcrQuerableHandlers = new ArrayList<ResourceProviderHandler>();
-        this.nativeQuerableHandlers = new ArrayList<ResourceProviderHandler>();
+        this.languageQuerableHandlers = new ArrayList<ResourceProviderHandler>();
         for (ResourceProviderHandler h : allHandlers) {
             ResourceProviderInfo info = h.getInfo();
             if (info.getAuthType() == AuthType.required) {
@@ -64,11 +61,8 @@ public class ResourceProviderStorage {
             if (info.isRefreshable()) {
                 this.refreshableHandlers.add(h);
             }
-            if (h.getResourceProvider().getJCRQueryProvider() != null) {
-                this.jcrQuerableHandlers.add(h);
-            }
-            if (h.getResourceProvider().getQueryProvider() != null) {
-                this.nativeQuerableHandlers.add(h);
+            if (h.getResourceProvider().getQueryLanguageProvider() != null) {
+                this.languageQuerableHandlers.add(h);
             }
         }
         this.handlersTree = new PathTree<ResourceProviderHandler>(handlers);
@@ -94,12 +88,8 @@ public class ResourceProviderStorage {
         return refreshableHandlers;
     }
 
-    public List<ResourceProviderHandler> getJcrQuerableHandlers() {
-        return jcrQuerableHandlers;
-    }
-
-    public List<ResourceProviderHandler> getNativeQuerableHandlers() {
-        return nativeQuerableHandlers;
+    public List<ResourceProviderHandler> getLanguaheQuerableHandlers() {
+        return languageQuerableHandlers;
     }
 
     public PathTree<ResourceProviderHandler> getTree() {

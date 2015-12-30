@@ -31,13 +31,9 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.api.resource.query.Query;
-import org.apache.sling.api.resource.query.QueryInstructions;
 import org.apache.sling.api.resource.runtime.dto.AuthType;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
-import org.apache.sling.spi.resource.provider.JCRQueryProvider;
-import org.apache.sling.spi.resource.provider.QueryProvider;
-import org.apache.sling.spi.resource.provider.QueryResult;
+import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
 import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
@@ -266,31 +262,13 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
         }
     }
 
-    private QueryProvider<Object> getQueryProvider() {
-        return rp.getQueryProvider();
-    }
-
-    private JCRQueryProvider<Object> getJcrQueryProvider() {
-        return rp.getJCRQueryProvider();
-    }
-
-    @Override
-    public QueryResult find(Query q, QueryInstructions qi) {
-        final QueryProvider<Object> provider = getQueryProvider();
-        if (provider == null) {
-            return null;
-        }
-        try {
-            return provider.find(getContext(), q, qi);
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-            return null;
-        }
+    private QueryLanguageProvider<Object> getQueryLanguageProvider() {
+        return rp.getQueryLanguageProvider();
     }
 
     @Override
     public String[] getSupportedLanguages() {
-        final JCRQueryProvider<Object> jcrQueryProvider = getJcrQueryProvider();
+        final QueryLanguageProvider<Object> jcrQueryProvider = getQueryLanguageProvider();
         if (jcrQueryProvider == null) {
             return null;
         }
@@ -304,7 +282,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
 
     @Override
     public Iterator<Resource> findResources(String query, String language) {
-        final JCRQueryProvider<Object> jcrQueryProvider = getJcrQueryProvider();
+        final QueryLanguageProvider<Object> jcrQueryProvider = getQueryLanguageProvider();
         if (jcrQueryProvider == null) {
             return null;
         }
@@ -319,7 +297,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public Iterator<Map<String, Object>> queryResources(String query, String language) {
-        final JCRQueryProvider<Object> jcrQueryProvider = getJcrQueryProvider();
+        final QueryLanguageProvider<Object> jcrQueryProvider = getQueryLanguageProvider();
         if (jcrQueryProvider == null) {
             return null;
         }

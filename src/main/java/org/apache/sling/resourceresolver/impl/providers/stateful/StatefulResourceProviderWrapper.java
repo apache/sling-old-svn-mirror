@@ -26,9 +26,6 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.query.Query;
-import org.apache.sling.api.resource.query.QueryInstructions;
-import org.apache.sling.spi.resource.provider.QueryResult;
 import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 
@@ -103,11 +100,6 @@ public class StatefulResourceProviderWrapper implements StatefulResourceProvider
     @Override
     public boolean hasChanges() {
         return rp.hasChanges();
-    }
-
-    @Override
-    public QueryResult find(Query q, QueryInstructions qi) {
-        return rp.find(q, qi);
     }
 
     @Override

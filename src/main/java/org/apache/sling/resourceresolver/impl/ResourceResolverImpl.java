@@ -51,9 +51,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ResourceWrapper;
-import org.apache.sling.api.resource.query.Query;
-import org.apache.sling.api.resource.query.QueryInstructions;
-import org.apache.sling.api.resource.query.Result;
 import org.apache.sling.resourceresolver.impl.helper.RedirectResource;
 import org.apache.sling.resourceresolver.impl.helper.ResourceIteratorDecorator;
 import org.apache.sling.resourceresolver.impl.helper.ResourcePathIterator;
@@ -1311,15 +1308,5 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     @Override
     public Resource move(final String srcAbsPath, final String destAbsPath) throws PersistenceException {
         return this.provider.move(srcAbsPath, destAbsPath);
-    }
-
-    /**
-     * Querying the resource providers
-     * @param q The query
-     * @param qi The query instructions
-     * @return An iterator for the result.
-     */
-    public Result find(final Query q, final QueryInstructions qi) {
-        return this.provider.find(q, qi);
     }
 }

@@ -31,14 +31,14 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.sling.api.SlingConstants;
-import org.apache.sling.api.resource.Path;
-import org.apache.sling.api.resource.PathSet;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.api.resource.runtime.dto.FailureReason;
 import org.apache.sling.api.resource.runtime.dto.ResourceProviderDTO;
 import org.apache.sling.api.resource.runtime.dto.ResourceProviderFailureDTO;
 import org.apache.sling.api.resource.runtime.dto.RuntimeDTO;
+import org.apache.sling.api.resource.util.Path;
+import org.apache.sling.api.resource.util.PathSet;
 import org.apache.sling.resourceresolver.impl.legacy.LegacyResourceProviderWhiteboard;
 import org.apache.sling.spi.resource.provider.ObservationReporter;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
@@ -365,8 +365,7 @@ public class ResourceProviderTracker {
         d.path = info.getPath();
         d.refreshable = info.isRefreshable();
         d.serviceId = (Long)info.getServiceReference().getProperty(Constants.SERVICE_ID);
-        d.supportsJCRQuery = false;
-        d.supportsQuery = false;
+        d.supportsQueryLanguage = false;
         d.useResourceAccessSecurity = info.getUseResourceAccessSecurity();
     }
 
@@ -374,8 +373,7 @@ public class ResourceProviderTracker {
         fill(d, handler.getInfo());
         final ResourceProvider<?> provider = handler.getResourceProvider();
         if ( provider != null ) {
-            d.supportsJCRQuery = provider.getJCRQueryProvider() != null;
-            d.supportsQuery = provider.getQueryProvider() != null;
+            d.supportsQueryLanguage = provider.getQueryLanguageProvider() != null;
         }
     }
 

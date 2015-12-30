@@ -39,7 +39,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
-import org.apache.sling.spi.resource.provider.JCRQueryProvider;
+import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
 import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
@@ -75,8 +75,8 @@ public abstract class ResourceDecoratorTestBase {
         final ResourceProvider<?> provider = new ResourceProvider<Object>() {
 
             @Override
-            public JCRQueryProvider<Object> getJCRQueryProvider() {
-                return new JCRQueryProvider<Object>() {
+            public QueryLanguageProvider<Object> getQueryLanguageProvider() {
+                return new QueryLanguageProvider<Object>() {
 
                     @Override
                     public String[] getSupportedLanguages(ResolverContext<Object> ctx) {

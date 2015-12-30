@@ -29,10 +29,7 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.query.Query;
-import org.apache.sling.api.resource.query.QueryInstructions;
-import org.apache.sling.spi.resource.provider.JCRQueryProvider;
-import org.apache.sling.spi.resource.provider.QueryResult;
+import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
 import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 
@@ -119,25 +116,19 @@ public interface StatefulResourceProvider {
     boolean hasChanges();
 
     /**
-     * @see QueryManager#find(ResourceResolver, Query, QueryInstructions)
-     */
-    @CheckForNull
-    QueryResult find(@Nonnull Query q, @Nonnull QueryInstructions qi);
-
-    /**
-     * @see JCRQueryProvider#getSupportedLanguages(org.apache.sling.spi.resource.provider.ResolveContext)
+     * @see QueryLanguageProvider#getSupportedLanguages(org.apache.sling.spi.resource.provider.ResolveContext)
      */
     @CheckForNull
     String[] getSupportedLanguages();
 
     /**
-     * @see JCRQueryProvider#findResources(org.apache.sling.spi.resource.provider.ResolveContext, String, String)
+     * @see QueryLanguageProvider#findResources(org.apache.sling.spi.resource.provider.ResolveContext, String, String)
      */
     @CheckForNull
     Iterator<Resource> findResources(String query, String language);
 
     /**
-     * @see JCRQueryProvider#queryResources(org.apache.sling.spi.resource.provider.ResolveContext, String, String)
+     * @see QueryLanguageProvider#queryResources(org.apache.sling.spi.resource.provider.ResolveContext, String, String)
      */
     @CheckForNull
     Iterator<Map<String, Object>> queryResources(String query, String language);

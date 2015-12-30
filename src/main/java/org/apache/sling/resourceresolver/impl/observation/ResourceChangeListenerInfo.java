@@ -28,9 +28,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.apache.sling.api.resource.PathSet;
 import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
+import org.apache.sling.api.resource.util.PathSet;
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.osgi.framework.ServiceReference;
 

@@ -31,7 +31,7 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.spi.resource.provider.JCRQueryProvider;
+import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
 import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
@@ -79,9 +79,9 @@ public class LegacyResourceProviderFactoryAdapter extends ResourceProvider<Legac
     }
 
     @Override
-    public @CheckForNull JCRQueryProvider<LegacyResourceProviderAdapter> getJCRQueryProvider() {
+    public @CheckForNull QueryLanguageProvider<LegacyResourceProviderAdapter> getQueryLanguageProvider() {
         if (ArrayUtils.isEmpty(languages)) {
-            return super.getJCRQueryProvider();
+            return super.getQueryLanguageProvider();
         } else {
             return new JCRQueryProviderAdapter(languages);
         }
@@ -130,7 +130,7 @@ public class LegacyResourceProviderFactoryAdapter extends ResourceProvider<Legac
         return ctx.getProviderState().hasChanges((ResolverContext) ctx);
     }
 
-    private static class JCRQueryProviderAdapter implements JCRQueryProvider<LegacyResourceProviderAdapter> {
+    private static class JCRQueryProviderAdapter implements QueryLanguageProvider<LegacyResourceProviderAdapter> {
 
         private final String[] languages;
 
@@ -146,13 +146,13 @@ public class LegacyResourceProviderFactoryAdapter extends ResourceProvider<Legac
         @Override
         public Iterator<Resource> findResources(ResolverContext<LegacyResourceProviderAdapter> ctx, String query,
                 String language) {
-            return ctx.getProviderState().getJCRQueryProvider().findResources((ResolverContext) ctx, query, language);
+            return ctx.getProviderState().getQueryLanguageProvider().findResources((ResolverContext) ctx, query, language);
         }
 
         @Override
         public Iterator<ValueMap> queryResources(ResolverContext<LegacyResourceProviderAdapter> ctx, String query,
                 String language) {
-            return ctx.getProviderState().getJCRQueryProvider().queryResources((ResolverContext) ctx, query, language);
+            return ctx.getProviderState().getQueryLanguageProvider().queryResources((ResolverContext) ctx, query, language);
         }
     }
 }

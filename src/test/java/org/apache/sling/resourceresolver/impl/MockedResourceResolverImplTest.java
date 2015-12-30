@@ -47,7 +47,7 @@ import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
-import org.apache.sling.spi.resource.provider.JCRQueryProvider;
+import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
 import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
@@ -105,7 +105,7 @@ public class MockedResourceResolverImplTest {
 
     @SuppressWarnings("rawtypes")
     @Mock
-    private JCRQueryProvider queryProvider;
+    private QueryLanguageProvider queryProvider;
 
     private Map<String, Object> services = new HashMap<String, Object>();
 
@@ -163,7 +163,7 @@ public class MockedResourceResolverImplTest {
         handlers.add(createRPHandler(appsResourceProvider, "org.apache.sling.resourceresolver.impl.AppsProvider", 12L, "/libs"));
         handlers.add(createRPHandler(appsResourceProvider, "org.apache.sling.resourceresolver.impl.AppsProvider", 13L, "/apps"));
         handlers.add(createRPHandler(queriableResourceProviderA, "org.apache.sling.resourceresolver.impl.QueriableResourceProviderA", 14L, "/searchA"));
-        Mockito.when(queriableResourceProviderA.getJCRQueryProvider()).thenReturn(queryProvider);
+        Mockito.when(queriableResourceProviderA.getQueryLanguageProvider()).thenReturn(queryProvider);
 
         ResourceProviderStorage storage = new ResourceProviderStorage(handlers);
 
