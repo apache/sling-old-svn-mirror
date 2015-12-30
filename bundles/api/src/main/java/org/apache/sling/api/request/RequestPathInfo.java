@@ -18,7 +18,6 @@ package org.apache.sling.api.request;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 import org.apache.sling.api.resource.Resource;
 
