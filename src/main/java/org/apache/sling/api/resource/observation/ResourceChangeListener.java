@@ -64,7 +64,8 @@ public interface ResourceChangeListener {
 
     /**
      * Array of change types - optional.
-     * If this property is missing, added, removed and changed events are reported.
+     * If this property is missing, added, removed and changed events for resources
+     * and added, and removed events for resource providers are reported.
      * If this property is invalid, the listener is ignored. The type of the property
      * must either be String, or a String array. Valid values are the constants from
      * {@link ResourceChange.ChangeType}.
