@@ -35,7 +35,7 @@ import org.apache.sling.api.resource.RefreshableResourceProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.spi.resource.provider.JCRQueryProvider;
+import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
 import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
@@ -109,11 +109,11 @@ public class LegacyResourceProviderAdapter extends ResourceProvider<Object> {
     }
 
     @Override
-    public @CheckForNull JCRQueryProvider<Object> getJCRQueryProvider() {
+    public @CheckForNull QueryLanguageProvider<Object> getQueryLanguageProvider() {
         if (rp instanceof QueriableResourceProvider) {
             return new JCRQueryProviderAdapter((QueriableResourceProvider) rp, languages);
         } else {
-            return super.getJCRQueryProvider();
+            return super.getQueryLanguageProvider();
         }
     }
 
@@ -203,7 +203,7 @@ public class LegacyResourceProviderAdapter extends ResourceProvider<Object> {
         }
     }
 
-    private static class JCRQueryProviderAdapter implements JCRQueryProvider<Object> {
+    private static class JCRQueryProviderAdapter implements QueryLanguageProvider<Object> {
 
         private final QueriableResourceProvider rp;
 

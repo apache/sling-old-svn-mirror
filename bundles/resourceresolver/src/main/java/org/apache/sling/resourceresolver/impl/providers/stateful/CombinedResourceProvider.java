@@ -45,15 +45,10 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.api.resource.query.Query;
-import org.apache.sling.api.resource.query.Query.QueryType;
-import org.apache.sling.api.resource.query.QueryInstructions;
-import org.apache.sling.api.resource.query.Result;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.resourceresolver.impl.providers.tree.Node;
-import org.apache.sling.spi.resource.provider.QueryResult;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -372,92 +367,11 @@ public class CombinedResourceProvider {
     }
 
     /**
-     * Queries a resource provider
-     * Right now, a query against only one resource provider is allowed.
-     */
-    public Result find(final Query q, final QueryInstructions qi) {
-        final Set<StatefulResourceProvider> providers = new HashSet<StatefulResourceProvider>();
-        collect(providers, q);
-        QueryResult result = null;
-        if ( !providers.isEmpty() ) {
-            // providers contains only a single provider (collect throws an IAE otherwise)
-            final StatefulResourceProvider handler = providers.iterator().next();
-            result = handler.find(q, qi);
-        }
-        if ( result == null ) {
-            return new Result() {
-
-                @Override
-                public Iterator<Resource> iterator() {
-                    final Collection<Resource> col = Collections.emptyList();
-                    return col.iterator();
-                }
-
-                @Override
-                public String getContinuationKey() {
-                    return null;
-                }
-            };
-        }
-        final QueryResult qr = result;
-        return new Result() {
-
-            @Override
-            public Iterator<Resource> iterator() {
-                return qr.getResources().iterator();
-            }
-
-            @Override
-            public String getContinuationKey() {
-                return qr.getContinuationKey();
-            }
-        };
-    }
-
-    private void collect(final Set<StatefulResourceProvider> providers, final Query q) {
-        if ( q.getQueryType() == QueryType.SINGLE ) {
-            if ( q.getPaths().isEmpty() ) {
-                final Node<ResourceProviderHandler> node = storage.getTree().getBestMatchingNode("/");
-                if ( node != null && node.getValue().getResourceProvider().getQueryProvider() != null ) {
-                    try {
-                        final StatefulResourceProvider srp = authenticator.getStateful(node.getValue(), this);
-
-                        if ( providers.add(srp) && providers.size() > 1 ) {
-                            throw new IllegalArgumentException("More than one provider involved in query.");
-                        }
-                    } catch ( final LoginException le ) {
-                        // we can ignore this
-                    }
-                }
-            } else {
-                for(final String p : q.getPaths() ) {
-                    final Node<ResourceProviderHandler> node = storage.getTree().getBestMatchingNode(p);
-                    if ( node != null && node.getValue().getResourceProvider().getQueryProvider() != null ) {
-                        try {
-                            final StatefulResourceProvider srp = authenticator.getStateful(node.getValue(), this);
-
-                            if ( providers.add(srp) && providers.size() > 1 ) {
-                                throw new IllegalArgumentException("More than one provider involved in query.");
-                            }
-                        } catch ( final LoginException le ) {
-                            // we can ignore this
-                        }
-                    }
-                }
-            }
-        } else {
-            for(final Query iq : q.getParts()) {
-                collect(providers, iq);
-            }
-        }
-    }
-
-    /**
      * Return the union of query languages supported by the providers.
      */
     public String[] getSupportedLanguages() {
         Set<String> supportedLanguages = new LinkedHashSet<String>();
-        for (StatefulResourceProvider p : authenticator.getAllBestEffort(storage.getJcrQuerableHandlers(), this)) {
+        for (StatefulResourceProvider p : authenticator.getAllBestEffort(storage.getLanguaheQuerableHandlers(), this)) {
             supportedLanguages.addAll(Arrays.asList(p.getSupportedLanguages()));
         }
         return supportedLanguages.toArray(new String[supportedLanguages.size()]);
@@ -477,7 +391,7 @@ public class CombinedResourceProvider {
 
     private List<StatefulResourceProvider> getQuerableProviders(String language) {
         List<StatefulResourceProvider> querableProviders = new ArrayList<StatefulResourceProvider>();
-        for (StatefulResourceProvider p : authenticator.getAllBestEffort(storage.getJcrQuerableHandlers(), this)) {
+        for (StatefulResourceProvider p : authenticator.getAllBestEffort(storage.getLanguaheQuerableHandlers(), this)) {
             if (ArrayUtils.contains(p.getSupportedLanguages(), language)) {
                 querableProviders.add(p);
             }
