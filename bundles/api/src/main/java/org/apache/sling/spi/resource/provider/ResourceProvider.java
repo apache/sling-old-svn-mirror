@@ -555,30 +555,16 @@ public abstract class ResourceProvider<T> {
     }
 
     /**
-     * Get the optional query provider.
+     * Get the optional query language provider.
      * If the provider supports this kind of query, it must return a query provider implementation
      * if the provider is active. It should not return a query provider if it is not
      * active.
      * This method is called for each query, therefore the provider implementation
      * might cache the provider object.
      *
-     * @return A query provider if this resource provider supports this type of querying.
+     * @return A query language provider if this resource provider supports this type of querying.
      */
-    public @CheckForNull QueryProvider<T> getQueryProvider() {
-        return null;
-    }
-
-    /**
-     * Get the optional JCR query provider.
-     * If the provider supports this kind of query, it must return a query provider implementation
-     * if the provider is active. It should not return a query provider if it is not
-     * active.
-     * This method is called for each query, therefore the provider implementation
-     * might cache the provider object.
-     *
-     * @return A JCR query provider if this resource provider supports this type of querying.
-     */
-    public @CheckForNull JCRQueryProvider<T> getJCRQueryProvider() {
+    public @CheckForNull QueryLanguageProvider<T> getQueryLanguageProvider() {
         return null;
     }
 

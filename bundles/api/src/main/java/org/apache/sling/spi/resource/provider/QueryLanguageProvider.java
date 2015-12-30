@@ -37,7 +37,7 @@ import aQute.bnd.annotation.ConsumerType;
  * to this object.
  */
 @ConsumerType
-public interface JCRQueryProvider<T> {
+public interface QueryLanguageProvider<T> {
 
     /**
      * The supported languages of the resource provider.

@@ -16,12 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.api.resource;
+package org.apache.sling.api.resource.util;
 
 /**
  * Simple helper class for path matching.
  *
- * @since 2.9.0 (Sling API Bundle 2.10.0)
+ * @since 1.0.0 (Sling API Bundle 2.10.0)
  */
 public class Path implements Comparable<Path> {
 
