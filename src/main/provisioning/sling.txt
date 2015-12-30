@@ -71,7 +71,7 @@
     org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.10
     org.apache.sling/org.apache.sling.scripting.sightly.models.provider/1.0.0
     org.apache.sling/org.apache.sling.scripting.sightly.repl/1.0.2
-    org.apache.sling/org.apache.sling.serviceusermapper/1.2.0
+    org.apache.sling/org.apache.sling.serviceusermapper/1.2.2
     org.apache.sling/org.apache.sling.servlets.get/2.1.14
     org.apache.sling/org.apache.sling.servlets.post/2.3.8
     org.apache.sling/org.apache.sling.servlets.resolver/2.3.9-SNAPSHOT

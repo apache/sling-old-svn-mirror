@@ -47,7 +47,7 @@
     org.apache.felix/org.apache.felix.configadmin/1.8.8
     org.apache.felix/org.apache.felix.eventadmin/1.4.4
     org.apache.aries/org.apache.aries.util/1.1.1
-    org.apache.felix/org.apache.felix.coordinator/1.0.0
+    org.apache.felix/org.apache.felix.coordinator/1.0.2
     org.eclipse.equinox/org.eclipse.equinox.region/1.2.101.v20150831-1342
     org.apache.aries.subsystem/org.apache.aries.subsystem.api/2.0.6
     org.apache.aries.subsystem/org.apache.aries.subsystem.core/2.0.6
