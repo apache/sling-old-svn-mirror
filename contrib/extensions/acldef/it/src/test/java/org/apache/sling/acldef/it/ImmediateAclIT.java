@@ -31,6 +31,7 @@ import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.junit.rules.TeleporterRule;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.osgi.service.cm.Configuration;
@@ -45,17 +46,7 @@ public class ImmediateAclIT {
     private final static String ACLDEF_PROP_PREFIX = "acldef.text.";
 
     private boolean userExists(String id) throws LoginException, RepositoryException, InterruptedException {
-        Session s = null;
-        
-        // TODO need to wait for Sling to be ready 
-        final long timeout = System.currentTimeMillis() + 10000L;
-        while(System.currentTimeMillis() < timeout) {
-            try {
-                s = teleporter.getService(SlingRepository.class).loginAdministrative(null);
-            } catch(IllegalStateException ignore) {
-                Thread.sleep(100);
-            }
-        }
+        final Session s = teleporter.getService(SlingRepository.class).loginAdministrative(null);
         
         try {
             final Authorizable a = ((JackrabbitSession)s).getUserManager().getAuthorizable(id);
@@ -66,6 +57,11 @@ public class ImmediateAclIT {
             s.logout();
         }
         return false;
+    }
+    
+    @Before
+    public void waitForServices() {
+        WaitFor.services(teleporter, ConfigurationAdmin.class, SlingRepository.class);
     }
     
     @Test
