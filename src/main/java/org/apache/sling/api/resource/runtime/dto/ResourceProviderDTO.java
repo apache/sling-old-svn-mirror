@@ -25,12 +25,13 @@ public class ResourceProviderDTO {
 
     /**
 	 * The name of the resource provider.
-	 * Optional might be null.
+	 * Optional might be {@code null}.
 	 */
 	public String name;
 
     /**
      * The path of the resource provider.
+     * This is never {@code null}.
      */
     public String path;
 
@@ -41,6 +42,7 @@ public class ResourceProviderDTO {
 
     /**
      * The auth handling for this provider.
+     * This is never {@code null}.
      */
     public AuthType authType;
 
