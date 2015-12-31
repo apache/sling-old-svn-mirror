@@ -36,7 +36,6 @@
   <modules>
     <module>parser</module>
     <module>oak-jcr</module>
-    <module>provisioning</module>
     <module>it</module>
   </modules>
 </project>
