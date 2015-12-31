@@ -28,6 +28,7 @@ import javax.jcr.security.Privilege;
 
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlManager;
+import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.commons.jackrabbit.authorization.AccessControlUtils;
 
 /** Utilities for ACL management */
@@ -56,7 +57,11 @@ public class AclUtil {
             }
             JackrabbitAccessControlList acl = AccessControlUtils.getAccessControlList(s, path);
             for(String principal : principals) {
-                final Principal p = ServiceUserUtil.getAuthorizable(s, principal).getPrincipal(); 
+                final Authorizable a = ServiceUserUtil.getAuthorizable(s, principal);
+                if(a == null) {
+                    throw new IllegalStateException("Principal not found:" + principal);
+                }
+                final Principal p = a.getPrincipal(); 
                 acl.addEntry(p, jcrPriv, isAllow);
             }
             getJACM(s).setPolicy(path, acl);
