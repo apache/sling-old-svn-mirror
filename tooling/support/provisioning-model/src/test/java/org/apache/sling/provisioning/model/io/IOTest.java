@@ -93,7 +93,7 @@ public class IOTest {
             configs.add(c);
         }
 
-        assertEquals(3, configs.size());
+        assertEquals(4, configs.size());
 
         final Configuration cfgA = configs.get(0);
         assertEquals("org.apache.test.A", cfgA.getPid());
@@ -114,6 +114,11 @@ public class IOTest {
         assertEquals(2, cfgC.getProperties().size());
         assertEquals("C", cfgC.getProperties().get("name"));
         assertArrayEquals(new Integer[] {1,2,3}, (Integer[])cfgC.getProperties().get("array"));
+        
+        final Configuration cfgD = configs.get(3);
+        assertEquals("org.apache.test.D", cfgD.getPid());
+        assertEquals("Here is\na multiline\nstring", cfgD.getProperties().get("textA"));
+        assertEquals("Another one\nusing\nescaped newlines", cfgD.getProperties().get("textB"));
     }
 
     @Test public void testAddition() throws Exception {

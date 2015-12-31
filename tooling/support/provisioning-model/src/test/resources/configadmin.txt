@@ -42,3 +42,8 @@ org.apache.test.C
     ]
     name="C"    
     
+org.apache.test.D
+  textA="Here is
+    a multiline
+    string"     
+  textB="Another one\nusing\nescaped newlines"     
