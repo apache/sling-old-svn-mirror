@@ -26,7 +26,23 @@
   org.apache.sling/org.apache.sling.acldef.oak-jcr/0.0.1-SNAPSHOT
   org.apache.sling/org.apache.sling.acldef.parser/0.0.1-SNAPSHOT
 
-[configurations]
-
 [settings]
   org.apache.sling.commons.log.julenabled=true
+
+[configurations]
+org.apache.sling.acldef.jcr.AclSetup-one
+  #
+  acldef.text.1="create service user fredWilma"
+  #
+  # multiline acldef statement
+  acldef.text.2="
+      set ACL for fredWilma
+        allow jcr:read on /var
+        deny jcr:write on /var
+      end"
+  #    
+  # single line with backslash n should work as well    
+  acldef.text.backs="set ACL for fredWilma \n deny jcr:write on /var \n end"
+  #
+  # this user will be created from code, to validate the async ACL setting    
+  acldef.text.another="set ACL for anotherUser \n deny jcr:write on /tmp \n end"

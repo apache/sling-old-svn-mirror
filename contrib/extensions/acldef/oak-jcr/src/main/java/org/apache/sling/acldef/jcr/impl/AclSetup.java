@@ -49,11 +49,11 @@ import aQute.bnd.annotation.component.Deactivate;
 @Component(
         configurationFactory=true,
         metatype=false,
-        configurationPid=AclSetupComponent.CONFIG_PID,
+        configurationPid=AclSetup.CONFIG_PID,
         policy=ConfigurationPolicy.REQUIRE)
-public class AclSetupComponent implements Runnable {
+public class AclSetup implements Runnable {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    public static final String CONFIG_PID = "org.apache.sling.acldef.jcr.AclSetupComponent";
+    public static final String CONFIG_PID = "org.apache.sling.acldef.jcr.AclSetup";
     public static final String ACLDEF_PROP_PREFIX = "acldef.text.";
     public static final String THREAD_POOL_NAME = "ACL Definitions";
     
