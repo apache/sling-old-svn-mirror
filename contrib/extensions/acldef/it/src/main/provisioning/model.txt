@@ -37,12 +37,22 @@ org.apache.sling.acldef.jcr.AclSetup-one
   # multiline acldef statement
   acldef.text.2="
       set ACL for fredWilma
-        allow jcr:read on /var
-        deny jcr:write on /var
+        allow jcr:all on /acltest
+        deny jcr:write on /acltest/A
       end"
   #    
-  # single line with backslash n should work as well    
-  acldef.text.backs="set ACL for fredWilma \n deny jcr:write on /var \n end"
-  #
-  # this user will be created from code, to validate the async ACL setting    
-  acldef.text.another="set ACL for anotherUser \n deny jcr:write on /tmp \n end"
+  # single line with backslash n works as well    
+  acldef.text.backs="set ACL for fredWilma \n allow jcr:write on /acltest/A/B \n end"
+  
+# try some acldef in a separate config  
+org.apache.sling.acldef.jcr.AclSetup-two
+  # this user will be created from code, to validate the async ACL setting
+  # and using the path-oriented notation, to test that     
+  acldef.text.another="
+    set ACL on /acltest
+      allow jcr:all for anotherUser
+    end
+    set ACL on /acltest/A/B
+      deny jcr:write for anotherUser
+    end
+    "

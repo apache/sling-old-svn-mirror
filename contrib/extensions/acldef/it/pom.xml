@@ -166,6 +166,10 @@
       <version>2.0.18</version>
       <exclusions>
         <exclusion>
+          <groupId>javax.jcr</groupId>
+          <artifactId>jcr</artifactId>
+        </exclusion>
+        <exclusion>
           <groupId>junit</groupId>
           <artifactId>junit-dep</artifactId>
         </exclusion>
