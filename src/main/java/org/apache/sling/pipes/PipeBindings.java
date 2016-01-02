@@ -161,29 +161,32 @@ public class PipeBindings {
      * @return
      */
     protected String computeECMA5Expression(String expr){
-        StringBuilder expression = new StringBuilder();
         Matcher matcher = INJECTED_SCRIPT.matcher(expr);
-        int start = 0;
-        while (matcher.find()){
-            if (matcher.start() > start){
-                if (expression.length() == 0){
-                    expression.append("'");
+        if (INJECTED_SCRIPT.matcher(expr).find()) {
+            StringBuilder expression = new StringBuilder();
+            int start = 0;
+            while (matcher.find()) {
+                if (matcher.start() > start) {
+                    if (expression.length() == 0) {
+                        expression.append("'");
+                    }
+                    expression.append(expr.substring(start, matcher.start()));
                 }
-                expression.append(expr.substring(start,matcher.start()));
+                if (expression.length() > 0) {
+                    expression.append("' + ");
+                }
+                expression.append(matcher.group(1));
+                start = matcher.end();
+                if (start < expr.length()) {
+                    expression.append(" + '");
+                }
             }
-            if (expression.length() > 0){
-                expression.append("' + ");
+            if (start < expr.length()) {
+                expression.append(expr.substring(start) + "'");
             }
-            expression.append(matcher.group(1));
-            start = matcher.end();
-            if (start < expr.length()){
-                expression.append(" + '");
-            }
+            return expression.toString();
         }
-        if (start < expr.length()){
-             expression.append(expr.substring(start) + "'");
-        }
-        return expression.toString();
+        return null;
     }
 
     /**
@@ -192,8 +195,13 @@ public class PipeBindings {
      * @return
      * @throws ScriptException
      */
-    private Object evaluate(String expr) throws ScriptException {
-        return engine.eval(computeECMA5Expression(expr), scriptContext);
+    protected Object evaluate(String expr) throws ScriptException {
+        String computed = computeECMA5Expression(expr);
+        if (computed != null){
+            //computed is null in case expr is a simple string
+            return engine.eval(computed, scriptContext);
+        }
+        return expr;
     }
 
     /**

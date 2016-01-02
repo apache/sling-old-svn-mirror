@@ -26,6 +26,8 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 
+import javax.script.ScriptException;
+
 /**
  * testing binding's expressions instanciations
  */
@@ -37,6 +39,15 @@ public class PipeBindingsTest extends AbstractPipeTest {
     public void setup() {
         super.setup();
         context.load().json("/container.json", PATH_PIPE);
+    }
+
+    @Test
+    public void testEvaluateSimpleString() throws ScriptException {
+        Resource resource = context.resourceResolver().getResource(PATH_PIPE + "/" + ContainerPipeTest.NN_DUMMYTREE);
+        PipeBindings bindings = new PipeBindings(resource);
+        String simple = "simple string";
+        String evaluated = (String)bindings.evaluate(simple);
+        assertEquals("evaluated should be the same than input", evaluated, simple);
     }
 
     @Test
