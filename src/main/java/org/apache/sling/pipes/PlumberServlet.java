@@ -60,6 +60,14 @@ public class PlumberServlet extends SlingAllMethodsServlet {
 
     protected static final String PARAM_WRITER = "writer";
 
+    protected static final String PARAM_SIZE = "size";
+
+    public static final int NB_MAX = 10;
+
+    public static final String KEY_SIZE = PARAM_SIZE;
+
+    public static final String KEY_ITEMS = "items";
+
     @Reference
     Plumber plumber;
 
@@ -81,6 +89,7 @@ public class PlumberServlet extends SlingAllMethodsServlet {
             }
             String dryRun = request.getParameter(BasePipe.DRYRUN_KEY);
             String paramBindings = request.getParameter(PARAM_BINDINGS);
+            int size = request.getParameter(PARAM_SIZE) != null ? Integer.parseInt(request.getParameter(PARAM_SIZE)) : NB_MAX;
 
             Map additionalBindings = null;
             if (StringUtils.isNotBlank(dryRun) && dryRun.equals(Boolean.TRUE.toString())) {
@@ -118,28 +127,42 @@ public class PlumberServlet extends SlingAllMethodsServlet {
             if (!writeAllowed && pipe.modifiesContent()) {
                 throw new Exception("This pipe modifies content, you should use a POST request");
             }
-            writer.array();
+            writer.object();
+            int i = 0;
             if (writerObj != null) {
                 pipe.getBindings().addBindings(additionalBindings);
                 Iterator<Resource> resourceIterator = pipe.getOutput();
+                writer.key(KEY_ITEMS).array();
                 while (resourceIterator.hasNext()){
                     Resource resource = resourceIterator.next();
-                    writer.object();
-                    writer.key(PATH_KEY).value(resource.getPath());
-                    Iterator<String> keys = writerObj.keys();
-                    while (keys.hasNext()){
-                        String key = keys.next();
-                        writer.key(key).value(pipe.getBindings().instantiateObject(writerObj.getString(key)));
+                    if (i ++ < NB_MAX) {
+                        writer.object();
+                        writer.key(PATH_KEY).value(resource.getPath());
+                        Iterator<String> keys = writerObj.keys();
+                        while (keys.hasNext()) {
+                            String key = keys.next();
+                            writer.key(key).value(pipe.getBindings().instantiateObject(writerObj.getString(key)));
+                        }
+                        writer.endObject();
                     }
-                    writer.endObject();
                 }
+                writer.endArray();
+                writer.key(KEY_SIZE).value(i);
             } else {
                 Set<String> resources = plumber.execute(resolver, pipe, additionalBindings, true);
+                writer.key(KEY_SIZE).value(resources.size());
+                writer.key(KEY_ITEMS);
+                writer.array();
                 for (String resource : resources) {
-                    writer.value(resource);
+                    if (i ++ > NB_MAX){
+                        break;
+                    } else {
+                        writer.value(resource);
+                    }
                 }
+                writer.endArray();
             }
-            writer.endArray();
+            writer.endObject();
             response.flushBuffer();
         } catch (Exception e) {
             throw new ServletException(e);
