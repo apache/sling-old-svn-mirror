@@ -77,8 +77,9 @@ public class PlumberServletTest  extends AbstractPipeTest {
     private void assertDummyTree() throws JSONException {
         String finalResponse = stringResponse.toString();
         assertFalse("There should be a response", StringUtils.isBlank(finalResponse));
-        JSONArray array = new JSONArray(finalResponse);
-        assertEquals("response should be an array with 4 results", 4, array.length());
+        JSONObject object = new JSONObject(finalResponse);
+        assertEquals("response should be an obj with size value equals to 4", object.getInt(PlumberServlet.KEY_SIZE), 4);
+        assertEquals("response should be an obj with items value equals to a 4 valued array", object.getJSONArray(PlumberServlet.KEY_ITEMS).length(), 4);
     }
 
     @Test
@@ -132,7 +133,8 @@ public class PlumberServletTest  extends AbstractPipeTest {
                 mockPlumberServletRequest(context.resourceResolver(), dummyTreePath, null, bindings.toString(), respObject.toString(), null);
         servlet.execute(request, response, false);
         assertDummyTree();
-        JSONArray array = new JSONArray(stringResponse.toString());
+        JSONObject response = new JSONObject(stringResponse.toString());
+        JSONArray array = response.getJSONArray(PlumberServlet.KEY_ITEMS);
         for (int i = 0; i < array.length(); i++) {
             JSONObject object = array.optJSONObject(i);
             assertNotNull("there should be an object returned at each time", object);
