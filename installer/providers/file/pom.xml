@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>25</version>
+        <version>26</version>
         <relativePath/>
     </parent>
 
@@ -42,6 +42,10 @@
         <url>http://svn.apache.org/viewvc/sling/trunk/installer/providers/file/</url>
     </scm>
 
+    <properties>
+        <sling.java.version>7</sling.java.version>
+    </properties>
+    
     <build>
         <plugins>
 

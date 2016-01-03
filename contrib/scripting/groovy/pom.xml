@@ -23,7 +23,7 @@
   <parent>
     <artifactId>sling</artifactId>
     <groupId>org.apache.sling</groupId>
-    <version>26-SNAPSHOT</version>
+    <version>26</version>
     <relativePath/>
   </parent>
 

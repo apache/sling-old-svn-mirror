@@ -25,7 +25,7 @@ under the License.
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>22</version>
+        <version>26</version>
         <relativePath/>
     </parent>
     <artifactId>sling-server</artifactId>
