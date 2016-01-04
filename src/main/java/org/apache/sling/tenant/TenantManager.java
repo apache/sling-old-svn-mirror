@@ -60,10 +60,9 @@ public interface TenantManager {
      *            though, that this map contain at least the
      *            {@link Tenant#PROP_NAME} and {@link Tenant#PROP_DESCRIPTION}
      *            properties.
-     * @return The newly created {@link Tenant} instance.
+     * @return The newly created {@link Tenant} instance or {@code null} if a tenant
+     *         with the id already exists.
      * @throws NullPointerException if {@code tenantId} is {@code null}.
-     * @throws IllegalArgumentException if a tenant with the same
-     *             {@code tentantId} already exists.
      */
     Tenant create(String tenantId, Map<String, Object> properties);
 
