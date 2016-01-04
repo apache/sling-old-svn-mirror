@@ -16,7 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-@Version("0.0.2")
-package org.apache.sling.scripting.thymeleaf;
+package org.apache.sling.scripting.thymeleaf.internal;
 
-import org.osgi.annotation.versioning.Version;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
+
+@ObjectClassDefinition(
+    name = "Apache Sling Scripting Thymeleaf “Non-Caching Template Resolver”",
+    description = "non-caching template resolver for Sling Scripting Thymeleaf"
+)
+@interface NonCachingTemplateResolverConfiguration {
+
+    @AttributeDefinition(
+        name = "order",
+        description = "property for ordering template resolvers inside the Thymeleaf template engine"
+    )
+    int order() default 0;
+
+}

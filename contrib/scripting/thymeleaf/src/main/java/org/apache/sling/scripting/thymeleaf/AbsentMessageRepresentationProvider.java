@@ -16,16 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.thymeleaf.internal.processor;
+package org.apache.sling.scripting.thymeleaf;
 
-import org.thymeleaf.dialect.IProcessorDialect;
-import org.thymeleaf.processor.element.AbstractAttributeTagProcessor;
-import org.thymeleaf.templatemode.TemplateMode;
+import org.osgi.annotation.versioning.ProviderType;
+import org.thymeleaf.context.ITemplateContext;
 
-public abstract class SlingHtmlAttributeTagProcessor extends AbstractAttributeTagProcessor {
+@ProviderType
+public interface AbsentMessageRepresentationProvider {
 
-    public SlingHtmlAttributeTagProcessor(final IProcessorDialect processorDialect, final String dialectPrefix, final String attributeName, final int precedence, final boolean removeAttribute) {
-        super(processorDialect, TemplateMode.HTML, dialectPrefix, null, false, attributeName, false, precedence, removeAttribute);
-    }
+    String provideAbsentMessageRepresentation(final ITemplateContext templateContext, final Class<?> origin, final String key, final Object[] messageParameters);
 
 }

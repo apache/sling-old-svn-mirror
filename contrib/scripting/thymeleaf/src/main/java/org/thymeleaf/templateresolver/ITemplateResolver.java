@@ -140,6 +140,7 @@ public interface ITemplateResolver {
      * </p>
      * 
      * @param configuration the engine configuration.
+     * @param context the context
      * @param ownerTemplate the containing template from which we want to resolve a new one as a fragment. Can be null.
      * @param template the template to be resolved (usually its name).
      * @param templateResolutionAttributes the template resolution attributes to be used (usually coming from a

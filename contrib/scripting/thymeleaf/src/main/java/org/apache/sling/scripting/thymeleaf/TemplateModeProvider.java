@@ -16,7 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-@Version("0.0.2")
 package org.apache.sling.scripting.thymeleaf;
 
-import org.osgi.annotation.versioning.Version;
+import org.apache.sling.api.resource.Resource;
+import org.osgi.annotation.versioning.ProviderType;
+import org.thymeleaf.templatemode.TemplateMode;
+
+@ProviderType
+public interface TemplateModeProvider {
+
+    TemplateMode provideTemplateMode(final Resource resource);
+
+}

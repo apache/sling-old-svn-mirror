@@ -18,163 +18,167 @@
  */
 package org.apache.sling.scripting.thymeleaf.internal;
 
-import java.util.Dictionary;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Modified;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyUnbounded;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.osgi.framework.Constants;
-import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
+import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.cache.ICacheManager;
 import org.thymeleaf.dialect.IDialect;
 import org.thymeleaf.messageresolver.IMessageResolver;
 import org.thymeleaf.standard.StandardDialect;
 import org.thymeleaf.templateresolver.ITemplateResolver;
 
 @Component(
-    label = "Apache Sling Scripting Thymeleaf “Script Engine Factory”",
-    description = "scripting engine for Thymeleaf templates",
+    service = ScriptEngineFactory.class,
     immediate = true,
-    metatype = true
+    property = {
+        Constants.SERVICE_DESCRIPTION + "=Scripting engine for Thymeleaf templates",
+        Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+    }
 )
-@Service
-@Properties({
-    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
-    @Property(name = Constants.SERVICE_DESCRIPTION, value = "scripting engine for Thymeleaf templates"),
-    @Property(name = Constants.SERVICE_RANKING, intValue = 0, propertyPrivate = false)
-})
+@Designate(
+    ocd = ThymeleafScriptEngineFactoryConfiguration.class
+)
 public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFactory {
 
-    @Reference(referenceInterface = ITemplateResolver.class, cardinality = ReferenceCardinality.MANDATORY_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    private final Set<ITemplateResolver> templateResolvers = new LinkedHashSet<ITemplateResolver>();
+    @Reference(
+        cardinality = ReferenceCardinality.AT_LEAST_ONE,
+        policy = ReferencePolicy.DYNAMIC,
+        bind = "addTemplateResolver",
+        unbind = "removeTemplateResolver"
+    )
+    private List<ITemplateResolver> templateResolvers;
 
-    @Reference(referenceInterface = IMessageResolver.class, cardinality = ReferenceCardinality.MANDATORY_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    private final Set<IMessageResolver> messageResolvers = new LinkedHashSet<IMessageResolver>();
+    @Reference(
+        cardinality = ReferenceCardinality.AT_LEAST_ONE,
+        policy = ReferencePolicy.DYNAMIC,
+        bind = "addMessageResolver",
+        unbind = "removeMessageResolver"
+    )
+    private List<IMessageResolver> messageResolvers;
 
-    @Reference(referenceInterface = IDialect.class, cardinality = ReferenceCardinality.MANDATORY_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    private final Set<IDialect> dialects = new LinkedHashSet<IDialect>();
+    @Reference(
+        cardinality = ReferenceCardinality.AT_LEAST_ONE,
+        policy = ReferencePolicy.DYNAMIC,
+        bind = "addDialect",
+        unbind = "removeDialect"
+    )
+    private List<IDialect> dialects;
+
+    @Reference(
+        cardinality = ReferenceCardinality.OPTIONAL,
+        policy = ReferencePolicy.DYNAMIC,
+        policyOption = ReferencePolicyOption.GREEDY,
+        bind = "setCacheManager",
+        unbind = "unsetCacheManager"
+    )
+    private volatile ICacheManager cacheManager;
 
     private TemplateEngine templateEngine;
 
-    public static final String DEFAULT_EXTENSION = "html";
-
-    @Property(value = {DEFAULT_EXTENSION}, unbounded = PropertyUnbounded.ARRAY)
-    public static final String EXTENSIONS_PARAMETER = "org.apache.sling.scripting.thymeleaf.extensions";
-
-    public static final String DEFAULT_MIMETYPE = "text/html";
-
-    @Property(value = {DEFAULT_MIMETYPE}, unbounded = PropertyUnbounded.ARRAY)
-    public static final String MIMETYPES_PARAMETER = "org.apache.sling.scripting.thymeleaf.mimetypes";
-
-    public static final String DEFAULT_NAME = "thymeleaf";
-
-    @Property(value = {DEFAULT_NAME}, unbounded = PropertyUnbounded.ARRAY)
-    public static final String NAMES_PARAMETER = "org.apache.sling.scripting.thymeleaf.names";
+    private final Object lock = new Object();
 
     private final Logger logger = LoggerFactory.getLogger(ThymeleafScriptEngineFactory.class);
 
     public ThymeleafScriptEngineFactory() {
     }
 
+    protected void addTemplateResolver(final ITemplateResolver templateResolver) {
+        synchronized (lock) {
+            logger.debug("adding template resolver '{}'", templateResolver.getName());
+            templateEngine = null;
+        }
+    }
+
+    protected void removeTemplateResolver(final ITemplateResolver templateResolver) {
+        synchronized (lock) {
+            logger.debug("removing template resolver '{}'", templateResolver.getName());
+            templateEngine = null;
+        }
+    }
+
+    protected void addMessageResolver(final IMessageResolver messageResolver) {
+        synchronized (lock) {
+            logger.debug("adding message resolver '{}'", messageResolver.getName());
+            templateEngine = null;
+        }
+    }
+
+    protected void removeMessageResolver(final IMessageResolver messageResolver) {
+        synchronized (lock) {
+            logger.debug("removing message resolver '{}'", messageResolver.getName());
+            templateEngine = null;
+        }
+    }
+
+    protected void addDialect(final IDialect dialect) {
+        synchronized (lock) {
+            logger.debug("adding dialect '{}'", dialect.getName());
+            templateEngine = null;
+        }
+    }
+
+    protected void removeDialect(final IDialect dialect) {
+        synchronized (lock) {
+            logger.debug("removing dialect '{}'", dialect.getName());
+            templateEngine = null;
+        }
+    }
+
+    protected void setCacheManager(final ICacheManager cacheManager) {
+        synchronized (lock) {
+            logger.debug("setting cache manager '{}'", cacheManager.getClass().getName());
+            templateEngine = null;
+        }
+    }
+
+    protected void unsetCacheManager(final ICacheManager cacheManager) {
+        synchronized (lock) {
+            logger.debug("unsetting cache manager '{}'", cacheManager.getClass().getName());
+            templateEngine = null;
+        }
+    }
+
     @Activate
-    private void activate(final ComponentContext componentContext) {
+    private void activate(final ThymeleafScriptEngineFactoryConfiguration configuration) {
         logger.debug("activate");
-        configure(componentContext);
-        configureTemplateEngine();
+        configure(configuration);
     }
 
     @Modified
-    private void modified(final ComponentContext componentContext) {
+    private void modified(final ThymeleafScriptEngineFactoryConfiguration configuration) {
         logger.debug("modified");
-        configure(componentContext);
-        configureTemplateEngine();
+        configure(configuration);
     }
 
     @Deactivate
-    private void deactivate(final ComponentContext componentContext) {
+    private void deactivate() {
         logger.debug("deactivate");
         templateEngine = null;
     }
 
-    protected synchronized void bindTemplateResolvers(final ITemplateResolver templateResolver) {
-        logger.debug("binding template resolver '{}'", templateResolver.getName());
-        templateResolvers.add(templateResolver);
-        configureTemplateEngine();
-    }
-
-    protected synchronized void unbindTemplateResolvers(final ITemplateResolver templateResolver) {
-        logger.debug("unbinding template resolver '{}'", templateResolver.getName());
-        templateResolvers.remove(templateResolver);
-        configureTemplateEngine();
-    }
-
-    protected synchronized void bindMessageResolvers(final IMessageResolver messageResolver) {
-        logger.debug("binding message resolver '{}'", messageResolver.getName());
-        messageResolvers.add(messageResolver);
-        configureTemplateEngine();
-    }
-
-    protected synchronized void unbindMessageResolvers(final IMessageResolver messageResolver) {
-        logger.debug("unbinding message resolver '{}'", messageResolver.getName());
-        messageResolvers.remove(messageResolver);
-        configureTemplateEngine();
-    }
-
-    protected synchronized void bindDialects(final IDialect dialect) {
-        logger.debug("binding dialect '{}'", dialect.getName());
-        dialects.add(dialect);
-        configureTemplateEngine();
-    }
-
-    protected synchronized void unbindDialects(final IDialect dialect) {
-        logger.debug("unbinding dialect '{}'", dialect.getName());
-        dialects.remove(dialect);
-        configureTemplateEngine();
-    }
-
-    private synchronized void configure(final ComponentContext componentContext) {
-        final Dictionary properties = componentContext.getProperties();
-
-        final String[] extensions = PropertiesUtil.toStringArray(properties.get(EXTENSIONS_PARAMETER), new String[]{DEFAULT_EXTENSION});
-        setExtensions(extensions);
-
-        final String[] mimeTypes = PropertiesUtil.toStringArray(properties.get(MIMETYPES_PARAMETER), new String[]{DEFAULT_MIMETYPE});
-        setMimeTypes(mimeTypes);
-
-        final String[] names = PropertiesUtil.toStringArray(properties.get(NAMES_PARAMETER), new String[]{DEFAULT_NAME});
-        setNames(names);
-    }
-
-    // the configuration of the Thymeleaf TemplateEngine is static and we need to recreate on modification
-    private synchronized void configureTemplateEngine() {
-        logger.info("configuring template engine");
-        if (templateEngine == null || templateEngine.isInitialized()) {
-            templateEngine = new TemplateEngine();
-        }
-        templateEngine.setTemplateResolvers(templateResolvers);
-        templateEngine.setMessageResolvers(messageResolvers);
-        templateEngine.setDialects(dialects);
-        final IDialect standardDialect = new StandardDialect();
-        templateEngine.addDialect(standardDialect);
-        // TODO
-        // final ICacheManager cacheManager = null;
-        // templateEngine.setCacheManager(cacheManager);
+    private void configure(final ThymeleafScriptEngineFactoryConfiguration configuration) {
+        setExtensions(configuration.extensions());
+        setMimeTypes(configuration.mimeTypes());
+        setNames(configuration.names());
     }
 
     @Override
@@ -185,12 +189,13 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
     @Override
     public String getLanguageVersion() {
         try {
-            final java.util.Properties properties = new java.util.Properties();
-            properties.load(getClass().getResourceAsStream("org/thymeleaf/thymeleaf.properties"));
+            final Properties properties = new Properties();
+            properties.load(getClass().getResourceAsStream("/org/thymeleaf/thymeleaf.properties"));
             return properties.getProperty("version");
         } catch (Exception e) {
+            logger.error("error reading version from thymeleaf.properties", e);
+            return ""; // null breaks output of web console
         }
-        return "";
     }
 
     @Override
@@ -200,7 +205,22 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
     }
 
     TemplateEngine getTemplateEngine() {
-        return templateEngine;
+        synchronized (lock) {
+            if (this.templateEngine == null) {
+                logger.info("setting up new template engine");
+                templateEngine = new TemplateEngine();
+                final Set<ITemplateResolver> templateResolvers = new HashSet<>(this.templateResolvers);
+                templateEngine.setTemplateResolvers(templateResolvers);
+                final Set<IMessageResolver> messageResolvers = new HashSet<>(this.messageResolvers);
+                templateEngine.setMessageResolvers(messageResolvers);
+                final Set<IDialect> dialects = new HashSet<>(this.dialects);
+                templateEngine.setDialects(dialects);
+                final IDialect standardDialect = new StandardDialect();
+                templateEngine.addDialect(standardDialect);
+                templateEngine.setCacheManager(cacheManager);
+            }
+            return templateEngine;
+        }
     }
 
 }

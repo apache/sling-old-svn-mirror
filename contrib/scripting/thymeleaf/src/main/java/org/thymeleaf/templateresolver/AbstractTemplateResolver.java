@@ -210,7 +210,7 @@ public abstract class AbstractTemplateResolver implements ITemplateResolver {
      * </p>
      * <p>
      *   If this <em>existence check</em> is enabled and a resource is determined to not exist,
-     *   {@link ITemplateResolver#resolveTemplate(IEngineConfiguration, String, String, Map)} will return <tt>null</tt>.
+     *   {@link ITemplateResolver#resolveTemplate(IEngineConfiguration, IContext, String, String, Map)} will return <tt>null</tt>.
      * </p>
      *
      * @return <tt>true</tt> if resource existence will be checked, <tt>false</tt> if not
@@ -245,7 +245,7 @@ public abstract class AbstractTemplateResolver implements ITemplateResolver {
      * </p>
      * <p>
      *   If this <em>existence check</em> is enabled and a resource is determined to not exist,
-     *   {@link ITemplateResolver#resolveTemplate(IEngineConfiguration, String, String, Map)} will return <tt>null</tt>.
+     *   {@link ITemplateResolver#resolveTemplate(IEngineConfiguration, IContext, String, String, Map)} will return <tt>null</tt>.
      * </p>
      *
      * @param checkExistence <tt>true</tt> if resource existence should be checked, <tt>false</tt> if not

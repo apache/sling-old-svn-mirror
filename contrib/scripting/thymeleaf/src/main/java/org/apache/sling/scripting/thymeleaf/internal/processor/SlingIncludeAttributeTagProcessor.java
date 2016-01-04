@@ -37,13 +37,16 @@ import org.thymeleaf.IEngineConfiguration;
 import org.thymeleaf.context.ITemplateContext;
 import org.thymeleaf.dialect.IProcessorDialect;
 import org.thymeleaf.engine.AttributeName;
+import org.thymeleaf.model.IElementAttributes;
 import org.thymeleaf.model.IProcessableElementTag;
+import org.thymeleaf.processor.element.AbstractAttributeTagProcessor;
 import org.thymeleaf.processor.element.IElementTagStructureHandler;
 import org.thymeleaf.standard.expression.IStandardExpression;
 import org.thymeleaf.standard.expression.IStandardExpressionParser;
 import org.thymeleaf.standard.expression.StandardExpressions;
+import org.thymeleaf.templatemode.TemplateMode;
 
-public class SlingIncludeAttributeTagProcessor extends SlingHtmlAttributeTagProcessor {
+public class SlingIncludeAttributeTagProcessor extends AbstractAttributeTagProcessor {
 
     public static final int ATTRIBUTE_PRECEDENCE = 100;
 
@@ -62,7 +65,7 @@ public class SlingIncludeAttributeTagProcessor extends SlingHtmlAttributeTagProc
     private final Logger logger = LoggerFactory.getLogger(SlingIncludeAttributeTagProcessor.class);
 
     public SlingIncludeAttributeTagProcessor(final IProcessorDialect processorDialect, final String dialectPrefix) {
-        super(processorDialect, dialectPrefix, ATTRIBUTE_NAME, ATTRIBUTE_PRECEDENCE, true);
+        super(processorDialect, TemplateMode.HTML, dialectPrefix, null, true, ATTRIBUTE_NAME, true, ATTRIBUTE_PRECEDENCE, true);
     }
 
     @Override
@@ -88,8 +91,6 @@ public class SlingIncludeAttributeTagProcessor extends SlingHtmlAttributeTagProc
             final RequestDispatcherOptions requestDispatcherOptions = prepareRequestDispatcherOptions(expressionParser, templateContext, processableElementTag);
             // dispatch
             final String content = dispatch(resource, path, slingHttpServletRequest, slingHttpServletResponse, requestDispatcherOptions);
-            // cleanup TODO: still needed?
-            // processableElementTag.getAttributes().removeAttribute(attributeName);
             // add output
             final Boolean unwrap = (Boolean) parseAttribute(expressionParser, templateContext, processableElementTag, UNWRAP_ATTRIBUTE_NAME);
             if (unwrap != null && unwrap) {
@@ -103,9 +104,15 @@ public class SlingIncludeAttributeTagProcessor extends SlingHtmlAttributeTagProc
     }
 
     protected Object parseAttribute(final IStandardExpressionParser expressionParser, final ITemplateContext templateContext, final IProcessableElementTag processableElementTag, final String name) {
-        final String attributeValue = processableElementTag.getAttributes().getValue(getDialect().getPrefix(), name);
-        final IStandardExpression expression = expressionParser.parseExpression(templateContext, attributeValue);
-        return expression.execute(templateContext);
+        final IElementAttributes attributes = processableElementTag.getAttributes();
+        final String value = attributes.getValue(getDialect().getPrefix(), name);
+        Object result = null;
+        if (value != null) {
+            final IStandardExpression expression = expressionParser.parseExpression(templateContext, value);
+            result = expression.execute(templateContext);
+        }
+        attributes.removeAttribute(getDialect().getPrefix(), name);
+        return result;
     }
 
     protected RequestDispatcherOptions prepareRequestDispatcherOptions(final IStandardExpressionParser expressionParser, final ITemplateContext templateContext, final IProcessableElementTag processableElementTag) {

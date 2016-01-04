@@ -16,8 +16,8 @@ Installation
 
 For running Sling Scripting Thymeleaf with Sling's Launchpad some dependencies need to be resolved. This can be achieved by installing the following bundles:
 
-    mvn:org.apache.sling/org.apache.sling.i18n/2.2.10
-    mvn:org.javassist/javassist/3.18.2-GA
+    mvn:org.apache.sling/org.apache.sling.i18n/2.4.4
+    mvn:org.javassist/javassist/3.20.0-GA
     mvn:commons-io/commons-io/2.4
 
 There is a feature for Karaf:
