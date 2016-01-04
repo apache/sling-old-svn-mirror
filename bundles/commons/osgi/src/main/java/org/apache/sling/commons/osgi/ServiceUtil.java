@@ -49,7 +49,7 @@ public class ServiceUtil {
      * The comparator will return the services in the given order. In ascending order the 
      * service with the lowest ranking comes first, in descending order the service with the 
      * highest ranking comes first. The latter is useful if you want to have the service 
-     * returned first which is also chosen by {@link BundleContext#getServiceReference(String)}).
+     * returned first which is also chosen by {@link BundleContext#getServiceReference(String)}.
      * @param props The service properties.
      * @param order The order (either ascending or descending).
      * @return A comparable for the ranking of the service

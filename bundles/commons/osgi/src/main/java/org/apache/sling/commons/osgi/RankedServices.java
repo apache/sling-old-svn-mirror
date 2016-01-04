@@ -28,6 +28,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
 import aQute.bnd.annotation.ConsumerType;
 import aQute.bnd.annotation.ProviderType;
@@ -35,7 +36,11 @@ import aQute.bnd.annotation.ProviderType;
 /**
  * Helper class that collects all services registered via OSGi bind/unbind methods.
  * The services are ordered by service ranking and can be iterated directly using this object instance.
- * Implementation is thread-safe.
+ * Implementation is thread-safe.<br><br>
+ * <i>With Declarative Services 1.3 supporting field injection with multiple cardinality (leveraging Collections),
+ * this class should only be used if DS 1.3 cannot be used for some reason.
+ * DS 1.3 is using the same ordering as {@link ServiceReference#compareTo(Object)}</i>
+ * <br><br>
  * <p>Usage example:</p>
  * <p>1. Define a dynamic reference with cardinality OPTIONAL_MULTIPLE in your service:
  * <pre>
@@ -62,6 +67,7 @@ import aQute.bnd.annotation.ProviderType;
  * of referenced services has changed.</p>
  * @param <T> Service type
  * @since 2.3
+ * @see "OSGi Compendium 6.0, Declarative Services 1.3, Reference Field Option, $112.3.8.1"
  */
 @ProviderType
 public final class RankedServices<T> implements Iterable<T> {
@@ -73,7 +79,7 @@ public final class RankedServices<T> implements Iterable<T> {
 
   /**
    * Instantiate without change listener in ascending order (lowest service ranking first).
-   * @deprecated Use {@link #RankedService(Order)}) to explicitly give the order.
+   * @deprecated Use {@link #RankedService(Order)} to explicitly give the order.
    */
   @Deprecated
   public RankedServices() {
@@ -81,9 +87,9 @@ public final class RankedServices<T> implements Iterable<T> {
   }
   
   /**
-   * Instantiate with change listener in ascending order ((lowest service ranking first).
+   * Instantiate with change listener in ascending order (lowest service ranking first).
    * @param changeListener Change listener
-   * @deprecated use {@link #RankedServices(Order order, ChangeListener changeListener)}  instead 
+   * @deprecated Use {@link #RankedServices(Order order, ChangeListener changeListener)} instead 
    */
   @Deprecated
   public RankedServices(ChangeListener changeListener) {
