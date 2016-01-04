@@ -24,20 +24,20 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>26</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.commons.osgi</artifactId>
-    <version>2.3.1-SNAPSHOT</version> <!-- next release version should be 2.4 given new BundleUtil -->
+    <version>2.4.0</version> <!-- next release version should be 2.4 given new BundleUtil -->
     <packaging>bundle</packaging>
 
     <name>Apache Sling Commons OSGi support</name>
     <description>Commons OSGi</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/commons/osgi</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/osgi</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/commons/osgi</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.commons.osgi-2.4.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.commons.osgi-2.4.0</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.commons.osgi-2.4.0</url>
     </scm>
     
     <properties>
