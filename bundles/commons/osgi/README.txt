@@ -6,16 +6,16 @@ and components.
 Getting Started
 ===============
 
-This component uses a Maven 2 (http://maven.apache.org/) build
-environment. It requires a Java 5 JDK (or higher) and Maven (http://maven.apache.org/)
-2.0.7 or later. We recommend to use the latest Maven version.
+This component uses a Maven 3 (http://maven.apache.org/) build
+environment. It requires a Java 6 JDK (or higher) and Maven (http://maven.apache.org/)
+3.0.5 or later. We recommend to use the latest Maven version.
 
-If you have Maven 2 installed, you can compile and
+If you have Maven installed, you can compile and
 package the jar using the following command:
 
     mvn package
 
-See the Maven 2 documentation for other build features.
+See the Maven documentation for other build features.
 
 The latest source code for this component is available in the
 Subversion (http://subversion.tigris.org/) source repository of
