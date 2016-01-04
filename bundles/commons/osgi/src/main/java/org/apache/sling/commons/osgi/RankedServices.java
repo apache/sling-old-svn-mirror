@@ -39,7 +39,7 @@ import aQute.bnd.annotation.ProviderType;
  * Implementation is thread-safe.<br><br>
  * <i>With Declarative Services 1.3 supporting field injection with multiple cardinality (leveraging Collections),
  * this class should only be used if DS 1.3 cannot be used for some reason.
- * DS 1.3 is using the same ordering as {@link ServiceReference#compareTo(Object)}</i>
+ * DS 1.3 is using the same ordering as {@link ServiceReference#compareTo(Object)}.</i>
  * <br><br>
  * <p>Usage example:</p>
  * <p>1. Define a dynamic reference with cardinality OPTIONAL_MULTIPLE in your service:
@@ -67,7 +67,7 @@ import aQute.bnd.annotation.ProviderType;
  * of referenced services has changed.</p>
  * @param <T> Service type
  * @since 2.3
- * @see "OSGi Compendium 6.0, Declarative Services 1.3, Reference Field Option, $112.3.8.1"
+ * @see "OSGi Compendium 6.0, Declarative Services 1.3, Reference Field Option, §112.3.8.1"
  */
 @ProviderType
 public final class RankedServices<T> implements Iterable<T> {
