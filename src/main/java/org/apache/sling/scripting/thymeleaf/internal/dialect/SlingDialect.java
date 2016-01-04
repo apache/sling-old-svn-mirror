@@ -21,29 +21,21 @@ package org.apache.sling.scripting.thymeleaf.internal.dialect;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.scripting.thymeleaf.internal.processor.SlingIncludeAttributeTagProcessor;
 import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
 import org.thymeleaf.dialect.AbstractProcessorDialect;
+import org.thymeleaf.dialect.IDialect;
 import org.thymeleaf.processor.IProcessor;
 
 @Component(
-    immediate = true
+    service = IDialect.class,
+    immediate = true,
+    property = {
+        Constants.SERVICE_DESCRIPTION + "=Sling dialect for Sling Scripting Thymeleaf",
+        Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+    }
 )
-@Service
-@Properties({
-    @Property(
-        name = Constants.SERVICE_VENDOR,
-        value = "The Apache Software Foundation"
-    ),
-    @Property(
-        name = Constants.SERVICE_DESCRIPTION,
-        value = "Sling dialect for Sling Scripting Thymeleaf"
-    )
-})
 public final class SlingDialect extends AbstractProcessorDialect {
 
     public static final String NAME = "Sling";

@@ -19,49 +19,60 @@
 package org.apache.sling.scripting.thymeleaf.internal;
 
 import java.text.MessageFormat;
-import java.util.Dictionary;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Modified;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.i18n.ResourceBundleProvider;
+import org.apache.sling.scripting.thymeleaf.AbsentMessageRepresentationProvider;
+import org.apache.sling.scripting.thymeleaf.internal.ResourceBundleMessageResolverConfiguration.AbsentMessageRepresentationType;
 import org.osgi.framework.Constants;
-import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
+import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thymeleaf.context.ITemplateContext;
 import org.thymeleaf.messageresolver.IMessageResolver;
 
 @Component(
-    label = "Apache Sling Scripting Thymeleaf “Resource Bundle Message Resolver”",
-    description = "resource bundle message resolver for Sling Scripting Thymeleaf",
     immediate = true,
-    metatype = true
+    property = {
+        Constants.SERVICE_DESCRIPTION + "=ResourceBundle MessageResolver for Sling Scripting Thymeleaf",
+        Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+    }
 )
-@Service
-@Properties({
-    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
-    @Property(name = Constants.SERVICE_DESCRIPTION, value = "resource bundle message resolver for Sling Scripting Thymeleaf")
-})
+@Designate(
+    ocd = ResourceBundleMessageResolverConfiguration.class
+)
 public class ResourceBundleMessageResolver implements IMessageResolver {
 
-    @Reference
-    private ResourceBundleProvider resourceBundleProvider;
+    @Reference(
+        cardinality = ReferenceCardinality.OPTIONAL,
+        policy = ReferencePolicy.DYNAMIC,
+        policyOption = ReferencePolicyOption.GREEDY,
+        bind = "setResourceBundleProvider",
+        unbind = "unsetResourceBundleProvider"
+    )
+    private volatile ResourceBundleProvider resourceBundleProvider;
+
+    @Reference(
+        cardinality = ReferenceCardinality.OPTIONAL,
+        policy = ReferencePolicy.DYNAMIC,
+        policyOption = ReferencePolicyOption.GREEDY,
+        bind = "setAbsentMessageRepresentationProvider",
+        unbind = "unsetAbsentMessageRepresentationProvider"
+    )
+    private volatile AbsentMessageRepresentationProvider absentMessageRepresentationProvider;
 
     private Integer order;
 
-    public static final int DEFAULT_ORDER = 0;
-
-    @Property(intValue = DEFAULT_ORDER)
-    public static final String ORDER_PARAMETER = "org.apache.sling.scripting.thymeleaf.internal.ResourceBundleMessageResolver.order";
+    private AbsentMessageRepresentationType absentMessageRepresentationType;
 
     public static final Object[] EMPTY_MESSAGE_PARAMETERS = new Object[0];
 
@@ -70,26 +81,42 @@ public class ResourceBundleMessageResolver implements IMessageResolver {
     public ResourceBundleMessageResolver() {
     }
 
+    public void setResourceBundleProvider(final ResourceBundleProvider resourceBundleProvider) {
+        logger.info("setting resource bundle provider: {}", resourceBundleProvider);
+    }
+
+    public void unsetResourceBundleProvider(final ResourceBundleProvider resourceBundleProvider) {
+        logger.info("unsetting resource bundle provider: {}", resourceBundleProvider);
+    }
+
+    public void setAbsentMessageRepresentationProvider(final AbsentMessageRepresentationProvider absentMessageRepresentationProvider) {
+        logger.info("setting absent message representation provider: {}", absentMessageRepresentationProvider);
+    }
+
+    public void unsetAbsentMessageRepresentationProvider(final AbsentMessageRepresentationProvider absentMessageRepresentationProvider) {
+        logger.info("unsetting absent message representation provider: {}", absentMessageRepresentationProvider);
+    }
+
     @Activate
-    private void activate(final ComponentContext componentContext) {
+    private void activate(final ResourceBundleMessageResolverConfiguration configuration) {
         logger.debug("activate");
-        configure(componentContext);
+        configure(configuration);
     }
 
     @Modified
-    private void modified(final ComponentContext componentContext) {
+    private void modified(final ResourceBundleMessageResolverConfiguration configuration) {
         logger.debug("modified");
-        configure(componentContext);
+        configure(configuration);
     }
 
     @Deactivate
-    private void deactivate(final ComponentContext componentContext) {
+    private void deactivate() {
         logger.debug("deactivate");
     }
 
-    private synchronized void configure(final ComponentContext componentContext) {
-        final Dictionary properties = componentContext.getProperties();
-        order = PropertiesUtil.toInteger(properties.get(ORDER_PARAMETER), DEFAULT_ORDER);
+    private void configure(final ResourceBundleMessageResolverConfiguration configuration) {
+        order = configuration.order();
+        absentMessageRepresentationType = configuration.absentMessageRepresentationType();
     }
 
     @Override
@@ -104,7 +131,7 @@ public class ResourceBundleMessageResolver implements IMessageResolver {
 
     @Override
     public String resolveMessage(final ITemplateContext templateContext, final Class<?> origin, final String key, final Object[] messageParameters) {
-        logger.debug("template context: {}, origin: {}, key: {}, message parameters: {}", templateContext, origin, key, messageParameters);
+        logger.debug("resolving message for '{}' ({}) with message parameters {}", key, origin, messageParameters);
         // TODO can origin be useful with Sling i18n?
         final Locale locale = templateContext.getLocale();
         final ResourceBundle resourceBundle = resourceBundleProvider.getResourceBundle(locale);
@@ -117,7 +144,26 @@ public class ResourceBundleMessageResolver implements IMessageResolver {
 
     @Override
     public String createAbsentMessageRepresentation(final ITemplateContext templateContext, final Class<?> origin, final String key, final Object[] messageParameters) {
-        return key; // TODO make configurable
+        logger.debug("creating absent message representation for '{}' ({}) with message parameters {}", key, origin, messageParameters);
+        String message = null;
+        final AbsentMessageRepresentationProvider absentMessageRepresentationProvider = this.absentMessageRepresentationProvider;
+        if (absentMessageRepresentationProvider == null) {
+            switch (absentMessageRepresentationType) {
+                case EMPTY:
+                    message = "";
+                    break;
+                case BLANK:
+                    message = " ";
+                    break;
+                case KEY:
+                    message = key;
+                    break;
+            }
+        } else {
+            message = absentMessageRepresentationProvider.provideAbsentMessageRepresentation(templateContext, origin, key, messageParameters);
+        }
+        logger.debug("message: '{}'", message);
+        return message;
     }
 
 }
