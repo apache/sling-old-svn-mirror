@@ -43,8 +43,6 @@ import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.apache.sling.event.jobs.consumer.JobExecutor;
-import org.apache.sling.launchpad.api.StartupHandler;
-import org.apache.sling.launchpad.api.StartupMode;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
@@ -108,10 +106,6 @@ public abstract class AbstractJobHandlingTest {
                 mavenBundle("org.slf4j", "jcl-over-slf4j", "1.7.13"),
                 mavenBundle("org.slf4j", "log4j-over-slf4j", "1.7.13"),
 
-                // launchpad api and settings
-                mavenBundle("org.apache.sling", "org.apache.sling.launchpad.api", "1.1.0"),
-                mavenBundle("org.apache.sling", "org.apache.sling.settings", "1.3.4"),
-
                 mavenBundle("commons-io", "commons-io", "2.4"),
                 mavenBundle("commons-fileupload", "commons-fileupload", "1.3.1"),
                 mavenBundle("commons-collections", "commons-collections", "3.2.2"),
@@ -134,16 +128,17 @@ public abstract class AbstractJobHandlingTest {
                 mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.1.2"),
 
                 // sling
+                mavenBundle("org.apache.sling", "org.apache.sling.settings", "1.3.8"),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.osgi", "2.3.0"),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.json", "2.0.16"),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.mime", "2.1.8"),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.classloader", "1.3.2"),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.scheduler", "2.4.14"),
-                mavenBundle("org.apache.sling", "org.apache.sling.commons.threads", "3.2.2"),
+                mavenBundle("org.apache.sling", "org.apache.sling.commons.threads", "3.2.4"),
 
                 mavenBundle("org.apache.sling", "org.apache.sling.auth.core", "1.3.12"),
                 mavenBundle("org.apache.sling", "org.apache.sling.discovery.api", "1.0.2"),
-                mavenBundle("org.apache.sling", "org.apache.sling.discovery.standalone", "1.0.0"),
+                mavenBundle("org.apache.sling", "org.apache.sling.discovery.standalone", "1.0.2"),
 
                 mavenBundle("org.apache.sling", "org.apache.sling.api", "2.8.0"),
                 mavenBundle("org.apache.sling", "org.apache.sling.resourceresolver", "1.1.6"),
@@ -179,9 +174,9 @@ public abstract class AbstractJobHandlingTest {
         JobManager result = null;
         int count = 0;
         do {
-            final ServiceReference sr = this.bc.getServiceReference(JobManager.class.getName());
+            final ServiceReference<JobManager> sr = this.bc.getServiceReference(JobManager.class);
             if ( sr != null ) {
-                result = (JobManager)this.bc.getService(sr);
+                result = this.bc.getService(sr);
             } else {
                 count++;
                 if ( count == 10 ) {
@@ -209,24 +204,6 @@ public abstract class AbstractJobHandlingTest {
         Dictionary<String, Object> p2 = new Hashtable<String, Object>();
         p2.put(JobManagerConfiguration.PROPERTY_BACKGROUND_LOAD_DELAY, 3L);
         c2.update(p2);
-
-        final StartupHandler handler = new StartupHandler() {
-
-            @Override
-            public void waitWithStartup(boolean flag) {
-            }
-
-            @Override
-            public boolean isFinished() {
-                return true;
-            }
-
-            @Override
-            public StartupMode getMode() {
-                return StartupMode.INSTALL;
-            }
-        };
-        this.bc.registerService(StartupHandler.class.getName(), handler, null);
     }
 
     private int deleteCount;
@@ -246,8 +223,8 @@ public abstract class AbstractJobHandlingTest {
     }
 
     public void cleanup() {
-        final ServiceReference ref = this.bc.getServiceReference(ResourceResolverFactory.class.getName());
-        final ResourceResolverFactory factory = (ResourceResolverFactory) this.bc.getService(ref);
+        final ServiceReference<ResourceResolverFactory> ref = this.bc.getServiceReference(ResourceResolverFactory.class);
+        final ResourceResolverFactory factory = this.bc.getService(ref);
         ResourceResolver resolver = null;
         try {
             resolver = factory.getAdministrativeResourceResolver(null);
