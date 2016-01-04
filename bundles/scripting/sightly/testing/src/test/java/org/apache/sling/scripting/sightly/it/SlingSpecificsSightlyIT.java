@@ -18,11 +18,19 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.it;
 
+import java.io.IOException;
+
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.InputStreamBody;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import io.sightly.tck.http.Client;
 import io.sightly.tck.html.HTMLExtractor;
+import io.sightly.tck.http.Client;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -40,6 +48,7 @@ public class SlingSpecificsSightlyIT {
     private static final String SLING_JS_DEPENDENCY_RESOLUTION = "/sightly/use-sibling-dependency-resolution.html";
     private static final String SLING_USE_INHERITANCE_WITHOVERLAY = "/sightly/useinheritance.html";
     private static final String SLING_USE_INHERITANCE_WITHOUTOVERLAY = "/sightly/useinheritance.notoverlaid.html";
+    private static final String SLING_JAVA_USE_POJO_UPDATE = "/sightly/use.repopojo.html";
 
     @BeforeClass
     public static void init() {
@@ -145,6 +154,31 @@ public class SlingSpecificsSightlyIT {
         String url = launchpadURL + SLING_USE_INHERITANCE_WITHOUTOVERLAY;
         String pageContent = client.getStringContent(url, 200);
         assertEquals("notoverlaid", HTMLExtractor.innerHTML(url, pageContent, "#notoverlaid"));
+    }
+
+    @Test
+    public void testRepositoryPojoUpdate() throws Exception {
+        String url = launchpadURL + SLING_JAVA_USE_POJO_UPDATE;
+        String pageContent = client.getStringContent(url, 200);
+        assertEquals("original", HTMLExtractor.innerHTML(url + System.currentTimeMillis(), pageContent, "#repopojo"));
+        uploadFile("RepoPojo.java.updated", "RepoPojo.java", "/apps/sightly/scripts/use");
+        pageContent = client.getStringContent(url, 200);
+        assertEquals("updated", HTMLExtractor.innerHTML(url + System.currentTimeMillis(), pageContent, "#repopojo"));
+        uploadFile("RepoPojo.java.original", "RepoPojo.java", "/apps/sightly/scripts/use");
+        pageContent = client.getStringContent(url, 200);
+        assertEquals("original", HTMLExtractor.innerHTML(url + System.currentTimeMillis(), pageContent, "#repopojo"));
+    }
+
+    private void uploadFile(String fileName, String serverFileName, String url) throws IOException {
+        HttpClient httpClient = HttpClientBuilder.create().build();
+        HttpPost post = new HttpPost(launchpadURL + url);
+        post.setHeader("Authorization", "Basic YWRtaW46YWRtaW4=");
+        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
+        InputStreamBody inputStreamBody = new InputStreamBody(this.getClass().getClassLoader().getResourceAsStream(fileName),
+                ContentType.TEXT_PLAIN, fileName);
+        entityBuilder.addPart(serverFileName, inputStreamBody);
+        post.setEntity(entityBuilder.build());
+        httpClient.execute(post);
     }
 
 }

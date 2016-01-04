@@ -35,6 +35,7 @@ import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.scripting.sightly.impl.compiler.SightlyJavaCompilerService;
+import org.apache.sling.scripting.sightly.impl.compiler.UnitChangeMonitor;
 import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
 import org.apache.sling.scripting.sightly.pojo.Use;
 import org.apache.sling.scripting.sightly.render.RenderContext;
@@ -69,6 +70,9 @@ public class JavaUseProvider implements UseProvider {
     private SightlyJavaCompilerService sightlyJavaCompilerService = null;
 
     @Reference
+    private UnitChangeMonitor unitChangeMonitor = null;
+
+    @Reference
     private ClassLoaderWriter classLoaderWriter = null;
 
     @Override
@@ -85,6 +89,14 @@ public class JavaUseProvider implements UseProvider {
         Object result;
         try {
             Class<?> cls = classLoaderWriter.getClassLoader().loadClass(identifier);
+            if (unitChangeMonitor.getLastModifiedDateForJavaUseObject(identifier) > 0) {
+                // the object is a POJO that was changed in the repository but not recompiled;
+                result = sightlyJavaCompilerService.getInstance(renderContext, identifier, true);
+                if (result instanceof Use) {
+                    ((Use) result).init(BindingsUtils.merge(globalBindings, arguments));
+                }
+                return ProviderOutcome.success(result);
+            }
             // attempt OSGi service load
             result = sling.getService(cls);
             if (result != null) {
