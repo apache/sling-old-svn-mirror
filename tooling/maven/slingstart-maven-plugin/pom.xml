@@ -22,7 +22,7 @@
     </parent>
 
     <artifactId>slingstart-maven-plugin</artifactId>
-    <version>1.4.0</version>
+    <version>1.4.1-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <name>Apache Sling SlingStart Maven Plugin</name>
@@ -36,9 +36,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/slingstart-maven-plugin-1.4.0</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/slingstart-maven-plugin-1.4.0</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/slingstart-maven-plugin-1.4.0</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/maven/slingstart-maven-plugin</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/maven/slingstart-maven-plugin</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/maven/slingstart-maven-plugin</url>
     </scm>
 
     <build>
