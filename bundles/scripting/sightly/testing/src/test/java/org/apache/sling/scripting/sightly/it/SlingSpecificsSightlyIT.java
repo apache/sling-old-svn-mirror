@@ -169,6 +169,13 @@ public class SlingSpecificsSightlyIT {
         assertEquals("original", HTMLExtractor.innerHTML(url + System.currentTimeMillis(), pageContent, "#repopojo"));
     }
 
+    @Test
+    public void testRepositoryPojoNoPkg() {
+        String url = launchpadURL + SLING_USE;
+        String pageContent = client.getStringContent(url, 200);
+        assertEquals("nopkg", HTMLExtractor.innerHTML(url, pageContent, "#repopojo-nopkg"));
+    }
+
     private void uploadFile(String fileName, String serverFileName, String url) throws IOException {
         HttpClient httpClient = HttpClientBuilder.create().build();
         HttpPost post = new HttpPost(launchpadURL + url);
