@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.felix.scr.annotations.Activate;
@@ -65,6 +66,8 @@ import org.slf4j.LoggerFactory;
 public class SightlyJavaCompilerService {
 
     private static final Logger LOG = LoggerFactory.getLogger(SightlyJavaCompilerService.class);
+
+    public static final Pattern PACKAGE_DECL_PATTERN = Pattern.compile("package\\s+([a-zA-Z_$][a-zA-Z\\d_$]*\\.?)*;");
 
     @Reference
     private ClassLoaderWriter classLoaderWriter = null;
@@ -166,6 +169,10 @@ public class SightlyJavaCompilerService {
             IOUtils.write(sourceCode, os, "UTF-8");
             IOUtils.closeQuietly(os);
         }
+        sourceCode = PACKAGE_DECL_PATTERN.matcher(sourceCode).replaceFirst("");
+        sourceCode = "package " + Utils.getPackageNameFromFQCN(fqcn) + ";\n" + sourceCode;
+
+
         CompilationUnit compilationUnit = new SightlyCompilationUnit(sourceCode, fqcn);
 
         long start = System.currentTimeMillis();

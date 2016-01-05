@@ -16,34 +16,23 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.impl.compiler;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.sling.scripting.sightly.impl.utils.JavaEscapeUtils;
+import org.junit.Test;
 
-public class Utils {
+import static org.junit.Assert.assertEquals;
 
-    public static String getJavaNameFromPath(String path) {
-        if (path.endsWith(".java")) {
-            path = path.substring(0, path.length() - 5);
-        }
-        String[] parts = path.split("/");
-        StringBuilder stringBuilder = new StringBuilder();
-        for (int i = 0; i < parts.length; i++) {
-            String part = parts[i];
-            if (StringUtils.isNotEmpty(part)) {
-                stringBuilder.append(JavaEscapeUtils.getEscapedToken(parts[i]));
-                if (i != parts.length - 1) {
-                    stringBuilder.append(".");
-                }
-            }
-        }
-        return stringBuilder.toString();
+public class UtilsTest {
+
+    @Test
+    public void testGetJavaNameFromPath() throws Exception {
+        assertEquals("apps.project.components.A", Utils.getJavaNameFromPath("/apps/project/components/A.java"));
+        assertEquals("apps.pro_ject.components.A", Utils.getJavaNameFromPath("/apps/pro-ject/components/A.java"));
+        assertEquals("apps._static.project.components.A", Utils.getJavaNameFromPath("/apps/static/project/components/A.java"));
     }
 
-    public static String getPackageNameFromFQCN(String fqcn) {
-        if (StringUtils.isNotEmpty(fqcn)) {
-            return fqcn.substring(0, fqcn.lastIndexOf("."));
-        }
-        return null;
+    @Test
+    public void testGetPackageNameFromFQCN() throws Exception {
+        assertEquals("apps.project.components", Utils.getPackageNameFromFQCN("apps.project.components.A"));
+        assertEquals("apps.pro_ject.components", Utils.getPackageNameFromFQCN("apps.pro_ject.components.A"));
+        assertEquals("apps._static.project.components", Utils.getPackageNameFromFQCN("apps._static.project.components.A"));
     }
-
 }
