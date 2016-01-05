@@ -59,7 +59,7 @@ public class Page {
     }
 
     public Iterable<Page> getParents() {
-        return $(resource).parents().map(Page.class);
+        return $(resource).parents("fling/page").map(Page.class);
     }
 
     public Iterable<Page> getChildren() {
