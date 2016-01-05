@@ -26,7 +26,7 @@
     <!-- org.apache.sling.resourceresolver requires jcr -->
     <bundle>mvn:org.apache.sling/org.apache.sling.resourceresolver/1.2.6</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.serviceusermapper/1.2.2</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.settings/1.3.7-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.settings/1.3.8</bundle>
     <!-- Apache Sling Commons -->
     <bundle>mvn:org.apache.sling/org.apache.sling.commons.classloader/1.3.2</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.commons.compiler/2.2.0</bundle>
@@ -71,7 +71,7 @@
     <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
   </feature>
   <feature name="sling-commons-threads" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.commons.threads/3.2.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.commons.threads/3.2.4</bundle>
   </feature>
   <!-- Apache Sling Extensions -->
   <feature name="sling-extension-adapter" version="${feature.version}">
@@ -99,7 +99,7 @@
     <bundle dependency="true">mvn:org.apache.httpcomponents/httpclient-osgi/4.5.1</bundle>
   </feature>
   <feature name="sling-extension-discovery-standalone" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.discovery.standalone/1.0.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.discovery.standalone/1.0.2</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling-extension-discovery</feature>
   </feature>
@@ -318,7 +318,7 @@
     <feature version="${feature.version}">sling-jcr</feature>
   </feature>
   <feature name="sling-scripting-jsp" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.jsp/2.1.6</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.jsp/2.1.8</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.jsp.taglib/2.2.4</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling-scripting</feature>
@@ -474,7 +474,7 @@
     <bundle dependency="true">mvn:org.codehaus.groovy/groovy-templates/2.4.5</bundle>
   </feature>
   <feature name="sling-scripting-java" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.java/2.0.12</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.java/2.0.14</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-scripting</feature>
