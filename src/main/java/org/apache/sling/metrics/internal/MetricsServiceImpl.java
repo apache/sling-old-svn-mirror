@@ -76,6 +76,7 @@ public class MetricsServiceImpl implements MetricsService{
         final Dictionary<String, String> regProps = new Hashtable<String, String>();
         regProps.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Metrics Registry");
         regProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        regProps.put("name", "sling");
         regs.add(context.registerService(MetricRegistry.class.getName(), registry, regProps));
     }
 
