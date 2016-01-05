@@ -71,7 +71,7 @@ import org.slf4j.LoggerFactory;
         @Property(name = InventoryPrinter.TITLE, value = "Sling Metrics"),
         @Property(name = InventoryPrinter.WEBCONSOLE, boolValue = true)
 })
-public class MetricPrinter extends HttpServlet implements
+public class MetricWebConsolePlugin extends HttpServlet implements
         InventoryPrinter, ServiceTrackerCustomizer<MetricRegistry, MetricRegistry>{
     /**
      * Service property name which stores the MetricRegistry name as a given OSGi
