@@ -134,6 +134,7 @@ public class SlingLogPanel extends HttpServlet {
         if (req.getPathInfo() != null) {
             if (req.getPathInfo().endsWith(PATH_TAILER)){
                 String appenderName = req.getParameter(PARAM_APPENDER_NAME);
+                addNoSniffHeader(resp);
                 if (appenderName == null){
                     pw.printf("Provide appender name via [%s] request parameter%n", PARAM_APPENDER_NAME);
                     return;
@@ -857,6 +858,9 @@ public class SlingLogPanel extends HttpServlet {
         return (path != null) ? path : "[stdout]";
     }
 
+    private static void addNoSniffHeader(HttpServletResponse resp) {
+        resp.setHeader("X-Content-Type-Options", "nosniff");
+    }
 
     // ~------------------------------------------------Status Manager
     // Based on ch.qos.logback.core.status.ViewStatusMessagesServletBase

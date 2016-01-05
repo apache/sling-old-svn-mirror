@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 
 import com.gargoylesoftware.htmlunit.DefaultCredentialsProvider;
+import com.gargoylesoftware.htmlunit.Page;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import org.apache.commons.io.FilenameUtils;
@@ -38,6 +39,7 @@ import org.ops4j.pax.exam.spi.PaxExamRuntime;
 import org.ops4j.pax.tinybundles.core.TinyBundle;
 import org.osgi.framework.Constants;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.frameworkProperty;
@@ -132,6 +134,13 @@ public class ITWebConsoleRemote extends LogTestBase {
         //Should dump content of configured file testremote.log
         //with its name
         assertTrue(text.contains("testremote.log"));
+    }
+
+    @Test
+    public void tailerHeader() throws Exception{
+        Page page = webClient.getPage(prepareUrl("slinglog/tailer.txt?name=webconsoletest1.log"));
+        String nosniffHeader = page.getWebResponse().getResponseHeaderValue("X-Content-Type-Options");
+        assertEquals("nosniff", nosniffHeader);
     }
 
     @AfterClass
