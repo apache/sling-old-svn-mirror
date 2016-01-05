@@ -401,7 +401,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                     tenantProps.putAll(props);
                 }
             } catch (Exception e) {
-                log.info("addTenant: Unexpected problem calling TenantCustomizer " + ts, e);
+                log.info("addTenant/updateTenant: Unexpected problem calling TenantCustomizer " + ts, e);
             }
         }
         // call tenant hooks
@@ -412,7 +412,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                     tenantProps.putAll(props);
                 }
             } catch (Exception e) {
-                log.info("removeTenant: Unexpected problem calling TenantManagerHook " + ts, e);
+                log.info("addTenant/updateTenant: Unexpected problem calling TenantManagerHook " + ts, e);
             }
         }
     }
