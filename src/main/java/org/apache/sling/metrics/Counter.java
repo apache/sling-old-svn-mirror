@@ -20,9 +20,10 @@
 package org.apache.sling.metrics;
 
 import aQute.bnd.annotation.ProviderType;
+import org.apache.sling.api.adapter.Adaptable;
 
 @ProviderType
-public interface Counter extends Counting, Metric{
+public interface Counter extends Counting, Metric, Adaptable{
     /**
      * Increment the counter by one.
      */
