@@ -27,11 +27,11 @@
         <relativePath/>
     </parent>
 
-    <artifactId>org.apache.sling.commons.resourcebuilder</artifactId>
+    <artifactId>org.apache.sling.resourcebuilder</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling Commons Resource Builder</name>
+    <name>Apache Sling Resource Builder</name>
     <description>Utilities to create Sling content</description>
 
     <properties>
