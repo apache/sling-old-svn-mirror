@@ -23,10 +23,9 @@ import java.io.Closeable;
 import java.util.concurrent.TimeUnit;
 
 import aQute.bnd.annotation.ProviderType;
-import org.apache.sling.api.adapter.Adaptable;
 
 @ProviderType
-public interface Timer extends Counting, Metric, Adaptable {
+public interface Timer extends Counting, Metric{
     /**
      * A timing context.
      *

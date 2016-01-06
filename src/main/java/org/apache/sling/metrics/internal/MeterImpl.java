@@ -45,9 +45,9 @@ final class MeterImpl implements Meter {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+    public <A> A adaptTo(Class<A> type) {
         if (type == com.codahale.metrics.Meter.class){
-            return (AdapterType)meter;
+            return (A)meter;
         }
         return null;
     }

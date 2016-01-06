@@ -23,4 +23,13 @@ import aQute.bnd.annotation.ProviderType;
 
 @ProviderType
 public interface Metric {
+    /**
+     * Adapts the Metric to the specified type.
+     *
+     * @param <A> The type to which this metric is to be adapted.
+     * @param type Class object for the type to which this metric is to be adapted.
+     * @return The object, of the specified type, to which this metric has been adapted
+     * or null if this metric cannot be adapted to the specified type.
+     */
+    <A> A adaptTo(Class<A> type);
 }

@@ -20,10 +20,9 @@
 package org.apache.sling.metrics;
 
 import aQute.bnd.annotation.ProviderType;
-import org.apache.sling.api.adapter.Adaptable;
 
 @ProviderType
-public interface Meter extends Counting, Metric, Adaptable {
+public interface Meter extends Counting, Metric{
     /**
      * Mark the occurrence of an event.
      */

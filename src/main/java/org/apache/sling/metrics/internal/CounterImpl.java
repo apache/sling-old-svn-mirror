@@ -56,9 +56,9 @@ final class CounterImpl implements Counter {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+    public <A> A adaptTo(Class<A> type) {
         if (type == com.codahale.metrics.Counter.class){
-            return (AdapterType) counter;
+            return (A) counter;
         }
         return null;
     }

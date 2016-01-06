@@ -20,10 +20,9 @@
 package org.apache.sling.metrics;
 
 import aQute.bnd.annotation.ProviderType;
-import org.apache.sling.api.adapter.Adaptable;
 
 @ProviderType
-public interface Histogram extends Counting, Metric, Adaptable {
+public interface Histogram extends Counting, Metric {
     /**
      * Adds a recorded value.
      *
