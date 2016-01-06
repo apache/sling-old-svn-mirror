@@ -46,34 +46,34 @@ public interface MetricsService {
     };
 
     /**
-     * Creates a new {@link com.codahale.metrics.Timer} and registers it under the given name.
+     * Creates a new {@link Timer} and registers it under the given name.
      *
      * @param name the name of the metric
-     * @return a new {@link com.codahale.metrics.Timer}
+     * @return a new {@link Timer}
      */
     Timer timer(String name);
 
     /**
-     * Creates a new {@link com.codahale.metrics.Histogram} and registers it under the given name.
+     * Creates a new {@link Histogram} and registers it under the given name.
      *
      * @param name the name of the metric
-     * @return a new {@link com.codahale.metrics.Histogram}
+     * @return a new {@link Histogram}
      */
     Histogram histogram(String name);
 
     /**
-     * Creates a new {@link com.codahale.metrics.Counter} and registers it under the given name.
+     * Creates a new {@link Counter} and registers it under the given name.
      *
      * @param name the name of the metric
-     * @return a new {@link com.codahale.metrics.Counter}
+     * @return a new {@link Counter}
      */
     Counter counter(String name);
 
     /**
-     * Creates a new {@link com.codahale.metrics.Meter} and registers it under the given name.
+     * Creates a new {@link Meter} and registers it under the given name.
      *
      * @param name the name of the metric
-     * @return a new {@link com.codahale.metrics.Meter}
+     * @return a new {@link Meter}
      */
     Meter meter(String name);
 }
