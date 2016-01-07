@@ -99,7 +99,7 @@ public class SimpleDistributionAgentTest {
                 new SimpleDistributionQueue(name, "name"));
         DistributionResponse response = agent.execute(resourceResolver, request);
         assertNotNull(response);
-        assertEquals("ERROR", response.getMessage());
+        assertEquals("[ERROR]", response.getMessage());
         assertEquals(DistributionRequestState.DROPPED, response.getState());
     }
 
@@ -139,7 +139,7 @@ public class SimpleDistributionAgentTest {
                 new SimpleDistributionQueue(name, "name"));
         DistributionResponse response = agent.execute(resourceResolver, request);
         assertNotNull(response);
-        assertEquals("QUEUED", response.getMessage());
+        assertEquals("[QUEUED]", response.getMessage());
         assertEquals(DistributionRequestState.ACCEPTED, response.getState());
     }
 
