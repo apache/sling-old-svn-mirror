@@ -17,16 +17,16 @@
  * under the License.
  */
 
-package org.apache.sling.metrics;
+package org.apache.sling.commons.metrics;
 
 import aQute.bnd.annotation.ProviderType;
 
 @ProviderType
-public interface Counting {
+public interface Histogram extends Counting, Metric {
     /**
-     * Returns the current count.
+     * Adds a recorded value.
      *
-     * @return the current count
+     * @param value the length of the value
      */
-    long getCount();
+    void update(long value);
 }

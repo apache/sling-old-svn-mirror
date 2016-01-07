@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.sling.metrics.internal;
+package org.apache.sling.commons.metrics.internal;
 
 import java.lang.management.ManagementFactory;
 import java.util.Collections;
@@ -25,11 +25,11 @@ import java.util.Collections;
 import javax.management.MBeanServer;
 
 import com.codahale.metrics.MetricRegistry;
-import org.apache.sling.metrics.Counter;
-import org.apache.sling.metrics.Histogram;
-import org.apache.sling.metrics.Meter;
-import org.apache.sling.metrics.MetricsService;
-import org.apache.sling.metrics.Timer;
+import org.apache.sling.commons.metrics.Counter;
+import org.apache.sling.commons.metrics.Histogram;
+import org.apache.sling.commons.metrics.Meter;
+import org.apache.sling.commons.metrics.MetricsService;
+import org.apache.sling.commons.metrics.Timer;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
 import org.junit.After;

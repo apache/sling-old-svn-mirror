@@ -17,38 +17,33 @@
  * under the License.
  */
 
-package org.apache.sling.metrics.internal;
+package org.apache.sling.commons.metrics;
 
-import org.apache.sling.metrics.Meter;
+import aQute.bnd.annotation.ProviderType;
 
-final class MeterImpl implements Meter {
-    private final com.codahale.metrics.Meter meter;
+@ProviderType
+public interface Counter extends Counting, Metric{
+    /**
+     * Increment the counter by one.
+     */
+    void inc();
 
-    MeterImpl(com.codahale.metrics.Meter meter) {
-        this.meter = meter;
-    }
+    /**
+     * Decrement the counter by one.
+     */
+    void dec();
 
-    @Override
-    public void mark() {
-        meter.mark();
-    }
+    /**
+     * Increment the counter by {@code n}.
+     *
+     * @param n the amount by which the counter will be increased
+     */
+    void inc(long n);
 
-    @Override
-    public void mark(long n) {
-        meter.mark(n);
-    }
-
-    @Override
-    public long getCount() {
-        return meter.getCount();
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public <A> A adaptTo(Class<A> type) {
-        if (type == com.codahale.metrics.Meter.class){
-            return (A)meter;
-        }
-        return null;
-    }
+    /**
+     * Decrement the counter by {@code n}.
+     *
+     * @param n the amount by which the counter will be decreased
+     */
+    void dec(long n);
 }

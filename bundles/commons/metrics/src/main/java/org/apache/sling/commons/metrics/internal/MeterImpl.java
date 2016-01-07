@@ -17,16 +17,38 @@
  * under the License.
  */
 
-package org.apache.sling.metrics;
+package org.apache.sling.commons.metrics.internal;
 
-import aQute.bnd.annotation.ProviderType;
+import org.apache.sling.commons.metrics.Meter;
 
-@ProviderType
-public interface Histogram extends Counting, Metric {
-    /**
-     * Adds a recorded value.
-     *
-     * @param value the length of the value
-     */
-    void update(long value);
+final class MeterImpl implements Meter {
+    private final com.codahale.metrics.Meter meter;
+
+    MeterImpl(com.codahale.metrics.Meter meter) {
+        this.meter = meter;
+    }
+
+    @Override
+    public void mark() {
+        meter.mark();
+    }
+
+    @Override
+    public void mark(long n) {
+        meter.mark(n);
+    }
+
+    @Override
+    public long getCount() {
+        return meter.getCount();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <A> A adaptTo(Class<A> type) {
+        if (type == com.codahale.metrics.Meter.class){
+            return (A)meter;
+        }
+        return null;
+    }
 }

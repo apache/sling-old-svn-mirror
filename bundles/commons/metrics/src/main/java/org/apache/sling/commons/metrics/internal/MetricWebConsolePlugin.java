@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.sling.metrics.internal;
+package org.apache.sling.commons.metrics.internal;
 
 import java.io.IOException;
 import java.io.PrintStream;

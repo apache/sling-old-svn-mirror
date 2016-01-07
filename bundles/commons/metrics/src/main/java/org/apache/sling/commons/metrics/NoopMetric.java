@@ -17,61 +17,78 @@
  * under the License.
  */
 
-package org.apache.sling.metrics.internal;
+package org.apache.sling.commons.metrics;
 
 import java.util.concurrent.TimeUnit;
 
-import org.apache.sling.metrics.Timer;
+final class NoopMetric implements Counter, Histogram, Timer, Meter{
+    public static final NoopMetric INSTANCE = new NoopMetric();
+    @Override
+    public long getCount() {
+        return 0;
+    }
 
+    @Override
+    public void inc() {
 
-final class TimerImpl implements Timer {
-    private final com.codahale.metrics.Timer timer;
+    }
 
-    TimerImpl(com.codahale.metrics.Timer timer) {
-        this.timer = timer;
+    @Override
+    public void dec() {
+
+    }
+
+    @Override
+    public void inc(long n) {
+
+    }
+
+    @Override
+    public void dec(long n) {
+
+    }
+
+    @Override
+    public void mark() {
+
+    }
+
+    @Override
+    public void mark(long n) {
+
     }
 
     @Override
     public void update(long duration, TimeUnit unit) {
-        timer.update(duration, unit);
+
     }
 
     @Override
     public Context time() {
-        return new ContextImpl(timer.time());
+        return NoopContext.INSTANCE;
     }
 
     @Override
-    public long getCount() {
-        return timer.getCount();
+    public void update(long value) {
+
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public <A> A adaptTo(Class<A> type) {
-        if (type == com.codahale.metrics.Timer.class) {
-            return (A) timer;
-        }
+    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
         return null;
     }
 
-    private static final class ContextImpl implements Context {
-        private final com.codahale.metrics.Timer.Context context;
+    private static final class NoopContext implements Context {
+        public static final NoopContext INSTANCE = new NoopContext();
 
-        private ContextImpl(com.codahale.metrics.Timer.Context context) {
-            this.context = context;
-        }
-
+        @Override
         public long stop() {
-            return context.stop();
+            return 0;
         }
 
-        /**
-         * Equivalent to calling {@link #stop()}.
-         */
         @Override
         public void close() {
-            stop();
+
         }
     }
 }

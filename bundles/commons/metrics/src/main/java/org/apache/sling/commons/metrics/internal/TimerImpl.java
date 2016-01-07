@@ -17,78 +17,61 @@
  * under the License.
  */
 
-package org.apache.sling.metrics;
+package org.apache.sling.commons.metrics.internal;
 
 import java.util.concurrent.TimeUnit;
 
-final class NoopMetric implements Counter, Histogram, Timer, Meter{
-    public static final NoopMetric INSTANCE = new NoopMetric();
-    @Override
-    public long getCount() {
-        return 0;
-    }
+import org.apache.sling.commons.metrics.Timer;
 
-    @Override
-    public void inc() {
 
-    }
+final class TimerImpl implements Timer {
+    private final com.codahale.metrics.Timer timer;
 
-    @Override
-    public void dec() {
-
-    }
-
-    @Override
-    public void inc(long n) {
-
-    }
-
-    @Override
-    public void dec(long n) {
-
-    }
-
-    @Override
-    public void mark() {
-
-    }
-
-    @Override
-    public void mark(long n) {
-
+    TimerImpl(com.codahale.metrics.Timer timer) {
+        this.timer = timer;
     }
 
     @Override
     public void update(long duration, TimeUnit unit) {
-
+        timer.update(duration, unit);
     }
 
     @Override
     public Context time() {
-        return NoopContext.INSTANCE;
+        return new ContextImpl(timer.time());
     }
 
     @Override
-    public void update(long value) {
-
+    public long getCount() {
+        return timer.getCount();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+    public <A> A adaptTo(Class<A> type) {
+        if (type == com.codahale.metrics.Timer.class) {
+            return (A) timer;
+        }
         return null;
     }
 
-    private static final class NoopContext implements Context {
-        public static final NoopContext INSTANCE = new NoopContext();
+    private static final class ContextImpl implements Context {
+        private final com.codahale.metrics.Timer.Context context;
 
-        @Override
-        public long stop() {
-            return 0;
+        private ContextImpl(com.codahale.metrics.Timer.Context context) {
+            this.context = context;
         }
 
+        public long stop() {
+            return context.stop();
+        }
+
+        /**
+         * Equivalent to calling {@link #stop()}.
+         */
         @Override
         public void close() {
-
+            stop();
         }
     }
 }

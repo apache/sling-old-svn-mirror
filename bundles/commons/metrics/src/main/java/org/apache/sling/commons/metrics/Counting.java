@@ -17,19 +17,16 @@
  * under the License.
  */
 
-package org.apache.sling.metrics;
+package org.apache.sling.commons.metrics;
 
 import aQute.bnd.annotation.ProviderType;
 
 @ProviderType
-public interface Metric {
+public interface Counting {
     /**
-     * Adapts the Metric to the specified type.
+     * Returns the current count.
      *
-     * @param <A> The type to which this metric is to be adapted.
-     * @param type Class object for the type to which this metric is to be adapted.
-     * @return The object, of the specified type, to which this metric has been adapted
-     * or null if this metric cannot be adapted to the specified type.
+     * @return the current count
      */
-    <A> A adaptTo(Class<A> type);
+    long getCount();
 }
