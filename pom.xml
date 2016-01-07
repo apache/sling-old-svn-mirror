@@ -28,7 +28,7 @@
     <version>26</version>
   </parent>
 
-  <artifactId>org.apache.sling.metrics</artifactId>
+  <artifactId>org.apache.sling.commons.metrics</artifactId>
   <packaging>bundle</packaging>
   <version>0.0.1-SNAPSHOT</version>
 
