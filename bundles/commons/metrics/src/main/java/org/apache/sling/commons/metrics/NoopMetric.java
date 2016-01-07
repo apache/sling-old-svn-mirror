@@ -21,8 +21,9 @@ package org.apache.sling.commons.metrics;
 
 import java.util.concurrent.TimeUnit;
 
-final class NoopMetric implements Counter, Histogram, Timer, Meter{
-    public static final NoopMetric INSTANCE = new NoopMetric();
+enum NoopMetric implements Counter, Histogram, Timer, Meter{
+    INSTANCE;
+
     @Override
     public long getCount() {
         return 0;
@@ -78,8 +79,8 @@ final class NoopMetric implements Counter, Histogram, Timer, Meter{
         return null;
     }
 
-    private static final class NoopContext implements Context {
-        public static final NoopContext INSTANCE = new NoopContext();
+    private enum NoopContext implements Context {
+        INSTANCE;
 
         @Override
         public long stop() {
