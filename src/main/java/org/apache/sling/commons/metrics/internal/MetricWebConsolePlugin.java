@@ -169,7 +169,7 @@ public class MetricWebConsolePlugin extends HttpServlet implements
         pw.println("<br>");
         pw.println("<div class='table'>");
         pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>Meters</div>");
-        pw.println("<table class='nicetable'>");
+        pw.println("<table class='nicetable' id='data-meters'>");
         pw.println("<thead>");
         pw.println("<tr>");
         pw.println("<th class='header'>Name</th>");
@@ -217,7 +217,7 @@ public class MetricWebConsolePlugin extends HttpServlet implements
         pw.println("<br>");
         pw.println("<div class='table'>");
         pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>Timers</div>");
-        pw.println("<table class='nicetable'>");
+        pw.println("<table class='nicetable' id='data-timers'>");
         pw.println("<thead>");
         pw.println("<tr>");
         pw.println("<th class='header'>Name</th>");
@@ -295,7 +295,7 @@ public class MetricWebConsolePlugin extends HttpServlet implements
         pw.println("<br>");
         pw.println("<div class='table'>");
         pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>Histograms</div>");
-        pw.println("<table class='nicetable'>");
+        pw.println("<table class='nicetable' id='data-histograms'>");
         pw.println("<thead>");
         pw.println("<tr>");
         pw.println("<th class='header'>Name</th>");
@@ -357,7 +357,7 @@ public class MetricWebConsolePlugin extends HttpServlet implements
         pw.println("<br>");
         pw.println("<div class='table'>");
         pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>Counters</div>");
-        pw.println("<table class='nicetable'>");
+        pw.println("<table class='nicetable' id='data-counters'>");
         pw.println("<thead>");
         pw.println("<tr>");
         pw.println("<th class='header'>Name</th>");
@@ -393,7 +393,7 @@ public class MetricWebConsolePlugin extends HttpServlet implements
         pw.println("<br>");
         pw.println("<div class='table'>");
         pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>Guages</div>");
-        pw.println("<table class='nicetable'>");
+        pw.println("<table class='nicetable' id='data-guages'>");
         pw.println("<thead>");
         pw.println("<tr>");
         pw.println("<th class='header'>Name</th>");
@@ -424,7 +424,7 @@ public class MetricWebConsolePlugin extends HttpServlet implements
 
     //~----------------------------------------------< internal >
 
-    private MetricRegistry getConsolidatedRegistry() {
+    MetricRegistry getConsolidatedRegistry() {
         MetricRegistry registry = new MetricRegistry();
         for (Map.Entry<ServiceReference, MetricRegistry> registryEntry : registries.entrySet()){
             String metricRegistryName = (String) registryEntry.getKey().getProperty(METRIC_REGISTRY_NAME);
