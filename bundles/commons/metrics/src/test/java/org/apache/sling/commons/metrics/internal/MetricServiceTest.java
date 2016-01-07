@@ -109,6 +109,13 @@ public class MetricServiceTest {
         assertSame(histo, service.histogram("test"));
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void sameNameDifferentTypeMetric() throws Exception{
+        activate();
+        service.histogram("test");
+        service.timer("test");
+    }
+
     private MetricRegistry getRegistry(){
         return context.getService(MetricRegistry.class);
     }
