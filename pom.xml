@@ -34,7 +34,9 @@
 
   <name>Apache Sling Metrics</name>
   <description>
-    Integrates Metric library http://metrics.dropwizard.io/ with Sling
+    Integrates Metric library with Sling. Refer to
+    https://sling.apache.org/documentation/bundles/metrics.html
+    for details
   </description>
 
   <scm>
