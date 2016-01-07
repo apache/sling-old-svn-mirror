@@ -35,14 +35,12 @@
   <name>Apache Sling Metrics</name>
   <description>
     Integrates Metric library http://metrics.dropwizard.io/ with Sling
-
-    Refer to http://sling.apache.org/documentation/bundles/log-tracers.html
   </description>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/metrics</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/metrics</developerConnection>
-    <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/metrics</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/commons/metrics</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/metrics</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/bundles/commons/metrics</url>
   </scm>
 
 
