@@ -17,34 +17,15 @@
  * under the License.
  */
 
-package org.apache.sling.metrics.internal;
+/**
+ * Provides configuration support for the Logback based logging in Sling
+ *
+ * @version 1.0
+ */
+@Version("1.0")
+@Export(optional = "provide:=true")
+package org.apache.sling.commons.metrics;
 
+import aQute.bnd.annotation.Export;
+import aQute.bnd.annotation.Version;
 
-import org.apache.sling.metrics.Histogram;
-
-final class HistogramImpl implements Histogram {
-    private final com.codahale.metrics.Histogram histogram;
-
-    HistogramImpl(com.codahale.metrics.Histogram histogram) {
-        this.histogram = histogram;
-    }
-
-    @Override
-    public void update(long value) {
-        histogram.update(value);
-    }
-
-    @Override
-    public long getCount() {
-        return histogram.getCount();
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public <A> A adaptTo(Class<A> type) {
-        if (type == com.codahale.metrics.Histogram.class){
-            return (A) histogram;
-        }
-        return null;
-    }
-}

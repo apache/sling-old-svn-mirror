@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.sling.metrics.internal;
+package org.apache.sling.commons.metrics.internal;
 
 import java.util.concurrent.TimeUnit;
 
@@ -113,7 +113,7 @@ public class MetricWrapperTest {
         Timer time = new Timer(new ExponentiallyDecayingReservoir(), clock);
 
         TimerImpl timerStats = new TimerImpl(time);
-        org.apache.sling.metrics.Timer.Context context = timerStats.time();
+        org.apache.sling.commons.metrics.Timer.Context context = timerStats.time();
 
         clock.tick = TimeUnit.SECONDS.toNanos(314);
         context.close();

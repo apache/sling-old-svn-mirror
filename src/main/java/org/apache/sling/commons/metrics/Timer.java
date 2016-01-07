@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.sling.metrics;
+package org.apache.sling.commons.metrics;
 
 import java.io.Closeable;
 import java.util.concurrent.TimeUnit;

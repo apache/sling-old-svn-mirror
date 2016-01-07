@@ -17,48 +17,33 @@
  * under the License.
  */
 
-package org.apache.sling.metrics.internal;
+package org.apache.sling.commons.metrics.internal;
 
 
-import org.apache.sling.metrics.Counter;
+import org.apache.sling.commons.metrics.Histogram;
 
-final class CounterImpl implements Counter {
-    private final com.codahale.metrics.Counter counter;
+final class HistogramImpl implements Histogram {
+    private final com.codahale.metrics.Histogram histogram;
 
-    CounterImpl(com.codahale.metrics.Counter counter) {
-        this.counter = counter;
+    HistogramImpl(com.codahale.metrics.Histogram histogram) {
+        this.histogram = histogram;
     }
 
     @Override
-    public void inc() {
-        counter.inc();
-    }
-
-    @Override
-    public void dec() {
-        counter.dec();
-    }
-
-    @Override
-    public void inc(long n) {
-        counter.inc(n);
-    }
-
-    @Override
-    public void dec(long n) {
-        counter.dec(n);
+    public void update(long value) {
+        histogram.update(value);
     }
 
     @Override
     public long getCount() {
-        return counter.getCount();
+        return histogram.getCount();
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public <A> A adaptTo(Class<A> type) {
-        if (type == com.codahale.metrics.Counter.class){
-            return (A) counter;
+        if (type == com.codahale.metrics.Histogram.class){
+            return (A) histogram;
         }
         return null;
     }

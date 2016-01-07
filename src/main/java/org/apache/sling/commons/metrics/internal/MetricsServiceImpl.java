@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.sling.metrics.internal;
+package org.apache.sling.commons.metrics.internal;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,18 +36,18 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.sling.metrics.Counter;
-import org.apache.sling.metrics.Histogram;
-import org.apache.sling.metrics.Meter;
-import org.apache.sling.metrics.Metric;
-import org.apache.sling.metrics.MetricsService;
-import org.apache.sling.metrics.Timer;
+import org.apache.sling.commons.metrics.Meter;
+import org.apache.sling.commons.metrics.MetricsService;
+import org.apache.sling.commons.metrics.Timer;
+import org.apache.sling.commons.metrics.Counter;
+import org.apache.sling.commons.metrics.Histogram;
+import org.apache.sling.commons.metrics.Metric;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 
 @Component
-public class MetricsServiceImpl implements MetricsService{
+public class MetricsServiceImpl implements MetricsService {
     private final List<ServiceRegistration> regs = new ArrayList<ServiceRegistration>();
     private final ConcurrentMap<String, Metric> metrics = new ConcurrentHashMap<String, Metric>();
     private final MetricRegistry registry = new MetricRegistry();
