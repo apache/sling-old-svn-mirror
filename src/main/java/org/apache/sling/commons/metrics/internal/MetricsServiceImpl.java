@@ -115,6 +115,15 @@ public class MetricsServiceImpl implements MetricsService {
     }
 
     @SuppressWarnings("unchecked")
+    @Override
+    public <A> A adaptTo(Class<A> type) {
+        if (type == MetricRegistry.class){
+            return (A) registry;
+        }
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
     private <T extends Metric> T getOrAdd(String name, MetricBuilder<T> builder) {
         final Metric metric = metrics.get(name);
         if (builder.isInstance(metric)) {
