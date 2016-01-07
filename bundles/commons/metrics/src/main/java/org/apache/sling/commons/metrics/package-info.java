@@ -18,7 +18,7 @@
  */
 
 /**
- * Provides configuration support for the Logback based logging in Sling
+ * Provides an API to generate and collect metrics in various forms
  *
  * @version 1.0
  */

@@ -21,8 +21,15 @@ package org.apache.sling.commons.metrics;
 
 import aQute.bnd.annotation.ProviderType;
 
+/**
+ * The {@code MetricsService} enables creation of various types of {@code Metric}.
+ */
 @ProviderType
 public interface MetricsService {
+    /**
+     * Dummy variant of MetricsService which does not
+     * collect any metric
+     */
     MetricsService NOOP = new MetricsService() {
         @Override
         public Timer timer(String name) {
@@ -47,6 +54,7 @@ public interface MetricsService {
 
     /**
      * Creates a new {@link Timer} and registers it under the given name.
+     * If a timer with same name exists then same instance is returned
      *
      * @param name the name of the metric
      * @return a new {@link Timer}
@@ -55,6 +63,7 @@ public interface MetricsService {
 
     /**
      * Creates a new {@link Histogram} and registers it under the given name.
+     * If a histogram with same name exists then same instance is returned.
      *
      * @param name the name of the metric
      * @return a new {@link Histogram}
@@ -63,6 +72,7 @@ public interface MetricsService {
 
     /**
      * Creates a new {@link Counter} and registers it under the given name.
+     * If a counter with same name exists then same instance is returned
      *
      * @param name the name of the metric
      * @return a new {@link Counter}
@@ -71,6 +81,7 @@ public interface MetricsService {
 
     /**
      * Creates a new {@link Meter} and registers it under the given name.
+     * If a meter with same name exists then same instance is returned
      *
      * @param name the name of the metric
      * @return a new {@link Meter}

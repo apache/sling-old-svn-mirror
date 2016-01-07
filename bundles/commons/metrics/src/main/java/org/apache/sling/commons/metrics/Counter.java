@@ -21,6 +21,9 @@ package org.apache.sling.commons.metrics;
 
 import aQute.bnd.annotation.ProviderType;
 
+/**
+ * An incrementing and decrementing counter metric.
+ */
 @ProviderType
 public interface Counter extends Counting, Metric{
     /**

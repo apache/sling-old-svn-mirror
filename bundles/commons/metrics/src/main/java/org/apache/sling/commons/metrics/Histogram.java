@@ -21,6 +21,9 @@ package org.apache.sling.commons.metrics;
 
 import aQute.bnd.annotation.ProviderType;
 
+/**
+ * A metric which calculates the distribution of a value.
+ */
 @ProviderType
 public interface Histogram extends Counting, Metric {
     /**

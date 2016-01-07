@@ -24,6 +24,9 @@ import java.util.concurrent.TimeUnit;
 
 import aQute.bnd.annotation.ProviderType;
 
+/**
+ * A timer metric which aggregates timing durations and provides duration statistics.
+ */
 @ProviderType
 public interface Timer extends Counting, Metric{
     /**
