@@ -21,6 +21,9 @@ package org.apache.sling.commons.metrics;
 
 import aQute.bnd.annotation.ProviderType;
 
+/**
+ * A meter metric which measures mean throughput
+ */
 @ProviderType
 public interface Meter extends Counting, Metric{
     /**
