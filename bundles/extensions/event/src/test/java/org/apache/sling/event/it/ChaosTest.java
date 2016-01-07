@@ -18,11 +18,12 @@
  */
 package org.apache.sling.event.it;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -140,7 +141,7 @@ public class ChaosTest extends AbstractJobHandlingTest {
     /**
      * Setup consumers
      */
-    private void setupJobConsumers(final List<ServiceRegistration> registrations) {
+    private void setupJobConsumers(final List<ServiceRegistration<?>> registrations) {
         for(int i=0; i<NUM_ORDERED_TOPICS; i++) {
             registrations.add(this.registerJobConsumer(ORDERED_TOPICS[i],
 
@@ -205,14 +206,14 @@ public class ChaosTest extends AbstractJobHandlingTest {
             final long endTime = startTime + DURATION * 1000;
             while ( System.currentTimeMillis() < endTime ) {
                 final String topic = topics[index];
-                jobManager.addJob(topic, null);
-                created.get(topic).incrementAndGet();
+                if ( jobManager.addJob(topic, null) != null ) {
+                    created.get(topic).incrementAndGet();
 
-                index++;
-                if ( index == topics.length ) {
-                    index = 0;
+                    index++;
+                    if ( index == topics.length ) {
+                        index = 0;
+                    }
                 }
-
                 final int sleepTime = random.nextInt(200);
                 try {
                     Thread.sleep(sleepTime);
@@ -252,7 +253,7 @@ public class ChaosTest extends AbstractJobHandlingTest {
             final AtomicLong finishedThreads) {
         final List<TopologyView> views = new ArrayList<TopologyView>();
         // register topology listener
-        final ServiceRegistration reg = this.bc.registerService(TopologyEventListener.class.getName(), new TopologyEventListener() {
+        final ServiceRegistration<TopologyEventListener> reg = this.bc.registerService(TopologyEventListener.class, new TopologyEventListener() {
 
             @Override
             public void handleTopologyEvent(final TopologyEvent event) {
@@ -268,19 +269,17 @@ public class ChaosTest extends AbstractJobHandlingTest {
         final TopologyView view = views.get(0);
 
         try {
-            final ServiceReference[] refs = this.bc.getServiceReferences(TopologyEventListener.class.getName(), null);
+            final Collection<ServiceReference<TopologyEventListener>> refs = this.bc.getServiceReferences(TopologyEventListener.class, null);
             assertNotNull(refs);
-            assertTrue(refs.length > 1);
-            int index = 0;
+            assertFalse(refs.isEmpty());
             TopologyEventListener found = null;
-            while ( index < refs.length ) {
-                final TopologyEventListener listener = (TopologyEventListener) this.bc.getService(refs[index]);
-                if ( listener.getClass().getName().equals("org.apache.sling.event.impl.jobs.config.TopologyHandler") ) {
+            for(final ServiceReference<TopologyEventListener> ref : refs) {
+                final TopologyEventListener listener = this.bc.getService(ref);
+                if ( listener != null && listener.getClass().getName().equals("org.apache.sling.event.impl.jobs.config.TopologyHandler") ) {
                     found = listener;
                     break;
                 }
-                bc.ungetService(refs[index]);
-                index++;
+                bc.ungetService(ref);
             }
             assertNotNull(found);
             final TopologyEventListener tel = found;
@@ -349,11 +348,11 @@ public class ChaosTest extends AbstractJobHandlingTest {
             topics.add(ROUND_TOPICS[i]);
         }
 
-        final List<ServiceRegistration> registrations = new ArrayList<ServiceRegistration>();
+        final List<ServiceRegistration<?>> registrations = new ArrayList<ServiceRegistration<?>>();
         final List<Thread> threads = new ArrayList<Thread>();
         final AtomicLong finishedThreads = new AtomicLong();
 
-        final ServiceRegistration eventHandler = this.registerEventHandler("org/apache/sling/event/notification/job/*",
+        final ServiceRegistration<EventHandler> eventHandler = this.registerEventHandler("org/apache/sling/event/notification/job/*",
                 new EventHandler() {
 
                     @Override
@@ -398,7 +397,7 @@ public class ChaosTest extends AbstractJobHandlingTest {
                 final Iterator<String> iter = allTopics.iterator();
                 while ( iter.hasNext() ) {
                     final String topic = iter.next();
-                    if ( finished.get(topic).get() >= created.get(topic).get() ) {
+                    if ( finished.get(topic).get() == created.get(topic).get() ) {
                         iter.remove();
                     }
                 }
@@ -414,7 +413,7 @@ public class ChaosTest extends AbstractJobHandlingTest {
 
         } finally {
             eventHandler.unregister();
-            for(final ServiceRegistration reg : registrations) {
+            for(final ServiceRegistration<?> reg : registrations) {
                 reg.unregister();
             }
         }
