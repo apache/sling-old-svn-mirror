@@ -59,9 +59,9 @@
             </Bundle-DocURL>
             <DynamicImport-Package>
               javax.servlet,
-              javax.servlet.http;version=2.3,
-              org.apache.commons.io.output;version=2.4.0,
-              org.apache.felix.inventory;version=1.0
+              javax.servlet.http;version="[2.3,3)",
+              org.apache.commons.io.output;version="[2.4.0,3)",
+              org.apache.felix.inventory;version="[1.0.0,2)"
             </DynamicImport-Package>
           </instructions>
         </configuration>
