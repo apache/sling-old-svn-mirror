@@ -48,6 +48,12 @@ public class DistributionPackageUtils {
      */
     public static String PACKAGE_INFO_PROPERTY_REQUEST_USER = "internal.request.user";
 
+    public static String PACKAGE_INFO_PROPERTY_REQUEST_ID = "internal.request.id";
+
+    public static String PACKAGE_INFO_PROPERTY_REQUEST_START_TIME = "internal.request.startTime";
+
+
+
 
     /**
      * Acquires the package if it's a {@link SharedDistributionPackage}, via {@link SharedDistributionPackage#acquire(String)}
