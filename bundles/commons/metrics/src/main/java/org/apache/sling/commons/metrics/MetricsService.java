@@ -50,6 +50,11 @@ public interface MetricsService {
         public Meter meter(String name) {
             return NoopMetric.INSTANCE;
         }
+
+        @Override
+        public <A> A adaptTo(Class<A> type) {
+            return null;
+        }
     };
 
     /**
@@ -87,4 +92,15 @@ public interface MetricsService {
      * @return a new {@link Meter}
      */
     Meter meter(String name);
+
+    /**
+     * Adapts the service to the specified type. This can be used to
+     * get instance to underlying {@code MetricRegistry}
+     *
+     * @param <A> The type to which this metric is to be adapted.
+     * @param type Class object for the type to which this metric is to be adapted.
+     * @return The object, of the specified type, to which this metric has been adapted
+     * or null if this metric cannot be adapted to the specified type.
+     */
+    <A> A adaptTo(Class<A> type);
 }

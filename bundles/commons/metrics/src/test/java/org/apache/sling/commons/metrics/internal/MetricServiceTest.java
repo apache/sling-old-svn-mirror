@@ -59,6 +59,8 @@ public class MetricServiceTest {
         assertNotNull(context.getService(MetricRegistry.class));
         assertNotNull(context.getService(MetricsService.class));
 
+        assertNotNull(service.adaptTo(MetricRegistry.class));
+
         MockOsgi.deactivate(service);
 
         assertNull(context.getService(MetricRegistry.class));
