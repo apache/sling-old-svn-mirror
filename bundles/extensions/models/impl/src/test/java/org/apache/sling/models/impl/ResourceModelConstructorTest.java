@@ -27,6 +27,7 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
+import org.apache.sling.models.impl.ParameterizedTypeFromRequestAttributeTest.TestModel;
 import org.apache.sling.models.impl.injectors.ChildResourceInjector;
 import org.apache.sling.models.impl.injectors.ValueMapInjector;
 import org.apache.sling.models.testmodels.classes.ChildModel;
@@ -61,6 +62,7 @@ public class ResourceModelConstructorTest {
         factory.activate(componentCtx);
         factory.bindInjector(new ValueMapInjector(), new ServicePropertiesMap(2, 2));
         factory.bindInjector(new ChildResourceInjector(), new ServicePropertiesMap(1, 1));
+        factory.adapterImplementations.addClassesAsAdapterAndImplementation(ParentModel.class, ChildModel.class);
     }
 
     @Test

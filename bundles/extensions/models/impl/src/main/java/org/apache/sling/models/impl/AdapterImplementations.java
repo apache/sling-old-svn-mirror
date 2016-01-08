@@ -84,6 +84,16 @@ final class AdapterImplementations {
         }
     }
     
+    /** Add implementation mapping for the given model class (implementation is the model class itself).
+     * Only used for testing purposes. Use {@link #add(Class, Class)} in case you want to register a different implementation.
+     * @param modelClasses the model classes to register
+     */
+    protected void addClassesAsAdapterAndImplementation(Class<?>... modelClasses) {
+        for (Class<?> modelClass : modelClasses) {
+            add(modelClass, modelClass);
+        }
+    }
+    
     /**
      * Add implementation mapping for the given adapter type.
      * @param adapterType Adapter type

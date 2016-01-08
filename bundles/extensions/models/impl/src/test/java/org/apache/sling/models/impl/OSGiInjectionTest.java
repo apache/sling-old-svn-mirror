@@ -75,6 +75,7 @@ public class OSGiInjectionTest {
         factory.bindInjector(injectorFactory, new ServicePropertiesMap(1, 1));
 
         bindings.setSling(helper);
+        factory.adapterImplementations.addClassesAsAdapterAndImplementation(SimpleOSGiModel.class, ListOSGiModel.class, RequestOSGiModel.class, ArrayOSGiModel.class, SetOSGiModel.class, OptionalListOSGiModel.class, org.apache.sling.models.testmodels.classes.constructorinjection.ListOSGiModel.class, org.apache.sling.models.testmodels.classes.constructorinjection.SimpleOSGiModel.class, CollectionOSGiModel.class, OptionalArrayOSGiModel.class);
     }
 
     @Test

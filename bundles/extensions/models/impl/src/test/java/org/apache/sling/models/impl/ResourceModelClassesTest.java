@@ -78,6 +78,7 @@ public class ResourceModelClassesTest {
         
         factory.bindInjectAnnotationProcessorFactory(valueMapInjector,
                 Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 2L));
+        factory.adapterImplementations.addClassesAsAdapterAndImplementation(SimplePropertyModel.class, ArrayWrappersModel.class, ResourceModelWithRequiredField.class, ChildValueMapModel.class, ArrayPrimitivesModel.class, ChildResourceModel.class, ResourceModelWithRequiredFieldOptionalStrategy.class, ParentModel.class, ChildModel.class, ListModel.class);
     }
 
     @Test

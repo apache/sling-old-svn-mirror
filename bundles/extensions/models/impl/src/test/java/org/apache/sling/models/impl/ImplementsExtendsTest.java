@@ -36,9 +36,12 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Vector;
 
+import javax.jws.WebParam.Mode;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
+import org.apache.sling.models.factory.ModelClassException;
 import org.apache.sling.models.impl.injectors.ValueMapInjector;
 import org.apache.sling.models.spi.ImplementationPicker;
 import org.apache.sling.models.testmodels.classes.implextend.EvenSimplerPropertyModel;
@@ -50,6 +53,7 @@ import org.apache.sling.models.testmodels.classes.implextend.InvalidSampleServic
 import org.apache.sling.models.testmodels.classes.implextend.SampleServiceInterface;
 import org.apache.sling.models.testmodels.classes.implextend.SimplePropertyModel;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -153,8 +157,12 @@ public class ImplementsExtendsTest {
         
         // make sure adaption is not longer possible: implementation class mapping is removed
         Resource res = getMockResourceWithProps();
-        SampleServiceInterface model = factory.getAdapter(res, SampleServiceInterface.class);
-        assertNull(model);
+        try {
+            SampleServiceInterface model = factory.getAdapter(res, SampleServiceInterface.class);
+            Assert.fail("Getting the model for interface 'SampleServiceInterface' should fail after the accroding adapter factory has been unregistered");
+        } catch (ModelClassException e) {
+            
+        }
     }
 
     /**
@@ -172,23 +180,30 @@ public class ImplementsExtendsTest {
 
     /**
      * Try to adapt in a case where there is no picker available.
-     * This causes the extend adaptation to fail, but the case where the
-     * class is the adapter still works.
+     * This causes the extend adaptation to fail.
      */
     @Test
-    @SuppressWarnings("deprecation")
-    public void testImplementsNoPicker() {
+    public void testImplementsNoPickerWithAdapterEqualsImplementation() {
         factory.unbindImplementationPicker(firstImplementationPicker, firstImplementationPickerProps);
 
         Resource res = getMockResourceWithProps();
-        SampleServiceInterface model = factory.getAdapter(res, SampleServiceInterface.class);
-        assertNull(model);
-        assertFalse(factory.isModelClass(res, SampleServiceInterface.class));
-
-        model = factory.getAdapter(res, ImplementsInterfacePropertyModel.class);
+        
+        SampleServiceInterface model = factory.getAdapter(res, ImplementsInterfacePropertyModel.class);
         assertNotNull(model);
         assertEquals("first-value|null|third-value", model.getAllProperties());
         assertTrue(factory.canCreateFromAdaptable(res, ImplementsInterfacePropertyModel.class));
+    }
+    
+    /**
+     * Try to adapt in a case where there is no picker available.
+     * The case where the class is the adapter still works.
+     */
+    @Test(expected=ModelClassException.class)
+    public void testImplementsNoPickerWithDifferentImplementations() {
+        factory.unbindImplementationPicker(firstImplementationPicker, firstImplementationPickerProps);
+
+        Resource res = getMockResourceWithProps();
+        factory.getAdapter(res, SampleServiceInterface.class);
     }
 
     /**
@@ -208,13 +223,10 @@ public class ImplementsExtendsTest {
     /**
      * Test implementation class with a mapping that is not valid (an interface that is not implemented).
      */
-    @Test
-    @SuppressWarnings("deprecation")
+    @Test(expected=ModelClassException.class)
     public void testInvalidImplementsInterfaceModel() {
         Resource res = getMockResourceWithProps();
-        InvalidSampleServiceInterface model = factory.getAdapter(res, InvalidSampleServiceInterface.class);
-        assertNull(model);
-        assertFalse(factory.isModelClass(res, InvalidSampleServiceInterface.class));
+        factory.getAdapter(res, InvalidSampleServiceInterface.class);
     }
 
     /**
@@ -224,6 +236,7 @@ public class ImplementsExtendsTest {
     public void testExtendsClassModel() {
         Resource res = getMockResourceWithProps();
 
+        // this is not having a model annotation nor does implement an interface/extend a class with a model annotation
         SimplePropertyModel model = factory.getAdapter(res, SimplePropertyModel.class);
         assertNotNull(model);
         assertEquals("!first-value|null|third-value!", model.getAllProperties());

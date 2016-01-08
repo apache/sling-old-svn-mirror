@@ -208,16 +208,17 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     }
 
     private boolean internalCanCreateFromAdaptable(Object adaptable, Class<?> requestedType) throws ModelClassException {
-        ModelClass<?> modelClass = getImplementationTypeForAdapterType(requestedType, adaptable);
-        if (!modelClass.hasModelAnnotation()) {
-            throw new ModelClassException(String.format("Model class '%s' does not have a model annotation", modelClass.getType()));
-        }
-
-        Class<?>[] declaredAdaptable = modelClass.getModelAnnotation().adaptables();
-        for (Class<?> clazz : declaredAdaptable) {
-            if (clazz.isInstance(adaptable)) {
-                return true;
+        try {
+            ModelClass<?> modelClass = getImplementationTypeForAdapterType(requestedType, adaptable);
+            Class<?>[] declaredAdaptable = modelClass.getModelAnnotation().adaptables();
+            for (Class<?> clazz : declaredAdaptable) {
+                if (clazz.isInstance(adaptable)) {
+                    return true;
+                }
             }
+        } catch (ModelClassException e) {
+            log.debug("Could not find implementation for given type " + requestedType + ". Probably forgot either the model annotation or it was not registered as adapter factory (yet)", e);
+            return false;
         }
         return false;
     }
@@ -225,8 +226,13 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     @Override
     @Deprecated
     public boolean isModelClass(@Nonnull Object adaptable, @Nonnull Class<?> requestedType) {
-        ModelClass<?> type = getImplementationTypeForAdapterType(requestedType, adaptable);
-        return type.hasModelAnnotation();
+        try {
+            getImplementationTypeForAdapterType(requestedType, adaptable);
+        } catch (ModelClassException e) {
+            log.debug("Could not find implementation for given adaptable. Probably forgot either the model annotation or it was not registered as adapter factory (yet)", e);
+            return false;
+        }
+        return true;
     }
 
     @Override
@@ -238,7 +244,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
      * 
      * @param requestedType the adapter type
      * @param adaptable the adaptable
-     * @return the implementation type to use for the desired model type
+     * @return the implementation type to use for the desired model type or null if there is none registered
      * @see <a
      *      href="http://sling.apache.org/documentation/bundles/models.html#specifying-an-alternate-adapter-class-since-sling-models-110">Specifying
      *      an Alternate Adapter Class</a>
@@ -246,14 +252,14 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     private <ModelType> ModelClass<ModelType> getImplementationTypeForAdapterType(Class<ModelType> requestedType, Object adaptable) {
         // lookup ModelClass wrapper for implementation type
         // additionally check if a different implementation class was registered for this adapter type
+        // the adapter implementation is initially filled by the ModelPackageBundleList
         ModelClass<ModelType> modelClass = this.adapterImplementations.lookup(requestedType, adaptable);
         if (modelClass != null) {
             log.debug("Using implementation type {} for requested adapter type {}", modelClass, requestedType);
             return modelClass;
         }
-        // normally this code path is not executed, because all types are cached in adapterImplementations
-        // it is still useful for unit testing
-        return new ModelClass<ModelType>(requestedType, this.adapterImplementations.getStaticInjectAnnotationProcessorFactories());
+        // throw exception here
+        throw new ModelClassException("Could not yet find an adapter factory for the model " + requestedType + " from adaptable " + adaptable.getClass());
     }
 
     @SuppressWarnings("unchecked")
