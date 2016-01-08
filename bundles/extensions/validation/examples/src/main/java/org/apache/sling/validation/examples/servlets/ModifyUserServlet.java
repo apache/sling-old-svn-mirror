@@ -20,6 +20,7 @@ package org.apache.sling.validation.examples.servlets;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.servlet.ServletException;
@@ -74,7 +75,7 @@ public class ModifyUserServlet extends SlingAllMethodsServlet {
                         JSONArray failures = new JSONArray();
                         for (ValidationFailure failure : vr.getFailures()) {
                             JSONObject failureJson = new JSONObject();
-                            failureJson.put("message", failure.getMessage());
+                            failureJson.put("message", failure.getMessage(request.getResourceBundle(Locale.US)));
                             failureJson.put("location", failure.getLocation());
                             failures.put(failureJson);
                         }

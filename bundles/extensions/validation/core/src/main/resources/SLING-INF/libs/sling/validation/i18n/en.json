@@ -1,0 +1,33 @@
+{
+	"jcr:primaryType": "nt:folder",
+	"jcr:mixinTypes": ["mix:language"],
+	"jcr:language": "en",
+	"sling.validator.regex.pattern-does-not-match" : {
+		"jcr:primaryType": "sling:MessageEntry",
+		"sling:message": "Property does not match the pattern \"{0}\"."
+	},
+	"sling.validator.missing-required-child-resource-with-name" : {
+		"jcr:primaryType": "sling:MessageEntry",
+		"sling:message": "Missing required child resource with name \"{0}\"."
+	},
+	"sling.validator.missing-required-child-resource-matching-pattern" : {
+		"jcr:primaryType": "sling:MessageEntry",
+		"sling:message": "Missing required child resource matching regular expression pattern \"{0}\"."
+	},
+	"sling.validator.missing-required-property-with-name" : {
+		"jcr:primaryType": "sling:MessageEntry",
+		"sling:message": "Missing required property with name \"{0}\"."
+	},
+	"sling.validator.missing-required-property-matching-pattern" : {
+		"jcr:primaryType": "sling:MessageEntry",
+		"sling:message": "Missing required property matching regular expression pattern \"{0}\"."
+	},
+	"sling.validator.multi-value-property-required" : {
+		"jcr:primaryType": "sling:MessageEntry",
+		"sling:message": "Expected multi-value property but found only a single value property."
+	},
+	"sling.validator.wrong-property-type" : {
+		"jcr:primaryType": "sling:MessageEntry",
+		"sling:message": "Property was expected to be of type \"{0}\" but it cannot be converted to that type."
+	}
+}

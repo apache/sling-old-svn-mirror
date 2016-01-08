@@ -232,6 +232,7 @@
                         <sling.additional.bundle.1>org.apache.sling.validation.api</sling.additional.bundle.1>
                         <sling.additional.bundle.2>org.apache.sling.validation.core</sling.additional.bundle.2>
                         <sling.additional.bundle.3>org.apache.sling.validation.test-services</sling.additional.bundle.3>
+                        <!-- TODO: add Sling i18n bundle -->
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
@@ -268,8 +269,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad</artifactId>
-            <classifier>standalone</classifier>
-            <version>7</version>
+            <version>8</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>

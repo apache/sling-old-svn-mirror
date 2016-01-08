@@ -58,10 +58,10 @@ public class ValidationResourceVisitor extends AbstractResourceVisitor {
                 return;
             }
             // calculate the property name correctly from the root
-            // the relative path must end with a slash and not start with a slash
+            // the relative path must not end with a slash and not start with a slash
             final String relativePath;
             if (resource.getPath().startsWith(rootResourcePath)) {
-                relativePath = resource.getPath().substring(rootResourcePath.length()) + "/";
+                relativePath = resource.getPath().substring(rootResourcePath.length());
             } else {
                 relativePath = "";
             }
