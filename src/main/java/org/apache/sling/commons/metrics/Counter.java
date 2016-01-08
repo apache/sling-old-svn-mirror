@@ -29,24 +29,24 @@ public interface Counter extends Counting, Metric{
     /**
      * Increment the counter by one.
      */
-    void inc();
+    void increment();
 
     /**
      * Decrement the counter by one.
      */
-    void dec();
+    void decrement();
 
     /**
      * Increment the counter by {@code n}.
      *
      * @param n the amount by which the counter will be increased
      */
-    void inc(long n);
+    void increment(long n);
 
     /**
      * Decrement the counter by {@code n}.
      *
      * @param n the amount by which the counter will be decreased
      */
-    void dec(long n);
+    void decrement(long n);
 }

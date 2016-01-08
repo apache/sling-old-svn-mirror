@@ -30,22 +30,22 @@ final class CounterImpl implements Counter {
     }
 
     @Override
-    public void inc() {
+    public void increment() {
         counter.inc();
     }
 
     @Override
-    public void dec() {
+    public void decrement() {
         counter.dec();
     }
 
     @Override
-    public void inc(long n) {
+    public void increment(long n) {
         counter.inc(n);
     }
 
     @Override
-    public void dec(long n) {
+    public void decrement(long n) {
         counter.dec(n);
     }
 

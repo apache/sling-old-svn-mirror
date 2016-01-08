@@ -30,22 +30,22 @@ enum NoopMetric implements Counter, Histogram, Timer, Meter{
     }
 
     @Override
-    public void inc() {
+    public void increment() {
 
     }
 
     @Override
-    public void dec() {
+    public void decrement() {
 
     }
 
     @Override
-    public void inc(long n) {
+    public void increment(long n) {
 
     }
 
     @Override
-    public void dec(long n) {
+    public void decrement(long n) {
 
     }
 
