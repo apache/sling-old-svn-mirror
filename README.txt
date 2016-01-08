@@ -28,7 +28,7 @@ on host xyzzy, port 1234, with the Sling main servlet mounted under /foo:
 To run the tests against the same instance that is used in the full build,
 start an instance by running
 
-   mvn slingstart:start -Dlaunchpad.keep.running=true
+   mvn slingstart:start -Dlaunchpad.keep.running=true -Dhttp.port=8080
 
 in the launchpad/testing folder, optionally using -Dsling.run.modes=oak to
 use Oak instead of Jackrabbit. Since that instance is using an arbitrary
