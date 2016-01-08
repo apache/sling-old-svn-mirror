@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.sling.junit.rules.TeleporterRule;
 import org.apache.sling.launchpad.api.LaunchpadContentProvider;
 import org.junit.Before;
@@ -45,12 +44,9 @@ public class EmbeddedModelTest {
     public void setup() throws IOException {
         final InputStream modelStream = teleporter.getService(LaunchpadContentProvider.class).getResourceAsStream(MODEL_RESOURCE_PATH);
         assertNotNull("Expecting embedded model resource at " + MODEL_RESOURCE_PATH, modelStream);
-        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
         try {
-            IOUtils.copy(modelStream, bos);
-            modelContent = new String(bos.toByteArray());
+            modelContent = new String(IOUtils.toByteArray(modelStream));
         } finally {
-            bos.close();
             modelStream.close();
         }
     }
