@@ -242,6 +242,23 @@ public abstract class AbstractJobHandlingTest {
                 resolver.close();
             }
         }
+        // remove all configurations and clean content
+        try {
+            final org.osgi.service.cm.Configuration[] cfgs = this.configAdmin.listConfigurations(null);
+            if ( cfgs != null ) {
+                for(final org.osgi.service.cm.Configuration c : cfgs) {
+                    try {
+                        c.delete();
+                    } catch (final IOException io) {
+                        // ignore
+                    }
+                }
+            }
+        } catch (final IOException io) {
+            // ignore
+        } catch (final InvalidSyntaxException e) {
+            // ignore
+        }
         this.sleep(1000);
     }
 
@@ -308,15 +325,5 @@ public abstract class AbstractJobHandlingTest {
                 handler, props);
         this.waitConsumerChangeCount(cc + 1);
         return reg;
-    }
-
-    /**
-     * Helper method to remove a configuration
-     */
-    protected void removeConfiguration(final String pid) throws IOException {
-        if ( pid != null ) {
-            final org.osgi.service.cm.Configuration cfg = this.configAdmin.getConfiguration(pid, null);
-            cfg.delete();
-        }
     }
 }

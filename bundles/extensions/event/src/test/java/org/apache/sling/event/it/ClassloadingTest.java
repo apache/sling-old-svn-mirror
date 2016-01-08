@@ -44,14 +44,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
-import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventHandler;
 
 @RunWith(PaxExam.class)
-@ExamReactorStrategy(PerMethod.class)
 public class ClassloadingTest extends AbstractJobHandlingTest {
 
     private static final int CONDITION_INTERVAL_MILLIS = 50;
@@ -59,8 +56,6 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
 
     private static final String QUEUE_NAME = "cltest";
     private static final String TOPIC = "sling/cltest";
-
-    private String queueConfigPid;
 
     @Override
     @Before
@@ -75,14 +70,12 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
         orderedProps.put(ConfigurationConstants.PROP_TOPICS, TOPIC);
         orderedConfig.update(orderedProps);
 
-        queueConfigPid = orderedConfig.getPid();
-
         this.sleep(1000L);
     }
 
+    @Override
     @After
-    public void cleanUp() throws IOException {
-        this.removeConfiguration(this.queueConfigPid);
+    public void cleanup() {
         super.cleanup();
     }
 

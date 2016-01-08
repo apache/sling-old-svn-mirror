@@ -44,22 +44,17 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
-import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventHandler;
 
 @RunWith(PaxExam.class)
-@ExamReactorStrategy(PerMethod.class)
 public class RoundRobinQueueTest extends AbstractJobHandlingTest {
 
     private static final String QUEUE_NAME = "roundrobintest";
     private static final String TOPIC = "sling/roundrobintest";
     private static int MAX_PAR = 5;
     private static int NUM_JOBS = 300;
-
-    private String queueConfPid;
 
     @Override
     @Before
@@ -77,14 +72,12 @@ public class RoundRobinQueueTest extends AbstractJobHandlingTest {
         rrProps.put(ConfigurationConstants.PROP_MAX_PARALLEL, MAX_PAR);
         rrConfig.update(rrProps);
 
-        queueConfPid = rrConfig.getPid();
-
         this.sleep(1000L);
     }
 
+    @Override
     @After
-    public void cleanUp() throws IOException {
-        this.removeConfiguration(this.queueConfPid);
+    public void cleanup() {
         super.cleanup();
     }
 

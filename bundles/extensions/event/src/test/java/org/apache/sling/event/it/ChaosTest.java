@@ -50,8 +50,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
-import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -59,7 +57,6 @@ import org.osgi.service.event.Event;
 import org.osgi.service.event.EventHandler;
 
 @RunWith(PaxExam.class)
-@ExamReactorStrategy(PerMethod.class)
 public class ChaosTest extends AbstractJobHandlingTest {
 
     /** Duration for firing jobs in seconds. */
@@ -93,11 +90,6 @@ public class ChaosTest extends AbstractJobHandlingTest {
         }
     }
 
-    private String orderedQueueConfPid;
-
-    private String topicRRQueueConfPid;
-
-
     @Override
     @Before
     public void setup() throws IOException {
@@ -113,8 +105,6 @@ public class ChaosTest extends AbstractJobHandlingTest {
         orderedProps.put(ConfigurationConstants.PROP_RETRY_DELAY, 2000L);
         orderedConfig.update(orderedProps);
 
-        orderedQueueConfPid = orderedConfig.getPid();
-
         // create round robin test queue
         final org.osgi.service.cm.Configuration rrConfig = this.configAdmin.createFactoryConfiguration("org.apache.sling.event.jobs.QueueConfiguration", null);
         final Dictionary<String, Object> rrProps = new Hashtable<String, Object>();
@@ -126,15 +116,12 @@ public class ChaosTest extends AbstractJobHandlingTest {
         rrProps.put(ConfigurationConstants.PROP_MAX_PARALLEL, 5);
         rrConfig.update(rrProps);
 
-        topicRRQueueConfPid = rrConfig.getPid();
-
         this.sleep(1000L);
     }
 
+    @Override
     @After
-    public void cleanUp() throws IOException {
-        this.removeConfiguration(this.orderedQueueConfPid);
-        this.removeConfiguration(this.topicRRQueueConfPid);
+    public void cleanup() {
         super.cleanup();
     }
 
