@@ -18,23 +18,42 @@
  */
 package org.apache.sling.validation.spi;
 
+import java.text.MessageFormat;
+import java.util.Arrays;
+import java.util.ResourceBundle;
+
 import javax.annotation.Nonnull;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.sling.validation.ValidationFailure;
 
+/**
+ * Wraps a message key (being looked up in a {@link ResourceBundle}), messageArguments (being used with {@link MessageFormat#format(String, Object...)}
+ * and the location where the validation failure occurred.
+ */
 public class DefaultValidationFailure implements ValidationFailure {
 
-    private final @Nonnull String message;
     private final @Nonnull String location;
+    private final @Nonnull String messageKey;
+    private final Object[] messageArguments;
 
-    public DefaultValidationFailure(@Nonnull String message, @Nonnull String location) {
-        this.message = message;
+    /**
+     * Constructor of a validation failure. The message is constructed by looking up the given messageKey from a resourceBundle.
+     * and formatting it using the given messageArguments via {@link MessageFormat#format(String, Object...)}.
+     * @param location the location
+     * @param messageKey the key to look up in the resource bundle
+     * @param messageArguments the arguments to be used with the looked up value from the resource bundle (given in {@link #getMessage(ResourceBundle)}
+     */
+    public DefaultValidationFailure(@Nonnull String location, @Nonnull String messageKey, Object... messageArguments) {
         this.location = location;
+        this.messageKey = messageKey;
+        this.messageArguments = messageArguments;
     }
 
+    @SuppressWarnings("null")
     @Override
-    public @Nonnull String getMessage() {
-        return message;
+    public @Nonnull String getMessage(@Nonnull ResourceBundle resourceBundle) {
+        return MessageFormat.format(resourceBundle.getString(messageKey), messageArguments);
     }
 
     @Override
@@ -44,7 +63,7 @@ public class DefaultValidationFailure implements ValidationFailure {
 
     @Override
     public String toString() {
-        return "DefaultValidationFailure [message=" + message + ", location=" + location + "]";
+        return "DefaultValidationFailure [location=" + location + ", messageKey=" + messageKey + ", messageArguments=" + StringUtils.join(messageArguments) + "]";
     }
 
     @Override
@@ -52,7 +71,8 @@ public class DefaultValidationFailure implements ValidationFailure {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((location == null) ? 0 : location.hashCode());
-        result = prime * result + ((message == null) ? 0 : message.hashCode());
+        result = prime * result + Arrays.hashCode(messageArguments);
+        result = prime * result + ((messageKey == null) ? 0 : messageKey.hashCode());
         return result;
     }
 
@@ -62,7 +82,7 @@ public class DefaultValidationFailure implements ValidationFailure {
             return true;
         if (obj == null)
             return false;
-        if (!(obj instanceof DefaultValidationFailure))
+        if (getClass() != obj.getClass())
             return false;
         DefaultValidationFailure other = (DefaultValidationFailure) obj;
         if (location == null) {
@@ -70,11 +90,14 @@ public class DefaultValidationFailure implements ValidationFailure {
                 return false;
         } else if (!location.equals(other.location))
             return false;
-        if (message == null) {
-            if (other.message != null)
+        if (!Arrays.equals(messageArguments, other.messageArguments))
+            return false;
+        if (messageKey == null) {
+            if (other.messageKey != null)
                 return false;
-        } else if (!message.equals(other.message))
+        } else if (!messageKey.equals(other.messageKey))
             return false;
         return true;
     }
+
 }
