@@ -57,6 +57,7 @@ import org.apache.sling.provisioning.model.Model;
 import org.apache.sling.provisioning.model.ModelConstants;
 import org.apache.sling.provisioning.model.RunMode;
 import org.apache.sling.provisioning.model.Section;
+import org.apache.sling.provisioning.model.io.ModelWriter;
 import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.UnArchiver;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
@@ -82,6 +83,10 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
     private static final String ARTIFACTS_DIRECTORY = "install";
 
     private static final String CONFIG_DIRECTORY = "config";
+
+    private static final String PROVISIONING_DIRECTORY = "provisioning";
+    
+    private static final String EMBEDDED_MODEL_FILENAME = "model.txt";
 
     private static final String BOOTSTRAP_FILE = "sling_bootstrap.txt";
 
@@ -142,8 +147,28 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
         unpackBaseArtifact(model, outputDir, ModelConstants.RUN_MODE_STANDALONE);
         this.buildSettings(model, ModelConstants.RUN_MODE_STANDALONE, outputDir);
         this.buildBootstrapFile(model, ModelConstants.RUN_MODE_STANDALONE, outputDir);
+        this.embedModel(model, outputDir);
 
         this.buildContentsMap(model, ModelConstants.RUN_MODE_STANDALONE, contentsMap);
+    }
+    
+    /** Embed our model in the created jar file */
+    private void embedModel(Model model, File outputDir) throws MojoExecutionException {
+        final File modelDir = new File(new File(outputDir, BASE_DESTINATION), PROVISIONING_DIRECTORY);
+        modelDir.mkdirs();
+        final File modelFile = new File(modelDir, EMBEDDED_MODEL_FILENAME);
+        try {
+            final FileWriter w = new FileWriter(modelFile);
+            try {
+                w.write("# Aggregated provisioning model embedded by " + getClass().getName() + "\n");
+                ModelWriter.write(w, model);
+            } finally {
+                w.flush();
+                w.close();
+            }
+        } catch(IOException ioe) {
+            throw new MojoExecutionException("Failed to create model file " + modelFile.getAbsolutePath(), ioe);
+        }
     }
 
     /**
@@ -177,6 +202,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
             }
             this.buildSettings(model, ModelConstants.RUN_MODE_WEBAPP, webappDir);
             this.buildBootstrapFile(model, ModelConstants.RUN_MODE_WEBAPP, webappDir);
+            this.embedModel(model, webappDir);
 
             this.buildContentsMap(model, ModelConstants.RUN_MODE_WEBAPP, contentsMap);
         }
