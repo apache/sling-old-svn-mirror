@@ -36,7 +36,7 @@ public interface ModelFactory {
      * @return a new instance for the required model (never {@code null})
      * @throws MissingElementsException in case no injector was able to inject some required values with the given types
      * @throws InvalidAdaptableException in case the given class cannot be instantiated from the given adaptable (different adaptable on the model annotation)
-     * @throws ModelClassException in case the model could not be instantiated because model annotation was missing, reflection failed, no valid constructor was found or post-construct could not be called
+     * @throws ModelClassException in case the model could not be instantiated because model annotation was missing, reflection failed, no valid constructor was found, model was not registered as adapter factory yet, or post-construct could not be called
      * @throws PostConstructException in case the post-construct method has thrown an exception itself
      * @throws ValidationException in case validation could not be performed for some reason (e.g. no validation information available)
      * @throws InvalidModelException in case the given model type could not be validated through the model validation
@@ -48,10 +48,9 @@ public interface ModelFactory {
      * 
      * @param adaptable the adaptable to check
      * @param type the class to check
-     * @return {@code true} in case the given class can be created from the given adaptable
-     * @throws ModelClassException in case no class with the Model annotation adapts to the requested type
+     * @return {@code true} in case the given class can be created from the given adaptable, otherwise {@code false}
      */
-    public boolean canCreateFromAdaptable(@Nonnull Object adaptable, @Nonnull Class<?> type) throws ModelClassException;
+    public boolean canCreateFromAdaptable(@Nonnull Object adaptable, @Nonnull Class<?> type);
 
     /**
      * 
@@ -69,7 +68,7 @@ public interface ModelFactory {
      * Checks if a given type can be instantiated though Sling Models. This checks that
      * <ul>
      * <li>there is a class annotated with <code>Model</code> which adapts to the given type</li>
-     * <li>this class is registered as Sling Model (i.e. the package is listed in the "Sling-Model-Packages" header from the bundles manifest)</li>
+     * <li>this class is registered as Sling Model (i.e. the package is listed in the "Sling-Model-Packages" header from the bundles manifest and has been picked up already by the bundle listener)</li>
      * </ul>
      * Only if both conditions are fulfilled this method will return {@code true}.
      * @param type the class to check
