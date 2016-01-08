@@ -55,6 +55,8 @@
                         <!-- embed the commons.osgi bundle as described in http://njbartlett.name/2014/05/26/static-linking.html, 
                              to make this bundle compatible with older versions of Sling -->
                         <Conditional-Package>org.apache.sling.commons.osgi</Conditional-Package>
+                        <Bundle-Category>sling</Bundle-Category>
+                        <Sling-Initial-Content>SLING-INF;overwrite=true</Sling-Initial-Content>
                     </instructions>
                 </configuration>
             </plugin>

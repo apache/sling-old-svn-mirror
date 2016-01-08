@@ -54,6 +54,15 @@ import org.slf4j.LoggerFactory;
 @Service()
 public class ValidationServiceImpl implements ValidationService{
 
+    /** Keys whose values are defined in the JCR resource bundle contained in the content-repository section of this bundle */
+    protected static final String I18N_KEY_WRONG_PROPERTY_TYPE = "sling.validator.wrong-property-type";
+    protected static final String I18N_KEY_EXPECTED_MULTIVALUE_PROPERTY = "sling.validator.multi-value-property-required";
+    protected static final String I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME = "sling.validator.missing-required-property-with-name";
+    protected static final String I18N_KEY_MISSING_REQUIRED_PROPERTY_MATCHING_PATTERN = "sling.validator.missing-required-property-matching-pattern";
+    protected static final String I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_WITH_NAME = "sling.validator.missing-required-child-resource-with-name";
+    protected static final String I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_MATCHING_PATTERN = "sling.validator.missing-required-child-resource-matching-pattern";
+    
+
     private static final Logger LOG = LoggerFactory.getLogger(ValidationServiceImpl.class);
     
     @Reference
@@ -169,22 +178,28 @@ public class ValidationServiceImpl implements ValidationService{
                     }
                 }
                 if (!foundMatch && childResource.isRequired()) {
-                    result.addFailure("Missing required child resource.", relativePath + pattern.pattern());
+                    result.addFailure(relativePath, I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_MATCHING_PATTERN, pattern.toString());
                 }
             } else {
                 Resource expectedResource = resource.getChild(childResource.getName());
                 if (expectedResource != null) {
                     validateChildResource(expectedResource, relativePath, childResource, result);
                 } else if (childResource.isRequired()) {
-                    result.addFailure("Missing required child resource.", relativePath + childResource.getName());
+                    result.addFailure(relativePath, I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_WITH_NAME, childResource.getName());
                 }
             } 
         }
     }
 
-    private void validateChildResource(Resource resource, String relativePath, ChildResource childResource, CompositeValidationResult result) {
-        validateValueMap(resource.adaptTo(ValueMap.class), resource, relativePath + resource.getName() + "/", childResource.getProperties(), result);
-        validateChildren(resource, relativePath + resource.getName() + "/", childResource.getChildren(), result);
+    private void validateChildResource(Resource resource, String relativePathOfParent, ChildResource childResource, CompositeValidationResult result) {
+        final String relativePath;
+        if (relativePathOfParent.isEmpty()) {
+            relativePath = resource.getName();
+        } else {
+            relativePath = relativePathOfParent +  "/" + resource.getName();
+        }
+        validateValueMap(resource.adaptTo(ValueMap.class), resource, relativePath, childResource.getProperties(), result);
+        validateChildren(resource, relativePath, childResource.getChildren(), result);
     }
 
     @Override
@@ -221,7 +236,7 @@ public class ValidationServiceImpl implements ValidationService{
                     }
                 }
                 if (!foundMatch && resourceProperty.isRequired()) {
-                    result.addFailure("Missing required property.", relativePath + resourceProperty.getNamePattern());
+                    result.addFailure(relativePath, I18N_KEY_MISSING_REQUIRED_PROPERTY_MATCHING_PATTERN, pattern.toString());
                 }
             } else {
                 validatePropertyValue(resourceProperty.getName(), valueMap, resource, relativePath, resourceProperty, result);
@@ -233,14 +248,14 @@ public class ValidationServiceImpl implements ValidationService{
         Object fieldValues = valueMap.get(property);
         if (fieldValues == null) {
             if (resourceProperty.isRequired()) {
-                result.addFailure("Missing required property.", relativePath + property);
+                result.addFailure(relativePath, I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, property);
             }
             return;
         }
         List<ParameterizedValidator> validators = resourceProperty.getValidators();
         if (resourceProperty.isMultiple()) {
             if (!fieldValues.getClass().isArray()) {
-                result.addFailure("Expected multiple-valued property.", relativePath + property);
+                result.addFailure(relativePath + property, I18N_KEY_EXPECTED_MULTIVALUE_PROPERTY);
                 return;
             }
         }
@@ -261,7 +276,7 @@ public class ValidationServiceImpl implements ValidationService{
             // see https://issues.apache.org/jira/browse/SLING-4178 for why the second check is necessary
             if (typedValue == null || (typedValue.length > 0 && typedValue[0] == null)) {
                 // here the missing required property case was already treated in validateValueMap
-                result.addFailure("Property was expected to be of type '" + validator.getType() + "' but cannot be converted to that type.", property);
+                result.addFailure(relativePath + property, I18N_KEY_WRONG_PROPERTY_TYPE, validator.getType());
                 return;
             }
             
