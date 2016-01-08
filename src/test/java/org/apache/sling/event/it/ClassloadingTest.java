@@ -44,7 +44,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventHandler;
 
@@ -83,7 +82,7 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
     public void testSimpleClassloading() throws Exception {
         final AtomicInteger processedJobsCount = new AtomicInteger(0);
         final List<Event> finishedEvents = Collections.synchronizedList(new ArrayList<Event>());
-        final ServiceRegistration<JobConsumer> jcReg = this.registerJobConsumer(TOPIC,
+        this.registerJobConsumer(TOPIC,
                 new JobConsumer() {
                     @Override
                     public JobResult process(Job job) {
@@ -91,7 +90,7 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
                         return JobResult.OK;
                     }
                 });
-        final ServiceRegistration<EventHandler> ehReg = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
+        this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
                 new EventHandler() {
 
                     @Override
@@ -99,70 +98,65 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
                         finishedEvents.add(event);
                     }
                 });
-        try {
-            final JobManager jobManager = this.getJobManager();
+        final JobManager jobManager = this.getJobManager();
 
-            final List<String> list = new ArrayList<String>();
-            list.add("1");
-            list.add("2");
+        final List<String> list = new ArrayList<String>();
+        list.add("1");
+        list.add("2");
 
-            final Map<String, String> map = new HashMap<String, String>();
-            map.put("a", "a1");
-            map.put("b", "b2");
+        final Map<String, String> map = new HashMap<String, String>();
+        map.put("a", "a1");
+        map.put("b", "b2");
 
-            // we start a single job
-            final Map<String, Object> props = new HashMap<String, Object>();
-            props.put("string", "Hello");
-            props.put("int", new Integer(5));
-            props.put("long", new Long(7));
-            props.put("list", list);
-            props.put("map", map);
+        // we start a single job
+        final Map<String, Object> props = new HashMap<String, Object>();
+        props.put("string", "Hello");
+        props.put("int", new Integer(5));
+        props.put("long", new Long(7));
+        props.put("list", list);
+        props.put("map", map);
 
-            final String jobId = jobManager.addJob(TOPIC, props).getId();
+        final String jobId = jobManager.addJob(TOPIC, props).getId();
 
-            new RetryLoop(Conditions.collectionIsNotEmptyCondition(finishedEvents,
-                    "Waiting for finishedEvents to have at least one element"), 5, 50);
+        new RetryLoop(Conditions.collectionIsNotEmptyCondition(finishedEvents,
+                "Waiting for finishedEvents to have at least one element"), 5, 50);
 
-            // no jobs queued, none processed and no available
-            new RetryLoop(new RetryLoop.Condition() {
+        // no jobs queued, none processed and no available
+        new RetryLoop(new RetryLoop.Condition() {
 
-                @Override
-                public String getDescription() {
-                    return "Waiting for job to be processed. Conditions: queuedJobs=" + jobManager.getStatistics().getNumberOfQueuedJobs() +
-                            ", jobsCount=" + processedJobsCount + ", findJobs=" +
-                            jobManager.findJobs(JobManager.QueryType.ALL, TOPIC, -1, (Map<String, Object>[]) null)
-                            .size();
-                }
+            @Override
+            public String getDescription() {
+                return "Waiting for job to be processed. Conditions: queuedJobs=" + jobManager.getStatistics().getNumberOfQueuedJobs() +
+                        ", jobsCount=" + processedJobsCount + ", findJobs=" +
+                        jobManager.findJobs(JobManager.QueryType.ALL, TOPIC, -1, (Map<String, Object>[]) null)
+                        .size();
+            }
 
-                @Override
-                public boolean isTrue() throws Exception {
-                    return jobManager.getStatistics().getNumberOfQueuedJobs() == 0
-                            && processedJobsCount.get() == 1
-                            && jobManager.findJobs(JobManager.QueryType.ALL, TOPIC, -1, (Map<String, Object>[]) null)
-                                    .size() == 0;
-                }
-            }, CONDITION_TIMEOUT_SECONDS, CONDITION_INTERVAL_MILLIS);
+            @Override
+            public boolean isTrue() throws Exception {
+                return jobManager.getStatistics().getNumberOfQueuedJobs() == 0
+                        && processedJobsCount.get() == 1
+                        && jobManager.findJobs(JobManager.QueryType.ALL, TOPIC, -1, (Map<String, Object>[]) null)
+                                .size() == 0;
+            }
+        }, CONDITION_TIMEOUT_SECONDS, CONDITION_INTERVAL_MILLIS);
 
-            final String jobTopic = (String)finishedEvents.get(0).getProperty(NotificationConstants.NOTIFICATION_PROPERTY_JOB_TOPIC);
-            assertNotNull(jobTopic);
-            assertEquals("Hello", finishedEvents.get(0).getProperty("string"));
-            assertEquals(new Integer(5), Integer.valueOf(finishedEvents.get(0).getProperty("int").toString()));
-            assertEquals(new Long(7), Long.valueOf(finishedEvents.get(0).getProperty("long").toString()));
-            assertEquals(list, finishedEvents.get(0).getProperty("list"));
-            assertEquals(map, finishedEvents.get(0).getProperty("map"));
+        final String jobTopic = (String)finishedEvents.get(0).getProperty(NotificationConstants.NOTIFICATION_PROPERTY_JOB_TOPIC);
+        assertNotNull(jobTopic);
+        assertEquals("Hello", finishedEvents.get(0).getProperty("string"));
+        assertEquals(new Integer(5), Integer.valueOf(finishedEvents.get(0).getProperty("int").toString()));
+        assertEquals(new Long(7), Long.valueOf(finishedEvents.get(0).getProperty("long").toString()));
+        assertEquals(list, finishedEvents.get(0).getProperty("list"));
+        assertEquals(map, finishedEvents.get(0).getProperty("map"));
 
-            jobManager.removeJobById(jobId);
-        } finally {
-            jcReg.unregister();
-            ehReg.unregister();
-        }
+        jobManager.removeJobById(jobId);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testFailedClassloading() throws Exception {
         final AtomicInteger failedJobsCount = new AtomicInteger(0);
         final List<Event> finishedEvents = Collections.synchronizedList(new ArrayList<Event>());
-        final ServiceRegistration<JobConsumer> jcReg = this.registerJobConsumer(TOPIC + "/failed",
+        this.registerJobConsumer(TOPIC + "/failed",
                 new JobConsumer() {
 
                     @Override
@@ -171,7 +165,7 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
                         return JobResult.OK;
                     }
                 });
-        final ServiceRegistration<EventHandler> ehReg = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
+        this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
                 new EventHandler() {
 
                     @Override
@@ -179,52 +173,47 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
                         finishedEvents.add(event);
                     }
                 });
-        try {
-            final JobManager jobManager = this.getJobManager();
+        final JobManager jobManager = this.getJobManager();
 
-            // dao is an invisible class for the dynamic class loader as it is not public
-            // therefore scheduling this job should fail!
-            final DataObject dao = new DataObject();
+        // dao is an invisible class for the dynamic class loader as it is not public
+        // therefore scheduling this job should fail!
+        final DataObject dao = new DataObject();
 
-            // we start a single job
-            final Map<String, Object> props = new HashMap<String, Object>();
-            props.put("dao", dao);
+        // we start a single job
+        final Map<String, Object> props = new HashMap<String, Object>();
+        props.put("dao", dao);
 
-            final String id = jobManager.addJob(TOPIC + "/failed", props).getId();
+        final String id = jobManager.addJob(TOPIC + "/failed", props).getId();
 
-            // wait until the conditions are met
-            new RetryLoop(new RetryLoop.Condition() {
+        // wait until the conditions are met
+        new RetryLoop(new RetryLoop.Condition() {
 
-                @Override
-                public boolean isTrue() throws Exception {
-                    return failedJobsCount.get() == 0
-                            && finishedEvents.size() == 0
-                            && jobManager.findJobs(JobManager.QueryType.ALL, TOPIC + "/failed", -1,
-                                    (Map<String, Object>[]) null).size() == 1
-                            && jobManager.getStatistics().getNumberOfQueuedJobs() == 0
-                            && jobManager.getStatistics().getNumberOfActiveJobs() == 0;
-                }
+            @Override
+            public boolean isTrue() throws Exception {
+                return failedJobsCount.get() == 0
+                        && finishedEvents.size() == 0
+                        && jobManager.findJobs(JobManager.QueryType.ALL, TOPIC + "/failed", -1,
+                                (Map<String, Object>[]) null).size() == 1
+                        && jobManager.getStatistics().getNumberOfQueuedJobs() == 0
+                        && jobManager.getStatistics().getNumberOfActiveJobs() == 0;
+            }
 
-                @Override
-                public String getDescription() {
-                    return "Waiting for job failure to be recorded. Conditions " +
-                           "faildJobsCount=" + failedJobsCount.get() +
-                           ", finishedEvents=" + finishedEvents.size() +
-                           ", findJobs= " + jobManager.findJobs(JobManager.QueryType.ALL, TOPIC + "/failed", -1,
-                                   (Map<String, Object>[]) null).size()
-                           +", queuedJobs=" + jobManager.getStatistics().getNumberOfQueuedJobs()
-                           +", activeJobs=" + jobManager.getStatistics().getNumberOfActiveJobs();
-                }
-            }, CONDITION_TIMEOUT_SECONDS, CONDITION_INTERVAL_MILLIS);
+            @Override
+            public String getDescription() {
+                return "Waiting for job failure to be recorded. Conditions " +
+                       "faildJobsCount=" + failedJobsCount.get() +
+                       ", finishedEvents=" + finishedEvents.size() +
+                       ", findJobs= " + jobManager.findJobs(JobManager.QueryType.ALL, TOPIC + "/failed", -1,
+                               (Map<String, Object>[]) null).size()
+                       +", queuedJobs=" + jobManager.getStatistics().getNumberOfQueuedJobs()
+                       +", activeJobs=" + jobManager.getStatistics().getNumberOfActiveJobs();
+            }
+        }, CONDITION_TIMEOUT_SECONDS, CONDITION_INTERVAL_MILLIS);
 
-            jobManager.removeJobById(id); // moves the job to the history section
-            assertEquals(0, jobManager.findJobs(JobManager.QueryType.ALL, TOPIC + "/failed", -1, (Map<String, Object>[])null).size());
+        jobManager.removeJobById(id); // moves the job to the history section
+        assertEquals(0, jobManager.findJobs(JobManager.QueryType.ALL, TOPIC + "/failed", -1, (Map<String, Object>[])null).size());
 
-            jobManager.removeJobById(id); // removes the job permanently
-        } finally {
-            jcReg.unregister();
-            ehReg.unregister();
-        }
+        jobManager.removeJobById(id); // removes the job permanently
     }
 
     private static final class DataObject implements Serializable {

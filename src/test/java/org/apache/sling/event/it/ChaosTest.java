@@ -128,9 +128,9 @@ public class ChaosTest extends AbstractJobHandlingTest {
     /**
      * Setup consumers
      */
-    private void setupJobConsumers(final List<ServiceRegistration<?>> registrations) {
+    private void setupJobConsumers() {
         for(int i=0; i<NUM_ORDERED_TOPICS; i++) {
-            registrations.add(this.registerJobConsumer(ORDERED_TOPICS[i],
+            this.registerJobConsumer(ORDERED_TOPICS[i],
 
                 new JobConsumer() {
 
@@ -138,10 +138,10 @@ public class ChaosTest extends AbstractJobHandlingTest {
                     public JobResult process(final Job job) {
                         return JobResult.OK;
                     }
-                }));
+                });
         }
         for(int i=0; i<NUM_PARALLEL_TOPICS; i++) {
-            registrations.add(this.registerJobConsumer(PARALLEL_TOPICS[i],
+            this.registerJobConsumer(PARALLEL_TOPICS[i],
 
                 new JobConsumer() {
 
@@ -149,10 +149,10 @@ public class ChaosTest extends AbstractJobHandlingTest {
                     public JobResult process(final Job job) {
                         return JobResult.OK;
                     }
-                }));
+                });
         }
         for(int i=0; i<NUM_ROUND_TOPICS; i++) {
-            registrations.add(this.registerJobConsumer(ROUND_TOPICS[i],
+            this.registerJobConsumer(ROUND_TOPICS[i],
 
                 new JobConsumer() {
 
@@ -160,7 +160,7 @@ public class ChaosTest extends AbstractJobHandlingTest {
                     public JobResult process(final Job job) {
                         return JobResult.OK;
                     }
-                }));
+                });
         }
     }
 
@@ -335,11 +335,10 @@ public class ChaosTest extends AbstractJobHandlingTest {
             topics.add(ROUND_TOPICS[i]);
         }
 
-        final List<ServiceRegistration<?>> registrations = new ArrayList<ServiceRegistration<?>>();
         final List<Thread> threads = new ArrayList<Thread>();
         final AtomicLong finishedThreads = new AtomicLong();
 
-        final ServiceRegistration<EventHandler> eventHandler = this.registerEventHandler("org/apache/sling/event/notification/job/*",
+        this.registerEventHandler("org/apache/sling/event/notification/job/*",
                 new EventHandler() {
 
                     @Override
@@ -352,44 +351,44 @@ public class ChaosTest extends AbstractJobHandlingTest {
                         }
                     }
                 });
-        try {
-            // setup job consumers
-            this.setupJobConsumers(registrations);
 
-            // setup job creation tests
-            this.setupJobCreationThreads(threads, jobManager, created, finishedThreads);
+        // setup job consumers
+        this.setupJobConsumers();
 
-            this.setupChaosThreads(threads, finishedThreads);
+        // setup job creation tests
+        this.setupJobCreationThreads(threads, jobManager, created, finishedThreads);
 
-            System.out.println("Starting threads...");
-            // start threads
-            for(final Thread t : threads) {
-                t.setDaemon(true);
-                t.start();
-            }
+        this.setupChaosThreads(threads, finishedThreads);
 
-            System.out.println("Sleeping for " + DURATION + " seconds to wait for threads to finish...");
-            // for sure we can sleep for the duration
-            this.sleep(DURATION * 1000);
+        System.out.println("Starting threads...");
+        // start threads
+        for(final Thread t : threads) {
+            t.setDaemon(true);
+            t.start();
+        }
 
-            System.out.println("Polling for threads to finish...");
-            // wait until threads are finished
-            while ( finishedThreads.get() < threads.size() ) {
-                this.sleep(100);
-            }
+        System.out.println("Sleeping for " + DURATION + " seconds to wait for threads to finish...");
+        // for sure we can sleep for the duration
+        this.sleep(DURATION * 1000);
 
-            System.out.println("Waiting for job handling to finish...");
-            final Set<String> allTopics = new HashSet<String>(topics);
-            while ( !allTopics.isEmpty() ) {
-                final Iterator<String> iter = allTopics.iterator();
-                while ( iter.hasNext() ) {
-                    final String topic = iter.next();
-                    if ( finished.get(topic).get() == created.get(topic).get() ) {
-                        iter.remove();
-                    }
+        System.out.println("Polling for threads to finish...");
+        // wait until threads are finished
+        while ( finishedThreads.get() < threads.size() ) {
+            this.sleep(100);
+        }
+
+        System.out.println("Waiting for job handling to finish...");
+        final Set<String> allTopics = new HashSet<String>(topics);
+        while ( !allTopics.isEmpty() ) {
+            final Iterator<String> iter = allTopics.iterator();
+            while ( iter.hasNext() ) {
+                final String topic = iter.next();
+                if ( finished.get(topic).get() == created.get(topic).get() ) {
+                    iter.remove();
                 }
-                this.sleep(100);
             }
+            this.sleep(100);
+        }
 /* We could try to enable this with Oak again - but right now JR observation handler is too
  * slow.
             System.out.println("Checking notifications...");
@@ -397,13 +396,6 @@ public class ChaosTest extends AbstractJobHandlingTest {
                 assertEquals("Checking topic " + topic, created.get(topic).get(), added.get(topic).get());
             }
  */
-
-        } finally {
-            eventHandler.unregister();
-            for(final ServiceRegistration<?> reg : registrations) {
-                reg.unregister();
-            }
-        }
 
     }
 }
