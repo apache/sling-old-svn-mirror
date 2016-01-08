@@ -39,12 +39,12 @@ public class CompositeValidationResult implements ValidationResult {
         results = new ArrayList<ValidationResult>();
     }
 
-    public void addValidationResult(ValidationResult result) {
+    public void addValidationResult(@Nonnull ValidationResult result) {
         results.add(result);
     }
 
-    public void addFailure(@Nonnull String message, String location) {
-        results.add(new DefaultValidationResult(message, location));
+    public void addFailure(@Nonnull String location, @Nonnull String message, Object... messageArguments) {
+        results.add(new DefaultValidationResult(location, message, messageArguments));
     }
 
     @Override

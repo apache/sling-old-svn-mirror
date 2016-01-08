@@ -40,8 +40,7 @@ public interface ValidationContext {
     @Nonnull String getLocation();
 
     /**
-     * all properties of the validated resource/valuemap (only used for validations considering multiple properties), never {@code null}.
-     * @return
+     * @return all properties of the validated resource/valuemap (only used for validations considering multiple properties), never {@code null}.
      */
     @Nonnull ValueMap getValueMap();
 
@@ -49,6 +48,4 @@ public interface ValidationContext {
      * @return the resource on which the validation was triggered. {@code null} in case the validation was triggered on a {@link ValueMap} (via {@link ValidationService#validate(ValueMap, org.apache.sling.validation.model.ValidationModel)}).
      */
     @CheckForNull Resource getResource();
-    
-    
 }

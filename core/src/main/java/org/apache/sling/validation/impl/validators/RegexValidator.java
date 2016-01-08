@@ -19,6 +19,7 @@
 package org.apache.sling.validation.impl.validators;
 
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import javax.annotation.Nonnull;
 
@@ -40,6 +41,7 @@ import org.apache.sling.validation.spi.Validator;
 @Service(Validator.class)
 public class RegexValidator implements Validator<String> {
 
+    public static final String I18N_KEY_PATTERN_DOES_NOT_MATCH = "sling.validator.regex.pattern-does-not-match";
     public static final String REGEX_PARAM = "regex";
 
     @Override
@@ -47,13 +49,17 @@ public class RegexValidator implements Validator<String> {
             throws SlingValidationException {
         String regex = arguments.get(REGEX_PARAM, "");
         if (StringUtils.isEmpty(regex)) {
-            throw new SlingValidationException("Mandatory " + REGEX_PARAM + " is missing from the arguments map.");
+            throw new SlingValidationException("Mandatory argument '" + REGEX_PARAM + "' is missing from the arguments map.");
         }
-        Pattern pattern = Pattern.compile(regex);
-        if (pattern.matcher((String)data).matches()) {
-            return DefaultValidationResult.VALID;
+        try {
+            Pattern pattern = Pattern.compile(regex);
+            if (pattern.matcher((String)data).matches()) {
+                return DefaultValidationResult.VALID;
+            }
+            return new DefaultValidationResult(context.getLocation(), I18N_KEY_PATTERN_DOES_NOT_MATCH, regex);
+        } catch (PatternSyntaxException e) {
+            throw new SlingValidationException("Given pattern in argument '" + REGEX_PARAM + "' is invalid", e);
         }
-        return new DefaultValidationResult("Property does not match the pattern '" + regex + "'", context.getLocation());
     }
 
 }

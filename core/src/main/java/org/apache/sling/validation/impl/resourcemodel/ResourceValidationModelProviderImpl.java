@@ -78,7 +78,6 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
     public static final String VALIDATORS = "validators";
     public static final String OPTIONAL = "optional";
     public static final String PROPERTY_MULTIPLE = "propertyMultiple";
-    public static final String PROPERTY_TYPE = "propertyType";
     public static final String PROPERTIES = "properties";
     public static final String VALIDATION_MODEL_RESOURCE_TYPE = "sling/validation/model";
     public static final String MODELS_HOME = "validation/";

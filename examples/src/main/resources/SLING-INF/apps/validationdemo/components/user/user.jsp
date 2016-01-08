@@ -18,6 +18,7 @@
 --><%@page session="false" import="
     java.util.Map,
     java.util.List,
+    java.util.Locale,
     org.apache.sling.api.resource.Resource,
     org.apache.sling.validation.ValidationFailure,
     org.apache.sling.validation.examples.models.UserModel
@@ -49,8 +50,8 @@
 <%
     for (ValidationFailure error : user.getErrors()) {
 %>
-<span><strong>Key:</strong> <%= error.getLocation() %></span><br>
-<span><%= error.getMessage() %></span><br>
+<span><strong>Location:</strong> <%= error.getLocation() %></span><br>
+<span><%= error.getMessage(slingRequest.getResourceBundle(Locale.US)) %></span><br>
 <%
     }
 %>

@@ -20,9 +20,9 @@ package org.apache.sling.validation.testservices;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.List;
-import java.util.Map;
+import java.util.ResourceBundle;
 
+import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.commons.json.JSONArray;
@@ -37,7 +37,12 @@ import org.slf4j.LoggerFactory;
 public class ValidationPostResponse extends AbstractPostResponse {
 
     private ValidationResult validationResult;
+    private final ResourceBundle resourceBundle;
     private static final Logger LOG = LoggerFactory.getLogger(ValidationPostResponse.class);
+
+    public ValidationPostResponse(@Nonnull ResourceBundle resourceBundle) {
+        this.resourceBundle = resourceBundle;
+    }
 
     public void setValidationResult(ValidationResult validationResult) {
         this.validationResult = validationResult;
@@ -55,7 +60,7 @@ public class ValidationPostResponse extends AbstractPostResponse {
                 JSONArray failures = new JSONArray();
                 for (ValidationFailure failure : validationResult.getFailures()) {
                     JSONObject failureJson = new JSONObject();
-                    failureJson.put("message", failure.getMessage());
+                    failureJson.put("message", failure.getMessage(resourceBundle));
                     failureJson.put("location", failure.getLocation());
                     failures.put(failureJson);
                 }

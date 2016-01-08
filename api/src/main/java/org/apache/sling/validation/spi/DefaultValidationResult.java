@@ -18,6 +18,7 @@
  */
 package org.apache.sling.validation.spi;
 
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -38,13 +39,15 @@ public class DefaultValidationResult implements ValidationResult {
     }
 
     /** 
-     * Constructs a result with one failure message and an according location
-     * @param message the failure message
-     * @param location the location
+     * Constructs a result with one failure message. The message is constructed by looking up the given messageKey from a resourceBundle.
+     * and formatting it using the given messageArguments via {@link MessageFormat#format(String, Object...)}.
+     * @param location the location.
+     * @param messageKey the message key used for looking up a value in the resource bundle given in {@link ValidationFailure#getMessage(java.util.ResourceBundle)}.
+     * @param messageArguments optional number of arguments being used in {@link MessageFormat#format(String, Object...)}
      */
-    public DefaultValidationResult(@Nonnull String message, String location) {
+    public DefaultValidationResult(@Nonnull String location, @Nonnull String messageKey, Object... messageArguments) {
         this.isValid = false;
-        this.failures = Collections.<ValidationFailure>singletonList(new DefaultValidationFailure(message, location));
+        this.failures = Collections.<ValidationFailure>singletonList(new DefaultValidationFailure(location, messageKey, messageArguments));
     }
 
     public DefaultValidationResult(ValidationFailure... failures) {

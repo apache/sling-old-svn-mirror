@@ -20,9 +20,10 @@ package org.apache.sling.validation.impl;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -97,7 +98,7 @@ public class ValidationServiceImplTest {
         HashMap<String, Object> hashMap = new HashMap<String, Object>();
         hashMap.put("field1", "1");
         ValidationResult vr = validationService.validate(new ValueMapDecorator(hashMap), vm);
-        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>contains(new DefaultValidationFailure("Property was expected to be of type 'class java.util.Date' but cannot be converted to that type.", "field1")));
+        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>contains(new DefaultValidationFailure("field1", ValidationServiceImpl.I18N_KEY_WRONG_PROPERTY_TYPE, Date.class)));
     }
 
     @Test
@@ -140,7 +141,7 @@ public class ValidationServiceImplTest {
         hashMap.put("field3", "");
 
         ValidationResult vr = validationService.validate(new ValueMapDecorator(hashMap), vm);
-        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>contains(new DefaultValidationFailure("Missing required property.", "field4")));
+        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>contains(new DefaultValidationFailure("", ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, "field4")));
     }
 
     @Test()
@@ -167,7 +168,7 @@ public class ValidationServiceImplTest {
         ValidationResult vr = validationService.validate(new ValueMapDecorator(hashMap), vm);
 
         Assert.assertFalse(vr.isValid()); // check for correct error message Map<String, List<String>>
-        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>contains(new DefaultValidationFailure("Property does not match the pattern 'abc'", "field1")));
+        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>contains(new DefaultValidationFailure("field1", RegexValidator.I18N_KEY_PATTERN_DOES_NOT_MATCH, "abc")));
     }
 
     @Test
@@ -187,7 +188,7 @@ public class ValidationServiceImplTest {
         ValidationResult vr = validationService.validate(new ValueMapDecorator(hashMap), vm);
 
         Assert.assertFalse(vr.isValid());
-        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure> hasItem(new DefaultValidationFailure("Property does not match the pattern '" + TEST_REGEX + "'", "field2")));
+        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure> hasItem(new DefaultValidationFailure("field2", RegexValidator.I18N_KEY_PATTERN_DOES_NOT_MATCH, TEST_REGEX)));
     }
 
     @Test
@@ -219,7 +220,7 @@ public class ValidationServiceImplTest {
 
         ValidationResult vr = validationService.validate(testResource, vm);
         Assert.assertFalse("resource should have been considered invalid", vr.isValid());
-        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>contains(new DefaultValidationFailure("Missing required property.", "child/grandchild/field1")));
+        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>contains(new DefaultValidationFailure("child/grandchild", ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, "field1")));
     }
 
     @Test
@@ -332,10 +333,10 @@ public class ValidationServiceImplTest {
         Assert.assertFalse("resource should have been considered invalid", vr.isValid());
         
         Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>containsInAnyOrder(
-                new DefaultValidationFailure("Missing required child resource.", "child2/grandchild.*"),
-                new DefaultValidationFailure("Missing required child resource.", "child3/grandchild.*"),
-                new DefaultValidationFailure("Missing required property.", "child3/field1"),
-                new DefaultValidationFailure("Missing required child resource.", "siblingchild.*")));
+                new DefaultValidationFailure("child2", ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_MATCHING_PATTERN, "grandchild.*"),
+                new DefaultValidationFailure("child3", ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_MATCHING_PATTERN, "grandchild.*"),
+                new DefaultValidationFailure("child3", ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, "field1"),
+                new DefaultValidationFailure("", ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_MATCHING_PATTERN, "siblingchild.*")));
     }
 
     @Test
@@ -363,8 +364,8 @@ public class ValidationServiceImplTest {
         Assert.assertFalse("resource should have been considered invalid", vr.isValid());
         
         Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>contains(
-                new DefaultValidationFailure("Property does not match the pattern '\\d'", "field3"),
-                new DefaultValidationFailure("Missing required property.", "otherfield.*")));
+                new DefaultValidationFailure("field3", RegexValidator.I18N_KEY_PATTERN_DOES_NOT_MATCH, "\\d"),
+                new DefaultValidationFailure("", ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_MATCHING_PATTERN, "otherfield.*")));
     }
 
     @Test
@@ -382,7 +383,7 @@ public class ValidationServiceImplTest {
 
         ValidationResult vr = validationService.validate(testResource, vm);
         Assert.assertFalse("resource should have been considered invalid", vr.isValid());
-        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>contains(new DefaultValidationFailure("Property does not match the pattern '\\d'", "field[1]")));
+        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>contains(new DefaultValidationFailure("field[1]", RegexValidator.I18N_KEY_PATTERN_DOES_NOT_MATCH, "\\d")));
     }
 
     @Test()
@@ -443,8 +444,8 @@ public class ValidationServiceImplTest {
         ValidationResult vr = validationService.validateResourceRecursively(testResource, true, ignoreResourceType3Filter, false);
         Assert.assertFalse("resource should have been considered invalid", vr.isValid());
         Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>contains(
-                new DefaultValidationFailure("Missing required property.", "field1"),
-                new DefaultValidationFailure("Missing required property.", "child2/field2")));
+                new DefaultValidationFailure("", ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, "field1"),
+                new DefaultValidationFailure("child2", ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, "field2")));
     }
 
     @Test(expected = IllegalArgumentException.class)
