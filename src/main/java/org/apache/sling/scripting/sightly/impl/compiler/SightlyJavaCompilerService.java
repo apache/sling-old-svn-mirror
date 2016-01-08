@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
@@ -67,7 +68,7 @@ public class SightlyJavaCompilerService {
 
     private static final Logger LOG = LoggerFactory.getLogger(SightlyJavaCompilerService.class);
 
-    public static final Pattern PACKAGE_DECL_PATTERN = Pattern.compile("package\\s+([a-zA-Z_$][a-zA-Z\\d_$]*\\.?)*;");
+    public static final Pattern PACKAGE_DECL_PATTERN = Pattern.compile("(.*)(package\\s+([a-zA-Z_$][a-zA-Z\\d_$]*\\.?)*;)(.*)");
 
     @Reference
     private ClassLoaderWriter classLoaderWriter = null;
@@ -169,11 +170,24 @@ public class SightlyJavaCompilerService {
             IOUtils.write(sourceCode, os, "UTF-8");
             IOUtils.closeQuietly(os);
         }
-        sourceCode = PACKAGE_DECL_PATTERN.matcher(sourceCode).replaceFirst("");
-        sourceCode = "package " + Utils.getPackageNameFromFQCN(fqcn) + ";\n" + sourceCode;
 
+        StringBuilder sourceCodeSB = new StringBuilder();
+        String[] sourceCodeLines = sourceCode.split("\n");
+        boolean foundPackageDeclaration = false;
+        for (String line : sourceCodeLines) {
+            Matcher matcher = PACKAGE_DECL_PATTERN.matcher(line);
+            if (matcher.matches()) {
+                line = matcher.group(1) + "package " + Utils.getPackageNameFromFQCN(fqcn) + ";" + matcher.group(4);
+                foundPackageDeclaration = true;
+            }
+            sourceCodeSB.append(line).append("\n");
+        }
 
-        CompilationUnit compilationUnit = new SightlyCompilationUnit(sourceCode, fqcn);
+        if (!foundPackageDeclaration) {
+            sourceCodeSB.insert(0, "package " + Utils.getPackageNameFromFQCN(fqcn) + ";\n");
+        }
+
+        CompilationUnit compilationUnit = new SightlyCompilationUnit(sourceCodeSB.toString(), fqcn);
 
         long start = System.currentTimeMillis();
         CompilationResult compilationResult = javaCompiler.compile(new CompilationUnit[]{compilationUnit}, options);
