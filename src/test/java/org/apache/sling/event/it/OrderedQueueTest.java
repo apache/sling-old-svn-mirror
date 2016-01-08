@@ -44,17 +44,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
-import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventHandler;
 
 @RunWith(PaxExam.class)
-@ExamReactorStrategy(PerMethod.class)
 public class OrderedQueueTest extends AbstractJobHandlingTest {
-
-    private String queueConfPid;
 
     @Override
     @Before
@@ -71,14 +66,12 @@ public class OrderedQueueTest extends AbstractJobHandlingTest {
         orderedProps.put(ConfigurationConstants.PROP_RETRY_DELAY, 2000L);
         orderedConfig.update(orderedProps);
 
-        this.queueConfPid = orderedConfig.getPid();
-
         this.sleep(1000L);
     }
 
+    @Override
     @After
-    public void cleanUp() throws IOException {
-        this.removeConfiguration(this.queueConfPid);
+    public void cleanup() {
         super.cleanup();
     }
 

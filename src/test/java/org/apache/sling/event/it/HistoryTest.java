@@ -41,19 +41,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
-import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.ServiceRegistration;
 
 @RunWith(PaxExam.class)
-@ExamReactorStrategy(PerMethod.class)
 public class HistoryTest extends AbstractJobHandlingTest {
 
     private static final String TOPIC = "sling/test/history";
 
     private static final String PROP_COUNTER = "counter";
-
-    private String queueConfPid;
 
     @Override
     @Before
@@ -72,13 +67,12 @@ public class HistoryTest extends AbstractJobHandlingTest {
         props.put(ConfigurationConstants.PROP_KEEP_JOBS, true);
         config.update(props);
 
-        this.queueConfPid = config.getPid();
         this.sleep(1000L);
     }
 
+    @Override
     @After
-    public void cleanUp() throws IOException {
-        this.removeConfiguration(this.queueConfPid);
+    public void cleanup() {
         super.cleanup();
     }
 
