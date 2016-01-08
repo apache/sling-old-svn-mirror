@@ -48,7 +48,7 @@ public class FormatFilter extends FilterComponent implements RuntimeExtension {
     public static final String FORMAT_OPTION = "format";
     public static final String FORMAT_FUNCTION = "format";
 
-    private static final Pattern PLACEHOLDER_REGEX = Pattern.compile("\\{\\d}");
+    private static final Pattern PLACEHOLDER_REGEX = Pattern.compile("\\{\\d+}");
 
     @Override
     public Expression apply(Expression expression, ExpressionContext expressionContext) {
