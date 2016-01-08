@@ -71,11 +71,13 @@ public class MultipleInjectorTest {
 
         factory = new ModelAdapterFactory();
         factory.activate(componentCtx);
+        // binding injector should be asked first as it has a lower service ranking!
         factory.bindInjector(bindingsInjector, new ServicePropertiesMap(1, 1));
         factory.bindInjector(attributesInjector, new ServicePropertiesMap(2, 2));
         factory.bindStaticInjectAnnotationProcessorFactory(bindingsInjector, new ServicePropertiesMap(1, 1));
 
         when(request.getAttribute(SlingBindings.class.getName())).thenReturn(bindings);
+        factory.adapterImplementations.addClassesAsAdapterAndImplementation(ForTwoInjectorsWithSource.class, ForTwoInjectors.class);
     }
 
     @Test
@@ -90,9 +92,6 @@ public class MultipleInjectorTest {
 
         assertNotNull(obj);
         assertEquals(obj.firstAttribute, bindingsValue);
-
-        verify(bindingsInjector).createAnnotationProcessor(any(AnnotatedElement.class));
-        verify(bindingsInjector).getValue(eq(request), eq("firstAttribute"), eq(String.class), any(AnnotatedElement.class), any(DisposalCallbackRegistry.class));
     }
 
     @Test
@@ -107,10 +106,6 @@ public class MultipleInjectorTest {
 
         assertNotNull(obj);
         assertEquals(obj.firstAttribute, attributeValue);
-
-        verify(bindingsInjector).getName();
-        verify(bindingsInjector).createAnnotationProcessor(any(AnnotatedElement.class));
-        verifyNoMoreInteractions(bindingsInjector);
     }
 
     @Model(adaptables = SlingHttpServletRequest.class)

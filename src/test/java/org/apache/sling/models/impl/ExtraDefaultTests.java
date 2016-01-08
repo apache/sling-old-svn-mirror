@@ -55,6 +55,7 @@ public class ExtraDefaultTests {
 
         factory = new ModelAdapterFactory();
         factory.activate(componentCtx);
+        factory.adapterImplementations.addClassesAsAdapterAndImplementation(EmptyDefaultsModel.class, WrongTypeDefaultsModel.class);
     }
 
     @Test

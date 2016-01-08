@@ -16,8 +16,9 @@
  */
 package org.apache.sling.models.impl;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.when;
 
 import java.util.Hashtable;
 
@@ -63,6 +64,8 @@ public class RequestInjectionTest {
         factory = new ModelAdapterFactory();
         factory.activate(componentCtx);
         factory.bindInjector(new BindingsInjector(), new ServicePropertiesMap(1, 1));
+        
+        factory.adapterImplementations.addClassesAsAdapterAndImplementation(BindingsModel.class, org.apache.sling.models.testmodels.classes.constructorinjection.BindingsModel.class);
     }
 
     @Test
