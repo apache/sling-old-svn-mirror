@@ -447,6 +447,10 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         // if default is not set, check if mandatory
         if (!wasInjectionSuccessful) {
             if (element.isOptional(annotationProcessor)) {
+                // log previous injection error, if there was any
+                if (lastInjectionException != null) {
+                    log.debug("Injection into optional element {} failed because of: " + lastInjectionException.getMessage(), element.getAnnotatedElement(), lastInjectionException);
+                }
                 if (element.isPrimitive()) {
                     RuntimeException throwable = injectPrimitiveInitialValue(element, callback);
                     if (throwable != null) {
