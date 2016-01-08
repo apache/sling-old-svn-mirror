@@ -40,24 +40,24 @@ public class MetricWrapperTest {
         Counter counter = registry.counter("test");
         CounterImpl counterStats = new CounterImpl(counter);
 
-        counterStats.inc();
+        counterStats.increment();
         assertEquals(1, counterStats.getCount());
         assertEquals(1, counter.getCount());
         assertEquals(1, counterStats.getCount());
 
-        counterStats.inc();
-        counterStats.inc();
+        counterStats.increment();
+        counterStats.increment();
         assertEquals(3, counterStats.getCount());
 
-        counterStats.dec();
+        counterStats.decrement();
         assertEquals(2, counterStats.getCount());
         assertEquals(2, counter.getCount());
 
-        counterStats.inc(7);
+        counterStats.increment(7);
         assertEquals(9, counterStats.getCount());
         assertEquals(9, counter.getCount());
 
-        counterStats.dec(5);
+        counterStats.decrement(5);
         assertEquals(4, counterStats.getCount());
         assertEquals(4, counter.getCount());
 
