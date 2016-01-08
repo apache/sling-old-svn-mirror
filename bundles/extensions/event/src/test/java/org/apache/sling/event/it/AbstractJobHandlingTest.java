@@ -28,8 +28,11 @@ import static org.ops4j.pax.exam.CoreOptions.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -64,6 +67,8 @@ public abstract class AbstractJobHandlingTest {
 
     private static final String DEFAULT_BUILD_DIR = "target";
 
+    private static final String PORT_CONFIG = "org.osgi.service.http.port";
+
     protected static final int DEFAULT_TEST_TIMEOUT = 1000*60*5;
 
     @Inject
@@ -75,7 +80,7 @@ public abstract class AbstractJobHandlingTest {
     @Inject
     protected BundleContext bc;
 
-    private static final String PORT_CONFIG = "org.osgi.service.http.port";
+    protected List<ServiceRegistration<?>> registrations = new ArrayList<>();
 
     @Configuration
     public Option[] config() {
@@ -223,12 +228,13 @@ public abstract class AbstractJobHandlingTest {
     }
 
     public void cleanup() {
+        // clean job area
         final ServiceReference<ResourceResolverFactory> ref = this.bc.getServiceReference(ResourceResolverFactory.class);
         final ResourceResolverFactory factory = this.bc.getService(ref);
         ResourceResolver resolver = null;
         try {
             resolver = factory.getAdministrativeResourceResolver(null);
-            final Resource rsrc = resolver.getResource(JobManagerConfiguration.DEFAULT_REPOSITORY_PATH);
+            final Resource rsrc = resolver.getResource("/var/eventing");
             if ( rsrc != null ) {
                 delete(rsrc);
                 resolver.commit();
@@ -242,7 +248,13 @@ public abstract class AbstractJobHandlingTest {
                 resolver.close();
             }
         }
-        // remove all configurations and clean content
+        // unregister all services
+        for(final ServiceRegistration<?> reg : this.registrations) {
+            reg.unregister();
+        }
+        this.registrations.clear();
+
+        // remove all configurations
         try {
             final org.osgi.service.cm.Configuration[] cfgs = this.configAdmin.listConfigurations(null);
             if ( cfgs != null ) {
@@ -271,15 +283,16 @@ public abstract class AbstractJobHandlingTest {
         props.put(EventConstants.EVENT_TOPIC, topic);
         final ServiceRegistration<EventHandler> reg = this.bc.registerService(EventHandler.class,
                 handler, props);
+        this.registrations.add(reg);
         return reg;
     }
 
     protected long getConsumerChangeCount() {
         long result = -1;
         try {
-            final ServiceReference[] refs = this.bc.getServiceReferences(PropertyProvider.class.getName(), "(changeCount=*)");
-            if ( refs != null && refs.length > 0 ) {
-                result = (Long)refs[0].getProperty("changeCount");
+            final Collection<ServiceReference<PropertyProvider>> refs = this.bc.getServiceReferences(PropertyProvider.class, "(changeCount=*)");
+            if ( !refs.isEmpty() ) {
+                result = (Long)refs.iterator().next().getProperty("changeCount");
             }
         } catch ( final InvalidSyntaxException ignore ) {
             // ignore
@@ -309,6 +322,7 @@ public abstract class AbstractJobHandlingTest {
         props.put(JobConsumer.PROPERTY_TOPICS, topic);
         final ServiceRegistration<JobConsumer> reg = this.bc.registerService(JobConsumer.class,
                 handler, props);
+        this.registrations.add(reg);
         this.waitConsumerChangeCount(cc + 1);
         return reg;
     }
@@ -323,7 +337,15 @@ public abstract class AbstractJobHandlingTest {
         props.put(JobConsumer.PROPERTY_TOPICS, topic);
         final ServiceRegistration<JobExecutor> reg = this.bc.registerService(JobExecutor.class,
                 handler, props);
+        this.registrations.add(reg);
         this.waitConsumerChangeCount(cc + 1);
         return reg;
+    }
+
+    protected void unregister(final ServiceRegistration<?> reg) {
+        if ( reg != null ) {
+            this.registrations.remove(reg);
+            reg.unregister();
+        }
     }
 }

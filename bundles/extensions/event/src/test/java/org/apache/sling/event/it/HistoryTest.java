@@ -41,7 +41,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.osgi.framework.ServiceRegistration;
 
 @RunWith(PaxExam.class)
 public class HistoryTest extends AbstractJobHandlingTest {
@@ -88,7 +87,7 @@ public class HistoryTest extends AbstractJobHandlingTest {
      */
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testHistory() throws Exception {
-        final ServiceRegistration reg = this.registerJobExecutor(TOPIC,
+        this.registerJobExecutor(TOPIC,
                 new JobExecutor() {
 
                     @Override
@@ -102,51 +101,41 @@ public class HistoryTest extends AbstractJobHandlingTest {
                     }
 
                 });
-        Collection<Job> col = null;
-        try {
-            for(int i = 0; i< 10; i++) {
-                this.addJob(i);
-            }
-            this.sleep(200L);
-            while ( this.getJobManager().findJobs(JobManager.QueryType.HISTORY, TOPIC, -1, (Map<String, Object>[])null).size() < 10 ) {
-                this.sleep(20L);
-            }
-            col = this.getJobManager().findJobs(JobManager.QueryType.HISTORY, TOPIC, -1, (Map<String, Object>[])null);
-            assertEquals(10, col.size());
-            assertEquals(0, this.getJobManager().findJobs(JobManager.QueryType.ACTIVE, TOPIC, -1, (Map<String, Object>[])null).size());
-            assertEquals(0, this.getJobManager().findJobs(JobManager.QueryType.QUEUED, TOPIC, -1, (Map<String, Object>[])null).size());
-            assertEquals(0, this.getJobManager().findJobs(JobManager.QueryType.ALL, TOPIC, -1, (Map<String, Object>[])null).size());
-            assertEquals(3, this.getJobManager().findJobs(JobManager.QueryType.CANCELLED, TOPIC, -1, (Map<String, Object>[])null).size());
-            assertEquals(0, this.getJobManager().findJobs(JobManager.QueryType.DROPPED, TOPIC, -1, (Map<String, Object>[])null).size());
-            assertEquals(3, this.getJobManager().findJobs(JobManager.QueryType.ERROR, TOPIC, -1, (Map<String, Object>[])null).size());
-            assertEquals(0, this.getJobManager().findJobs(JobManager.QueryType.GIVEN_UP, TOPIC, -1, (Map<String, Object>[])null).size());
-            assertEquals(0, this.getJobManager().findJobs(JobManager.QueryType.STOPPED, TOPIC, -1, (Map<String, Object>[])null).size());
-            assertEquals(7, this.getJobManager().findJobs(JobManager.QueryType.SUCCEEDED, TOPIC, -1, (Map<String, Object>[])null).size());
+        for(int i = 0; i< 10; i++) {
+            this.addJob(i);
+        }
+        this.sleep(200L);
+        while ( this.getJobManager().findJobs(JobManager.QueryType.HISTORY, TOPIC, -1, (Map<String, Object>[])null).size() < 10 ) {
+            this.sleep(20L);
+        }
+        Collection<Job> col = this.getJobManager().findJobs(JobManager.QueryType.HISTORY, TOPIC, -1, (Map<String, Object>[])null);
+        assertEquals(10, col.size());
+        assertEquals(0, this.getJobManager().findJobs(JobManager.QueryType.ACTIVE, TOPIC, -1, (Map<String, Object>[])null).size());
+        assertEquals(0, this.getJobManager().findJobs(JobManager.QueryType.QUEUED, TOPIC, -1, (Map<String, Object>[])null).size());
+        assertEquals(0, this.getJobManager().findJobs(JobManager.QueryType.ALL, TOPIC, -1, (Map<String, Object>[])null).size());
+        assertEquals(3, this.getJobManager().findJobs(JobManager.QueryType.CANCELLED, TOPIC, -1, (Map<String, Object>[])null).size());
+        assertEquals(0, this.getJobManager().findJobs(JobManager.QueryType.DROPPED, TOPIC, -1, (Map<String, Object>[])null).size());
+        assertEquals(3, this.getJobManager().findJobs(JobManager.QueryType.ERROR, TOPIC, -1, (Map<String, Object>[])null).size());
+        assertEquals(0, this.getJobManager().findJobs(JobManager.QueryType.GIVEN_UP, TOPIC, -1, (Map<String, Object>[])null).size());
+        assertEquals(0, this.getJobManager().findJobs(JobManager.QueryType.STOPPED, TOPIC, -1, (Map<String, Object>[])null).size());
+        assertEquals(7, this.getJobManager().findJobs(JobManager.QueryType.SUCCEEDED, TOPIC, -1, (Map<String, Object>[])null).size());
 
-            // find all topics
-            assertEquals(7, this.getJobManager().findJobs(JobManager.QueryType.SUCCEEDED, null, -1, (Map<String, Object>[])null).size());
+        // find all topics
+        assertEquals(7, this.getJobManager().findJobs(JobManager.QueryType.SUCCEEDED, null, -1, (Map<String, Object>[])null).size());
 
-            // verify order, message and state
-            long last = 9;
-            for(final Job j : col) {
-                assertNotNull(j.getFinishedDate());
-                final long count = j.getProperty(PROP_COUNTER, Long.class);
-                assertEquals(last, count);
-                if ( count == 2 || count == 5 || count == 7 ) {
-                    assertEquals(Job.JobState.ERROR, j.getJobState());
-                } else {
-                    assertEquals(Job.JobState.SUCCEEDED, j.getJobState());
-                }
-                assertEquals(j.getJobState().name(), j.getResultMessage());
-                last--;
+        // verify order, message and state
+        long last = 9;
+        for(final Job j : col) {
+            assertNotNull(j.getFinishedDate());
+            final long count = j.getProperty(PROP_COUNTER, Long.class);
+            assertEquals(last, count);
+            if ( count == 2 || count == 5 || count == 7 ) {
+                assertEquals(Job.JobState.ERROR, j.getJobState());
+            } else {
+                assertEquals(Job.JobState.SUCCEEDED, j.getJobState());
             }
-        } finally {
-            if ( col != null ) {
-                for(final Job j : col) {
-                    this.getJobManager().removeJobById(j.getId());
-                }
-            }
-            reg.unregister();
+            assertEquals(j.getJobState().name(), j.getResultMessage());
+            last--;
         }
     }
 }

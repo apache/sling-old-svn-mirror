@@ -61,7 +61,7 @@ public class TopicMatchingTest extends AbstractJobHandlingTest {
     public void testSimpleMatching() throws Exception {
         final Barrier barrier = new Barrier(2);
 
-        final ServiceRegistration<JobExecutor> reg = this.registerJobExecutor("sling/test/*",
+        this.registerJobExecutor("sling/test/*",
                 new JobExecutor() {
 
                     @Override
@@ -69,7 +69,7 @@ public class TopicMatchingTest extends AbstractJobHandlingTest {
                         return context.result().succeeded();
                     }
                 });
-        final ServiceRegistration<EventHandler> eventHandler = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
+        this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
                 new EventHandler() {
 
                     @Override
@@ -78,13 +78,8 @@ public class TopicMatchingTest extends AbstractJobHandlingTest {
                     }
                 });
 
-        try {
-            this.getJobManager().addJob(TOPIC, null);
-            barrier.block();
-        } finally {
-            reg.unregister();
-            eventHandler.unregister();
-        }
+        this.getJobManager().addJob(TOPIC, null);
+        barrier.block();
     }
 
     /**
@@ -94,7 +89,7 @@ public class TopicMatchingTest extends AbstractJobHandlingTest {
     public void testDeepMatching() throws Exception {
         final Barrier barrier = new Barrier(2);
 
-        final ServiceRegistration<JobExecutor> reg = this.registerJobExecutor("sling/**",
+        this.registerJobExecutor("sling/**",
                 new JobExecutor() {
 
                     @Override
@@ -102,7 +97,7 @@ public class TopicMatchingTest extends AbstractJobHandlingTest {
                         return context.result().succeeded();
                     }
                 });
-        final ServiceRegistration<EventHandler> eventHandler = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
+        this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
                 new EventHandler() {
 
                     @Override
@@ -111,13 +106,8 @@ public class TopicMatchingTest extends AbstractJobHandlingTest {
                     }
                 });
 
-        try {
-            this.getJobManager().addJob(TOPIC, null);
-            barrier.block();
-        } finally {
-            reg.unregister();
-            eventHandler.unregister();
-        }
+        this.getJobManager().addJob(TOPIC, null);
+        barrier.block();
     }
 
     /**
@@ -129,7 +119,7 @@ public class TopicMatchingTest extends AbstractJobHandlingTest {
         final Barrier barrier2 = new Barrier(2);
         final Barrier barrier3 = new Barrier(2);
 
-        final ServiceRegistration<JobExecutor> reg1 = this.registerJobExecutor("sling/**",
+        this.registerJobExecutor("sling/**",
                 new JobExecutor() {
 
                     @Override
@@ -163,17 +153,16 @@ public class TopicMatchingTest extends AbstractJobHandlingTest {
 
         // second test, unregister reg3, now it should be reg2
         long cc = this.getConsumerChangeCount();
-        reg3.unregister();
+        this.unregister(reg3);
         this.waitConsumerChangeCount(cc + 1);
         this.getJobManager().addJob(TOPIC, null);
         barrier2.block();
 
         // third test, unregister reg2, reg1 is now the only one
         cc = this.getConsumerChangeCount();
-        reg2.unregister();
+        this.unregister(reg2);
         this.waitConsumerChangeCount(cc + 1);
         this.getJobManager().addJob(TOPIC, null);
         barrier1.block();
-        reg1.unregister();
     }
 }
