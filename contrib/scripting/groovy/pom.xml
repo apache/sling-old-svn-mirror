@@ -24,11 +24,11 @@
     <artifactId>sling</artifactId>
     <groupId>org.apache.sling</groupId>
     <version>26</version>
-    <relativePath/>
+    <relativePath />
   </parent>
 
   <artifactId>org.apache.sling.scripting.groovy</artifactId>
-  <version>1.0.1-SNAPSHOT</version>
+  <version>1.0.2</version>
   <packaging>bundle</packaging>
 
   <name>Apache Sling Scripting Groovy Support</name>
@@ -39,9 +39,9 @@
   </properties>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/scripting/groovy</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/scripting/groovy</developerConnection>
-    <url>http://svn.apache.org/viewvc/sling/trunk/contrib/scripting/groovy</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.groovy-1.0.2</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.groovy-1.0.2</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.scripting.groovy-1.0.2</url>
   </scm>
 
   <build>
