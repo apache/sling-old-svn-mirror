@@ -288,6 +288,8 @@
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/userManager/UpdateUserTest.*</exclude>
                 <!-- TODO testWithJspForward: 404 -->
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/JspForwardTest.*</exclude>
+                <!-- SLING-5414 Launchpad/Provisioning Model only -->
+                <exclude>org/apache/sling/launchpad/webapp/integrationtest/provisioning/EmbeddedModelTest.*</exclude>
               </excludes>
             </configuration>
           </plugin>
