@@ -142,7 +142,7 @@
           <module>scripting/scala/config</module>
           <module>scripting/scala/samples/hello-world</module>
           <module>scripting/scala/samples/forum</module>
-          <module>scripting/thymeleaf</module>
+          <module>scripting/org.apache.sling.scripting.thymeleaf</module>
           <module>scripting/velocity</module>
           <module>scripting/xproc</module>
 
