@@ -102,6 +102,11 @@ public class DefaultSharedDistributionPackage implements SharedDistributionPacka
         return distributionPackage.createInputStream();
     }
 
+    @Override
+    public long getSize() {
+        return distributionPackage.getSize();
+    }
+
     public void close() {
         distributionPackage.close();
     }

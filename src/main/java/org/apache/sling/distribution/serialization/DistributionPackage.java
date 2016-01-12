@@ -56,6 +56,13 @@ public interface DistributionPackage {
     @Nonnull
     InputStream createInputStream() throws IOException;
 
+
+    /**
+     *
+     * @return the size in bytes
+     */
+    long getSize();
+
     /**
      * closes all resources associated with this instance
      */

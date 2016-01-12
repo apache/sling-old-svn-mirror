@@ -77,6 +77,11 @@ public class JcrVaultDistributionPackage extends AbstractDistributionPackage imp
         }
     }
 
+    @Override
+    public long getSize() {
+        return jcrPackage.getSize();
+    }
+
     public void close() {
         jcrPackage.close();
     }

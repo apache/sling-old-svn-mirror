@@ -42,6 +42,7 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
     private final static String PACKAGE_START = "DSTRPCK:";
     private final static String DELIM = "|";
     private final static String PATH_DELIM = ",";
+    private final long size;
 
     public SimpleDistributionPackage(DistributionRequest request, String type) {
         super(toIdString(request, type), type);
@@ -50,6 +51,7 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
 
         this.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, paths);
         this.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, requestType);
+        this.size = getId().toCharArray().length;
     }
 
     public static String toIdString(DistributionRequest request, String type) {
@@ -109,6 +111,11 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
     @Nonnull
     public InputStream createInputStream() throws IOException {
         return IOUtils.toInputStream(getId(), "UTF-8");
+    }
+
+    @Override
+    public long getSize() {
+        return size;
     }
 
 

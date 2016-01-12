@@ -105,7 +105,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
                 }
 
                 Content content = response.returnContent();
-                log.debug("delivered package {} to {}", distributionPackage.getId(), distributionEndpoint.getUri());
+                log.debug("DELIVERED packageId={}, endpoint={}", distributionPackage.getId(), distributionEndpoint.getUri());
             } catch (HttpHostConnectException e) {
                 log.debug("could not connect to {} - retrying", distributionEndpoint.getUri());
                 throw new RecoverableDistributionException(e);
@@ -173,7 +173,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
             executor = executor.auth(new HttpHost(distributionEndpoint.getUri().getHost(), distributionEndpoint.getUri().getPort()),
                     credentialsMap.get(USERNAME), credentialsMap.get(PASSWORD)).authPreemptive(
                     new HttpHost(distributionEndpoint.getUri().getHost(), distributionEndpoint.getUri().getPort()));
-            log.debug("authenticated executor HTTP client with user and password {}", secret.asCredentialsMap().get(USERNAME));
+            log.debug("AUTH user={}, endpoint={}", secret.asCredentialsMap().get(USERNAME), distributionEndpoint.getUri());
         }
         return executor;
     }

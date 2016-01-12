@@ -54,6 +54,11 @@ public class FileVaultDistributionPackage extends AbstractDistributionPackage im
         return new FileInputStream(pkg.getFile());
     }
 
+    @Override
+    public long getSize() {
+        return pkg.getFile().length();
+    }
+
     public void close() {
         pkg.close();
     }

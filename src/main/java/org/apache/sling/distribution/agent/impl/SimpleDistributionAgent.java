@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
@@ -204,11 +205,13 @@ public class SimpleDistributionAgent implements DistributionAgent {
             CompositeDistributionResponse distributionResponse = exportPackages(agentResourceResolver, distributionRequest, callingUser, requestId);
 
 
-            log.debug("STARTED {} {} paths={}, success={}, state={}, exportTime={}ms, noPackages={}, noQueues={}", new Object[]{
+            log.debug("STARTED {} {} paths={}, success={}, state={}, exportTime={}ms, noPackages={}, size={}B, noQueues={}", new Object[]{
                     requestId,
                     distributionRequest.getRequestType(), distributionRequest.getPaths(),
                     distributionResponse.isSuccessful(), distributionResponse.getState(),
-                    distributionResponse.getExportTime(), distributionResponse.getPackagesCount(), distributionResponse.getQueuesCount()
+                    distributionResponse.getExportTime(),
+                    distributionResponse.getPackagesCount(), distributionResponse.getPackagseSize(),
+                    distributionResponse.getQueuesCount()
             });
 
             return distributionResponse;
@@ -227,9 +230,6 @@ public class SimpleDistributionAgent implements DistributionAgent {
     }
 
     private CompositeDistributionResponse exportPackages(ResourceResolver agentResourceResolver, DistributionRequest distributionRequest, String callingUser, String requestId) throws DistributionException {
-        String actualUser =  agentResourceResolver != null ? agentResourceResolver.getUserID() : "N/A";
-        log.debug("exporting packages with user {} on behalf of {}", actualUser, callingUser);
-
         final long startTime = System.currentTimeMillis();
         PackageExporterProcessor packageProcessor =  new PackageExporterProcessor(callingUser, requestId, startTime);
 
@@ -240,8 +240,9 @@ public class SimpleDistributionAgent implements DistributionAgent {
         generatePackageEvent(DistributionEventTopics.AGENT_PACKAGE_CREATED);
         List<DistributionResponse> distributionResponses = packageProcessor.getAllResponses();
         int packagesCount = packageProcessor.getPackagesCount();
+        long packagesSize = packageProcessor.getPackagesSize();
 
-        return new CompositeDistributionResponse(distributionResponses, packagesCount, endTime - startTime);
+        return new CompositeDistributionResponse(distributionResponses, packagesCount, packagesSize, endTime - startTime);
     }
 
 
@@ -266,11 +267,9 @@ public class SimpleDistributionAgent implements DistributionAgent {
         } catch (DistributionException e) {
             log.error("an error happened during dispatching items to the queue(s)", e);
             distributionResponses.add(new SimpleDistributionResponse(DistributionRequestState.DROPPED, e.toString()));
-        } finally {
-            distributionPackage.close();
         }
 
-        log.debug("scheduled package {} with info {}", distributionPackage.getId(), distributionPackage.getInfo());
+        log.debug("SCHEDULED packageId={}, info={}", distributionPackage.getId(), distributionPackage.getInfo());
 
 
         return distributionResponses;
@@ -435,6 +434,10 @@ public class SimpleDistributionAgent implements DistributionAgent {
             distributionPackage = distributionPackageExporter.getPackage(agentResourceResolver, queueItem.getId());
 
             if (distributionPackage != null) {
+                final DistributionRequestType requestType = distributionPackage.getInfo().getRequestType();
+                final long packageSize = distributionPackage.getSize();
+                final String[] paths = distributionPackage.getInfo().getPaths();
+
                 DistributionPackageUtils.mergeQueueEntry(distributionPackage.getInfo(), queueEntry);
 
                 if (processPackage(agentResourceResolver, distributionPackage)) {
@@ -448,11 +451,11 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
                 final long endTime = System.currentTimeMillis();
 
-                log.info("END[{}] {} {} paths={}, time={}ms, importTime={}ms, packageId={}", new Object[] {
+                log.info("END[{}] {} {} paths={}, time={}ms, importTime={}ms, size={}B", new Object[] {
                         queueName, requestId,
-                        distributionPackage.getInfo().getRequestType(), distributionPackage.getInfo().getPaths(), endTime - globalStartTime, endTime - startTime,
-                        distributionPackage.getId()
-
+                        requestType, paths,
+                        endTime - globalStartTime, endTime - startTime,
+                        packageSize
                 });
             } else {
                 success = true; // return success if package does not exist in order to clear the queue.
@@ -476,7 +479,6 @@ public class SimpleDistributionAgent implements DistributionAgent {
             return false;
         }
 
-        log.debug("distribution package {} was delivered", distributionPackage.getId());
         return true;
     }
 
@@ -590,16 +592,16 @@ public class SimpleDistributionAgent implements DistributionAgent {
             DistributionQueueItem queueItem = queueEntry.getItem();
 
             try {
-                log.debug("queue {} processing item {}", queueName, queueItem);
+                log.debug("PROCESSING[{}] item={}", queueName, queueItem);
 
                 boolean success = processQueueItem(queueName, queueEntry);
 
-                log.debug("queue {} processing item {} ended with status {}", queueName, queueItem, success);
+                log.debug("PROCESSED[{}] item={}, status={}", queueName, queueItem, success);
 
                 return success;
 
             } catch (Throwable t) {
-                log.error("queue {} error while processing item {} {}", new Object[] { queueName, queueItem, t} );
+                log.error("FAILED[{}] item{}", queueName, queueItem, t);
                 return false;
             }
         }
@@ -612,6 +614,9 @@ public class SimpleDistributionAgent implements DistributionAgent {
         private final String requestId;
         private final long startTime;
         private final AtomicInteger packagesCount = new AtomicInteger();
+        private final AtomicLong packagesSize = new AtomicLong();
+        private final List<DistributionResponse> allResponses = new ArrayList<DistributionResponse>();
+
 
         public List<DistributionResponse> getAllResponses() {
             return allResponses;
@@ -621,7 +626,8 @@ public class SimpleDistributionAgent implements DistributionAgent {
             return packagesCount.get();
         }
 
-        private final List<DistributionResponse> allResponses = new ArrayList<DistributionResponse>();
+        public long getPackagesSize() { return packagesSize.get(); }
+
 
         PackageExporterProcessor(String callingUser, String requestId, long startTime) {
 
@@ -635,6 +641,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
             Collection<SimpleDistributionResponse> responses = scheduleImportPackage(distributionPackage, callingUser, requestId, startTime);
 
             packagesCount.incrementAndGet();
+            packagesSize.addAndGet(distributionPackage.getSize());
             allResponses.addAll(responses);
         }
 

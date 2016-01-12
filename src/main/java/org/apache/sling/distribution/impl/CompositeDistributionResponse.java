@@ -32,6 +32,7 @@ import org.apache.sling.distribution.DistributionResponse;
 public class CompositeDistributionResponse extends SimpleDistributionResponse {
 
     private final int packagesCount;
+    private final long packagseSize;
     private final int queuesCount;
     private final long exportTime;
 
@@ -39,9 +40,10 @@ public class CompositeDistributionResponse extends SimpleDistributionResponse {
 
     private String message;
 
-    public CompositeDistributionResponse(List<DistributionResponse> distributionResponses, int packagesCount, long exportTime) {
+    public CompositeDistributionResponse(List<DistributionResponse> distributionResponses, int packagesCount, long packagseSize, long exportTime) {
         super(DistributionRequestState.DISTRIBUTED, null);
         this.packagesCount = packagesCount;
+        this.packagseSize = packagseSize;
         this.queuesCount = distributionResponses.size();
         this.exportTime = exportTime;
         if (distributionResponses.isEmpty()) {
@@ -115,5 +117,9 @@ public class CompositeDistributionResponse extends SimpleDistributionResponse {
 
     public int getQueuesCount() {
         return queuesCount;
+    }
+
+    public long getPackagseSize() {
+        return packagseSize;
     }
 }

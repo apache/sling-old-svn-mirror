@@ -55,6 +55,11 @@ public class DistributionPackageWrapper implements DistributionPackage {
         return wrappedPackage.createInputStream();
     }
 
+    @Override
+    public long getSize() {
+        return wrappedPackage.getSize();
+    }
+
     public void close() {
         wrappedPackage.close();
     }
