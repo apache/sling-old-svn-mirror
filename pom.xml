@@ -285,6 +285,7 @@
                         <sling.additional.bundle.32>org.apache.sling.serviceusermapper</sling.additional.bundle.32>
                         <sling.additional.bundle.33>org.apache.sling.jcr.api</sling.additional.bundle.33>
                         <sling.additional.bundle.34>org.apache.sling.jcr.base</sling.additional.bundle.34>
+                        <sling.additional.bundle.35>org.apache.sling.event</sling.additional.bundle.35>
                         <sling.additional.bundle.4>org.apache.sling.hc.core</sling.additional.bundle.4>
                         <sling.additional.bundle.5>org.apache.jackrabbit.vault</sling.additional.bundle.5>
                         <sling.additional.bundle.6>org.apache.sling.distribution.api</sling.additional.bundle.6>
@@ -419,6 +420,11 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.serviceusermapper</artifactId>
             <version>1.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.event</artifactId>
+            <version>4.0.0</version>
         </dependency>
         <dependency>
             <groupId>javax.jcr</groupId>
