@@ -67,6 +67,8 @@
             <metatype:Option value="MIN" label="Min" />
             <metatype:Option value="MAX" label="Max" />
         </metatype:AD>
+        <metatype:AD id="webconsole.configurationFactory.nameHint"
+            type="String" default="{name}" />
     </metatype:OCD>
     <metatype:Designate
         pid="org.apache.sling.commons.threads.impl.DefaultThreadPool.factory"
