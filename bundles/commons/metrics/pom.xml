@@ -30,7 +30,7 @@
 
   <artifactId>org.apache.sling.commons.metrics</artifactId>
   <packaging>bundle</packaging>
-  <version>0.0.3-SNAPSHOT</version>
+  <version>1.0.0</version>
 
   <name>Apache Sling Metrics</name>
   <description>
@@ -40,9 +40,9 @@
   </description>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/commons/metrics</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/metrics</developerConnection>
-    <url>http://svn.apache.org/viewvc/sling/trunk/bundles/commons/metrics</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.commons.metrics-1.0.0</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.commons.metrics-1.0.0</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.commons.metrics-1.0.0</url>
   </scm>
 
 
