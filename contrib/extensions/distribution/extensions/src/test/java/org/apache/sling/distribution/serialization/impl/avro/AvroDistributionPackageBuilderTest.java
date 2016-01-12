@@ -102,6 +102,12 @@ public class AvroDistributionPackageBuilderTest {
             public boolean isDeep(String path) {
                 return false;
             }
+
+            @Nonnull
+            @Override
+            public String[] getFilters(String path) {
+                return new String[0];
+            }
         });
         assertNotNull(distributionPackage);
         DistributionPackage readPackage = avroDistributionPackageBuilder.readPackage(resourceResolver, distributionPackage.createInputStream());

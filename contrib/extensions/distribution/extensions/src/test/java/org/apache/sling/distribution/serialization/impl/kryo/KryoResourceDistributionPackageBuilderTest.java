@@ -69,6 +69,12 @@ public class KryoResourceDistributionPackageBuilderTest {
             public boolean isDeep(String path) {
                 return true;
             }
+
+            @Nonnull
+            @Override
+            public String[] getFilters(String path) {
+                return new String[0];
+            }
         });
         assertNotNull(kryoPackage);
         DistributionPackage readPackage = kryoResourceDistributionPackageBuilder.readPackage(resourceResolver, kryoPackage.createInputStream());
@@ -90,6 +96,12 @@ public class KryoResourceDistributionPackageBuilderTest {
 
             public boolean isDeep(String path) {
                 return true;
+            }
+
+            @Nonnull
+            @Override
+            public String[] getFilters(String path) {
+                return new String[0];
             }
         });
         assertNotNull(kryoPackage);

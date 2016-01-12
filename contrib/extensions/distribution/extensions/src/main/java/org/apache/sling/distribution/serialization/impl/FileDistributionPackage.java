@@ -57,6 +57,11 @@ public class FileDistributionPackage implements DistributionPackage {
         return new FileInputStream(file);
     }
 
+    @Override
+    public long getSize() {
+        return file.length();
+    }
+
     public void close() {
         // do nothing
     }
