@@ -188,6 +188,7 @@
         <module>bundles/extensions/i18n</module>
         <module>bundles/extensions/xss</module>
         <module>bundles/extensions/resourcebuilder</module>
+        <module>bundles/extensions/servlet-helpers</module>
 
         <!-- Testing Support -->
         <module>testing</module>

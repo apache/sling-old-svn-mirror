@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.testing.mock.sling.servlet;
+package org.apache.sling.servlethelpers;
 
 import java.text.DateFormat;
 import java.text.ParseException;

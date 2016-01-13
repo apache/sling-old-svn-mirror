@@ -16,38 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.testing.mock.sling.servlet;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import javax.servlet.http.Cookie;
-
 /**
- * Manages cookies for request and response.
+ * Mock implementation of selected Servlet-related Sling APIs.
  */
-class CookieSupport {
-
-    private Map<String, Cookie> cookies = new LinkedHashMap<String, Cookie>();
-
-    public void addCookie(Cookie cookie) {
-        cookies.put(cookie.getName(), cookie);
-    }
-
-    public Cookie getCookie(String name) {
-        return cookies.get(name);
-    }
-
-    public Cookie[] getCookies() {
-        if (cookies.isEmpty()) {
-            return null;
-        } else {
-            return cookies.values().toArray(new Cookie[cookies.size()]);
-        }
-    }
-
-    public void reset() {
-        cookies.clear();
-    }
-
-}
+@aQute.bnd.annotation.Version("1.0")
+package org.apache.sling.servlethelpers;

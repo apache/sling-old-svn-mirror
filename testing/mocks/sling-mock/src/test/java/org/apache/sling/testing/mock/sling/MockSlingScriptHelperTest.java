@@ -46,7 +46,7 @@ public class MockSlingScriptHelperTest {
     public void setUp() throws Exception {
         this.bundleContext = MockOsgi.newBundleContext();
         this.resourceResolver = MockSling.newResourceResolver(bundleContext);
-        this.request = new MockSlingHttpServletRequest(this.resourceResolver);
+        this.request = new MockSlingHttpServletRequest(this.resourceResolver, bundleContext);
         this.response = new MockSlingHttpServletResponse();
         this.scriptHelper = MockSling.newSlingScriptHelper(this.request, this.response, this.bundleContext);
     }

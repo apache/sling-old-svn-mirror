@@ -16,12 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.testing.mock.sling.servlet;
+package org.apache.sling.servlethelpers;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import org.apache.sling.servlethelpers.MockRequestPathInfo;
 import org.junit.Before;
 import org.junit.Test;
 

@@ -216,7 +216,7 @@ public final class MockSling {
      * @return Sling script helper instance
      */
     public static SlingScriptHelper newSlingScriptHelper(BundleContext bundleContext) {
-        SlingHttpServletRequest request = new MockSlingHttpServletRequest(newResourceResolver(bundleContext));
+        SlingHttpServletRequest request = new MockSlingHttpServletRequest(newResourceResolver(bundleContext), bundleContext);
         SlingHttpServletResponse response = new MockSlingHttpServletResponse();
         return newSlingScriptHelper(request, response, bundleContext);
     }

@@ -16,14 +16,38 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.testing.mock.sling.servlet;
+package org.apache.sling.servlethelpers;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import javax.servlet.http.Cookie;
 
 /**
- * Interface to create a mock {@link RequestDispatcher} when calling the getRequestDispatcher methods
- * on {@link MockSlingHttpServletRequest} instances.
+ * Manages cookies for request and response.
  */
-public interface MockRequestDispatcherFactory extends org.apache.sling.servlethelpers.MockRequestDispatcherFactory {
+class CookieSupport {
 
-    // inherit from superclass
+    private Map<String, Cookie> cookies = new LinkedHashMap<String, Cookie>();
+
+    public void addCookie(Cookie cookie) {
+        cookies.put(cookie.getName(), cookie);
+    }
+
+    public Cookie getCookie(String name) {
+        return cookies.get(name);
+    }
+
+    public Cookie[] getCookies() {
+        if (cookies.isEmpty()) {
+            return null;
+        } else {
+            return cookies.values().toArray(new Cookie[cookies.size()]);
+        }
+    }
+
+    public void reset() {
+        cookies.clear();
+    }
 
 }

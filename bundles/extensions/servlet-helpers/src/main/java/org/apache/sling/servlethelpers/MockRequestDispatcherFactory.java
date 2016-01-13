@@ -16,14 +16,36 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.testing.mock.sling.servlet;
+package org.apache.sling.servlethelpers;
+
+import javax.servlet.RequestDispatcher;
+
+import org.apache.sling.api.request.RequestDispatcherOptions;
+import org.apache.sling.api.resource.Resource;
+
+import aQute.bnd.annotation.ConsumerType;
 
 /**
  * Interface to create a mock {@link RequestDispatcher} when calling the getRequestDispatcher methods
  * on {@link MockSlingHttpServletRequest} instances.
  */
-public interface MockRequestDispatcherFactory extends org.apache.sling.servlethelpers.MockRequestDispatcherFactory {
+@ConsumerType
+public interface MockRequestDispatcherFactory {
 
-    // inherit from superclass
+    /**
+     * Get request dispatcher for given path.
+     * @param path Path
+     * @param options Options. Null if no options are provided.
+     * @return Request dispatcher
+     */
+    RequestDispatcher getRequestDispatcher(String path, RequestDispatcherOptions options);
+
+    /**
+     * Get request dispatcher for given resource.
+     * @param resource Resource
+     * @param options Options. Null if no options are provided.
+     * @return Request dispatcher
+     */
+    RequestDispatcher getRequestDispatcher(Resource resource, RequestDispatcherOptions options);
 
 }
