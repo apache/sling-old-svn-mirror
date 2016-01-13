@@ -21,9 +21,14 @@ package org.apache.sling.commons.metrics.internal;
 
 import java.lang.management.ManagementFactory;
 import java.util.Collections;
+import java.util.Set;
 
 import javax.management.MBeanServer;
+import javax.management.ObjectName;
+import javax.management.Query;
+import javax.management.QueryExp;
 
+import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.MetricRegistry;
 import org.apache.sling.commons.metrics.Counter;
 import org.apache.sling.commons.metrics.Histogram;
@@ -36,9 +41,13 @@ import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class MetricServiceTest {
@@ -48,8 +57,8 @@ public class MetricServiceTest {
     private MetricsServiceImpl service = new MetricsServiceImpl();
 
     @After
-    public void registerMBeanServer() {
-        context.registerService(MBeanServer.class, ManagementFactory.getPlatformMBeanServer());
+    public void deactivate(){
+        MockOsgi.deactivate(service);
     }
 
     @Test
@@ -116,6 +125,23 @@ public class MetricServiceTest {
         activate();
         service.histogram("test");
         service.timer("test");
+    }
+
+    @Test
+    public void jmxRegistration() throws Exception{
+        MBeanServer server = ManagementFactory.getPlatformMBeanServer();
+        activate();
+        Meter meter = service.meter("test");
+        assertNotNull(meter);
+        QueryExp q = Query.isInstanceOf(Query.value(JmxReporter.JmxMeterMBean.class.getName()));
+        Set<ObjectName> names = server.queryNames(new ObjectName("org.apache.sling:name=*"), q);
+        assertThat(names, is(not(empty())));
+
+        MockOsgi.deactivate(service);
+
+        names = server.queryNames(new ObjectName("org.apache.sling:name=*"), q);
+        assertThat(names, is(empty()));
+
     }
 
     private MetricRegistry getRegistry(){
