@@ -20,6 +20,7 @@
 package org.apache.sling.commons.metrics.internal;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -36,6 +37,7 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.sling.commons.metrics.Meter;
 import org.apache.sling.commons.metrics.MetricsService;
 import org.apache.sling.commons.metrics.Timer;
@@ -52,21 +54,14 @@ public class MetricsServiceImpl implements MetricsService {
     private final ConcurrentMap<String, Metric> metrics = new ConcurrentHashMap<String, Metric>();
     private final MetricRegistry registry = new MetricRegistry();
 
-    @Reference
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY)
     private MBeanServer server;
 
     private JmxReporter reporter;
 
     @Activate
     private void activate(BundleContext context, Map<String, Object> config) {
-        //TODO Domain name should be based on calling bundle
-        //For that we can register ServiceFactory and make use of calling
-        //bundle symbolic name to determine the mapping
-
-        reporter = JmxReporter.forRegistry(registry)
-                .inDomain("org.apache.sling")
-                .registerWith(server)
-                .build();
+        enableJMXReporter();
 
         final Dictionary<String, String> svcProps = new Hashtable<String, String>();
         svcProps.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Metrics Service");
@@ -204,5 +199,21 @@ public class MetricsServiceImpl implements MetricsService {
         T newMetric(MetricRegistry registry, String name);
 
         boolean isInstance(Metric metric);
+    }
+
+    private void enableJMXReporter() {
+        //TODO Domain name should be based on calling bundle
+        //For that we can register ServiceFactory and make use of calling
+        //bundle symbolic name to determine the mapping
+
+        if (server == null){
+            server = ManagementFactory.getPlatformMBeanServer();
+        }
+
+        reporter = JmxReporter.forRegistry(registry)
+                .inDomain("org.apache.sling")
+                .registerWith(server)
+                .build();
+        reporter.start();
     }
 }
