@@ -125,7 +125,7 @@
     org.apache.sling/org.apache.sling.jcr.webconsole/1.0.2
     org.apache.sling/org.apache.sling.extensions.explorer/1.0.4
     io.dropwizard.metrics/metrics-core/3.1.0
-    org.apache.sling/org.apache.sling.commons.metrics/0.0.3-SNAPSHOT
+    org.apache.sling/org.apache.sling.commons.metrics/1.0.1-SNAPSHOT
 
 [configurations]
   org.apache.sling.engine.impl.log.RequestLogger
