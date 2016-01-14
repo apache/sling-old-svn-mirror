@@ -36,6 +36,7 @@
   <description>Launchpad Oak Tar Integration Tests for Apache Sling Launchpad Karaf</description>
 
   <properties>
+    <org.apache.karaf.version>4.0.4</org.apache.karaf.version>
     <org.ops4j.pax.exam.version>4.8.0</org.ops4j.pax.exam.version>
   </properties>
 
@@ -64,7 +65,7 @@
       <groupId>org.apache.karaf</groupId>
       <artifactId>apache-karaf</artifactId>
       <type>tar.gz</type>
-      <version>4.0.3</version>
+      <version>${org.apache.karaf.version}</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
