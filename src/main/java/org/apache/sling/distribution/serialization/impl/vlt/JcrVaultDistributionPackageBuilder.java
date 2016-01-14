@@ -86,7 +86,7 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
         this.importMode = importMode;
         this.aclHandling = aclHandling;
         this.packageRoots = packageRoots;
-        this.tempPackagesNode = AbstractDistributionPackage.PACKAGES_ROOT + "/" + type + "/data";
+        this.tempPackagesNode = type + "/data";
 
         this.tempDirectory = VltUtils.getTempFolder(tempFilesFolder);
         this.filters = VltUtils.parseFilters(filterRules);
@@ -193,24 +193,20 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
 
 
         try {
-            if (packageRoot != null) {
-                String packageName = packageId.getDownloadName();
-                if (packageRoot.hasNode(packageName)) {
-                    packageRoot.getNode(packageName).remove();
-                }
-
-                JcrPackage jcrPackage = packageManager.create(packageRoot, packageName);
-                Property data = jcrPackage.getData();
-                data.setValue(in);
-                JcrPackageDefinition def = jcrPackage.getDefinition();
-                def.unwrap(pack, true, false);
-
-                log.debug("package uploaded to {}", jcrPackage.getNode().getPath());
-
-                return jcrPackage;
-            } else {
-                return packageManager.upload(in, true);
+            String packageName = packageId.getDownloadName();
+            if (packageRoot.hasNode(packageName)) {
+                packageRoot.getNode(packageName).remove();
             }
+
+            JcrPackage jcrPackage = packageManager.create(packageRoot, packageName);
+            Property data = jcrPackage.getData();
+            data.setValue(in);
+            JcrPackageDefinition def = jcrPackage.getDefinition();
+            def.unwrap(pack, true, false);
+
+            log.debug("package uploaded to {}", jcrPackage.getNode().getPath());
+
+            return jcrPackage;
         } finally {
             IOUtils.closeQuietly(in);
         }
@@ -223,12 +219,8 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
         Node packageRoot = getPackageRoot(session);
         PackageId packageId = new PackageId(PACKAGE_GROUP, packageName, VERSION);
 
-        if (packageRoot != null) {
-            Node packageNode = packageRoot.getNode(packageId.getDownloadName());
-            return packageManager.open(packageNode);
-        } else {
-            return packageManager.open(packageId);
-        }
+        Node packageNode = packageRoot.getNode(packageId.getDownloadName());
+        return packageManager.open(packageNode);
     }
 
     private PackageId getPackageId(VaultPackage vaultPackage) {
@@ -242,10 +234,11 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
     }
 
     private Node getPackageRoot(Session session) throws RepositoryException {
-        Node packageRoot = null;
-        if (tempPackagesNode != null) {
-            packageRoot = JcrUtils.getOrCreateByPath(tempPackagesNode, "sling:Folder", "sling:Folder", session, true);
+        Node tempRoot = JcrUtils.getNodeIfExists(AbstractDistributionPackage.PACKAGES_ROOT, session);
+        if (tempPackagesNode != null && tempRoot != null) {
+            return JcrUtils.getOrCreateByPath(tempRoot, tempPackagesNode, false, "sling:Folder", "sling:Folder", true);
         }
-        return packageRoot;
+
+        throw new RepositoryException("Cannot read "+ AbstractDistributionPackage.PACKAGES_ROOT);
     }
 }
