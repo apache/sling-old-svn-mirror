@@ -306,7 +306,7 @@
       db=sling
     </config>
     <feature version="${feature.version}">sling-launchpad-oak</feature>
-    <bundle dependency="true">mvn:org.mongodb/mongo-java-driver/2.14.0</bundle>
+    <bundle dependency="true">mvn:org.mongodb/mongo-java-driver/2.14.1</bundle>
   </feature>
   <!-- Apache Sling Scripting -->
   <feature name="sling-scripting" version="${feature.version}">
@@ -330,7 +330,7 @@
     <feature version="${feature.version}">sling-scripting</feature>
   </feature>
   <feature name="sling-scripting-sightly" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly/1.0.6</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly/1.0.10</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.10</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
@@ -436,7 +436,7 @@
     <feature version="${feature.version}">sling-extension-healthcheck</feature>
     <bundle dependency="true">mvn:org.apache.httpcomponents/httpcore-osgi/4.4.4</bundle>
     <bundle dependency="true">mvn:org.apache.httpcomponents/httpclient-osgi/4.5.1</bundle>
-    <bundle dependency="true">mvn:org.apache.jackrabbit.vault/org.apache.jackrabbit.vault/3.1.24</bundle>
+    <bundle dependency="true">mvn:org.apache.jackrabbit.vault/org.apache.jackrabbit.vault/3.1.26</bundle>
   </feature>
   <feature name="sling-extension-healthcheck" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.hc.core/1.2.2</bundle>
@@ -471,7 +471,7 @@
   </feature>
   <!-- Apache Sling Scripting (contrib) -->
   <feature name="sling-scripting-groovy" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.groovy/1.0.1-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.groovy/1.0.2</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-scripting</feature>
