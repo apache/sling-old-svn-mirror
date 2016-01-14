@@ -32,7 +32,7 @@
     <version>1.0.0-SNAPSHOT</version>
 
     <name>Apache Sling Servlet Helpers</name>
-    <description>Mock implementations of SlingHttpServletRequest, SlingHttpServletRepsonse and related classes.</description>
+    <description>Mock implementations of SlingHttpServletRequest, SlingHttpServletResponse and related classes.</description>
 
     <scm>
         <connection>
