@@ -53,6 +53,7 @@ public class WritePipeTest extends AbstractPipeTest {
         ValueMap properties =  context.resourceResolver().getResource("/content/fruits/apple").adaptTo(ValueMap.class);
         assertTrue("There should be hasSeed set to true", properties.get("hasSeed", false));
         assertArrayEquals("Colors should be correctly set", new String[]{"green", "red"}, properties.get("colors", String[].class));
+        assertFalse("worm property should be gone (${null} conf)", properties.get("worm", false));
     }
 
     /**

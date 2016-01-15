@@ -112,7 +112,7 @@ public class WritePipe extends BasePipe {
                     if (value == null) {
                         //null value are not handled by modifiable value maps,
                         //removing the property if it exists
-                        Resource propertyResource = resource.getChild(key);
+                        Resource propertyResource = target.getChild(key);
                         if (propertyResource != null) {
                             logger.info("removing {}", propertyResource.getPath());
                             if (!isDryRun()){
