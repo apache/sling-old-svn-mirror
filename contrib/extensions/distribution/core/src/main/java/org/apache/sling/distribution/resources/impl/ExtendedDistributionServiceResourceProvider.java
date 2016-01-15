@@ -30,6 +30,7 @@ import org.apache.sling.distribution.component.impl.DistributionComponent;
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.component.impl.DistributionComponentProvider;
 import org.apache.sling.distribution.log.DistributionLog;
+import org.apache.sling.distribution.queue.impl.ErrorQueueDispatchingStrategy;
 import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
@@ -137,6 +138,11 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
                 result.put("state", queueStatus.getState().name());
                 result.put("empty", queueStatus.isEmpty());
                 result.put("itemsCount", queueStatus.getItemsCount());
+
+                if (queueName.startsWith(ErrorQueueDispatchingStrategy.ERROR_PREFIX)) {
+                    String retryQueue = queueName.replace(ErrorQueueDispatchingStrategy.ERROR_PREFIX, "");
+                    result.put("retryQueue", retryQueue);
+                }
 
                 List<String> nameList = new ArrayList<String>();
                 Map<String, Map<String, Object>> propertiesMap = new HashMap<String, Map<String, Object>>();
