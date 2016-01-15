@@ -41,10 +41,14 @@ public class PipeBindingsTest extends AbstractPipeTest {
         context.load().json("/container.json", PATH_PIPE);
     }
 
+    private PipeBindings getDummyTreeBinding(){
+        Resource resource = context.resourceResolver().getResource(PATH_PIPE + "/" + ContainerPipeTest.NN_DUMMYTREE);
+        return new PipeBindings(resource);
+    }
+
     @Test
     public void testEvaluateSimpleString() throws ScriptException {
-        Resource resource = context.resourceResolver().getResource(PATH_PIPE + "/" + ContainerPipeTest.NN_DUMMYTREE);
-        PipeBindings bindings = new PipeBindings(resource);
+        PipeBindings bindings = getDummyTreeBinding();
         String simple = "simple string";
         String evaluated = (String)bindings.evaluate(simple);
         assertEquals("evaluated should be the same than input", evaluated, simple);
@@ -52,8 +56,7 @@ public class PipeBindingsTest extends AbstractPipeTest {
 
     @Test
     public void computeEcma5Expression() {
-        Resource resource = context.resourceResolver().getResource(PATH_PIPE + "/" + ContainerPipeTest.NN_DUMMYTREE);
-        PipeBindings bindings = new PipeBindings(resource);
+        PipeBindings bindings = getDummyTreeBinding();
         Map<String,String> expressions = new HashMap<>();
         expressions.put("blah ${blah} blah", "'blah ' + blah + ' blah'");
         expressions.put("${blah}", "blah");
@@ -68,8 +71,7 @@ public class PipeBindingsTest extends AbstractPipeTest {
 
     @Test
     public void testInstantiateExpression() throws Exception {
-        Resource resource = context.resourceResolver().getResource(PATH_PIPE + "/" + ContainerPipeTest.NN_DUMMYTREE);
-        PipeBindings bindings = new PipeBindings(resource);
+        PipeBindings bindings = getDummyTreeBinding();
         Map<String, String> testMap = new HashMap<>();
         testMap.put("a", "apricots");
         testMap.put("b", "bananas");
@@ -79,9 +81,15 @@ public class PipeBindingsTest extends AbstractPipeTest {
     }
 
     @Test
+    public void testEvaluateNull() throws Exception {
+        PipeBindings bindings = getDummyTreeBinding();
+        assertNull("${null} object should be instantiated as null", bindings.instantiateObject("${null}"));
+        assertNull("${null} expression should be instantiated as null", bindings.instantiateExpression("${null}"));
+    }
+
+    @Test
     public void testInstantiateObject() throws Exception {
-        Resource resource = context.resourceResolver().getResource(PATH_PIPE + "/" + ContainerPipeTest.NN_DUMMYTREE);
-        PipeBindings bindings = new PipeBindings(resource);
+        PipeBindings bindings = getDummyTreeBinding();
         Map<String, String> testMap = new HashMap<>();
         testMap.put("a", "apricots");
         testMap.put("b", "bananas");
