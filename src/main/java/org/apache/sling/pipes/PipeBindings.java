@@ -227,7 +227,7 @@ public class PipeBindings {
     public Object instantiateObject(String expr){
         try {
             Object result = evaluate(expr);
-            if (! result.getClass().getName().startsWith("java.lang.")) {
+            if (result != null && ! result.getClass().getName().startsWith("java.lang.")) {
                 //special case of the date in which case jdk.nashorn.api.scripting.ScriptObjectMirror will
                 //be returned
                 JsDate jsDate = ((Invocable) engine).getInterface(result, JsDate.class);
