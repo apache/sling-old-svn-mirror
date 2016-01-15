@@ -63,7 +63,7 @@
   </feature>
   <!-- Apache Sling Commons -->
   <feature name="sling-commons-metrics" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.commons.metrics/1.0.1-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.commons.metrics/1.0.0</bundle>
     <!-- dependencies -->
     <feature>scr</feature>
     <bundle dependency="true">mvn:io.dropwizard.metrics/metrics-core/3.1.2</bundle>
