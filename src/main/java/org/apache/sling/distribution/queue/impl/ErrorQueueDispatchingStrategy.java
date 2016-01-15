@@ -47,7 +47,7 @@ public class ErrorQueueDispatchingStrategy implements DistributionQueueDispatchi
     private final Logger log = LoggerFactory.getLogger(getClass());
 
 
-    private final static String ERROR_PREFIX = "error-";
+    public final static String ERROR_PREFIX = "error-";
     private final Set<String> queueNames = new TreeSet<String>();
 
     public ErrorQueueDispatchingStrategy(String[] queueNames) {

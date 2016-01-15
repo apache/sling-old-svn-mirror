@@ -90,6 +90,17 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
 
                 addItems(resourceResolver, queue, sourceQueue, idParam);
             }
+        } else if ("move".equals(operation)) {
+            String from = request.getParameter("from");
+            String[] idParam = request.getParameterValues("id");
+
+            if (idParam != null && from != null) {
+                DistributionAgent agent = request.getResource().getParent().getParent().adaptTo(DistributionAgent.class);
+                DistributionQueue sourceQueue = agent.getQueue(from);
+
+                addItems(resourceResolver, queue, sourceQueue, idParam);
+                deleteItems(resourceResolver, sourceQueue, idParam);
+            }
         }
     }
 
@@ -101,6 +112,13 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
         }
 
         for (String id: ids) {
+            DistributionQueueEntry targetEntry =  targetQueue.getItem(id);
+
+            if (targetEntry != null) {
+                log.warn("item {} already in queue {}", id, targetQueue.getName());
+                continue;
+            }
+
             DistributionQueueEntry entry = sourceQueue.getItem(id);
             if (entry != null) {
                 targetQueue.add(new DistributionQueueItem(id, entry.getItem()));
