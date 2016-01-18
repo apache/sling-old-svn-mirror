@@ -150,8 +150,7 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
         try {
             session = getSession(resourceResolver);
 
-            String packageName = distributionPackage.getId();
-            JcrPackage jcrPackage = openPackage(session, packageName);
+            JcrPackage jcrPackage = ((JcrVaultDistributionPackage) distributionPackage).getJcrPackage();
 
             ImportOptions importOptions = VltUtils.getImportOptions(aclHandling, importMode);
             jcrPackage.extract(importOptions);
@@ -211,7 +210,6 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
 
     private JcrPackage openPackage(Session session, String packageName) throws RepositoryException {
         JcrPackageManager packageManager = packaging.getPackageManager(session);
-
 
         Node packageRoot = getPackageRoot(session);
         PackageId packageId = new PackageId(PACKAGE_GROUP, packageName, VERSION);

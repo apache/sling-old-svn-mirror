@@ -95,4 +95,8 @@ public class JcrVaultDistributionPackage extends AbstractDistributionPackage imp
             log.error("Cannot delete package", e);
         }
     }
+
+    JcrPackage getJcrPackage() {
+        return jcrPackage;
+    }
 }
