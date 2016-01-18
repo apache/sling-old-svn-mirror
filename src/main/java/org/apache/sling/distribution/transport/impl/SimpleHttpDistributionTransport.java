@@ -94,17 +94,18 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
                 Request req = Request.Post(distributionEndpoint.getUri()).useExpectContinue();
 
                 InputStream inputStream = null;
-                Response response = null;
                 try {
                     inputStream = distributionPackage.createInputStream();
 
                     req = req.bodyStream(inputStream, ContentType.APPLICATION_OCTET_STREAM);
-                    response = executor.execute(req);
+
+                    Response response = executor.execute(req);
+
+                    response.discardContent();
                 } finally {
                     IOUtils.closeQuietly(inputStream);
                 }
 
-                Content content = response.returnContent();
                 log.debug("delivered packageId={}, endpoint={}", distributionPackage.getId(), distributionEndpoint.getUri());
             } catch (HttpHostConnectException e) {
                 throw new RecoverableDistributionException("endpoint not available " + distributionEndpoint.getUri(), e);
@@ -192,7 +193,6 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
         distributionContext.put(contextKeyExecutor, executor);
 
         return executor;
-
     }
 
 }
