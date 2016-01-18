@@ -44,21 +44,17 @@ import org.apache.sling.distribution.transport.impl.SimpleHttpDistributionTransp
  */
 public class RemoteDistributionPackageExporter implements DistributionPackageExporter {
 
-
     private final DistributionPackageBuilder packageBuilder;
-    private final DistributionTransportSecretProvider secretProvider;
-    private final DefaultDistributionLog log;
     private final int maxPullItems;
     private final DistributionTransportContext distributionContext = new DistributionTransportContext();
 
 
-    private List<DistributionTransport> transportHandlers = new ArrayList<DistributionTransport>();
+    private final List<DistributionTransport> transportHandlers = new ArrayList<DistributionTransport>();
 
     public RemoteDistributionPackageExporter(DefaultDistributionLog log, DistributionPackageBuilder packageBuilder,
                                              DistributionTransportSecretProvider secretProvider,
                                              String[] endpoints,
                                              int maxPullItems) {
-        this.log = log;
         this.maxPullItems = maxPullItems;
         if (packageBuilder == null) {
             throw new IllegalArgumentException("packageBuilder is required");
@@ -70,7 +66,6 @@ public class RemoteDistributionPackageExporter implements DistributionPackageExp
 
 
         this.packageBuilder = packageBuilder;
-        this.secretProvider = secretProvider;
 
         for (String endpoint : endpoints) {
             if (endpoint != null && endpoint.length() > 0) {
@@ -79,7 +74,6 @@ public class RemoteDistributionPackageExporter implements DistributionPackageExp
         }
     }
 
-    @Nonnull
     public void exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest, @Nonnull DistributionPackageProcessor packageProcessor) throws DistributionException {
         int maxNumberOfPackages = DistributionRequestType.PULL.equals(distributionRequest.getRequestType()) ? maxPullItems : 1;
         for (DistributionTransport distributionTransport : transportHandlers) {

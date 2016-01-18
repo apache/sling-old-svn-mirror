@@ -151,7 +151,7 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
                     propertiesMap.put(entry.getItem().getId(), getItemProperties(entry));
                 }
 
-                result.put(ITEMS, nameList.toArray(new String[0]));
+                result.put(ITEMS, nameList.toArray(new String[nameList.size()]));
                 result.put(INTERNAL_ITEMS_PROPERTIES, propertiesMap);
                 result.put(INTERNAL_ADAPTABLE, queue);
             }
@@ -179,7 +179,7 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
     }
 
 
-    Map<String, Object> getItemProperties(DistributionQueueEntry entry) {
+    private Map<String, Object> getItemProperties(DistributionQueueEntry entry) {
         Map<String, Object> result = new HashMap<String, Object>();
 
 

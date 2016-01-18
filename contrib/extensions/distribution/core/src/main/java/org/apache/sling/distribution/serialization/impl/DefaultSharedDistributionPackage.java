@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 public class DefaultSharedDistributionPackage implements SharedDistributionPackage {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    protected static final String REFERENCE_ROOT_NODE = "refs";
+    static final String REFERENCE_ROOT_NODE = "refs";
     private final Object lock;
 
     private final ResourceResolver resourceResolver;
@@ -136,8 +136,7 @@ public class DefaultSharedDistributionPackage implements SharedDistributionPacka
         String holderPath = packagePath;
 
         resourceResolver.refresh();
-        Resource resource = resourceResolver.getResource(holderPath);
-        return resource;
+        return resourceResolver.getResource(holderPath);
     }
 
 

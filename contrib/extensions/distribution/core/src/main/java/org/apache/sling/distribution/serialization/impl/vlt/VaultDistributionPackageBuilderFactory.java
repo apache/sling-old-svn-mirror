@@ -60,7 +60,7 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
      * name of this package builder.
      */
     @Property(label = "Name", description = "The name of the package builder.")
-    public static final String NAME = DistributionComponentConstants.PN_NAME;
+    private static final String NAME = DistributionComponentConstants.PN_NAME;
 
 
     /**
@@ -74,39 +74,39 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
                     value = "file packages"
             )},
             value = "jcrvlt", label = "type", description = "The type of this package builder")
-    public static final String TYPE = DistributionComponentConstants.PN_TYPE;
+    private static final String TYPE = DistributionComponentConstants.PN_TYPE;
 
 
     /**
      * import mode property for file vault package builder
      */
     @Property(label = "Import Mode", description = "The vlt import mode for created packages.")
-    public static final String IMPORT_MODE = "importMode";
+    private static final String IMPORT_MODE = "importMode";
 
     /**
      * ACL handling property for file vault package builder
      */
     @Property(label = "Acl Handling", description = "The vlt acl handling mode for created packages.")
-    public static final String ACL_HANDLING = "aclHandling";
+    private static final String ACL_HANDLING = "aclHandling";
 
     /**
      * Package roots
      */
     @Property(label = "Package Roots", description = "The package roots to be used for created packages. (this is useful for assembling packages with an user that cannot read above the package root)")
-    public static final String PACKAGE_ROOTS = "package.roots";
+    private static final String PACKAGE_ROOTS = "package.roots";
 
     /**
      * Package filters
      */
     @Property(label = "Package Filters", description = "The package path filters. Filter format: path|+include|-exclude", cardinality = 100)
-    public static final String PACKAGE_FILTERS = "package.filters";
+    private static final String PACKAGE_FILTERS = "package.filters";
 
 
     /**
      * Temp file folder
      */
     @Property(label = "Temp Filesystem Folder", description = "The filesystem folder where the temporary files should be saved.")
-    public static final String TEMP_FS_FOLDER = "tempFsFolder";
+    private static final String TEMP_FS_FOLDER = "tempFsFolder";
 
     @Reference
     private Packaging packaging;

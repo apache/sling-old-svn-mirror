@@ -58,9 +58,10 @@ public class DistributionConfigurationResourceProviderFactory implements Resourc
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Property
-    public final static String KIND = DistributionComponentConstants.PN_KIND;
+    private final static String KIND = DistributionComponentConstants.PN_KIND;
 
     @Reference
+    private
     DistributionConfigurationManager configurationManager;
 
     private String resourceRoot;

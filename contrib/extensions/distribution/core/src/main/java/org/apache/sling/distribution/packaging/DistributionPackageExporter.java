@@ -18,11 +18,8 @@
  */
 package org.apache.sling.distribution.packaging;
 
-
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.List;
 
 import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -51,10 +48,9 @@ public interface DistributionPackageExporter {
      *                            location in the repository while a 'remote' exporter will use the resolver just to
      *                            store the binary of the remotely fetched packages in the repository.
      * @param distributionRequest - the request containing the needed information for content to be exported
-     * @return a {@link java.util.List} of {@link DistributionPackage}s
      */
-    @Nonnull
-    void exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest, @Nonnull DistributionPackageProcessor packageProcessor) throws DistributionException;
+    void exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest,
+                        @Nonnull DistributionPackageProcessor packageProcessor) throws DistributionException;
 
     /**
      * Retrieves a {@link DistributionPackage} given its identifier, if it already exists.

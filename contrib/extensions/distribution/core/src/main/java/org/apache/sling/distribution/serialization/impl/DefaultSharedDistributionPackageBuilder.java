@@ -191,8 +191,7 @@ public class DefaultSharedDistributionPackageBuilder implements DistributionPack
     }
 
     private String getPathFromName(String name) {
-        String packagePath = sharedPackagesRoot + "/" + name;
-        return packagePath;
+        return sharedPackagesRoot + "/" + name;
     }
 
     private String retrieveIdFromName(ResourceResolver resourceResolver, String name) {

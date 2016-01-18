@@ -36,7 +36,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.vault.fs.api.ImportMode;
-import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.api.WorkspaceFilter;
 import org.apache.jackrabbit.vault.fs.io.AccessControlHandling;
 import org.apache.jackrabbit.vault.fs.io.ImportOptions;
@@ -71,8 +70,8 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
     private static final String PACKAGE_GROUP = "sling/distribution";
 
     private final Packaging packaging;
-    private ImportMode importMode;
-    private AccessControlHandling aclHandling;
+    private final ImportMode importMode;
+    private final AccessControlHandling aclHandling;
     private final String[] packageRoots;
     private final String tempPackagesNode;
     private final File tempDirectory;
@@ -189,8 +188,6 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
         PackageId packageId = getPackageId(pack);
 
         InputStream in = FileUtils.openInputStream(pack.getFile());
-
-
 
         try {
             String packageName = packageId.getDownloadName();

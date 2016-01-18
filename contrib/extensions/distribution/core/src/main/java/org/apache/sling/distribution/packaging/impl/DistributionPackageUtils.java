@@ -36,21 +36,21 @@ import java.util.List;
  */
 public class DistributionPackageUtils {
 
-    static Logger log = LoggerFactory.getLogger(DistributionPackageUtils.class);
+    private static final Logger log = LoggerFactory.getLogger(DistributionPackageUtils.class);
 
     /**
      * distribution package origin queue
      */
-    public static String PACKAGE_INFO_PROPERTY_ORIGIN_QUEUE = "internal.origin.queue";
+    private static final String PACKAGE_INFO_PROPERTY_ORIGIN_QUEUE = "internal.origin.queue";
 
     /**
      * distribution request user
      */
-    public static String PACKAGE_INFO_PROPERTY_REQUEST_USER = "internal.request.user";
+    public static final String PACKAGE_INFO_PROPERTY_REQUEST_USER = "internal.request.user";
 
-    public static String PACKAGE_INFO_PROPERTY_REQUEST_ID = "internal.request.id";
+    public static final String PACKAGE_INFO_PROPERTY_REQUEST_ID = "internal.request.id";
 
-    public static String PACKAGE_INFO_PROPERTY_REQUEST_START_TIME = "internal.request.startTime";
+    public static final String PACKAGE_INFO_PROPERTY_REQUEST_START_TIME = "internal.request.startTime";
 
 
 
@@ -144,7 +144,7 @@ public class DistributionPackageUtils {
         info.put(DistributionPackageInfo.PROPERTY_REQUEST_DEEP_PATHS, getDeepPaths(request));
     }
 
-    public static String[] getDeepPaths(DistributionRequest request) {
+    private static String[] getDeepPaths(DistributionRequest request) {
         List<String> deepPaths = new ArrayList<String>();
         for (String path : request.getPaths()) {
             if (request.isDeep(path)) {
@@ -152,7 +152,7 @@ public class DistributionPackageUtils {
             }
         }
 
-        return deepPaths.toArray(new String[0]);
+        return deepPaths.toArray(new String[deepPaths.size()]);
     }
 
 }

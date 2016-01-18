@@ -19,8 +19,6 @@
 package org.apache.sling.distribution.packaging.impl.exporter;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
@@ -49,8 +47,7 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
     private final DistributionPackageBuilderProvider packageBuilderProvider;
     private final String name;
 
-    final static String PACKAGE_TYPE = "agentexporter";
-
+    private final static String PACKAGE_TYPE = "agentexporter";
 
     private DistributionAgent agent;
     private String queueName;
@@ -66,7 +63,6 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
         this.agent = agent;
     }
 
-    @Nonnull
     public void exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest, @Nonnull DistributionPackageProcessor packageProcessor) throws DistributionException {
 
         if (DistributionRequestType.TEST.equals(distributionRequest.getRequestType())) {
@@ -145,13 +141,12 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
         return null;
     }
 
-
     private class AgentDistributionPackage extends DistributionPackageWrapper {
 
         private final DistributionPackage distributionPackage;
         private final DistributionQueue queue;
 
-        protected AgentDistributionPackage(DistributionPackage distributionPackage, DistributionQueue queue) {
+        AgentDistributionPackage(DistributionPackage distributionPackage, DistributionQueue queue) {
             super(distributionPackage);
             this.distributionPackage = distributionPackage;
             this.queue = queue;
@@ -165,7 +160,6 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
             agentLog("exported package {} with info {} from queue {} by exporter {}", new Object[] {id, distributionPackage.getInfo(), queue.getName(), name});
         }
     }
-
 
     private void agentLog(String message, Object[] values) {
         DistributionLog agentLog = agent.getLog();

@@ -19,7 +19,6 @@
 package org.apache.sling.distribution.packaging.impl.exporter;
 
 import javax.annotation.Nonnull;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -71,7 +70,6 @@ public class LocalDistributionPackageExporterFactory implements DistributionPack
         exporter = new LocalDistributionPackageExporter(packageBuilder);
     }
 
-    @Nonnull
     public void exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest, @Nonnull DistributionPackageProcessor packageProcessor) throws DistributionException {
         exporter.exportPackages(resourceResolver, distributionRequest, packageProcessor);
     }

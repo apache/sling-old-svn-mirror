@@ -38,9 +38,7 @@ import java.util.TreeMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.vault.fs.api.ImportMode;
-import org.apache.jackrabbit.vault.fs.api.PathFilter;
 import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.api.WorkspaceFilter;
 import org.apache.jackrabbit.vault.fs.config.DefaultMetaInf;
@@ -65,7 +63,7 @@ import org.slf4j.LoggerFactory;
  */
 public class VltUtils {
 
-    final static Logger log = LoggerFactory.getLogger(VltUtils.class);
+    private final static Logger log = LoggerFactory.getLogger(VltUtils.class);
 
     public static WorkspaceFilter createFilter(DistributionRequest distributionRequest, NavigableMap<String, List<String>> filters) {
         DefaultWorkspaceFilter filter = new DefaultWorkspaceFilter();
@@ -105,7 +103,6 @@ public class VltUtils {
             filterSet.addInclude(new DefaultPathFilter(path));
         }
 
-
         List<String> patterns = new ArrayList<String>();
 
         // add the most specific filter rules
@@ -116,11 +113,7 @@ public class VltUtils {
             }
         }
 
-        String[] requestFilters = distributionRequest.getFilters(path);
-
-        if (requestFilters != null) {
-            patterns.addAll(Arrays.asList(requestFilters));
-        }
+        patterns.addAll(Arrays.asList(distributionRequest.getFilters(path)));
 
         for (String pattern : patterns) {
             PathFilterSet.Entry<DefaultPathFilter> entry = extractPathPattern(pattern);
@@ -350,8 +343,6 @@ public class VltUtils {
         List<String> paths = new ArrayList<String>();
         Map<String, String[]> filters = new HashMap<String, String[]>();
 
-
-
         for (String path : request.getPaths()) {
             if (VltUtils.findParent(path, "rep:policy") != null) {
                 if (DistributionRequestType.DELETE.equals(requestType)) {
@@ -373,11 +364,10 @@ public class VltUtils {
             filters.put(path, request.getFilters(path));
         }
 
-        return new SimpleDistributionRequest(requestType, paths.toArray(new String[0]), deepPaths, filters);
+        return new SimpleDistributionRequest(requestType, paths.toArray(new String[paths.size()]), deepPaths, filters);
     }
 
-
-    public static PathFilterSet.Entry<DefaultPathFilter> extractPathPattern(String pattern) {
+    private static PathFilterSet.Entry<DefaultPathFilter> extractPathPattern(String pattern) {
         PathFilterSet.Entry<DefaultPathFilter> result = null;
         if (pattern.startsWith("+")) {
             result = new PathFilterSet.Entry<DefaultPathFilter>(new DefaultPathFilter(pattern.substring(1)), true);

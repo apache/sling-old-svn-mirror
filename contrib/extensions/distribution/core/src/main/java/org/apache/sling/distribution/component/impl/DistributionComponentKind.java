@@ -68,8 +68,8 @@ public enum DistributionComponentKind {
     TRIGGER("trigger");
 
 
-    private static Map<DistributionComponentKind, Class> classMap = new HashMap<DistributionComponentKind, Class>();
-    private static Map<DistributionComponentKind, Map<String, Class>> factoryMap = new HashMap<DistributionComponentKind, Map<String, Class>>();
+    private static final Map<DistributionComponentKind, Class> classMap = new HashMap<DistributionComponentKind, Class>();
+    private static final Map<DistributionComponentKind, Map<String, Class>> factoryMap = new HashMap<DistributionComponentKind, Map<String, Class>>();
 
     static {
         registerKind(AGENT, DistributionAgent.class);

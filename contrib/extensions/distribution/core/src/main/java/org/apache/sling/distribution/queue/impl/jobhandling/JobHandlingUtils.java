@@ -18,6 +18,8 @@
  */
 package org.apache.sling.distribution.queue.impl.jobhandling;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -30,7 +32,7 @@ import org.apache.sling.event.jobs.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JobHandlingUtils {
+class JobHandlingUtils {
     private final static Logger log = LoggerFactory.getLogger(JobHandlingUtils.class);
 
 
@@ -79,6 +81,7 @@ public class JobHandlingUtils {
         return properties;
     }
 
+    @Nonnull
     public static String getQueueName(Job job) {
 
         String topic = job.getTopic();
@@ -96,13 +99,12 @@ public class JobHandlingUtils {
         String queueName = getQueueName(job);
         int attempts = job.getRetryCount();
 
-        DistributionQueueItemStatus status = new DistributionQueueItemStatus(job.getCreated(),
+        return new DistributionQueueItemStatus(job.getCreated(),
                 attempts > 0 ? DistributionQueueItemState.ERROR : DistributionQueueItemState.QUEUED,
                 attempts, queueName);
-
-        return status;
     }
 
+    @CheckForNull
     public static DistributionQueueEntry getEntry(final Job job) {
         DistributionQueueItem item = getItem(job);
         DistributionQueueItemStatus itemStatus = getStatus(job);

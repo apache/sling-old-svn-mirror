@@ -19,6 +19,7 @@
 package org.apache.sling.distribution.transport.impl;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
@@ -55,16 +56,15 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
     private static final String PASSWORD = "password";
     private static final String EXECUTOR_CONTEXT_KEY_PREFIX = "ExecutorContextKey";
 
-
     /**
      * distribution package origin uri
      */
-    public static String PACKAGE_INFO_PROPERTY_ORIGIN_URI = "internal.origin.uri";
+    private static final String PACKAGE_INFO_PROPERTY_ORIGIN_URI = "internal.origin.uri";
 
-    protected final DefaultDistributionLog log;
+    private final DefaultDistributionLog log;
     private final DistributionEndpoint distributionEndpoint;
     private final DistributionPackageBuilder packageBuilder;
-    protected final DistributionTransportSecretProvider secretProvider;
+    private final DistributionTransportSecretProvider secretProvider;
     private final String contextKeyExecutor;
 
     public SimpleHttpDistributionTransport(DefaultDistributionLog log, DistributionEndpoint distributionEndpoint,
@@ -86,7 +86,6 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
         if (packageOrigin != null && hostAndPort.equals(getHostAndPort(packageOrigin))) {
             log.debug("skipping distribution of package {} to same origin {}", distributionPackage.getId(), hostAndPort);
         } else {
-
 
             try {
                 Executor executor = getExecutor(distributionContext);
@@ -116,7 +115,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
 
     }
 
-    @Nonnull
+    @Nullable
     public DistributionPackageProxy retrievePackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest, @Nonnull DistributionTransportContext distributionContext) throws DistributionException {
         log.debug("pulling from {}", distributionEndpoint.getUri());
         List<DistributionPackage> result = new ArrayList<DistributionPackage>();
@@ -127,7 +126,6 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
 
             // TODO : executor should be cached and reused
 
-
             Executor executor = getExecutor(distributionContext);
 
 //            Request req = Request.Post(distributionURI).useExpectContinue();
@@ -137,7 +135,6 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
             // continuously requests package streams as long as type header is received with the response (meaning there's a package of a certain type)
             final Map<String, String> headers = new HashMap<String, String>();
 
-
             InputStream inputStream = HttpTransportUtils.fetchNextPackage(executor, distributionURI, headers);
 
             if (inputStream == null) {
@@ -145,19 +142,12 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
             }
 
             final DistributionPackage responsePackage = packageBuilder.readPackage(resourceResolver, inputStream);
-            if (responsePackage != null) {
-                responsePackage.getInfo().put(PACKAGE_INFO_PROPERTY_ORIGIN_URI, distributionURI);
-                log.debug("pulled package with info {}", responsePackage.getInfo());
+            responsePackage.getInfo().put(PACKAGE_INFO_PROPERTY_ORIGIN_URI, distributionURI);
+            log.debug("pulled package with info {}", responsePackage.getInfo());
 
+            String originalId = headers.get(HttpTransportUtils.HEADER_DISTRIBUTION_ORIGINAL_ID);
 
-                String originalId = headers.get(HttpTransportUtils.HEADER_DISTRIBUTION_ORIGINAL_ID);
-
-                DistributionPackageProxy remotePackage = new DefaultDistributionPackageProxy(responsePackage, executor, distributionURI, originalId);
-
-                return remotePackage;
-            } else {
-                log.warn("responsePackage is null");
-            }
+            return new DefaultDistributionPackageProxy(responsePackage, executor, distributionURI, originalId);
         } catch (HttpHostConnectException e) {
             log.debug("could not connect to {} - skipping", distributionEndpoint.getUri());
         } catch (Exception ex) {
@@ -167,7 +157,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
         return null;
     }
 
-    protected Executor authenticate(DistributionTransportSecret secret, Executor executor) {
+    private Executor authenticate(DistributionTransportSecret secret, Executor executor) {
         Map<String, String> credentialsMap = secret.asCredentialsMap();
         if (credentialsMap != null) {
             executor = executor.auth(new HttpHost(distributionEndpoint.getUri().getHost(), distributionEndpoint.getUri().getPort()),

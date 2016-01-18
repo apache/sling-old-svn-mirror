@@ -95,7 +95,7 @@ public class DistributionConfigurationResourceProvider extends AbstractModifying
         return null;
     }
 
-    protected Map<String, Object> getResourceRootProperties() {
+    private Map<String, Object> getResourceRootProperties() {
         List<DistributionConfiguration> configsList = configurationManager.getConfigs(kind);
 
         List<String> nameList = new ArrayList<String>();
@@ -113,7 +113,7 @@ public class DistributionConfigurationResourceProvider extends AbstractModifying
     }
 
 
-    protected Map<String, Object> getResourceProperties(String resourceName) {
+    private Map<String, Object> getResourceProperties(String resourceName) {
 
         String componentName = getConfigName(resourceName);
 
@@ -138,7 +138,7 @@ public class DistributionConfigurationResourceProvider extends AbstractModifying
         return configName;
     }
 
-    String getResourceType(DistributionComponentKind kind) {
+    private String getResourceType(DistributionComponentKind kind) {
         return SETTINGS_RESOURCE_TYPE;
     }
 

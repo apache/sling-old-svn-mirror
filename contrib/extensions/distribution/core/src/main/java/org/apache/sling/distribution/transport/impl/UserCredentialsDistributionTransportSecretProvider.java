@@ -51,10 +51,10 @@ public class UserCredentialsDistributionTransportSecretProvider implements
     public static final String NAME = DistributionComponentConstants.PN_NAME;
 
     @Property(label = "User Name", description = "The name of the user used to perform remote actions.")
-    public final static String USERNAME = "username";
+    private final static String USERNAME = "username";
 
     @Property(label = "Password", description = "The clear text password to perform authentication. Warning: storing clear text passwords is not safe.")
-    public final static String PASSWORD = "password";
+    private final static String PASSWORD = "password";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
