@@ -56,13 +56,17 @@ public class DistributionPackageImporterServlet extends SlingAllMethodsServlet {
         InputStream stream = request.getInputStream();
         ResourceResolver resourceResolver = request.getResourceResolver();
         try {
+            if (request.getParameter("forceError") != null) {
+                throw new Exception("manually forced error");
+            }
+            
             DistributionPackageInfo distributionPackageInfo = distributionPackageImporter.importStream(resourceResolver, stream);
 
             log.info("Package {} imported successfully", distributionPackageInfo);
             ServletJsonUtils.writeJson(response, 200, "package imported successfully");
 
         } catch (final Throwable e) {
-            ServletJsonUtils.writeJson(response, 400, "an unexpected error has occurred during distribution import");
+            ServletJsonUtils.writeJson(response, 500, "an unexpected error has occurred during distribution import");
             log.error("Error during distribution import", e);
         } finally {
             long end = System.currentTimeMillis();

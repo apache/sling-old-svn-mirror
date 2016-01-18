@@ -72,16 +72,23 @@ public class DistributionPackageUtils {
      * @param queueName the name of the queue from which it should be eventually released
      */
     public static void releaseOrDelete(DistributionPackage distributionPackage, String queueName) {
-        if (distributionPackage instanceof SharedDistributionPackage) {
-            if (queueName != null) {
-                ((SharedDistributionPackage) distributionPackage).release(queueName);
-                log.debug("package {} released from queue {}", distributionPackage.getId(), queueName);
+        if (distributionPackage == null) {
+            return;
+        }
+        try {
+            if (distributionPackage instanceof SharedDistributionPackage) {
+                if (queueName != null) {
+                    ((SharedDistributionPackage) distributionPackage).release(queueName);
+                    log.debug("package {} released from queue {}", distributionPackage.getId(), queueName);
+                } else {
+                    log.error("package {} cannot be released from null queue", distributionPackage.getId());
+                }
             } else {
-                log.error("package {} cannot be released from null queue", distributionPackage.getId());
+                deleteSafely(distributionPackage);
+                log.debug("package {} deleted", distributionPackage.getId());
             }
-        } else {
-            deleteSafely(distributionPackage);
-            log.debug("package {} deleted", distributionPackage.getId());
+        } catch (Throwable t) {
+            log.error("cannot release package {}", t);
         }
     }
 

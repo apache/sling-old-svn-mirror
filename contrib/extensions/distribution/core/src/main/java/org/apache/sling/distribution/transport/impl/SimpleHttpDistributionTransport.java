@@ -30,6 +30,7 @@ import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHost;
+import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
@@ -104,15 +105,20 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
                 }
 
                 Content content = response.returnContent();
-                log.debug("DELIVERED packageId={}, endpoint={}", distributionPackage.getId(), distributionEndpoint.getUri());
+                log.debug("delivered packageId={}, endpoint={}", distributionPackage.getId(), distributionEndpoint.getUri());
             } catch (HttpHostConnectException e) {
-                log.debug("could not connect to {} - retrying", distributionEndpoint.getUri());
-                throw new RecoverableDistributionException(e);
-            } catch (Exception ex) {
-                throw new DistributionException(ex);
+                throw new RecoverableDistributionException("endpoint not available " + distributionEndpoint.getUri(), e);
+            } catch (HttpResponseException e) {
+                int statusCode = e.getStatusCode();
+                if (statusCode == 404 || statusCode == 401) {
+                    throw new RecoverableDistributionException("not enough rights for " + distributionEndpoint.getUri(), e);
+                }
+                throw new DistributionException(e);
+            } catch (Exception e) {
+                throw new DistributionException(e);
+
             }
         }
-
     }
 
     @Nullable
@@ -163,7 +169,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
             executor = executor.auth(new HttpHost(distributionEndpoint.getUri().getHost(), distributionEndpoint.getUri().getPort()),
                     credentialsMap.get(USERNAME), credentialsMap.get(PASSWORD)).authPreemptive(
                     new HttpHost(distributionEndpoint.getUri().getHost(), distributionEndpoint.getUri().getPort()));
-            log.debug("AUTH user={}, endpoint={}", secret.asCredentialsMap().get(USERNAME), distributionEndpoint.getUri());
+            log.debug("authenticate user={}, endpoint={}", secret.asCredentialsMap().get(USERNAME), distributionEndpoint.getUri());
         }
         return executor;
     }
