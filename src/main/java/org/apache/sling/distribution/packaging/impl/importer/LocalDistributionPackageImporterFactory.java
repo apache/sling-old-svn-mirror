@@ -60,7 +60,7 @@ public class LocalDistributionPackageImporterFactory implements DistributionPack
      * name of this importer.
      */
     @Property(label = "Name", description = "The name of the importer.")
-    public static final String NAME = DistributionComponentConstants.PN_NAME;
+    private static final String NAME = DistributionComponentConstants.PN_NAME;
 
 
     @Property(name = "packageBuilder.target", label = "Package Builder", description = "The target reference for the DistributionPackageBuilder used to create distribution packages, " +

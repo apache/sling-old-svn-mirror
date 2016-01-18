@@ -103,12 +103,13 @@ public class SimpleDistributionQueue implements DistributionQueue {
     }
 
     @Nonnull
-    public DistributionQueueState getState() {
+    private DistributionQueueState getState() {
         DistributionQueueItem firstItem = queue.peek();
         DistributionQueueItemStatus firstItemStatus = firstItem != null ? statusMap.get(firstItem) : null;
         return DistributionQueueUtils.calculateState(firstItem, firstItemStatus);
     }
 
+    @Nonnull
     @Override
     public DistributionQueueStatus getStatus() {
         return new DistributionQueueStatus(queue.size(), getState());

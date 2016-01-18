@@ -36,14 +36,13 @@ public class PriorityQueueDispatchingStrategy implements DistributionQueueDispat
 
     private final Map<String, String> selectors;
     private final List<String> mainQueues;
-    private final Map<String, String> selectorQueues;
     private final List<String> allQueues = new ArrayList<String>();
 
     public PriorityQueueDispatchingStrategy(Map<String, String> selectors, String[] queueNames) {
 
         this.selectors = selectors;
         this.mainQueues = Arrays.asList(queueNames);
-        this.selectorQueues = getMatchingQueues(null);
+        Map<String, String> selectorQueues = getMatchingQueues(null);
         this.allQueues.addAll(mainQueues);
         this.allQueues.addAll(selectorQueues.keySet());
     }
@@ -55,9 +54,10 @@ public class PriorityQueueDispatchingStrategy implements DistributionQueueDispat
 
         DistributionQueueDispatchingStrategy dispatchingStrategy = null;
         if (matchingQueues.size() > 0) {
-            dispatchingStrategy = new MultipleQueueDispatchingStrategy(matchingQueues.keySet().toArray(new String[0]));
+            java.util.Set<String> var = matchingQueues.keySet();
+            dispatchingStrategy = new MultipleQueueDispatchingStrategy(var.toArray(new String[var.size()]));
         } else {
-            dispatchingStrategy = new MultipleQueueDispatchingStrategy(mainQueues.toArray(new String[0]));
+            dispatchingStrategy = new MultipleQueueDispatchingStrategy(mainQueues.toArray(new String[mainQueues.size()]));
         }
 
         return dispatchingStrategy.add(distributionPackage, queueProvider);

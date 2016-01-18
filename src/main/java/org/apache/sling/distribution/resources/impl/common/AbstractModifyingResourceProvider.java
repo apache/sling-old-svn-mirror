@@ -140,7 +140,7 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
         return true;
     }
 
-    protected Map<String, Object> getMainResourceProperties(String resourceName) {
+    private Map<String, Object> getMainResourceProperties(String resourceName) {
 
         if (deletedResources.contains(resourceName)) {
             return null;

@@ -50,10 +50,10 @@ public class DistributionEventDistributeDistributionTriggerFactory implements Di
      * chain distribution path property
      */
     @Property(label = "Path", description = "The path for which the distribution events will be forwarded.")
-    public static final String PATH = "path";
+    private static final String PATH = "path";
 
 
-    DistributionEventDistributeDistributionTrigger trigger;
+    private DistributionEventDistributeDistributionTrigger trigger;
 
 
     @Activate

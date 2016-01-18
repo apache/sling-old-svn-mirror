@@ -19,10 +19,16 @@
 
 package org.apache.sling.distribution.packaging;
 
-
 import org.apache.sling.distribution.serialization.DistributionPackage;
 
+/**
+ * A callback function used to process packages
+ */
 public interface DistributionPackageProcessor {
 
+    /**
+     * process a distribution package
+     * @param distributionPackage the distribution package
+     */
     void process(DistributionPackage distributionPackage);
 }

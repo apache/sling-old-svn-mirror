@@ -53,9 +53,9 @@ public class ResourceEventDistributionTriggerFactory implements DistributionTrig
      * resource event path property
      */
     @Property(label = "Path", description = "The resource path for which changes are distributed")
-    public static final String PATH = "path";
+    private static final String PATH = "path";
 
-    ResourceEventDistributionTrigger trigger;
+    private ResourceEventDistributionTrigger trigger;
 
     @Reference
     private SlingRepository repository;

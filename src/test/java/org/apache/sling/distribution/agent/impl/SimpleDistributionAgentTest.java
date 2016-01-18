@@ -20,6 +20,7 @@ package org.apache.sling.distribution.agent.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
@@ -54,7 +55,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.when;
 
 /**
@@ -70,7 +70,7 @@ public class SimpleDistributionAgentTest {
         DistributionRequestAuthorizationStrategy packageExporterStrategy = mock(DistributionRequestAuthorizationStrategy.class);
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
         DistributionQueueDispatchingStrategy distributionHandler = mock(DistributionQueueDispatchingStrategy.class);
-        Iterable<DistributionQueueItemStatus> states = Arrays.asList(new DistributionQueueItemStatus(DistributionQueueItemState.ERROR, DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME));
+        Iterable<DistributionQueueItemStatus> states = Collections.singletonList(new DistributionQueueItemStatus(DistributionQueueItemState.ERROR, DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME));
         when(distributionHandler.add(any(DistributionPackage.class), any(DistributionQueueProvider.class))).thenReturn(states);
         DistributionEventFactory distributionEventFactory = mock(DistributionEventFactory.class);
         ResourceResolverFactory resolverFactory = mock(ResourceResolverFactory.class);
@@ -124,7 +124,7 @@ public class SimpleDistributionAgentTest {
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
 
         when(distributionPackage.getInfo()).thenReturn(new DistributionPackageInfo("type"));
-        Iterable<DistributionQueueItemStatus> states = Arrays.asList(new DistributionQueueItemStatus(DistributionQueueItemState.QUEUED,
+        Iterable<DistributionQueueItemStatus> states = Collections.singletonList(new DistributionQueueItemStatus(DistributionQueueItemState.QUEUED,
                 DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME));
         when(distributionHandler.add(any(DistributionPackage.class), any(DistributionQueueProvider.class))).thenReturn(states);
         doAnswer(new Answer() {
@@ -242,8 +242,8 @@ public class SimpleDistributionAgentTest {
         ResourceResolverFactory resolverFactory = mock(ResourceResolverFactory.class);
 
 
-        when(queueDistributionStrategy.add(any(DistributionPackage.class), any(DistributionQueueProvider.class))).thenReturn(Arrays.asList(
-              new DistributionQueueItemStatus(DistributionQueueItemState.QUEUED, "default")
+        when(queueDistributionStrategy.add(any(DistributionPackage.class), any(DistributionQueueProvider.class))).thenReturn(Collections.singletonList(
+                new DistributionQueueItemStatus(DistributionQueueItemState.QUEUED, "default")
         ));
 
         SimpleDistributionAgent agent = new SimpleDistributionAgent(name,
@@ -288,7 +288,7 @@ public class SimpleDistributionAgentTest {
         ResourceResolverFactory resolverFactory = mock(ResourceResolverFactory.class);
 
 
-        when(queueDistributionStrategy.add(any(DistributionPackage.class), any(DistributionQueueProvider.class))).thenReturn(Arrays.asList(
+        when(queueDistributionStrategy.add(any(DistributionPackage.class), any(DistributionQueueProvider.class))).thenReturn(Collections.singletonList(
                 new DistributionQueueItemStatus(DistributionQueueItemState.QUEUED, "default")
         ));
 

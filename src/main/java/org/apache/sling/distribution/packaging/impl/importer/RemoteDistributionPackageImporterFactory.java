@@ -26,7 +26,6 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -61,18 +60,19 @@ public class RemoteDistributionPackageImporterFactory implements DistributionPac
      * name of this importer.
      */
     @Property(label = "Name", description = "The name of the importer.")
-    public static final String NAME = DistributionComponentConstants.PN_NAME;
+    private static final String NAME = DistributionComponentConstants.PN_NAME;
 
 
     /**
      * endpoints property
      */
     @Property(cardinality = 100, label = "Endpoints", description = "The list of endpoints to which the packages will be imported.")
-    public static final String ENDPOINTS = "endpoints";
+    private static final String ENDPOINTS = "endpoints";
 
     @Property(name = "transportSecretProvider.target", label = "Transport Secret Provider", description = "The target reference for the DistributionTransportSecretProvider used to obtain the credentials used for accessing the remote endpoints, " +
             "e.g. use target=(name=...) to bind to services by name.")
     @Reference(name = "transportSecretProvider")
+    private
     DistributionTransportSecretProvider transportSecretProvider;
 
     private DistributionPackageImporter importer;

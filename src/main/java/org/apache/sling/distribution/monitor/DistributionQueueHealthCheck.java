@@ -90,7 +90,7 @@ public class DistributionQueueHealthCheck implements HealthCheck {
         distributionAgents.clear();
     }
 
-    protected void bindDistributionAgent(final DistributionAgent distributionAgent) {
+    void bindDistributionAgent(final DistributionAgent distributionAgent) {
         distributionAgents.add(distributionAgent);
 
         log.debug("Registering distribution agent {} ", distributionAgent);

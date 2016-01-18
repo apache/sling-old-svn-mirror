@@ -21,7 +21,6 @@ package org.apache.sling.distribution.servlet;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.IOUtils;
@@ -77,7 +76,7 @@ public class DistributionPackageExporterServlet extends SlingAllMethodsServlet {
         }
     }
 
-    protected void exportOnePackage(final SlingHttpServletRequest request, final SlingHttpServletResponse response, final boolean delete)
+    private void exportOnePackage(final SlingHttpServletRequest request, final SlingHttpServletResponse response, final boolean delete)
             throws ServletException, IOException {
 
         DistributionPackageExporter distributionPackageExporter = request
@@ -140,7 +139,7 @@ public class DistributionPackageExporterServlet extends SlingAllMethodsServlet {
         }
     }
 
-    void deletePackage(final SlingHttpServletRequest request, final SlingHttpServletResponse response) throws DistributionException {
+    private void deletePackage(final SlingHttpServletRequest request, final SlingHttpServletResponse response) throws DistributionException {
         DistributionPackageExporter distributionPackageExporter = request
                 .getResource()
                 .adaptTo(DistributionPackageExporter.class);

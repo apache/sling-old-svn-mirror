@@ -88,7 +88,7 @@ public class ReverseDistributionAgentFactory extends AbstractDistributionAgentFa
 
 
     @Property(label = "Service Name", description = "The name of the service used to access the repository.")
-    public static final String SERVICE_NAME = "serviceName";
+    private static final String SERVICE_NAME = "serviceName";
 
     @Property(options = {
             @PropertyOption(name = "debug", value = "debug"), @PropertyOption(name = "info", value = "info"), @PropertyOption(name = "warn", value = "warn"),
@@ -100,19 +100,19 @@ public class ReverseDistributionAgentFactory extends AbstractDistributionAgentFa
 
 
     @Property(boolValue = true, label = "Queue Processing Enabled", description = "Whether or not the distribution agent should process packages in the queues.")
-    public static final String QUEUE_PROCESSING_ENABLED = "queue.processing.enabled";
+    private static final String QUEUE_PROCESSING_ENABLED = "queue.processing.enabled";
 
     /**
      * endpoints property
      */
     @Property(cardinality = 100, label = "Importer Endpoints", description = "List of endpoints from which packages are received (exported).")
-    public static final String EXPORTER_ENDPOINTS = "packageExporter.endpoints";
+    private static final String EXPORTER_ENDPOINTS = "packageExporter.endpoints";
 
     /**
      * no. of items to poll property
      */
     @Property(intValue = 100, label = "Pull Items", description = "Number of subsequent pull requests to make.")
-    public static final String PULL_ITEMS = "pull.items";
+    private static final String PULL_ITEMS = "pull.items";
 
 
     @Property(name = "requestAuthorizationStrategy.target", label = "Request Authorization Strategy", description = "The target reference for the DistributionRequestAuthorizationStrategy used to authorize the access to distribution process," +
@@ -124,6 +124,7 @@ public class ReverseDistributionAgentFactory extends AbstractDistributionAgentFa
     @Property(name = "transportSecretProvider.target", label = "Transport Secret Provider", description = "The target reference for the DistributionTransportSecretProvider used to obtain the credentials used for accessing the remote endpoints, " +
             "e.g. use target=(name=...) to bind to services by name.", value = SettingsUtils.COMPONENT_NAME_DEFAULT)
     @Reference(name = "transportSecretProvider")
+    private
     DistributionTransportSecretProvider transportSecretProvider;
 
 

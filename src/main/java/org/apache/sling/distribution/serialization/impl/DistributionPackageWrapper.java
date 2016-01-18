@@ -33,7 +33,7 @@ import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 public class DistributionPackageWrapper implements DistributionPackage {
 
 
-    protected final DistributionPackage wrappedPackage;
+    private final DistributionPackage wrappedPackage;
 
     protected DistributionPackageWrapper(DistributionPackage wrappedPackage) {
 

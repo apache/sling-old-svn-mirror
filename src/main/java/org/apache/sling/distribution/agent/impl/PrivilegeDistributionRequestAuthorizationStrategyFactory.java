@@ -54,10 +54,10 @@ public class PrivilegeDistributionRequestAuthorizationStrategyFactory implements
      * privilege request authorization strategy jcr privilege property
      */
     @Property(label = "Jcr Privilege", description = "Jcr privilege to check for authorizing distribution requests. The privilege is checked for the calling user session.")
-    public static final String JCR_PRIVILEGE = "jcrPrivilege";
+    private static final String JCR_PRIVILEGE = "jcrPrivilege";
 
 
-    DistributionRequestAuthorizationStrategy authorizationStrategy;
+    private DistributionRequestAuthorizationStrategy authorizationStrategy;
 
     @Activate
     public void activate(BundleContext context, Map<String, Object> config) {

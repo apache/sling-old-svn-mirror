@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  */
 public class FileVaultDistributionPackage extends AbstractDistributionPackage implements DistributionPackage {
 
-    Logger log = LoggerFactory.getLogger(FileVaultDistributionPackage.class);
+    private final Logger log = LoggerFactory.getLogger(FileVaultDistributionPackage.class);
 
     private final VaultPackage pkg;
 

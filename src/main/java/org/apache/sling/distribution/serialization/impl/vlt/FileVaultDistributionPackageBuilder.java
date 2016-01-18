@@ -28,7 +28,6 @@ import java.util.TreeMap;
 import java.util.UUID;
 
 import org.apache.jackrabbit.vault.fs.api.ImportMode;
-import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.api.WorkspaceFilter;
 import org.apache.jackrabbit.vault.fs.io.AccessControlHandling;
 import org.apache.jackrabbit.vault.fs.io.ImportOptions;
@@ -59,9 +58,9 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
 
     private final Packaging packaging;
 
-    private ImportMode importMode;
+    private final ImportMode importMode;
 
-    private AccessControlHandling aclHandling;
+    private final AccessControlHandling aclHandling;
 
     private final String[] packageRoots;
     private final File tempDirectory;

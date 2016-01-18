@@ -56,24 +56,24 @@ public class ScheduledDistributionTriggerFactory implements DistributionTrigger 
      * scheduled trigger action property
      */
     @Property(label = "Distribution Type", description = "The type of the distribution request produced by this trigger.")
-    public static final String ACTION = "action";
+    private static final String ACTION = "action";
 
     /**
      * scheduled trigger path property
      */
     @Property(label = "Distributed Path", description = "The path to be distributed periodically.")
-    public static final String PATH = "path";
+    private static final String PATH = "path";
 
     /**
      * scheduled trigger seconds property
      */
     @Property(label = "Interval in Seconds", description = "The number of seconds between executions")
-    public static final String SECONDS = "seconds";
+    private static final String SECONDS = "seconds";
 
     @Property(label = "Service Name", description = "The name of the service used to trigger the distribution requests.")
-    public static final String SERVICE_NAME = "serviceName";
+    private static final String SERVICE_NAME = "serviceName";
 
-    ScheduledDistributionTrigger trigger;
+    private ScheduledDistributionTrigger trigger;
 
     @Reference
     private ResourceResolverFactory resolverFactory;

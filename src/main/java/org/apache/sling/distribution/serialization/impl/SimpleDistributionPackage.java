@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  */
 public class SimpleDistributionPackage extends AbstractDistributionPackage implements DistributionPackage {
 
-    static Logger log = LoggerFactory.getLogger(SimpleDistributionPackage.class);
+    private static final Logger log = LoggerFactory.getLogger(SimpleDistributionPackage.class);
 
     private final static String PACKAGE_START = "DSTRPCK:";
     private final static String DELIM = "|";
@@ -54,7 +54,7 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
         this.size = getId().toCharArray().length;
     }
 
-    public static String toIdString(DistributionRequest request, String type) {
+    private static String toIdString(DistributionRequest request, String type) {
 
         StringBuilder b = new StringBuilder();
 

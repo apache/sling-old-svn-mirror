@@ -84,7 +84,7 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
 
 
     @Property(label = "Service Name", description = "The name of the service used to access the repository.")
-    public static final String SERVICE_NAME = "serviceName";
+    private static final String SERVICE_NAME = "serviceName";
 
     @Property(options = {
             @PropertyOption(name = "debug", value = "debug"), @PropertyOption(name = "info", value = "info"), @PropertyOption(name = "warn", value = "warn"),
@@ -116,7 +116,7 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
 
     @Property(cardinality = 100, label = "Priority queues", description = "List of priority queues that should used for specific paths." +
             "The selector format is  {queuePrefix}[|{mainQueueMatcher}]={pathMatcher}, e.g. french=/content/fr.*")
-    public static final String PRIORITY_QUEUES = "priorityQueues";
+    private static final String PRIORITY_QUEUES = "priorityQueues";
 
 
     @Reference

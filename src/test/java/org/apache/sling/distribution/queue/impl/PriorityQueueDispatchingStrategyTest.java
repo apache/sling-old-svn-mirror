@@ -41,8 +41,8 @@ import static org.mockito.Mockito.when;
 
 public class PriorityQueueDispatchingStrategyTest {
 
-    static String[] queueNames;
-    static Map<String, String> selectors;
+    private static String[] queueNames;
+    private static Map<String, String> selectors;
 
     @BeforeClass
     public static void setup() {

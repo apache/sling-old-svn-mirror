@@ -19,7 +19,6 @@
 package org.apache.sling.distribution.packaging.impl.exporter;
 
 import javax.annotation.Nonnull;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -56,7 +55,7 @@ public class AgentDistributionPackageExporterFactory implements DistributionPack
      * name of this exporter.
      */
     @Property(label = "Name", description = "The name of the exporter.")
-    public static final String NAME = DistributionComponentConstants.PN_NAME;
+    private static final String NAME = DistributionComponentConstants.PN_NAME;
 
     @Property(label = "Queue", description = "The name of the queue from which the packages should be exported.")
     private static final String QUEUE_NAME = "queue";
@@ -82,7 +81,6 @@ public class AgentDistributionPackageExporterFactory implements DistributionPack
         packageExporter = new AgentDistributionPackageExporter(queueName, agent, packageBuilderProvider, name);
     }
 
-    @Nonnull
     public void exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest, @Nonnull DistributionPackageProcessor packageProcessor) throws DistributionException {
         packageExporter.exportPackages(resourceResolver, distributionRequest, packageProcessor);
     }

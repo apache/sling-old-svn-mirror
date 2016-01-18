@@ -92,7 +92,7 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
 
 
     @Property(label = "Service Name", description = "The name of the service used to access the repository.")
-    public static final String SERVICE_NAME = "serviceName";
+    private static final String SERVICE_NAME = "serviceName";
 
     @Property(options = {
             @PropertyOption(name = "debug", value = "debug"), @PropertyOption(name = "info", value = "info"), @PropertyOption(name = "warn", value = "warn"),
@@ -108,7 +108,7 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
 
 
     @Property(boolValue = true, label = "Queue Processing Enabled", description = "Whether or not the distribution agent should process packages in the queues.")
-    public static final String QUEUE_PROCESSING_ENABLED = "queue.processing.enabled";
+    private static final String QUEUE_PROCESSING_ENABLED = "queue.processing.enabled";
 
 
     /**
@@ -116,26 +116,26 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
      */
     @Property(cardinality = 100, label = "Importer Endpoints", description = "List of endpoints to which packages are sent (imported). " +
             "The list can be given as a map in case a queue should be configured for each endpoint, e.g. queueName=http://...")
-    public static final String IMPORTER_ENDPOINTS = "packageImporter.endpoints";
+    private static final String IMPORTER_ENDPOINTS = "packageImporter.endpoints";
 
 
     @Property(cardinality = 100, label = "Passive queues", description = "List of queues that should be disabled." +
             "These queues will gather all the packages until they are removed explicitly.")
-    public static final String PASSIVE_QUEUES = "passiveQueues";
+    private static final String PASSIVE_QUEUES = "passiveQueues";
 
     @Property(cardinality = 100, label = "Priority queues", description = "List of priority queues that should used for specific paths." +
             "The selector format is  {queuePrefix}[|{mainQueueMatcher}]={pathMatcher}, e.g. french=/content/fr.*")
-    public static final String PRIORITY_QUEUES = "priorityQueues";
+    private static final String PRIORITY_QUEUES = "priorityQueues";
 
     @Property(options = {
             @PropertyOption(name = "none", value = "none"), @PropertyOption(name = "errorQueue", value = "errorQueue")},
             value = "none",
             label = "Retry Strategy", description = "The strategy to apply after a certain number of failed retries."
     )
-    public static final String RETRY_STRATEGY = "retry.strategy";
+    private static final String RETRY_STRATEGY = "retry.strategy";
 
     @Property(intValue = 100, label = "Retry attempts", description = "The number of times to retry until the retry strategy is applied.")
-    public static final String RETRY_ATTEMPTS = "retry.attempts";
+    private static final String RETRY_ATTEMPTS = "retry.attempts";
 
 
     @Property(name = "requestAuthorizationStrategy.target", label = "Request Authorization Strategy", description = "The target reference for the DistributionRequestAuthorizationStrategy used to authorize the access to distribution process," +
@@ -147,6 +147,7 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
     @Property(name = "transportSecretProvider.target", label = "Transport Secret Provider", description = "The target reference for the DistributionTransportSecretProvider used to obtain the credentials used for accessing the remote endpoints, " +
             "e.g. use target=(name=...) to bind to services by name.", value = SettingsUtils.COMPONENT_NAME_DEFAULT)
     @Reference(name = "transportSecretProvider")
+    private
     DistributionTransportSecretProvider transportSecretProvider;
 
 

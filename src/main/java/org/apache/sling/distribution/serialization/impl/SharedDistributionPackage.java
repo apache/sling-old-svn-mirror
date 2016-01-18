@@ -20,7 +20,6 @@ package org.apache.sling.distribution.serialization.impl;
 
 import javax.annotation.Nonnull;
 
-import aQute.bnd.annotation.ConsumerType;
 import aQute.bnd.annotation.ProviderType;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 

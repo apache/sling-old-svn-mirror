@@ -99,6 +99,7 @@ public class RepositoryDistributionPackageImporter implements DistributionPackag
         }
     }
 
+    @Nonnull
     public DistributionPackageInfo importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
         throw new DistributionException("not supported");
     }

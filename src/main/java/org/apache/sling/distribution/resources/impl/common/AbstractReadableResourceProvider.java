@@ -47,7 +47,7 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
 
     protected static final String SLING_RESOURCE_TYPE = "sling:resourceType";
 
-    protected final String resourceRoot;
+    final String resourceRoot;
 
     protected AbstractReadableResourceProvider(String resourceRoot) {
 

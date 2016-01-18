@@ -78,7 +78,7 @@ public class JcrEventDistributionTrigger extends AbstractJcrEventTrigger impleme
     }
 
 
-    boolean isIgnoredPath(String path) {
+    private boolean isIgnoredPath(String path) {
         if (path == null) {
             return true;
         }

@@ -55,7 +55,7 @@ public class ScheduledDistributionTrigger implements DistributionTrigger {
     private final String serviceName;
     private final ResourceResolverFactory resourceResolverFactory;
 
-    private Set<String> registeredJobs = Collections.synchronizedSet(new HashSet<String>());
+    private final Set<String> registeredJobs = Collections.synchronizedSet(new HashSet<String>());
 
 
     public ScheduledDistributionTrigger(String distributionActionName, String path, int secondsInterval, String serviceName, Scheduler scheduler, ResourceResolverFactory resourceResolverFactory) {
@@ -146,7 +146,7 @@ public class ScheduledDistributionTrigger implements DistributionTrigger {
         }
     }
 
-    String getJobName(DistributionRequestHandler requestHandler) {
+    private String getJobName(DistributionRequestHandler requestHandler) {
         return SCHEDULE_NAME + requestHandler.toString();
     }
 }

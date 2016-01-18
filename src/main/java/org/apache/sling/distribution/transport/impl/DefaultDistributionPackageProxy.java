@@ -30,7 +30,7 @@ import java.net.URISyntaxException;
 
 
 public class DefaultDistributionPackageProxy implements DistributionPackageProxy {
-    static final Logger log = LoggerFactory.getLogger(DefaultDistributionPackageProxy.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultDistributionPackageProxy.class);
 
 
     private final DistributionPackage wrappedPackage;

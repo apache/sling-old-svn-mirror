@@ -61,9 +61,10 @@ public class DistributionServiceResourceProviderFactory implements ResourceProvi
 
 
     @Property
-    public final static String KIND = DistributionComponentConstants.PN_KIND;
+    private final static String KIND = DistributionComponentConstants.PN_KIND;
 
     @Reference
+    private
     DistributionComponentProvider componentProvider;
 
     private ResourceProvider resourceProvider;

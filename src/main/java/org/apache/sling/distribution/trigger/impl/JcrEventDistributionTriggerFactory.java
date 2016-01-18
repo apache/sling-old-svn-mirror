@@ -56,22 +56,22 @@ public class JcrEventDistributionTriggerFactory implements DistributionTrigger {
      * jcr event trigger path property
      */
     @Property(label = "Path", description = "The path for which changes are distributed.")
-    public static final String PATH = "path";
+    private static final String PATH = "path";
 
     /**
      * jcr event trigger path property
      */
     @Property(cardinality = 100, label = "Ignored Paths Patterns", description = "The paths matching one of these patterns will be ignored.")
-    public static final String IGNORED_PATHS_PATTERNS = "ignoredPathsPatterns";
+    private static final String IGNORED_PATHS_PATTERNS = "ignoredPathsPatterns";
 
     /**
      * jcr event trigger service user property
      */
     @Property(label = "Service Name", description = "The service used to listen for jcr events")
-    public static final String SERVICE_NAME = "serviceName";
+    private static final String SERVICE_NAME = "serviceName";
 
 
-    JcrEventDistributionTrigger trigger;
+    private JcrEventDistributionTrigger trigger;
 
     @Reference
     private SlingRepository repository;
