@@ -21,7 +21,8 @@ package org.apache.sling.nosql.mongodb.resourceprovider.integration;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.sling.nosql.mongodb.resourceprovider.impl.MongoDBNoSqlAdapter;
 import org.bson.Document;
@@ -29,6 +30,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.mongodb.MongoClient;
 
 /**
@@ -43,12 +45,14 @@ public class IndexCreationIT {
 	private String collection;
 		
 	@Before
-	public void setUp() {
+	public void setUp() throws Exception {
 	    String connectionString = System.getProperty("connectionString", "localhost:27017");
         database =  System.getProperty("database", "sling") + "_indextest";
         collection = System.getProperty("collection", "resources");
 		mongoClient = new MongoClient(connectionString);
 		underTest = new MongoDBNoSqlAdapter(mongoClient, database, collection);
+		underTest.checkConnection();
+		underTest.createIndexDefinitions();
 	}
 
 	@After
@@ -61,17 +65,14 @@ public class IndexCreationIT {
 	public void testIndexesPresent() {
 		assertNotNull(underTest);
 		
-		//expecting 2 indexes (_id, parentPath)
-		int expected = 2;
-		int actual = 0;
+		final List<String> expectedIndexNames= ImmutableList.<String>of("_id_", "parentPath_1");
 		
-		final String[] expectedIndexesNames=  {"_id_", "parentPath_1"};
-		
-		for (Document d : mongoClient.getDatabase(database).getCollection(collection).listIndexes()){
-			assert Arrays.asList(expectedIndexesNames).contains( d.get("name") );
-			actual++;
+		List<String> actualIndexNames = new ArrayList<String>();
+		for (Document d : mongoClient.getDatabase(database).getCollection(collection).listIndexes()) {
+		    actualIndexNames.add(d.get("name").toString());
 		}
-		assertEquals(expected, actual);
+		
+		assertEquals(expectedIndexNames, actualIndexNames);
 	}
 
 }
