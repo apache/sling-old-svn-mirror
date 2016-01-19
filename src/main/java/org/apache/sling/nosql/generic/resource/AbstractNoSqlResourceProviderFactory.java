@@ -39,6 +39,7 @@ public abstract class AbstractNoSqlResourceProviderFactory implements ResourcePr
     public final ResourceProvider getResourceProvider(Map<String, Object> authenticationInfo) throws LoginException {
         NoSqlAdapter adapter = getNoSqlAdapter();
         adapter.checkConnection();
+        adapter.createIndexDefinitions();
         return new NoSqlResourceProvider(adapter, getEventAdmin());
     }
 

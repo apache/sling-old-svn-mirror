@@ -117,7 +117,12 @@ public class SimpleNoSqlAdapter implements NoSqlAdapter {
 
     @Override
     public void checkConnection() throws LoginException {
+        // nothing to do
+    }
 
+    @Override
+    public void createIndexDefinitions() {
+        // nothing to do
     }
 
 }

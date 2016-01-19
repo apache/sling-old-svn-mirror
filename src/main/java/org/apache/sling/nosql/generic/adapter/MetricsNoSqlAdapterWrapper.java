@@ -95,6 +95,11 @@ public final class MetricsNoSqlAdapterWrapper implements NoSqlAdapter {
         delegate.checkConnection();
     }
 
+    @Override
+    public void createIndexDefinitions() {
+        delegate.createIndexDefinitions();
+    }    
+
     private class Metrics {
         
         private long startTime;
@@ -113,5 +118,5 @@ public final class MetricsNoSqlAdapterWrapper implements NoSqlAdapter {
         }
         
     }
-    
+
 }

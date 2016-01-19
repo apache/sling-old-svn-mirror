@@ -169,6 +169,11 @@ class ValueMapConvertingNoSqlAdapter implements NoSqlAdapter {
         delegate.checkConnection();
     }
 
+    @Override
+    public void createIndexDefinitions() {
+        delegate.createIndexDefinitions();
+    }
+
     private static DateFormat getISO8601Format() {
         return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
     }
