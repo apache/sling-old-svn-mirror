@@ -67,19 +67,19 @@ public final class MongoDBNoSqlAdapter extends AbstractNoSqlAdapter {
         
         // create index on parent path field (if it does not exist yet)
         try {
-            Document parenPathtIndex = new Document("_parentPath", 1);
+            Document parenPathtIndex = new Document(PN_PARENT_PATH, 1);
             this.collection.createIndex(parenPathtIndex);
         }
         catch (DuplicateKeyException ex) {
             // index already exists, ignore
         }
         catch (Throwable ex) {
-            log.error("Unable to create index on _parentPath: " + ex.getMessage(), ex);
+            log.error("Unable to create index on " + PN_PARENT_PATH + ": " + ex.getMessage(), ex);
         }
         
         // create unique index on path field (if it does not exist yet)
         try {
-            Document pathIndex = new Document("_path", 1);
+            Document pathIndex = new Document(PN_PATH, 1);
             IndexOptions idxOptions = new IndexOptions();
             idxOptions.unique(true);
             this.collection.createIndex(pathIndex, idxOptions);
@@ -88,7 +88,7 @@ public final class MongoDBNoSqlAdapter extends AbstractNoSqlAdapter {
             // index already exists, ignore
         }
         catch (Throwable ex) {
-            log.error("Unable to create unique index on _path: " + ex.getMessage(), ex);
+            log.error("Unable to create unique index on " + PN_PATH + ": " + ex.getMessage(), ex);
         }
     }
 
