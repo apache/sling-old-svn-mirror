@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.nosql.generic.adapter.AbstractNoSqlAdapter;
 import org.apache.sling.nosql.generic.adapter.MultiValueMode;
@@ -33,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoClient;
+import com.mongodb.MongoException;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
@@ -145,4 +147,13 @@ public final class MongoDBNoSqlAdapter extends AbstractNoSqlAdapter {
         return result.getDeletedCount() > 0;
     }
 
+    @Override
+    public void checkConnection() throws LoginException {
+        // the query is not relevant, just the successful round-trip
+        try {
+            collection.find(Filters.eq(PN_PATH, "/")).first();
+        } catch (MongoException e) {
+            throw new LoginException(e);
+        }
+    }
 }
