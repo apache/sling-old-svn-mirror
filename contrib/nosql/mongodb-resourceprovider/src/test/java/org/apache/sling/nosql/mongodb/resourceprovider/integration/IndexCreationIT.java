@@ -18,6 +18,7 @@
  */
 package org.apache.sling.nosql.mongodb.resourceprovider.integration;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.util.Arrays;
@@ -60,17 +61,17 @@ public class IndexCreationIT {
 	public void testIndexesPresent() {
 		assertNotNull(underTest);
 		
-		//expecting at least 3 indexes (_id, _path, _parentPath)
-		int expected = 3;
+		//expecting 2 indexes (_id, parentPath)
+		int expected = 2;
 		int actual = 0;
 		
-		final String[] expectedIndexesNames=  {"_id_", "_path_1", "_parentPath_1"};
+		final String[] expectedIndexesNames=  {"_id_", "parentPath_1"};
 		
-		for( Document d : mongoClient.getDatabase(database).getCollection(collection).listIndexes()){
+		for (Document d : mongoClient.getDatabase(database).getCollection(collection).listIndexes()){
 			assert Arrays.asList(expectedIndexesNames).contains( d.get("name") );
 			actual++;
 		}
-		assert expected == actual;
+		assertEquals(expected, actual);
 	}
 
 }
