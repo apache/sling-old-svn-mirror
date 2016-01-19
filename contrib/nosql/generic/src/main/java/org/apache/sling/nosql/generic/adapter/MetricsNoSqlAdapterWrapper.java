@@ -20,6 +20,7 @@ package org.apache.sling.nosql.generic.adapter;
 
 import java.util.Iterator;
 
+import org.apache.sling.api.resource.LoginException;
 import org.slf4j.Logger;
 
 /**
@@ -89,6 +90,11 @@ public final class MetricsNoSqlAdapterWrapper implements NoSqlAdapter {
         }
     }
     
+    @Override
+    public void checkConnection() throws LoginException {
+        delegate.checkConnection();
+    }
+
     private class Metrics {
         
         private long startTime;
