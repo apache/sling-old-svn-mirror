@@ -81,7 +81,7 @@ class JobHandlingUtils {
         return properties;
     }
 
-    @Nonnull
+    @CheckForNull
     public static String getQueueName(Job job) {
 
         String topic = job.getTopic();
