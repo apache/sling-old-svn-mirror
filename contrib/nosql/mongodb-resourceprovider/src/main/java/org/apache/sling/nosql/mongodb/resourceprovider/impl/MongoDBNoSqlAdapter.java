@@ -66,32 +66,6 @@ public final class MongoDBNoSqlAdapter extends AbstractNoSqlAdapter {
     public MongoDBNoSqlAdapter(MongoClient mongoClient, String database, String collection) {
         MongoDatabase db = mongoClient.getDatabase(database);
         this.collection = db.getCollection(collection);
-        
-        // create index on parent path field (if it does not exist yet)
-        try {
-            Document parenPathtIndex = new Document(PN_PARENT_PATH, 1);
-            this.collection.createIndex(parenPathtIndex);
-        }
-        catch (DuplicateKeyException ex) {
-            // index already exists, ignore
-        }
-        catch (Throwable ex) {
-            log.error("Unable to create index on " + PN_PARENT_PATH + ": " + ex.getMessage(), ex);
-        }
-        
-        // create unique index on path field (if it does not exist yet)
-        try {
-            Document pathIndex = new Document(PN_PATH, 1);
-            IndexOptions idxOptions = new IndexOptions();
-            idxOptions.unique(true);
-            this.collection.createIndex(pathIndex, idxOptions);
-        }
-        catch (DuplicateKeyException ex) {
-            // index already exists, ignore
-        }
-        catch (Throwable ex) {
-            log.error("Unable to create unique index on " + PN_PATH + ": " + ex.getMessage(), ex);
-        }
     }
 
     @Override
@@ -156,4 +130,34 @@ public final class MongoDBNoSqlAdapter extends AbstractNoSqlAdapter {
             throw new LoginException(e);
         }
     }
+
+    @Override
+    public void createIndexDefinitions() {
+        // create index on parent path field (if it does not exist yet)
+        try {
+            Document parenPathtIndex = new Document(PN_PARENT_PATH, 1);
+            this.collection.createIndex(parenPathtIndex);
+        }
+        catch (DuplicateKeyException ex) {
+            // index already exists, ignore
+        }
+        catch (Throwable ex) {
+            log.error("Unable to create index on " + PN_PARENT_PATH + ": " + ex.getMessage(), ex);
+        }
+        
+        // create unique index on path field (if it does not exist yet)
+        try {
+            Document pathIndex = new Document(PN_PATH, 1);
+            IndexOptions idxOptions = new IndexOptions();
+            idxOptions.unique(true);
+            this.collection.createIndex(pathIndex, idxOptions);
+        }
+        catch (DuplicateKeyException ex) {
+            // index already exists, ignore
+        }
+        catch (Throwable ex) {
+            log.error("Unable to create unique index on " + PN_PATH + ": " + ex.getMessage(), ex);
+        }
+    }
+
 }
