@@ -229,4 +229,9 @@ public class LegacyResourceProviderAdapter extends ResourceProvider<Object> {
             return rp.queryResources(ctx.getResourceResolver(), query, language);
         }
     }
+    
+    @Override
+    public String toString() {
+        return "[" + getClass().getSimpleName() + ": " + rp.toString() + " ]";
+    }
 }

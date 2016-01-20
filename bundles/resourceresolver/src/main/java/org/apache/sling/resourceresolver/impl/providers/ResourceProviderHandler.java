@@ -85,4 +85,9 @@ public class ResourceProviderHandler implements Comparable<ResourceProviderHandl
     public ProviderContextImpl getProviderContext() {
         return this.context;
     }
+    
+    @Override
+    public String toString() {
+        return "[" + getClass().getSimpleName() +"# provider: " + provider + " ]";
+    }
 }

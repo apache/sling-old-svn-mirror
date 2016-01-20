@@ -346,4 +346,9 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     public ResourceProvider<Object> getResourceProvider() {
         return rp;
     }
+    
+    @Override
+    public String toString() {
+        return "[" + getClass().getSimpleName() + "# rp: " + rp + ", authenticated: " + authenticated + "]";
+    }
 }

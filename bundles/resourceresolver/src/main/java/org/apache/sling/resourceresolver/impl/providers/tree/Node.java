@@ -64,4 +64,9 @@ public class Node<T> {
             return children;
         }
     }
+    
+    @Override
+    public String toString() {
+        return "[" + getClass().getSimpleName() + "# value: " + value +" ]";
+    }
 }
