@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
  * - queue size: -1
  * - keep alive time: 60000
  * - block policy: RUN
- * - shutdown graceful: false
+ * - shutdown graceful: true
  * - shutdown wait time: -1
  * - priority: NORM
  * - daemon: false
@@ -82,7 +82,7 @@ public final class ModifiableThreadPoolConfig implements ThreadPoolConfig {
     private ThreadPoolPolicy blockPolicy = ThreadPoolPolicy.RUN;
 
     /** Try to shutdown gracefully? */
-    private  boolean shutdownGraceful = false;
+    private  boolean shutdownGraceful = true;
 
     /** Wait time during shutdown. */
     private  int shutdownWaitTimeMs = -1;
