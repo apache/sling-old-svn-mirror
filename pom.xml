@@ -188,5 +188,11 @@
         	<version>1.9.5</version>
         	<scope>test</scope>
         </dependency>
+        <dependency>
+        	<groupId>org.apache.sling</groupId>
+        	<artifactId>org.apache.sling.testing.osgi-mock</artifactId>
+        	<version>1.4.0</version>
+        	<scope>test</scope>
+        </dependency>
     </dependencies>
 </project>
