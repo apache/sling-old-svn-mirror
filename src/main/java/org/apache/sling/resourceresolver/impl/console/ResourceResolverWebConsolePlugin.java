@@ -489,7 +489,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
 
         pw.println("Resource Providers");
 
-        final String format = "%25s%25s%15s\r\n";
+        final String format = "%35s %25s %15s\r\n";
         pw.printf(format, "Provider", "Path", "Configuration");
 
         final RuntimeDTO runtimeDTO = this.runtimeService.getRuntimeDTO();
