@@ -178,4 +178,40 @@ public class CombinedResourceProviderTest {
         assertThat(crp.getResource("/something", null, null, false), not(nullValue()));
         assertThat(crp.getResource("/some/path/object", null, null, false), not(nullValue()));
     }
+
+    /**
+     * Verifies that listing the children at root lists both the synthetic and the 'real' children
+     */
+    @Test
+    public void listChildren_root() {
+        Resource root = crp.getResource("/", null, null, false);
+        Iterator<Resource> children = crp.listChildren(root);
+        
+        Map<String, Resource> all = new HashMap<String, Resource>();
+        while ( children.hasNext() ) {
+            Resource child = children.next();
+            all.put(child.getPath(), child);
+        }
+        
+        assertThat(all.entrySet(), Matchers.hasSize(2));
+        assertThat("Resource at /something", all.get("/something"), not(nullValue()));
+        assertThat("Resource at /some", all.get("/some"), not(nullValue()));
+    }
+    
+    @Test
+    public void listChildren_lowerLevel() {
+        
+        Resource root = crp.getResource("/some", null, null, false);
+        Iterator<Resource> children = crp.listChildren(root);
+        Map<String, Resource> all = new HashMap<String, Resource>();
+
+        while ( children.hasNext() ) {
+            Resource child = children.next();
+            all.put(child.getPath(), child);
+        }
+        
+        assertThat(all.entrySet(), Matchers.hasSize(1));
+        assertThat("Resource at /some/path", all.get("/some/path"), not(nullValue()));
+        
+    }
 }
