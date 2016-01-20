@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.commons.threads</artifactId>
     <packaging>bundle</packaging>
-    <version>3.2.5-SNAPSHOT</version>
+    <version>3.2.6</version>
 
     <name>Apache Sling Thread Support</name>
     <description>
@@ -37,9 +37,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/commons/threads</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/threads</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/commons/threads</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.commons.threads-3.2.6</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.commons.threads-3.2.6</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.commons.threads-3.2.6</url>
     </scm>
 
     <build>
