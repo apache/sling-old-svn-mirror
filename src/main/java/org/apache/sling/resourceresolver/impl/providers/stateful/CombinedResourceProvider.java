@@ -222,7 +222,12 @@ public class CombinedResourceProvider {
             for (final Entry<String, Node<ResourceProviderHandler>> entry : node.getChildren().entrySet()) {
                 final String name = entry.getKey();
                 final ResourceProviderHandler handler = entry.getValue().getValue();
-                final String childPath = new StringBuilder(parent.getPath()).append('/').append(name).toString();
+                StringBuilder pathBuilder = new StringBuilder();
+                if ( !parent.getPath().equals("/")) {
+                    pathBuilder.append(parent.getPath());
+                }
+                pathBuilder.append('/').append(name);
+                final String childPath = pathBuilder.toString();
                 if (handler == null) {
                     syntheticList.add(new SyntheticResource(resolver, childPath, RESOURCE_TYPE_SYNTHETIC));
                 } else {
