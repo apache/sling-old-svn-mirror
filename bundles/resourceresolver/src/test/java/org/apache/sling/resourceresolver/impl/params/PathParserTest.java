@@ -29,7 +29,7 @@ import java.util.Map;
 import org.apache.sling.resourceresolver.impl.params.PathParser;
 import org.junit.Test;
 
-public class PathParametersParserTest {
+public class PathParserTest {
 
     private PathParser parser = new PathParser();
 
