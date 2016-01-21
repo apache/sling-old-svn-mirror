@@ -42,6 +42,7 @@ import org.osgi.framework.BundleContext;
         immediate = true
 )
 @Service(DistributionRequestAuthorizationStrategy.class)
+@Property(name="webconsole.configurationFactory.nameHint", value="Strategy name: {name}")
 public class PrivilegeDistributionRequestAuthorizationStrategyFactory implements DistributionRequestAuthorizationStrategy {
 
     /**

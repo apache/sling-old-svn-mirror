@@ -54,6 +54,7 @@ import org.slf4j.LoggerFactory;
         policy = ConfigurationPolicy.REQUIRE
 )
 @Service(value = DistributionPackageExporter.class)
+@Property(name="webconsole.configurationFactory.nameHint", value="Exporter name: {name}")
 public class RemoteDistributionPackageExporterFactory implements DistributionPackageExporter {
 
 

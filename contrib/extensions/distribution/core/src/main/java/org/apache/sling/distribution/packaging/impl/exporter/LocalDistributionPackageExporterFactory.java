@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE)
 @Service(value = DistributionPackageExporter.class)
+@Property(name="webconsole.configurationFactory.nameHint", value="Exporter name: {name}")
 public class LocalDistributionPackageExporterFactory implements DistributionPackageExporter {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
