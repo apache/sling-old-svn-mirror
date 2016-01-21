@@ -56,7 +56,7 @@ public class DefaultDistributionPackageBuilderProvider implements DistributionPa
                 DistributionPackageBuilder packageBuilder = (DistributionPackageBuilder) service;
 
                 if (type.equals(packageBuilder.getType())) {
-                    return packageBuilder;
+                    return new DefaultSharedDistributionPackageBuilder(packageBuilder);
                 }
             }
         }

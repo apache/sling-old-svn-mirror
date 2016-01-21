@@ -65,7 +65,6 @@ public class AgentDistributionPackageExporterFactory implements DistributionPack
     @Reference(name = "agent")
     private DistributionAgent agent;
 
-
     @Reference
     private DistributionPackageBuilderProvider packageBuilderProvider;
 

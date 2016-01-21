@@ -139,9 +139,9 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
         }
 
         if ("filevlt".equals(type)) {
-            packageBuilder = new DefaultSharedDistributionPackageBuilder(new FileVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, packageFilters, tempFsFolder));
+            packageBuilder = new FileVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, packageFilters, tempFsFolder);
         } else {
-            packageBuilder = new DefaultSharedDistributionPackageBuilder(new JcrVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, packageFilters, tempFsFolder));
+            packageBuilder = new JcrVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, packageFilters, tempFsFolder);
         }
     }
 

@@ -34,15 +34,17 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
-import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
+import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * {@link DistributionPackageBuilder} for {@link SharedDistributionPackage}s
+ */
 public class DefaultSharedDistributionPackageBuilder implements DistributionPackageBuilder {
     private final Logger log = LoggerFactory.getLogger(getClass());
-
 
     private static final String PN_ORIGINAL_ID = "original.package.id";
     private static final String PN_ORIGINAL_REQUEST_TYPE = "original.package.request.type";
@@ -56,7 +58,7 @@ public class DefaultSharedDistributionPackageBuilder implements DistributionPack
 
     // use a global repolock for syncing access to the shared package root
     // TODO: this can be finegrained when we will allow configurable package roots
-    private final Object repolock = new Object();
+    private static final Object repolock = new Object();
 
     public DefaultSharedDistributionPackageBuilder(DistributionPackageBuilder distributionPackageExporter) {
         this.distributionPackageBuilder = distributionPackageExporter;
@@ -88,7 +90,6 @@ public class DefaultSharedDistributionPackageBuilder implements DistributionPack
 
         log.debug("created shared package {} for {}", sharedDistributionPackage.getId(), distributionPackage.getId());
         return sharedDistributionPackage;
-
     }
 
     @Nonnull
@@ -98,11 +99,7 @@ public class DefaultSharedDistributionPackageBuilder implements DistributionPack
 
         log.debug("read shared package {}", distributionPackage);
 
-        if (distributionPackage == null) {
-            return null;
-        }
-
-        String packageName = null;
+        String packageName;
         try {
             packageName = generateNameFromId(resourceResolver, distributionPackage);
 
@@ -154,7 +151,6 @@ public class DefaultSharedDistributionPackageBuilder implements DistributionPack
         return distributionPackageBuilder.installPackage(resourceResolver, originalPackage);
     }
 
-
     private String generateNameFromId(ResourceResolver resourceResolver, DistributionPackage distributionPackage) throws PersistenceException {
 
         String name = PACKAGE_NAME_PREFIX + "_" + System.currentTimeMillis() + "_" + UUID.randomUUID();
@@ -172,7 +168,6 @@ public class DefaultSharedDistributionPackageBuilder implements DistributionPack
         }
 
         String packagePath = getPathFromName(name);
-
 
         synchronized (repolock) {
             Resource resource = ResourceUtil.getOrCreateResource(resourceResolver, packagePath,
@@ -208,7 +203,6 @@ public class DefaultSharedDistributionPackageBuilder implements DistributionPack
         if (properties == null) {
             return null;
         }
-
 
         return properties.get(PN_ORIGINAL_ID, null);
     }
