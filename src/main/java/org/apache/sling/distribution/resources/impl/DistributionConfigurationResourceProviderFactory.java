@@ -53,6 +53,7 @@ import org.slf4j.LoggerFactory;
         @Property(name = ResourceProvider.ROOTS),
         @Property(name = ResourceProvider.OWNS_ROOTS, boolValue = true, propertyPrivate = true)
 })
+@Property(name="webconsole.configurationFactory.nameHint", value="Resource kind: {kind}")
 public class DistributionConfigurationResourceProviderFactory implements ResourceProviderFactory {
 
     private final Logger log = LoggerFactory.getLogger(getClass());

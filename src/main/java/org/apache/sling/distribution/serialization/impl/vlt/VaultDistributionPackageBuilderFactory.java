@@ -54,6 +54,7 @@ import org.apache.sling.distribution.serialization.impl.DefaultSharedDistributio
         policy = ConfigurationPolicy.REQUIRE
 )
 @Service(DistributionPackageBuilder.class)
+@Property(name="webconsole.configurationFactory.nameHint", value="Builder name: {name}")
 public class VaultDistributionPackageBuilderFactory implements DistributionPackageBuilder {
 
     /**

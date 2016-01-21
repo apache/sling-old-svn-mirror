@@ -46,6 +46,7 @@ import org.osgi.framework.BundleContext;
         policy = ConfigurationPolicy.REQUIRE
 )
 @Service(DistributionTrigger.class)
+@Property(name="webconsole.configurationFactory.nameHint", value="Trigger name: {name} on path {path}")
 public class JcrEventDistributionTriggerFactory implements DistributionTrigger {
 
 

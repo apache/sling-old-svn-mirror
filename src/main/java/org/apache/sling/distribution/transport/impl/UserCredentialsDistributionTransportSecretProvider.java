@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE)
 @Service(value = DistributionTransportSecretProvider.class)
+@Property(name="webconsole.configurationFactory.nameHint", value="Secret provider name: {name}")
 public class UserCredentialsDistributionTransportSecretProvider implements
         DistributionTransportSecretProvider {
 

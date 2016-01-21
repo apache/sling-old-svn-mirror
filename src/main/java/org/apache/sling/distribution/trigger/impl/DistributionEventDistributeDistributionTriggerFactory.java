@@ -41,6 +41,7 @@ import org.osgi.framework.BundleContext;
         policy = ConfigurationPolicy.REQUIRE
 )
 @Service(DistributionTrigger.class)
+@Property(name="webconsole.configurationFactory.nameHint", value="Trigger name: {name}")
 public class DistributionEventDistributeDistributionTriggerFactory implements DistributionTrigger {
 
     @Property(label = "Name", description = "The name of the trigger.")

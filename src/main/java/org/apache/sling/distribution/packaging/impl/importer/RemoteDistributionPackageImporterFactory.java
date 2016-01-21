@@ -51,6 +51,7 @@ import org.slf4j.LoggerFactory;
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE)
 @Service(value = DistributionPackageImporter.class)
+@Property(name="webconsole.configurationFactory.nameHint", value="Importer name: {name}")
 public class RemoteDistributionPackageImporterFactory implements DistributionPackageImporter {
 
     private final Logger log = LoggerFactory.getLogger(getClass());

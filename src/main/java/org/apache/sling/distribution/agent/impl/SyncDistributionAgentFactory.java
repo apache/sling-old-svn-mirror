@@ -73,6 +73,7 @@ import org.slf4j.LoggerFactory;
 @Reference(name = "triggers", referenceInterface = DistributionTrigger.class,
         policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
         bind = "bindDistributionTrigger", unbind = "unbindDistributionTrigger")
+@Property(name="webconsole.configurationFactory.nameHint", value="Agent name: {name}")
 public class SyncDistributionAgentFactory extends AbstractDistributionAgentFactory {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
