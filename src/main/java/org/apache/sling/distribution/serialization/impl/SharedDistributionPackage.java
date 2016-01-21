@@ -24,7 +24,8 @@ import aQute.bnd.annotation.ProviderType;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 
 /**
- * A {@link DistributionPackage} that offers basic reference counting
+ * A {@link DistributionPackage} that offers basic reference counting.
+ * That's useful for example when using a package in multiple queues.
  */
 @ProviderType
 public interface SharedDistributionPackage extends DistributionPackage {

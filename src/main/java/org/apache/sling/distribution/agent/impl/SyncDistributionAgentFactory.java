@@ -51,6 +51,7 @@ import org.apache.sling.distribution.queue.impl.ErrorQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.MultipleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
+import org.apache.sling.distribution.serialization.impl.DefaultSharedDistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.event.jobs.JobManager;
@@ -234,7 +235,7 @@ public class SyncDistributionAgentFactory extends AbstractDistributionAgentFacto
         exportQueueStrategy = new MultipleQueueDispatchingStrategy(queueNames);
         packageImporter = new RemoteDistributionPackageImporter(distributionLog, transportSecretProvider, importerEndpointsMap);
 
-        DistributionPackageExporter packageExporter = new RemoteDistributionPackageExporter(distributionLog, packageBuilder, transportSecretProvider, exporterEndpoints, pullItems);
+        DistributionPackageExporter packageExporter = new RemoteDistributionPackageExporter(distributionLog, new DefaultSharedDistributionPackageBuilder(packageBuilder), transportSecretProvider, exporterEndpoints, pullItems);
         DistributionQueueProvider queueProvider = new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
         DistributionRequestType[] allowedRequests = new DistributionRequestType[]{DistributionRequestType.PULL};
 

@@ -40,6 +40,7 @@ import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
+import org.apache.sling.distribution.serialization.impl.DefaultSharedDistributionPackageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,7 +80,7 @@ public class LocalDistributionPackageImporterFactory implements DistributionPack
     @Activate
     public void activate(Map<String, Object> config) {
         name = PropertiesUtil.toString(config.get(NAME), null);
-        importer = new LocalDistributionPackageImporter(packageBuilder);
+        importer = new LocalDistributionPackageImporter(new DefaultSharedDistributionPackageBuilder(packageBuilder));
     }
 
 

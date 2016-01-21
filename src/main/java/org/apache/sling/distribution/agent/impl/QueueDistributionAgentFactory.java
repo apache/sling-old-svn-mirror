@@ -45,6 +45,7 @@ import org.apache.sling.distribution.queue.impl.PriorityQueueDispatchingStrategy
 import org.apache.sling.distribution.queue.impl.SingleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
+import org.apache.sling.distribution.serialization.impl.DefaultSharedDistributionPackageBuilder;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -179,7 +180,7 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
             exportQueueStrategy = new SingleQueueDispatchingStrategy();
         }
 
-        DistributionPackageExporter packageExporter = new LocalDistributionPackageExporter(packageBuilder);
+        DistributionPackageExporter packageExporter = new LocalDistributionPackageExporter(new DefaultSharedDistributionPackageBuilder(packageBuilder));
         DistributionRequestType[] allowedRequests = new DistributionRequestType[]{DistributionRequestType.ADD, DistributionRequestType.DELETE};
 
         return new SimpleDistributionAgent(agentName, false, null,

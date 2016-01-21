@@ -87,7 +87,6 @@ public class RemoteDistributionPackageImporterFactory implements DistributionPac
 
         DefaultDistributionLog distributionLog = new DefaultDistributionLog(DistributionComponentKind.IMPORTER, importerName, RemoteDistributionPackageImporter.class, DefaultDistributionLog.LogLevel.ERROR);
 
-
         importer = new RemoteDistributionPackageImporter(distributionLog, transportSecretProvider, endpoints);
 
     }
