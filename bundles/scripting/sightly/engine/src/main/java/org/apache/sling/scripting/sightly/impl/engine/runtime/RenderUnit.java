@@ -84,7 +84,6 @@ public abstract class RenderUnit implements Record<RenderUnit> {
             throw new SightlyException("data-sly-call: " + templateObj.getClass().getName() + " does not represent a Sightly template.");
         }
         RenderUnit unit = (RenderUnit) templateObj;
-        SlingScriptHelper ssh = (SlingScriptHelper) renderContext.getBindings().get(SlingBindings.SLING);
         Map<String, Object> argumentsMap = RenderUtils.toMap(argsObj);
         Bindings arguments = new SimpleBindings(Collections.unmodifiableMap(argumentsMap));
         unit.render(renderContext, arguments);

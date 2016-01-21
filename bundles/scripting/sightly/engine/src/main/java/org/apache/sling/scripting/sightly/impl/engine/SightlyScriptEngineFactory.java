@@ -42,13 +42,13 @@ import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 public class SightlyScriptEngineFactory extends AbstractScriptEngineFactory {
 
     @Reference
-    private UnitLoader unitLoader = null;
+    private UnitLoader unitLoader;
 
     @Reference
-    private ExtensionRegistryService extensionRegistryService = null;
+    private ExtensionRegistryService extensionRegistryService;
 
     @Reference
-    private DynamicClassLoaderManager dynamicClassLoaderManager = null;
+    private DynamicClassLoaderManager dynamicClassLoaderManager;
 
     public final static String SHORT_NAME = "sightly";
 

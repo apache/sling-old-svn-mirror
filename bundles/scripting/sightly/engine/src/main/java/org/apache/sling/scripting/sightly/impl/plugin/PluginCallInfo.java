@@ -18,6 +18,8 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.impl.plugin;
 
+import java.util.Arrays;
+
 /**
  * Data related to a plugin call
  */
@@ -28,7 +30,7 @@ public class PluginCallInfo {
 
     public PluginCallInfo(String name, String[] arguments) {
         this.name = name;
-        this.arguments = arguments;
+        this.arguments = Arrays.copyOf(arguments, arguments.length);
     }
 
     /**
@@ -44,6 +46,6 @@ public class PluginCallInfo {
      * @return a possibly empty array of args
      */
     public String[] getArguments() {
-        return arguments;
+        return Arrays.copyOf(arguments, arguments.length);
     }
 }

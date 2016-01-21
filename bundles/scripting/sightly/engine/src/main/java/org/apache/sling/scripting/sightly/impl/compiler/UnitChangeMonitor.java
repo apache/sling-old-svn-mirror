@@ -51,7 +51,7 @@ public class UnitChangeMonitor {
 
     private static final Logger LOG = LoggerFactory.getLogger(UnitChangeMonitor.class);
 
-    private Map<String, SightlyScript> slyScriptsMap = new ConcurrentHashMap<String, SightlyScript>();
+    private Map<String, SightlyScriptMetaInfo> slyScriptsMap = new ConcurrentHashMap<String, SightlyScriptMetaInfo>();
     private Map<String, Long> slyJavaUseMap = new ConcurrentHashMap<String, Long>();
     private ServiceRegistration eventHandlerServiceRegistration;
 
@@ -68,17 +68,17 @@ public class UnitChangeMonitor {
      * @return the script's last modified date or 0 if there's no information about the script
      */
     public long getLastModifiedDateForScript(String script) {
-        SightlyScript sightlyScript = slyScriptsMap.get(script);
-        if (sightlyScript != null) {
-            return sightlyScript.lastModified;
+        SightlyScriptMetaInfo sightlyScriptMetaInfo = slyScriptsMap.get(script);
+        if (sightlyScriptMetaInfo != null) {
+            return sightlyScriptMetaInfo.lastModified;
         }
         return 0;
     }
 
     public String getScriptEncoding(String script) {
-        SightlyScript sightlyScript = getScript(script);
-        if (sightlyScript != null) {
-            return sightlyScript.encoding;
+        SightlyScriptMetaInfo sightlyScriptMetaInfo = getScript(script);
+        if (sightlyScriptMetaInfo != null) {
+            return sightlyScriptMetaInfo.encoding;
         }
         return sightlyEngineConfiguration.getEncoding();
     }
@@ -175,7 +175,7 @@ public class UnitChangeMonitor {
                 if (StringUtils.isEmpty(encoding)) {
                     encoding = sightlyEngineConfiguration.getEncoding();
                 }
-                slyScriptsMap.put(path, new SightlyScript(path, encoding, System.currentTimeMillis()));
+                slyScriptsMap.put(path, new SightlyScriptMetaInfo(encoding, System.currentTimeMillis()));
             }
         } else if (SlingConstants.TOPIC_RESOURCE_REMOVED.equals(topic)) {
             if (path.endsWith(".java")) {
@@ -186,11 +186,11 @@ public class UnitChangeMonitor {
         }
     }
 
-    private SightlyScript getScript(String script) {
-        SightlyScript sightlyScript = null;
+    private SightlyScriptMetaInfo getScript(String script) {
+        SightlyScriptMetaInfo sightlyScriptMetaInfo = null;
         if (StringUtils.isNotEmpty(script)) {
-            sightlyScript = slyScriptsMap.get(script);
-            if (sightlyScript == null) {
+            sightlyScriptMetaInfo = slyScriptsMap.get(script);
+            if (sightlyScriptMetaInfo == null) {
                 ResourceResolver resolver = null;
                 try {
                     resolver = rrf.getAdministrativeResourceResolver(null);
@@ -203,8 +203,8 @@ public class UnitChangeMonitor {
                     if (StringUtils.isEmpty(encoding)) {
                         encoding = sightlyEngineConfiguration.getEncoding();
                     }
-                    sightlyScript = new SightlyScript(script, encoding, scriptResourceMetadata.getModificationTime());
-                    slyScriptsMap.put(script, sightlyScript);
+                    sightlyScriptMetaInfo = new SightlyScriptMetaInfo(encoding, scriptResourceMetadata.getModificationTime());
+                    slyScriptsMap.put(script, sightlyScriptMetaInfo);
                 } catch (LoginException e) {
                     // do nothing; we'll just return the default encoding
                     LOG.warn("Cannot read character encoding value for script " + script);
@@ -215,19 +215,15 @@ public class UnitChangeMonitor {
                 }
             }
         }
-        return sightlyScript;
+        return sightlyScriptMetaInfo;
     }
 
-    private class SightlyScript {
+    private static class SightlyScriptMetaInfo {
         String encoding;
-        String className;
-        String path;
         long lastModified;
 
-        public SightlyScript(String path, String encoding, long lastModified) {
+        public SightlyScriptMetaInfo(String encoding, long lastModified) {
             this.encoding = encoding;
-            className = Utils.getJavaNameFromPath(path);
-            this.path = path;
             this.lastModified = lastModified;
         }
     }
