@@ -103,5 +103,23 @@ public class ElementContext {
             }
             return 1;
         }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof PrioritizedInvoke)) {
+                return false;
+            }
+            PrioritizedInvoke that = (PrioritizedInvoke) obj;
+            if (this.priority == that.priority) {
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            assert false : "hashCode not designed";
+            return 42;
+        }
     }
 }

@@ -222,6 +222,8 @@ public final class HtmlParser {
                         parseSubState = 0;
                     }
                     break;
+                default:
+                    break;
                 }
                 break;
             case COMMENT:
@@ -288,6 +290,8 @@ public final class HtmlParser {
                     } else {
                         parseSubState = 2;
                     }
+                    break;
+                default:
                     break;
                 }
                 break;
@@ -375,6 +379,8 @@ public final class HtmlParser {
                         parseState = PARSE_STATE.OUTSIDE;
                     }
                     break;
+                default:
+                    break;
                 }
                 break;
 
@@ -396,6 +402,8 @@ public final class HtmlParser {
                     parseState = PARSE_STATE.OUTSIDE;
                 }
                 exprType = EXPR_NONE;
+                break;
+            default:
                 break;
             }
         }

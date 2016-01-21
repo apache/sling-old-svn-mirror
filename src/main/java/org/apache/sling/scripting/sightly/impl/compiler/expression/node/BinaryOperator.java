@@ -142,8 +142,7 @@ public enum BinaryOperator {
     I_DIV {
         @Override
         public Object eval(Object left, Object right) {
-            return adjust(RenderUtils.toNumber(left).intValue()
-                / RenderUtils.toNumber(right).intValue());
+            return RenderUtils.toNumber(left).intValue() / RenderUtils.toNumber(right).intValue();
         }
     },
 
@@ -158,10 +157,10 @@ public enum BinaryOperator {
 
     };
 
-    public static String OBJECT_NAME = BinaryOperator.class.getName();
-    public static String METHOD_STRICT_EQ = "strictEq";
-    public static String METHOD_LEQ = "leq";
-    public static String METHOD_LT = "lt";
+    public static final String OBJECT_NAME = BinaryOperator.class.getName();
+    public static final String METHOD_STRICT_EQ = "strictEq";
+    public static final String METHOD_LEQ = "leq";
+    public static final String METHOD_LT = "lt";
 
     private static boolean eq(Object left, Object right) {
         if (left == null) {

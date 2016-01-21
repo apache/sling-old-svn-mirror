@@ -180,7 +180,7 @@ public class UnitLoader {
             if (url == null) {
                 throw new SightlyException("No bundle resource resides at " + path);
             }
-            inputStream = componentContext.getBundleContext().getBundle().getEntry(path).openStream();
+            inputStream = url.openStream();
             return IOUtils.toString(inputStream);
         } catch (IOException e) {
             throw new SightlyException("Java class templates could not be found");

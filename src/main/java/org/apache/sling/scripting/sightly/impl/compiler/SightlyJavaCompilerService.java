@@ -133,33 +133,25 @@ public class SightlyJavaCompilerService {
      * @throws CompilerException in case of any runtime exception
      */
     public Object compileSource(SourceIdentifier sourceIdentifier, String sourceCode, String fqcn) {
-        boolean downgradedLock = false;
-        writeLock.lock();
+        readLock.lock();
         try {
-            if (sourceIdentifier != null) {
-                if (sourceIdentifier.needsUpdate()) {
+            if (sourceIdentifier == null || sourceIdentifier.needsUpdate()) {
+                readLock.unlock();
+                writeLock.lock();
+                try {
                     return internalCompileSource(sourceCode, fqcn);
-                } else {
-                    /**
-                     * downgrade write lock to a read lock; we don't need to recompile the class since it seems it has been recompiled by
-                     * another thread
-                     */
+                } finally {
+                    // downgrade write lock since we've probably compiled the source code by now
                     readLock.lock();
                     writeLock.unlock();
-                    downgradedLock = true;
-                    return classLoaderWriter.getClassLoader().loadClass(fqcn).newInstance();
                 }
             } else {
-                return internalCompileSource(sourceCode, fqcn);
+                return classLoaderWriter.getClassLoader().loadClass(fqcn).newInstance();
             }
         } catch (Exception e) {
             throw new CompilerException(CompilerException.CompilerExceptionCause.COMPILER_ERRORS, e);
         } finally {
-            if (downgradedLock) {
-                readLock.unlock();
-            } else {
-                writeLock.unlock();
-            }
+            readLock.unlock();
         }
     }
 
@@ -366,7 +358,7 @@ public class SightlyJavaCompilerService {
         return buffer.toString();
     }
 
-    class SightlyCompilationUnit implements CompilationUnit {
+    private static class SightlyCompilationUnit implements CompilationUnit {
 
         private String fqcn;
         private String sourceCode;
@@ -378,7 +370,7 @@ public class SightlyJavaCompilerService {
 
         @Override
         public Reader getSource() throws IOException {
-            return new InputStreamReader(IOUtils.toInputStream(sourceCode, "UTF-8"));
+            return new InputStreamReader(IOUtils.toInputStream(sourceCode, "UTF-8"), "UTF-8");
         }
 
         @Override

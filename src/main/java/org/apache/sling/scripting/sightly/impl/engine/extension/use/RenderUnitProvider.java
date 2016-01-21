@@ -62,7 +62,7 @@ import org.osgi.framework.Constants;
 public class RenderUnitProvider implements UseProvider {
 
     @Reference
-    private UnitLoader unitLoader = null;
+    private UnitLoader unitLoader;
 
     @Override
     public ProviderOutcome provide(String identifier, RenderContext renderContext, Bindings arguments) {

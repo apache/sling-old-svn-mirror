@@ -22,6 +22,8 @@ package org.apache.sling.scripting.sightly.impl.compiler;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -31,11 +33,6 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.scripting.sightly.impl.compiler.debug.SanityChecker;
-import org.apache.sling.scripting.sightly.impl.compiler.ris.CommandStream;
-import org.apache.sling.scripting.sightly.impl.compiler.util.stream.PushStream;
-import org.apache.sling.scripting.sightly.impl.filter.Filter;
-import org.apache.sling.scripting.sightly.impl.html.dom.HtmlParserService;
-import org.apache.sling.scripting.sightly.impl.plugin.Plugin;
 import org.apache.sling.scripting.sightly.impl.compiler.frontend.SimpleFrontend;
 import org.apache.sling.scripting.sightly.impl.compiler.optimization.CoalescingWrites;
 import org.apache.sling.scripting.sightly.impl.compiler.optimization.DeadCodeRemoval;
@@ -44,6 +41,11 @@ import org.apache.sling.scripting.sightly.impl.compiler.optimization.StreamTrans
 import org.apache.sling.scripting.sightly.impl.compiler.optimization.SyntheticMapRemoval;
 import org.apache.sling.scripting.sightly.impl.compiler.optimization.UnusedVariableRemoval;
 import org.apache.sling.scripting.sightly.impl.compiler.optimization.reduce.ConstantFolding;
+import org.apache.sling.scripting.sightly.impl.compiler.ris.CommandStream;
+import org.apache.sling.scripting.sightly.impl.compiler.util.stream.PushStream;
+import org.apache.sling.scripting.sightly.impl.filter.Filter;
+import org.apache.sling.scripting.sightly.impl.html.dom.HtmlParserService;
+import org.apache.sling.scripting.sightly.impl.plugin.Plugin;
 import org.osgi.service.component.ComponentContext;
 
 /**
@@ -69,6 +71,8 @@ public class SightlyCompilerService {
 
     private List<Filter> filters = new ArrayList<Filter>();
     private List<Plugin> plugins = new ArrayList<Plugin>();
+    private static final Lock FILTERS_LOCK = new ReentrantLock();
+    private static final Lock PLUGINS_LOCK = new ReentrantLock();
 
     private volatile StreamTransformer optimizer;
     private volatile CompilerFrontend frontend;
@@ -117,33 +121,46 @@ public class SightlyCompilerService {
 
     @SuppressWarnings("UnusedDeclaration")
     protected void bindFilterService(Filter filter, Map<String, Object> properties) {
-        synchronized(filters) {
+        FILTERS_LOCK.lock();
+        try {
             filters = add(filters, filter);
             reloadFrontend();
+        } finally {
+            FILTERS_LOCK.unlock();
         }
     }
 
     @SuppressWarnings("UnusedDeclaration")
     protected void unbindFilterService(Filter filter, Map<String, Object> properties) {
-        synchronized (filters) {
+        FILTERS_LOCK.lock();
+        try {
             filters = remove(filters, filter);
             reloadFrontend();
+        } finally {
+            FILTERS_LOCK.unlock();
         }
+
     }
 
     @SuppressWarnings("UnusedDeclaration")
     protected void bindPluginService(Plugin plugin, Map<String, Object> properties) {
-        synchronized (plugins) {
+        PLUGINS_LOCK.lock();
+        try {
             plugins = add(plugins, plugin);
             reloadFrontend();
+        } finally {
+            PLUGINS_LOCK.unlock();
         }
     }
 
     @SuppressWarnings("UnusedDeclaration")
     protected void unbindPluginService(Plugin plugin, Map<String, Object> properties) {
-        synchronized (plugins) {
+        PLUGINS_LOCK.lock();
+        try {
             plugins = remove(plugins, plugin);
             reloadFrontend();
+        } finally {
+            PLUGINS_LOCK.unlock();
         }
     }
 

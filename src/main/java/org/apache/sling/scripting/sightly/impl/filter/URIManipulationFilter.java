@@ -102,9 +102,6 @@ public class URIManipulationFilter extends FilterComponent implements RuntimeExt
         ExtensionUtils.checkArgumentCount(URI_MANIPULATION_FUNCTION, arguments, 2);
         String uriString = RenderUtils.toString(arguments[0]);
         Map<String, Object> options = RenderUtils.toMap(arguments[1]);
-        if (uriString == null) {
-            return null;
-        }
         StringBuilder sb = new StringBuilder();
         PathInfo pathInfo = new PathInfo(uriString);
         uriAppender(sb, SCHEME, options, pathInfo.getScheme());
