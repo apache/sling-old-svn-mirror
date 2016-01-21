@@ -44,8 +44,8 @@ import org.slf4j.LoggerFactory;
  * Sightly {@link UseProvider} which will instantiate a referenced Sling Model.
  * </p>
  * <p>
- * For that it tries to use the {@link ModelFactory#createModel(Object, Class)} first with the adaptable {@link Resource}
- * then with the adaptable {@link SlingHttpServletRequest}. It will always fail with an exception (i.e. no other {@code UseProvider} is
+ * For that it tries to use the {@link ModelFactory#createModel(Object, Class)} first with the adaptable {@link SlingHttpServletRequest}
+ * then with the adaptable {@link Resource}. It will always fail with an exception (i.e. no other {@code UseProvider} is
  * asked afterwards and the exception is being rethrown) in case the following two preconditions are fulfilled:
  * </p>
  * <ol>
