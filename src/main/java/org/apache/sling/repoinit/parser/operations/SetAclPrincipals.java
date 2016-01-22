@@ -15,29 +15,36 @@
  * limitations under the License.
  */
 
-package org.apache.sling.acldef.parser.operations;
+package org.apache.sling.repoinit.parser.operations;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-/** Base class for operations that group AclLines */
- abstract class AclGroupBase extends Operation {
-    private final List<AclLine> lines;
+/** Set ACL statement that groups a set of AclLines
+ *  that all refer to the same set of principals.
+ */
+public class SetAclPrincipals extends AclGroupBase {
     
-    protected AclGroupBase(List<AclLine> lines) {
-        this.lines = Collections.unmodifiableList(lines);
+    private final List<String> principals;
+    
+    public SetAclPrincipals(List<String> principals, List<AclLine> lines) {
+        super(lines);
+        this.principals = Collections.unmodifiableList(principals);
     }
     
     protected String getParametersDescription() {
         final StringBuilder sb = new StringBuilder();
-        for(AclLine line : lines) {
-            sb.append("\n  ").append(line.toString());
-        }
+        sb.append(principals);
+        sb.append(super.getParametersDescription());
         return sb.toString(); 
     }
     
-    public Collection<AclLine> getLines() {
-        return lines;
+    public List<String> getPrincipals() {
+        return principals;
+    }
+
+    @Override
+    public void accept(OperationVisitor v) {
+        v.visitSetAclPrincipal(this);
     }
 }

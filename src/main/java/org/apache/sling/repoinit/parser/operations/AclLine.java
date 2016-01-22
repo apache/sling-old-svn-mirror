@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.sling.acldef.parser.operations;
+package org.apache.sling.repoinit.parser.operations;
 
 import java.util.ArrayList;
 import java.util.Collections;

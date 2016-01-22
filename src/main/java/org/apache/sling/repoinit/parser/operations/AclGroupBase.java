@@ -15,25 +15,29 @@
  * limitations under the License.
  */
 
-package org.apache.sling.acldef.parser.test;
+package org.apache.sling.repoinit.parser.operations;
 
-import java.io.Reader;
-import java.io.StringReader;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
-import org.apache.sling.acldef.parser.AclParsingException;
-import org.apache.sling.acldef.parser.impl.ACLDefinitionsParserService;
-import org.junit.Test;
-
-public class ParserServiceTest {
-    @Test
-    public void noErrors() throws AclParsingException {
-        final Reader r = new StringReader("create service user foo");
-        new ACLDefinitionsParserService().parse(r);
+/** Base class for operations that group AclLines */
+ abstract class AclGroupBase extends Operation {
+    private final List<AclLine> lines;
+    
+    protected AclGroupBase(List<AclLine> lines) {
+        this.lines = Collections.unmodifiableList(lines);
     }
     
-    @Test(expected = AclParsingException.class)
-    public void syntaxError() throws AclParsingException {
-        final Reader r = new StringReader("not a valid statement");
-        new ACLDefinitionsParserService().parse(r);
+    protected String getParametersDescription() {
+        final StringBuilder sb = new StringBuilder();
+        for(AclLine line : lines) {
+            sb.append("\n  ").append(line.toString());
+        }
+        return sb.toString(); 
+    }
+    
+    public Collection<AclLine> getLines() {
+        return lines;
     }
 }

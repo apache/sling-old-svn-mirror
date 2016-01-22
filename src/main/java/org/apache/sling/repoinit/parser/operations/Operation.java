@@ -15,15 +15,16 @@
  * limitations under the License.
  */
 
-package org.apache.sling.acldef.parser.operations;
+package org.apache.sling.repoinit.parser.operations;
 
-public class DeleteServiceUser extends ServiceUserOperation {
-    public DeleteServiceUser(String username) {
-        super(username);
-    }
+public abstract class Operation {
+    public abstract void accept(OperationVisitor v);
+    
+    protected abstract String getParametersDescription();
     
     @Override
-    public void accept(OperationVisitor v) {
-        v.visitDeleteServiceUser(this);
+    public String toString() {
+        return getClass().getSimpleName() + " " + getParametersDescription();
     }
+
 }

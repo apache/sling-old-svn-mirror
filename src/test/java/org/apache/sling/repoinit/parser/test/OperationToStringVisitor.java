@@ -15,17 +15,17 @@
  * limitations under the License.
  */
 
-package org.apache.sling.acldef.parser.test;
+package org.apache.sling.repoinit.parser.test;
 
 import java.io.PrintWriter;
 import java.util.Collection;
 
-import org.apache.sling.acldef.parser.operations.AclLine;
-import org.apache.sling.acldef.parser.operations.CreateServiceUser;
-import org.apache.sling.acldef.parser.operations.DeleteServiceUser;
-import org.apache.sling.acldef.parser.operations.OperationVisitor;
-import org.apache.sling.acldef.parser.operations.SetAclPaths;
-import org.apache.sling.acldef.parser.operations.SetAclPrincipals;
+import org.apache.sling.repoinit.parser.operations.AclLine;
+import org.apache.sling.repoinit.parser.operations.CreateServiceUser;
+import org.apache.sling.repoinit.parser.operations.DeleteServiceUser;
+import org.apache.sling.repoinit.parser.operations.OperationVisitor;
+import org.apache.sling.repoinit.parser.operations.SetAclPaths;
+import org.apache.sling.repoinit.parser.operations.SetAclPrincipals;
 
 /** OperationVisitor that dumps the operations using
  *  their toString() methods

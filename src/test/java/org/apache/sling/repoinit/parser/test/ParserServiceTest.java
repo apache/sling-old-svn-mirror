@@ -15,16 +15,25 @@
  * limitations under the License.
  */
 
-package org.apache.sling.acldef.parser.operations;
+package org.apache.sling.repoinit.parser.test;
 
-public abstract class Operation {
-    public abstract void accept(OperationVisitor v);
-    
-    protected abstract String getParametersDescription();
-    
-    @Override
-    public String toString() {
-        return getClass().getSimpleName() + " " + getParametersDescription();
+import java.io.Reader;
+import java.io.StringReader;
+
+import org.apache.sling.repoinit.parser.AclParsingException;
+import org.apache.sling.repoinit.parser.impl.ACLDefinitionsParserService;
+import org.junit.Test;
+
+public class ParserServiceTest {
+    @Test
+    public void noErrors() throws AclParsingException {
+        final Reader r = new StringReader("create service user foo");
+        new ACLDefinitionsParserService().parse(r);
     }
-
+    
+    @Test(expected = AclParsingException.class)
+    public void syntaxError() throws AclParsingException {
+        final Reader r = new StringReader("not a valid statement");
+        new ACLDefinitionsParserService().parse(r);
+    }
 }

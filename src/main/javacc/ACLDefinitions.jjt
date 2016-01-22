@@ -10,12 +10,12 @@ options
 
 PARSER_BEGIN(ACLDefinitionsParserImpl)
 
-package org.apache.sling.acldef.parser.impl;
+package org.apache.sling.repoinit.parser.impl;
 
 import java.util.List;
 import java.util.ArrayList;
 
-import org.apache.sling.acldef.parser.operations.*;
+import org.apache.sling.repoinit.parser.operations.*;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more

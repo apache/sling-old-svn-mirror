@@ -16,12 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.acldef.parser;
+package org.apache.sling.repoinit.parser;
 
 import java.io.Reader;
 import java.util.List;
 
-import org.apache.sling.acldef.parser.operations.Operation;
+import org.apache.sling.repoinit.parser.operations.Operation;
 
 /** ACL definitions parser service interface */
 public interface AclDefinitionsParser {

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.sling.acldef.parser.test;
+package org.apache.sling.repoinit.parser.test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -28,10 +28,10 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.sling.acldef.parser.impl.ACLDefinitionsParserImpl;
-import org.apache.sling.acldef.parser.impl.ParseException;
-import org.apache.sling.acldef.parser.operations.Operation;
-import org.apache.sling.acldef.parser.operations.OperationVisitor;
+import org.apache.sling.repoinit.parser.impl.ACLDefinitionsParserImpl;
+import org.apache.sling.repoinit.parser.impl.ParseException;
+import org.apache.sling.repoinit.parser.operations.Operation;
+import org.apache.sling.repoinit.parser.operations.OperationVisitor;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;

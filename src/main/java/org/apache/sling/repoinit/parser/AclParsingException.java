@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.acldef.parser;
+package org.apache.sling.repoinit.parser;
 
 public class AclParsingException extends Exception {
     private static final long serialVersionUID = 1L;

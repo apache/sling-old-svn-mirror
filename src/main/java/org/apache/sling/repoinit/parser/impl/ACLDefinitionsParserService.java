@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.acldef.parser.impl;
+package org.apache.sling.repoinit.parser.impl;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -24,9 +24,9 @@ import java.util.List;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.acldef.parser.AclDefinitionsParser;
-import org.apache.sling.acldef.parser.AclParsingException;
-import org.apache.sling.acldef.parser.operations.Operation;
+import org.apache.sling.repoinit.parser.AclDefinitionsParser;
+import org.apache.sling.repoinit.parser.AclParsingException;
+import org.apache.sling.repoinit.parser.operations.Operation;
 
 /** ACL definitions parser service */
 @Component

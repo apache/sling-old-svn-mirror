@@ -15,36 +15,15 @@
  * limitations under the License.
  */
 
-package org.apache.sling.acldef.parser.operations;
+package org.apache.sling.repoinit.parser.operations;
 
-import java.util.Collections;
-import java.util.List;
-
-/** Set ACL statement that groups a set of AclLines
- *  that all refer to the same set of paths.
- */
-public class SetAclPaths extends AclGroupBase {
-    
-    private final List<String> paths;
-    
-    public SetAclPaths(List<String> paths, List<AclLine> lines) {
-        super(lines);
-        this.paths = Collections.unmodifiableList(paths);
-    }
-    
-    protected String getParametersDescription() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append(paths);
-        sb.append(super.getParametersDescription());
-        return sb.toString(); 
-    }
-    
-    public List<String> getPaths() {
-        return paths;
+public class CreateServiceUser extends ServiceUserOperation {
+    public CreateServiceUser(String username) {
+        super(username);
     }
 
     @Override
     public void accept(OperationVisitor v) {
-        v.visitSetAclPaths(this);
+        v.visitCreateServiceUser(this);
     }
 }
