@@ -114,6 +114,7 @@
         <module>bundles/commons/threaddump</module>
         <module>bundles/commons/threads</module>
         <module>bundles/commons/metrics</module>
+        <module>bundles/commons/repoinit</module>
 
         <!-- Authentication Support -->
         <module>bundles/auth/core</module>
