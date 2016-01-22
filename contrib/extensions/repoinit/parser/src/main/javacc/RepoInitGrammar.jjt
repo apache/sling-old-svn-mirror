@@ -1,4 +1,5 @@
-/* JavaCC grammar for the SLING-5355 ACL definitions language
+/* JavaCC grammar for the SLING-5449 content repository 
+ * initialization language
  * See https://javacc.java.net/doc/docindex.html for the JavaCC docs
  */
  
@@ -8,7 +9,7 @@ options
     STATIC=false;
 }
 
-PARSER_BEGIN(ACLDefinitionsParserImpl)
+PARSER_BEGIN(RepoInitParserImpl)
 
 package org.apache.sling.repoinit.parser.impl;
 
@@ -34,10 +35,10 @@ import org.apache.sling.repoinit.parser.operations.*;
  * limitations under the License.
  */
 
-public class ACLDefinitionsParserImpl 
+public class RepoInitParserImpl 
 {
 }
-PARSER_END(ACLDefinitionsParserImpl)
+PARSER_END(RepoInitParserImpl)
 
 SKIP :
 {

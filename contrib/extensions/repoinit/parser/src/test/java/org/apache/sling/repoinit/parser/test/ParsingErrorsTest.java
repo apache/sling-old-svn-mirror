@@ -26,8 +26,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.sling.repoinit.parser.impl.ACLDefinitionsParserImpl;
 import org.apache.sling.repoinit.parser.impl.ParseException;
+import org.apache.sling.repoinit.parser.impl.RepoInitParserImpl;
 import org.apache.sling.repoinit.parser.impl.TokenMgrError;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -74,7 +74,7 @@ public class ParsingErrorsTest {
     public void checkResult() throws ParseException, IOException {
         final StringReader r = new StringReader(input);
         try {
-            new ACLDefinitionsParserImpl(r).parse();
+            new RepoInitParserImpl(r).parse();
             if(expected != null) {
                 fail("Expected a " + expected.getSimpleName() + " for [" + input + "]");
             }

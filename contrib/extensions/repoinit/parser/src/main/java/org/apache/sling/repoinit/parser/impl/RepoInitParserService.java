@@ -24,21 +24,21 @@ import java.util.List;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.repoinit.parser.AclDefinitionsParser;
-import org.apache.sling.repoinit.parser.AclParsingException;
+import org.apache.sling.repoinit.parser.RepoInitParser;
+import org.apache.sling.repoinit.parser.RepoInitParsingException;
 import org.apache.sling.repoinit.parser.operations.Operation;
 
 /** ACL definitions parser service */
 @Component
-@Service(value=AclDefinitionsParser.class)
-public class ACLDefinitionsParserService implements AclDefinitionsParser {
+@Service(value=RepoInitParser.class)
+public class RepoInitParserService implements RepoInitParser {
 
     @Override
-    public List<Operation> parse(Reader r) throws AclParsingException {
+    public List<Operation> parse(Reader r) throws RepoInitParsingException {
         try {
-            return new ACLDefinitionsParserImpl(r).parse();
+            return new RepoInitParserImpl(r).parse();
         } catch (ParseException pe) {
-            throw new AclParsingException(pe.getMessage(), pe);
+            throw new RepoInitParsingException(pe.getMessage(), pe);
         } finally {
             try {
                 r.close();

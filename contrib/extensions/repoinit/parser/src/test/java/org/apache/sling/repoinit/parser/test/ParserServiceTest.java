@@ -20,20 +20,20 @@ package org.apache.sling.repoinit.parser.test;
 import java.io.Reader;
 import java.io.StringReader;
 
-import org.apache.sling.repoinit.parser.AclParsingException;
-import org.apache.sling.repoinit.parser.impl.ACLDefinitionsParserService;
+import org.apache.sling.repoinit.parser.RepoInitParsingException;
+import org.apache.sling.repoinit.parser.impl.RepoInitParserService;
 import org.junit.Test;
 
 public class ParserServiceTest {
     @Test
-    public void noErrors() throws AclParsingException {
+    public void noErrors() throws RepoInitParsingException {
         final Reader r = new StringReader("create service user foo");
-        new ACLDefinitionsParserService().parse(r);
+        new RepoInitParserService().parse(r);
     }
     
-    @Test(expected = AclParsingException.class)
-    public void syntaxError() throws AclParsingException {
+    @Test(expected = RepoInitParsingException.class)
+    public void syntaxError() throws RepoInitParsingException {
         final Reader r = new StringReader("not a valid statement");
-        new ACLDefinitionsParserService().parse(r);
+        new RepoInitParserService().parse(r);
     }
 }

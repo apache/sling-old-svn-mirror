@@ -40,13 +40,13 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.repoinit.jcr.AclOperationVisitor;
-import org.apache.sling.repoinit.parser.AclDefinitionsParser;
-import org.apache.sling.repoinit.parser.AclParsingException;
-import org.apache.sling.repoinit.parser.operations.Operation;
-import org.apache.sling.repoinit.parser.operations.OperationVisitor;
 import org.apache.sling.api.request.ResponseUtil;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.repoinit.jcr.AclOperationVisitor;
+import org.apache.sling.repoinit.parser.RepoInitParser;
+import org.apache.sling.repoinit.parser.RepoInitParsingException;
+import org.apache.sling.repoinit.parser.operations.Operation;
+import org.apache.sling.repoinit.parser.operations.OperationVisitor;
 import org.osgi.framework.Constants;
 
 @Component
@@ -81,7 +81,7 @@ public class OakAclDefConsolePlugin extends HttpServlet {
     private SlingRepository repository;
 
     @Reference
-    private AclDefinitionsParser parser;
+    private RepoInitParser parser;
 
     private String thisPath(HttpServletRequest request) {
         return request.getContextPath() + request.getServletPath() + request.getPathInfo();
@@ -160,7 +160,7 @@ public class OakAclDefConsolePlugin extends HttpServlet {
         }
     }
     
-    private void setAcl(String aclDef) throws RepositoryException, IOException, AclParsingException {
+    private void setAcl(String aclDef) throws RepositoryException, IOException, RepoInitParsingException {
         final Reader r = new StringReader(aclDef);
         Session s = null;
         try {

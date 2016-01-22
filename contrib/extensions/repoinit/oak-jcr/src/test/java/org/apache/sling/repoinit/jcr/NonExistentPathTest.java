@@ -23,7 +23,7 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.sling.repoinit.parser.AclParsingException;
+import org.apache.sling.repoinit.parser.RepoInitParsingException;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.After;
@@ -41,14 +41,14 @@ public class NonExistentPathTest {
     private Session s;
     
     @Before
-    public void setup() throws RepositoryException, AclParsingException {
+    public void setup() throws RepositoryException, RepoInitParsingException {
         U = new TestUtil(context);
         U.parseAndExecute("create service user " + U.username);
         s = U.loginService(U.username);
     }
 
     @After
-    public void cleanup() throws RepositoryException, AclParsingException {
+    public void cleanup() throws RepositoryException, RepoInitParsingException {
         U.cleanupUser();
         s.logout();
     }

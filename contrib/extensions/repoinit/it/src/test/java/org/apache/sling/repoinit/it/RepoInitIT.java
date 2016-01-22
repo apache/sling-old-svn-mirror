@@ -22,8 +22,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Dictionary;
-import java.util.Hashtable;
 import java.util.UUID;
 
 import javax.jcr.AccessDeniedException;
@@ -39,18 +37,16 @@ import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.junit.rules.TeleporterRule;
 import org.apache.sling.repoinit.jcr.AclOperationVisitor;
-import org.apache.sling.repoinit.parser.AclDefinitionsParser;
+import org.apache.sling.repoinit.parser.RepoInitParser;
 import org.apache.sling.repoinit.parser.operations.Operation;
 import org.apache.sling.repoinit.parser.operations.OperationVisitor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.osgi.service.cm.Configuration;
-import org.osgi.service.cm.ConfigurationAdmin;
 
 /** Test service users and ACLs set from a text file. */
-public class ProvisionedAclIT {
+public class RepoInitIT {
 
     private Session session;
     private static final String FRED_WILMA = "fredWilmaService";
@@ -65,7 +61,7 @@ public class ProvisionedAclIT {
     
     @Before
     public void setup() throws Exception {
-        WaitFor.services(teleporter, SlingRepository.class, AclDefinitionsParser.class);
+        WaitFor.services(teleporter, SlingRepository.class, RepoInitParser.class);
         session = teleporter.getService(SlingRepository.class).loginAdministrative(null);
         
         // TODO this should be done by the repoinit language
@@ -79,7 +75,7 @@ public class ProvisionedAclIT {
         final InputStream is = getClass().getResourceAsStream(REPO_INIT_FILE);
         assertNotNull("Expecting " + REPO_INIT_FILE, is);
         try {
-            final AclDefinitionsParser parser = teleporter.getService(AclDefinitionsParser.class);
+            final RepoInitParser  parser = teleporter.getService(RepoInitParser.class);
             final OperationVisitor v = new AclOperationVisitor(session);
             for(Operation op : parser.parse(new InputStreamReader(is, "UTF-8"))) {
                 op.accept(v);

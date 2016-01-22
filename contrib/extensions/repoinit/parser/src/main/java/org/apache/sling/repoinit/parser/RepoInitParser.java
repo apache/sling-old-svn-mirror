@@ -18,10 +18,17 @@
  */
 package org.apache.sling.repoinit.parser;
 
-public class AclParsingException extends Exception {
-    private static final long serialVersionUID = 1L;
+import java.io.Reader;
+import java.util.List;
 
-    public AclParsingException(String reason, Throwable cause) {
-        super(reason, cause);
-    }
+import org.apache.sling.repoinit.parser.operations.Operation;
+
+/** ACL definitions parser service interface */
+public interface RepoInitParser {
+    /** Parse the supplied input.
+     * @param r Input in ACL definitions format. The reader is closed
+     *  by this method. 
+     * @throws AclParsingException on parsing errors
+     */
+    List<Operation> parse(Reader r) throws RepoInitParsingException;
 }
