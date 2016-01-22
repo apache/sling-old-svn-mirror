@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 @Version("1.1.1")
+@ProviderType
 package org.apache.sling.models.spi.injectorspecific;
 
+import aQute.bnd.annotation.ProviderType;
 import aQute.bnd.annotation.Version;

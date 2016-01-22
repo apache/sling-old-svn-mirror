@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 @Version("1.2.0")
+@ConsumerType
 package org.apache.sling.models.annotations;
 
+import aQute.bnd.annotation.ConsumerType;
 import aQute.bnd.annotation.Version;
