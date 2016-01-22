@@ -42,7 +42,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.request.ResponseUtil;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.repoinit.jcr.AclOperationVisitor;
+import org.apache.sling.repoinit.jcr.JcrRepoInitOpVisitor;
 import org.apache.sling.repoinit.parser.RepoInitParser;
 import org.apache.sling.repoinit.parser.RepoInitParsingException;
 import org.apache.sling.repoinit.parser.operations.Operation;
@@ -165,7 +165,7 @@ public class OakAclDefConsolePlugin extends HttpServlet {
         Session s = null;
         try {
             s = repository.loginAdministrative(null);
-            final OperationVisitor v = new AclOperationVisitor(s);
+            final OperationVisitor v = new JcrRepoInitOpVisitor(s);
             for(Operation op : parser.parse(r)) {
                 op.accept(v);
             }

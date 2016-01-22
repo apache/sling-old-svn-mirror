@@ -71,7 +71,7 @@ class TestUtil {
     }
     
     void parseAndExecute(String input) throws RepositoryException, RepoInitParsingException {
-        final AclOperationVisitor v = new AclOperationVisitor(adminSession);
+        final JcrRepoInitOpVisitor v = new JcrRepoInitOpVisitor(adminSession);
         for(Operation o : parse(input)) {
             o.accept(v);
         }
