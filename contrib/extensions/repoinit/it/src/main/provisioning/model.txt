@@ -23,32 +23,32 @@
   org.apache.sling/org.apache.sling.junit.core/1.0.14
   org.apache.sling/org.apache.sling.testing.tools/1.0.10
   
-  org.apache.sling/org.apache.sling.acldef.oak-jcr/0.0.1-SNAPSHOT
-  org.apache.sling/org.apache.sling.acldef.parser/0.0.1-SNAPSHOT
+  org.apache.sling/org.apache.sling.repoinit.oak-jcr/0.0.1-SNAPSHOT
+  org.apache.sling/org.apache.sling.repoinit.parser/0.0.1-SNAPSHOT
 
 [settings]
   org.apache.sling.commons.log.julenabled=true
 
 [configurations]
-org.apache.sling.acldef.jcr.AclSetup-one
+org.apache.sling.repoinit.jcr.AclSetup-one
   #
-  acldef.text.1="create service user fredWilma"
+  repoinit.text.1="create service user fredWilma"
   #
-  # multiline acldef statement
-  acldef.text.2="
+  # multiline repoinit statement
+  repoinit.text.2="
       set ACL for fredWilma
         allow jcr:all on /acltest
         deny jcr:write on /acltest/A
       end"
   #    
   # single line with backslash n works as well    
-  acldef.text.backs="set ACL for fredWilma \n allow jcr:write on /acltest/A/B \n end"
+  repoinit.text.backs="set ACL for fredWilma \n allow jcr:write on /acltest/A/B \n end"
   
-# try some acldef in a separate config  
-org.apache.sling.acldef.jcr.AclSetup-two
+# try some repoinit in a separate config  
+org.apache.sling.repoinit.jcr.AclSetup-two
   # this user will be created from code, to validate the async ACL setting
   # and using the path-oriented notation, to test that     
-  acldef.text.another="
+  repoinit.text.another="
     set ACL on /acltest
       allow jcr:all for anotherUser
     end

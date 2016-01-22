@@ -14,19 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.junit.teleporter.customizers;
 
-import org.apache.sling.junit.rules.TeleporterRule;
-import org.apache.sling.testing.teleporter.client.ClientSideTeleporter;
+package org.apache.sling.repoinit.parser.test;
 
-public class ITCustomizer implements TeleporterRule.Customizer {
+import java.io.Reader;
+import java.io.StringReader;
 
-    public static final String BASE_URL_PROP = "launchpad.http.server.url";
-    @Override
-    public void customize(TeleporterRule t, String options) {
-        final ClientSideTeleporter cst = (ClientSideTeleporter)t;
-        cst.setBaseUrl(System.getProperty(BASE_URL_PROP, BASE_URL_PROP + "_IS_NOT_SET"));
-        cst.setServerCredentials("admin", "admin");
-        cst.includeDependencyPrefix("org.apache.sling.repoinit.it");
+import org.apache.sling.repoinit.parser.AclParsingException;
+import org.apache.sling.repoinit.parser.impl.ACLDefinitionsParserService;
+import org.junit.Test;
+
+public class ParserServiceTest {
+    @Test
+    public void noErrors() throws AclParsingException {
+        final Reader r = new StringReader("create service user foo");
+        new ACLDefinitionsParserService().parse(r);
+    }
+    
+    @Test(expected = AclParsingException.class)
+    public void syntaxError() throws AclParsingException {
+        final Reader r = new StringReader("not a valid statement");
+        new ACLDefinitionsParserService().parse(r);
     }
 }

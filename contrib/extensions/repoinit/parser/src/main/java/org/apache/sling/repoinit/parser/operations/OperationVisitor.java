@@ -14,19 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.junit.teleporter.customizers;
 
-import org.apache.sling.junit.rules.TeleporterRule;
-import org.apache.sling.testing.teleporter.client.ClientSideTeleporter;
+package org.apache.sling.repoinit.parser.operations;
 
-public class ITCustomizer implements TeleporterRule.Customizer {
-
-    public static final String BASE_URL_PROP = "launchpad.http.server.url";
-    @Override
-    public void customize(TeleporterRule t, String options) {
-        final ClientSideTeleporter cst = (ClientSideTeleporter)t;
-        cst.setBaseUrl(System.getProperty(BASE_URL_PROP, BASE_URL_PROP + "_IS_NOT_SET"));
-        cst.setServerCredentials("admin", "admin");
-        cst.includeDependencyPrefix("org.apache.sling.repoinit.it");
-    }
+public interface OperationVisitor {
+    void visitCreateServiceUser(CreateServiceUser s);
+    void visitDeleteServiceUser(DeleteServiceUser s);
+    void visitSetAclPrincipal(SetAclPrincipals s);
+    void visitSetAclPaths(SetAclPaths s);
 }

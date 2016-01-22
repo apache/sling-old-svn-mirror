@@ -14,19 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.junit.teleporter.customizers;
 
-import org.apache.sling.junit.rules.TeleporterRule;
-import org.apache.sling.testing.teleporter.client.ClientSideTeleporter;
+package org.apache.sling.repoinit.parser.operations;
 
-public class ITCustomizer implements TeleporterRule.Customizer {
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
-    public static final String BASE_URL_PROP = "launchpad.http.server.url";
-    @Override
-    public void customize(TeleporterRule t, String options) {
-        final ClientSideTeleporter cst = (ClientSideTeleporter)t;
-        cst.setBaseUrl(System.getProperty(BASE_URL_PROP, BASE_URL_PROP + "_IS_NOT_SET"));
-        cst.setServerCredentials("admin", "admin");
-        cst.includeDependencyPrefix("org.apache.sling.repoinit.it");
+/** Base class for operations that group AclLines */
+ abstract class AclGroupBase extends Operation {
+    private final List<AclLine> lines;
+    
+    protected AclGroupBase(List<AclLine> lines) {
+        this.lines = Collections.unmodifiableList(lines);
+    }
+    
+    protected String getParametersDescription() {
+        final StringBuilder sb = new StringBuilder();
+        for(AclLine line : lines) {
+            sb.append("\n  ").append(line.toString());
+        }
+        return sb.toString(); 
+    }
+    
+    public Collection<AclLine> getLines() {
+        return lines;
     }
 }

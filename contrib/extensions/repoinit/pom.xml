@@ -30,7 +30,7 @@
   <artifactId>org.apache.sling.repoinit.reactor</artifactId>
   <packaging>pom</packaging>
   <version>0.0.1-SNAPSHOT</version>
-  <name>Apache Sling Content RepoInit Reactor</name>
+  <name>Apache Sling RepoInit Reactor</name>
   <description>Content Repository Initialization Modules</description>
 
   <modules>
