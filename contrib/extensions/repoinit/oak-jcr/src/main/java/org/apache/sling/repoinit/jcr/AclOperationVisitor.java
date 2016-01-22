@@ -24,6 +24,8 @@ import java.util.List;
 
 import javax.jcr.Session;
 
+import org.apache.sling.repoinit.jcr.impl.AclUtil;
+import org.apache.sling.repoinit.jcr.impl.ServiceUserUtil;
 import org.apache.sling.repoinit.parser.operations.AclLine;
 import org.apache.sling.repoinit.parser.operations.CreateServiceUser;
 import org.apache.sling.repoinit.parser.operations.DeleteServiceUser;

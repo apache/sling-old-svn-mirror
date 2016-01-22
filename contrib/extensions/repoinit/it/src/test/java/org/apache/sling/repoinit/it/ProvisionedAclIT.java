@@ -17,8 +17,11 @@
 package org.apache.sling.repoinit.it;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.UUID;
@@ -35,6 +38,10 @@ import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.junit.rules.TeleporterRule;
+import org.apache.sling.repoinit.jcr.AclOperationVisitor;
+import org.apache.sling.repoinit.parser.AclDefinitionsParser;
+import org.apache.sling.repoinit.parser.operations.Operation;
+import org.apache.sling.repoinit.parser.operations.OperationVisitor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -42,29 +49,46 @@ import org.junit.Test;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
-/** Test service users and ACLs set from
- *  our provisioning model. 
- *  TODO test /var ACLs and use @Retry rule
- */
+/** Test service users and ACLs set from a text file. */
 public class ProvisionedAclIT {
 
     private Session session;
-    private static final String FRED_WILMA = "fredWilma";
-    private static final String ANOTHER = "anotherUser";
+    private static final String FRED_WILMA = "fredWilmaService";
+    private static final String ANOTHER = "anotherService";
+    
+    public static final String REPO_INIT_FILE = "/repoinit.txt";
     
     @Rule
-    public TeleporterRule teleporter = TeleporterRule.forClass(getClass(), "IT");
+    public TeleporterRule teleporter = TeleporterRule
+        .forClass(getClass(), "IT")
+        .withResources(REPO_INIT_FILE);
     
     @Before
-    public void setup() throws LoginException, RepositoryException {
-        WaitFor.services(teleporter, SlingRepository.class, ConfigurationAdmin.class);
+    public void setup() throws Exception {
+        WaitFor.services(teleporter, SlingRepository.class, AclDefinitionsParser.class);
         session = teleporter.getService(SlingRepository.class).loginAdministrative(null);
         
+        // TODO this should be done by the repoinit language
         try {
             session.getRootNode().addNode("acltest").addNode("A").addNode("B").save();;
         } catch(RepositoryException ignore) {
         }
         assertTrue("Expecting test nodes to be created", session.itemExists("/acltest/A/B"));
+        
+        // Execute some repoinit statements
+        final InputStream is = getClass().getResourceAsStream(REPO_INIT_FILE);
+        assertNotNull("Expecting " + REPO_INIT_FILE, is);
+        try {
+            final AclDefinitionsParser parser = teleporter.getService(AclDefinitionsParser.class);
+            final OperationVisitor v = new AclOperationVisitor(session);
+            for(Operation op : parser.parse(new InputStreamReader(is, "UTF-8"))) {
+                op.accept(v);
+            }
+            session.save();
+        } finally {
+            is.close();
+        }
+        
     }
     
     @After
@@ -128,16 +152,6 @@ public class ProvisionedAclIT {
     
     @Test
     public void anotherUserAcl() throws Exception {
-        // Verify that user creation causes its ACL
-        // to be set. Use a config to create the user,
-        // to also test that mechanism.
-        final ConfigurationAdmin ca = teleporter.getService(ConfigurationAdmin.class);
-        final Configuration cfg = ca.createFactoryConfiguration("org.apache.sling.repoinit.jcr.AclSetup");
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put("repoinit.text.1", "create service user " + ANOTHER);
-        cfg.setBundleLocation(null);
-        cfg.update(props);
-        
         new Retry() {
             @Override
             public Void call() throws Exception {

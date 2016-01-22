@@ -31,6 +31,7 @@ import javax.jcr.SimpleCredentials;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.User;
+import org.apache.sling.repoinit.jcr.impl.ServiceUserUtil;
 import org.apache.sling.repoinit.parser.AclParsingException;
 import org.apache.sling.repoinit.parser.impl.ACLDefinitionsParserService;
 import org.apache.sling.repoinit.parser.operations.Operation;
