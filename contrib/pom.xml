@@ -122,7 +122,6 @@
           <module>extensions/tenant</module>
           <module>extensions/urlrewriter</module>
           <module>extensions/hapi</module>
-          <module>extensions/acldef</module>
 
           <module>jcr/compiler</module>
           <module>jcr/jackrabbit-client</module>
