@@ -32,8 +32,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.sling.repoinit.jcr.impl.ServiceUserUtil;
-import org.apache.sling.repoinit.parser.AclParsingException;
-import org.apache.sling.repoinit.parser.impl.ACLDefinitionsParserService;
+import org.apache.sling.repoinit.parser.RepoInitParsingException;
+import org.apache.sling.repoinit.parser.impl.RepoInitParserService;
 import org.apache.sling.repoinit.parser.operations.Operation;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 
@@ -50,10 +50,10 @@ class TestUtil {
         username = "user_" + id;
     }
     
-    List<Operation> parse(String input) throws AclParsingException {
+    List<Operation> parse(String input) throws RepoInitParsingException {
         final Reader r = new StringReader(input);
         try {
-            return new ACLDefinitionsParserService().parse(r);
+            return new RepoInitParserService().parse(r);
         } finally {
             IOUtils.closeQuietly(r);
         }
@@ -70,7 +70,7 @@ class TestUtil {
         }
     }
     
-    void parseAndExecute(String input) throws RepositoryException, AclParsingException {
+    void parseAndExecute(String input) throws RepositoryException, RepoInitParsingException {
         final AclOperationVisitor v = new AclOperationVisitor(adminSession);
         for(Operation o : parse(input)) {
             o.accept(v);
@@ -78,7 +78,7 @@ class TestUtil {
         adminSession.save();
     }
     
-    void cleanupUser() throws RepositoryException, AclParsingException {
+    void cleanupUser() throws RepositoryException, RepoInitParsingException {
         parseAndExecute("delete service user " + username);
         assertServiceUser("in cleanupUser()", username, false);
     }
