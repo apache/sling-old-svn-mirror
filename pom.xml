@@ -1099,10 +1099,11 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                 <version>1.9.12</version>
                 <scope>provided</scope>
             </dependency>
+            <!-- this version must match the version being used by the maven-bundle-plugin -->
             <dependency>
-                <groupId>biz.aQute</groupId>
-                <artifactId>bndlib</artifactId>
-                <version>1.50.0</version>
+                <groupId>biz.aQute.bnd</groupId>
+                <artifactId>biz.aQute.bndlib</artifactId>
+                <version>3.0.0</version>
                 <scope>provided</scope>
             </dependency>
 
