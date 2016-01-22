@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.acldef.jcr;
+package org.apache.sling.repoinit.jcr;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -31,9 +31,9 @@ import javax.jcr.SimpleCredentials;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.User;
-import org.apache.sling.acldef.parser.AclParsingException;
-import org.apache.sling.acldef.parser.impl.ACLDefinitionsParserService;
-import org.apache.sling.acldef.parser.operations.Operation;
+import org.apache.sling.repoinit.parser.AclParsingException;
+import org.apache.sling.repoinit.parser.impl.ACLDefinitionsParserService;
+import org.apache.sling.repoinit.parser.operations.Operation;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 
 /** Test utilities */

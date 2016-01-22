@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.acldef.jcr.impl;
+package org.apache.sling.repoinit.jcr.impl;
 
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -27,9 +27,9 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.sling.acldef.jcr.AclOperationVisitor;
-import org.apache.sling.acldef.parser.AclDefinitionsParser;
-import org.apache.sling.acldef.parser.operations.Operation;
+import org.apache.sling.repoinit.jcr.AclOperationVisitor;
+import org.apache.sling.repoinit.parser.AclDefinitionsParser;
+import org.apache.sling.repoinit.parser.operations.Operation;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 import aQute.bnd.annotation.component.Deactivate;
 
 /** OSGi component that sets up service users and ACLS
- *  based on configurations created by the acldef provisioning
+ *  based on configurations created by the repoinit provisioning
  *  model processor.
  *  
  *  As Oak requires a path to exist before setting an ACL on it,
@@ -53,8 +53,8 @@ import aQute.bnd.annotation.component.Deactivate;
         policy=ConfigurationPolicy.REQUIRE)
 public class AclSetup implements Runnable {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    public static final String CONFIG_PID = "org.apache.sling.acldef.jcr.AclSetup";
-    public static final String ACLDEF_PROP_PREFIX = "acldef.text.";
+    public static final String CONFIG_PID = "org.apache.sling.repoinit.jcr.AclSetup";
+    public static final String ACLDEF_PROP_PREFIX = "repoinit.text.";
     public static final String THREAD_POOL_NAME = "ACL Definitions";
     
     private List<String> todo; 
@@ -114,15 +114,15 @@ public class AclSetup implements Runnable {
         try {
             s = repository.loginAdministrative(null);
             final AclOperationVisitor visitor = new AclOperationVisitor(s);
-            for(String acldef : todo) {
+            for(String repoinit : todo) {
                 try {
-                    for(Operation op : parser.parse(new StringReader(acldef))) {
+                    for(Operation op : parser.parse(new StringReader(repoinit))) {
                         op.accept(visitor);
                         s.save();
                     }
                 } catch(Exception e) {
                     log.warn("Exception while executing an ACL definition:" + e.toString(), e);
-                    newTodo.add(acldef);
+                    newTodo.add(repoinit);
                 }
             }
         } catch(Exception e) {

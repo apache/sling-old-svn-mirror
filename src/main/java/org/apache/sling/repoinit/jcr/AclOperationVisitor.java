@@ -14,22 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.acldef.jcr;
+package org.apache.sling.repoinit.jcr;
 
-import static org.apache.sling.acldef.parser.operations.AclLine.PROP_PATHS;
-import static org.apache.sling.acldef.parser.operations.AclLine.PROP_PRINCIPALS;
-import static org.apache.sling.acldef.parser.operations.AclLine.PROP_PRIVILEGES;
+import static org.apache.sling.repoinit.parser.operations.AclLine.PROP_PATHS;
+import static org.apache.sling.repoinit.parser.operations.AclLine.PROP_PRINCIPALS;
+import static org.apache.sling.repoinit.parser.operations.AclLine.PROP_PRIVILEGES;
 
 import java.util.List;
 
 import javax.jcr.Session;
 
-import org.apache.sling.acldef.parser.operations.AclLine;
-import org.apache.sling.acldef.parser.operations.CreateServiceUser;
-import org.apache.sling.acldef.parser.operations.DeleteServiceUser;
-import org.apache.sling.acldef.parser.operations.OperationVisitor;
-import org.apache.sling.acldef.parser.operations.SetAclPaths;
-import org.apache.sling.acldef.parser.operations.SetAclPrincipals;
+import org.apache.sling.repoinit.parser.operations.AclLine;
+import org.apache.sling.repoinit.parser.operations.CreateServiceUser;
+import org.apache.sling.repoinit.parser.operations.DeleteServiceUser;
+import org.apache.sling.repoinit.parser.operations.OperationVisitor;
+import org.apache.sling.repoinit.parser.operations.SetAclPaths;
+import org.apache.sling.repoinit.parser.operations.SetAclPrincipals;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

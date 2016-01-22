@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.acldef.jcr.webconsole;
+package org.apache.sling.repoinit.jcr.webconsole;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -40,11 +40,11 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.acldef.jcr.AclOperationVisitor;
-import org.apache.sling.acldef.parser.AclDefinitionsParser;
-import org.apache.sling.acldef.parser.AclParsingException;
-import org.apache.sling.acldef.parser.operations.Operation;
-import org.apache.sling.acldef.parser.operations.OperationVisitor;
+import org.apache.sling.repoinit.jcr.AclOperationVisitor;
+import org.apache.sling.repoinit.parser.AclDefinitionsParser;
+import org.apache.sling.repoinit.parser.AclParsingException;
+import org.apache.sling.repoinit.parser.operations.Operation;
+import org.apache.sling.repoinit.parser.operations.OperationVisitor;
 import org.apache.sling.api.request.ResponseUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.framework.Constants;
@@ -56,13 +56,13 @@ import org.osgi.framework.Constants;
     @Property(name=Constants.SERVICE_DESCRIPTION, value="Apache Sling ACL Definitions Console Plugin"),
     @Property(name="felix.webconsole.label", value=OakAclDefConsolePlugin.LABEL),
     @Property(name="felix.webconsole.title", value="Set ACLs"),
-    @Property(name="felix.webconsole.css", value="/" + OakAclDefConsolePlugin.LABEL + "/res/ui/acldef.css"),
+    @Property(name="felix.webconsole.css", value="/" + OakAclDefConsolePlugin.LABEL + "/res/ui/repoinit.css"),
     @Property(name="felix.webconsole.category", value="Sling"),
 })
 public class OakAclDefConsolePlugin extends HttpServlet {
 
     private static final long serialVersionUID = 1234;
-    private static final String PAR_ACLDEF = "acldef";
+    private static final String PAR_ACLDEF = "repoinit";
     private static final String PAR_MSG = "msg";
     public static final String LABEL = "setACL";
     private static final String ATTR_SUBMIT = "plugin.submit";
