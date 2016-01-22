@@ -35,11 +35,8 @@ import org.apache.sling.repoinit.parser.operations.SetAclPrincipals;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Processes the Operations produced by the ACL
- *  definitions parser to create the users and
- *  set the ACLs defined by the parser input.
- */
-public class AclOperationVisitor implements OperationVisitor {
+/** JCR visitor for the Operations produced by the repoinit parser */
+public class JcrRepoInitOpVisitor implements OperationVisitor {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     
@@ -49,7 +46,7 @@ public class AclOperationVisitor implements OperationVisitor {
      * @param s must have sufficient rights to create users
      *      and set ACLs.
      */
-    public AclOperationVisitor(Session s) {
+    public JcrRepoInitOpVisitor(Session s) {
         session = s;
     }
     

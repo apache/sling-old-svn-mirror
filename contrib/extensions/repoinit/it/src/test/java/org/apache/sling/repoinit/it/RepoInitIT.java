@@ -36,7 +36,7 @@ import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.junit.rules.TeleporterRule;
-import org.apache.sling.repoinit.jcr.AclOperationVisitor;
+import org.apache.sling.repoinit.jcr.JcrRepoInitOpVisitor;
 import org.apache.sling.repoinit.parser.RepoInitParser;
 import org.apache.sling.repoinit.parser.operations.Operation;
 import org.apache.sling.repoinit.parser.operations.OperationVisitor;
@@ -76,7 +76,7 @@ public class RepoInitIT {
         assertNotNull("Expecting " + REPO_INIT_FILE, is);
         try {
             final RepoInitParser  parser = teleporter.getService(RepoInitParser.class);
-            final OperationVisitor v = new AclOperationVisitor(session);
+            final OperationVisitor v = new JcrRepoInitOpVisitor(session);
             for(Operation op : parser.parse(new InputStreamReader(is, "UTF-8"))) {
                 op.accept(v);
             }
