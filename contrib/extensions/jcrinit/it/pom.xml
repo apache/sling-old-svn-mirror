@@ -27,18 +27,18 @@
     <relativePath/>
   </parent>
 
-  <artifactId>org.apache.sling.acldef.it</artifactId>
+  <artifactId>org.apache.sling.repoinit.it</artifactId>
   <packaging>slingstart</packaging>
   <version>0.0.1-SNAPSHOT</version>
-  <name>Apache Sling ACL Definitions Integration Tests</name>
+  <name>Apache Sling RepoInit Integration Tests</name>
   <description>
-		Integration tests for the ACL definitions modules
+		Integration tests for the RepoInit modules
   </description>
 
   <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/acldef/it</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/acldef/it</developerConnection>
-    <url>https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/acldef/it</url>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/repoinit/it</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/repoinit/it</developerConnection>
+    <url>https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/repoinit/it</url>
   </scm>
 
  <properties>

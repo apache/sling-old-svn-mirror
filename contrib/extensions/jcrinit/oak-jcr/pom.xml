@@ -27,13 +27,13 @@
     <relativePath/>
   </parent>
 
-  <artifactId>org.apache.sling.acldef.oak-jcr</artifactId>
+  <artifactId>org.apache.sling.repoinit.oak-jcr</artifactId>
   <packaging>bundle</packaging>
   <version>0.0.1-SNAPSHOT</version>
-  <name>Apache Sling ACL Definitions Oak/JCR module</name>
+  <name>Apache Sling RepoInit Oak/JCR module</name>
   <description>
-	  Applies ACLs to an Oak JCR repository based on the output
-	  of the ACL Definition Language parser.
+	  Initializes a JCR repository based on the output
+	  of the RepoInit Language parser.
   </description>
   
   <properties>
@@ -41,9 +41,9 @@
   </properties>
 
   <scm>
-    <connection>scm:svn: https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/acldef/oak-jcr</connection>
-    <developerConnection>scm:svn: https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/acldef/oak-jcr</developerConnection>
-    <url> https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/acldef/oak-jcr</url>
+    <connection>scm:svn: https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/repoinit/oak-jcr</connection>
+    <developerConnection>scm:svn: https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/repoinit/oak-jcr</developerConnection>
+    <url> https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/repoinit/oak-jcr</url>
   </scm>
   
   <build>
@@ -112,7 +112,7 @@
     </dependency>
      <dependency>
       <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.acldef.parser</artifactId>
+      <artifactId>org.apache.sling.repoinit.parser</artifactId>
 	  <version>0.0.1-SNAPSHOT</version>
 	  <scope>provided</scope>
     </dependency>

@@ -27,16 +27,16 @@
     <relativePath/>
   </parent>
 
-  <artifactId>org.apache.sling.acldef.parser</artifactId>
+  <artifactId>org.apache.sling.repoinit.parser</artifactId>
   <packaging>bundle</packaging>
   <version>0.0.1-SNAPSHOT</version>
-  <name>Apache Sling ACL Definitions Parser</name>
-  <description>Parser for an ACL Definition Language used in Sling</description>
+  <name>Apache Sling RepoInit Parser</name>
+  <description>Parser for the Repository Initialization language used in Sling</description>
 
   <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/acldef-parser</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/acldef-parser</developerConnection>
-    <url>https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/acldef-parser</url>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/repoinit/parser</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/repoinit/parser</developerConnection>
+    <url>https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/repoinit/parser</url>
   </scm>
   
   <build>

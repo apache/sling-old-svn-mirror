@@ -27,11 +27,11 @@
     <relativePath/>
   </parent>
 
-  <artifactId>org.apache.sling.acldef.reactor</artifactId>
+  <artifactId>org.apache.sling.repoinit.reactor</artifactId>
   <packaging>pom</packaging>
   <version>0.0.1-SNAPSHOT</version>
-  <name>Apache Sling ACL Definitions Reactor</name>
-  <description>ACL Definition Language used in Sling</description>
+  <name>Apache Sling Content RepoInit Reactor</name>
+  <description>Content Repository Initialization Modules</description>
 
   <modules>
     <module>parser</module>
