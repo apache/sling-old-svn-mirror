@@ -197,7 +197,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
         /** Detect newly created folders that we must watch */
         private final List<RootFolderListener> listeners = new LinkedList<RootFolderListener>();
 
-        private volatile EventListener moveEventListener;
+        private volatile RootFolderMoveListener moveEventListener;
 
         /** Session shared by all WatchedFolder */
         private volatile Session session;
@@ -225,31 +225,9 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
                         null,
                         true); // noLocal
                 // add special observation listener for move events
-                this.moveEventListener = new EventListener() {
-
-                    /**
-                     * @see javax.jcr.observation.EventListener#onEvent(javax.jcr.observation.EventIterator)
-                     */
-                    public void onEvent(final EventIterator events) {
-                        try {
-                            while (events.hasNext()) {
-                                final Event e = events.nextEvent();
-                                checkChanges(e.getIdentifier());
-                                checkChanges(e.getPath());
-                            }
-                        } catch (final RepositoryException re) {
-                            logger.warn("RepositoryException in onEvent", re);
-                        }
-                    }
-                };
-                session.getWorkspace().getObservationManager().addEventListener(
-                        moveEventListener,
-                        Event.NODE_MOVED,
-                        "/",
-                        true, // isDeep
-                        null,
-                        null,
-                        true); // noLocal
+                if(cfg.getRoots() != null && cfg.getRoots().length > 0) {
+                    moveEventListener = new RootFolderMoveListener(session, cfg.getRoots(),  updateFoldersListTimer);
+                }
 
                 logger.debug("Watching for node events on / to detect removal/add of our root folders");
 
@@ -285,8 +263,8 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
                         wfc.cleanup(session);
                     }
                     session.getWorkspace().getObservationManager().removeEventListener(this);
-                    if ( moveEventListener != null ) {
-                        session.getWorkspace().getObservationManager().removeEventListener(moveEventListener);
+                    if (moveEventListener != null) {
+                        moveEventListener.cleanup(session);
                         moveEventListener = null;
                     }
                 }
