@@ -36,9 +36,9 @@
   </description>
 
   <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/repoinit/it</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/repoinit/it</developerConnection>
-    <url>https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/repoinit/it</url>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/repoinit/it</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/repoinit/it</developerConnection>
+    <url>https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/repoinit/it</url>
   </scm>
 
  <properties>
