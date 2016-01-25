@@ -42,6 +42,8 @@ class RootFolderMoveListener implements EventListener {
     private final RescanTimer timer;
 
     private final String[] watchedPaths;
+    
+    private EventListener toCleanup;
 
     RootFolderMoveListener(final Session session, final String[] rootFolders,  final RescanTimer timer) throws RepositoryException {
         this.timer = timer;
@@ -58,6 +60,7 @@ class RootFolderMoveListener implements EventListener {
             if(obsManager instanceof  JackrabbitObservationManager){
                 JackrabbitObservationManager observationManager = (JackrabbitObservationManager)obsManager;
                 observationManager.addEventListener(this, eventFilter);
+                toCleanup = this;
                 logger.info("Watching {} to detect move changes in subfolders", Arrays.toString(watchedPaths));
             }
         }
@@ -69,11 +72,10 @@ class RootFolderMoveListener implements EventListener {
     }
 
     void cleanup(final Session session) throws RepositoryException {
-        if(watchedPaths != null && watchedPaths.length > 0){
-            session.getWorkspace().getObservationManager().removeEventListener(this);
+        if(toCleanup != null) {
+            session.getWorkspace().getObservationManager().removeEventListener(toCleanup);
         }
     }
-
 
     /**
      * Schedule a scan.
