@@ -138,7 +138,7 @@ public class SlingTestBase implements SlingInstance {
     }
 
     /**
-     * Automatically by the {@link SlingRemoteTestRunner} since package version 1.1.0.
+     * Automatically by the SlingRemoteTestRunner since package version 1.1.0.
      */
     @After
     public void uninstallAdditionalBundlesIfNecessary() {
