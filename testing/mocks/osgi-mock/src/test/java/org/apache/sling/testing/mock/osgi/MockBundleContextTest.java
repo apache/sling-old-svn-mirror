@@ -57,7 +57,7 @@ public class MockBundleContextTest {
 
     @Before
     public void setUp() {
-        bundleContext = (MockBundleContext)MockOsgi.newBundleContext();
+        bundleContext = MockOsgi.newBundleContext();
     }
 
     @After
