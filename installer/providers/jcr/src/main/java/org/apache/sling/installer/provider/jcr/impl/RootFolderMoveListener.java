@@ -62,13 +62,16 @@ class RootFolderMoveListener implements EventListener {
                 observationManager.addEventListener(this, eventFilter);
                 toCleanup = this;
                 logger.info("Watching {} to detect move changes in subfolders", Arrays.toString(watchedPaths));
+            } else {
+                logger.warn("ObservationManager is not a JackrabbitObservationManager, won't observe moves for {}", 
+                        Arrays.asList(rootFolders));
             }
         }
     }
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + " (" + watchedPaths + ")";
+        return getClass().getSimpleName() + " (" + Arrays.asList(watchedPaths) + ")";
     }
 
     void cleanup(final Session session) throws RepositoryException {
