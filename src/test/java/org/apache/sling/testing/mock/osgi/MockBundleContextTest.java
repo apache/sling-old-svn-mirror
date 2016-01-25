@@ -29,10 +29,12 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,7 +57,12 @@ public class MockBundleContextTest {
 
     @Before
     public void setUp() {
-        bundleContext = MockOsgi.newBundleContext();
+        bundleContext = (MockBundleContext)MockOsgi.newBundleContext();
+    }
+
+    @After
+    public void tearDown() {
+        MockOsgi.shutdown(bundleContext);
     }
 
     @Test
@@ -214,5 +221,16 @@ public class MockBundleContextTest {
         ServiceRegistration serviceRegistration = bundleContext.registerService(Long.class.getName(), Long.valueOf(1), null);
         
         assertFalse(filter.match(serviceRegistration.getReference()));
+    }
+
+    @Test
+    public void testGetDataFile() {
+        File rootFile = bundleContext.getDataFile("");
+        assertNotNull(rootFile);
+        
+        File childFile = bundleContext.getDataFile("child");
+        assertNotNull(childFile);
+        
+        assertEquals(childFile.getParentFile(), rootFile);
     }
 }
