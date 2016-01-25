@@ -19,6 +19,7 @@
 package org.apache.sling.testing.mock.osgi;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Dictionary;
@@ -32,6 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.framework.FilterImpl;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.Reference;
@@ -53,6 +55,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.Files;
 
 /**
  * Mock {@link BundleContext} implementation.
@@ -64,6 +67,7 @@ class MockBundleContext implements BundleContext {
     private final Map<ServiceListener, Filter> serviceListeners = new ConcurrentHashMap<ServiceListener, Filter>();
     private final Queue<BundleListener> bundleListeners = new ConcurrentLinkedQueue<BundleListener>();
     private final ConfigurationAdmin configAdmin = new MockConfigurationAdmin();
+    private File dataFileBaseDir;
 
     public MockBundleContext() {
         this.bundle = new MockBundle(this);
@@ -323,6 +327,24 @@ class MockBundleContext implements BundleContext {
         return null;
     }
     
+    @Override
+    public File getDataFile(final String path) {
+        if (path == null) {
+            throw new IllegalArgumentException("Invalid path: " + path);
+        }
+        synchronized (this) {
+            if (dataFileBaseDir == null) {
+                dataFileBaseDir = Files.createTempDir();
+            }
+        }
+        if (path.isEmpty()) { 
+            return dataFileBaseDir;
+        }
+        else {
+            return new File(dataFileBaseDir, path);
+        }
+    }
+
     /**
      * Deactivates all bundles registered in this mocked bundle context.
      */
@@ -333,6 +355,13 @@ class MockBundleContext implements BundleContext {
             }
             catch (NoScrMetadataException ex) {
                 // ignore, no deactivate method is available then
+            }
+        }
+        if (dataFileBaseDir != null) {
+            try {
+                FileUtils.deleteDirectory(dataFileBaseDir);
+            } catch (IOException e) {
+                // ignore
             }
         }
     }
@@ -350,11 +379,6 @@ class MockBundleContext implements BundleContext {
 
     @Override
     public Bundle getBundle(final long l) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public File getDataFile(final String s) {
         throw new UnsupportedOperationException();
     }
 
