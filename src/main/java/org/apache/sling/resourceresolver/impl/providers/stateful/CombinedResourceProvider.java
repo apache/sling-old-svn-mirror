@@ -222,11 +222,8 @@ public class CombinedResourceProvider {
             for (final Entry<String, Node<ResourceProviderHandler>> entry : node.getChildren().entrySet()) {
                 final String name = entry.getKey();
                 final ResourceProviderHandler handler = entry.getValue().getValue();
-                StringBuilder pathBuilder = new StringBuilder();
-                if ( !parent.getPath().equals("/")) {
-                    pathBuilder.append(parent.getPath());
-                }
-                pathBuilder.append('/').append(name);
+                PathBuilder pathBuilder = new PathBuilder(parent.getPath());
+                pathBuilder.append(name);
                 final String childPath = pathBuilder.toString();
                 if (handler == null) {
                     syntheticList.add(new SyntheticResource(resolver, childPath, RESOURCE_TYPE_SYNTHETIC));
@@ -498,7 +495,7 @@ public class CombinedResourceProvider {
 
     private void copy(final Resource src, final String dstPath, final List<Resource> newNodes) throws PersistenceException {
         final ValueMap vm = src.getValueMap();
-        final String createPath = dstPath + '/' + src.getName();
+        final String createPath = new PathBuilder(dstPath).append(src.getName()).toString();
         newNodes.add(this.create(createPath, vm));
         for(final Resource c : src.getChildren()) {
             copy(c, createPath, newNodes);
@@ -654,6 +651,34 @@ public class CombinedResourceProvider {
             }
 
             return null;
+        }
+    }
+    
+    private static class PathBuilder {
+        private StringBuilder sb = new StringBuilder();
+        
+        public PathBuilder(String path) {
+            sb.append(path);
+        }
+        
+        PathBuilder append(String path) {
+            
+            boolean trailingSlash = sb.length() > 0 && sb.charAt(sb.length() - 1) == '/';
+            boolean leadingSlash = path.length() > 0 && path.charAt(0) == '/';
+            
+            if ( trailingSlash && leadingSlash) {
+                sb.append(path.substring(1));
+            } else if ( !trailingSlash && !leadingSlash ) {
+                sb.append('/').append(path);
+            } else {
+                sb.append(path);
+            }
+            
+            return this;
+        }
+        
+        public String toString() {
+            return sb.toString();
         }
     }
 }
