@@ -207,7 +207,7 @@ public class ServerSetup {
         runRemainingPhases(false);
     }
     
-    /** Return a context that {@SetupPhase} can use to 
+    /** Return a context that <code>@SetupPhase</code> can use to 
      *  communicate among them and with the outside.
      */
     public Map<String, Object> getContext() {
