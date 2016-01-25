@@ -109,7 +109,8 @@ class MiscUtil {
         // First wait for all JCR events to be delivered
         eventHelper.waitForEvents(5000L);
         // RescanTimer causes a SCAN_DELAY_MSEC wait after JCR events are received
-        Thread.sleep(RescanTimer.SCAN_DELAY_MSEC * 4);
+        // This assumes the RescanTimer is using its default delay, as per its javadoc
+        Thread.sleep(RescanTimer.DEFAULT_SCAN_DELAY_MSEC * 4);
         // And wait for a few JcrInstaller run cycles
         MiscUtil.waitForCycles(installer, startCycles, 2, 10000L);
     }
