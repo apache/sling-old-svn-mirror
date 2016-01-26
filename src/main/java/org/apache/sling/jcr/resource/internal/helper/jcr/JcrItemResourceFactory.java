@@ -31,6 +31,7 @@ import javax.jcr.version.VersionManager;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.resource.internal.HelperData;
@@ -84,15 +85,15 @@ public class JcrItemResourceFactory {
             parentResourcePath = parent.getPath();
         }
 
-        Item item = null;
+        Item item;
         if (parentNode != null && resourcePath.startsWith(parentResourcePath)) {
             String subPath = resourcePath.substring(parentResourcePath.length());
             if (!subPath.isEmpty() && subPath.charAt(0) == '/') {
                 subPath = subPath.substring(1);
             }
             item = getSubitem(parentNode, subPath);
-        } else if (itemExists(jcrPath)) {
-            item = session.getItem(jcrPath);
+        } else {
+            item = getItemOrNull(jcrPath);
         }
 
         if (item != null && version != null) {
@@ -168,25 +169,25 @@ public class JcrItemResourceFactory {
     private static boolean isVersionable(Item item) throws RepositoryException {
         return item.isNode() && ((Node) item).isNodeType(JcrConstants.MIX_VERSIONABLE);
     }
-    
 
-    /**
-     * Checks whether the item exists and this content manager's session has
-     * read access to the item. If the item does not exist, access control is
-     * ignored by this method and <code>false</code> is returned.
-     *
-     * @param path The path to the item to check
-     * @return <code>true</code> if the item exists and this content manager's
-     *         session has read access. If the item does not exist,
-     *         <code>false</code> is returned ignoring access control.
-     */
-    private boolean itemExists(final String path) {
-        try {
-            return session.itemExists(path);
-        } catch (RepositoryException re) {
-            log.debug("itemExists: Error checking for existence of {}: {}",
-                path, re.toString());
-            return false;
+    Item getItemOrNull(String path) throws RepositoryException {
+        Item item;
+        // Check first if the path is absolute. If it isn't, then we return null because the previous itemExists method,
+        // which was replaced by this method, would have returned null as well (instead of throwing an exception).
+        if (path.isEmpty() || path.charAt(0) != '/') {
+            item = null;
         }
+        // Use fast getItemOrNull if session is a JackrabbitSession
+        else if (session instanceof JackrabbitSession) {
+            item = ((JackrabbitSession) session).getItemOrNull(path);
+        }
+        // Fallback to slower itemExists & getItem pattern
+        else if (session.itemExists(path)) {
+            item = session.getItem(path);
+        } else {
+            item = null;
+        }
+        return item;
     }
+
 }
