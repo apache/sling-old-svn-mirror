@@ -32,9 +32,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Dictionary;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +45,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.resource.runtime.dto.AuthType;
+import org.apache.sling.resourceresolver.impl.Fixture;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 import org.apache.sling.resourceresolver.impl.SimpleValueMapImpl;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
@@ -64,8 +63,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
 
 @SuppressWarnings("unchecked")
 public class CombinedResourceProviderTest {
@@ -92,9 +89,11 @@ public class CombinedResourceProviderTest {
 
         BundleContext bc = MockOsgi.newBundleContext();
         
+        Fixture fixture = new Fixture(bc);
+        
         // sub-provider
         subProvider = Mockito.mock(ResourceProvider.class);
-        ResourceProviderInfo info = registerResourceProvider(bc, subProvider, "/some/path", AuthType.required);
+        ResourceProviderInfo info = fixture.registerResourceProvider(subProvider, "/some/path", AuthType.required);
         ResourceProviderHandler handler = new ResourceProviderHandler(bc, info);
         when(subProvider.getQueryLanguageProvider()).thenReturn(new SimpleQueryLanguageProvider(QL_MOCK, QL_ANOTHER_MOCK) {
             @Override
@@ -122,7 +121,7 @@ public class CombinedResourceProviderTest {
         handler.activate();
 
         rootProvider = mock(ResourceProvider.class);
-        ResourceProviderInfo rootInfo = registerResourceProvider(bc, rootProvider, "/", AuthType.required);
+        ResourceProviderInfo rootInfo = fixture.registerResourceProvider(rootProvider, "/", AuthType.required);
         ResourceProviderHandler rootHandler = new ResourceProviderHandler(bc, rootInfo);
         when(rootProvider.getQueryLanguageProvider()).thenReturn(new SimpleQueryLanguageProvider(QL_NOOP));
         rootHandler.activate();
@@ -145,22 +144,7 @@ public class CombinedResourceProviderTest {
 
         crp = new CombinedResourceProvider(storage, rr, authenticator);
     }
-
-    private ResourceProviderInfo registerResourceProvider(BundleContext bc, ResourceProvider<?> rp, String root, AuthType authType) throws InvalidSyntaxException {
-        
-        Dictionary<String, String> props = new Hashtable<String, String>();
-        props.put(ResourceProvider.PROPERTY_ROOT, root);
-        props.put(ResourceProvider.PROPERTY_AUTHENTICATE, authType.name());
-        props.put(ResourceProvider.PROPERTY_MODIFIABLE, Boolean.TRUE.toString());
-        
-        bc.registerService(ResourceProvider.class.getName(), rp, props);
-        
-        ServiceReference sr = bc.getServiceReferences(ResourceProvider.class.getName(),
-                "(" + ResourceProvider.PROPERTY_ROOT + "=" + root + ")")[0];
-        
-        return new ResourceProviderInfo(sr);
-    }
-
+    
     /**
      * Configures the provider to return a mock resource for the specified path
      * @return 
