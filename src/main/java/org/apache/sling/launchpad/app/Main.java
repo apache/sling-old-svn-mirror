@@ -193,7 +193,7 @@ public class Main {
     /**
      * Creates an instance of this main loader class. The provided arguments are
      * used to configure the OSGi framework being launched with the
-     * {@link #startSling(URL)} method.
+     * {@link #doStart(URL)} method.
      *
      * @param args The map of configuration properties to be supplied to the
      *            OSGi framework. The keys in this map are assumed to be usefull
@@ -229,7 +229,7 @@ public class Main {
      * <td>Specifies the socket to use for the control connection. This
      * specification is of the form <i>host:port</i> where the host can be a
      * host name or IP Address and may be omitted (along with the separating
-     * colon) and port is just the numberic port number at which to listen. The
+     * colon) and port is just the numeric port number at which to listen. The
      * default is <i>localhost:63000</i>. It is suggested to not use an
      * externally accessible interface for security reasons because there is no
      * added security on this control channel for now.</td>
@@ -271,8 +271,8 @@ public class Main {
      *         supplied. Otherwise the VM should terminate with the returned
      *         code as its exit code. For the stop action, this will be zero.
      *         For the status action, this will be a LSB compliant code for
-     *         daemon status check: 0 (application running), 1 (Programm Dead),
-     *         3 (Programm Not Running), 4 (Unknown Problem).
+     *         daemon status check: 0 (application running), 1 (Program Dead),
+     *         3 (Program Not Running), 4 (Unknown Problem).
      * @see <a
      *      href="http://refspecs.linuxbase.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html">Init Script Actions</a>
      *      for a definition of the LSB status codes
@@ -338,7 +338,7 @@ public class Main {
      * Calling this method multiple times before calling {@link #doStop()} will
      * cause a message to be printed and <code>true</code> being returned.
      *
-     * @return <code>true</code> if startup was successfull or the application
+     * @return <code>true</code> if startup was successful or the application
      *         is considered to be started already. Otherwise an error message
      *         has been logged and <code>false</code> is returned.
      */
@@ -536,7 +536,7 @@ public class Main {
     }
 
     /**
-     * Define the sling.launchpad parameter implementing the algorithme defined
+     * Define the sling.launchpad parameter implementing the algorithm defined
      * on the wiki page to find the setting according to this algorithm:
      * <ol>
      * <li>Configuration property <code>sling.launchpad</code>. This path is
@@ -612,7 +612,7 @@ public class Main {
 
     /**
      * Parses the command line arguments into a map of strings indexed by
-     * strings. This method suppports single character option names only at the
+     * strings. This method supports single character option names only at the
      * moment. Each pair of an option name and its value is stored into the
      * map. If a single dash '-' character is encountered the rest of the command
      * line are interpreted as option names and are stored in the map unmodified
@@ -630,7 +630,7 @@ public class Main {
      *
      * @return The map of command line options and their values
      */
-    // default accessor to enable unit tests wihtout requiring reflection
+    // default accessor to enable unit tests without requiring reflection
     static Map<String, String> parseCommandLine(String... args) {
         Map<String, String> commandLine = new HashMap<String, String>();
         boolean readUnparsed = false;
@@ -723,7 +723,7 @@ public class Main {
         return (prop == null) ? true : Boolean.valueOf(prop);
     }
 
-    // default accessor to enable unit tests wihtout requiring reflection
+    // default accessor to enable unit tests without requiring reflection
     static Map<String, String> convertCommandLineArgs(
             Map<String, String> rawArgs) {
         final HashMap<String, String> props = new HashMap<String, String>();
@@ -921,8 +921,8 @@ public class Main {
             /**
              * This method is called if the framework is stopped from within by
              * calling stop on the system bundle or if the framework is stopped
-             * because the VM is going down and the shutdown hook has initated
-             * the shutdown In any case we ensure the reference to the framework
+             * because the VM is going down and the shutdown hook has initiated
+             * the shutdown. In any case we ensure the reference to the framework
              * is removed and remove the shutdown hook (but don't care if that
              * fails).
              */
