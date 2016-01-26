@@ -78,7 +78,7 @@ public class CombinedResourceProvider {
     }
 
     /**
-     * Logouts from all providers.
+     * Logs out from all providers.
      */
     public void logout() {
         for (StatefulResourceProvider p : authenticator.getAllUsedAuthenticated()) {
@@ -373,7 +373,7 @@ public class CombinedResourceProvider {
      */
     public String[] getSupportedLanguages() {
         Set<String> supportedLanguages = new LinkedHashSet<String>();
-        for (StatefulResourceProvider p : authenticator.getAllBestEffort(storage.getLanguaheQuerableHandlers(), this)) {
+        for (StatefulResourceProvider p : authenticator.getAllBestEffort(storage.getLanguageQueryableHandlers(), this)) {
             supportedLanguages.addAll(Arrays.asList(p.getSupportedLanguages()));
         }
         return supportedLanguages.toArray(new String[supportedLanguages.size()]);
@@ -383,31 +383,31 @@ public class CombinedResourceProvider {
      * Queries all resource providers and combines the results.
      */
     public Iterator<Resource> findResources(final String query, final String language) {
-        List<StatefulResourceProvider> querableRP = getQuerableProviders(language);
-        List<Iterator<Resource>> iterators = new ArrayList<Iterator<Resource>>(querableRP.size());
-        for (StatefulResourceProvider p : querableRP) {
+        List<StatefulResourceProvider> queryableRP = getQueryableProviders(language);
+        List<Iterator<Resource>> iterators = new ArrayList<Iterator<Resource>>(queryableRP.size());
+        for (StatefulResourceProvider p : queryableRP) {
             iterators.add(p.findResources(query, language));
         }
         return new ChainedIterator<Resource>(iterators.iterator());
     }
 
-    private List<StatefulResourceProvider> getQuerableProviders(String language) {
-        List<StatefulResourceProvider> querableProviders = new ArrayList<StatefulResourceProvider>();
-        for (StatefulResourceProvider p : authenticator.getAllBestEffort(storage.getLanguaheQuerableHandlers(), this)) {
+    private List<StatefulResourceProvider> getQueryableProviders(String language) {
+        List<StatefulResourceProvider> queryableProviders = new ArrayList<StatefulResourceProvider>();
+        for (StatefulResourceProvider p : authenticator.getAllBestEffort(storage.getLanguageQueryableHandlers(), this)) {
             if (ArrayUtils.contains(p.getSupportedLanguages(), language)) {
-                querableProviders.add(p);
+                queryableProviders.add(p);
             }
         }
-        return querableProviders;
+        return queryableProviders;
     }
 
     /**
      * Queries all resource providers and combines the results.
      */
     public Iterator<Map<String, Object>> queryResources(final String query, final String language) {
-        List<StatefulResourceProvider> querableRP = getQuerableProviders(language);
-        List<Iterator<Map<String, Object>>> iterators = new ArrayList<Iterator<Map<String, Object>>>(querableRP.size());
-        for (StatefulResourceProvider p : querableRP) {
+        List<StatefulResourceProvider> queryableRP = getQueryableProviders(language);
+        List<Iterator<Map<String, Object>>> iterators = new ArrayList<Iterator<Map<String, Object>>>(queryableRP.size());
+        for (StatefulResourceProvider p : queryableRP) {
             iterators.add(p.queryResources(query, language));
         }
         return new ChainedIterator<Map<String, Object>>(iterators.iterator());
