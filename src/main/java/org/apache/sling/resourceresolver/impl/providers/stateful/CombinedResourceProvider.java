@@ -38,6 +38,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.sling.api.paths.PathBuilder;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -651,34 +652,6 @@ public class CombinedResourceProvider {
             }
 
             return null;
-        }
-    }
-    
-    private static class PathBuilder {
-        private StringBuilder sb = new StringBuilder();
-        
-        public PathBuilder(String path) {
-            sb.append(path);
-        }
-        
-        PathBuilder append(String path) {
-            
-            boolean trailingSlash = sb.length() > 0 && sb.charAt(sb.length() - 1) == '/';
-            boolean leadingSlash = path.length() > 0 && path.charAt(0) == '/';
-            
-            if ( trailingSlash && leadingSlash) {
-                sb.append(path.substring(1));
-            } else if ( !trailingSlash && !leadingSlash ) {
-                sb.append('/').append(path);
-            } else {
-                sb.append(path);
-            }
-            
-            return this;
-        }
-        
-        public String toString() {
-            return sb.toString();
         }
     }
 }
