@@ -330,6 +330,7 @@ public class ResourceProviderTracker {
                 final ResourceProviderFailureDTO d = new ResourceProviderFailureDTO();
                 fill(d, entry.getKey());
                 d.reason = entry.getValue();
+                failures.add(d);
             }
         }
         dto.providers = dtos.toArray(new ResourceProviderDTO[dtos.size()]);
