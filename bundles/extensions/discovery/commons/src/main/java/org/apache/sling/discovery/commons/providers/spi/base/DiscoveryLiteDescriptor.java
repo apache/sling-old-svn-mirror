@@ -110,9 +110,14 @@ public class DiscoveryLiteDescriptor {
      * @throws Exception if anything in the descriptor is wrongly formatted
      */
     public String getViewId() throws Exception {
+        if (descriptor.isNull("id")) {
+            // SLING-5458 : id can now be null,
+            // so treat this separately and return null here too
+            return null;
+        }
         Object idObj = descriptor.get("id");
         if (idObj == null || !(idObj instanceof String)) {
-            throw new Exception("getMe: 'me' value of descriptor not a String: "+idObj+" (descriptor: "+descriptor+")");
+            throw new Exception("getViewId: 'id' value of descriptor not a String: "+idObj+" (descriptor: "+descriptor+")");
         }
         return String.valueOf(idObj);
     }
