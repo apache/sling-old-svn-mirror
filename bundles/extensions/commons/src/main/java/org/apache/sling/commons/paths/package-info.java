@@ -17,4 +17,4 @@
  * under the License.
  */
 @aQute.bnd.annotation.Version("1.0")
-package org.apache.sling.api.paths;
+package org.apache.sling.commons.paths;

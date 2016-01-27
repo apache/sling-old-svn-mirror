@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.api.paths;
+package org.apache.sling.commons.paths;
 
 /**
  * The <tt>PathBuilder</tt> offers a convenient way of creating a valid path from multiple fragments
