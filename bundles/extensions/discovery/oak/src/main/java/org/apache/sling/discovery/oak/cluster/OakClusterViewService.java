@@ -18,6 +18,7 @@
  */
 package org.apache.sling.discovery.oak.cluster;
 
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -25,11 +26,14 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.ModifiableValueMap;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
@@ -42,6 +46,7 @@ import org.apache.sling.discovery.commons.providers.DefaultInstanceDescription;
 import org.apache.sling.discovery.commons.providers.spi.LocalClusterView;
 import org.apache.sling.discovery.commons.providers.spi.base.DiscoveryLiteDescriptor;
 import org.apache.sling.discovery.commons.providers.spi.base.IdMapService;
+import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
 import org.apache.sling.discovery.oak.Config;
 import org.apache.sling.settings.SlingSettingsService;
 import org.slf4j.Logger;
@@ -54,6 +59,10 @@ import org.slf4j.LoggerFactory;
 @Service(value = ClusterViewService.class)
 public class OakClusterViewService implements ClusterViewService {
     
+    private static final String PROPERTY_CLUSTER_ID = "clusterId";
+    private static final String PROPERTY_CLUSTER_ID_DEFINED_AT = "clusterIdDefinedAt";
+    private static final String PROPERTY_CLUSTER_ID_DEFINED_BY = "clusterIdDefinedBy";
+
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Reference
@@ -130,6 +139,10 @@ public class OakClusterViewService implements ClusterViewService {
         }
         logger.trace("asClusterView: start");
         String clusterViewId = descriptor.getViewId();
+        if (clusterViewId == null || clusterViewId.length() == 0) {
+            logger.trace("asClusterView: no clusterId provided by discovery-lite descriptor - reading from repo.");
+            clusterViewId = readOrDefineClusterId(resourceResolver);
+        }
         String localClusterSyncTokenId = /*descriptor.getViewId()+"_"+*/String.valueOf(descriptor.getSeqNum());
         if (!descriptor.isFinal()) {
             throw new UndefinedClusterViewException(Reason.NO_ESTABLISHED_VIEW, "descriptor is not yet final: "+descriptor);
@@ -198,6 +211,75 @@ public class OakClusterViewService implements ClusterViewService {
             throw new UndefinedClusterViewException(Reason.ISOLATED_FROM_TOPOLOGY, 
                     "established view does not include local instance - isolated");
         }
+    }
+
+    /**
+     * oak's discovery-lite can opt to not provide a clusterViewId eg in the
+     * single-VM case. (for clusters discovery-lite normally defines the
+     * clusterViewId, as it is the one responsible for defining the membership
+     * too) Thus if we're not getting an id here we have to define one here. (we
+     * can typically assume that this corresponds to a singleVM case, but that's
+     * not a 100% requirement). This id must be stored to ensure the contract
+     * that the clusterId is stable across restarts. For that, the id is stored
+     * under /var/discovery/oak (and to account for odd/edgy cases we'll do a
+     * retry when storing the id, in case we'd run into conflicts, even though
+     * they should not occur in singleVM cases)
+     * 
+     * @param resourceResolver the ResourceResolver with which to read or write
+     * the clusterId properties under /var/discovery/oak
+     * @return the clusterId to be used - either the one read or defined
+     * at /var/discovery/oak - or the slingId in case of non-fixable exceptions
+     * @throws PersistenceException when /var/discovery/oak could not be
+     * accessed or auto-created
+     */
+    private String readOrDefineClusterId(ResourceResolver resourceResolver) throws PersistenceException {
+        //TODO: if Config gets a specific, public getDiscoveryResourcePath, this can be simplified:
+        final String clusterInstancesPath = config.getClusterInstancesPath();
+        final String discoveryResourcePath = clusterInstancesPath.substring(0, 
+                clusterInstancesPath.lastIndexOf("/", clusterInstancesPath.length()-2));
+        final int MAX_RETRIES = 5;
+        for(int retryCnt=0; retryCnt<MAX_RETRIES; retryCnt++) {
+            Resource varDiscoveryOak = resourceResolver.getResource(discoveryResourcePath);
+            if (varDiscoveryOak == null) {
+                varDiscoveryOak = ResourceHelper.getOrCreateResource(resourceResolver, discoveryResourcePath);
+            }
+            if (varDiscoveryOak == null) {
+                logger.error("readOrDefinedClusterId: Could not create: "+discoveryResourcePath);
+                throw new RuntimeException("could not create " + discoveryResourcePath);
+            }
+            ModifiableValueMap props = varDiscoveryOak.adaptTo(ModifiableValueMap.class);
+            if (props == null) {
+                logger.error("readOrDefineClusterId: Could not adaptTo ModifiableValueMap: "+varDiscoveryOak);
+                throw new RuntimeException("could not adaptTo ModifiableValueMap: " + varDiscoveryOak);
+            }
+            Object clusterIdObj = props.get(PROPERTY_CLUSTER_ID);
+            String clusterId = (clusterIdObj == null) ? null : String.valueOf(clusterIdObj);
+            if (clusterId != null && clusterId.length() > 0) {
+                logger.trace("readOrDefineClusterId: read clusterId from repo as {}", clusterId);
+                return clusterId;
+            }
+
+            // must now define a new clusterId and store it under /var/discovery/oak
+            final String newClusterId = UUID.randomUUID().toString();
+            props.put(PROPERTY_CLUSTER_ID, newClusterId);
+            props.put(PROPERTY_CLUSTER_ID_DEFINED_BY, getSlingId());
+            props.put(PROPERTY_CLUSTER_ID_DEFINED_AT, Calendar.getInstance());
+            try {
+                logger.info("readOrDefineClusterId: storing new clusterId as " + newClusterId);
+                resourceResolver.commit();
+                return newClusterId;
+            } catch (PersistenceException e) {
+                logger.warn("readOrDefineClusterId: could not persist clusterId "
+                        + "(retrying in 1 sec max " + (MAX_RETRIES - retryCnt - 1) + " more times: " + e, e);
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e1) {
+                    logger.warn("readOrDefineClusterId: got interrupted: "+e1, e1);
+                }
+                logger.info("readOrDefineClusterId: retrying now.");
+            }
+        }
+        throw new RuntimeException("failed to write new clusterId (see log file earlier for more details)");
     }
 
     private String getLeaderElectionId(ResourceResolver resourceResolver, String slingId) {
