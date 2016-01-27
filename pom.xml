@@ -129,7 +129,7 @@
 		<dependency>
 			<groupId>org.apache.sling</groupId>
 			<artifactId>org.apache.sling.discovery.commons</artifactId>
-			<version>1.0.7-SNAPSHOT</version>
+			<version>1.0.8</version>
             <scope>provided</scope>
 		</dependency>
         <!-- besides including discovery.commons' normal jar above, 
@@ -138,7 +138,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.discovery.commons</artifactId>
-            <version>1.0.7-SNAPSHOT</version>
+            <version>1.0.8</version>
             <scope>test</scope>
             <type>test-jar</type>
         </dependency>
