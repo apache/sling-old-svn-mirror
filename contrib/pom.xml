@@ -120,6 +120,7 @@
           <module>extensions/sling-query</module>
           <module>extensions/superimposing</module>
           <module>extensions/tenant</module>
+          <module>extensions/tracer</module>
           <module>extensions/urlrewriter</module>
           <module>extensions/hapi</module>
 
