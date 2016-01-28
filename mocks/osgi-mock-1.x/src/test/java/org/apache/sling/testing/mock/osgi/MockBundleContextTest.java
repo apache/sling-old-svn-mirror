@@ -84,7 +84,7 @@ public class MockBundleContextTest {
 
         String clazz3 = Integer.class.getName();
         Object service3 = new Object();
-        Dictionary properties3 = getServiceProperties(100L);
+        Dictionary properties3 = getServiceProperties(-100L);
         ServiceRegistration reg3 = bundleContext.registerService(clazz3, service3, properties3);
 
         // test get service references
