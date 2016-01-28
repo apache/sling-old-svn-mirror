@@ -76,8 +76,9 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
     private final String tempPackagesNode;
     private final File tempDirectory;
     private final TreeMap<String, List<String>> filters;
+    private final boolean useBinaryReferences;
 
-    public JcrVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots, String[] filterRules, String tempFilesFolder) {
+    public JcrVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots, String[] filterRules, String tempFilesFolder, boolean useBinaryReferences) {
         super(type);
 
         this.packaging = packaging;
@@ -89,6 +90,7 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
 
         this.tempDirectory = VltUtils.getTempFolder(tempFilesFolder);
         this.filters = VltUtils.parseFilters(filterRules);
+        this.useBinaryReferences = useBinaryReferences;
     }
 
     @Override
@@ -104,7 +106,7 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
             String packageName = getType() + "_" + System.currentTimeMillis() + "_" + UUID.randomUUID();
 
             WorkspaceFilter filter = VltUtils.createFilter(request, filters);
-            ExportOptions opts = VltUtils.getExportOptions(filter, packageRoots, packageGroup, packageName, VERSION);
+            ExportOptions opts = VltUtils.getExportOptions(filter, packageRoots, packageGroup, packageName, VERSION, useBinaryReferences);
 
             log.debug("assembling package {} user {}", packageGroup + '/' + packageName + "-" + VERSION, resourceResolver.getUserID());
 

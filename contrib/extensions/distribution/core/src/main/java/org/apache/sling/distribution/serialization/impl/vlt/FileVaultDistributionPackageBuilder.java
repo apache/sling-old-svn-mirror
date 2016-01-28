@@ -65,8 +65,9 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
     private final String[] packageRoots;
     private final File tempDirectory;
     private final TreeMap<String, List<String>> filters;
+    private final boolean useBinaryReferences;
 
-    public FileVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots, String[] filterRules, String tempFilesFolder) {
+    public FileVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots, String[] filterRules, String tempFilesFolder, boolean useBinaryReferences) {
         super(type);
         this.packaging = packaging;
         this.importMode = importMode;
@@ -75,7 +76,7 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
 
         this.tempDirectory = VltUtils.getTempFolder(tempFilesFolder);
         this.filters = VltUtils.parseFilters(filterRules);
-
+        this.useBinaryReferences = useBinaryReferences;
 
         log.info("using temp directory {}", tempDirectory == null ? tempDirectory : tempDirectory.getPath());
     }
@@ -92,7 +93,7 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
             String packageName = getType() + "_" + System.currentTimeMillis() + "_" + UUID.randomUUID();
 
             WorkspaceFilter filter = VltUtils.createFilter(request, filters);
-            ExportOptions opts = VltUtils.getExportOptions(filter, packageRoots, packageGroup, packageName, VERSION);
+            ExportOptions opts = VltUtils.getExportOptions(filter, packageRoots, packageGroup, packageName, VERSION, useBinaryReferences);
 
             log.debug("assembling package {}", packageGroup + '/' + packageName + "-" + VERSION);
 

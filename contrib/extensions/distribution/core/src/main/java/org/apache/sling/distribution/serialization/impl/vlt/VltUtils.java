@@ -50,6 +50,7 @@ import org.apache.jackrabbit.vault.fs.io.ImportOptions;
 import org.apache.jackrabbit.vault.packaging.ExportOptions;
 import org.apache.jackrabbit.vault.packaging.JcrPackage;
 import org.apache.jackrabbit.vault.packaging.PackageManager;
+import org.apache.jackrabbit.vault.packaging.PackageProperties;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
@@ -132,7 +133,8 @@ public class VltUtils {
     public static ExportOptions getExportOptions(WorkspaceFilter filter, String[] packageRoots,
                                                  String packageGroup,
                                                  String packageName,
-                                                 String packageVersion) {
+                                                 String packageVersion,
+                                                 boolean useBinaryReferences) {
         DefaultMetaInf inf = new DefaultMetaInf();
         ExportOptions opts = new ExportOptions();
         inf.setFilter(filter);
@@ -141,6 +143,7 @@ public class VltUtils {
         props.setProperty(VaultPackage.NAME_GROUP, packageGroup);
         props.setProperty(VaultPackage.NAME_NAME, packageName);
         props.setProperty(VaultPackage.NAME_VERSION, packageVersion);
+    	props.setProperty(PackageProperties.NAME_USE_BINARY_REFERENCES, String.valueOf(useBinaryReferences));
         inf.setProperties(props);
 
         opts.setMetaInf(inf);

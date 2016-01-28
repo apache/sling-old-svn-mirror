@@ -109,6 +109,9 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
     @Property(label = "Temp Filesystem Folder", description = "The filesystem folder where the temporary files should be saved.")
     private static final String TEMP_FS_FOLDER = "tempFsFolder";
 
+    @Property(label="Use Binary References", description = "If activated, it avoids sending binaries in the distribution package.", boolValue = false)
+    public static final String USE_BINARY_REFERENCES = "useBinaryReferences";
+    
     @Reference
     private Packaging packaging;
 
@@ -127,7 +130,8 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
         String[] packageFilters = SettingsUtils.removeEmptyEntries(PropertiesUtil.toStringArray(config.get(PACKAGE_FILTERS), null));
 
         String tempFsFolder = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(TEMP_FS_FOLDER), null));
-
+        boolean useBinaryReferences = PropertiesUtil.toBoolean(config.get(USE_BINARY_REFERENCES), false);
+        
         ImportMode importMode = null;
         if (importModeString != null) {
             importMode = ImportMode.valueOf(importModeString.trim());
@@ -139,9 +143,9 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
         }
 
         if ("filevlt".equals(type)) {
-            packageBuilder = new FileVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, packageFilters, tempFsFolder);
+            packageBuilder = new FileVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, packageFilters, tempFsFolder, useBinaryReferences);
         } else {
-            packageBuilder = new JcrVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, packageFilters, tempFsFolder);
+            packageBuilder = new JcrVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, packageFilters, tempFsFolder, useBinaryReferences);
         }
     }
 
