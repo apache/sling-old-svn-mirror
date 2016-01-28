@@ -18,20 +18,19 @@
  */
 package org.apache.sling.jcr.base;
 
-import org.apache.sling.jcr.api.NamespaceMapper;
-import org.apache.sling.serviceusermapping.ServiceUserMapper;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.doReturn;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+
 import org.apache.sling.testing.mock.jcr.MockJcr;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.osgi.framework.Bundle;
-
-import javax.jcr.*;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Proxy;
-import java.util.Dictionary;
-
-import static org.mockito.Mockito.*;
-import static org.junit.Assert.*;
 
 public class SessionProxyHandlerTest {
 
@@ -50,7 +49,7 @@ public class SessionProxyHandlerTest {
         doReturn(imperSession).when(session).impersonate(null);
 
         //Create a proxy handle and proxy session
-        SessionProxyHandler proxyHandler = new SessionProxyHandler(new CustomSlingRepositoryManager());
+        SessionProxyHandler proxyHandler = new SessionProxyHandler(new MockSlingRepositoryManager(null));
         Session proxySession = proxyHandler.createProxy(session);
 
         //sessionForTest is a proxy which contains a link to the imperSession object
@@ -65,47 +64,5 @@ public class SessionProxyHandlerTest {
         //Checking that others methods of proxy object works also well and doesn't call impersonate method
         assertNotNull(sessionForTest.getRootNode());
         assertNotNull(sessionForTest.getRepository());
-    }
-
-    /**
-     * Create custom RepositoryManager to support namespace mapping, since the only one
-     * available <code>OakSlingRepositoryManager</code> lies under <code>org.apache.sling.jcr.oak.server</code>
-     * what creates circular dependencies with this module.
-     */
-    private static final class CustomSlingRepositoryManager extends AbstractSlingRepositoryManager{
-        @Override
-        protected ServiceUserMapper getServiceUserMapper() {
-            return null;
-        }
-
-        @Override
-        protected Repository acquireRepository() {
-            return null;
-        }
-
-        @Override
-        protected Dictionary<String, Object> getServiceRegistrationProperties() {
-            return null;
-        }
-
-        @Override
-        protected AbstractSlingRepository2 create(Bundle usingBundle) {
-            return null;
-        }
-
-        @Override
-        protected void destroy(AbstractSlingRepository2 repositoryServiceInstance) {
-
-        }
-
-        @Override
-        protected void disposeRepository(Repository repository) {
-
-        }
-
-        @Override
-        protected NamespaceMapper[] getNamespaceMapperServices() {
-            return new NamespaceMapper[0];
-        }
     }
 }
