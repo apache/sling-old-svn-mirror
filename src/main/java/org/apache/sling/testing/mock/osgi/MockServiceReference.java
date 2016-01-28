@@ -81,14 +81,13 @@ class MockServiceReference implements ServiceReference {
         if (!(obj instanceof MockServiceReference)) {
             return 0;
         }
-        // sort by decreasing by service ranking, and secondary increasing by
-        // service id
+        // sort by ascending by service ranking, and secondary ascending by service id
         Integer serviceRanking = getServiceRanking();
-        Integer otherServiceRanking = ((MockServiceReference) obj).getServiceRanking();
-        int serviceRankingCompare = otherServiceRanking.compareTo(serviceRanking);
+        Integer otherServiceRanking = ((MockServiceReference)obj).getServiceRanking();
+        int serviceRankingCompare = serviceRanking.compareTo(otherServiceRanking);
         if (serviceRankingCompare == 0) {
             Long serviceId = getServiceId();
-            Long otherServiceId = ((MockServiceReference) obj).getServiceId();
+            Long otherServiceId = ((MockServiceReference)obj).getServiceId();
             return serviceId.compareTo(otherServiceId);
         } else {
             return serviceRankingCompare;
