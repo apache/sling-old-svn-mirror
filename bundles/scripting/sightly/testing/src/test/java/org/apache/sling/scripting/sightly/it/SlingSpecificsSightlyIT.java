@@ -20,6 +20,8 @@ package org.apache.sling.scripting.sightly.it;
 
 import java.io.IOException;
 
+import javax.swing.text.html.HTML;
+
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
@@ -49,6 +51,7 @@ public class SlingSpecificsSightlyIT {
     private static final String SLING_USE_INHERITANCE_WITHOVERLAY = "/sightly/useinheritance.html";
     private static final String SLING_USE_INHERITANCE_WITHOUTOVERLAY = "/sightly/useinheritance.notoverlaid.html";
     private static final String SLING_JAVA_USE_POJO_UPDATE = "/sightly/use.repopojo.html";
+    private static final String SLING_ATTRIBUTE_QUOTES = "/sightly/attributequotes.html";
 
     @BeforeClass
     public static void init() {
@@ -174,6 +177,16 @@ public class SlingSpecificsSightlyIT {
         String url = launchpadURL + SLING_USE;
         String pageContent = client.getStringContent(url, 200);
         assertEquals("nopkg", HTMLExtractor.innerHTML(url, pageContent, "#repopojo-nopkg"));
+    }
+
+    @Test
+    public void testAttributeQuotes() {
+        String url = launchpadURL + SLING_ATTRIBUTE_QUOTES;
+        String pageContent = client.getStringContent(url, 200);
+        // need to test against the raw content
+        assertTrue(pageContent.contains("<span data-resource='{\"resource\" : \"/sightly/attributequotes\"}'>/sightly/attributequotes</span>"));
+        assertTrue(pageContent.contains("<span data-resource=\"/sightly/attributequotes\">/sightly/attributequotes</span>"));
+        assertTrue(pageContent.contains("<span data-resource=\"/sightly/attributequotes\">/sightly/attributequotes</span>"));
     }
 
     private void uploadFile(String fileName, String serverFileName, String url) throws IOException {

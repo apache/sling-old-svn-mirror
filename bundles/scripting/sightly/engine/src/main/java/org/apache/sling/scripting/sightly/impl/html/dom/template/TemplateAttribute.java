@@ -24,9 +24,12 @@ public class TemplateAttribute {
 
     private final String value;
 
-    public TemplateAttribute(final String name, final String value) {
+    private final char quoteChar;
+
+    public TemplateAttribute(final String name, final String value, char quoteChar) {
         this.name = name;
         this.value = value;
+        this.quoteChar = quoteChar;
     }
 
     public String getName() {
@@ -37,7 +40,7 @@ public class TemplateAttribute {
         return this.value;
     }
 
-    public boolean hasValue() {
-        return value != null;
+    public char getQuoteChar() {
+        return quoteChar;
     }
 }

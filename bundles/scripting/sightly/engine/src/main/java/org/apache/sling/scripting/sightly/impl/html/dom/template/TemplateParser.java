@@ -89,7 +89,7 @@ public class TemplateParser {
             final Iterator<String> iter = attList.attributeNames();
             while ( iter.hasNext() ) {
                 final String aName = iter.next();
-                final TemplateAttribute attr = new TemplateAttribute(aName, attList.getValue(aName));
+                final TemplateAttribute attr = new TemplateAttribute(aName, attList.getValue(aName), attList.getQuoteChar(aName));
                 attrs.add(attr);
             }
             final TemplateElementNode element = new TemplateElementNode(name, endSlash, attrs);
@@ -126,9 +126,7 @@ public class TemplateParser {
         }
 
         private boolean contains(String name) {
-            Iterator it = this.elementStack.iterator(); // ascending iterator
-            while (it.hasNext()) {
-                TemplateElementNode elem = (TemplateElementNode) it.next();
+            for (TemplateElementNode elem : this.elementStack) {
                 if (name.equals(elem.getName())) {
                     return true;
                 }

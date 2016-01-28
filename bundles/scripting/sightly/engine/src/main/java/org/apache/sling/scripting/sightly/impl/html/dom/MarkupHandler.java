@@ -83,12 +83,12 @@ public class MarkupHandler {
         elementStack.push(context);
     }
 
-    public void onAttribute(String name, String value) {
+    public void onAttribute(String name, String value, char quoteChar) {
         ElementContext context = elementStack.peek();
         if (Syntax.isPluginAttribute(name)) {
             handlePlugin(name, StringUtils.defaultString(value, ""), context);
         } else {
-            context.addAttribute(name, value);
+            context.addAttribute(name, value, quoteChar);
         }
     }
 
@@ -114,12 +114,12 @@ public class MarkupHandler {
     }
 
     private void traverseAttributes(ElementContext context, PluginInvoke invoke) {
-        for (Map.Entry<String, Object> attribute : context.getAttributes()) {
-            String attrName = attribute.getKey();
+        for (ElementContext.Attribute attribute : context.getAttributes()) {
+            String attrName = attribute.getName();
             Object contentObj = attribute.getValue();
             if (contentObj == null || contentObj instanceof String) {
                 String content = (String) contentObj;
-                emitAttribute(attrName, content, invoke);
+                emitAttribute(attrName, content, attribute.getQuoteChar(), invoke);
             } else if (contentObj instanceof Map.Entry) {
                 Map.Entry entry = (Map.Entry) contentObj;
                 PluginCallInfo info = (PluginCallInfo) entry.getKey();
@@ -129,30 +129,30 @@ public class MarkupHandler {
         }
     }
 
-    private void emitAttribute(String name, String content, PluginInvoke invoke) {
+    private void emitAttribute(String name, String content, char quoteChar, PluginInvoke invoke) {
         invoke.beforeAttribute(stream, name);
         if (content == null) {
-            emitSimpleTextAttribute(name, null, invoke);
+            emitSimpleTextAttribute(name, null, quoteChar, invoke);
         } else {
             Interpolation interpolation = expressionParser.parseInterpolation(content);
             String text = tryAsSimpleText(interpolation);
             if (text != null) {
-                emitSimpleTextAttribute(name, text, invoke);
+                emitSimpleTextAttribute(name, text, quoteChar, invoke);
             } else {
-                emitExpressionAttribute(name, interpolation, invoke);
+                emitExpressionAttribute(name, interpolation, quoteChar, invoke);
             }
         }
         invoke.afterAttribute(stream, name);
     }
 
-    private void emitSimpleTextAttribute(String name, String textValue, PluginInvoke invoke) {
+    private void emitSimpleTextAttribute(String name, String textValue, char quoteChar, PluginInvoke invoke) {
         emitAttributeStart(name);
         invoke.beforeAttributeValue(stream, name, new StringConstant(textValue));
         if (textValue != null) {
-            emitAttributeValueStart();
+            emitAttributeValueStart(quoteChar);
             textValue = escapeQuotes(textValue);
             out(textValue);
-            emitAttributeEnd();
+            emitAttributeEnd(quoteChar);
         }
         invoke.afterAttributeValue(stream, name);
     }
@@ -161,16 +161,16 @@ public class MarkupHandler {
         return textValue.replace("\"", "&quot;");
     }
 
-    private void emitExpressionAttribute(String name, Interpolation interpolation, PluginInvoke invoke) {
+    private void emitExpressionAttribute(String name, Interpolation interpolation, char quoteChar, PluginInvoke invoke) {
         interpolation = attributeChecked(name, interpolation);
         if (interpolation.size() == 1) {
-            emitSingleFragment(name, interpolation, invoke);
+            emitSingleFragment(name, interpolation, quoteChar, invoke);
         } else {
-            emitMultipleFragment(name, interpolation, invoke);
+            emitMultipleFragment(name, interpolation, quoteChar, invoke);
         }
     }
 
-    private void emitMultipleFragment(String name, Interpolation interpolation, PluginInvoke invoke) {
+    private void emitMultipleFragment(String name, Interpolation interpolation, char quoteChar, PluginInvoke invoke) {
         // Simplified algorithm for attribute output, which works when the interpolation is not of size 1. In this
         // case we are certain that the attribute value cannot be the boolean value true, so we can skip this test
         // altogether
@@ -191,16 +191,16 @@ public class MarkupHandler {
         stream.emit(new Conditional.Start(shouldDisplayAttr, true));
         emitAttributeStart(name);
         invoke.beforeAttributeValue(stream, name, expression.getRoot());
-        emitAttributeValueStart();
+        emitAttributeValueStart(quoteChar);
         stream.emit(new OutVariable(attrContent));
-        emitAttributeEnd();
+        emitAttributeEnd(quoteChar);
         invoke.afterAttributeValue(stream, name);
         stream.emit(Conditional.END);
         stream.emit(VariableBinding.END);
         stream.emit(VariableBinding.END);
     }
 
-    private void emitSingleFragment(String name, Interpolation interpolation, PluginInvoke invoke) {
+    private void emitSingleFragment(String name, Interpolation interpolation, char quoteChar, PluginInvoke invoke) {
         Expression valueExpression = expressionWrapper.transform(interpolation, null, ExpressionContext.ATTRIBUTE); //raw expression
         String attrValue = symbolGenerator.next("attrValue"); //holds the raw attribute value
         String attrContent = symbolGenerator.next("attrContent"); //holds the escaped attribute value
@@ -228,9 +228,9 @@ public class MarkupHandler {
         stream.emit(new VariableBinding.Start(isTrueVar, //isTrueAttr = (attrValue == true)
                 new BinaryOperation(BinaryOperator.EQ, new Identifier(attrValue), BooleanConstant.TRUE)));
         stream.emit(new Conditional.Start(isTrueVar, false)); //if (!isTrueAttr)
-        emitAttributeValueStart(); // write("='");
+        emitAttributeValueStart(quoteChar); // write("='");
         stream.emit(new OutVariable(attrContent)); //write(attrContent)
-        emitAttributeEnd(); //write("'");
+        emitAttributeEnd(quoteChar); //write("'");
         stream.emit(Conditional.END); //end if isTrueAttr
         stream.emit(VariableBinding.END); //end scope for isTrueAttr
         invoke.afterAttributeValue(stream, name);
@@ -245,12 +245,21 @@ public class MarkupHandler {
         out(" " + name);
     }
 
-    private void emitAttributeValueStart() {
-        out("=\"");
+    private void emitAttributeValueStart(char quoteChar) {
+        char quote = '"';
+        if (quoteChar != 0) {
+            quote = quoteChar;
+        }
+        out("=");
+        out(String.valueOf(quote));
     }
 
-    private void emitAttributeEnd() {
-        out("\"");
+    private void emitAttributeEnd(char quoteChar) {
+        char quote = '"';
+        if (quoteChar != 0) {
+            quote = quoteChar;
+        }
+        out(String.valueOf(quote));
     }
 
 

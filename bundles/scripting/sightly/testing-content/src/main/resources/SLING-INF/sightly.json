@@ -28,5 +28,9 @@
     "use-sibling-dependency-resolution": {
         "jcr:primaryType": "nt:unstructured",
         "sling:resourceType": "/apps/sightly/scripts/siblingdeps/component"
+    },
+    "attributequotes": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "/apps/sightly/scripts/attributequotes"
     }
 }
