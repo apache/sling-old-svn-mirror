@@ -23,9 +23,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
-import java.util.Dictionary;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
 
@@ -33,10 +33,13 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.sling.api.SlingConstants;
+import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
+import org.apache.sling.api.resource.util.PathSet;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.spi.resource.provider.ObservationReporter;
+import org.apache.sling.spi.resource.provider.ObserverConfiguration;
 import org.junit.Test;
-import org.osgi.service.event.Event;
 
 /**
  * Base for the two different listener tests.
@@ -49,21 +52,7 @@ public abstract class AbstractListenerTest {
 
     private String pathToModify = "/test" + System.currentTimeMillis() + "-modify";
 
-    private final List<Event> events = synchronizedList(new ArrayList<Event>());
-
-    protected void addEvent(final Event e) {
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
-        for(final String name : e.getPropertyNames()) {
-            props.put(name, e.getProperty(name));
-        }
-        this.events.add(new Event(e.getTopic(), props) {
-
-            @Override
-            public String toString() {
-                return "Event(topic=" + e.getTopic() + ", properties=" + props + ")";
-            }
-        });
-    }
+    private final List<ResourceChange> events = synchronizedList(new ArrayList<ResourceChange>());
 
     @Test public void testSimpleOperations() throws Exception {
         generateEvents();
@@ -73,17 +62,18 @@ public abstract class AbstractListenerTest {
         final Set<String> modifyPaths = new HashSet<String>();
         final Set<String> removePaths = new HashSet<String>();
 
-        for(final Event event : events) {
-            if ( event.getTopic().equals(SlingConstants.TOPIC_RESOURCE_ADDED) ) {
-                addPaths.add((String)event.getProperty(SlingConstants.PROPERTY_PATH));
-            } else if ( event.getTopic().equals(SlingConstants.TOPIC_RESOURCE_CHANGED) ) {
-                modifyPaths.add((String)event.getProperty(SlingConstants.PROPERTY_PATH));
-            } else if ( event.getTopic().equals(SlingConstants.TOPIC_RESOURCE_REMOVED) ) {
-                removePaths.add((String)event.getProperty(SlingConstants.PROPERTY_PATH));
+        for (final ResourceChange event : events) {
+            if (event.getType() == ChangeType.ADDED) {
+                addPaths.add(event.getPath());
+            } else if (event.getType() == ChangeType.CHANGED) {
+                modifyPaths.add(event.getPath());
+                assertEquals(Collections.singleton("foo"), event.getAddedPropertyNames());
+            } else if (event.getType() == ChangeType.REMOVED) {
+                removePaths.add(event.getPath());
             } else {
                 fail("Unexpected event: " + event);
             }
-            assertNotNull(event.getProperty(SlingConstants.PROPERTY_USERID));
+            assertNotNull(event.getUserId());
         }
         assertEquals(3, addPaths.size());
         assertTrue("Added set should contain " + createdPath, addPaths.contains(createdPath));
@@ -103,6 +93,7 @@ public abstract class AbstractListenerTest {
     }
 
     private void generateEvents() throws Exception {
+        @SuppressWarnings("deprecation")
         final Session session = getRepository().loginAdministrative(null);
 
         try {
@@ -132,4 +123,51 @@ public abstract class AbstractListenerTest {
     }
 
     public abstract SlingRepository getRepository();
+
+    protected ObservationReporter getObservationReporter() {
+        return new SimpleObservationReporter();
+    }
+
+    private class SimpleObservationReporter implements ObservationReporter {
+
+        @Override
+        public void reportChanges(Iterable<ResourceChange> changes, boolean distribute) {
+            for (ResourceChange c : changes) {
+                events.add(c);
+            }
+        }
+
+        @Override
+        public List<ObserverConfiguration> getObserverConfigurations() {
+            ObserverConfiguration config = new ObserverConfiguration() {
+
+                @Override
+                public boolean includeExternal() {
+                    return true;
+                }
+
+                @Override
+                public PathSet getPaths() {
+                    return PathSet.fromStrings("/");
+                }
+
+                @Override
+                public PathSet getExcludedPaths() {
+                    return PathSet.fromPaths();
+                }
+
+                @Override
+                public Set<ChangeType> getChangeTypes() {
+                    return EnumSet.allOf(ChangeType.class);
+                }
+
+                @Override
+                public boolean matches(String path) {
+                    return true;
+                }
+            };
+            return Collections.singletonList(config);
+        }
+    }
+
 }

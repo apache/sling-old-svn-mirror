@@ -16,31 +16,22 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import javax.jcr.Session;
 
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.util.PathSet;
 import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.resource.internal.helper.jcr.JcrTestNodeResource;
+import org.apache.sling.spi.resource.provider.ObservationReporter;
+import org.apache.sling.spi.resource.provider.ProviderContext;
 import org.junit.After;
 import org.junit.Before;
-import org.mockito.Mockito;
-import org.osgi.framework.BundleContext;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventAdmin;
-import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * Test of JcrResourceListener.
  */
 public class JcrResourceListenerTest extends AbstractListenerTest {
 
-    private SynchronousJcrResourceListener listener;
+    private JcrResourceListener listener;
 
     private Session adminSession;
 
@@ -52,44 +43,28 @@ public class JcrResourceListenerTest extends AbstractListenerTest {
         }
         RepositoryUtil.stopRepository();
         if ( listener != null ) {
-            listener.dispose();
+            listener.close();
             listener = null;
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Before
     public void setUp() throws Exception {
         RepositoryUtil.startRepository();
         this.adminSession = RepositoryUtil.getRepository().loginAdministrative(null);
         RepositoryUtil.registerSlingNodeTypes(adminSession);
-        final ResourceResolver resolver = Mockito.mock(ResourceResolver.class);
-        Mockito.when(resolver.adaptTo(Mockito.any(Class.class))).thenReturn(this.adminSession);
-        Mockito.when(resolver.getResource(Mockito.anyString())).thenReturn(new JcrTestNodeResource(resolver, this.adminSession.getNode("/"), null));
-
-        final ResourceResolverFactory factory = Mockito.mock(ResourceResolverFactory.class);
-        Mockito.when(factory.getAdministrativeResourceResolver(Mockito.anyMap())).thenReturn(resolver);
-
-        final EventAdmin mockEA = new EventAdmin() {
-
-            public void postEvent(final Event event) {
-                addEvent(event);
+        this.listener = new JcrResourceListener(new ProviderContext() {
+            @Override
+            public ObservationReporter getObservationReporter() {
+                return JcrResourceListenerTest.this.getObservationReporter();
             }
 
-            public void sendEvent(final Event event) {
-                addEvent(event);
+            @Override
+            public PathSet getExcludedPaths() {
+                return PathSet.fromPaths();
             }
-        };
-
-        final ServiceTracker tracker = mock(ServiceTracker.class);
-        when(tracker.getService()).thenReturn(mockEA);
-
-        final BundleContext bundleContext = mock(BundleContext.class);
-        when(bundleContext.createFilter(any(String.class))).thenReturn(null);
-        when(bundleContext.getServiceReference(any(String.class))).thenReturn(null);
-        when(bundleContext.getService(null)).thenReturn(mockEA);
-
-        this.listener = new SynchronousJcrResourceListener(RepositoryUtil.getRepository(),
-                        bundleContext, resolver, tracker);
+        }, "/", new PathMapperImpl(), RepositoryUtil.getRepository());
     }
 
     @Override
