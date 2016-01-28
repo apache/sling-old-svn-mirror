@@ -168,3 +168,5 @@
   org.apache.sling.jcr.davex.impl.servlets.SlingDavExServlet
       alias="/server"
 
+  org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge
+      enabled=B"true"
