@@ -20,7 +20,9 @@ package org.apache.sling.testing.mock.osgi;
 
 import java.util.Collections;
 import java.util.Dictionary;
+import java.util.Map;
 
+import org.apache.sling.commons.osgi.ServiceUtil;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -32,12 +34,19 @@ class MockServiceReference<T> implements ServiceReference<T> {
 
     private final Bundle bundle;
     private final MockServiceRegistration<T> serviceRegistration;
+    private volatile Comparable<Object> comparable;
 
     public MockServiceReference(final Bundle bundle, final MockServiceRegistration<T> serviceRegistration) {
         this.bundle = bundle;
         this.serviceRegistration = serviceRegistration;
+        this.comparable = buildComparable();
     }
-
+    
+    private Comparable<Object> buildComparable() {
+        Map<String,Object> props = MapUtil.toMap(serviceRegistration.getProperties());
+        return ServiceUtil.getComparableForServiceRanking(props);
+    }
+    
     @Override
     public Bundle getBundle() {
         return this.bundle;
@@ -50,6 +59,7 @@ class MockServiceReference<T> implements ServiceReference<T> {
      */
     public void setProperty(final String key, final Object value) {
         this.serviceRegistration.getProperties().put(key, value);
+        this.comparable = buildComparable();
     }
 
     @Override
@@ -65,7 +75,7 @@ class MockServiceReference<T> implements ServiceReference<T> {
 
     @Override
     public int hashCode() {
-        return ((Long) getServiceId()).hashCode();
+        return comparable.hashCode();
     }
 
     @Override
@@ -73,7 +83,7 @@ class MockServiceReference<T> implements ServiceReference<T> {
         if (!(obj instanceof MockServiceReference)) {
             return false;
         }
-        return ((Long) getServiceId()).equals(((MockServiceReference) obj).getServiceId());
+        return comparable.equals(((MockServiceReference)obj).comparable);
     }
 
     @Override
@@ -81,17 +91,7 @@ class MockServiceReference<T> implements ServiceReference<T> {
         if (!(obj instanceof MockServiceReference)) {
             return 0;
         }
-        // sort by ascending by service ranking, and secondary ascending by service id
-        Integer serviceRanking = getServiceRanking();
-        Integer otherServiceRanking = ((MockServiceReference)obj).getServiceRanking();
-        int serviceRankingCompare = serviceRanking.compareTo(otherServiceRanking);
-        if (serviceRankingCompare == 0) {
-            Long serviceId = getServiceId();
-            Long otherServiceId = ((MockServiceReference)obj).getServiceId();
-            return serviceId.compareTo(otherServiceId);
-        } else {
-            return serviceRankingCompare;
-        }
+        return comparable.compareTo(((MockServiceReference)obj).comparable);
     }
 
     long getServiceId() {

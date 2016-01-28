@@ -88,9 +88,10 @@ public class OsgiContextImplTest {
         Set<String> myService2 = new HashSet<String>();
         context.registerService(Set.class, myService2);
 
+        // expected: descending order because ordering descending by service id
         Set[] serviceResults = context.getServices(Set.class, null);
-        assertSame(myService1, serviceResults[0]);
-        assertSame(myService2, serviceResults[1]);
+        assertSame(myService1, serviceResults[1]);
+        assertSame(myService2, serviceResults[0]);
     }
 
     @Test
