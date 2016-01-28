@@ -18,9 +18,10 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
+import static java.util.Collections.singletonList;
+
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
@@ -132,7 +133,7 @@ public class OakResourceListener extends NodeObserver implements Closeable {
         if ( logger.isDebugEnabled() ) {
             logger.debug("added(path={}, added={}, deleted={}, changed={})", new Object[] {path, added, deleted, changed});
         }
-        ctx.getObservationReporter().reportChanges(Arrays.asList(builder.build()), false);
+        ctx.getObservationReporter().reportChanges(singletonList(builder.build()), false);
     }
 
     @Override
@@ -150,7 +151,7 @@ public class OakResourceListener extends NodeObserver implements Closeable {
         if ( logger.isDebugEnabled() ) {
             logger.debug("deleted(path={}, added={}, deleted={}, changed={})", new Object[] {path, added, deleted, changed});
         }
-        ctx.getObservationReporter().reportChanges(Arrays.asList(builder.build()), false);
+        ctx.getObservationReporter().reportChanges(singletonList(builder.build()), false);
     }
 
     @Override
@@ -168,7 +169,7 @@ public class OakResourceListener extends NodeObserver implements Closeable {
         if ( logger.isDebugEnabled() ) {
             logger.debug("changed(path={}, added={}, deleted={}, changed={})", new Object[] {path, added, deleted, changed});
         }
-        ctx.getObservationReporter().reportChanges(Arrays.asList(builder.build()), false);
+        ctx.getObservationReporter().reportChanges(singletonList(builder.build()), false);
     }
 
     private Builder toEventProperties(final String path, final Set<String> added, final Set<String> deleted, final Set<String> changed, final CommitInfo commitInfo) {
