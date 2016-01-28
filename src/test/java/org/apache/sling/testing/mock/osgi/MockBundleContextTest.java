@@ -72,15 +72,15 @@ public class MockBundleContextTest {
     @Test
     public void testServiceRegistration() throws InvalidSyntaxException {
         // prepare test services
-        String clazz1 = String.class.getName();
-        Object service1 = new Object();
-        Dictionary properties1 = getServiceProperties(null);
-        ServiceRegistration reg1 = bundleContext.registerService(clazz1, service1, properties1);
-
         String[] clazzes2 = new String[] { String.class.getName(), Integer.class.getName() };
         Object service2 = new Object();
         Dictionary properties2 = getServiceProperties(null);
         ServiceRegistration reg2 = bundleContext.registerService(clazzes2, service2, properties2);
+
+        String clazz1 = String.class.getName();
+        Object service1 = new Object();
+        Dictionary properties1 = getServiceProperties(null);
+        ServiceRegistration reg1 = bundleContext.registerService(clazz1, service1, properties1);
 
         String clazz3 = Integer.class.getName();
         Object service3 = new Object();
