@@ -16,9 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.sling.jcr.base;
 
-@Version("2.4.0")
-package org.apache.sling.jcr.api;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
-import aQute.bnd.annotation.Version;
+import org.osgi.framework.Bundle;
 
+/** Minimal AbstractSlingRepositoryManager used for testing */ 
+class MockSlingRepository2 extends AbstractSlingRepository2 {
+
+    MockSlingRepository2(MockSlingRepositoryManager manager, Bundle usingBundle, Session session) {
+        super(manager, usingBundle);
+    }
+    
+    @Override
+    protected Session createAdministrativeSession(String workspace) throws RepositoryException {
+        // Assuming we run on a test repo with no access control
+        return getRepository().login();
+    }
+}
