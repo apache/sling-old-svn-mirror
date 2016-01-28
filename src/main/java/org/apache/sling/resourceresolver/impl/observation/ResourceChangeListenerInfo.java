@@ -39,8 +39,6 @@ import org.osgi.framework.ServiceReference;
  */
 public class ResourceChangeListenerInfo {
 
-    private static final Set<ChangeType> DEFAULT_CHANGE_TYPES = EnumSet.of(ChangeType.ADDED, ChangeType.REMOVED, ChangeType.CHANGED, ChangeType.PROVIDER_ADDED, ChangeType.PROVIDER_REMOVED);
-
     private static final Set<ChangeType> DEFAULT_CHANGE_RESOURCE_TYPES = EnumSet.of(ChangeType.ADDED, ChangeType.REMOVED, ChangeType.CHANGED);
 
     private static final Set<ChangeType> DEFAULT_CHANGE_PROVIDER_TYPES = EnumSet.of(ChangeType.PROVIDER_ADDED, ChangeType.PROVIDER_REMOVED);
