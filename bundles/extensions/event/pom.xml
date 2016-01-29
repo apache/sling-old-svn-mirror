@@ -309,6 +309,12 @@
             <version>1.0.6</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+          <groupId>org.apache.sling</groupId>
+          <artifactId>org.apache.sling.testing.sling-mock</artifactId>
+          <version>1.6.0</version>
+          <scope>test</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>

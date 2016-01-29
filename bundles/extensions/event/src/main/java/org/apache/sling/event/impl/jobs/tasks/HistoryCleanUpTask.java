@@ -143,33 +143,51 @@ public class HistoryCleanUpTask implements JobExecutor {
                     continue;
                 }
 
-                // now years
+                final int removeYear = removeDate.get(Calendar.YEAR);
+                final int removeMonth = removeDate.get(Calendar.MONTH) + 1;
+                final int removeDay = removeDate.get(Calendar.DAY_OF_MONTH);
+                final int removeHour = removeDate.get(Calendar.HOUR_OF_DAY);
+                final int removeMinute = removeDate.get(Calendar.MINUTE);
+
+                // start with years
                 final Iterator<Resource> yearIter = topicResource.listChildren();
                 while ( !context.isStopped() && yearIter.hasNext() ) {
                     final Resource yearResource = yearIter.next();
                     final int year = Integer.valueOf(yearResource.getName());
-                    final boolean oldYear = year < removeDate.get(Calendar.YEAR);
+                    if ( year > removeYear ) {
+                        continue;
+                    }
+                    final boolean oldYear = year < removeYear;
 
                     // months
                     final Iterator<Resource> monthIter = yearResource.listChildren();
                     while ( !context.isStopped() && monthIter.hasNext() ) {
                         final Resource monthResource = monthIter.next();
                         final int month = Integer.valueOf(monthResource.getName());
-                        final boolean oldMonth = oldYear || month < (removeDate.get(Calendar.MONTH) + 1);
+                        if ( !oldYear && month > removeMonth) {
+                            continue;
+                        }
+                        final boolean oldMonth = oldYear || month < removeMonth;
 
                         // days
                         final Iterator<Resource> dayIter = monthResource.listChildren();
                         while ( !context.isStopped() && dayIter.hasNext() ) {
                             final Resource dayResource = dayIter.next();
                             final int day = Integer.valueOf(dayResource.getName());
-                            final boolean oldDay = oldMonth || day < removeDate.get(Calendar.DAY_OF_MONTH);
+                            if ( !oldMonth && day > removeDay) {
+                                continue;
+                            }
+                            final boolean oldDay = oldMonth || day < removeDay;
 
                             // hours
                             final Iterator<Resource> hourIter = dayResource.listChildren();
                             while ( !context.isStopped() && hourIter.hasNext() ) {
                                 final Resource hourResource = hourIter.next();
                                 final int hour = Integer.valueOf(hourResource.getName());
-                                final boolean oldHour = oldDay || hour < removeDate.get(Calendar.HOUR_OF_DAY);
+                                if ( !oldDay && hour > removeHour) {
+                                    continue;
+                                }
+                                final boolean oldHour = oldDay || hour < removeHour;
 
                                 // minutes
                                 final Iterator<Resource> minuteIter = hourResource.listChildren();
@@ -178,7 +196,8 @@ public class HistoryCleanUpTask implements JobExecutor {
 
                                     // check if we can delete the minute
                                     final int minute = Integer.valueOf(minuteResource.getName());
-                                    final boolean oldMinute = oldHour || minute <= removeDate.get(Calendar.MINUTE);
+                                    final boolean oldMinute = oldHour || minute <= removeMinute;
+
                                     if ( oldMinute ) {
                                         final Iterator<Resource> jobIter = minuteResource.listChildren();
                                         while ( !context.isStopped() && jobIter.hasNext() ) {
@@ -196,11 +215,11 @@ public class HistoryCleanUpTask implements JobExecutor {
                                                 resolver.commit();
                                             }
                                         }
-                                    }
-                                    // check if we can delete the minute
-                                    if ( !context.isStopped() && oldMinute && !minuteResource.listChildren().hasNext()) {
-                                        resolver.delete(minuteResource);
-                                        resolver.commit();
+                                        // check if we can delete the minute
+                                        if ( !context.isStopped() && !minuteResource.listChildren().hasNext()) {
+                                            resolver.delete(minuteResource);
+                                            resolver.commit();
+                                        }
                                     }
                                 }
 
