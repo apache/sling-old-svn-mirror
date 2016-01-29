@@ -172,6 +172,10 @@ public class CleanUpTask {
             // sanity check - should never be null
             if ( baseResource != null ) {
                 final Calendar now = Calendar.getInstance();
+                final int removeYear = now.get(Calendar.YEAR);
+                final int removeMonth = now.get(Calendar.MONTH) + 1;
+                final int removeDay = now.get(Calendar.DAY_OF_MONTH);
+                final int removeHour = now.get(Calendar.HOUR_OF_DAY);
 
                 final Iterator<Resource> topicIter = baseResource.listChildren();
                 while ( caps.isActive() && topicIter.hasNext() ) {
@@ -182,28 +186,41 @@ public class CleanUpTask {
                     while ( caps.isActive() && yearIter.hasNext() ) {
                         final Resource yearResource = yearIter.next();
                         final int year = Integer.valueOf(yearResource.getName());
-                        final boolean oldYear = year < now.get(Calendar.YEAR);
+                        // we should not have a year higher than "now", but we test anyway
+                        if ( year > removeYear ) {
+                            continue;
+                        }
+                        final boolean oldYear = year < removeYear;
 
                         // months
                         final Iterator<Resource> monthIter = yearResource.listChildren();
                         while ( caps.isActive() && monthIter.hasNext() ) {
                             final Resource monthResource = monthIter.next();
                             final int month = Integer.valueOf(monthResource.getName());
-                            final boolean oldMonth = oldYear || month < (now.get(Calendar.MONTH) + 1);
+                            if ( !oldYear && month > removeMonth ) {
+                                continue;
+                            }
+                            final boolean oldMonth = oldYear || month < removeMonth;
 
                             // days
                             final Iterator<Resource> dayIter = monthResource.listChildren();
                             while ( caps.isActive() && dayIter.hasNext() ) {
                                 final Resource dayResource = dayIter.next();
                                 final int day = Integer.valueOf(dayResource.getName());
-                                final boolean oldDay = oldMonth || day < now.get(Calendar.DAY_OF_MONTH);
+                                if ( !oldMonth && day > removeDay ) {
+                                    continue;
+                                }
+                                final boolean oldDay = oldMonth || day < removeDay;
 
                                 // hours
                                 final Iterator<Resource> hourIter = dayResource.listChildren();
                                 while ( caps.isActive() && hourIter.hasNext() ) {
                                     final Resource hourResource = hourIter.next();
                                     final int hour = Integer.valueOf(hourResource.getName());
-                                    final boolean oldHour = (oldDay && (oldMonth || now.get(Calendar.HOUR_OF_DAY) > 0)) || hour < (now.get(Calendar.HOUR_OF_DAY) -1);
+                                    if ( !oldDay && hour > removeHour ) {
+                                        continue;
+                                    }
+                                    final boolean oldHour = (oldDay && (oldMonth || removeHour > 0)) || hour < (removeHour -1);
 
                                     // we only remove minutes if the hour is old
                                     if ( oldHour ) {
