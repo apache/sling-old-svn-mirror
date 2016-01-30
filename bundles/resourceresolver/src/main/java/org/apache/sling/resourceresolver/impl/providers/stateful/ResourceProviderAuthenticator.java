@@ -58,8 +58,6 @@ public class ResourceProviderAuthenticator {
 
     private final ResourceAccessSecurityTracker securityTracker;
 
-    boolean allProvidersAuthenticated;
-
     public ResourceProviderAuthenticator(ResourceResolver resolver, Map<String, Object> authInfo,
             ResourceAccessSecurityTracker securityTracker) throws LoginException {
         this.stateful = new IdentityHashMap<ResourceProviderHandler, StatefulResourceProvider>();
@@ -144,8 +142,17 @@ public class ResourceProviderAuthenticator {
         return result;
     }
 
-    private @Nonnull StatefulResourceProvider createStateful(ResourceProviderHandler handler,
-            CombinedResourceProvider combinedProvider) throws LoginException {
+    /**
+     * Create a stateful resource provider
+     * @param handler Resource provider handler
+     * @param combinedProvider Combined resource provider
+     * @return The stateful resource provider
+     * @throws LoginException
+     */
+    private @Nonnull StatefulResourceProvider createStateful(
+            final ResourceProviderHandler handler,
+            final CombinedResourceProvider combinedProvider)
+    throws LoginException {
         final ResourceProvider<?> rp = handler.getResourceProvider();
         StatefulResourceProvider authenticated;
         authenticated = new AuthenticatedResourceProvider(rp, handler.getInfo(), resolver, authInfo, combinedProvider);
