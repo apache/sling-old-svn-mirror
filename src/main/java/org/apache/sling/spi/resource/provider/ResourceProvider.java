@@ -82,9 +82,6 @@ import aQute.bnd.annotation.ConsumerType;
  * <p>
  * Each method gets the {@link ResourceContext} which gives access to
  * further functionality.
- * <p>
- * TODO - query
- * TODO - observation
  */
 @ConsumerType
 public abstract class ResourceProvider<T> {
