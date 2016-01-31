@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.resourceresolver.impl.stateful;
+package org.apache.sling.resourceresolver.impl.helper;
 
 import static org.hamcrest.Matchers.arrayContainingInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
@@ -51,7 +51,6 @@ import org.apache.sling.resourceresolver.impl.SimpleValueMapImpl;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
-import org.apache.sling.resourceresolver.impl.providers.stateful.CombinedResourceProvider;
 import org.apache.sling.resourceresolver.impl.providers.stateful.ResourceProviderAuthenticator;
 import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
 import org.apache.sling.spi.resource.provider.ResolverContext;
@@ -65,32 +64,32 @@ import org.mockito.Mockito;
 import org.osgi.framework.BundleContext;
 
 @SuppressWarnings("unchecked")
-public class CombinedResourceProviderTest {
+public class ResourceResolverContextTest {
 
     // query language names
     private static final String QL_MOCK = "MockQueryLanguage";
     private static final String QL_ANOTHER_MOCK = "AnotherMockQueryLanguage";
     private static final String QL_NOOP = "NoopQueryLanguage";
-    
+
     // query definitions
     private static final String QUERY_MOCK_FIND_ALL = "FIND ALL";
-    
+
     private ResourceProviderAuthenticator authenticator;
-    private CombinedResourceProvider crp;
+    private ResourceResolverContext crp;
     private List<ResourceProviderHandler> handlers;
     private ResourceProvider<Object> subProvider;
     private Map<String, Object> authInfo;
     private ResourceProvider<Object> rootProvider;
     private Resource subProviderResource;
     private Resource somethingResource;
-    
+
     @Before
     public void prepare() throws Exception {
 
         BundleContext bc = MockOsgi.newBundleContext();
-        
+
         Fixture fixture = new Fixture(bc);
-        
+
         // sub-provider
         subProvider = Mockito.mock(ResourceProvider.class);
         ResourceProviderInfo info = fixture.registerResourceProvider(subProvider, "/some/path", AuthType.required);
@@ -103,19 +102,19 @@ public class CombinedResourceProviderTest {
                     valueMap.put("key", "value");
                     return Collections.<ValueMap> singletonList(valueMap).iterator();
                 }
-                
+
                 throw new UnsupportedOperationException();
             }
-            
+
             @Override
             public Iterator<Resource> findResources(ResolverContext<Object> ctx, String query, String language) {
-                
+
                 if ( query.equals(QUERY_MOCK_FIND_ALL) && language.equals(QL_MOCK)) {
                     return Collections.<Resource> singletonList(newMockResource("/some/path/object")).iterator();
                 }
-                
+
                 throw new UnsupportedOperationException();
-                
+
             }
         });
         handler.activate();
@@ -130,10 +129,10 @@ public class CombinedResourceProviderTest {
         Resource root = configureResourceAt(rootProvider, "/");
         somethingResource = configureResourceAt(rootProvider, "/something");
         subProviderResource = configureResourceAt(subProvider, "/some/path/object");
-        
+
         // configure query at '/'
         when(rootProvider.listChildren((ResolverContext<Object>) Mockito.anyObject(), Mockito.eq(root))).thenReturn(Collections.singleton(somethingResource).iterator());
-        
+
         ResourceResolver rr = mock(ResourceResolver.class);
         ResourceAccessSecurityTracker securityTracker = Mockito.mock(ResourceAccessSecurityTracker.class);
         authInfo = Collections.emptyMap();
@@ -142,31 +141,31 @@ public class CombinedResourceProviderTest {
         ResourceProviderStorage storage = new ResourceProviderStorage(handlers);
         authenticator = new ResourceProviderAuthenticator(rr, authInfo, securityTracker);
 
-        crp = new CombinedResourceProvider(storage, rr, authenticator);
+        crp = new ResourceResolverContext(false, storage, rr, authenticator);
     }
-    
+
     /**
      * Configures the provider to return a mock resource for the specified path
-     * @return 
+     * @return
      */
     private <T> Resource configureResourceAt(ResourceProvider<T> provider, String path) {
-        
+
         Resource mockResource = newMockResource(path);
-        
+
         when(provider.getResource((ResolverContext<T>) Mockito.any(), Mockito.eq(path), (ResourceContext) Mockito.any(), (Resource) Mockito.any()))
             .thenReturn(mockResource);
-        
+
         return mockResource;
     }
 
     private Resource newMockResource(String path) {
-        
+
         Resource mockResource = mock(Resource.class);
         when(mockResource.getPath()).thenReturn(path);
         when(mockResource.getName()).thenReturn(ResourceUtil.getName(path));
         when(mockResource.getResourceMetadata()).thenReturn(mock(ResourceMetadata.class));
         when(mockResource.getChildren()).thenReturn(Collections.<Resource> emptyList());
-        
+
         return mockResource;
     }
 
@@ -181,11 +180,11 @@ public class CombinedResourceProviderTest {
 
         verify(subProvider).authenticate(authInfo);
 
-        crp.logout();
+        crp.close();
 
         verify(subProvider).logout(mockContext());
     }
-    
+
     private ResolverContext<Object> mockContext() {
         return (ResolverContext<Object>) Mockito.any();
     }
@@ -201,7 +200,7 @@ public class CombinedResourceProviderTest {
 
         assertTrue("Not a syntethic resource : " + resource, ResourceUtil.isSyntheticResource(resource));
     }
-    
+
     /**
      * Verifies that a getResource call for a missing resource returns null
      */
@@ -218,8 +217,8 @@ public class CombinedResourceProviderTest {
         assertThat(crp.getResource("/something", null, null, false), not(nullValue()));
         assertThat(crp.getResource("/some/path/object", null, null, false), not(nullValue()));
     }
-    
-    
+
+
     /**
      * Verifies that the existing parent of a resource is found
      */
@@ -230,8 +229,8 @@ public class CombinedResourceProviderTest {
         assertThat("parent.path", parent.getPath(), equalTo("/"));
     }
 
-    
-    
+
+
     /**
      * Verifies that a synthetic parent is returned for a resource without an actual parent
      */
@@ -249,24 +248,24 @@ public class CombinedResourceProviderTest {
     public void listChildren_root() {
         Resource root = crp.getResource("/", null, null, false);
         Iterator<Resource> children = crp.listChildren(root);
-        
+
         Map<String, Resource> all = new HashMap<String, Resource>();
         while ( children.hasNext() ) {
             Resource child = children.next();
             all.put(child.getPath(), child);
         }
-        
+
         assertThat(all.entrySet(), Matchers.hasSize(2));
         assertThat("Resource at /something", all.get("/something"), not(nullValue()));
         assertThat("Resource at /some", all.get("/some"), not(nullValue()));
     }
-    
+
     /**
      * Verifies listing the children at a level below the root
      */
     @Test
     public void listChildren_lowerLevel() {
-        
+
         Resource root = crp.getResource("/some", null, null, false);
         Iterator<Resource> children = crp.listChildren(root);
         Map<String, Resource> all = new HashMap<String, Resource>();
@@ -275,15 +274,15 @@ public class CombinedResourceProviderTest {
             Resource child = children.next();
             all.put(child.getPath(), child);
         }
-        
+
         assertThat(all.entrySet(), Matchers.hasSize(1));
         assertThat("Resource at /some/path", all.get("/some/path"), not(nullValue()));
-        
+
     }
-    
+
     /**
      * Verifies copying resources between the same ResourceProvider
-     * 
+     *
      * @throws PersistenceException persistence exception
      */
     @Test
@@ -293,38 +292,38 @@ public class CombinedResourceProviderTest {
             .thenReturn(true);
         configureResourceAt(subProvider, "/some/path/new/object");
         configureResourceAt(subProvider, "/some/path/new");
-        
+
         Resource resource = crp.copy("/some/path/object", "/some/path/new");
-        
-        
+
+
         assertThat(resource, not(nullValue()));
     }
-    
+
     /**
      * Verifies copying resources between different ResourceProviders
-     * 
+     *
      * @throws PersistenceException persistence exception
-     */     
+     */
     @Test
     public void copy_differentProvider() throws PersistenceException {
 
         Resource newRes = newMockResource("/object");
         when(rootProvider.create(mockContext(), Mockito.eq("/object"), Mockito.anyMap()))
             .thenReturn(newRes);
-    
+
         Resource resource = crp.copy("/some/path/object", "/");
-    
+
         assertThat(resource, not(nullValue()));
     }
 
     /**
      * Verifies moving resources between the same ResourceProvider
-     * 
+     *
      * @throws PersistenceException persistence exception
      */
     @Test
     public void move_sameProvider() throws PersistenceException {
-        
+
         when(subProvider.move(mockContext(), Mockito.eq("/some/path/object"), Mockito.eq("/some/path/new")))
                 .thenReturn(true);
         configureResourceAt(subProvider, "/some/path/new/object");
@@ -332,33 +331,33 @@ public class CombinedResourceProviderTest {
 
         Resource resource = crp.move("/some/path/object", "/some/path/new");
 
-        assertThat(resource, not(nullValue()));        
+        assertThat(resource, not(nullValue()));
     }
- 
+
     /**
      * Verifies moving resources between different ResourceProviders
-     * 
+     *
      * @throws PersistenceException persistence exception
-     */    
+     */
     @Test
     public void move_differentProvider() throws PersistenceException {
-        
+
         Resource newRes = newMockResource("/object");
         when(rootProvider.create(mockContext(), Mockito.eq("/object"), Mockito.anyMap())).thenReturn(newRes);
 
         Resource resource = crp.move("/some/path/object", "/");
 
         assertThat(resource, not(nullValue()));
-        
+
         verify(subProvider).delete(mockContext(), Mockito.eq(subProviderResource));
     }
-    
+
     /**
      * Verifies listing the query languages
      */
     @Test
     public void queryLanguages() throws PersistenceException {
-        
+
         assertThat(crp.getSupportedLanguages(), arrayContainingInAnyOrder(QL_NOOP, QL_MOCK, QL_ANOTHER_MOCK));
     }
 
@@ -367,16 +366,16 @@ public class CombinedResourceProviderTest {
      */
     @Test
     public void queryResources() throws PersistenceException {
-        
+
         Iterator<Map<String, Object>> queryResources = crp.queryResources(QUERY_MOCK_FIND_ALL, QL_MOCK);
-        
+
         int count = 0;
-        
+
         while ( queryResources.hasNext() ) {
             assertThat("ValueMap returned from query", queryResources.next(), hasEntry("key", (Object) "value"));
             count++;
         }
-        
+
         assertThat("query result count", count, Matchers.equalTo(1));
     }
 
@@ -385,41 +384,41 @@ public class CombinedResourceProviderTest {
      */
     @Test
     public void findResource() throws PersistenceException {
-        
+
         Iterator<Resource> resources = crp.findResources(QUERY_MOCK_FIND_ALL, QL_MOCK);
-        
+
         int count = 0;
-        
+
         while ( resources.hasNext() ) {
             assertThat("resources[0].path", resources.next().getPath(), equalTo("/some/path/object"));
             count++;
         }
-        
+
         assertThat("query result count", count, Matchers.equalTo(1));
     }
-    
+
     /**
      * Simple test-only QueryLanguageProvider
      *
      */
     private static class SimpleQueryLanguageProvider implements QueryLanguageProvider<Object> {
-        
+
         private final String[] queryLanguages;
 
         public SimpleQueryLanguageProvider(String... queryLanguages) {
             this.queryLanguages = queryLanguages;
         }
-        
+
         @Override
         public String[] getSupportedLanguages(ResolverContext<Object> ctx) {
             return queryLanguages;
         }
-        
+
         @Override
         public Iterator<ValueMap> queryResources(ResolverContext<Object> ctx, String query, String language) {
             throw new UnsupportedOperationException();
-        }        
-        
+        }
+
         @Override
         public Iterator<Resource> findResources(ResolverContext<Object> ctx, String query, String language) {
             throw new UnsupportedOperationException();
