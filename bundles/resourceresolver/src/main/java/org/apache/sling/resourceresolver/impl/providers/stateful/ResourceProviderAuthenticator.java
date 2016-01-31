@@ -157,7 +157,7 @@ public class ResourceProviderAuthenticator {
         StatefulResourceProvider authenticated;
         authenticated = new AuthenticatedResourceProvider(rp, handler.getInfo(), resolver, authInfo, combinedProvider);
         if (handler.getInfo().getUseResourceAccessSecurity()) {
-            authenticated = new SecureResourceProvider(authenticated, securityTracker);
+            authenticated = new SecureResourceProviderDecorator(authenticated, securityTracker);
         }
         return authenticated;
     }

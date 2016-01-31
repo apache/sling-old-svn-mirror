@@ -303,7 +303,7 @@ public class CombinedResourceProvider {
         try {
             final StatefulResourceProvider provider = getBestMatchingModifiableProvider(path);
             if ( provider != null ) {
-                final Resource creationResultResource = provider.create(path, properties);
+                final Resource creationResultResource = provider.create(resolver, path, properties);
                 if (creationResultResource != null) {
                     return creationResultResource;
                 }

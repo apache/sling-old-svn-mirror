@@ -215,7 +215,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     }
 
     @Override
-    public Resource create(String path, Map<String, Object> properties) throws PersistenceException {
+    public Resource create(final ResourceResolver resolver, String path, Map<String, Object> properties) throws PersistenceException {
         try {
             return rp.create(getContext(), path, properties);
         } catch (LoginException e) {
@@ -334,11 +334,6 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
         } catch (LoginException e) {
             throw new PersistenceException("Unable to create context.", e);
         }
-    }
-
-    @Override
-    public ResourceResolver getResourceResolver() {
-        return resolver;
     }
 
     @Override

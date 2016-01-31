@@ -35,17 +35,17 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.security.ResourceAccessSecurity;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
-import org.apache.sling.resourceresolver.impl.providers.stateful.SecureResourceProvider;
+import org.apache.sling.resourceresolver.impl.providers.stateful.SecureResourceProviderDecorator;
 import org.apache.sling.resourceresolver.impl.providers.stateful.StatefulResourceProvider;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-public class SecureResourceProviderTest {
-    
+public class SecureResourceProviderDecoratorTest {
+
     private ResourceAccessSecurity security;
     private ResourceResolver rr;
-    private SecureResourceProvider src;
+    private SecureResourceProviderDecorator src;
     private StatefulResourceProvider rp;
     private Resource first;
     private Resource second;
@@ -54,82 +54,80 @@ public class SecureResourceProviderTest {
     public void prepare() throws PersistenceException {
 
         rr = mock(ResourceResolver.class);
-        
+
         security = mock(ResourceAccessSecurity.class);
         first = mock(Resource.class);
         second = mock(Resource.class);
-        
+
         when(security.getReadableResource(first)).thenReturn(first);
         when(security.getReadableResource(second)).thenReturn(null);
-        
+
         rp = mock(StatefulResourceProvider.class);
-        when(rp.create("/some/path", Collections.<String, Object> emptyMap())).thenReturn(mock(Resource.class));
+        when(rp.create(rr, "/some/path", Collections.<String, Object> emptyMap())).thenReturn(mock(Resource.class));
         when(rp.findResources("FIND ALL", "MockQueryLanguage")).thenReturn(Arrays.asList(first, second).iterator());
-        
-        when(rp.getResourceResolver()).thenReturn(rr);
-        
+
         ResourceAccessSecurityTracker securityTracker = new ResourceAccessSecurityTracker() {
             @Override
             public ResourceAccessSecurity getApplicationResourceAccessSecurity() {
                 return security;
             }
         };
-        
-        src = new SecureResourceProvider(rp, securityTracker);
-                
+
+        src = new SecureResourceProviderDecorator(rp, securityTracker);
+
     }
 
     @Test
     public void create_success() throws PersistenceException {
-        
+
         when(security.canCreate("/some/path", rr)).thenReturn(true);
-        
-        assertNotNull("expected resource to be created", src.create("/some/path", Collections.<String, Object> emptyMap()));
+
+        assertNotNull("expected resource to be created", src.create(rr, "/some/path", Collections.<String, Object> emptyMap()));
     }
-    
+
     @Test
     public void create_failure() throws PersistenceException {
-        
+
         when(security.canCreate("/some/path", rr)).thenReturn(false);
-        
-        assertNull("expected resource to not be created", src.create("/some/path", Collections.<String, Object> emptyMap()));
+
+        assertNull("expected resource to not be created", src.create(rr, "/some/path", Collections.<String, Object> emptyMap()));
     }
-    
+
     @Test
     public void delete_success() throws PersistenceException {
-        
+
         Resource toDelete = mock(Resource.class);
-        
+
         when(security.canDelete(toDelete)).thenReturn(true);
-        
+
         src.delete(toDelete);
-        
+
         verify(rp).delete(toDelete);
     }
-    
+
     @Test
     public void delete_failure() throws PersistenceException {
-        
+
         Resource toDelete = mock(Resource.class);
-        
+
         when(security.canDelete(toDelete)).thenReturn(false);
-        
+
         src.delete(toDelete);
-        
+
         Mockito.verifyZeroInteractions(rp);
     }
-    
+
     @Test
     public void find() {
-        
+
         Iterator<Resource> resources = src.findResources("FIND ALL", "MockQueryLanguage");
-        
+
         assertThat("resources should contain at least one item", resources.hasNext(), equalTo(true));
-        
+
         Resource resource = resources.next();
-        
+
         assertThat("unexpected resource found", resource, equalTo(first));
-        
+
         assertThat("resources should exactly at least one item", resources.hasNext(), equalTo(false));
     }
 }
