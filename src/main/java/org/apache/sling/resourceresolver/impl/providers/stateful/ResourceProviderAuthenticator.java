@@ -30,6 +30,7 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.runtime.dto.AuthType;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
+import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 
@@ -73,7 +74,7 @@ public class ResourceProviderAuthenticator {
      * @throws LoginException
      */
     public void authenticateAll(final List<ResourceProviderHandler> handlers,
-                                final CombinedResourceProvider combinedProvider)
+                                final ResourceResolverContext combinedProvider)
     throws LoginException {
         final List<StatefulResourceProvider> successfulHandlers = new ArrayList<StatefulResourceProvider>();
         for (final ResourceProviderHandler h : handlers) {
@@ -90,7 +91,7 @@ public class ResourceProviderAuthenticator {
     }
 
     private @Nonnull StatefulResourceProvider authenticate(final ResourceProviderHandler handler,
-            CombinedResourceProvider combinedProvider) throws LoginException {
+            ResourceResolverContext combinedProvider) throws LoginException {
         StatefulResourceProvider rp = stateful.get(handler);
         if (rp == null) {
             rp = createStateful(handler, combinedProvider);
@@ -112,7 +113,7 @@ public class ResourceProviderAuthenticator {
         return stateful.values();
     }
 
-    public @Nonnull StatefulResourceProvider getStateful(ResourceProviderHandler handler, CombinedResourceProvider combinedProvider)
+    public @Nonnull StatefulResourceProvider getStateful(ResourceProviderHandler handler, ResourceResolverContext combinedProvider)
     throws LoginException {
         return authenticate(handler, combinedProvider);
     }
@@ -130,7 +131,7 @@ public class ResourceProviderAuthenticator {
     }
 
     public Collection<StatefulResourceProvider> getAllBestEffort(List<ResourceProviderHandler> handlers,
-            CombinedResourceProvider combinedProvider) {
+            ResourceResolverContext combinedProvider) {
         List<StatefulResourceProvider> result = new ArrayList<StatefulResourceProvider>(handlers.size());
         for (ResourceProviderHandler h : handlers) {
             try {
@@ -151,7 +152,7 @@ public class ResourceProviderAuthenticator {
      */
     private @Nonnull StatefulResourceProvider createStateful(
             final ResourceProviderHandler handler,
-            final CombinedResourceProvider combinedProvider)
+            final ResourceResolverContext combinedProvider)
     throws LoginException {
         final ResourceProvider<?> rp = handler.getResourceProvider();
         StatefulResourceProvider authenticated;

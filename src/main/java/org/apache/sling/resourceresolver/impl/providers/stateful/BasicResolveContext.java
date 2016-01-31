@@ -21,6 +21,7 @@ package org.apache.sling.resourceresolver.impl.providers.stateful;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.resourceresolver.impl.providers.tree.Node;
@@ -35,7 +36,7 @@ public class BasicResolveContext<T> implements ResolverContext<T> {
 
     private final T providerState;
 
-    private final CombinedResourceProvider combinedProvider;
+    private final ResourceResolverContext combinedProvider;
 
     private volatile boolean parentLookupDone = false;
 
@@ -46,7 +47,7 @@ public class BasicResolveContext<T> implements ResolverContext<T> {
     public BasicResolveContext(ResourceResolver resourceResolver,
             T providerState,
             String parentPath,
-            CombinedResourceProvider combinedProvider) {
+            ResourceResolverContext combinedProvider) {
         this.resourceResolver = resourceResolver;
         this.parentPath = parentPath;
         this.providerState = providerState;
