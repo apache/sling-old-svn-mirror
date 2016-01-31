@@ -33,11 +33,6 @@ public class EmptyResourceProvider implements StatefulResourceProvider {
     public static final StatefulResourceProvider SINGLETON = new EmptyResourceProvider();
 
     @Override
-    public ResourceResolver getResourceResolver() {
-        return null;
-    }
-
-    @Override
     public void logout() {
     }
 
@@ -76,7 +71,7 @@ public class EmptyResourceProvider implements StatefulResourceProvider {
     }
 
     @Override
-    public Resource create(String path, Map<String, Object> properties)
+    public Resource create(ResourceResolver resolver, String path, Map<String, Object> properties)
             throws PersistenceException {
         return null;
     }

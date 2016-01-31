@@ -42,11 +42,6 @@ import org.apache.sling.spi.resource.provider.ResourceProvider;
 public interface StatefulResourceProvider {
 
     /**
-     * Returns the resource resolver associated to this {@link StatefulResourceProvider}.
-     */
-    ResourceResolver getResourceResolver();
-
-    /**
      * @see ResourceProvider#logout(Object)
      */
     void logout();
@@ -93,7 +88,7 @@ public interface StatefulResourceProvider {
     /**
      * @see ResourceProvider#create(org.apache.sling.spi.resource.provider.ResolveContext, String, Map)
      */
-    Resource create(final String path, final Map<String, Object> properties) throws PersistenceException;
+    Resource create(ResourceResolver resolver, String path, Map<String, Object> properties) throws PersistenceException;
 
     /**
      * @see ResourceProvider#delete(org.apache.sling.spi.resource.provider.ResolveContext, Resource)
