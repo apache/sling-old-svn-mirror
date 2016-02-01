@@ -64,8 +64,8 @@ import org.apache.sling.jcr.resource.internal.JcrModifiableValueMap;
 import org.apache.sling.jcr.resource.internal.JcrResourceListener;
 import org.apache.sling.jcr.resource.internal.NodeUtil;
 import org.apache.sling.jcr.resource.internal.OakResourceListener;
-import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
 import org.apache.sling.spi.resource.provider.ProviderContext;
+import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
 import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
@@ -257,8 +257,8 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     }
 
     @Override
-    public void logout(final @Nonnull ResolverContext<JcrProviderState> ctx) {
-        ctx.getProviderState().logout();
+    public void logout(final @Nonnull JcrProviderState state) {
+        state.logout();
     }
 
     @Override
