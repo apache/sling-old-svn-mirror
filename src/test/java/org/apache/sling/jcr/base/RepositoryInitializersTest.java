@@ -18,11 +18,9 @@
  */
 package org.apache.sling.jcr.base;
 
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Arrays;
 import java.util.Hashtable;
 
 import javax.jcr.Repository;
@@ -40,7 +38,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.osgi.framework.Constants;
-import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 
 /** Test the SlingRepositoryInitializer mechanism */
@@ -117,7 +114,8 @@ public class RepositoryInitializersTest {
         assertStart(true);
         
         // TODO this should really be 1,2,3 but the Sling OSGi mocks sort 
-		// in the wrong order w.r.t service ranking, see SLING-5462
+        // in the wrong order w.r.t service ranking, see SLING-5462,
+        // will be fixed in osgi-mock 2.0.2
         assertTestInitializerProperty("3,2,1,");
         assertAdditionalRepositoryServices(1);
     }
