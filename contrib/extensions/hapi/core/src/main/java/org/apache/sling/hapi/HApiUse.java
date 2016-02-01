@@ -19,17 +19,17 @@
 
 package org.apache.sling.hapi;
 
-import org.apache.sling.scripting.sightly.pojo.Use;
+import java.util.Map;
+
+import javax.script.Bindings;
+
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
+import org.apache.sling.scripting.sightly.pojo.Use;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.script.Bindings;
-import java.util.Map;
 
 /**
  * Sightly use class helper to provide the hypermedia API microdata attributes for the type configured throught the 'type' binding.
@@ -44,7 +44,6 @@ public class HApiUse implements Use {
     private MicrodataAttributeHelper helper;
     private SlingHttpServletRequest request;
     private SlingScriptHelper sling;
-    private Resource resource;
     private ResourceResolver resourceResolver;
     private String typeId;
     private Map<String, String> itemTypeAttr;
@@ -55,10 +54,10 @@ public class HApiUse implements Use {
      * {@inheritDoc}
      * @param bindings
      */
+    @Override
     public void init(Bindings bindings) {
         request = (SlingHttpServletRequest) bindings.get(SlingBindings.REQUEST);
         sling = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
-        resource = (Resource)bindings.get(SlingBindings.RESOURCE);
         resourceResolver = request.getResourceResolver();
         typeId = (String) bindings.get("type");
         LOG.debug("init type: {}", typeId);

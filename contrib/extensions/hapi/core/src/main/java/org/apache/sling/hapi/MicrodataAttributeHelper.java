@@ -18,8 +18,6 @@
  ******************************************************************************/
 package org.apache.sling.hapi;
 
-import org.apache.sling.api.resource.ResourceResolver;
-
 import java.util.Map;
 
 public interface MicrodataAttributeHelper {
