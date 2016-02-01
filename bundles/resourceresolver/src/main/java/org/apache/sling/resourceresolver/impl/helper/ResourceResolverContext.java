@@ -51,7 +51,6 @@ import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.resourceresolver.impl.providers.stateful.AbstractIterator;
-import org.apache.sling.resourceresolver.impl.providers.stateful.EmptyResourceProvider;
 import org.apache.sling.resourceresolver.impl.providers.stateful.ResourceProviderAuthenticator;
 import org.apache.sling.resourceresolver.impl.providers.stateful.StatefulResourceProvider;
 import org.apache.sling.resourceresolver.impl.providers.tree.Node;
@@ -145,9 +144,11 @@ public class ResourceResolverContext {
         final String path = child.getPath();
         try {
             final StatefulResourceProvider provider = getBestMatchingProvider(path);
-            final Resource parentCandidate = provider.getParent(child);
-            if (parentCandidate != null) {
-                return parentCandidate;
+            if ( provider != null ) {
+                final Resource parentCandidate = provider.getParent(child);
+                if (parentCandidate != null) {
+                    return parentCandidate;
+                }
             }
         } catch ( final LoginException le ) {
             // ignore
@@ -181,9 +182,11 @@ public class ResourceResolverContext {
 
         try {
             final StatefulResourceProvider provider = this.getBestMatchingProvider(path);
-            final Resource resourceCandidate = provider.getResource(path, parent, parameters, isResolve);
-            if (resourceCandidate != null) {
-                return resourceCandidate;
+            if ( provider != null ) {
+                final Resource resourceCandidate = provider.getResource(path, parent, parameters, isResolve);
+                if (resourceCandidate != null) {
+                    return resourceCandidate;
+                }
             }
         } catch ( LoginException le ) {
             // ignore
@@ -227,7 +230,9 @@ public class ResourceResolverContext {
         Iterator<Resource> realChildren = null;
         try {
             final StatefulResourceProvider provider = this.getBestMatchingProvider(parentPath);
-            realChildren = provider.listChildren(parent);
+            if ( provider != null ) {
+                realChildren = provider.listChildren(parent);
+            }
         } catch ( final LoginException le ) {
             // ignore, realChildren will be null
         }
@@ -599,9 +604,9 @@ public class ResourceResolverContext {
      * @return
      * @throws LoginException
      */
-    private @Nonnull StatefulResourceProvider getBestMatchingProvider(final String path) throws LoginException {
+    private @CheckForNull StatefulResourceProvider getBestMatchingProvider(final String path) throws LoginException {
         final Node<ResourceProviderHandler> node = storage.getTree().getBestMatchingNode(path);
-        return node == null ? EmptyResourceProvider.SINGLETON : authenticator.getStateful(node.getValue(), this);
+        return node == null ? null : authenticator.getStateful(node.getValue(), this);
     }
 
     /**
