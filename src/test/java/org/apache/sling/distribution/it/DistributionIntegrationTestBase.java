@@ -107,12 +107,12 @@ public abstract class DistributionIntegrationTestBase {
     public static void checkNoPackagesLeft() throws IOException, JSONException {
 
 
-        assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/vlt/shared");
-        assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/vlt/data");
+        assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/default/shared");
+        assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/default/data");
         assertEmptyFolder(author, authorClient, "/etc/packages/sling/distribution");
 
-        assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/vlt/shared");
-        assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/vlt/data");
+        assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/default/shared");
+        assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/default/data");
         assertEmptyFolder(publish, publishClient, "/etc/packages/sling/distribution");
     }
 
