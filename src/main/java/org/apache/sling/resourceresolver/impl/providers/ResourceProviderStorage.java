@@ -24,6 +24,11 @@ import java.util.List;
 import org.apache.sling.api.resource.runtime.dto.AuthType;
 import org.apache.sling.resourceresolver.impl.providers.tree.PathTree;
 
+/**
+ * The resource provider storage contains all available handlers
+ * and keeps a list of handlers for specific categories to avoid
+ * iterating over all handlers for the different use cases.
+ */
 public class ResourceProviderStorage {
 
     private final List<ResourceProviderHandler> allHandlers;
