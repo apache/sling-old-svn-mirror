@@ -314,11 +314,11 @@ public abstract class ResourceProvider<T> {
 
     /**
      * If the provider requires authentication, this method is called with the state of the user
-     * once the resource resolver is closed.
+     * returned by {@link #authenticate(Map)} once the resource resolver is closed.
      *
-     * @param ctx The {@link ResolverContext}.
+     * @param state The provider state returned by {@link #authenticate(Map)}.
      */
-    public void logout(final @Nonnull ResolverContext<T> ctx) {
+    public void logout(final @CheckForNull T state) {
         // do nothing
     }
 
