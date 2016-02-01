@@ -59,8 +59,8 @@ public class LegacyResourceProviderFactoryAdapter extends ResourceProvider<Legac
     }
 
     @Override
-    public void logout(final @Nonnull ResolverContext<LegacyResourceProviderAdapter> ctx) {
-        ctx.getProviderState().logout(null);
+    public void logout(final @Nonnull LegacyResourceProviderAdapter state) {
+        state.logout(null);
     }
 
     @Override
