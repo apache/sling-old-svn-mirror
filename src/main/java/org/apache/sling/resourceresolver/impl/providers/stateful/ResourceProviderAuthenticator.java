@@ -32,7 +32,6 @@ import org.apache.sling.api.resource.runtime.dto.AuthType;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
-import org.apache.sling.spi.resource.provider.ResourceProvider;
 
 /**
  * The authenticator is a per resource resolver instance.
@@ -70,16 +69,16 @@ public class ResourceProviderAuthenticator {
     /**
      * Authenticate all handlers
      * @param handlers
-     * @param combinedProvider
+     * @param resolverContext
      * @throws LoginException
      */
     public void authenticateAll(final List<ResourceProviderHandler> handlers,
-                                final ResourceResolverContext combinedProvider)
+                                final ResourceResolverContext resolverContext)
     throws LoginException {
         final List<StatefulResourceProvider> successfulHandlers = new ArrayList<StatefulResourceProvider>();
         for (final ResourceProviderHandler h : handlers) {
             try {
-                successfulHandlers.add(authenticate(h, combinedProvider));
+                successfulHandlers.add(authenticate(h, resolverContext));
             } catch ( final LoginException le ) {
                 // logout from all successful handlers
                 for(final StatefulResourceProvider handler : successfulHandlers) {
@@ -91,10 +90,10 @@ public class ResourceProviderAuthenticator {
     }
 
     private @Nonnull StatefulResourceProvider authenticate(final ResourceProviderHandler handler,
-            ResourceResolverContext combinedProvider) throws LoginException {
+            ResourceResolverContext resolverContext) throws LoginException {
         StatefulResourceProvider rp = stateful.get(handler);
         if (rp == null) {
-            rp = createStateful(handler, combinedProvider);
+            rp = createStateful(handler, resolverContext);
             stateful.put(handler, rp);
             if (handler.getInfo().getAuthType() != AuthType.no) {
                 authenticated.add(rp);
@@ -113,9 +112,9 @@ public class ResourceProviderAuthenticator {
         return stateful.values();
     }
 
-    public @Nonnull StatefulResourceProvider getStateful(ResourceProviderHandler handler, ResourceResolverContext combinedProvider)
+    public @Nonnull StatefulResourceProvider getStateful(ResourceProviderHandler handler, ResourceResolverContext resolverContext)
     throws LoginException {
-        return authenticate(handler, combinedProvider);
+        return authenticate(handler, resolverContext);
     }
 
     public Collection<StatefulResourceProvider> getAllUsedAuthenticated() {
@@ -131,11 +130,11 @@ public class ResourceProviderAuthenticator {
     }
 
     public Collection<StatefulResourceProvider> getAllBestEffort(List<ResourceProviderHandler> handlers,
-            ResourceResolverContext combinedProvider) {
+            ResourceResolverContext resolverContext) {
         List<StatefulResourceProvider> result = new ArrayList<StatefulResourceProvider>(handlers.size());
         for (ResourceProviderHandler h : handlers) {
             try {
-                result.add(getStateful(h, combinedProvider));
+                result.add(getStateful(h, resolverContext));
             } catch ( final LoginException le) {
                 // ignore
             }
@@ -146,17 +145,16 @@ public class ResourceProviderAuthenticator {
     /**
      * Create a stateful resource provider
      * @param handler Resource provider handler
-     * @param combinedProvider Combined resource provider
+     * @param resolverContext Combined resource provider
      * @return The stateful resource provider
      * @throws LoginException
      */
     private @Nonnull StatefulResourceProvider createStateful(
             final ResourceProviderHandler handler,
-            final ResourceResolverContext combinedProvider)
+            final ResourceResolverContext resolverContext)
     throws LoginException {
-        final ResourceProvider<?> rp = handler.getResourceProvider();
         StatefulResourceProvider authenticated;
-        authenticated = new AuthenticatedResourceProvider(rp, handler.getInfo(), resolver, authInfo, combinedProvider);
+        authenticated = new AuthenticatedResourceProvider(handler, resolver, authInfo, resolverContext);
         if (handler.getInfo().getUseResourceAccessSecurity()) {
             authenticated = new SecureResourceProviderDecorator(authenticated, securityTracker);
         }

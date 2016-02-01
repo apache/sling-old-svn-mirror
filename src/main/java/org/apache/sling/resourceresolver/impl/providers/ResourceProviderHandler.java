@@ -32,9 +32,10 @@ public class ResourceProviderHandler implements Comparable<ResourceProviderHandl
 
     private final BundleContext bundleContext;
 
-    private volatile ResourceProvider<?> provider;
-
     private final ProviderContextImpl context = new ProviderContextImpl();
+
+    private volatile ResourceProvider<Object> provider;
+
 
     public ResourceProviderHandler(final BundleContext bc, final ResourceProviderInfo info) {
         this.info = info;
@@ -45,15 +46,16 @@ public class ResourceProviderHandler implements Comparable<ResourceProviderHandl
         return this.info;
     }
 
+    @SuppressWarnings("unchecked")
     public boolean activate() {
-        this.provider = (ResourceProvider<?>) this.bundleContext.getService(this.info.getServiceReference());
+        this.provider = (ResourceProvider<Object>) this.bundleContext.getService(this.info.getServiceReference());
         if ( this.provider != null ) {
             this.provider.start(context);
         }
         return this.provider != null;
     }
 
-    public ResourceProvider<?> getResourceProvider() {
+    public ResourceProvider<Object> getResourceProvider() {
         return this.provider;
     }
 
@@ -85,7 +87,7 @@ public class ResourceProviderHandler implements Comparable<ResourceProviderHandl
     public ProviderContextImpl getProviderContext() {
         return this.context;
     }
-    
+
     @Override
     public String toString() {
         return "[" + getClass().getSimpleName() +"# provider: " + provider + " ]";

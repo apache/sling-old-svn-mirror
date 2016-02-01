@@ -33,7 +33,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.runtime.dto.AuthType;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
-import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
 import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
@@ -53,9 +53,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
 
     private static final String FORBIDDEN_ATTRIBUTE = ResourceResolverFactory.PASSWORD;
 
-    private final ResourceProvider<Object> rp;
-
-    private final ResourceProviderInfo info;
+    private final ResourceProviderHandler handler;
 
     private final Map<String, Object> authInfo;
 
@@ -68,18 +66,15 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     private volatile boolean authenticated;
 
 
-    @SuppressWarnings("unchecked")
-    public AuthenticatedResourceProvider(ResourceProvider<?> rp,
-            ResourceProviderInfo info,
+    public AuthenticatedResourceProvider(final ResourceProviderHandler handler,
             ResourceResolver resolver,
             Map<String, Object> authInfo,
             ResourceResolverContext resolverContext) throws LoginException {
-        this.rp = (ResourceProvider<Object>) rp;
-        this.info = info;
+        this.handler = handler;
         this.authInfo = authInfo;
         this.resolver = resolver;
         this.resolverContext = resolverContext;
-        if (info.getAuthType() == AuthType.required) {
+        if (handler.getInfo().getAuthType() == AuthType.required) {
             authenticate();
         }
     }
@@ -87,17 +82,17 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     private ResolverContext<Object> authenticate() throws LoginException {
         if ( cachedContext  == null ) {
             Object contextData = null;
-            if ( info.getAuthType() == AuthType.required || info.getAuthType() == AuthType.lazy ) {
+            if ( (handler.getInfo().getAuthType() == AuthType.required || handler.getInfo().getAuthType() == AuthType.lazy) ) {
                 try {
-                    contextData = rp.authenticate(authInfo);
+                    contextData = handler.getResourceProvider().authenticate(authInfo);
                 } catch ( final LoginException le ) {
-                    logger.debug("Unable to login into resource provider " + rp, le);
+                    logger.debug("Unable to login into resource provider " + handler.getResourceProvider(), le);
                     throw le;
                 }
                 authenticated = true;
             }
 
-            cachedContext = new BasicResolveContext<Object>(resolver, contextData, ResourceUtil.getParent(info.getPath()), this.resolverContext);
+            cachedContext = new BasicResolveContext<Object>(resolver, contextData, ResourceUtil.getParent(handler.getInfo().getPath()), this.resolverContext);
         }
 
         return cachedContext;
@@ -112,7 +107,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     public void logout() {
         if (authenticated) {
             try {
-                rp.logout(getContext().getProviderState());
+                handler.getResourceProvider().logout(getContext().getProviderState());
             } catch (LoginException e) {
                 logger.error("Can't create context", e);
             }
@@ -124,7 +119,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     @Override
     public void refresh() {
         try {
-            rp.refresh(getContext());
+            handler.getResourceProvider().refresh(getContext());
         } catch (LoginException e) {
             logger.error("Can't create context", e);
         }
@@ -133,7 +128,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     @Override
     public boolean isLive() {
         try {
-            return rp.isLive(getContext());
+            return handler.getResourceProvider().isLive(getContext());
         } catch (LoginException e) {
             logger.error("Can't create context", e);
             return false;
@@ -143,7 +138,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     @Override
     public Resource getParent(Resource child) {
         try {
-            return rp.getParent(getContext(), child);
+            return handler.getResourceProvider().getParent(getContext(), child);
         } catch (LoginException e) {
             logger.error("Can't create context", e);
             return null;
@@ -163,7 +158,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
             };
         }
         try {
-            return rp.getResource(getContext(), path, resourceContext, parent);
+            return handler.getResourceProvider().getResource(getContext(), path, resourceContext, parent);
         } catch (LoginException e) {
             logger.error("Can't create context", e);
             return null;
@@ -174,7 +169,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     @Override
     public Iterator<Resource> listChildren(Resource parent) {
         try {
-            return rp.listChildren(getContext(), parent);
+            return handler.getResourceProvider().listChildren(getContext(), parent);
         } catch (LoginException e) {
             logger.error("Can't create context", e);
             return null;
@@ -186,7 +181,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
         Set<String> attributeNames = new LinkedHashSet<String>();
         Collection<String> rpAttributeNames = null;
         try {
-            rpAttributeNames = rp.getAttributeNames(getContext());
+            rpAttributeNames = handler.getResourceProvider().getAttributeNames(getContext());
         } catch (LoginException e) {
             logger.error("Can't create context", e);
         }
@@ -207,7 +202,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
         }
         Object attribute = null;
         try {
-            attribute = rp.getAttribute(getContext(), name);
+            attribute = handler.getResourceProvider().getAttribute(getContext(), name);
         } catch (LoginException e) {
             logger.error("Can't create context", e);
         }
@@ -220,7 +215,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     @Override
     public Resource create(final ResourceResolver resolver, String path, Map<String, Object> properties) throws PersistenceException {
         try {
-            return rp.create(getContext(), path, properties);
+            return handler.getResourceProvider().create(getContext(), path, properties);
         } catch (LoginException e) {
             logger.error("Can't create context", e);
             return null;
@@ -230,7 +225,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     @Override
     public void delete(Resource resource) throws PersistenceException {
         try {
-            rp.delete(getContext(), resource);
+            handler.getResourceProvider().delete(getContext(), resource);
         } catch (LoginException e) {
             logger.error("Can't create context", e);
         }
@@ -239,7 +234,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     @Override
     public void revert() {
         try {
-            rp.revert(getContext());
+            handler.getResourceProvider().revert(getContext());
         } catch (LoginException e) {
             logger.error("Can't create context", e);
         }
@@ -248,7 +243,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     @Override
     public void commit() throws PersistenceException {
         try {
-            rp.commit(getContext());
+            handler.getResourceProvider().commit(getContext());
         } catch (LoginException e) {
             logger.error("Can't create context", e);
         }
@@ -257,7 +252,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     @Override
     public boolean hasChanges() {
         try {
-            return rp.hasChanges(getContext());
+            return handler.getResourceProvider().hasChanges(getContext());
         } catch (LoginException e) {
             logger.error("Can't create context", e);
             return false;
@@ -265,7 +260,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     }
 
     private QueryLanguageProvider<Object> getQueryLanguageProvider() {
-        return rp.getQueryLanguageProvider();
+        return handler.getResourceProvider().getQueryLanguageProvider();
     }
 
     @Override
@@ -314,7 +309,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     @Override
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
         try {
-            return rp.adaptTo(getContext(), type);
+            return handler.getResourceProvider().adaptTo(getContext(), type);
         } catch (LoginException e) {
             logger.error("Can't create context", e);
             return null;
@@ -324,7 +319,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     @Override
     public boolean copy(String srcAbsPath, String destAbsPath) throws PersistenceException {
         try {
-            return rp.copy(getContext(), srcAbsPath, destAbsPath);
+            return handler.getResourceProvider().copy(getContext(), srcAbsPath, destAbsPath);
         } catch (LoginException e) {
             throw new PersistenceException("Unable to create context.", e);
         }
@@ -333,7 +328,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     @Override
     public boolean move(String srcAbsPath, String destAbsPath) throws PersistenceException {
         try {
-            return rp.move(getContext(), srcAbsPath, destAbsPath);
+            return handler.getResourceProvider().move(getContext(), srcAbsPath, destAbsPath);
         } catch (LoginException e) {
             throw new PersistenceException("Unable to create context.", e);
         }
@@ -341,11 +336,11 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
 
     @Override
     public ResourceProvider<Object> getResourceProvider() {
-        return rp;
+        return handler.getResourceProvider();
     }
 
     @Override
     public String toString() {
-        return "[" + getClass().getSimpleName() + "# rp: " + rp + ", authenticated: " + authenticated + "]";
+        return "[" + getClass().getSimpleName() + "# rp: " + getResourceProvider() + ", authenticated: " + authenticated + "]";
     }
 }
