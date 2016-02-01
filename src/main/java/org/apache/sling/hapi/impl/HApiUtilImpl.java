@@ -18,30 +18,44 @@
  ******************************************************************************/
 package org.apache.sling.hapi.impl;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.Value;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryManager;
+import javax.jcr.query.QueryResult;
+
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.hapi.HApiProperty;
 import org.apache.sling.hapi.HApiType;
-import org.apache.sling.hapi.MicrodataAttributeHelper;
 import org.apache.sling.hapi.HApiUtil;
-import org.apache.felix.scr.annotations.*;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.hapi.MicrodataAttributeHelper;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.*;
-import javax.jcr.query.Query;
-import javax.jcr.query.QueryManager;
-import javax.jcr.query.QueryResult;
-import java.util.*;
-
 
 @Component(label = "Apache Sling Hypermedia API tools", metatype = true)
-@Service()
-
+@Service(value = HApiUtil.class)
 public class HApiUtilImpl implements HApiUtil {
+
+    private final Logger LOG = LoggerFactory.getLogger(HApiUtil.class);
 
     @Property(label = "HApi Resource Type", cardinality = 0, value = DEFAULT_RESOURCE_TYPE)
     public static final String HAPI_RESOURCE_TYPE = "org.apache.sling.hapi.tools.resourcetype";
@@ -69,6 +83,7 @@ public class HApiUtilImpl implements HApiUtil {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Node getTypeNode(ResourceResolver resolver, String type) throws RepositoryException {
         Session session = resolver.adaptTo(Session.class);
 
@@ -112,6 +127,7 @@ public class HApiUtilImpl implements HApiUtil {
     /**
      * {@inheritDoc}
      */
+    @Override
     public HApiType fromPath(ResourceResolver resolver, String type) throws RepositoryException {
         Node typeNode = this.getTypeNode(resolver, type);
         LOG.debug("typeNode=" + typeNode);
@@ -125,6 +141,7 @@ public class HApiUtilImpl implements HApiUtil {
     /**
      * {@inheritDoc}
      */
+    @Override
     public HApiType fromNode(ResourceResolver resolver, Node typeNode) throws RepositoryException {
         if (null == typeNode) return null;
         String name = typeNode.getProperty("name").getValue().getString();
@@ -186,6 +203,7 @@ public class HApiUtilImpl implements HApiUtil {
     /**
      * {@inheritDoc}
      */
+    @Override
     public MicrodataAttributeHelper getHelper(ResourceResolver resolver, String type) throws RepositoryException {
         return new MicrodataAttributeHelperImpl(resolver, TypesCache.getInstance(this).getType(resolver, type));
     }
