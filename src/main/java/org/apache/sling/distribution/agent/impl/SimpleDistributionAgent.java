@@ -435,6 +435,8 @@ public class SimpleDistributionAgent implements DistributionAgent {
             distributionPackage = distributionPackageExporter.getPackage(agentResourceResolver, queueItem.getId());
 
             if (distributionPackage != null) {
+                final long getTime = System.currentTimeMillis();
+
                 final DistributionRequestType requestType = distributionPackage.getInfo().getRequestType();
                 final long packageSize = distributionPackage.getSize();
                 final String[] paths = distributionPackage.getInfo().getPaths();
@@ -447,10 +449,10 @@ public class SimpleDistributionAgent implements DistributionAgent {
                     removeItemFromQueue = true;
                     final long endTime = System.currentTimeMillis();
 
-                    log.info("[{}] PACKAGE-DELIVERED {}: {} paths={}, time={}ms, importTime={}ms, size={}B", new Object[] {
+                    log.info("[{}] PACKAGE-DELIVERED {}: {} paths={}, importTime={}ms, execTime={}ms, size={}B", new Object[] {
                             queueName, requestId,
                             requestType, paths,
-                            endTime - globalStartTime, endTime - startTime,
+                            endTime - startTime, endTime - globalStartTime,
                             packageSize
                     });
                 } catch (RecoverableDistributionException e) {
@@ -525,7 +527,9 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
         if (resourceResolver != null) {
             try {
-                resourceResolver.commit();
+                if (resourceResolver.hasChanges()) {
+                    resourceResolver.commit();
+                }
             } catch (PersistenceException e) {
                 log.error("cannot commit changes to resource resolver", e);
             } finally {
@@ -603,11 +607,16 @@ public class SimpleDistributionAgent implements DistributionAgent {
             DistributionQueueItem queueItem = queueEntry.getItem();
 
             try {
+                final long startTime = System.currentTimeMillis();
+
                 log.debug("[{}] ITEM-PROCESS processing item={}", queueName, queueItem);
 
                 boolean success = processQueueItem(queueName, queueEntry);
 
-                log.debug("[{}] ITEM-PROCESSED item={}, status={}", queueName, queueItem, success);
+                final long endTime = System.currentTimeMillis();
+
+
+                log.debug("[{}] ITEM-PROCESSED item={}, status={}, processingTime={}", queueName, queueItem, success, endTime - startTime);
 
                 return success;
 

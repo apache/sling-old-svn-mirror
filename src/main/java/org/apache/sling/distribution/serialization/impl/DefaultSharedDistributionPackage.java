@@ -22,6 +22,8 @@ import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -35,19 +37,17 @@ public class DefaultSharedDistributionPackage implements SharedDistributionPacka
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     static final String REFERENCE_ROOT_NODE = "refs";
-    private final Object lock;
 
     private final ResourceResolver resourceResolver;
     private final String packagePath;
     private final DistributionPackage distributionPackage;
     private final String packageName;
 
-    public DefaultSharedDistributionPackage(Object lock, ResourceResolver resourceResolver, String packageName, String packagePath, DistributionPackage distributionPackage) {
+    public DefaultSharedDistributionPackage(ResourceResolver resourceResolver, String packageName, String packagePath, DistributionPackage distributionPackage) {
         this.resourceResolver = resourceResolver;
         this.packageName = packageName;
         this.packagePath = packagePath;
         this.distributionPackage = distributionPackage;
-        this.lock = lock;
     }
 
     public void acquire(@Nonnull String holderName) {
@@ -72,12 +72,15 @@ public class DefaultSharedDistributionPackage implements SharedDistributionPacka
         }
 
         try {
-            deleteHolderResource(holderName);
+            boolean doPackageDelete = deleteHolderResource(holderName);
 
-            boolean doPackageDelete = deleteIfEmpty();
 
             if (doPackageDelete) {
                 distributionPackage.delete();
+            }
+
+            if (resourceResolver.hasChanges()) {
+                resourceResolver.commit();
             }
 
             log.debug("released package {} from holder {} delete {}", new Object[]{packagePath, holderName, doPackageDelete});
@@ -114,7 +117,7 @@ public class DefaultSharedDistributionPackage implements SharedDistributionPacka
     public void delete() {
 
         try {
-            deleteHolderRoot();
+            deleteProxy();
         } catch (PersistenceException e) {
             log.error("cannot delete shared resource", e);
         }
@@ -135,7 +138,6 @@ public class DefaultSharedDistributionPackage implements SharedDistributionPacka
     private Resource getProxyResource() {
         String holderPath = packagePath;
 
-        resourceResolver.refresh();
         return resourceResolver.getResource(holderPath);
     }
 
@@ -153,64 +155,48 @@ public class DefaultSharedDistributionPackage implements SharedDistributionPacka
 
     private void createHolderResource(String holderName) throws PersistenceException {
 
-        synchronized (lock) {
-            Resource holderRoot = getHolderRootResource();
+        Resource holderRoot = getHolderRootResource();
 
-            if (holderRoot == null) {
-                return;
-            }
+        if (holderRoot == null) {
+            return;
+        }
 
+        Resource holder = holderRoot.getChild(holderName);
+
+        if (holder != null) {
+            return;
+        }
+
+        resourceResolver.create(holderRoot, holderName, Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object) "sling:Folder"));
+        resourceResolver.commit();
+    }
+
+    private boolean deleteHolderResource(String holderName) throws PersistenceException {
+        boolean doPackageDelete = false;
+        Resource holderRoot = getHolderRootResource();
+
+        if (holderRoot != null) {
             Resource holder = holderRoot.getChild(holderName);
 
             if (holder != null) {
-                return;
+                resourceResolver.delete(holder);
             }
-
-            resourceResolver.create(holderRoot, holderName, Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object) "sling:Folder"));
-            resourceResolver.commit();
-
         }
-    }
 
-    private void deleteHolderResource(String holderName) throws PersistenceException {
-
-        synchronized (lock) {
-            Resource holderRoot = getHolderRootResource();
-
-            if (holderRoot == null) {
-                return;
-            }
-
-            Resource holder = holderRoot.getChild(holderName);
-
-            if (holder == null) {
-                return;
-            }
-
-            resourceResolver.delete(holder);
-            resourceResolver.commit();
-        }
-    }
-
-    private void deleteHolderRoot() throws PersistenceException {
-        synchronized (lock) {
+        if (!holderRoot.hasChildren()) {
             Resource resource = getProxyResource();
             resourceResolver.delete(resource);
-            resourceResolver.commit();
+            doPackageDelete = true;
         }
 
+        return doPackageDelete;
     }
 
-    private boolean deleteIfEmpty() throws PersistenceException {
-        synchronized (lock) {
-            Resource holderRoot = getHolderRootResource();
-            if (holderRoot != null && !holderRoot.hasChildren()) {
-                deleteHolderRoot();
-                return true;
-            }
-        }
-
-        return false;
+    private void deleteProxy() throws PersistenceException {
+        Resource resource = getProxyResource();
+        resourceResolver.delete(resource);
+        resourceResolver.commit();
     }
+
 
 }
