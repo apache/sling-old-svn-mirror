@@ -43,7 +43,7 @@
     </div>
     <div class="row"></div>
 
-    <div class="row" data-sly-use.card="${'org.apache.sling.hapi.HApiUse' @type='/apps/sling/hapi_sample/types/pic_card'}"
+    <div class="row" data-sly-use.card="${'org.apache.sling.hapi.sightly.HApiUse' @type='/apps/sling/hapi_sample/types/pic_card'}"
          data-sly-attribute="${card.itemtype}">
         <div class="col-lg-6">
             <div class="card-asset">
@@ -57,7 +57,7 @@
                 <p>Type: <span class="type">PSD</span></p>
 
                 <p data-sly-attribute="${card.itemprop.resolution}"
-                   data-sly-use.resolution="${'org.apache.sling.hapi.HApiUse' @type=card.proptype.resolution}" class="resolution">
+                   data-sly-use.resolution="${'org.apache.sling.hapi.sightly.HApiUse' @type=card.proptype.resolution}" class="resolution">
                     <span>Resolution:</span>
                     <span data-sly-attribute="${resolution.itemprop.width}">1620</span> x <span
                         data-sly-attribute="${resolution.itemprop.height}">670</span>
