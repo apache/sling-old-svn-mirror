@@ -78,6 +78,8 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
     private final TreeMap<String, List<String>> filters;
     private final boolean useBinaryReferences;
 
+    private final Object repolock = new Object();
+
     public JcrVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots, String[] filterRules, String tempFilesFolder, boolean useBinaryReferences) {
         super(type);
 
@@ -231,11 +233,25 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
     }
 
     private Node getPackageRoot(Session session) throws RepositoryException {
-        Node tempRoot = JcrUtils.getNodeIfExists(AbstractDistributionPackage.PACKAGES_ROOT, session);
-        if (tempPackagesNode != null && tempRoot != null) {
-            return JcrUtils.getOrCreateByPath(tempRoot, tempPackagesNode, false, "sling:Folder", "sling:Folder", true);
+        Node packageRoot = JcrUtils.getNodeIfExists(AbstractDistributionPackage.PACKAGES_ROOT + "/" + tempPackagesNode, session);
+
+        if (packageRoot != null) {
+            return packageRoot;
         }
 
-        throw new RepositoryException("Cannot read "+ AbstractDistributionPackage.PACKAGES_ROOT);
+        synchronized (repolock) {
+            session.refresh(false);
+
+            Node tempRoot = JcrUtils.getNodeIfExists(AbstractDistributionPackage.PACKAGES_ROOT, session);
+
+            if (tempRoot == null) {
+                tempRoot = JcrUtils.getOrCreateByPath(AbstractDistributionPackage.PACKAGES_ROOT, "sling:Folder", "sling:Folder", session, true);
+            }
+
+            packageRoot = JcrUtils.getOrCreateByPath(tempRoot, tempPackagesNode, false, "sling:Folder", "sling:Folder", true);
+
+        }
+
+        return packageRoot;
     }
 }

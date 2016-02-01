@@ -162,7 +162,9 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
     protected void ungetSession(Session session) {
         if (session != null) {
             try {
-                session.save();
+                if (session.hasPendingChanges()) {
+                    session.save();
+                }
             } catch (RepositoryException e) {
                 log.debug("Cannot save session", e);
             }

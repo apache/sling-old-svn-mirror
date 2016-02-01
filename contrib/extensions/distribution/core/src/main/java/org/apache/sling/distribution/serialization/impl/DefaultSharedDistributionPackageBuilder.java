@@ -86,7 +86,7 @@ public class DefaultSharedDistributionPackageBuilder implements DistributionPack
         }
 
         String packagePath = getPathFromName(packageName);
-        DistributionPackage sharedDistributionPackage = new DefaultSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
+        DistributionPackage sharedDistributionPackage = new DefaultSharedDistributionPackage(resourceResolver, packageName, packagePath, distributionPackage);
 
         log.debug("created shared package {} for {}", sharedDistributionPackage.getId(), distributionPackage.getId());
         return sharedDistributionPackage;
@@ -110,7 +110,7 @@ public class DefaultSharedDistributionPackageBuilder implements DistributionPack
 
         String packagePath = getPathFromName(packageName);
 
-        DistributionPackage sharedDistributionPackage = new DefaultSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
+        DistributionPackage sharedDistributionPackage = new DefaultSharedDistributionPackage(resourceResolver, packageName, packagePath, distributionPackage);
 
         log.debug("created shared package {} for {}", sharedDistributionPackage.getId(), distributionPackage.getId());
         return sharedDistributionPackage;
@@ -137,7 +137,7 @@ public class DefaultSharedDistributionPackageBuilder implements DistributionPack
 
         String packagePath = getPathFromName(packageName);
 
-        return new DefaultSharedDistributionPackage(repolock, resourceResolver, packageName, packagePath, distributionPackage);
+        return new DefaultSharedDistributionPackage(resourceResolver, packageName, packagePath, distributionPackage);
     }
 
     public boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException {
@@ -169,6 +169,9 @@ public class DefaultSharedDistributionPackageBuilder implements DistributionPack
 
         String packagePath = getPathFromName(name);
 
+        Resource packagesRoot = getPackagesRoot(resourceResolver);
+
+        // TODO: Hack! this block is not strictly necessary to be synchronized but performance tests run faster if it is
         synchronized (repolock) {
             Resource resource = ResourceUtil.getOrCreateResource(resourceResolver, packagePath,
                     "sling:Folder", "sling:Folder", false);
@@ -181,6 +184,7 @@ public class DefaultSharedDistributionPackageBuilder implements DistributionPack
 
             resourceResolver.commit();
         }
+
 
         return name;
     }
@@ -205,5 +209,21 @@ public class DefaultSharedDistributionPackageBuilder implements DistributionPack
         }
 
         return properties.get(PN_ORIGINAL_ID, null);
+    }
+
+
+    Resource getPackagesRoot(ResourceResolver resourceResolver) throws PersistenceException {
+        Resource packagesRoot = resourceResolver.getResource(sharedPackagesRoot);
+
+        if (packagesRoot != null) {
+            return packagesRoot;
+        }
+
+        synchronized (repolock) {
+            resourceResolver.refresh();
+            packagesRoot = ResourceUtil.getOrCreateResource(resourceResolver, sharedPackagesRoot, "sling:Folder", "sling:Folder", true);
+        }
+
+        return packagesRoot;
     }
 }

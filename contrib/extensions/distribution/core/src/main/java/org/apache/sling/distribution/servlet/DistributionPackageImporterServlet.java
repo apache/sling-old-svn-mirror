@@ -62,7 +62,9 @@ public class DistributionPackageImporterServlet extends SlingAllMethodsServlet {
             
             DistributionPackageInfo distributionPackageInfo = distributionPackageImporter.importStream(resourceResolver, stream);
 
-            log.info("Package {} imported successfully", distributionPackageInfo);
+            long end = System.currentTimeMillis();
+
+            log.info("Package {} imported successfully in {}ms", distributionPackageInfo, end - start);
             ServletJsonUtils.writeJson(response, 200, "package imported successfully");
 
         } catch (final Throwable e) {
