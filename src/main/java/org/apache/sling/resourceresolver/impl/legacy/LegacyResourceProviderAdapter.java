@@ -145,7 +145,7 @@ public class LegacyResourceProviderAdapter extends ResourceProvider<Object> {
     }
 
     @Override
-    public void logout(final @Nonnull ResolverContext<Object> ctx) {
+    public void logout(final @Nonnull Object state) {
         if (rp instanceof DynamicResourceProvider) {
             ((DynamicResourceProvider) rp).close();
         }
@@ -229,7 +229,7 @@ public class LegacyResourceProviderAdapter extends ResourceProvider<Object> {
             return rp.queryResources(ctx.getResourceResolver(), query, language);
         }
     }
-    
+
     @Override
     public String toString() {
         return "[" + getClass().getSimpleName() + ": " + rp.toString() + " ]";
