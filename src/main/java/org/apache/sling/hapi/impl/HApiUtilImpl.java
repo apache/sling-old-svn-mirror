@@ -46,7 +46,6 @@ import org.apache.sling.hapi.HApiProperty;
 import org.apache.sling.hapi.HApiType;
 import org.apache.sling.hapi.HApiUtil;
 import org.apache.sling.hapi.MicrodataAttributeHelper;
-import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,7 +73,7 @@ public class HApiUtilImpl implements HApiUtil {
 
 
     @Activate
-    private void activate(ComponentContext context, Map<String, Object> configuration) {
+    private void activate(Map<String, Object> configuration) {
         resourceType = PropertiesUtil.toString(configuration.get(HAPI_RESOURCE_TYPE), DEFAULT_RESOURCE_TYPE);
         hApiPaths = PropertiesUtil.toStringArray(configuration.get(HAPI_PATHS));
         serverContextPath = PropertiesUtil.toString(configuration.get(HAPI_EXTERNAL_URL), DEFAULT_SERVER_URL);
