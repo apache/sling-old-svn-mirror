@@ -141,7 +141,7 @@ public class ResourceResolverContextTest {
         ResourceProviderStorage storage = new ResourceProviderStorage(handlers);
         authenticator = new ResourceProviderAuthenticator(rr, authInfo, securityTracker);
 
-        crp = new ResourceResolverContext(false, storage, rr, authenticator);
+        crp = new ResourceResolverContext(false, authInfo, storage, rr, authenticator);
     }
 
     /**

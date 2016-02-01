@@ -29,7 +29,6 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -98,13 +97,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /** The factory which created this resource resolver. */
     private final CommonResourceResolverFactoryImpl factory;
 
-    /** Closed marker. */
-    private final AtomicBoolean isClosed = new AtomicBoolean(false);
-
     /** Resource resolver context. */
     private final ResourceResolverContext context;
-
-    private final Map<String, Object> authenticationInfo;
 
     private volatile Exception closedResolverException;
 
@@ -114,8 +108,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
     ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo, final ResourceProviderStorage storage) throws LoginException {
         this.factory = factory;
-        this.authenticationInfo = authenticationInfo;
-        this.context = createContext(storage, isAdmin);
+        this.context = createContext(storage, authenticationInfo, isAdmin);
         this.factory.register(this, context);
     }
 
@@ -127,21 +120,21 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      */
     private ResourceResolverImpl(final ResourceResolverImpl resolver, final Map<String, Object> authenticationInfo) throws LoginException {
         this.factory = resolver.factory;
-        this.authenticationInfo = new HashMap<String, Object>();
-        if (resolver.authenticationInfo != null) {
-            this.authenticationInfo.putAll(resolver.authenticationInfo);
+        Map<String, Object> authInfo = new HashMap<String, Object>();
+        if (resolver.context.getAuthenticationInfo() != null) {
+            authInfo.putAll(resolver.context.getAuthenticationInfo());
         }
         if (authenticationInfo != null) {
-            this.authenticationInfo.putAll(authenticationInfo);
+            authInfo.putAll(authenticationInfo);
         }
-        this.context = createContext(factory.getResourceProviderTracker().getResourceProviderStorage(), resolver.context.isAdmin());
+        this.context = createContext(factory.getResourceProviderTracker().getResourceProviderStorage(), authInfo, resolver.context.isAdmin());
         this.factory.register(this, context);
     }
 
-    private ResourceResolverContext createContext(ResourceProviderStorage storage, boolean isAdmin)
+    private ResourceResolverContext createContext(ResourceProviderStorage storage, Map<String, Object> authenticationInfo, final boolean isAdmin)
     throws LoginException {
         final ResourceProviderAuthenticator authenticator = new ResourceProviderAuthenticator(this, authenticationInfo, this.factory.getResourceAccessSecurityTracker());
-        final ResourceResolverContext provider = new ResourceResolverContext(isAdmin, storage, this, authenticator);
+        final ResourceResolverContext provider = new ResourceResolverContext(isAdmin, authenticationInfo, storage, this, authenticator);
         authenticator.authenticateAll(storage.getAuthRequiredHandlers(), provider);
         return provider;
     }
@@ -164,7 +157,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      */
     @Override
     public boolean isLive() {
-        return !this.isClosed.get() && this.context.isLive() && this.factory.isLive();
+        return !this.context.isClosed() && this.context.isLive() && this.factory.isLive();
     }
 
     /**
@@ -175,9 +168,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         if (factory.shouldLogResourceResolverClosing()) {
             closedResolverException = new Exception("Stack Trace");
         }
-        if ( this.isClosed.compareAndSet(false, true)) {
-            this.factory.unregister(this, this.context);
-        }
+        this.factory.unregister(this, this.context);
     }
 
     /**
@@ -187,7 +178,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      *             If the resolver is already closed or the factory is no longer live.
      */
     private void checkClosed() {
-        if (this.isClosed.get()) {
+        if (this.context.isClosed()) {
             if (closedResolverException != null) {
                 logger.error("The ResourceResolver has already been closed.", closedResolverException);
             }
@@ -763,12 +754,12 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         checkClosed();
 
         // Try auth info first
-        if ( this.authenticationInfo != null ) {
-            final Object impUser = this.authenticationInfo.get(ResourceResolverFactory.USER_IMPERSONATION);
+        if ( this.context.getAuthenticationInfo() != null ) {
+            final Object impUser = this.context.getAuthenticationInfo().get(ResourceResolverFactory.USER_IMPERSONATION);
             if ( impUser != null ) {
                 return impUser.toString();
             }
-            final Object user = this.authenticationInfo.get(ResourceResolverFactory.USER);
+            final Object user = this.context.getAuthenticationInfo().get(ResourceResolverFactory.USER);
             if ( user != null ) {
                 return user.toString();
             }

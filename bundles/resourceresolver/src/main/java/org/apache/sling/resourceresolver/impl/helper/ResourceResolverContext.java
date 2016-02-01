@@ -74,7 +74,7 @@ public class ResourceResolverContext {
     private final boolean isAdmin;
 
     /** Resource type resource resolver (admin resolver) */
-    private ResourceResolver resourceTypeResourceResolver;
+    private volatile ResourceResolver resourceTypeResourceResolver;
 
     /** Flag for handling multiple calls to close. */
     private final AtomicBoolean isClosed = new AtomicBoolean(false);
@@ -85,13 +85,17 @@ public class ResourceResolverContext {
 
     private final ResourceProviderAuthenticator authenticator;
 
+    private final Map<String, Object> authenticationInfo;
+
     /**
      * Create a new resource resolver context.
      */
     public ResourceResolverContext(final boolean isAdmin,
+            final Map<String, Object> authenticationInfo,
             ResourceProviderStorage storage,
             ResourceResolver resolver,
             ResourceProviderAuthenticator authenticator) {
+        this.authenticationInfo = authenticationInfo;
         this.isAdmin = isAdmin;
         this.storage = storage;
         this.resolver = resolver;
@@ -102,6 +106,13 @@ public class ResourceResolverContext {
         return isAdmin;
     }
 
+    public Map<String, Object> getAuthenticationInfo() {
+        return this.authenticationInfo;
+    }
+
+    public boolean isClosed() {
+        return this.isClosed.get();
+    }
     /**
      * Logs out from all providers.
      */
