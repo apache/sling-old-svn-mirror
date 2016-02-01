@@ -16,13 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-package org.apache.sling.hapi;
+package org.apache.sling.hapi.sightly;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
+import org.apache.sling.hapi.HApiProperty;
+import org.apache.sling.hapi.HApiType;
+import org.apache.sling.hapi.HApiUtil;
 import org.apache.sling.scripting.sightly.pojo.Use;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
