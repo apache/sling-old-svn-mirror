@@ -469,9 +469,10 @@ public class SimpleDistributionAgent implements DistributionAgent {
                 log.error("distribution package with id {} does not exist. the package will be skipped.", queueItem.getId());
             }
         } finally {
-            DistributionPackageUtils.closeSafely(distributionPackage);
             if (removeItemFromQueue) {
                 DistributionPackageUtils.releaseOrDelete(distributionPackage, queueName);
+            } else {
+                DistributionPackageUtils.closeSafely(distributionPackage);
             }
             ungetAgentResourceResolver(agentResourceResolver);
         }
