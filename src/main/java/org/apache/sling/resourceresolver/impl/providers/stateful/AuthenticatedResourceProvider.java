@@ -61,49 +61,51 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
 
     private final ResourceResolver resolver;
 
-    private boolean authenticated;
+    private final ResourceResolverContext resolverContext;
 
-    private Object contextData;
+    private volatile ResolverContext<Object> cachedContext;
 
-    private ResolverContext<Object> cachedContext;
+    private volatile boolean authenticated;
 
-    private final ResourceResolverContext combinedProvider;
 
     @SuppressWarnings("unchecked")
     public AuthenticatedResourceProvider(ResourceProvider<?> rp,
             ResourceProviderInfo info,
             ResourceResolver resolver,
             Map<String, Object> authInfo,
-            ResourceResolverContext combinedProvider) throws LoginException {
+            ResourceResolverContext resolverContext) throws LoginException {
         this.rp = (ResourceProvider<Object>) rp;
         this.info = info;
         this.authInfo = authInfo;
         this.resolver = resolver;
-        this.combinedProvider = combinedProvider;
+        this.resolverContext = resolverContext;
         if (info.getAuthType() == AuthType.required) {
             authenticate();
         }
     }
 
-    private Object authenticate() throws LoginException {
-        if (!authenticated && (info.getAuthType() == AuthType.required || info.getAuthType() == AuthType.lazy)) {
-            try {
-                contextData = rp.authenticate(authInfo);
-            } catch ( final LoginException le ) {
-                logger.debug("Unable to login into resource provider " + rp, le);
-                throw le;
+    private ResolverContext<Object> authenticate() throws LoginException {
+        if ( cachedContext  == null ) {
+            Object contextData = null;
+            if ( info.getAuthType() == AuthType.required || info.getAuthType() == AuthType.lazy ) {
+                try {
+                    contextData = rp.authenticate(authInfo);
+                } catch ( final LoginException le ) {
+                    logger.debug("Unable to login into resource provider " + rp, le);
+                    throw le;
+                }
+                authenticated = true;
             }
-            authenticated = true;
+
+            cachedContext = new BasicResolveContext<Object>(resolver, contextData, ResourceUtil.getParent(info.getPath()), this.resolverContext);
         }
-        return contextData;
+
+        return cachedContext;
     }
 
     @Override
     public ResolverContext<Object> getContext() throws LoginException {
-        if (cachedContext == null) {
-            cachedContext = new BasicResolveContext<Object>(resolver, authenticate(), ResourceUtil.getParent(info.getPath()), this.combinedProvider);
-        }
-        return cachedContext;
+        return authenticate();
     }
 
     @Override
@@ -115,8 +117,8 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
                 logger.error("Can't create context", e);
             }
             authenticated = false;
-            cachedContext = null;
         }
+        cachedContext = null;
     }
 
     @Override
