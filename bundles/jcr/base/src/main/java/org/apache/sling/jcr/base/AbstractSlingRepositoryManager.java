@@ -359,6 +359,7 @@ public abstract class AbstractSlingRepositoryManager extends NamespaceMappingSup
         final ServiceReference [] refs = repoInitializerTracker.getServiceReferences();
         if(refs == null || refs.length == 0) {
             log.debug("No SlingRepositoryInitializer services found");
+            return;
         }
         Arrays.sort(refs);
         for(ServiceReference ref : refs) {
