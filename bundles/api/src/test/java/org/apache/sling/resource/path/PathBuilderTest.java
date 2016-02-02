@@ -16,11 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.commons.paths;
+package org.apache.sling.resource.path;
 
 import static org.junit.Assert.assertThat;
 
-import org.apache.sling.commons.paths.PathBuilder;
+import org.apache.sling.resource.path.PathBuilder;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
