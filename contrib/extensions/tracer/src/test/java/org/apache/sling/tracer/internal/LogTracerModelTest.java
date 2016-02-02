@@ -86,7 +86,7 @@ public class LogTracerModelTest {
     }
 
     private static TracerContext getContext(TracerSet ts) {
-        return new TracerContext(ts.getConfigs().toArray(new TracerConfig[ts.getConfigs().size()]));
+        return new TracerContext(ts.getConfigs().toArray(new TracerConfig[ts.getConfigs().size()]), Recording.NOOP);
     }
 
 }
