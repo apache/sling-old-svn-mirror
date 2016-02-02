@@ -74,6 +74,7 @@ import org.codehaus.plexus.util.FileUtils;
         threadSafe = true
     )
 public class PreparePackageMojo extends AbstractSlingStartMojo {
+
     private static final String ALL_RUNMODES_KEY = "_all_";
 
     private static final String BASE_DESTINATION = "resources";
@@ -252,8 +253,23 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
     throws MojoExecutionException{
         for(final ArtifactGroup group : runMode.getArtifactGroups()) {
             for(final org.apache.sling.provisioning.model.Artifact a : group) {
-                final Artifact artifact = ModelUtils.getArtifact(this.project, this.mavenSession, this.artifactHandlerManager, this.resolver,
+                Artifact artifact = null;
+                if ( a.getGroupId().equals(this.project.getGroupId())
+                        && a.getArtifactId().equals(this.project.getArtifactId())
+                        && a.getVersion().equals(this.project.getVersion()) ) {
+                    for(final Artifact projectArtifact : this.project.getAttachedArtifacts()) {
+                        if ( projectArtifact.getClassifier().equals(a.getClassifier()) ) {
+                            artifact = projectArtifact;
+                            break;
+                        }
+                    }
+                    if ( artifact == null ) {
+                        throw new MojoExecutionException("Unable to find artifact from same project: " + a.toMvnUrl());
+                    }
+                } else {
+                    artifact = ModelUtils.getArtifact(this.project, this.mavenSession, this.artifactHandlerManager, this.resolver,
                         a.getGroupId(), a.getArtifactId(), a.getVersion(), a.getType(), a.getClassifier());
+                }
                 File artifactFile = artifact.getFile();
 
                 String newBSN = a.getMetadata().get("bundle:rename-bsn");
