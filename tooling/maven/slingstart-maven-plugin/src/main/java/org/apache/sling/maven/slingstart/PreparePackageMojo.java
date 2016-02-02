@@ -85,7 +85,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
     private static final String CONFIG_DIRECTORY = "config";
 
     private static final String PROVISIONING_DIRECTORY = "provisioning";
-    
+
     private static final String EMBEDDED_MODEL_FILENAME = "model.txt";
 
     private static final String BOOTSTRAP_FILE = "sling_bootstrap.txt";
@@ -121,10 +121,6 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
         this.prepareWebapp(model);
     }
 
-    protected File getStandaloneOutputDirectory() {
-        return new File(this.project.getBuild().getOutputDirectory());
-    }
-
     /**
      * Prepare the global map for the artifacts.
      */
@@ -151,7 +147,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
 
         this.buildContentsMap(model, ModelConstants.RUN_MODE_STANDALONE, contentsMap);
     }
-    
+
     /** Embed our model in the created jar file */
     private void embedModel(Model model, File outputDir) throws MojoExecutionException {
         final File modelDir = new File(new File(outputDir, BASE_DESTINATION), PROVISIONING_DIRECTORY);
