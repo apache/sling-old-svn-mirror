@@ -27,7 +27,6 @@ import javax.jcr.Session;
 import org.apache.sling.commons.testing.jcr.RepositoryProvider;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -37,23 +36,24 @@ public class RootFolderMoveListenerTest {
     private RootFolderMoveListener rmlt;
     private static final long TEST_SCAN_DELAY_MSEC = 5; 
     private final RescanTimer timer = new RescanTimer(TEST_SCAN_DELAY_MSEC);
-    private Session session;
-    
+    private Session contentModificationSession;
+    private Session moveListenerSession;
+
     public static final String [] ROOTS = { "/foo", "/bar" };
-    
-    protected boolean needsTestContent() {
-        return true;
-    }
-    
+
     @Before
     public void setup() throws Exception {
-        session = RepositoryProvider.instance().getRepository().loginAdministrative(null);
-        rmlt = new RootFolderMoveListener(session, ROOTS, timer);
+        // Need 2 sessions for this test, as the RootFolderMoveListener is registered with noLocal property set to true.
+        contentModificationSession = RepositoryProvider.instance().getRepository().loginAdministrative(null);
+        moveListenerSession = RepositoryProvider.instance().getRepository().loginAdministrative(null);
+        rmlt = new RootFolderMoveListener(moveListenerSession, ROOTS, timer);
     }
     
     @After
-    public void cleanup() {
-        session.logout();
+    public void cleanup() throws Exception {
+        rmlt.cleanup(moveListenerSession);
+        contentModificationSession.logout();
+        moveListenerSession.logout();
     }
     
     private void waitForScanDelay() {
@@ -79,17 +79,16 @@ public class RootFolderMoveListenerTest {
     }
     
     @Test
-    @Ignore("Scan is not scheduled by move??")
     public void testMove() throws Exception {
-        session.getRootNode().addNode("foo");
-        session.getNode("/foo").addNode("one");
-        session.save();
+        contentModificationSession.getRootNode().addNode("foo");
+        contentModificationSession.getNode("/foo").addNode("one");
+        contentModificationSession.save();
         
         waitForScanDelay();
         assertFalse("Expecting no scheduled scan before move", timer.expired());
         
-        session.move("/foo/one", "/foo/two");
-        session.save();
+        contentModificationSession.move("/foo/one", "/foo/two");
+        contentModificationSession.save();
         waitForScanDelay();
         assertTrue("Expecting scan to be triggered after move", timer.expired());
     }
