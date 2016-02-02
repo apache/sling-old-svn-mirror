@@ -24,11 +24,11 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>26</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.hapi</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>bundle</packaging>
 
     <name>HApi - Sling Hypermedia API tools</name>
@@ -124,4 +124,10 @@
         </dependency>
     </dependencies>
 
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.hapi-1.0.0</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.hapi-1.0.0</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.hapi-1.0.0</url>
+  </scm>
 </project>
