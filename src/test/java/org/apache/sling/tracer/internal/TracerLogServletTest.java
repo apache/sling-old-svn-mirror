@@ -98,6 +98,8 @@ public class TracerLogServletTest {
 
         ArgumentCaptor<String> requestIdCaptor = ArgumentCaptor.forClass(String.class);
         verify(response).setHeader(eq(TracerLogServlet.HEADER_TRACER_REQUEST_ID), requestIdCaptor.capture());
+        verify(response).setHeader(TracerLogServlet.HEADER_TRACER_PROTOCOL_VERSION,
+                String.valueOf(TracerLogServlet.TRACER_PROTOCOL_VERSION));
 
         StringWriter sw = new StringWriter();
         when(response.getWriter()).thenReturn(new PrintWriter(sw));
