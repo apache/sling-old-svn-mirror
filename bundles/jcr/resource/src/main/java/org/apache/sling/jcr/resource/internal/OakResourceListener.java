@@ -30,6 +30,8 @@ import java.util.concurrent.Executor;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 
 import org.apache.jackrabbit.oak.plugins.observation.NodeObserver;
 import org.apache.jackrabbit.oak.spi.commit.BackgroundObserver;
@@ -103,7 +105,12 @@ public class OakResourceListener extends NodeObserver implements Closeable {
         final Dictionary<String, Object> mbeanProps = new Hashtable<String, Object>(props);
         String objectName = String.format("org.apache.sling:type=%s,name=SlingResourceListener",
                 BackgroundObserverMBean.TYPE);
-        mbeanProps.put("jmx.objectname", objectName);
+        try {
+            mbeanProps.put("jmx.objectname", new ObjectName(objectName));
+        } catch (MalformedObjectNameException e) {
+            // should not happen
+            throw new RuntimeException(e);
+        }
 
         mbeanRegistration = bundleContext.registerService(BackgroundObserverMBean.class.getName(), observer.getMBean(), mbeanProps);
     }
