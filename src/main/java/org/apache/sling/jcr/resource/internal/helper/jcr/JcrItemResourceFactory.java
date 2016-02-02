@@ -171,22 +171,26 @@ public class JcrItemResourceFactory {
     }
 
     Item getItemOrNull(String path) throws RepositoryException {
-        Item item;
         // Check first if the path is absolute. If it isn't, then we return null because the previous itemExists method,
         // which was replaced by this method, would have returned null as well (instead of throwing an exception).
         if (path.isEmpty() || path.charAt(0) != '/') {
-            item = null;
+            return null;
         }
-        // Use fast getItemOrNull if session is a JackrabbitSession
-        else if (session instanceof JackrabbitSession) {
-            item = ((JackrabbitSession) session).getItemOrNull(path);
+
+        Item item = null;
+        try {
+         // Use fast getItemOrNull if session is a JackrabbitSession
+            if (session instanceof JackrabbitSession) {
+                item = ((JackrabbitSession) session).getItemOrNull(path);
+            }
+            // Fallback to slower itemExists & getItem pattern
+            else if (session.itemExists(path)) {
+                item = session.getItem(path);
+            }
+        } catch (RepositoryException e) {
+            log.debug("Unable to access item at " + path + ", possibly invalid path", e);
         }
-        // Fallback to slower itemExists & getItem pattern
-        else if (session.itemExists(path)) {
-            item = session.getItem(path);
-        } else {
-            item = null;
-        }
+
         return item;
     }
 
