@@ -99,7 +99,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
                         } catch ( final Throwable t ) {
                             // we ignore everything from there to not stop this thread
                         }
-                        refs.remove(ref.context.hashCode());
+                        refs.remove(ref.control.hashCode());
                     } catch ( final InterruptedException ie) {
                         Thread.currentThread().interrupt();
                     }
@@ -199,26 +199,26 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
      * We create a weak reference to be able to close the resolver if close on the
      * resource resolver is never called.
      * @param resolver The resource resolver
-     * @param ctx The resource resolver context
+     * @param ctrl The resource resolver control
      */
     public void register(final ResourceResolver resolver,
-            final ResourceResolverControl ctx) {
+            final ResourceResolverControl ctrl) {
         // create new weak reference
-        refs.put(ctx.hashCode(), new ResolverWeakReference(resolver, this.resolverReferenceQueue, ctx));
+        refs.put(ctrl.hashCode(), new ResolverWeakReference(resolver, this.resolverReferenceQueue, ctrl));
     }
 
     /**
      * Inform about a closed resource resolver.
      * Make sure to remove it from the current thread context.
      * @param resourceResolverImpl The resource resolver
-     * @param ctx The resource resolver context
+     * @param ctrl The resource resolver control
      */
     public void unregister(final ResourceResolver resourceResolverImpl,
-            final ResourceResolverControl ctx) {
+            final ResourceResolverControl ctrl) {
         // close the context
-        ctx.close();
+        ctrl.close();
         // remove it from the set of weak references.
-        refs.remove(ctx.hashCode());
+        refs.remove(ctrl.hashCode());
 
         // on shutdown, the factory might already be closed before the resolvers close
         // therefore we have to check for null
@@ -410,22 +410,22 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     }
 
     /**
-     * Extension of a weak reference to be able to get the context object
+     * Extension of a weak reference to be able to get the control object
      * that is used for cleaning up.
      */
     private static final class ResolverWeakReference extends WeakReference<ResourceResolver> {
 
-        private final ResourceResolverControl context;
+        private final ResourceResolverControl control;
 
         public ResolverWeakReference(final ResourceResolver referent,
                 final ReferenceQueue<? super ResourceResolver> q,
-                final ResourceResolverControl ctx) {
+                final ResourceResolverControl ctrl) {
             super(referent, q);
-            this.context = ctx;
+            this.control = ctrl;
         }
 
         public void close() {
-            this.context.close();
+            this.control.close();
         }
     }
 }
