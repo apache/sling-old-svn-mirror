@@ -29,6 +29,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.security.ResourceAccessSecurity;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
+import org.apache.sling.resourceresolver.impl.helper.AbstractIterator;
 import org.apache.sling.spi.resource.provider.ResolverContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.slf4j.Logger;

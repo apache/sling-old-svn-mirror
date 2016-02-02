@@ -17,9 +17,6 @@
  */
 package org.apache.sling.resourceresolver.impl.helper;
 
-import static org.apache.sling.api.resource.ResourceUtil.getName;
-import static org.apache.sling.spi.resource.provider.ResourceProvider.RESOURCE_TYPE_SYNTHETIC;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -50,7 +47,6 @@ import org.apache.sling.resource.path.PathBuilder;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
-import org.apache.sling.resourceresolver.impl.providers.stateful.AbstractIterator;
 import org.apache.sling.resourceresolver.impl.providers.stateful.ResourceProviderAuthenticator;
 import org.apache.sling.resourceresolver.impl.providers.stateful.StatefulResourceProvider;
 import org.apache.sling.resourceresolver.impl.providers.tree.Node;
@@ -268,7 +264,7 @@ public class ResourceResolverContext {
                 pathBuilder.append(name);
                 final String childPath = pathBuilder.toString();
                 if (handler == null) {
-                    syntheticList.add(new SyntheticResource(resolver, childPath, RESOURCE_TYPE_SYNTHETIC));
+                    syntheticList.add(new SyntheticResource(resolver, childPath, ResourceProvider.RESOURCE_TYPE_SYNTHETIC));
                 } else {
                     Resource rsrc = null;
                     try {
@@ -282,7 +278,7 @@ public class ResourceResolverContext {
                         // if there is a child provider underneath, we need to create a synthetic resource
                         // otherwise we need to make sure that no one else is providing this child
                         if ( entry.getValue().getChildren().isEmpty() ) {
-                            syntheticList.add(new SyntheticResource(resolver, childPath, RESOURCE_TYPE_SYNTHETIC));
+                            syntheticList.add(new SyntheticResource(resolver, childPath, ResourceProvider.RESOURCE_TYPE_SYNTHETIC));
                         } else {
                             visitedNames.add(name);
                         }
@@ -299,7 +295,7 @@ public class ResourceResolverContext {
         if ( chain.size() == 0 ) {
             return Collections.EMPTY_LIST.iterator();
         }
-        return new UniqueIterator(visitedNames, chain);
+        return new UniqueResourceIterator(visitedNames, chain);
     }
 
     /**
@@ -352,7 +348,7 @@ public class ResourceResolverContext {
         } catch (LoginException le) {
             // ignore and throw (see below)
         }
-        throw new UnsupportedOperationException("create '" + getName(path) + "' at " + ResourceUtil.getParent(path));
+        throw new UnsupportedOperationException("create '" + ResourceUtil.getName(path) + "' at " + ResourceUtil.getParent(path));
     }
 
     /**
@@ -633,68 +629,6 @@ public class ResourceResolverContext {
         return null;
     }
 
-    private static class ChainedIterator<T> extends AbstractIterator<T> {
-
-        private final Iterator<Iterator<T>> iterators;
-
-        private Iterator<T> currentIterator;
-
-        public ChainedIterator(Iterator<Iterator<T>> iterators) {
-            this.iterators = iterators;
-        }
-
-        @Override
-        protected T seek() {
-            while (true) {
-                if (currentIterator == null) {
-                    if (!iterators.hasNext()) {
-                        return null;
-                    }
-                    currentIterator = iterators.next();
-                    continue;
-                }
-                if (currentIterator.hasNext()) {
-                    return currentIterator.next();
-                } else {
-                    currentIterator = null;
-                }
-            }
-        }
-    }
-
-    /**
-     * This iterator removes duplicated Resource entries. Regular resources
-     * overrides the synthetic ones.
-     */
-    private static class UniqueIterator extends AbstractIterator<Resource> {
-
-        private final Iterator<Resource> input;
-
-        private final Set<String> visited;
-
-        public UniqueIterator(final Set<String> visited, final Iterator<Resource> input) {
-            this.input = input;
-            this.visited = visited;
-        }
-
-        @Override
-        protected Resource seek() {
-            while (input.hasNext()) {
-                final Resource next = input.next();
-                final String name = next.getName();
-
-                if (visited.contains(name)) {
-                    continue;
-                } else {
-                    visited.add(name);
-                    next.getResourceMetadata().setResolutionPath(next.getPath());
-                    return next;
-                }
-            }
-
-            return null;
-        }
-    }
 
     /**
      * Close all dynamic resource providers.
