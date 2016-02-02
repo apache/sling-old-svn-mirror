@@ -18,18 +18,17 @@
  */
 package org.apache.sling.testing.mock.jcr;
 
-import java.util.UUID;
-
 import javax.jcr.Item;
 import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.nodetype.NodeType;
+import java.util.UUID;
 
 /**
  * Holds node and property item data independently from session.
  */
 class ItemData {
-    
+
     private final String path;
     private final String name;
     private final boolean isNode;
@@ -38,7 +37,7 @@ class ItemData {
     private Value[] values;
     private boolean isMultiple;
     private boolean isNew;
-    
+
     private ItemData(String path, boolean isNode, String uuid, NodeType nodeType) {
         this.path = path;
         this.name = ResourceUtil.getName(path);
@@ -47,11 +46,11 @@ class ItemData {
         this.nodeType = nodeType;
         this.isNew = true;
     }
-    
+
     public String getPath() {
         return path;
     }
-    
+
     public String getName() {
         return name;
     }
@@ -59,11 +58,11 @@ class ItemData {
     public boolean isNode() {
         return isNode;
     }
-    
+
     public boolean isProperty() {
         return !isNode;
     }
-    
+
     public String getUuid() {
         if (!isNode()) {
             throw new UnsupportedOperationException();
@@ -105,16 +104,15 @@ class ItemData {
         }
         this.isMultiple = isMultiple;
     }
-    
+
     public Item getItem(Session session) {
         if (isNode) {
             return new MockNode(this, session);
-        }
-        else {
+        } else {
             return new MockProperty(this, session);
         }
     }
-    
+
     public boolean isNew() {
         return isNew;
     }
@@ -131,7 +129,7 @@ class ItemData {
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof ItemData) {
-            return path.equals(((ItemData)obj).path);
+            return path.equals(((ItemData) obj).path);
         }
         return false;
     }
@@ -139,9 +137,13 @@ class ItemData {
     public static ItemData newNode(String path, NodeType nodeType) {
         return new ItemData(path, true, UUID.randomUUID().toString(), nodeType);
     }
-    
+
     public static ItemData newProperty(String path) {
         return new ItemData(path, false, null, null);
     }
-    
+
+    public static ItemData newMixin(String path) {
+        return new ItemData(path, false, null, null);
+    }
+
 }

@@ -18,32 +18,22 @@
  */
 package org.apache.sling.testing.mock.jcr;
 
-import java.io.InputStream;
-import java.math.BigDecimal;
-import java.util.Calendar;
-import java.util.regex.Pattern;
-
-import javax.jcr.Binary;
-import javax.jcr.Item;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.Property;
-import javax.jcr.PropertyIterator;
-import javax.jcr.RangeIterator;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.Value;
-import javax.jcr.lock.Lock;
-import javax.jcr.nodetype.NodeDefinition;
-import javax.jcr.nodetype.NodeType;
-import javax.jcr.version.Version;
-import javax.jcr.version.VersionHistory;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
 import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter;
+
+import javax.jcr.*;
+import javax.jcr.lock.Lock;
+import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionHistory;
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.util.Calendar;
+import java.util.regex.Pattern;
 
 /**
  * Mock {@link Node} implementation
@@ -66,13 +56,13 @@ class MockNode extends AbstractItem implements Node {
         Node node = new MockNode(itemData, getSession());
         getMockedSession().addItem(itemData);
         node.setProperty(JcrConstants.JCR_PRIMARYTYPE, primaryNodeTypeName);
-        
+
         // special handling for some node types
         if (StringUtils.equals(primaryNodeTypeName, JcrConstants.NT_FILE)) {
             node.setProperty(JcrConstants.JCR_CREATED, Calendar.getInstance());
             node.setProperty("jcr:createdBy", getMockedSession().getUserID());
         }
-        
+
         return node;
     }
 
@@ -301,7 +291,7 @@ class MockNode extends AbstractItem implements Node {
             throw new ItemNotFoundException();
         }
     }
-    
+
     @Override
     public int hashCode() {
         return itemData.hashCode();
@@ -310,7 +300,7 @@ class MockNode extends AbstractItem implements Node {
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof MockNode) {
-            return itemData.equals(((MockNode)obj).itemData);
+            return itemData.equals(((MockNode) obj).itemData);
         }
         return false;
     }
@@ -338,12 +328,43 @@ class MockNode extends AbstractItem implements Node {
 
     @Override
     public void addMixin(final String pMixinName) throws RepositoryException {
-        throw new UnsupportedOperationException();
+        if (hasProperty("jcr:mixinTypes")) {
+            Property property = getProperty("jcr:mixinTypes");
+            Value[] values = property.getValues();
+            boolean hasMixin = false;
+            for (Value value : values) {
+                if (value.getString().equals(pMixinName)) {
+                    hasMixin = true;
+                    break;
+                }
+            }
+            if (!hasMixin) {
+                String[] mixins = new String[values.length + 1];
+                int index = 0;
+                for (Value value : values) {
+                    mixins[index] = value.getString();
+                    index++;
+                }
+                mixins[index] = pMixinName;
+                setProperty("jcr:mixinTypes", mixins);
+            }
+        } else {
+            setProperty("jcr:mixinTypes", new String[]{pMixinName});
+        }
     }
 
     @Override
     public boolean canAddMixin(final String pMixinName) throws RepositoryException {
-        throw new UnsupportedOperationException();
+        if (hasProperty("jcr:mixinTypes")) {
+            Property property = getProperty("jcr:mixinTypes");
+            Value[] values = property.getValues();
+            for (Value value : values) {
+                if (value.getString().equals(pMixinName)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     @Override
@@ -352,7 +373,7 @@ class MockNode extends AbstractItem implements Node {
     }
 
     @Override
-    public Version checkin() throws RepositoryException  {
+    public Version checkin() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
@@ -383,7 +404,16 @@ class MockNode extends AbstractItem implements Node {
 
     @Override
     public int getIndex() throws RepositoryException {
-        throw new UnsupportedOperationException();
+        NodeIterator siblings = getParent().getNodes();
+        int index = 0;
+        while (siblings.hasNext()) {
+            Node nextNode = siblings.nextNode();
+            if (nextNode.equals(this)) {
+                return index;
+            }
+            index++;
+        }
+        return index;
     }
 
     @Override
@@ -393,7 +423,20 @@ class MockNode extends AbstractItem implements Node {
 
     @Override
     public NodeType[] getMixinNodeTypes() throws RepositoryException {
-        throw new UnsupportedOperationException();
+        NodeTypeManager e = getSession().getWorkspace().getNodeTypeManager();
+        if (hasProperty("jcr:mixinTypes")) {
+            Property property = getProperty("jcr:mixinTypes");
+            Value[] values = property.getValues();
+            NodeType[] types = new NodeType[values.length];
+
+            for (int i = 0; i < values.length; ++i) {
+                types[i] = e.getNodeType(values[i].getString());
+            }
+
+            return types;
+        } else {
+            return new NodeType[]{};
+        }
     }
 
     @Override
@@ -433,12 +476,65 @@ class MockNode extends AbstractItem implements Node {
 
     @Override
     public void orderBefore(final String srcChildRelPath, final String destChildRelPath) throws RepositoryException {
-        throw new UnsupportedOperationException();
+        NodeIterator nodes = getNodes();
+        int count = 0;
+        Integer srcNodeIndex = null;
+        Integer destNodeIndex = null;
+        while (nodes.hasNext()) {
+            Node nextNode = nodes.nextNode();
+            if (nextNode.getName().equals(srcChildRelPath)) {
+                srcNodeIndex = count;
+            } else if (nextNode.getPath().equals(destChildRelPath)) {
+                destNodeIndex = count;
+            }
+            count++;
+        }
+        if (srcNodeIndex != null && destNodeIndex != null &&
+                destNodeIndex != srcNodeIndex + 1) {
+            if (srcNodeIndex < destNodeIndex) {
+                getSession().move(srcChildRelPath, srcChildRelPath);
+            }
+            nodes = getNodes();
+            boolean move = false;
+            count = 0;
+            while (nodes.hasNext()) {
+                Node nextNode = nodes.nextNode();
+                if (count == destNodeIndex || nextNode.getName().equals(srcChildRelPath)) {
+                    move = !move;
+                }
+                if (move) {
+                    getSession().move(nextNode.getPath(), nextNode.getPath());
+                }
+                count++;
+            }
+
+        }
     }
 
     @Override
     public void removeMixin(final String mixinName) throws RepositoryException {
-        throw new UnsupportedOperationException();
+        Property property = getProperty("jcr:mixinTypes");
+        Value[] values = property.getValues();
+
+        boolean hasMixin = false;
+        for (Value value : values) {
+            if (value.getString().equals(mixinName)) {
+                hasMixin = true;
+                break;
+            }
+        }
+
+        if (hasMixin) {
+            String[] mixins = new String[values.length - 1];
+            int index = 0;
+            for (Value value : values) {
+                if (!value.getString().equals(mixinName)) {
+                    mixins[index] = value.getString();
+                    index++;
+                }
+            }
+            setProperty("jcr:mixinTypes", mixins);
+        }
     }
 
     @Override

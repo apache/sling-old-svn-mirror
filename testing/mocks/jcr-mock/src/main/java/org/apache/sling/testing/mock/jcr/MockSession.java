@@ -18,32 +18,20 @@
  */
 package org.apache.sling.testing.mock.jcr;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
+import org.apache.jackrabbit.value.ValueFactoryImpl;
+import org.xml.sax.ContentHandler;
+
+import javax.jcr.*;
+import javax.jcr.retention.RetentionManager;
+import javax.jcr.security.AccessControlManager;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-
-import javax.jcr.Credentials;
-import javax.jcr.Item;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.Property;
-import javax.jcr.RangeIterator;
-import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.ValueFactory;
-import javax.jcr.Workspace;
-import javax.jcr.retention.RetentionManager;
-import javax.jcr.security.AccessControlManager;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
-import org.apache.jackrabbit.value.ValueFactoryImpl;
-import org.xml.sax.ContentHandler;
 
 /**
  * Mock {@link Session} implementation. This instance holds the JCR data in a
@@ -57,15 +45,15 @@ class MockSession implements Session {
     private final String userId;
     private boolean isLive;
 
-    public MockSession(MockRepository repository, Map<String,ItemData> items,
-            String userId, String workspaceName) {
+    public MockSession(MockRepository repository, Map<String, ItemData> items,
+                       String userId, String workspaceName) {
         this.repository = repository;
         this.workspace = new MockWorkspace(repository, this, workspaceName);
         this.items = items;
         this.userId = userId;
         isLive = true;
     }
-    
+
     private void checkLive() throws RepositoryException {
         if (!isLive) {
             throw new RepositoryException("Session is logged out / not live.");
@@ -85,8 +73,7 @@ class MockSession implements Session {
         if (itemData != null) {
             if (itemData.isNode()) {
                 return new MockNode(itemData, this);
-            }
-            else {
+            } else {
                 return new MockProperty(itemData, this);
             }
         } else {
@@ -159,6 +146,7 @@ class MockSession implements Session {
 
     /**
      * Add item
+     *
      * @param itemData item data
      */
     void addItem(final ItemData itemData) {
@@ -172,6 +160,7 @@ class MockSession implements Session {
 
     /**
      * Remove item incl. children
+     *
      * @param absPath Item path
      */
     private void removeItemWithChildren(final String absPath) throws RepositoryException {
@@ -294,7 +283,7 @@ class MockSession implements Session {
     public void logout() {
         isLive = false;
     }
-    
+
     // --- unsupported operations ---
     @Override
     public void addLockToken(final String lt) {
@@ -303,25 +292,25 @@ class MockSession implements Session {
 
     @Override
     public void exportDocumentView(final String absPath, final ContentHandler contentHandler, final boolean skipBinary,
-            final boolean noRecurse) throws RepositoryException {
+                                   final boolean noRecurse) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public void exportDocumentView(final String absPath, final OutputStream out, final boolean skipBinary,
-            final boolean noRecurse) throws RepositoryException {
+                                   final boolean noRecurse) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public void exportSystemView(final String absPath, final ContentHandler contentHandler, final boolean skipBinary,
-            final boolean noRecurse) throws RepositoryException {
+                                 final boolean noRecurse) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public void exportSystemView(final String absPath, final OutputStream out, final boolean skipBinary,
-            final boolean noRecurse) throws RepositoryException {
+                                 final boolean noRecurse) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
@@ -357,7 +346,41 @@ class MockSession implements Session {
 
     @Override
     public void move(final String srcAbsPath, final String destAbsPath) throws RepositoryException {
-        throw new UnsupportedOperationException();
+        Node srcNode = getNode(srcAbsPath);
+        if (srcNode.isNode()) {
+            ItemData itemData = ItemData.newNode(destAbsPath, new MockNodeType(srcNode.getPrimaryNodeType().getName()));
+            addItem(itemData);
+            Node newNode = getNode(destAbsPath);
+            copyNode(newNode, srcNode);
+            removeItem(srcAbsPath);
+            save();
+        }
+    }
+
+    private void copyNode(Node newNode, Node srcNode) throws RepositoryException {
+        PropertyIterator properties = srcNode.getProperties();
+        while (properties.hasNext()) {
+            Property property = properties.nextProperty();
+            if (property.isMultiple()) {
+                Value[] values = property.getValues();
+                String[] strings = new String[values.length];
+                int i = 0;
+                for (Value value : values) {
+                    strings[i] = value.getString();
+                    i++;
+                }
+                newNode.setProperty(property.getName(), strings);
+            } else {
+                newNode.setProperty(property.getName(), property.getValue().getString());
+            }
+        }
+
+        NodeIterator srcNodeNodes = srcNode.getNodes();
+        while (srcNodeNodes.hasNext()) {
+            Node srcNodeChildNode = srcNodeNodes.nextNode();
+            Node newNodeChildNode = newNode.addNode(srcNodeChildNode.getName(), srcNodeChildNode.getPrimaryNodeType().getName());
+            copyNode(newNodeChildNode, srcNodeChildNode);
+        }
     }
 
     @Override
