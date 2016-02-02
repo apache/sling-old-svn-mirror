@@ -22,6 +22,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.UUID;
+
 import javax.jcr.Session;
 
 import org.apache.sling.commons.testing.jcr.RepositoryProvider;
@@ -39,8 +41,15 @@ public class RootFolderMoveListenerTest {
     private Session contentModificationSession;
     private Session moveListenerSession;
 
-    public static final String [] ROOTS = { "/foo", "/bar" };
+    public static final String ROOT_1 = "/" + uniqueName();
+    public static final String ROOT_2 = "/" + uniqueName();
+    
+    public static final String [] ROOTS = { ROOT_1, ROOT_2 };
 
+    private static String uniqueName() {
+        return RootFolderMoveListener.class.getSimpleName() + "_" + UUID.randomUUID().toString();
+    }
+    
     @Before
     public void setup() throws Exception {
         // Need 2 sessions for this test, as the RootFolderMoveListener is registered with noLocal property set to true.
@@ -67,7 +76,7 @@ public class RootFolderMoveListenerTest {
     @Test
     public void testToString() {
         final String str = rmlt.toString();
-        assertTrue("Expecting " + str + " to contain our list of paths", str.contains("/foo, /bar"));
+        assertTrue("Expecting " + str + " to contain our list of paths", str.contains(ROOT_1 + ", " + ROOT_2));
     }
     
     @Test
@@ -80,14 +89,14 @@ public class RootFolderMoveListenerTest {
     
     @Test
     public void testMove() throws Exception {
-        contentModificationSession.getRootNode().addNode("foo");
-        contentModificationSession.getNode("/foo").addNode("one");
+        contentModificationSession.getRootNode().addNode(ROOT_1.substring(1));
+        contentModificationSession.getNode(ROOT_1).addNode("one");
         contentModificationSession.save();
         
         waitForScanDelay();
         assertFalse("Expecting no scheduled scan before move", timer.expired());
         
-        contentModificationSession.move("/foo/one", "/foo/two");
+        contentModificationSession.move(ROOT_1 + "/one", ROOT_1 + "/two");
         contentModificationSession.save();
         waitForScanDelay();
         assertTrue("Expecting scan to be triggered after move", timer.expired());
