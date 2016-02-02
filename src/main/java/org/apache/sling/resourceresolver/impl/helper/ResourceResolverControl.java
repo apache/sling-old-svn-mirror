@@ -77,8 +77,6 @@ public class ResourceResolverControl {
 
     private final ResourceProviderStorage storage;
 
-    private final ResourceResolver resolver;
-
     private final ResourceProviderAuthenticator authenticator;
 
     private final Map<String, Object> authenticationInfo;
@@ -89,12 +87,10 @@ public class ResourceResolverControl {
     public ResourceResolverControl(final boolean isAdmin,
             final Map<String, Object> authenticationInfo,
             ResourceProviderStorage storage,
-            ResourceResolver resolver,
             ResourceProviderAuthenticator authenticator) {
         this.authenticationInfo = authenticationInfo;
         this.isAdmin = isAdmin;
         this.storage = storage;
-        this.resolver = resolver;
         this.authenticator = authenticator;
     }
 
@@ -147,7 +143,7 @@ public class ResourceResolverControl {
      * resource provider returns parent for this child. See
      * {@link #getResource(String, Resource, Map, boolean)} for more details
      */
-    public Resource getParent(Resource child) {
+    public Resource getParent(final ResourceResolverContext context, final Resource child) {
         final String path = child.getPath();
         try {
             final StatefulResourceProvider provider = getBestMatchingProvider(path);
@@ -162,7 +158,7 @@ public class ResourceResolverControl {
         }
         final String parentPath = ResourceUtil.getParent(path);
         if (parentPath != null && isIntermediatePath(parentPath)) {
-            return new SyntheticResource(resolver, parentPath, ResourceProvider.RESOURCE_TYPE_SYNTHETIC);
+            return new SyntheticResource(context.getResourceResolver(), parentPath, ResourceProvider.RESOURCE_TYPE_SYNTHETIC);
         }
         return null;
     }
@@ -181,7 +177,9 @@ public class ResourceResolverControl {
      * The same behaviour occurs in {@link #getParent(Resource)} and
      * {@link #listChildren(Resource)}.
      */
-    public Resource getResource(String path, Resource parent, Map<String, String> parameters, boolean isResolve) {
+    public Resource getResource(final ResourceResolverContext context,
+            String path, Resource parent, Map<String, String> parameters,
+            boolean isResolve) {
         if (path == null || path.length() == 0 || path.charAt(0) != '/') {
             logger.debug("Not absolute {}", path);
             return null; // path must be absolute
@@ -207,7 +205,7 @@ public class ResourceResolverControl {
         //              to get the parent resource for resource traversal.
         if (!isResolve && isIntermediatePath(path)) {
             logger.debug("Resolved Synthetic {}", path);
-            return new SyntheticResource(resolver, path, ResourceProvider.RESOURCE_TYPE_SYNTHETIC);
+            return new SyntheticResource(context.getResourceResolver(), path, ResourceProvider.RESOURCE_TYPE_SYNTHETIC);
         }
         logger.debug("Resource null {} ", path);
         return null;
@@ -226,7 +224,7 @@ public class ResourceResolverControl {
      * invocation on the result.
      */
     @SuppressWarnings("unchecked")
-    public Iterator<Resource> listChildren(final Resource parent) {
+    public Iterator<Resource> listChildren(final ResourceResolverContext context, final Resource parent) {
         final String parentPath = parent.getPath();
 
         // 3 sources are combined: children of the provider which owns 'parent',
@@ -264,7 +262,7 @@ public class ResourceResolverControl {
                 pathBuilder.append(name);
                 final String childPath = pathBuilder.toString();
                 if (handler == null) {
-                    syntheticList.add(new SyntheticResource(resolver, childPath, ResourceProvider.RESOURCE_TYPE_SYNTHETIC));
+                    syntheticList.add(new SyntheticResource(context.getResourceResolver(), childPath, ResourceProvider.RESOURCE_TYPE_SYNTHETIC));
                 } else {
                     Resource rsrc = null;
                     try {
@@ -278,7 +276,7 @@ public class ResourceResolverControl {
                         // if there is a child provider underneath, we need to create a synthetic resource
                         // otherwise we need to make sure that no one else is providing this child
                         if ( entry.getValue().getChildren().isEmpty() ) {
-                            syntheticList.add(new SyntheticResource(resolver, childPath, ResourceProvider.RESOURCE_TYPE_SYNTHETIC));
+                            syntheticList.add(new SyntheticResource(context.getResourceResolver(), childPath, ResourceProvider.RESOURCE_TYPE_SYNTHETIC));
                         } else {
                             visitedNames.add(name);
                         }
@@ -336,11 +334,13 @@ public class ResourceResolverControl {
      *             If creation fails
      * @return The new resource
      */
-    public Resource create(String path, Map<String, Object> properties) throws PersistenceException {
+    public Resource create(final ResourceResolverContext context,
+            final String path, final Map<String, Object> properties)
+    throws PersistenceException {
         try {
             final StatefulResourceProvider provider = getBestMatchingModifiableProvider(path);
             if ( provider != null ) {
-                final Resource creationResultResource = provider.create(resolver, path, properties);
+                final Resource creationResultResource = provider.create(context.getResourceResolver(), path, properties);
                 if (creationResultResource != null) {
                     return creationResultResource;
                 }
@@ -531,12 +531,12 @@ public class ResourceResolverControl {
         return hasMoreProviders;
     }
 
-    private void copy(final Resource src, final String dstPath, final List<Resource> newNodes) throws PersistenceException {
+    private void copy(final ResourceResolverContext context, final Resource src, final String dstPath, final List<Resource> newNodes) throws PersistenceException {
         final ValueMap vm = src.getValueMap();
         final String createPath = new PathBuilder(dstPath).append(src.getName()).toString();
-        newNodes.add(this.create(createPath, vm));
+        newNodes.add(this.create(context, createPath, vm));
         for(final Resource c : src.getChildren()) {
-            copy(c, createPath, newNodes);
+            copy(context, c, createPath, newNodes);
         }
     }
 
@@ -545,17 +545,18 @@ public class ResourceResolverControl {
      * {@link StatefulResourceProvider#copy(String, String)} method on it.
      * Returns false if there's no such provider.
      */
-    public Resource copy(final String srcAbsPath, final String destAbsPath) throws PersistenceException {
+    public Resource copy(final ResourceResolverContext context,
+            final String srcAbsPath, final String destAbsPath) throws PersistenceException {
         final StatefulResourceProvider optimizedSourceProvider = checkSourceAndDest(srcAbsPath, destAbsPath);
         if ( optimizedSourceProvider != null && optimizedSourceProvider.copy(srcAbsPath, destAbsPath) ) {
-            return this.getResource(destAbsPath + '/' + ResourceUtil.getName(srcAbsPath), null, null, false);
+            return this.getResource(context, destAbsPath + '/' + ResourceUtil.getName(srcAbsPath), null, null, false);
         }
 
-        final Resource srcResource = this.getResource(srcAbsPath, null, null, false);
+        final Resource srcResource = this.getResource(context, srcAbsPath, null, null, false);
         final List<Resource> newResources = new ArrayList<Resource>();
         boolean rollback = true;
         try {
-            this.copy(srcResource, destAbsPath, newResources);
+            this.copy(context, srcResource, destAbsPath, newResources);
             rollback = false;
             return newResources.get(0);
         } finally {
@@ -572,16 +573,17 @@ public class ResourceResolverControl {
      * {@link StatefulResourceProvider#move(String, String)} method on it.
      * Returns false if there's no such provider.
      */
-    public Resource move(String srcAbsPath, String destAbsPath) throws PersistenceException {
+    public Resource move(final ResourceResolverContext context,
+            String srcAbsPath, String destAbsPath) throws PersistenceException {
         final StatefulResourceProvider optimizedSourceProvider = checkSourceAndDest(srcAbsPath, destAbsPath);
         if ( optimizedSourceProvider != null && optimizedSourceProvider.move(srcAbsPath, destAbsPath) ) {
-            return this.getResource(destAbsPath + '/' + ResourceUtil.getName(srcAbsPath), null, null, false);
+            return this.getResource(context, destAbsPath + '/' + ResourceUtil.getName(srcAbsPath), null, null, false);
         }
-        final Resource srcResource = this.getResource(srcAbsPath, null, null, false);
+        final Resource srcResource = this.getResource(context, srcAbsPath, null, null, false);
         final List<Resource> newResources = new ArrayList<Resource>();
         boolean rollback = true;
         try {
-            this.copy(srcResource, destAbsPath, newResources);
+            this.copy(context, srcResource, destAbsPath, newResources);
             this.delete(srcResource);
             rollback = false;
             return newResources.get(0);

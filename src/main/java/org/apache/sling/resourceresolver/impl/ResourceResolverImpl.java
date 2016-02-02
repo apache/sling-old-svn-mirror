@@ -53,6 +53,7 @@ import org.apache.sling.api.resource.ResourceWrapper;
 import org.apache.sling.resourceresolver.impl.helper.RedirectResource;
 import org.apache.sling.resourceresolver.impl.helper.ResourceIteratorDecorator;
 import org.apache.sling.resourceresolver.impl.helper.ResourcePathIterator;
+import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverControl;
 import org.apache.sling.resourceresolver.impl.helper.StarResource;
 import org.apache.sling.resourceresolver.impl.helper.URI;
@@ -97,8 +98,11 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /** The factory which created this resource resolver. */
     private final CommonResourceResolverFactoryImpl factory;
 
-    /** Resource resolver context. */
+    /** Resource resolver control. */
     private final ResourceResolverControl control;
+
+    /** Resource resolver context. */
+    private final ResourceResolverContext context;
 
     private volatile Exception closedResolverException;
 
@@ -110,6 +114,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         this.factory = factory;
         this.control = createControl(storage, authenticationInfo, isAdmin);
         this.factory.register(this, control);
+        this.context = new ResourceResolverContext(this);
     }
 
     /**
@@ -129,12 +134,13 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         }
         this.control = createControl(factory.getResourceProviderTracker().getResourceProviderStorage(), authInfo, resolver.control.isAdmin());
         this.factory.register(this, control);
+        this.context = new ResourceResolverContext(this);
     }
 
     private ResourceResolverControl createControl(ResourceProviderStorage storage, Map<String, Object> authenticationInfo, final boolean isAdmin)
     throws LoginException {
         final ResourceProviderAuthenticator authenticator = new ResourceProviderAuthenticator(this, authenticationInfo, this.factory.getResourceAccessSecurityTracker());
-        final ResourceResolverControl provider = new ResourceResolverControl(isAdmin, authenticationInfo, storage, this, authenticator);
+        final ResourceResolverControl provider = new ResourceResolverControl(isAdmin, authenticationInfo, storage, authenticator);
         authenticator.authenticateAll(storage.getAuthRequiredHandlers(), provider);
         return provider;
     }
@@ -701,7 +707,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         if (parent instanceof ResourceWrapper) {
             return listChildren(((ResourceWrapper) parent).getResource());
         }
-        return new ResourceIteratorDecorator(this.factory.getResourceDecoratorTracker(), this.control.listChildren(parent));
+        return new ResourceIteratorDecorator(this.factory.getResourceDecoratorTracker(), this.control.listChildren(this.context, parent));
     }
 
     /**
@@ -1030,7 +1036,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             parentToUse = null;
         }
 
-        final Resource resource = this.control.getResource(path, parentToUse, parameters, isResolve);
+        final Resource resource = this.control.getResource(this.context, path, parentToUse, parameters, isResolve);
         if (resource != null) {
             resource.getResourceMetadata().setResolutionPath(path);
             resource.getResourceMetadata().setParameterMap(parameters);
@@ -1181,7 +1187,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
                 throw new IllegalArgumentException("Can't create child on a synthetic root");
             }
         }
-        final Resource rsrc = this.control.create(path, properties);
+        final Resource rsrc = this.control.create(this.context, path, properties);
         return this.factory.getResourceDecoratorTracker().decorate(rsrc);
     }
 
@@ -1282,16 +1288,16 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
     @Override
     public Resource getParent(final Resource child) {
-        return this.control.getParent(child);
+        return this.control.getParent(this.context, child);
     }
 
     @Override
     public Resource copy(final String srcAbsPath, final String destAbsPath) throws PersistenceException {
-        return this.control.copy(srcAbsPath, destAbsPath);
+        return this.control.copy(this.context, srcAbsPath, destAbsPath);
     }
 
     @Override
     public Resource move(final String srcAbsPath, final String destAbsPath) throws PersistenceException {
-        return this.control.move(srcAbsPath, destAbsPath);
+        return this.control.move(this.context, srcAbsPath, destAbsPath);
     }
 }

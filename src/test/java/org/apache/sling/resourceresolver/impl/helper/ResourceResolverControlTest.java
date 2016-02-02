@@ -82,6 +82,7 @@ public class ResourceResolverControlTest {
     private ResourceProvider<Object> rootProvider;
     private Resource subProviderResource;
     private Resource somethingResource;
+    private ResourceResolverContext context;
 
     @Before
     public void prepare() throws Exception {
@@ -141,7 +142,8 @@ public class ResourceResolverControlTest {
         ResourceProviderStorage storage = new ResourceProviderStorage(handlers);
         authenticator = new ResourceProviderAuthenticator(rr, authInfo, securityTracker);
 
-        crp = new ResourceResolverControl(false, authInfo, storage, rr, authenticator);
+        crp = new ResourceResolverControl(false, authInfo, storage, authenticator);
+        context = new ResourceResolverContext(rr);
     }
 
     /**
@@ -196,7 +198,7 @@ public class ResourceResolverControlTest {
     @Test
     public void getResource_synthetic() {
 
-        Resource resource = crp.getResource("/some", null, null, false);
+        Resource resource = crp.getResource(context, "/some", null, null, false);
 
         assertTrue("Not a syntethic resource : " + resource, ResourceUtil.isSyntheticResource(resource));
     }
@@ -206,7 +208,7 @@ public class ResourceResolverControlTest {
      */
     @Test
     public void getResource_missing() {
-        assertThat(crp.getResource("/nothing", null, null, false), nullValue());
+        assertThat(crp.getResource(context, "/nothing", null, null, false), nullValue());
     }
 
     /**
@@ -214,8 +216,8 @@ public class ResourceResolverControlTest {
      */
     @Test
     public void getResource_found() {
-        assertThat(crp.getResource("/something", null, null, false), not(nullValue()));
-        assertThat(crp.getResource("/some/path/object", null, null, false), not(nullValue()));
+        assertThat(crp.getResource(context, "/something", null, null, false), not(nullValue()));
+        assertThat(crp.getResource(context, "/some/path/object", null, null, false), not(nullValue()));
     }
 
 
@@ -224,7 +226,7 @@ public class ResourceResolverControlTest {
      */
     @Test
     public void getParent_found() {
-        Resource parent = crp.getParent(somethingResource);
+        Resource parent = crp.getParent(context, somethingResource);
         assertThat(parent, notNullValue());
         assertThat("parent.path", parent.getPath(), equalTo("/"));
     }
@@ -236,7 +238,7 @@ public class ResourceResolverControlTest {
      */
     @Test
     public void getParent_synthetic() {
-        Resource parent = crp.getParent(subProviderResource);
+        Resource parent = crp.getParent(context, subProviderResource);
         assertThat(parent, notNullValue());
         assertTrue("parent is a synthetic resource", ResourceUtil.isSyntheticResource(parent));
     }
@@ -246,8 +248,8 @@ public class ResourceResolverControlTest {
      */
     @Test
     public void listChildren_root() {
-        Resource root = crp.getResource("/", null, null, false);
-        Iterator<Resource> children = crp.listChildren(root);
+        Resource root = crp.getResource(context, "/", null, null, false);
+        Iterator<Resource> children = crp.listChildren(context, root);
 
         Map<String, Resource> all = new HashMap<String, Resource>();
         while ( children.hasNext() ) {
@@ -266,8 +268,8 @@ public class ResourceResolverControlTest {
     @Test
     public void listChildren_lowerLevel() {
 
-        Resource root = crp.getResource("/some", null, null, false);
-        Iterator<Resource> children = crp.listChildren(root);
+        Resource root = crp.getResource(context, "/some", null, null, false);
+        Iterator<Resource> children = crp.listChildren(context, root);
         Map<String, Resource> all = new HashMap<String, Resource>();
 
         while ( children.hasNext() ) {
@@ -293,7 +295,7 @@ public class ResourceResolverControlTest {
         configureResourceAt(subProvider, "/some/path/new/object");
         configureResourceAt(subProvider, "/some/path/new");
 
-        Resource resource = crp.copy("/some/path/object", "/some/path/new");
+        Resource resource = crp.copy(context, "/some/path/object", "/some/path/new");
 
 
         assertThat(resource, not(nullValue()));
@@ -311,7 +313,7 @@ public class ResourceResolverControlTest {
         when(rootProvider.create(mockContext(), Mockito.eq("/object"), Mockito.anyMap()))
             .thenReturn(newRes);
 
-        Resource resource = crp.copy("/some/path/object", "/");
+        Resource resource = crp.copy(context, "/some/path/object", "/");
 
         assertThat(resource, not(nullValue()));
     }
@@ -329,7 +331,7 @@ public class ResourceResolverControlTest {
         configureResourceAt(subProvider, "/some/path/new/object");
         configureResourceAt(subProvider, "/some/path/new");
 
-        Resource resource = crp.move("/some/path/object", "/some/path/new");
+        Resource resource = crp.move(context, "/some/path/object", "/some/path/new");
 
         assertThat(resource, not(nullValue()));
     }
@@ -345,7 +347,7 @@ public class ResourceResolverControlTest {
         Resource newRes = newMockResource("/object");
         when(rootProvider.create(mockContext(), Mockito.eq("/object"), Mockito.anyMap())).thenReturn(newRes);
 
-        Resource resource = crp.move("/some/path/object", "/");
+        Resource resource = crp.move(context, "/some/path/object", "/");
 
         assertThat(resource, not(nullValue()));
 
