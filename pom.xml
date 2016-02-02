@@ -86,8 +86,8 @@
                             org.apache.sling.api.resource;provide:=true,
                             org.apache.sling.commons.osgi;version="$(@)",
                             !org.apache.jackrabbit.api.observation,
-                            org.apache.jackrabbit.oak.plugins.observation;resolution:=optional,
-                            org.apache.jackrabbit.oak.spi.commit;resolution:=optional,
+                            org.apache.jackrabbit.oak.plugins.observation;version=0.0.0;resolution:=optional,
+                            org.apache.jackrabbit.oak.spi.commit;version=0.0.0;resolution:=optional,
                             *
                         </Import-Package>
                         <DynamicImport-Package>
