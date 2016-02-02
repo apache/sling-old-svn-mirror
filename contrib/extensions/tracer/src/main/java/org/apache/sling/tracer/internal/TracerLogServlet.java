@@ -46,6 +46,10 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
 
     public static final String HEADER_TRACER_REQUEST_ID = "Sling-Tracer-Request-Id";
 
+    public static final String HEADER_TRACER_PROTOCOL_VERSION = "Sling-Tracer-Protocol-Version";
+
+    public static final int TRACER_PROTOCOL_VERSION = 1;
+
     private final Cache<String, JSONRecording> cache;
 
     public TracerLogServlet(BundleContext context) {
@@ -161,8 +165,8 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
         request.setAttribute(ATTR_REQUEST_ID, requestId);
 
         response.setHeader(HEADER_TRACER_REQUEST_ID, requestId);
-        //TODO Show we also sent tracer version to enable client determine
-        //is server is capable of given version
+        response.setHeader(HEADER_TRACER_PROTOCOL_VERSION, String.valueOf(TRACER_PROTOCOL_VERSION));
+
         return recording;
     }
 
