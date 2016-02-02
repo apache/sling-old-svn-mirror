@@ -36,7 +36,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.resourceresolver.impl.console.ResourceResolverWebConsolePlugin;
 import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
-import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
+import org.apache.sling.resourceresolver.impl.helper.ResourceResolverControl;
 import org.apache.sling.resourceresolver.impl.mapping.MapConfigurationProvider;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
@@ -202,7 +202,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
      * @param ctx The resource resolver context
      */
     public void register(final ResourceResolver resolver,
-            final ResourceResolverContext ctx) {
+            final ResourceResolverControl ctx) {
         // create new weak reference
         refs.put(ctx.hashCode(), new ResolverWeakReference(resolver, this.resolverReferenceQueue, ctx));
     }
@@ -214,7 +214,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
      * @param ctx The resource resolver context
      */
     public void unregister(final ResourceResolver resourceResolverImpl,
-            final ResourceResolverContext ctx) {
+            final ResourceResolverControl ctx) {
         // close the context
         ctx.close();
         // remove it from the set of weak references.
@@ -415,11 +415,11 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
      */
     private static final class ResolverWeakReference extends WeakReference<ResourceResolver> {
 
-        private final ResourceResolverContext context;
+        private final ResourceResolverControl context;
 
         public ResolverWeakReference(final ResourceResolver referent,
                 final ReferenceQueue<? super ResourceResolver> q,
-                final ResourceResolverContext ctx) {
+                final ResourceResolverControl ctx) {
             super(referent, q);
             this.context = ctx;
         }

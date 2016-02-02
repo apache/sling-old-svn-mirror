@@ -32,7 +32,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.runtime.dto.AuthType;
-import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
+import org.apache.sling.resourceresolver.impl.helper.ResourceResolverControl;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
 import org.apache.sling.spi.resource.provider.ResolverContext;
@@ -59,7 +59,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
 
     private final ResourceResolver resolver;
 
-    private final ResourceResolverContext resolverContext;
+    private final ResourceResolverControl resolverContext;
 
     private volatile ResolverContext<Object> cachedContext;
 
@@ -69,7 +69,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     public AuthenticatedResourceProvider(final ResourceProviderHandler handler,
             ResourceResolver resolver,
             Map<String, Object> authInfo,
-            ResourceResolverContext resolverContext) throws LoginException {
+            ResourceResolverControl resolverContext) throws LoginException {
         this.handler = handler;
         this.authInfo = authInfo;
         this.resolver = resolver;

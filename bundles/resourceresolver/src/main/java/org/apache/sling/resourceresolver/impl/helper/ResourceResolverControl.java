@@ -62,9 +62,9 @@ import org.slf4j.LoggerFactory;
  *
  * Like a resource resolver itself, this class is not thread safe.
  */
-public class ResourceResolverContext {
+public class ResourceResolverControl {
 
-    private static final Logger logger = LoggerFactory.getLogger(ResourceResolverContext.class);
+    private static final Logger logger = LoggerFactory.getLogger(ResourceResolverControl.class);
 
     /** Is this a resource resolver for an admin? */
     private final boolean isAdmin;
@@ -86,7 +86,7 @@ public class ResourceResolverContext {
     /**
      * Create a new resource resolver context.
      */
-    public ResourceResolverContext(final boolean isAdmin,
+    public ResourceResolverControl(final boolean isAdmin,
             final Map<String, Object> authenticationInfo,
             ResourceProviderStorage storage,
             ResourceResolver resolver,
