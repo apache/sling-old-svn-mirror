@@ -64,7 +64,7 @@ import org.mockito.Mockito;
 import org.osgi.framework.BundleContext;
 
 @SuppressWarnings("unchecked")
-public class ResourceResolverContextTest {
+public class ResourceResolverControlTest {
 
     // query language names
     private static final String QL_MOCK = "MockQueryLanguage";
@@ -75,7 +75,7 @@ public class ResourceResolverContextTest {
     private static final String QUERY_MOCK_FIND_ALL = "FIND ALL";
 
     private ResourceProviderAuthenticator authenticator;
-    private ResourceResolverContext crp;
+    private ResourceResolverControl crp;
     private List<ResourceProviderHandler> handlers;
     private ResourceProvider<Object> subProvider;
     private Map<String, Object> authInfo;
@@ -141,7 +141,7 @@ public class ResourceResolverContextTest {
         ResourceProviderStorage storage = new ResourceProviderStorage(handlers);
         authenticator = new ResourceProviderAuthenticator(rr, authInfo, securityTracker);
 
-        crp = new ResourceResolverContext(false, authInfo, storage, rr, authenticator);
+        crp = new ResourceResolverControl(false, authInfo, storage, rr, authenticator);
     }
 
     /**
