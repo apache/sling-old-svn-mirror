@@ -16,38 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.resourceresolver.impl.providers.stateful;
+package org.apache.sling.resourceresolver.impl.helper;
 
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 
-public abstract class AbstractIterator<T> implements Iterator<T> {
+public class ChainedIterator<T> extends AbstractIterator<T> {
 
-    private T nextElement;
+    private final Iterator<Iterator<T>> iterators;
 
-    protected abstract T seek();
+    private Iterator<T> currentIterator;
+
+    public ChainedIterator(Iterator<Iterator<T>> iterators) {
+        this.iterators = iterators;
+    }
 
     @Override
-    public boolean hasNext() {
-        if (nextElement == null) {
-            nextElement = seek();
+    protected T seek() {
+        while (true) {
+            if (currentIterator == null) {
+                if (!iterators.hasNext()) {
+                    return null;
+                }
+                currentIterator = iterators.next();
+                continue;
+            }
+            if (currentIterator.hasNext()) {
+                return currentIterator.next();
+            } else {
+                currentIterator = null;
+            }
         }
-        return nextElement != null;
     }
-
-    @Override
-    public T next() {
-        if (nextElement == null && !hasNext()) {
-            throw new NoSuchElementException();
-        }
-        final T result = nextElement;
-        nextElement = null;
-        return result;
-    }
-
-    @Override
-    public void remove() {
-        throw new UnsupportedOperationException();
-    }
-
 }
