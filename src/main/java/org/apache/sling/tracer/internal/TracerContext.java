@@ -27,7 +27,7 @@ import org.apache.sling.api.request.RequestProgressTracker;
 import org.slf4j.helpers.MessageFormatter;
 
 class TracerContext {
-    private static final String QUERY_LOGGER = "org.apache.jackrabbit.oak.query.QueryEngineImpl";
+    static final String QUERY_LOGGER = "org.apache.jackrabbit.oak.query.QueryEngineImpl";
 
     /**
      * Following queries are internal to Oak and are fired for login/access control
@@ -54,9 +54,11 @@ class TracerContext {
     private RequestProgressTracker progressTracker;
     private int queryCount;
     private final TracerConfig[] tracers;
+    private final Recording recording;
 
-    public TracerContext(TracerConfig[] tracers) {
+    public TracerContext(TracerConfig[] tracers, Recording recording) {
         this.tracers = tracers;
+        this.recording = recording;
 
         //Say if the list is like com.foo;level=trace,com.foo.bar;level=info.
         // Then first config would result in a match and later config would
@@ -79,6 +81,7 @@ class TracerContext {
     }
 
     public boolean log(String logger, String format, Object[] params) {
+        recording.log(logger, format, params);
         if (QUERY_LOGGER.equals(logger)
                 && params != null && params.length == 2) {
             return logQuery((String) params[1]);
