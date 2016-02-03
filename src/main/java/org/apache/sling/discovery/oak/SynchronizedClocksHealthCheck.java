@@ -64,7 +64,7 @@ public class SynchronizedClocksHealthCheck implements HealthCheck {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private static final String DOCUMENT_NODE_STORE_MBEAN = "org.apache.jackrabbit.oak:name=*,type=\"DocumentNodeStore\",id=*";
+    private static final String DOCUMENT_NODE_STORE_MBEAN = "org.apache.jackrabbit.oak:name=*,type=DocumentNodeStore";
     private static final String TIME_DIFF_METHOD_NAME = "determineServerTimeDifferenceMillis";
 
     private static final long INTRA_CLUSTER_HIGH_WATER_MARK = 5000;
