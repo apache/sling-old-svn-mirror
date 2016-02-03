@@ -27,6 +27,8 @@ import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
+
+import javax.jcr.RepositoryException;
 import javax.jcr.security.Privilege;
 
 import org.apache.jackrabbit.commons.JcrUtils;
@@ -59,18 +61,7 @@ public class Init {
 
             JackrabbitSession jackrabittSession  = (JackrabbitSession) session;
             UserManager userManager = jackrabittSession.getUserManager();
-            Authorizable serviceUser = userManager.getAuthorizable(serviceUserName);
-
-            if (serviceUser == null) {
-                try {
-                    serviceUser = userManager.createSystemUser(serviceUserName, null);
-                    log.info("created system user {}", serviceUserName);
-
-                } catch (Throwable t) {
-                    serviceUser = userManager.createUser(serviceUserName, "123");
-                    log.info("created regular user {}", serviceUserName);
-                }
-            }
+            User serviceUser = createOrGetServiceUser(userManager, serviceUserName);
 
             if (serviceUser != null) {
                 AccessControlUtils.addAccessControlEntry(session, "/var/sling/distribution/packages", serviceUser.getPrincipal(), new String[]{ Privilege.JCR_ALL }, true);
@@ -79,12 +70,7 @@ public class Init {
 
             }
 
-            Authorizable distributorUser = userManager.getAuthorizable(distributorUserName);
-
-            if (distributorUser == null) {
-                distributorUser = userManager.createUser(distributorUserName, "123");
-                log.info("created regular user {}", distributorUserName);
-            }
+            Authorizable distributorUser = createOrGetRegularUser(userManager, distributorUserName);
 
             JcrUtils.getOrCreateByPath("/content", "sling:Folder", session);
 
@@ -97,11 +83,9 @@ public class Init {
 
             }
 
-            Authorizable defaultAgentUser = userManager.getAuthorizable(defaultAgentUserName);
+            User defaultAgentUser = createOrGetServiceUser(userManager, defaultAgentUserName);
 
-            if (defaultAgentUser == null) {
-                defaultAgentUser = userManager.createUser(defaultAgentUserName, "123");
-                log.info("created regular user {}", defaultAgentUserName);
+            if (defaultAgentUser != null) {
                 ((User) distributorUser).getImpersonation().grantImpersonation(defaultAgentUser.getPrincipal());
                 ((User) serviceUser).getImpersonation().grantImpersonation(defaultAgentUser.getPrincipal());
             }
@@ -112,6 +96,38 @@ public class Init {
             log.error("cannot create user", t);
         }
     }
+
+
+    private User createOrGetServiceUser(UserManager userManager, String serviceUserName) throws RepositoryException {
+        Authorizable serviceUser = userManager.getAuthorizable(serviceUserName);
+
+        if (serviceUser == null) {
+            try {
+                serviceUser = userManager.createSystemUser(serviceUserName, null);
+                log.info("created system user {}", serviceUserName);
+
+            } catch (Throwable t) {
+                serviceUser = userManager.createUser(serviceUserName, "123");
+                log.info("created regular user {}", serviceUserName);
+            }
+        }
+
+        return (User) serviceUser;
+
+    }
+
+    private User createOrGetRegularUser(UserManager userManager, String userName) throws RepositoryException {
+        Authorizable serviceUser = userManager.getAuthorizable(userName);
+
+        if (serviceUser == null) {
+            serviceUser = userManager.createUser(userName, "123");
+            log.info("created regular user {}", userName);
+        }
+
+        return (User) serviceUser;
+
+    }
+
 
 
 
