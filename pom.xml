@@ -72,17 +72,15 @@
         <!-- Change this to use longer or shorter timeouts for testing -->
         <sling.testing.timeout.multiplier>1.0</sling.testing.timeout.multiplier>
 
-        <!-- Set this to run the executable jar in a specified filesystem folder -->
-        <jar.executor.work.folder />
-
+		<author.jar.executor.work.folder>${project.build.directory}/author</author.jar.executor.work.folder>
         <!-- Options for the jar to execute. $JAREXEC_SERVER_PORT$ is replaced by the
         selected port number -->
-        <author.jar.executor.jar.options>-p $JAREXEC_SERVER_PORT$ -Dsling.run.modes=author -Dsling.home=sling/author
+        <author.jar.executor.jar.options>-p $JAREXEC_SERVER_PORT$ -Dsling.run.modes=author
         </author.jar.executor.jar.options>
+	
+		<publish.jar.executor.work.folder>${project.build.directory}/publish</publish.jar.executor.work.folder>
         <publish.jar.executor.jar.options>-p $JAREXEC_SERVER_PORT$ -Dsling.run.modes=publish
-            -Dsling.home=sling/publish
         </publish.jar.executor.jar.options>
-
 
         <!-- Change this to run selected tests only -->
         <tests.to.run>**/**Test.java</tests.to.run>
@@ -126,7 +124,6 @@
                 <configuration>
                     <excludes>
                         <exclude>derby.log</exclude>
-                        <exclude>sling/**</exclude>
                         <exclude>src/main/resources/SLING-CONTENT/libs/test/install.author/*.json</exclude>
                     </excludes>
                 </configuration>
@@ -135,21 +132,26 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
             </plugin>
-
             <plugin>
-                <artifactId>maven-clean-plugin</artifactId>
-                <configuration>
-                    <filesets>
-                        <fileset>
-                            <directory>${basedir}</directory>
-                            <includes>
-                                <!-- sling folder is the workdir of the executable jar that we test -->
-                                <include>sling/**</include>
-                            </includes>
-                        </fileset>
-                    </filesets>
-                </configuration>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>createFolders</id>
+                        <phase>process-resources</phase>
+                        <configuration>
+                            <tasks>
+                                <mkdir dir="${project.build.directory}/author"/>
+                                <mkdir dir="${project.build.directory}/publish"/>
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
+            
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -255,8 +257,10 @@
                         </author.jar.executor.jar.options>
                         <publish.jar.executor.jar.options>${publish.jar.executor.jar.options}
                         </publish.jar.executor.jar.options>
-
-
+                        
+						<author.jar.executor.work.folder>${author.jar.executor.work.folder}</author.jar.executor.work.folder>
+						<publish.jar.executor.work.folder>${publish.jar.executor.work.folder}</publish.jar.executor.work.folder>
+                        
                         <additional.bundles.path>
                             ${project.build.directory},${project.build.directory}/sling/additional-bundles
                         </additional.bundles.path>
@@ -280,11 +284,6 @@
 
                         <sling.additional.bundle.1>httpcore-osgi</sling.additional.bundle.1>
                         <sling.additional.bundle.2>httpclient-osgi</sling.additional.bundle.2>
-                        <sling.additional.bundle.30>org.apache.sling.jcr.resource</sling.additional.bundle.30>
-                        <sling.additional.bundle.31>org.apache.sling.discovery.impl</sling.additional.bundle.31>
-                        <sling.additional.bundle.32>org.apache.sling.serviceusermapper</sling.additional.bundle.32>
-                        <sling.additional.bundle.33>org.apache.sling.jcr.api</sling.additional.bundle.33>
-                        <sling.additional.bundle.34>org.apache.sling.jcr.base</sling.additional.bundle.34>
                         <sling.additional.bundle.35>org.apache.sling.event</sling.additional.bundle.35>
                         <sling.additional.bundle.4>org.apache.sling.hc.core</sling.additional.bundle.4>
                         <sling.additional.bundle.5>org.apache.jackrabbit.vault</sling.additional.bundle.5>
@@ -318,28 +317,6 @@
             <artifactId>org.apache.sling.commons.osgi</artifactId>
             <version>2.2.0</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.discovery.impl</artifactId>
-            <version>1.0.12</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.jcr.resource</artifactId>
-            <version>2.3.12</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.jcr.api</artifactId>
-            <version>2.3.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.jcr.base</artifactId>
-            <version>2.3.0</version>
         </dependency>
         <!-- FILEVAULT -->
         <dependency>
@@ -376,8 +353,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad</artifactId>
-            <classifier>standalone</classifier>
-            <version>7</version>
+            <version>8</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
