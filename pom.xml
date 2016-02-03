@@ -29,15 +29,15 @@
 
     <artifactId>org.apache.sling.discovery.oak</artifactId>
     <packaging>bundle</packaging>
-    <version>1.2.6</version>
+    <version>1.2.7-SNAPSHOT</version>
 
     <name>Apache Sling Oak-Based Discovery Service</name>
     <description>Implementation of Apache Sling Discovery based on Jackrabbit Oak using its discovery-lite descriptor for in-cluster view detection and a TopologyView through HTTP POST heartbeats announcing sub-topologies to each other.</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.discovery.oak-1.2.6</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.discovery.oak-1.2.6</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.discovery.oak-1.2.6</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/discovery/oak</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/discovery/oak</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/discovery/oak</url>
     </scm>
 
     <build>
