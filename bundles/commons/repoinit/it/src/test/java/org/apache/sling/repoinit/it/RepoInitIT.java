@@ -42,10 +42,12 @@ import org.apache.sling.repoinit.parser.operations.Operation;
 import org.apache.sling.repoinit.parser.operations.OperationVisitor;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 /** Test service users and ACLs set from a text file. */
+@Ignore("SLING-5452 - tests fail on Jenkins")
 public class RepoInitIT {
 
     private Session session;
