@@ -26,7 +26,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -62,13 +64,33 @@ class TeleporterHttpClient {
             c.setRequestProperty ("Authorization", basicAuth);
         }
     }
+
+    /** Wait until specified URL returns specified status */
+    public void waitForStatus(String url, int expectedStatus, int timeoutMsec) throws IOException {
+        final long end = System.currentTimeMillis() + timeoutMsec;
+        final Set<Integer> statusSet = new HashSet<Integer>();
+        while(System.currentTimeMillis() < end) {
+            try {
+                final int status = getHttpGetStatus(url);
+                statusSet.add(status);
+                if(status == expectedStatus) {
+                    return;
+                }
+                Thread.sleep(50);
+            } catch(Exception ignore) {
+            }
+        }
+        throw new IOException("Did not get status " + expectedStatus + " at " + url + " after " + timeoutMsec + " msec, got " + statusSet);
+    }
     
-    void installBundle(InputStream bundle, String bundleSymbolicName) throws MalformedURLException, IOException {
+    void installBundle(InputStream bundle, String bundleSymbolicName, int webConsoleReadyTimeoutSeconds) throws MalformedURLException, IOException {
         // Equivalent of
         // curl -u admin:admin -F action=install -Fbundlestart=1 -Fbundlefile=@somefile.jar http://localhost:8080/system/console/bundles
         final String url = baseUrl + "/system/console/bundles";
         final String contentType = "application/octet-stream";
         final HttpURLConnection c = (HttpURLConnection)new URL(url).openConnection();
+        
+        waitForStatus(url, 200, webConsoleReadyTimeoutSeconds * 1000);
         
         try {
             setConnectionCredentials(c);
@@ -106,7 +128,7 @@ class TeleporterHttpClient {
         }
     }
     
-    private int getHttpGetStatus(String url) throws MalformedURLException, IOException {
+    public int getHttpGetStatus(String url) throws MalformedURLException, IOException {
         final HttpURLConnection c = (HttpURLConnection)new URL(url).openConnection();
         setConnectionCredentials(c);
         c.setUseCaches(false);

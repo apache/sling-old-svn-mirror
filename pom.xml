@@ -68,8 +68,14 @@
       <artifactId>slf4j-simple</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.github.tomakehurst</groupId>
+      <artifactId>wiremock</artifactId>
+      <version>1.57</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
-
+  
   <scm>
     <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/junit/teleporter</connection>
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/junit/teleporter</developerConnection>
