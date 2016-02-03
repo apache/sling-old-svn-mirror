@@ -47,6 +47,7 @@ public class ClientSideTeleporter extends TeleporterRule {
     public static final String DEFAULT_TEST_SERVLET_PATH = "system/sling/junit";
     private DependencyAnalyzer dependencyAnalyzer;
     private int testReadyTimeoutSeconds = 5;
+    private int webConsoleReadyTimeoutSeconds = 30;
     private String baseUrl;
     private String serverCredentials;
     private String testServletPath = DEFAULT_TEST_SERVLET_PATH;
@@ -104,6 +105,11 @@ public class ClientSideTeleporter extends TeleporterRule {
         testReadyTimeoutSeconds = tm;
     }
     
+    /** Define how long to wait for the webconsole to be ready, before installing the test bundle */
+    public void setWebConsoleReadyTimeoutSeconds (int tm) {
+        webConsoleReadyTimeoutSeconds = tm;
+    }
+    
     /** Set the credentials to use to install our test bundle on the server */
     public void setServerCredentials(String username, String password) {
         serverCredentials = username + ":" + password;
@@ -154,7 +160,7 @@ public class ClientSideTeleporter extends TeleporterRule {
         final SimpleDateFormat fmt = new SimpleDateFormat("HH-mm-ss-");
         final String bundleSymbolicName = getClass().getSimpleName() + "." + fmt.format(new Date()) + "." + UUID.randomUUID();
         final InputStream bundle = buildTestBundle(classUnderTest, embeddedClasses, bundleSymbolicName);
-        httpClient.installBundle(bundle, bundleSymbolicName);
+        httpClient.installBundle(bundle, bundleSymbolicName, webConsoleReadyTimeoutSeconds);
         return bundleSymbolicName;
     }
     
