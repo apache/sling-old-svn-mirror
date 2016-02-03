@@ -16,6 +16,9 @@
  */
 package org.apache.sling.hamcrest.matchers;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
@@ -52,6 +55,16 @@ public class ResourceMatcher extends TypeSafeMatcher<Resource> {
         }
 
         return true;
+    }
+
+    @Override
+    protected void describeMismatchSafely(Resource item, Description mismatchDescription) {
+        Map<String, Object> actualProperties = item.adaptTo(ValueMap.class);
+        if (actualProperties == null) {
+            mismatchDescription.appendText("was Resource which does not expose a value map via adaptTo");
+            return;
+        }
+        mismatchDescription.appendText("was Resource with properties ").appendValueList("[", ",", "]", actualProperties.entrySet()).appendText(" (resource: ").appendValue(item).appendText(")");
     }
 
 }
