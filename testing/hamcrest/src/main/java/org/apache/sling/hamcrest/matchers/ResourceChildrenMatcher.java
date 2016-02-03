@@ -16,6 +16,7 @@
  */
 package org.apache.sling.hamcrest.matchers;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
@@ -48,5 +49,14 @@ public class ResourceChildrenMatcher extends TypeSafeMatcher<Resource> {
         }
         return true;
     }
-    
+
+    @Override
+    protected void describeMismatchSafely(Resource item, Description mismatchDescription) {
+        List<String> actualChildNames = new ArrayList<String>();
+        for (Resource child : item.getChildren()) {
+            actualChildNames.add(child.getName());
+        }
+        mismatchDescription.appendText("was Resource with children ").appendValueList("[", ",", "]", actualChildNames).appendText(" (resource: ").appendValue(item).appendText(")");
+    }
+
 }
