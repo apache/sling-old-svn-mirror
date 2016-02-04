@@ -193,7 +193,12 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
     public String getServiceUserID(final Bundle bundle, final String subServiceName) {
         final String serviceName = getServiceName(bundle);
         final String userId = internalGetUserId(serviceName, subServiceName);
-        return isValidUser(userId, serviceName, subServiceName) ? userId : null;
+        final boolean valid = isValidUser(userId, serviceName, subServiceName);
+        final String result = valid ? userId : null;
+        log.debug(
+                "getServiceUserID(bundle {}, subServiceName {}) returns [{}] (raw userId={}, valid={})",
+                new Object[] { bundle, subServiceName, result, userId, valid });
+        return result;
     }
 
     protected synchronized void bindAmendment(final MappingConfigAmendment amendment, final Map<String, Object> props) {
@@ -313,6 +318,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
             if (serviceRegistration != null) {
                 try {
                     serviceRegistration.unregister();
+                    log.debug("Unregistered ServiceUserMapped {}", registration.mapping);
                 } catch (IllegalStateException e) {
                     log.error("cannot unregister ServiceUserMapped {}", registration.mapping,  e);
                 }
@@ -337,6 +343,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
                     new ServiceUserMappedImpl(), properties);
 
             ServiceRegistration oldServiceRegistration = registration.setService(serviceRegistration);
+            log.debug("Activated ServiceUserMapped {}", registration.mapping);
 
             if (oldServiceRegistration != null) {
                 try {
@@ -354,6 +361,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
         for (final Mapping mapping : this.activeMappings) {
             final String userId = mapping.map(serviceName, subServiceName);
             if (userId != null) {
+                log.debug("Got userId [{}] from {}/{}", new Object[] { userId, serviceName, subServiceName });
                 return userId;
             }
         }
@@ -362,6 +370,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
         for (Mapping mapping : this.activeMappings) {
             final String userId = mapping.map(serviceName, null);
             if (userId != null) {
+                log.debug("Got userId [{}] from {}/<no subServiceName>", userId, serviceName);
                 return userId;
             }
         }
@@ -372,17 +381,22 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     private boolean isValidUser(final String userId, final String serviceName, final String subServiceName) {
         if (userId == null) {
+            log.debug("isValidUser: userId is null -> invalid");
             return false;
         }
         if ( !validators.isEmpty() ) {
             for (final ServiceUserValidator validator : validators) {
                 if ( validator.isValid(userId, serviceName, subServiceName) ) {
+                    log.debug("isValidUser: Validator {} accepts userId [{}] -> valid", validator, userId);
                     return true;
                 }
             }
+            log.debug("isValidUser: No validator accepte userId [{}] -> invalid", userId);
             return false;
+        } else {
+            log.debug("isValidUser: No active validators for userId [{}] -> valid", userId);
+            return true;
         }
-        return true;
     }
 
     static String getServiceName(final Bundle bundle) {
