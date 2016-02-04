@@ -26,7 +26,7 @@ import java.util.Set;
 import javax.servlet.Servlet;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.spi.resource.provider.ResolverContext;
+import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 
@@ -63,7 +63,7 @@ public class ServletResourceProvider extends ResourceProvider<Object> {
     }
 
     @Override
-    public Resource getResource(final ResolverContext<Object> ctx, String path, ResourceContext resourceContext, Resource parent) {
+    public Resource getResource(final ResolveContext<Object> ctx, String path, ResourceContext resourceContext, Resource parent) {
         // only return a resource if the servlet has been assigned
         if (servlet != null && resourcePaths.contains(path)) {
             return new ServletResource(ctx.getResourceResolver(), servlet, path);
@@ -73,7 +73,7 @@ public class ServletResourceProvider extends ResourceProvider<Object> {
     }
 
     @Override
-    public Iterator<Resource> listChildren(ResolverContext<Object> ctx, Resource parent) {
+    public Iterator<Resource> listChildren(ResolveContext<Object> ctx, Resource parent) {
         return null;
     }
 
