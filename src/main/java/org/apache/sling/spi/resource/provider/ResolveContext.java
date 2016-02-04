@@ -35,7 +35,7 @@ import aQute.bnd.annotation.ProviderType;
  * is returned in {@link #getProviderState()}.
  */
 @ProviderType
-public interface ResolverContext<T> {
+public interface ResolveContext<T> {
 
     /**
      * Get the current resource resolver.
@@ -54,7 +54,7 @@ public interface ResolverContext<T> {
      * @return A resolve context or {@code null} if there is no parent.
      * @see #getParentResourceProvider()
      */
-    @CheckForNull ResolverContext<?> getParentResolveContext();
+    @CheckForNull ResolveContext<?> getParentResolveContext();
 
     /**
      * Return the parent resource provider.
