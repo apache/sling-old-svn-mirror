@@ -391,7 +391,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
                     return true;
                 }
             }
-            log.debug("isValidUser: No validator accepte userId [{}] -> invalid", userId);
+            log.debug("isValidUser: No validator accepted userId [{}] -> invalid", userId);
             return false;
         } else {
             log.debug("isValidUser: No active validators for userId [{}] -> valid", userId);
