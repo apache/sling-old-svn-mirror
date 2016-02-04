@@ -375,7 +375,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
             }
         }
 
-        // finally, fall back to default user
+        log.debug("No mapping found, fallback to default user [{}]", this.defaultUser);
         return this.defaultUser;
     }
 
