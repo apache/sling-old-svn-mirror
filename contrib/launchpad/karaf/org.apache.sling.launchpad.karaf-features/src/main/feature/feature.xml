@@ -77,7 +77,7 @@
     <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
   </feature>
   <feature name="sling-commons-threads" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.commons.threads/3.2.4</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.commons.threads/3.2.6</bundle>
   </feature>
   <!-- Apache Sling Extensions -->
   <feature name="sling-extension-adapter" version="${feature.version}">
@@ -145,7 +145,7 @@
   </feature>
   <feature name="sling-extension-models" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.models.api/1.2.2</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.models.impl/1.2.4</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.models.impl/1.2.6</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
   </feature>
@@ -166,7 +166,7 @@
     <feature version="${feature.version}">sling</feature>
   </feature>
   <feature name="sling-extension-xss" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.xss/1.0.6</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.xss/1.0.8</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
     <bundle dependency="true">mvn:org.apache.geronimo.bundles/commons-httpclient/3.1_2</bundle>
@@ -325,7 +325,7 @@
     <feature version="${feature.version}">sling-scripting</feature>
   </feature>
   <feature name="sling-scripting-sightly" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly/1.0.10</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly/1.0.12</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.10</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
