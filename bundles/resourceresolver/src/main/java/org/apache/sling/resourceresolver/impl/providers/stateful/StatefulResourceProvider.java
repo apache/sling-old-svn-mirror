@@ -30,7 +30,7 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
-import org.apache.sling.spi.resource.provider.ResolverContext;
+import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 
 /**
@@ -153,5 +153,5 @@ public interface StatefulResourceProvider {
      * @return Context for the wrapped ResourceProvider
      * @throws LoginException
      */
-    ResolverContext<Object> getContext() throws LoginException;
+    ResolveContext<Object> getContext() throws LoginException;
 }

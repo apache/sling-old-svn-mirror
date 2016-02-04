@@ -32,7 +32,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
-import org.apache.sling.spi.resource.provider.ResolverContext;
+import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 
@@ -64,18 +64,18 @@ public class LegacyResourceProviderFactoryAdapter extends ResourceProvider<Legac
     }
 
     @Override
-    public Resource getResource(ResolverContext<LegacyResourceProviderAdapter> ctx, String path, ResourceContext resourceContext, Resource parent) {
-        return ctx.getProviderState().getResource((ResolverContext) ctx, path, resourceContext, parent);
+    public Resource getResource(ResolveContext<LegacyResourceProviderAdapter> ctx, String path, ResourceContext resourceContext, Resource parent) {
+        return ctx.getProviderState().getResource((ResolveContext) ctx, path, resourceContext, parent);
     }
 
     @Override
-    public Iterator<Resource> listChildren(ResolverContext<LegacyResourceProviderAdapter> ctx, Resource parent) {
-        return ctx.getProviderState().listChildren((ResolverContext) ctx, parent);
+    public Iterator<Resource> listChildren(ResolveContext<LegacyResourceProviderAdapter> ctx, Resource parent) {
+        return ctx.getProviderState().listChildren((ResolveContext) ctx, parent);
     }
 
     @Override
-    public void refresh(final @Nonnull ResolverContext<LegacyResourceProviderAdapter> ctx) {
-        ctx.getProviderState().refresh((ResolverContext) ctx);
+    public void refresh(final @Nonnull ResolveContext<LegacyResourceProviderAdapter> ctx) {
+        ctx.getProviderState().refresh((ResolveContext) ctx);
     }
 
     @Override
@@ -88,46 +88,46 @@ public class LegacyResourceProviderFactoryAdapter extends ResourceProvider<Legac
     }
 
     @Override
-    public Collection<String> getAttributeNames(final @Nonnull ResolverContext<LegacyResourceProviderAdapter> ctx) {
-        return ctx.getProviderState().getAttributeNames((ResolverContext) ctx);
+    public Collection<String> getAttributeNames(final @Nonnull ResolveContext<LegacyResourceProviderAdapter> ctx) {
+        return ctx.getProviderState().getAttributeNames((ResolveContext) ctx);
     }
 
     @Override
-    public Object getAttribute(final @Nonnull ResolverContext<LegacyResourceProviderAdapter> ctx,
+    public Object getAttribute(final @Nonnull ResolveContext<LegacyResourceProviderAdapter> ctx,
             final @Nonnull String name) {
-        return ctx.getProviderState().getAttribute((ResolverContext) ctx, name);
+        return ctx.getProviderState().getAttribute((ResolveContext) ctx, name);
     }
 
     @Override
-    public boolean isLive(final @Nonnull ResolverContext<LegacyResourceProviderAdapter> ctx) {
-        return ctx.getProviderState().isLive((ResolverContext) ctx);
+    public boolean isLive(final @Nonnull ResolveContext<LegacyResourceProviderAdapter> ctx) {
+        return ctx.getProviderState().isLive((ResolveContext) ctx);
     }
 
     @Override
-    public Resource create(final @Nonnull ResolverContext<LegacyResourceProviderAdapter> ctx, final String path,
+    public Resource create(final @Nonnull ResolveContext<LegacyResourceProviderAdapter> ctx, final String path,
             final Map<String, Object> properties) throws PersistenceException {
-        return ctx.getProviderState().create((ResolverContext) ctx, path, properties);
+        return ctx.getProviderState().create((ResolveContext) ctx, path, properties);
     }
 
     @Override
-    public void delete(final @Nonnull ResolverContext<LegacyResourceProviderAdapter> ctx,
+    public void delete(final @Nonnull ResolveContext<LegacyResourceProviderAdapter> ctx,
             final @Nonnull Resource resource) throws PersistenceException {
-        ctx.getProviderState().delete((ResolverContext) ctx, resource);
+        ctx.getProviderState().delete((ResolveContext) ctx, resource);
     }
 
     @Override
-    public void revert(final @Nonnull ResolverContext<LegacyResourceProviderAdapter> ctx) {
-        ctx.getProviderState().revert((ResolverContext) ctx);
+    public void revert(final @Nonnull ResolveContext<LegacyResourceProviderAdapter> ctx) {
+        ctx.getProviderState().revert((ResolveContext) ctx);
     }
 
     @Override
-    public void commit(final @Nonnull ResolverContext<LegacyResourceProviderAdapter> ctx) throws PersistenceException {
-        ctx.getProviderState().commit((ResolverContext) ctx);
+    public void commit(final @Nonnull ResolveContext<LegacyResourceProviderAdapter> ctx) throws PersistenceException {
+        ctx.getProviderState().commit((ResolveContext) ctx);
     }
 
     @Override
-    public boolean hasChanges(final @Nonnull ResolverContext<LegacyResourceProviderAdapter> ctx) {
-        return ctx.getProviderState().hasChanges((ResolverContext) ctx);
+    public boolean hasChanges(final @Nonnull ResolveContext<LegacyResourceProviderAdapter> ctx) {
+        return ctx.getProviderState().hasChanges((ResolveContext) ctx);
     }
 
     private static class JCRQueryProviderAdapter implements QueryLanguageProvider<LegacyResourceProviderAdapter> {
@@ -139,20 +139,20 @@ public class LegacyResourceProviderFactoryAdapter extends ResourceProvider<Legac
         }
 
         @Override
-        public String[] getSupportedLanguages(ResolverContext<LegacyResourceProviderAdapter> ctx) {
+        public String[] getSupportedLanguages(ResolveContext<LegacyResourceProviderAdapter> ctx) {
             return languages;
         }
 
         @Override
-        public Iterator<Resource> findResources(ResolverContext<LegacyResourceProviderAdapter> ctx, String query,
+        public Iterator<Resource> findResources(ResolveContext<LegacyResourceProviderAdapter> ctx, String query,
                 String language) {
-            return ctx.getProviderState().getQueryLanguageProvider().findResources((ResolverContext) ctx, query, language);
+            return ctx.getProviderState().getQueryLanguageProvider().findResources((ResolveContext) ctx, query, language);
         }
 
         @Override
-        public Iterator<ValueMap> queryResources(ResolverContext<LegacyResourceProviderAdapter> ctx, String query,
+        public Iterator<ValueMap> queryResources(ResolveContext<LegacyResourceProviderAdapter> ctx, String query,
                 String language) {
-            return ctx.getProviderState().getQueryLanguageProvider().queryResources((ResolverContext) ctx, query, language);
+            return ctx.getProviderState().getQueryLanguageProvider().queryResources((ResolveContext) ctx, query, language);
         }
     }
 }

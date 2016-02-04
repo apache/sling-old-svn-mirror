@@ -32,7 +32,7 @@ import org.apache.commons.collections.IteratorUtils;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
-import org.apache.sling.spi.resource.provider.ResolverContext;
+import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.junit.Before;
@@ -72,7 +72,7 @@ public class ResourceResolverMangleNamespacesTest {
 
             @SuppressWarnings("unchecked")
             @Override
-            public @CheckForNull <AdapterType> AdapterType adaptTo(final  @Nonnull ResolverContext<Object> ctx,
+            public @CheckForNull <AdapterType> AdapterType adaptTo(final  @Nonnull ResolveContext<Object> ctx,
                     final @Nonnull Class<AdapterType> type) {
                 if (type.equals(Session.class)) {
                     return (AdapterType) activeSession;
@@ -82,13 +82,13 @@ public class ResourceResolverMangleNamespacesTest {
             }
 
             @Override
-            public Resource getResource(ResolverContext<Object> ctx, String path, ResourceContext rCtx, Resource parent) {
+            public Resource getResource(ResolveContext<Object> ctx, String path, ResourceContext rCtx, Resource parent) {
                 return null;
             }
 
             @SuppressWarnings("unchecked")
             @Override
-            public Iterator<Resource> listChildren(ResolverContext<Object> ctx, Resource parent) {
+            public Iterator<Resource> listChildren(ResolveContext<Object> ctx, Resource parent) {
                 return IteratorUtils.emptyIterator();
             }
         };
