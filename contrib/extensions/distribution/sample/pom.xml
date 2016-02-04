@@ -33,7 +33,7 @@
     <!-- P R O J E C T                                                           -->
     <!-- ======================================================================= -->
     <artifactId>org.apache.sling.distribution.sample</artifactId>
-    <version>0.1.5-SNAPSHOT</version>
+    <version>0.1.6</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Distribution Sample</name>
@@ -42,9 +42,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/distribution/sample</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/distribution/sample</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/distribution/sample</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.distribution.sample-0.1.6</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.distribution.sample-0.1.6</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.distribution.sample-0.1.6</url>
     </scm>
 
     <!-- ======================================================================= -->
