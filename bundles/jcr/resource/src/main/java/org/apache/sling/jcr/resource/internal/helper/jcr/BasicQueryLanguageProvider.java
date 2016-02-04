@@ -39,7 +39,7 @@ import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
 import org.apache.sling.spi.resource.provider.ProviderContext;
-import org.apache.sling.spi.resource.provider.ResolverContext;
+import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +64,7 @@ public class BasicQueryLanguageProvider implements QueryLanguageProvider<JcrProv
     }
 
     @Override
-    public String[] getSupportedLanguages(final ResolverContext<JcrProviderState> ctx) {
+    public String[] getSupportedLanguages(final ResolveContext<JcrProviderState> ctx) {
         try {
             return ctx.getProviderState().getSession().getWorkspace().getQueryManager().getSupportedQueryLanguages();
         } catch (final RepositoryException e) {
@@ -73,7 +73,7 @@ public class BasicQueryLanguageProvider implements QueryLanguageProvider<JcrProv
     }
 
     @Override
-    public Iterator<Resource> findResources(final ResolverContext<JcrProviderState> ctx,
+    public Iterator<Resource> findResources(final ResolveContext<JcrProviderState> ctx,
             final String query,
             final String language) {
         try {
@@ -91,7 +91,7 @@ public class BasicQueryLanguageProvider implements QueryLanguageProvider<JcrProv
     }
 
     @Override
-    public Iterator<ValueMap> queryResources(final ResolverContext<JcrProviderState> ctx,
+    public Iterator<ValueMap> queryResources(final ResolveContext<JcrProviderState> ctx,
             final String query,
             final String language) {
         final String queryLanguage = ArrayUtils.contains(getSupportedLanguages(ctx), language) ? language : DEFAULT_QUERY_LANGUAGE;

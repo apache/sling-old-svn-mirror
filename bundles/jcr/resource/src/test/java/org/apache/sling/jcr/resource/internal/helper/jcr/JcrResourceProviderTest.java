@@ -23,7 +23,7 @@ import java.security.Principal;
 import javax.jcr.Session;
 
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
-import org.apache.sling.spi.resource.provider.ResolverContext;
+import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.junit.Assert;
 import org.mockito.Mockito;
 
@@ -46,7 +46,7 @@ public class JcrResourceProviderTest extends RepositoryTestBase {
 
     public void testAdaptTo_Principal() {
         jcrResourceProvider = new JcrResourceProvider();
-        ResolverContext ctx = Mockito.mock(ResolverContext.class);
+        ResolveContext ctx = Mockito.mock(ResolveContext.class);
         Mockito.when(ctx.getProviderState()).thenReturn(new JcrProviderState(session, null, false));
         Assert.assertNotNull(jcrResourceProvider.adaptTo(ctx, Principal.class));
     }
