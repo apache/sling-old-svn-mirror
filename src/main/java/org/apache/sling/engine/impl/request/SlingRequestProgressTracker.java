@@ -103,9 +103,9 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
     private static final String COMMENT_PREFIX = "COMMENT ";
 
     /** TIMER_END format explanation */
-    private static final String TIMER_END_FORMAT = "{<elapsed msec>,<timer name>} <optional message>";
+    private static final String TIMER_END_FORMAT = "{<elapsed microseconds>,<timer name>} <optional message>";
 
-    /** The leading millisecond number is left-padded with white-space to this width. */
+    /** The leading nanosecond number is left-padded with white-space to this width. */
     private static final int PADDING_WIDTH = 7;
 
     /**
@@ -180,7 +180,7 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
     private String formatMessage(long offset, String message) {
         // Set exact length to avoid array copies within StringBuilder
         final StringBuilder sb = new StringBuilder(PADDING_WIDTH + 1 +  message.length() + 1);
-        final String offsetStr = Long.toString(offset);
+        final String offsetStr = Long.toString(offset / 1000);
         for (int i = PADDING_WIDTH - offsetStr.length(); i > 0; i--) {
             sb.append(' ');
         }
@@ -231,7 +231,7 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
      * </pre>
      */
     private long startTimerInternal(String name) {
-        long timer = System.currentTimeMillis();
+        long timer = System.nanoTime();
         namedTimerEntries.put(name, timer);
         entries.add(new TrackingEntry(timer, "TIMER_START{" + name + "}"));
         return timer;
@@ -261,7 +261,7 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
     private void logTimerInternal(String name, String msg, long startTime) {
         final StringBuilder sb = new StringBuilder();
         sb.append("TIMER_END{");
-        sb.append(System.currentTimeMillis() - startTime);
+        sb.append((System.nanoTime() - startTime) / 1000);
         sb.append(',');
         sb.append(name);
         sb.append('}');
@@ -275,7 +275,7 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
     public void done() {
         if(processingEnd != -1) return;
         logTimer(REQUEST_PROCESSING_TIMER, REQUEST_PROCESSING_TIMER);
-        processingEnd = System.currentTimeMillis();
+        processingEnd = System.nanoTime();
     }
 
     private long getTimeStamp() {
@@ -286,7 +286,7 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
         if (processingEnd != -1) {
             return processingEnd - processingStart;
         }
-        return System.currentTimeMillis() - processingStart;
+        return System.nanoTime() - processingStart;
     }
 
     /** Process tracker entry keeping timestamp, tag and message */
@@ -299,7 +299,7 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
         private final String message;
 
         TrackingEntry(String message) {
-            this.timeStamp = System.currentTimeMillis();
+            this.timeStamp = System.nanoTime();
             this.message = message;
         }
 

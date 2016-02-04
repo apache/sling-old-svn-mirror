@@ -52,7 +52,7 @@ public class SlingRequestProgressTrackerTest {
     public void messageFormatting() {
         final String[] expected = {
                 "TIMER_START{Request Processing}\n",
-                "COMMENT timer_end format is {<elapsed msec>,<timer name>} <optional message>\n",
+                "COMMENT timer_end format is {<elapsed microseconds>,<timer name>} <optional message>\n",
                 "TIMER_START{foo}\n",
                 "LOG one eins, two zwei, three drei\n",
                 "TIMER_START{bar}\n",
