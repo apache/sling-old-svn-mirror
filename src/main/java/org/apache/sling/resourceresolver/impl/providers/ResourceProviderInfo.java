@@ -72,9 +72,11 @@ public class ResourceProviderInfo implements Comparable<ResourceProviderInfo> {
     public boolean isValid() {
         // TODO - do real path check
         if ( !path.startsWith("/") ) {
+            logger.debug("ResourceProvider path does not start with /, invalid: {}", path);
             return false;
         }
         if ( this.authType == null ) {
+            logger.debug("ResourceProvider has null authType, invalid");
             return false;
         }
         return true;
