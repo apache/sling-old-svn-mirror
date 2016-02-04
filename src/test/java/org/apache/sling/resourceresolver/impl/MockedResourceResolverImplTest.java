@@ -48,7 +48,7 @@ import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
 import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
-import org.apache.sling.spi.resource.provider.ResolverContext;
+import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.junit.After;
@@ -238,7 +238,7 @@ public class MockedResourceResolverImplTest {
         mappingChildren.add(buildResource(path+"/http/localhost_any", localHostAnyList, resourceResolver, provider,"sling:match", "localhost\\.\\d*", "sling:internalRedirect", "/content"));
 
         Resource etcMapResource = buildResource(path+"/http", mappingChildren);
-        Mockito.when(provider.getResource(Mockito.any(ResolverContext.class), Mockito.eq(path), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(etcMapResource);
+        Mockito.when(provider.getResource(Mockito.any(ResolveContext.class), Mockito.eq(path), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(etcMapResource);
         return etcMapResource;
     }
 
@@ -299,8 +299,8 @@ public class MockedResourceResolverImplTest {
 
         // register the resource with the provider
         if ( provider != null ) {
-            Mockito.when(provider.listChildren(Mockito.any(ResolverContext.class), Mockito.eq(resource))).thenReturn(children.iterator());
-            Mockito.when(provider.getResource(Mockito.any(ResolverContext.class), Mockito.eq(fullpath), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(resource);
+            Mockito.when(provider.listChildren(Mockito.any(ResolveContext.class), Mockito.eq(resource))).thenReturn(children.iterator());
+            Mockito.when(provider.getResource(Mockito.any(ResolveContext.class), Mockito.eq(fullpath), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(resource);
         }
         if ( properties != null ) {
             ValueMap vm = new SimpleValueMapImpl();
@@ -547,8 +547,8 @@ public class MockedResourceResolverImplTest {
     public void testQueryResources() throws LoginException {
         final int n = 3;
         String[] languages = new String[] {FAKE_QUERY_LANGUAGE};
-        Mockito.when(queryProvider.getSupportedLanguages(Mockito.any(ResolverContext.class))).thenReturn(languages);
-        Mockito.when(queryProvider.queryResources(Mockito.any(ResolverContext.class), Mockito.any(String.class), Mockito.any(String.class)))
+        Mockito.when(queryProvider.getSupportedLanguages(Mockito.any(ResolveContext.class))).thenReturn(languages);
+        Mockito.when(queryProvider.queryResources(Mockito.any(ResolveContext.class), Mockito.any(String.class), Mockito.any(String.class)))
         .thenReturn(buildValueMapCollection(n, "A_").iterator());
 
         final ResourceResolver rr = resourceResolverFactory.getResourceResolver(null);

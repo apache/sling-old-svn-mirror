@@ -53,7 +53,7 @@ import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.resourceresolver.impl.providers.stateful.ResourceProviderAuthenticator;
 import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
-import org.apache.sling.spi.resource.provider.ResolverContext;
+import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
@@ -97,7 +97,7 @@ public class ResourceResolverControlTest {
         ResourceProviderHandler handler = new ResourceProviderHandler(bc, info);
         when(subProvider.getQueryLanguageProvider()).thenReturn(new SimpleQueryLanguageProvider(QL_MOCK, QL_ANOTHER_MOCK) {
             @Override
-            public Iterator<ValueMap> queryResources(ResolverContext<Object> ctx, String query, String language) {
+            public Iterator<ValueMap> queryResources(ResolveContext<Object> ctx, String query, String language) {
                 if ( query.equals(QUERY_MOCK_FIND_ALL) && language.equals(QL_MOCK)) {
                     SimpleValueMapImpl valueMap = new SimpleValueMapImpl();
                     valueMap.put("key", "value");
@@ -108,7 +108,7 @@ public class ResourceResolverControlTest {
             }
 
             @Override
-            public Iterator<Resource> findResources(ResolverContext<Object> ctx, String query, String language) {
+            public Iterator<Resource> findResources(ResolveContext<Object> ctx, String query, String language) {
 
                 if ( query.equals(QUERY_MOCK_FIND_ALL) && language.equals(QL_MOCK)) {
                     return Collections.<Resource> singletonList(newMockResource("/some/path/object")).iterator();
@@ -132,7 +132,7 @@ public class ResourceResolverControlTest {
         subProviderResource = configureResourceAt(subProvider, "/some/path/object");
 
         // configure query at '/'
-        when(rootProvider.listChildren((ResolverContext<Object>) Mockito.anyObject(), Mockito.eq(root))).thenReturn(Collections.singleton(somethingResource).iterator());
+        when(rootProvider.listChildren((ResolveContext<Object>) Mockito.anyObject(), Mockito.eq(root))).thenReturn(Collections.singleton(somethingResource).iterator());
 
         ResourceResolver rr = mock(ResourceResolver.class);
         ResourceAccessSecurityTracker securityTracker = Mockito.mock(ResourceAccessSecurityTracker.class);
@@ -154,7 +154,7 @@ public class ResourceResolverControlTest {
 
         Resource mockResource = newMockResource(path);
 
-        when(provider.getResource((ResolverContext<T>) Mockito.any(), Mockito.eq(path), (ResourceContext) Mockito.any(), (Resource) Mockito.any()))
+        when(provider.getResource((ResolveContext<T>) Mockito.any(), Mockito.eq(path), (ResourceContext) Mockito.any(), (Resource) Mockito.any()))
             .thenReturn(mockResource);
 
         return mockResource;
@@ -187,8 +187,8 @@ public class ResourceResolverControlTest {
         verify(subProvider).logout(mockContext());
     }
 
-    private ResolverContext<Object> mockContext() {
-        return (ResolverContext<Object>) Mockito.any();
+    private ResolveContext<Object> mockContext() {
+        return (ResolveContext<Object>) Mockito.any();
     }
 
     /**
@@ -412,17 +412,17 @@ public class ResourceResolverControlTest {
         }
 
         @Override
-        public String[] getSupportedLanguages(ResolverContext<Object> ctx) {
+        public String[] getSupportedLanguages(ResolveContext<Object> ctx) {
             return queryLanguages;
         }
 
         @Override
-        public Iterator<ValueMap> queryResources(ResolverContext<Object> ctx, String query, String language) {
+        public Iterator<ValueMap> queryResources(ResolveContext<Object> ctx, String query, String language) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public Iterator<Resource> findResources(ResolverContext<Object> ctx, String query, String language) {
+        public Iterator<Resource> findResources(ResolveContext<Object> ctx, String query, String language) {
             throw new UnsupportedOperationException();
         }
     }

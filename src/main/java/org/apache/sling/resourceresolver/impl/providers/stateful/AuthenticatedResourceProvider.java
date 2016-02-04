@@ -35,7 +35,7 @@ import org.apache.sling.api.resource.runtime.dto.AuthType;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverControl;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
-import org.apache.sling.spi.resource.provider.ResolverContext;
+import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.slf4j.Logger;
@@ -61,7 +61,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
 
     private final ResourceResolverControl resolverContext;
 
-    private volatile ResolverContext<Object> cachedContext;
+    private volatile ResolveContext<Object> cachedContext;
 
     private volatile boolean authenticated;
 
@@ -79,7 +79,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
         }
     }
 
-    private ResolverContext<Object> authenticate() throws LoginException {
+    private ResolveContext<Object> authenticate() throws LoginException {
         if ( cachedContext  == null ) {
             Object contextData = null;
             if ( (handler.getInfo().getAuthType() == AuthType.required || handler.getInfo().getAuthType() == AuthType.lazy) ) {
@@ -99,7 +99,7 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
     }
 
     @Override
-    public ResolverContext<Object> getContext() throws LoginException {
+    public ResolveContext<Object> getContext() throws LoginException {
         return authenticate();
     }
 

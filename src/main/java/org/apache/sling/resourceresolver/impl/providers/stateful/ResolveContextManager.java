@@ -22,17 +22,17 @@ import java.util.Map;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
-import org.apache.sling.spi.resource.provider.ResolverContext;
+import org.apache.sling.spi.resource.provider.ResolveContext;
 
 public class ResolveContextManager {
 
-    private final Map<ResourceProviderHandler, ResolverContext<Object>> contextMap;
+    private final Map<ResourceProviderHandler, ResolveContext<Object>> contextMap;
 
     public ResolveContextManager(final ResourceResolver resolver) {
-        this.contextMap = new IdentityHashMap<ResourceProviderHandler, ResolverContext<Object>>();
+        this.contextMap = new IdentityHashMap<ResourceProviderHandler, ResolveContext<Object>>();
     }
 
-    public ResolverContext<Object> getResolveContext(final ResourceProviderHandler handler) {
+    public ResolveContext<Object> getResolveContext(final ResourceProviderHandler handler) {
         return this.contextMap.get(handler);
     }
 }

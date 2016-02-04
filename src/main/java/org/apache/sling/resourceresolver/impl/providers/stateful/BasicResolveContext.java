@@ -25,10 +25,10 @@ import org.apache.sling.resourceresolver.impl.helper.ResourceResolverControl;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.resourceresolver.impl.providers.tree.Node;
-import org.apache.sling.spi.resource.provider.ResolverContext;
+import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 
-public class BasicResolveContext<T> implements ResolverContext<T> {
+public class BasicResolveContext<T> implements ResolveContext<T> {
 
     private final String parentPath;
 
@@ -42,7 +42,7 @@ public class BasicResolveContext<T> implements ResolverContext<T> {
 
     private volatile ResourceProvider<Object> parentProvider;
 
-    private volatile ResolverContext<Object> parentResolveContext;
+    private volatile ResolveContext<Object> parentResolveContext;
 
     public BasicResolveContext(ResourceResolver resourceResolver,
             T providerState,
@@ -70,7 +70,7 @@ public class BasicResolveContext<T> implements ResolverContext<T> {
     }
 
     @Override
-    public ResolverContext<?> getParentResolveContext() {
+    public ResolveContext<?> getParentResolveContext() {
         this.getParentResourceProvider();
         return parentResolveContext;
     }
