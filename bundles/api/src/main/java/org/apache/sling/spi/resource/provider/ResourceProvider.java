@@ -330,9 +330,9 @@ public abstract class ResourceProvider<T> {
      * This method is only called if the provider supports this and indicates
      * it by setting the {@link #PROPERTY_REFRESHABLE} to the value {@code true}.
      *
-     * @param ctx The {@link ResolverContext}.
+     * @param ctx The {@link ResolveContext}.
      */
-    public void refresh(final @Nonnull ResolverContext<T> ctx) {
+    public void refresh(final @Nonnull ResolveContext<T> ctx) {
         // nothing to do here
     }
 
@@ -346,12 +346,12 @@ public abstract class ResourceProvider<T> {
      * This method is only called for resource providers which have a state and
      * require authentication.
      *
-     * @param ctx The {@link ResolverContext}.
+     * @param ctx The {@link ResolveContext}.
      * @return <code>true</code> if the resource provider has not been closed
      *         yet and is still active.. Once the resource provider has been closed
      *         or is not active anymore, this method returns <code>false</code>.
      */
-    public boolean isLive(final @Nonnull ResolverContext<T> ctx) {
+    public boolean isLive(final @Nonnull ResolveContext<T> ctx) {
         return true;
     }
 
@@ -365,14 +365,14 @@ public abstract class ResourceProvider<T> {
      * depending on the full path of resource resolution passed into the
      * resource resolver.
      *
-     * @param ctx The {@link ResolverContext}.
+     * @param ctx The {@link ResolveContext}.
      * @param child The child resource.
      * @return <code>null</code> if this provider does not have a resource for
      *         the parent.
      * @throws org.apache.sling.api.SlingException
      *             may be thrown in case of any problem creating the <code>Resource</code> instance.
      */
-    public @CheckForNull Resource getParent(final @Nonnull ResolverContext<T> ctx, final @Nonnull Resource child) {
+    public @CheckForNull Resource getParent(final @Nonnull ResolveContext<T> ctx, final @Nonnull Resource child) {
         final String parentPath = ResourceUtil.getParent(child.getPath());
         if (parentPath == null) {
             return null;
@@ -391,7 +391,7 @@ public abstract class ResourceProvider<T> {
      * depending on the full path of resource resolution passed into the
      * resource resolver.
      *
-     * @param ctx The {@link ResolverContext}.
+     * @param ctx The {@link ResolveContext}.
      * @param path The full path of the resource.
      * @param resourceContext Additional information for resolving the resource
      * @param parent Optional parent resource
@@ -400,7 +400,7 @@ public abstract class ResourceProvider<T> {
      * @throws org.apache.sling.api.SlingException
      *             may be thrown in case of any problem creating the <code>Resource</code> instance.
      */
-    public abstract @CheckForNull Resource getResource(@Nonnull final ResolverContext<T> ctx,
+    public abstract @CheckForNull Resource getResource(@Nonnull final ResolveContext<T> ctx,
             @Nonnull final String path,
             @Nonnull final ResourceContext resourceContext,
             @CheckForNull final Resource parent);
@@ -425,7 +425,7 @@ public abstract class ResourceProvider<T> {
      * As with {@link #getResource(ResourceResolver, String)} the returned Resource objects must
      * not be cached objects.
      *
-     * @param ctx The {@link ResolverContext}.
+     * @param ctx The {@link ResolveContext}.
      * @param parent
      *            The {@link Resource Resource} whose children are requested.
      * @return An <code>Iterator</code> of {@link Resource} objects or <code>null</code> if the resource
@@ -435,7 +435,7 @@ public abstract class ResourceProvider<T> {
      * @throws SlingException
      *             If any error occurs acquiring the child resource iterator.
      */
-    public abstract @CheckForNull Iterator<Resource> listChildren(final @Nonnull ResolverContext<T> ctx, final @Nonnull Resource parent);
+    public abstract @CheckForNull Iterator<Resource> listChildren(final @Nonnull ResolveContext<T> ctx, final @Nonnull Resource parent);
 
     /**
      * Returns a collection of attribute names whose value can be retrieved
@@ -444,12 +444,12 @@ public abstract class ResourceProvider<T> {
      * This method is only called if the provider supports this and indicates
      * it by setting the {@link #PROPERTY_ATTRIBUTABLE} to the value {@code true}.
      *
-     * @param ctx The {@link ResolverContext}.
+     * @param ctx The {@link ResolveContext}.
      * @return A collection of attribute names or <code>null</code>
      * @throws IllegalStateException if this resource provider has already been
      *                               closed.
      */
-    public Collection<String> getAttributeNames(final @Nonnull ResolverContext<T> ctx) {
+    public Collection<String> getAttributeNames(final @Nonnull ResolveContext<T> ctx) {
         return null;
     }
 
@@ -461,14 +461,14 @@ public abstract class ResourceProvider<T> {
      * This method is only called if the provider supports this and indicates
      * it by setting the {@link #PROPERTY_ATTRIBUTABLE} to the value {@code true}.
      *
-     * @param ctx The {@link ResolverContext}.
+     * @param ctx The {@link ResolveContext}.
      * @param name  The name of the attribute to access
      * @return The value of the attribute or <code>null</code> if the attribute
      *         is not set or not accessible.
      * @throws IllegalStateException
      *             if this resource provider has already been closed.
      */
-    public Object getAttribute(final @Nonnull ResolverContext<T> ctx, final @Nonnull String name) {
+    public Object getAttribute(final @Nonnull ResolveContext<T> ctx, final @Nonnull String name) {
         return null;
     }
 
@@ -483,14 +483,14 @@ public abstract class ResourceProvider<T> {
      * This method is only called if the provider supports this and indicates
      * it by setting the {@link #PROPERTY_MODIFIABLE} to the value {@code true}.
      *
-     * @param ctx The {@link ResolverContext}.
+     * @param ctx The {@link ResolveContext}.
      * @param path The resource path.
      * @param properties Optional properties
      * @return The new resource.
      *
      * @throws PersistenceException If anything fails
      */
-    public Resource create(final @Nonnull ResolverContext<T> ctx, final String path, final Map<String, Object> properties)
+    public Resource create(final @Nonnull ResolveContext<T> ctx, final String path, final Map<String, Object> properties)
     throws PersistenceException {
         throw new PersistenceException("create is not supported.");
     }
@@ -503,12 +503,12 @@ public abstract class ResourceProvider<T> {
      * This method is only called if the provider supports this and indicates
      * it by setting the {@link #PROPERTY_MODIFIABLE} to the value {@code true}.
      *
-     * @param ctx The {@link ResolverContext}.
+     * @param ctx The {@link ResolveContext}.
      * @param resource The resource to delete.
      *
      * @throws PersistenceException If anything fails
      */
-    public void delete(final @Nonnull ResolverContext<T> ctx, final @Nonnull Resource resource)
+    public void delete(final @Nonnull ResolveContext<T> ctx, final @Nonnull Resource resource)
     throws PersistenceException {
         throw new PersistenceException("delete is not supported.");
     }
@@ -519,9 +519,9 @@ public abstract class ResourceProvider<T> {
      * This method is only called if the provider supports this and indicates
      * it by setting the {@link #PROPERTY_MODIFIABLE} to the value {@code true}.
      *
-     * @param ctx The {@link ResolverContext}.
+     * @param ctx The {@link ResolveContext}.
      */
-    public void revert(final @Nonnull ResolverContext<T> ctx) {
+    public void revert(final @Nonnull ResolveContext<T> ctx) {
         // nothing to do here
     }
 
@@ -531,10 +531,10 @@ public abstract class ResourceProvider<T> {
      * This method is only called if the provider supports this and indicates
      * it by setting the {@link #PROPERTY_MODIFIABLE} to the value {@code true}.
      *
-     * @param ctx The {@link ResolverContext}.
+     * @param ctx The {@link ResolveContext}.
      * @throws PersistenceException If anything fails
      */
-    public void commit(final @Nonnull ResolverContext<T> ctx)
+    public void commit(final @Nonnull ResolveContext<T> ctx)
     throws PersistenceException {
         // nothing to do here
     }
@@ -545,9 +545,9 @@ public abstract class ResourceProvider<T> {
      * This method is only called if the provider supports this and indicates
      * it by setting the {@link #PROPERTY_MODIFIABLE} to the value {@code true}.
      *
-     * @param ctx The {@link ResolverContext}.
+     * @param ctx The {@link ResolveContext}.
      */
-    public boolean hasChanges(final @Nonnull ResolverContext<T> ctx) {
+    public boolean hasChanges(final @Nonnull ResolveContext<T> ctx) {
         return false;
     }
 
@@ -579,12 +579,12 @@ public abstract class ResourceProvider<T> {
      * This method is only called if the provider supports this and indicates
      * it by setting the {@link #PROPERTY_ADAPTABLE} to the value {@code true}.
      *
-     * @param ctx The {@link ResolverContext}.
+     * @param ctx The {@link ResolveContext}.
      * @param type The generic type to which this resource is adapted to.
      * @return The adapter target or {@code null} if the provider cannot
      *         be adapt to the requested type.
      */
-    public @CheckForNull <AdapterType> AdapterType adaptTo(final  @Nonnull ResolverContext<T> ctx,
+    public @CheckForNull <AdapterType> AdapterType adaptTo(final  @Nonnull ResolveContext<T> ctx,
             final @Nonnull Class<AdapterType> type) {
         return null;
     }
@@ -604,14 +604,14 @@ public abstract class ResourceProvider<T> {
      * This method is only called if the provider supports this and indicates
      * it by setting the {@link #PROPERTY_MODIFIABLE} to the value {@code true}.
      *
-     * @param ctx The {@link ResolverContext}.
+     * @param ctx The {@link ResolveContext}.
      * @param srcAbsPath  the path of the resource to be copied.
      * @param destAbsPath the location to which the resource at
      *                    <code>srcAbsPath</code> is to be copied.
      * @throws PersistenceException If an error occurs.
      * @return {@code true} if the provider can perform the copy
      */
-    public boolean copy(final  @Nonnull ResolverContext<T> ctx,
+    public boolean copy(final  @Nonnull ResolveContext<T> ctx,
               final String srcAbsPath,
               final String destAbsPath) throws PersistenceException {
         return false;
@@ -632,14 +632,14 @@ public abstract class ResourceProvider<T> {
      * This method is only called if the provider supports this and indicates
      * it by setting the {@link #PROPERTY_MODIFIABLE} to the value {@code true}.
      *
-     * @param ctx The {@link ResolverContext}.
+     * @param ctx The {@link ResolveContext}.
      * @param srcAbsPath  the path of the resource to be copied.
      * @param destAbsPath the location to which the resource at
      *                    <code>srcAbsPath</code> is to be moved.
      * @throws PersistenceException If an error occurs.
      * @return {@code true} if the provider can perform the move
      */
-    public boolean move(final  @Nonnull ResolverContext<T> ctx,
+    public boolean move(final  @Nonnull ResolveContext<T> ctx,
               final String srcAbsPath,
               final String destAbsPath) throws PersistenceException {
         return false;

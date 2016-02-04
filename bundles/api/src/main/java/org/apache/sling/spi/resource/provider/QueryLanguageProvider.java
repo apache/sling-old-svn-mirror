@@ -42,7 +42,7 @@ public interface QueryLanguageProvider<T> {
     /**
      * The supported languages of the resource provider.
      */
-    String[] getSupportedLanguages(@Nonnull ResolverContext<T> ctx);
+    String[] getSupportedLanguages(@Nonnull ResolveContext<T> ctx);
 
     /**
      * Searches for resources using the given query formulated in the given
@@ -68,7 +68,7 @@ public interface QueryLanguageProvider<T> {
      * @throws IllegalStateException if this resource provider has already been
      *             closed.
      */
-    Iterator<Resource> findResources(@Nonnull ResolverContext<T> ctx, String query, String language);
+    Iterator<Resource> findResources(@Nonnull ResolveContext<T> ctx, String query, String language);
 
     /**
      * Queries the storage using the given query formulated in the given
@@ -97,5 +97,5 @@ public interface QueryLanguageProvider<T> {
      * @throws IllegalStateException if this resource provider has already been
      *             closed.
      */
-    Iterator<ValueMap> queryResources(@Nonnull ResolverContext<T> ctx, String query, String language);
+    Iterator<ValueMap> queryResources(@Nonnull ResolveContext<T> ctx, String query, String language);
 }
