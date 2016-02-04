@@ -240,6 +240,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
         }
 
         activeMappings = mappings.toArray(new Mapping[mappings.size()]);
+        log.debug("Active mappings updated: {}", mappings);
 
         RegistrationSet registrationSet = updateServiceRegistrations(activeMappings);
 
