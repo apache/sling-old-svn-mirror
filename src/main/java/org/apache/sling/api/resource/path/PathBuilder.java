@@ -21,40 +21,41 @@ package org.apache.sling.api.resource.path;
 /**
  * The <tt>PathBuilder</tt> offers a convenient way of creating a valid path from multiple fragments
  *
+ * @since 1.0.0 (Sling API Bundle 2.11.0)
  */
 public final class PathBuilder {
-    
-    private StringBuilder sb = new StringBuilder();
-    
+
+    private final StringBuilder sb = new StringBuilder();
+
     /**
      * Creates a new <tt>PathBuilder</tt> instance
-     * 
+     *
      * @param path the initial path
      */
-    public PathBuilder(String path) {
-        
+    public PathBuilder(final String path) {
+
         if ( path == null || path.isEmpty() || path.charAt(0) != '/') {
             throw new IllegalArgumentException("Path '" + path + "' is not absolute");
         }
-        
+
         sb.append(path);
     }
-    
+
     /**
      * Appends a new path fragment
-     * 
+     *
      * @param path the path fragment to append
      * @return this instance
      */
-    public PathBuilder append(String path) {
-        
+    public PathBuilder append(final String path) {
+
         if ( path == null || path.isEmpty() ) {
             throw new IllegalArgumentException("Path '" + path + "' is null or empty");
         }
-        
+
         boolean trailingSlash = sb.charAt(sb.length() - 1) == '/';
         boolean leadingSlash = path.charAt(0) == '/';
-        
+
         if ( trailingSlash && leadingSlash) {
             sb.append(path.substring(1));
         } else if ( !trailingSlash && !leadingSlash ) {
@@ -62,15 +63,16 @@ public final class PathBuilder {
         } else {
             sb.append(path);
         }
-        
+
         return this;
     }
-    
+
     /**
      * Returns the path
-     * 
+     *
      * @return the path
      */
+    @Override
     public String toString() {
         return sb.toString();
     }

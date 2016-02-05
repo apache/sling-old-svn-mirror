@@ -27,7 +27,7 @@ import java.util.Set;
 /**
  * Simple helper class for path matching against a set of paths.
  *
- * @since 1.0.0 (Sling API Bundle 2.10.0)
+ * @since 1.0.0 (Sling API Bundle 2.11.0)
  */
 public class PathSet implements Iterable<Path> {
 

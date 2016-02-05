@@ -35,6 +35,8 @@ import aQute.bnd.annotation.ConsumerType;
  * Calls from {@link ResourceResolver#findResources(String, String)} and
  * {@link ResourceResolver#queryResources(String, String)} are passed on
  * to this object.
+ *
+ * @since 1.0.0 (Sling API Bundle 2.11.0)
  */
 @ConsumerType
 public interface QueryLanguageProvider<T> {

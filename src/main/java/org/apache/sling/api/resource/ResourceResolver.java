@@ -399,7 +399,7 @@ public interface ResourceResolver extends Adaptable, Closeable {
      *             the parent resource.
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
-     * @since 2.9 (Sling API Bundle 2.10.0)
+     * @since 2.9 (Sling API Bundle 2.11.0)
      */
     @CheckForNull Resource getParent(@Nonnull Resource child);
 
@@ -739,7 +739,7 @@ public interface ResourceResolver extends Adaptable, Closeable {
      *                                       not allow to create a resource at that location.
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
-     * @since 2.9 (Sling API Bundle 2.10.0)
+     * @since 2.9 (Sling API Bundle 2.11.0)
      */
     Resource copy(final String srcAbsPath,
               final String destAbsPath) throws PersistenceException;
@@ -767,7 +767,7 @@ public interface ResourceResolver extends Adaptable, Closeable {
      *                                       not allow to create a resource at that location.
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
-     * @since 2.9 (Sling API Bundle 2.10.0)
+     * @since 2.9 (Sling API Bundle 2.11.0)
      */
     Resource move(final String srcAbsPath,
               final String destAbsPath) throws PersistenceException;

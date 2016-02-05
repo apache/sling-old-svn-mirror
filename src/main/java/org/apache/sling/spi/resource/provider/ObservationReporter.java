@@ -30,6 +30,8 @@ import aQute.bnd.annotation.ProviderType;
  * A {@code ResourceProvider} must use an observation reporter
  * to report changes to resources. The resource provider gets
  * an instance of this reporter through the {@link ProviderContext}.
+ *
+ * @since 1.0.0 (Sling API Bundle 2.11.0)
  */
 @ProviderType
 public interface ObservationReporter {
