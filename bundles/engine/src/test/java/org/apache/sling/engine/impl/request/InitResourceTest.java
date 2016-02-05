@@ -22,6 +22,7 @@ import java.util.Collection;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -93,6 +94,9 @@ public class InitResourceTest {
             allowing(req).getAttribute(RequestData.REQUEST_RESOURCE_PATH_ATTR);
             will(returnValue(null));
             allowing(req).setAttribute(with(equal(RequestData.REQUEST_RESOURCE_PATH_ATTR)), with(any(Object.class)));
+            
+            allowing(req).getAttribute(RequestProgressTracker.class.getName());
+            will(returnValue(null));
             
             // Verify that the ResourceResolver is called with the expected path
             allowing(resourceResolver).resolve(with(any(HttpServletRequest.class)),with(equal(expectedResolvePath)));

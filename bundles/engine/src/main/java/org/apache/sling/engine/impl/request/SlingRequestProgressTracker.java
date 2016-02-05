@@ -25,6 +25,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.sling.api.request.RequestProgressTracker;
 
 /**
@@ -134,7 +136,17 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
      * Creates a new request progress tracker.
      */
     public SlingRequestProgressTracker() {
+        this(null);
+    }
+
+    /**
+     * Creates a new request progress tracker and logs initial messages about the supplied request
+     */
+    public SlingRequestProgressTracker(HttpServletRequest request) {
         reset();
+        if(request != null) {
+            log("Method={0}, PathInfo={1}", request.getMethod(), request.getPathInfo());
+        }
     }
 
     /**
