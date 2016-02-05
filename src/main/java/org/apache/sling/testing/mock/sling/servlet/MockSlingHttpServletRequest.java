@@ -29,7 +29,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
 /**
- * Mock {@link SlingHttpServletRequest} implementation.
+ * Mock {@link org.apache.sling.api.SlingHttpServletRequest} implementation.
  */
 public class MockSlingHttpServletRequest extends org.apache.sling.servlethelpers.MockSlingHttpServletRequest {
 

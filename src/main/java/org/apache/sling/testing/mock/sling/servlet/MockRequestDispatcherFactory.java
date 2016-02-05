@@ -19,7 +19,7 @@
 package org.apache.sling.testing.mock.sling.servlet;
 
 /**
- * Interface to create a mock {@link RequestDispatcher} when calling the getRequestDispatcher methods
+ * Interface to create a mock {@link javax.servlet.RequestDispatcher} when calling the getRequestDispatcher methods
  * on {@link MockSlingHttpServletRequest} instances.
  */
 public interface MockRequestDispatcherFactory extends org.apache.sling.servlethelpers.MockRequestDispatcherFactory {

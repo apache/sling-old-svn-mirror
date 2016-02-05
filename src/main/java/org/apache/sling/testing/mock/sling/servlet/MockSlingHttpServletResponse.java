@@ -19,7 +19,7 @@
 package org.apache.sling.testing.mock.sling.servlet;
 
 /**
- * Mock {@link SlingHttpServletResponse} implementation.
+ * Mock {@link org.apache.sling.api.SlingHttpServletResponse} implementation.
  */
 public class MockSlingHttpServletResponse extends org.apache.sling.servlethelpers.MockSlingHttpServletResponse {
 
