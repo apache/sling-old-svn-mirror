@@ -33,7 +33,7 @@ import javax.jcr.observation.ObservationManager;
 
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
-import org.apache.sling.api.resource.util.PathSet;
+import org.apache.sling.api.resource.path.PathSet;
 import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.spi.resource.provider.ObservationReporter;

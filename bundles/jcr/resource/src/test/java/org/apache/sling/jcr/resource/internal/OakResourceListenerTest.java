@@ -32,7 +32,7 @@ import org.apache.jackrabbit.oak.jcr.Jcr;
 import org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStore;
 import org.apache.jackrabbit.oak.spi.commit.Observer;
 import org.apache.jackrabbit.oak.spi.whiteboard.Whiteboard;
-import org.apache.sling.api.resource.util.PathSet;
+import org.apache.sling.api.resource.path.PathSet;
 import org.apache.sling.commons.testing.jcr.RepositoryUtil.RepositoryWrapper;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.spi.resource.provider.ObservationReporter;
