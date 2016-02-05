@@ -20,6 +20,7 @@ package org.apache.sling.resourceresolver.impl.providers.stateful;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +32,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.runtime.dto.AuthType;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
+import org.apache.sling.resourceresolver.impl.helper.AbstractIterator;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverControl;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.spi.resource.provider.ResolveContext;
@@ -190,19 +192,30 @@ public class ProviderManager {
         return refreshable;
     }
 
-    public Collection<AuthenticatedResourceProvider> getAllBestEffort(@Nonnull final List<ResourceProviderHandler> handlers,
+    public Iterable<AuthenticatedResourceProvider> getAllBestEffort(@Nonnull final List<ResourceProviderHandler> handlers,
             @Nonnull final ResourceResolverControl control) {
-        final List<AuthenticatedResourceProvider> result = new ArrayList<AuthenticatedResourceProvider>(handlers.size());
-        for (final ResourceProviderHandler h : handlers) {
-            try {
-                final AuthenticatedResourceProvider rp = this.getOrCreateProvider(h, control);
-                if ( rp != null ) {
-                    result.add(rp);
-                }
-            } catch ( final LoginException le) {
-                // ignore
+        final Iterator<ResourceProviderHandler> handlerIter = handlers.iterator();
+        return new Iterable<AuthenticatedResourceProvider>() {
+
+            @Override
+            public Iterator<AuthenticatedResourceProvider> iterator() {
+                return new AbstractIterator<AuthenticatedResourceProvider>() {
+
+                    @Override
+                    protected AuthenticatedResourceProvider seek() {
+                        AuthenticatedResourceProvider result = null;
+                        while ( result == null && handlerIter.hasNext() ) {
+                            final ResourceProviderHandler h = handlerIter.next();
+                            try {
+                                result = getOrCreateProvider(h, control);
+                            } catch ( final LoginException le) {
+                                // ignore
+                            }
+                        }
+                        return result;
+                    }
+                };
             }
-        }
-        return result;
+        };
     }
 }

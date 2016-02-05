@@ -63,7 +63,6 @@ import org.osgi.service.event.EventAdmin;
  * One all required providers and provider factories are available a resource resolver factory
  * is registered.
  *
- * TODO : Should we implement modifiable? It would be easy but what about long running resolvers?
  */
 @Component(
      name = "org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl",
