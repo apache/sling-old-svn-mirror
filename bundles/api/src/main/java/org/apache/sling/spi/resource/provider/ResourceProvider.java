@@ -82,6 +82,8 @@ import aQute.bnd.annotation.ConsumerType;
  * <p>
  * Each method gets the {@link ResourceContext} which gives access to
  * further functionality.
+ *
+ * @since 1.0.0 (Sling API Bundle 2.11.0)
  */
 @ConsumerType
 public abstract class ResourceProvider<T> {

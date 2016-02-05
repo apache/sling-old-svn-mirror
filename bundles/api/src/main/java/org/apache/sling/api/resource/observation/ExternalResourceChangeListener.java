@@ -22,6 +22,8 @@ import aQute.bnd.annotation.ConsumerType;
 
 /**
  * This is a marker interface to receive external events.
+ *
+ * @since 1.0.0 (Sling API Bundle 2.11.0)
  */
 @ConsumerType
 public interface ExternalResourceChangeListener {

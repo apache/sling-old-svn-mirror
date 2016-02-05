@@ -20,6 +20,8 @@ package org.apache.sling.api.resource.runtime.dto;
 
 /**
  * Represents a {@code org.apache.sling.spi.resource.provider.ResourceProvider}.
+ *
+ * @since 1.0.0 (Sling API Bundle 2.11.0)
  */
 public class ResourceProviderDTO {
 

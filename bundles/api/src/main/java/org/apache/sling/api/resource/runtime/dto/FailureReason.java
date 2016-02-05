@@ -20,6 +20,8 @@ package org.apache.sling.api.resource.runtime.dto;
 
 /**
  * Failure reason for a failed resource provider.
+ *
+ * @since 1.0.0 (Sling API Bundle 2.11.0)
  */
 public enum FailureReason {
 

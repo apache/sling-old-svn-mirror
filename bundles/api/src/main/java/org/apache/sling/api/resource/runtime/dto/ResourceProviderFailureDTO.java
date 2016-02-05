@@ -23,6 +23,8 @@ package org.apache.sling.api.resource.runtime.dto;
  * If the provider is failed, some of the properties of the {@link ResourceProviderDTO}
  * might be missing or invalid, e.g. {@link ResourceProviderDTO#path} might contain
  * the empty path.
+ *
+ * @since 1.0.0 (Sling API Bundle 2.11.0)
  */
 public class ResourceProviderFailureDTO extends ResourceProviderDTO {
 

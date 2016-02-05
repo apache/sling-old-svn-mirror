@@ -43,6 +43,8 @@ import aQute.bnd.annotation.ConsumerType;
  * Local events for resources provide the names of the properties that
  * have been added, removed or changed. This information might be missing
  * for external events.
+ *
+ * @since 1.0.0 (Sling API Bundle 2.11.0)
  */
 @ConsumerType
 public class ResourceChange {

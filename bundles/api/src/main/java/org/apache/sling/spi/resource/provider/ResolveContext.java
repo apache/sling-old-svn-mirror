@@ -33,6 +33,8 @@ import aQute.bnd.annotation.ProviderType;
  *
  * If the provider requires authentication, the object returned by {@link ResourceProvider#authenticate(Map)}
  * is returned in {@link #getProviderState()}.
+ *
+ * @since 1.0.0 (Sling API Bundle 2.11.0)
  */
 @ProviderType
 public interface ResolveContext<T> {
