@@ -17,8 +17,11 @@
  */
 package org.apache.sling.resourceresolver.impl.helper;
 
+import javax.annotation.Nonnull;
+
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.resourceresolver.impl.providers.stateful.ResolveContextManager;
+import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
+import org.apache.sling.resourceresolver.impl.providers.stateful.ProviderManager;
 
 /**
  * The resource resolver context.
@@ -29,18 +32,18 @@ public class ResourceResolverContext {
 
     private final ResourceResolver resolver;
 
-    private final ResolveContextManager resolveContextManager;
+    private final ProviderManager providerManager;
 
-    public ResourceResolverContext(final ResourceResolver resolver) {
+    public ResourceResolverContext(@Nonnull final ResourceResolver resolver, @Nonnull final ResourceAccessSecurityTracker tracker) {
         this.resolver = resolver;
-        this.resolveContextManager = new ResolveContextManager(resolver);
+        this.providerManager = new ProviderManager(resolver, tracker);
     }
 
     public ResourceResolver getResourceResolver() {
         return this.resolver;
     }
 
-    public ResolveContextManager getResolveContextManager() {
-        return this.resolveContextManager;
+    public ProviderManager getProviderManager() {
+        return this.providerManager;
     }
 }

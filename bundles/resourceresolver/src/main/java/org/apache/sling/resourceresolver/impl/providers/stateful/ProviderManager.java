@@ -30,6 +30,7 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.runtime.dto.AuthType;
+import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverControl;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.spi.resource.provider.ResolveContext;
@@ -43,9 +44,9 @@ import org.slf4j.LoggerFactory;
  *
  * This class is not thread safe (same as the resource resolver).
  */
-public class ResolveContextManager {
+public class ProviderManager {
 
-    private static final Logger logger = LoggerFactory.getLogger(ResolveContextManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(ProviderManager.class);
 
     private final ResourceResolver resolver;
 
@@ -60,9 +61,12 @@ public class ResolveContextManager {
     /** Set of refreshable resource providers. */
     private final List<AuthenticatedResourceProvider> refreshable = new ArrayList<AuthenticatedResourceProvider>();
 
-    public ResolveContextManager(@Nonnull final ResourceResolver resolver) {
+    private final ResourceAccessSecurityTracker tracker;
+
+    public ProviderManager(@Nonnull final ResourceResolver resolver, @Nonnull final ResourceAccessSecurityTracker tracker) {
         this.contextMap = new IdentityHashMap<ResourceProviderHandler, AuthenticatedResourceProvider>();
         this.resolver = resolver;
+        this.tracker = tracker;
     }
 
     /**
@@ -157,7 +161,10 @@ public class ResolveContextManager {
                 control,
                 contextData,
                 ResourceUtil.getParent(handler.getInfo().getPath()));
-        final AuthenticatedResourceProvider rp = new AuthenticatedResourceProvider(provider, context);
+        final AuthenticatedResourceProvider rp = new AuthenticatedResourceProvider(provider,
+                handler.getInfo().getUseResourceAccessSecurity(),
+                context,
+                this.tracker);
         if ( isAuthenticated ) {
             this.authenticated.add(rp);
         }

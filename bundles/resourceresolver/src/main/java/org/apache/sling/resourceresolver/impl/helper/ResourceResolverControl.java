@@ -132,7 +132,7 @@ public class ResourceResolverControl {
      * Refreshes all refreshable providers.
      */
     public void refresh(@Nonnull final ResourceResolverContext context) {
-        for (final AuthenticatedResourceProvider p : context.getResolveContextManager().getAllUsedRefreshable()) {
+        for (final AuthenticatedResourceProvider p : context.getProviderManager().getAllUsedRefreshable()) {
             p.refresh();
         }
     }
@@ -141,7 +141,7 @@ public class ResourceResolverControl {
      * Returns {@code true} if all providers are live.
      */
     public boolean isLive(@Nonnull final ResourceResolverContext context) {
-        for (final AuthenticatedResourceProvider p : context.getResolveContextManager().getAllAuthenticated()) {
+        for (final AuthenticatedResourceProvider p : context.getProviderManager().getAllAuthenticated()) {
             if (!p.isLive()) {
                 return false;
             }
@@ -199,7 +199,7 @@ public class ResourceResolverControl {
 
         final AuthenticatedResourceProvider provider = this.getBestMatchingProvider(context, path);
         if ( provider != null ) {
-            final Resource resourceCandidate = provider.getResource(path, parent, parameters, isResolve);
+            final Resource resourceCandidate = provider.getResource(path, parent, parameters);
             if (resourceCandidate != null) {
                 return resourceCandidate;
             }
@@ -271,8 +271,8 @@ public class ResourceResolverControl {
                 } else {
                     Resource rsrc = null;
                     try {
-                        final AuthenticatedResourceProvider rp = context.getResolveContextManager().getOrCreateProvider(handler, this);
-                        rsrc = rp == null ? null : rp.getResource(childPath, parent, null, false);
+                        final AuthenticatedResourceProvider rp = context.getProviderManager().getOrCreateProvider(handler, this);
+                        rsrc = rp == null ? null : rp.getResource(childPath, parent, null);
                     } catch ( final LoginException ignore) {
                         // ignore
                     }
@@ -307,7 +307,7 @@ public class ResourceResolverControl {
      */
     public Collection<String> getAttributeNames(final ResourceResolverContext context) {
         final Set<String> names = new LinkedHashSet<String>();
-        for (final AuthenticatedResourceProvider p : context.getResolveContextManager().getAllBestEffort(storage.getAttributableHandlers(), this)) {
+        for (final AuthenticatedResourceProvider p : context.getProviderManager().getAllBestEffort(storage.getAttributableHandlers(), this)) {
             final Collection<String> newNames = p.getAttributeNames(this.authenticationInfo);
             if (newNames != null) {
                 names.addAll(newNames);
@@ -322,7 +322,7 @@ public class ResourceResolverControl {
      * the providers.
      */
     public Object getAttribute(final ResourceResolverContext context, final String name) {
-        for (final AuthenticatedResourceProvider p : context.getResolveContextManager().getAllBestEffort(storage.getAttributableHandlers(), this)) {
+        for (final AuthenticatedResourceProvider p : context.getProviderManager().getAllBestEffort(storage.getAttributableHandlers(), this)) {
             Object attribute = p.getAttribute(name, this.authenticationInfo);
             if (attribute != null) {
                 return attribute;
@@ -378,7 +378,7 @@ public class ResourceResolverControl {
      * Revert changes on all modifiable ResourceProviders.
      */
     public void revert(final ResourceResolverContext context) {
-        for (final AuthenticatedResourceProvider p : context.getResolveContextManager().getAllUsedModifiable()) {
+        for (final AuthenticatedResourceProvider p : context.getProviderManager().getAllUsedModifiable()) {
             p.revert();
         }
     }
@@ -387,7 +387,7 @@ public class ResourceResolverControl {
      * Commit changes on all modifiable ResourceProviders.
      */
     public void commit(final ResourceResolverContext context) throws PersistenceException {
-        for (final AuthenticatedResourceProvider p : context.getResolveContextManager().getAllUsedModifiable()) {
+        for (final AuthenticatedResourceProvider p : context.getProviderManager().getAllUsedModifiable()) {
             p.commit();
         }
     }
@@ -396,7 +396,7 @@ public class ResourceResolverControl {
      * Check if any modifiable ResourceProvider has uncommited changes.
      */
     public boolean hasChanges(final ResourceResolverContext context) {
-        for (final AuthenticatedResourceProvider p : context.getResolveContextManager().getAllUsedModifiable()) {
+        for (final AuthenticatedResourceProvider p : context.getProviderManager().getAllUsedModifiable()) {
             if (p.hasChanges()) {
                 return true;
             }
@@ -409,7 +409,7 @@ public class ResourceResolverControl {
      */
     public String[] getSupportedLanguages(final ResourceResolverContext context) {
         final Set<String> supportedLanguages = new LinkedHashSet<String>();
-        for (AuthenticatedResourceProvider p : context.getResolveContextManager().getAllBestEffort(storage.getLanguageQueryableHandlers(), this)) {
+        for (AuthenticatedResourceProvider p : context.getProviderManager().getAllBestEffort(storage.getLanguageQueryableHandlers(), this)) {
             supportedLanguages.addAll(Arrays.asList(p.getSupportedLanguages()));
         }
         return supportedLanguages.toArray(new String[supportedLanguages.size()]);
@@ -432,7 +432,7 @@ public class ResourceResolverControl {
             final ResourceResolverContext context,
             final String language) {
         final List<AuthenticatedResourceProvider> queryableProviders = new ArrayList<AuthenticatedResourceProvider>();
-        for (final AuthenticatedResourceProvider p : context.getResolveContextManager().getAllBestEffort(storage.getLanguageQueryableHandlers(), this)) {
+        for (final AuthenticatedResourceProvider p : context.getProviderManager().getAllBestEffort(storage.getLanguageQueryableHandlers(), this)) {
             if (ArrayUtils.contains(p.getSupportedLanguages(), language)) {
                 queryableProviders.add(p);
             }
@@ -460,7 +460,7 @@ public class ResourceResolverControl {
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType adaptTo(final ResourceResolverContext context, Class<AdapterType> type) {
         // TODO - improve by providing an iterator instead of a list (getAllBestEffort)
-        for (AuthenticatedResourceProvider p : context.getResolveContextManager().getAllBestEffort(storage.getAdaptableHandlers(), this)) {
+        for (AuthenticatedResourceProvider p : context.getProviderManager().getAllBestEffort(storage.getAdaptableHandlers(), this)) {
             final Object adaptee = p.adaptTo(type);
             if (adaptee != null) {
                 return (AdapterType) adaptee;
@@ -478,14 +478,14 @@ public class ResourceResolverControl {
         }
         AuthenticatedResourceProvider srcProvider = null;
         try {
-            srcProvider = context.getResolveContextManager().getOrCreateProvider(srcNode.getValue(), this);
+            srcProvider = context.getProviderManager().getOrCreateProvider(srcNode.getValue(), this);
         } catch (LoginException e) {
             // ignore
         }
         if ( srcProvider == null ) {
             throw new PersistenceException("Source resource does not exist.", null, srcAbsPath, null);
         }
-        final Resource srcResource = srcProvider.getResource(srcAbsPath, null, null, false);
+        final Resource srcResource = srcProvider.getResource(srcAbsPath, null, null);
         if ( srcResource == null ) {
             throw new PersistenceException("Source resource does not exist.", null, srcAbsPath, null);
         }
@@ -497,14 +497,14 @@ public class ResourceResolverControl {
         }
         AuthenticatedResourceProvider destProvider = null;
         try {
-            destProvider = context.getResolveContextManager().getOrCreateProvider(destNode.getValue(), this);
+            destProvider = context.getProviderManager().getOrCreateProvider(destNode.getValue(), this);
         } catch (LoginException e) {
             // ignore
         }
         if ( destProvider == null ) {
             throw new PersistenceException("Destination resource does not exist.", null, destAbsPath, null);
         }
-        final Resource destResource = destProvider.getResource(destAbsPath, null, null, false);
+        final Resource destResource = destProvider.getResource(destAbsPath, null, null);
         if ( destResource == null ) {
             throw new PersistenceException("Destination resource does not exist.", null, destAbsPath, null);
         }
@@ -522,7 +522,7 @@ public class ResourceResolverControl {
         for (final Entry<String, Node<ResourceProviderHandler>> entry : parent.getChildren().entrySet()) {
             if ( entry.getValue().getValue() != null ) {
                 try {
-                    context.getResolveContextManager().getOrCreateProvider(entry.getValue().getValue(), this);
+                    context.getProviderManager().getOrCreateProvider(entry.getValue().getValue(), this);
                     hasMoreProviders = true;
                 } catch ( final LoginException ignore) {
                     // ignore
@@ -613,7 +613,7 @@ public class ResourceResolverControl {
             final String path) {
         try {
             final Node<ResourceProviderHandler> node = storage.getTree().getBestMatchingNode(path);
-            return node == null ? null : context.getResolveContextManager().getOrCreateProvider(node.getValue(), this);
+            return node == null ? null : context.getProviderManager().getOrCreateProvider(node.getValue(), this);
         } catch ( final LoginException le ) {
             // ignore
             return null;
@@ -630,7 +630,7 @@ public class ResourceResolverControl {
         final Node<ResourceProviderHandler> node = storage.getTree().getBestMatchingNode(path);
         if ( node != null && node.getValue().getInfo().isModifiable() ) {
             try {
-                return context.getResolveContextManager().getOrCreateProvider(node.getValue(), this);
+                return context.getProviderManager().getOrCreateProvider(node.getValue(), this);
             } catch ( final LoginException le ) {
                 // ignore
                 return null;
