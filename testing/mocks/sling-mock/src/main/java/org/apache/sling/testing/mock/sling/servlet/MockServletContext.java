@@ -19,7 +19,7 @@
 package org.apache.sling.testing.mock.sling.servlet;
 
 /**
- * Mock {@link ServletContext} implementation.
+ * Mock {@link javax.servlet.ServletContext} implementation.
  */
 public final class MockServletContext extends org.apache.sling.servlethelpers.MockServletContext {
 

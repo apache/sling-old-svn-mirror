@@ -19,7 +19,7 @@
 package org.apache.sling.testing.mock.sling.servlet;
 
 /**
- * Mock {@link RequestPathInfo} implementation.
+ * Mock {@link org.apache.sling.api.request.RequestPathInfo} implementation.
  */
 public final class MockRequestPathInfo extends org.apache.sling.servlethelpers.MockRequestPathInfo {
 
