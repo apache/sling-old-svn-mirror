@@ -413,11 +413,11 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
         return this.getResource(parentPath);
     }
 
-    public void copy(String srcAbsPath, String destAbsPath) throws PersistenceException {
+    public Resource copy(String srcAbsPath, String destAbsPath) throws PersistenceException {
         throw new UnsupportedOperationException();
     }
 
-    public void move(String srcAbsPath, String destAbsPath) throws PersistenceException {
+    public Resource move(String srcAbsPath, String destAbsPath) throws PersistenceException {
         throw new UnsupportedOperationException();
     }
 
