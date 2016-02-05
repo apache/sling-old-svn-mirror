@@ -39,7 +39,7 @@ public class BasicResolveContext<T> implements ResolveContext<T> {
 
     private final ResourceResolver resolver;
 
-    private final ResolveContextManager resolveContextManager;
+    private final ProviderManager resolveContextManager;
 
     private final ResourceResolverControl control;
 
@@ -54,7 +54,7 @@ public class BasicResolveContext<T> implements ResolveContext<T> {
     private volatile ResolveContext<Object> parentResolveContext;
 
     public BasicResolveContext(@Nonnull final ResourceResolver resolver,
-            @Nonnull final ResolveContextManager resolveContextManager,
+            @Nonnull final ProviderManager resolveContextManager,
             @Nonnull final ResourceResolverControl control,
             @CheckForNull final T providerState,
             @Nonnull final String parentPath) {

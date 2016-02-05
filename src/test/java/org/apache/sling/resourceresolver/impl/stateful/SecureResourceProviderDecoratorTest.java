@@ -34,9 +34,10 @@ import java.util.Iterator;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.security.AccessSecurityException;
 import org.apache.sling.api.security.ResourceAccessSecurity;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
-import org.apache.sling.resourceresolver.impl.providers.stateful.SecureResourceProviderDecorator;
+import org.apache.sling.resourceresolver.impl.providers.stateful.AuthenticatedResourceProvider;
 import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
 import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
@@ -49,13 +50,13 @@ public class SecureResourceProviderDecoratorTest {
     private ResourceAccessSecurity security;
     private ResourceResolver rr;
     private ResolveContext resolveContext;
-    private SecureResourceProviderDecorator src;
+    private AuthenticatedResourceProvider src;
     private ResourceProvider rp;
     private Resource first;
     private Resource second;
 
     @Before
-    public void prepare() throws PersistenceException {
+    public void prepare() throws PersistenceException, AccessSecurityException {
 
         rr = mock(ResourceResolver.class);
         resolveContext = mock(ResolveContext.class);
@@ -67,6 +68,7 @@ public class SecureResourceProviderDecoratorTest {
 
         when(security.getReadableResource(first)).thenReturn(first);
         when(security.getReadableResource(second)).thenReturn(null);
+        when(security.transformQuery("FIND ALL", "MockQueryLanguage", rr)).thenReturn("FIND ALL");
 
         QueryLanguageProvider qlp = mock(QueryLanguageProvider.class);
 
@@ -83,7 +85,7 @@ public class SecureResourceProviderDecoratorTest {
             }
         };
 
-        src = new SecureResourceProviderDecorator(rp, resolveContext, securityTracker);
+        src = new AuthenticatedResourceProvider(rp, false, resolveContext, securityTracker);
 
     }
 

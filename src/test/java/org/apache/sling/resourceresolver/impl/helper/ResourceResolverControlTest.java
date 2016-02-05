@@ -140,7 +140,7 @@ public class ResourceResolverControlTest {
         ResourceProviderStorage storage = new ResourceProviderStorage(handlers);
 
         crp = new ResourceResolverControl(false, authInfo, storage);
-        context = new ResourceResolverContext(rr);
+        context = new ResourceResolverContext(rr, securityTracker);
     }
 
     /**
@@ -175,7 +175,7 @@ public class ResourceResolverControlTest {
     @Test
     public void loginLogout() throws LoginException {
 
-        context.getResolveContextManager().authenticateAll(handlers, crp);
+        context.getProviderManager().authenticateAll(handlers, crp);
 
         verify(subProvider).authenticate(authInfo);
 
