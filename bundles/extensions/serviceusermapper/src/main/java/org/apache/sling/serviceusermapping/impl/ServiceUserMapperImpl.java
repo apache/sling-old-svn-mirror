@@ -240,7 +240,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
         }
 
         activeMappings = mappings.toArray(new Mapping[mappings.size()]);
-        log.debug("Active mappings updated: {}", mappings);
+        log.debug("Active mappings updated: {} mappings active", mappings.size());
 
         RegistrationSet registrationSet = updateServiceRegistrations(activeMappings);
 
@@ -358,7 +358,10 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
     }
 
     private String internalGetUserId(final String serviceName, final String subServiceName) {
-        // try with serviceInfo first
+        log.debug(
+                "internalGetUserId: {} active mappings, looking for mapping for {}/{}", 
+                new Object[] { this.activeMappings.length, serviceName, subServiceName });
+        
         for (final Mapping mapping : this.activeMappings) {
             final String userId = mapping.map(serviceName, subServiceName);
             if (userId != null) {
@@ -368,6 +371,10 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
         }
 
         // second round without serviceInfo
+        log.debug(
+                "internalGetUserId: {} active mappings, looking for mapping for {}/<no subServiceName>", 
+                this.activeMappings.length, serviceName);
+        
         for (Mapping mapping : this.activeMappings) {
             final String userId = mapping.map(serviceName, null);
             if (userId != null) {
@@ -376,7 +383,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
             }
         }
 
-        log.debug("No mapping found, fallback to default user [{}]", this.defaultUser);
+        log.debug("internalGetUserId: no mapping found, fallback to default user [{}]", this.defaultUser);
         return this.defaultUser;
     }
 
