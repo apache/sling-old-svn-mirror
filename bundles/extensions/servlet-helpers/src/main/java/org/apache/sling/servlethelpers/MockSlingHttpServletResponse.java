@@ -46,6 +46,7 @@ public class MockSlingHttpServletResponse extends SlingAdaptable implements Slin
     private int status = HttpServletResponse.SC_OK;
     private int bufferSize = 1024 * 8;
     private boolean isCommitted;
+    private Locale locale = Locale.US;
     private final HeaderSupport headerSupport = new HeaderSupport();
     private final ResponseBodySupport bodySupport = new ResponseBodySupport();
     private final CookieSupport cookieSupport = new CookieSupport();
@@ -249,17 +250,17 @@ public class MockSlingHttpServletResponse extends SlingAdaptable implements Slin
         return cookieSupport.getCookies();
     }
 
-    // --- unsupported operations ---
     @Override
     public Locale getLocale() {
-        throw new UnsupportedOperationException();
+        return locale;
     }
 
     @Override
     public void setLocale(Locale loc) {
-        throw new UnsupportedOperationException();
+        this.locale = loc;
     }
 
+    // --- unsupported operations ---
     @Override
     public String encodeRedirectUrl(String url) {
         throw new UnsupportedOperationException();
@@ -279,4 +280,5 @@ public class MockSlingHttpServletResponse extends SlingAdaptable implements Slin
     public String encodeURL(String url) {
         throw new UnsupportedOperationException();
     }
+
 }

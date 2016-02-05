@@ -27,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Locale;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
@@ -172,6 +173,13 @@ public class MockSlingHttpServletResponseTest {
 
         response.reset();
         assertNull(response.getCookies());
+    }
+
+    @Test
+    public void testLocale() {
+        assertEquals(Locale.US, response.getLocale());
+        response.setLocale(Locale.GERMAN);
+        assertEquals(Locale.GERMAN, response.getLocale());
     }
 
 }

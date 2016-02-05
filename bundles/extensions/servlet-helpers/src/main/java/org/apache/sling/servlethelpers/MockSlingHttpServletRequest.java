@@ -96,6 +96,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
     private String remoteAddr;
     private String remoteHost;
     private int remotePort;
+    private Locale locale = Locale.US;
 
     private MockRequestDispatcherFactory requestDispatcherFactory;
     
@@ -259,8 +260,15 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     @Override
     public Locale getLocale() {
-        return Locale.US;
+        return locale;
     }
+    
+    /**
+     * @param loc Request locale
+     */
+    public void setLocale(Locale loc) {
+        this.locale = loc;
+    }    
 
     @Override
     public String getContextPath() {
