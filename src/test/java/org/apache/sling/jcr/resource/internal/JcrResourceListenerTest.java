@@ -18,7 +18,7 @@ package org.apache.sling.jcr.resource.internal;
 
 import javax.jcr.Session;
 
-import org.apache.sling.api.resource.util.PathSet;
+import org.apache.sling.api.resource.path.PathSet;
 import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.spi.resource.provider.ObservationReporter;

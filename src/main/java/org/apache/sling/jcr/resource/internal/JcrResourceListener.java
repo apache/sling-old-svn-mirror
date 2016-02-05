@@ -48,7 +48,7 @@ import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.api.observation.JackrabbitEvent;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
-import org.apache.sling.api.resource.util.Path;
+import org.apache.sling.api.resource.path.Path;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.internal.JcrResourceChange.Builder;
 import org.apache.sling.jcr.resource.internal.helper.jcr.PathMapper;
