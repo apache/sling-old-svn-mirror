@@ -30,7 +30,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.launchpad.testservices.resourceprovider.PlanetsResourceProvider.DoesNotNeedAContext;
-import org.apache.sling.spi.resource.provider.ResolverContext;
+import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 
@@ -82,7 +82,7 @@ public class PlanetsResourceProvider extends ResourceProvider<DoesNotNeedAContex
     };
     
     @Override
-    public Resource getResource(ResolverContext<DoesNotNeedAContext> ctx,
+    public Resource getResource(ResolveContext<DoesNotNeedAContext> ctx,
             String path, ResourceContext resourceContext, Resource parent) {
         // Synthetic resource for our root, so that /planets works
         if((ROOT).equals(path)) {
@@ -95,7 +95,7 @@ public class PlanetsResourceProvider extends ResourceProvider<DoesNotNeedAContex
     }
 
     @Override
-    public Iterator<Resource> listChildren(ResolverContext<DoesNotNeedAContext> ctx, Resource parent) {
+    public Iterator<Resource> listChildren(ResolveContext<DoesNotNeedAContext> ctx, Resource parent) {
         if(parent.getPath().startsWith(ROOT)) {
             // Not the most efficient thing...good enough for this example
             final List<Resource> kids = new ArrayList<Resource>();
