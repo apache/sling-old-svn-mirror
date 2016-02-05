@@ -18,25 +18,34 @@
  */
 package org.apache.sling.resourceresolver.impl.providers.stateful;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverControl;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
-import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.resourceresolver.impl.providers.tree.Node;
 import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 
+/**
+ * Resolve context implementation for a resource provider.
+ *
+ * This class is not thread safe (same as the resource resolver).
+ */
 public class BasicResolveContext<T> implements ResolveContext<T> {
 
-    private final String parentPath;
+    private final ResourceResolver resolver;
 
-    private final ResourceResolver resourceResolver;
+    private final ResolveContextManager resolveContextManager;
+
+    private final ResourceResolverControl control;
 
     private final T providerState;
 
-    private final ResourceResolverControl combinedProvider;
+    private final String parentPath;
 
     private volatile boolean parentLookupDone = false;
 
@@ -44,24 +53,21 @@ public class BasicResolveContext<T> implements ResolveContext<T> {
 
     private volatile ResolveContext<Object> parentResolveContext;
 
-    public BasicResolveContext(ResourceResolver resourceResolver,
-            T providerState,
-            String parentPath,
-            ResourceResolverControl combinedProvider) {
-        this.resourceResolver = resourceResolver;
+    public BasicResolveContext(@Nonnull final ResourceResolver resolver,
+            @Nonnull final ResolveContextManager resolveContextManager,
+            @Nonnull final ResourceResolverControl control,
+            @CheckForNull final T providerState,
+            @Nonnull final String parentPath) {
+        this.resolver = resolver;
+        this.resolveContextManager = resolveContextManager;
         this.parentPath = parentPath;
         this.providerState = providerState;
-        this.combinedProvider = combinedProvider;
-    }
-
-    public BasicResolveContext(ResourceResolver resourceResolver,
-            T providerState, String parentPath) {
-        this(resourceResolver, providerState, parentPath, null);
+        this.control = control;
     }
 
     @Override
     public ResourceResolver getResourceResolver() {
-        return resourceResolver;
+        return this.resolver;
     }
 
     @Override
@@ -80,20 +86,18 @@ public class BasicResolveContext<T> implements ResolveContext<T> {
         if ( ! parentLookupDone ) {
             synchronized ( this ) {
                 if ( this.parentPath != null ) {
-                    final ResourceProviderStorage storage = this.combinedProvider.getResourceProviderStorage();
                     String path = this.parentPath;
                     while ( path != null && this.parentProvider != null ) {
-                        final Node<ResourceProviderHandler> node = storage.getTree().getBestMatchingNode(this.parentPath);
+                        final Node<ResourceProviderHandler> node = this.control.getResourceProviderStorage().getTree().getBestMatchingNode(this.parentPath);
                         if ( node != null ) {
+                            final ResourceProviderHandler handler = node.getValue();
                             try {
-                                final StatefulResourceProvider srp = this.combinedProvider.getStatefulResourceProvider(node.getValue());
-                                if ( srp != null ) {
-                                    this.parentProvider = srp.getResourceProvider();
-                                    this.parentResolveContext = srp.getContext();
+                                this.parentResolveContext = this.resolveContextManager.getOrCreateResolveContext(handler, this.control);
+                                if ( this.parentResolveContext != null ) {
+                                    this.parentProvider = handler.getResourceProvider();
                                 }
                             } catch ( final LoginException se) {
                                 // skip this, try next
-                                this.parentProvider = null;
                             }
                             if ( this.parentProvider == null ) {
                                 path = ResourceUtil.getParent(path);

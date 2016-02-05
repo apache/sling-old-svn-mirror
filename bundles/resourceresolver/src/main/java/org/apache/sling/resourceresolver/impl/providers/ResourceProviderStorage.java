@@ -39,8 +39,6 @@ public class ResourceProviderStorage {
 
     private final List<ResourceProviderHandler> attributableHandlers;
 
-    private final List<ResourceProviderHandler> refreshableHandlers;
-
     private final List<ResourceProviderHandler> languageQueryableHandlers;
 
     private final PathTree<ResourceProviderHandler> handlersTree;
@@ -50,7 +48,6 @@ public class ResourceProviderStorage {
         this.authRequiredHandlers = new ArrayList<ResourceProviderHandler>();
         this.adaptableHandlers = new ArrayList<ResourceProviderHandler>();
         this.attributableHandlers = new ArrayList<ResourceProviderHandler>();
-        this.refreshableHandlers = new ArrayList<ResourceProviderHandler>();
         this.languageQueryableHandlers = new ArrayList<ResourceProviderHandler>();
         for (ResourceProviderHandler h : allHandlers) {
             ResourceProviderInfo info = h.getInfo();
@@ -62,9 +59,6 @@ public class ResourceProviderStorage {
             }
             if (info.isAttributable()) {
                 this.attributableHandlers.add(h);
-            }
-            if (info.isRefreshable()) {
-                this.refreshableHandlers.add(h);
             }
             if (h.getResourceProvider().getQueryLanguageProvider() != null) {
                 this.languageQueryableHandlers.add(h);
@@ -87,10 +81,6 @@ public class ResourceProviderStorage {
 
     public List<ResourceProviderHandler> getAttributableHandlers() {
         return attributableHandlers;
-    }
-
-    public List<ResourceProviderHandler> getRefreshableHandlers() {
-        return refreshableHandlers;
     }
 
     public List<ResourceProviderHandler> getLanguageQueryableHandlers() {

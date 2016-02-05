@@ -24,22 +24,15 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.runtime.dto.AuthType;
-import org.apache.sling.resourceresolver.impl.helper.ResourceResolverControl;
-import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
 import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This {@link StatefulResourceProvider} implementation authenticates the
@@ -47,105 +40,41 @@ import org.slf4j.LoggerFactory;
  * creation of the object (for {@link AuthType#required}) or before invoking the
  * first method (for {@link AuthType#lazy}).
  */
-public class AuthenticatedResourceProvider implements StatefulResourceProvider {
-
-    private static final Logger logger = LoggerFactory.getLogger(AuthenticatedResourceProvider.class);
+public class AuthenticatedResourceProvider {
 
     private static final String FORBIDDEN_ATTRIBUTE = ResourceResolverFactory.PASSWORD;
 
-    private final ResourceProviderHandler handler;
+    public static final AuthenticatedResourceProvider UNAUTHENTICATED_PROVIDER = new AuthenticatedResourceProvider(null, null);
 
-    private final Map<String, Object> authInfo;
+    private final ResourceProvider<Object> provider;
 
-    private final ResourceResolver resolver;
-
-    private final ResourceResolverControl resolverContext;
-
-    private volatile ResolveContext<Object> cachedContext;
+    private final ResolveContext<Object> cachedContext;
 
     private volatile boolean authenticated;
 
 
-    public AuthenticatedResourceProvider(final ResourceProviderHandler handler,
-            ResourceResolver resolver,
-            Map<String, Object> authInfo,
-            ResourceResolverControl resolverContext) throws LoginException {
-        this.handler = handler;
-        this.authInfo = authInfo;
-        this.resolver = resolver;
-        this.resolverContext = resolverContext;
-        if (handler.getInfo().getAuthType() == AuthType.required) {
-            authenticate();
-        }
+    public AuthenticatedResourceProvider(final ResourceProvider<Object> provider,
+            final ResolveContext<Object> resolveContext) {
+        this.provider = provider;
+        this.cachedContext = resolveContext;
     }
 
-    private ResolveContext<Object> authenticate() throws LoginException {
-        if ( cachedContext  == null ) {
-            Object contextData = null;
-            if ( (handler.getInfo().getAuthType() == AuthType.required || handler.getInfo().getAuthType() == AuthType.lazy) ) {
-                try {
-                    contextData = handler.getResourceProvider().authenticate(authInfo);
-                } catch ( final LoginException le ) {
-                    logger.debug("Unable to login into resource provider " + handler.getResourceProvider(), le);
-                    throw le;
-                }
-                authenticated = true;
-            }
-
-            cachedContext = new BasicResolveContext<Object>(resolver, contextData, ResourceUtil.getParent(handler.getInfo().getPath()), this.resolverContext);
-        }
-
-        return cachedContext;
+    public ResolveContext<Object> getResolveContext() {
+        return this.cachedContext;
     }
 
-    @Override
-    public ResolveContext<Object> getContext() throws LoginException {
-        return authenticate();
-    }
-
-    @Override
-    public void logout() {
-        if (authenticated) {
-            try {
-                handler.getResourceProvider().logout(getContext().getProviderState());
-            } catch (LoginException e) {
-                logger.error("Can't create context", e);
-            }
-            authenticated = false;
-        }
-        cachedContext = null;
-    }
-
-    @Override
     public void refresh() {
-        try {
-            handler.getResourceProvider().refresh(getContext());
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-        }
+        this.provider.refresh(this.cachedContext);
     }
 
-    @Override
     public boolean isLive() {
-        try {
-            return handler.getResourceProvider().isLive(getContext());
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-            return false;
-        }
+        return this.provider.isLive(this.cachedContext);
     }
 
-    @Override
-    public Resource getParent(Resource child) {
-        try {
-            return handler.getResourceProvider().getParent(getContext(), child);
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-            return null;
-        }
+    public Resource getParent(final Resource child) {
+        return this.provider.getParent(this.cachedContext, child);
     }
 
-    @Override
     public Resource getResource(String path, Resource parent, final Map<String, String> parameters, boolean isResolve) {
         ResourceContext resourceContext = ResourceContext.EMPTY_CONTEXT;
         if ( parameters != null ) {
@@ -157,34 +86,16 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
                 }
             };
         }
-        try {
-            return handler.getResourceProvider().getResource(getContext(), path, resourceContext, parent);
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-            return null;
-        }
-
+        return this.provider.getResource(this.cachedContext, path, resourceContext, parent);
     }
 
-    @Override
     public Iterator<Resource> listChildren(Resource parent) {
-        try {
-            return handler.getResourceProvider().listChildren(getContext(), parent);
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-            return null;
-        }
+        return this.provider.listChildren(this.cachedContext, parent);
     }
 
-    @Override
-    public Collection<String> getAttributeNames() {
+    public Collection<String> getAttributeNames(final Map<String, Object> authInfo) {
         Set<String> attributeNames = new LinkedHashSet<String>();
-        Collection<String> rpAttributeNames = null;
-        try {
-            rpAttributeNames = handler.getResourceProvider().getAttributeNames(getContext());
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-        }
+        Collection<String> rpAttributeNames = this.provider.getAttributeNames(this.cachedContext);
         if (rpAttributeNames != null) {
             attributeNames.addAll(rpAttributeNames);
         }
@@ -195,152 +106,80 @@ public class AuthenticatedResourceProvider implements StatefulResourceProvider {
         return attributeNames;
     }
 
-    @Override
-    public Object getAttribute(String name) {
+    public Object getAttribute(final String name, final Map<String, Object> authInfo) {
         if (FORBIDDEN_ATTRIBUTE.equals(name)) {
             return null;
         }
-        Object attribute = null;
-        try {
-            attribute = handler.getResourceProvider().getAttribute(getContext(), name);
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-        }
+        Object attribute = this.provider.getAttribute(this.cachedContext, name);
         if (attribute == null) {
             attribute = authInfo.get(name);
         }
         return attribute;
     }
 
-    @Override
     public Resource create(final ResourceResolver resolver, String path, Map<String, Object> properties) throws PersistenceException {
-        try {
-            return handler.getResourceProvider().create(getContext(), path, properties);
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-            return null;
-        }
+        return this.provider.create(this.cachedContext, path, properties);
     }
 
-    @Override
     public void delete(Resource resource) throws PersistenceException {
-        try {
-            handler.getResourceProvider().delete(getContext(), resource);
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-        }
+        this.provider.delete(this.cachedContext, resource);
     }
 
-    @Override
     public void revert() {
-        try {
-            handler.getResourceProvider().revert(getContext());
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-        }
+        this.provider.revert(this.cachedContext);
     }
 
-    @Override
     public void commit() throws PersistenceException {
-        try {
-            handler.getResourceProvider().commit(getContext());
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-        }
+        this.provider.commit(this.cachedContext);
     }
 
-    @Override
     public boolean hasChanges() {
-        try {
-            return handler.getResourceProvider().hasChanges(getContext());
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-            return false;
-        }
+        return this.provider.hasChanges(this.cachedContext);
     }
 
     private QueryLanguageProvider<Object> getQueryLanguageProvider() {
-        return handler.getResourceProvider().getQueryLanguageProvider();
+        return this.provider.getQueryLanguageProvider();
     }
 
-    @Override
     public String[] getSupportedLanguages() {
         final QueryLanguageProvider<Object> jcrQueryProvider = getQueryLanguageProvider();
         if (jcrQueryProvider == null) {
             return null;
         }
-        try {
-            return jcrQueryProvider.getSupportedLanguages(getContext());
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-            return ArrayUtils.EMPTY_STRING_ARRAY;
-        }
+        return jcrQueryProvider.getSupportedLanguages(this.cachedContext);
     }
 
-    @Override
     public Iterator<Resource> findResources(String query, String language) {
         final QueryLanguageProvider<Object> jcrQueryProvider = getQueryLanguageProvider();
         if (jcrQueryProvider == null) {
             return null;
         }
-        try {
-            return jcrQueryProvider.findResources(getContext(), query, language);
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-            return null;
-        }
+        return jcrQueryProvider.findResources(this.cachedContext, query, language);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    @Override
     public Iterator<Map<String, Object>> queryResources(String query, String language) {
         final QueryLanguageProvider<Object> jcrQueryProvider = getQueryLanguageProvider();
         if (jcrQueryProvider == null) {
             return null;
         }
-        try {
-            return (Iterator) jcrQueryProvider.queryResources(getContext(), query, language);
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-            return null;
-        }
+        return (Iterator) jcrQueryProvider.queryResources(this.cachedContext, query, language);
     }
 
-    @Override
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
-        try {
-            return handler.getResourceProvider().adaptTo(getContext(), type);
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-            return null;
-        }
+        return this.provider.adaptTo(this.cachedContext, type);
     }
 
-    @Override
     public boolean copy(String srcAbsPath, String destAbsPath) throws PersistenceException {
-        try {
-            return handler.getResourceProvider().copy(getContext(), srcAbsPath, destAbsPath);
-        } catch (LoginException e) {
-            throw new PersistenceException("Unable to create context.", e);
-        }
+        return this.provider.copy(this.cachedContext, srcAbsPath, destAbsPath);
     }
 
-    @Override
     public boolean move(String srcAbsPath, String destAbsPath) throws PersistenceException {
-        try {
-            return handler.getResourceProvider().move(getContext(), srcAbsPath, destAbsPath);
-        } catch (LoginException e) {
-            throw new PersistenceException("Unable to create context.", e);
-        }
-    }
-
-    @Override
-    public ResourceProvider<Object> getResourceProvider() {
-        return handler.getResourceProvider();
+        return this.provider.move(this.cachedContext, srcAbsPath, destAbsPath);
     }
 
     @Override
     public String toString() {
-        return "[" + getClass().getSimpleName() + "# rp: " + getResourceProvider() + ", authenticated: " + authenticated + "]";
+        return "[" + getClass().getSimpleName() + "# rp: " + this.provider + ", authenticated: " + authenticated + "]";
     }
 }

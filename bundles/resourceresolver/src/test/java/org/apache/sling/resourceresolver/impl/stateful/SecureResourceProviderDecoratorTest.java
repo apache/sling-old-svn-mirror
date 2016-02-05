@@ -22,6 +22,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -36,7 +37,9 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.security.ResourceAccessSecurity;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 import org.apache.sling.resourceresolver.impl.providers.stateful.SecureResourceProviderDecorator;
-import org.apache.sling.resourceresolver.impl.providers.stateful.StatefulResourceProvider;
+import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
+import org.apache.sling.spi.resource.provider.ResolveContext;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -45,8 +48,9 @@ public class SecureResourceProviderDecoratorTest {
 
     private ResourceAccessSecurity security;
     private ResourceResolver rr;
+    private ResolveContext resolveContext;
     private SecureResourceProviderDecorator src;
-    private StatefulResourceProvider rp;
+    private ResourceProvider rp;
     private Resource first;
     private Resource second;
 
@@ -54,6 +58,8 @@ public class SecureResourceProviderDecoratorTest {
     public void prepare() throws PersistenceException {
 
         rr = mock(ResourceResolver.class);
+        resolveContext = mock(ResolveContext.class);
+        when(resolveContext.getResourceResolver()).thenReturn(rr);
 
         security = mock(ResourceAccessSecurity.class);
         first = mock(Resource.class);
@@ -62,9 +68,13 @@ public class SecureResourceProviderDecoratorTest {
         when(security.getReadableResource(first)).thenReturn(first);
         when(security.getReadableResource(second)).thenReturn(null);
 
-        rp = mock(StatefulResourceProvider.class);
-        when(rp.create(rr, "/some/path", Collections.<String, Object> emptyMap())).thenReturn(mock(Resource.class));
-        when(rp.findResources("FIND ALL", "MockQueryLanguage")).thenReturn(Arrays.asList(first, second).iterator());
+        QueryLanguageProvider qlp = mock(QueryLanguageProvider.class);
+
+        rp = mock(ResourceProvider.class);
+        when(rp.getQueryLanguageProvider()).thenReturn(qlp);
+
+        when(rp.create(resolveContext, "/some/path", Collections.<String, Object> emptyMap())).thenReturn(mock(Resource.class));
+        when(qlp.findResources(resolveContext, "FIND ALL", "MockQueryLanguage")).thenReturn(Arrays.asList(first, second).iterator());
 
         ResourceAccessSecurityTracker securityTracker = new ResourceAccessSecurityTracker() {
             @Override
@@ -73,7 +83,7 @@ public class SecureResourceProviderDecoratorTest {
             }
         };
 
-        src = new SecureResourceProviderDecorator(rp, securityTracker);
+        src = new SecureResourceProviderDecorator(rp, resolveContext, securityTracker);
 
     }
 
@@ -102,7 +112,7 @@ public class SecureResourceProviderDecoratorTest {
 
         src.delete(toDelete);
 
-        verify(rp).delete(toDelete);
+        verify(rp).delete(resolveContext, toDelete);
     }
 
     @Test
@@ -112,7 +122,12 @@ public class SecureResourceProviderDecoratorTest {
 
         when(security.canDelete(toDelete)).thenReturn(false);
 
-        src.delete(toDelete);
+        try {
+            src.delete(toDelete);
+            fail();
+        } catch ( PersistenceException pe ) {
+            // correct
+        }
 
         Mockito.verifyZeroInteractions(rp);
     }
