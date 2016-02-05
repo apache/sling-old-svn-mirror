@@ -20,7 +20,7 @@ package org.apache.sling.resource.path;
 
 import static org.junit.Assert.assertThat;
 
-import org.apache.sling.api.resource.util.PathBuilder;
+import org.apache.sling.api.resource.path.PathBuilder;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 

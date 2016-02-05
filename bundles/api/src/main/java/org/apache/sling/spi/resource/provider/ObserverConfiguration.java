@@ -23,7 +23,7 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.observation.ResourceChange;
-import org.apache.sling.api.resource.util.PathSet;
+import org.apache.sling.api.resource.path.PathSet;
 
 import aQute.bnd.annotation.ProviderType;
 
