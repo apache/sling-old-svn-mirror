@@ -28,10 +28,10 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.path.Path;
+import org.apache.sling.api.resource.path.PathSet;
 import org.apache.sling.api.resource.runtime.dto.AuthType;
 import org.apache.sling.api.resource.runtime.dto.RuntimeDTO;
-import org.apache.sling.api.resource.util.Path;
-import org.apache.sling.api.resource.util.PathSet;
 import org.apache.sling.resourceresolver.impl.Fixture;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker.ChangeListener;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker.ObservationReporterGenerator;

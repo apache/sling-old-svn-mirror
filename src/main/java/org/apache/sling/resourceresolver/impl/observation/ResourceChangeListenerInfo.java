@@ -30,8 +30,8 @@ import java.util.Set;
 
 import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
+import org.apache.sling.api.resource.path.PathSet;
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
-import org.apache.sling.api.resource.util.PathSet;
 import org.osgi.framework.ServiceReference;
 
 /**
