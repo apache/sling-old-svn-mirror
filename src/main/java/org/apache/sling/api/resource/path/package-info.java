@@ -18,7 +18,7 @@
  */
 
 @Version("1.0.0")
-package org.apache.sling.api.resource.util;
+package org.apache.sling.api.resource.path;
 
 import aQute.bnd.annotation.Version;
 

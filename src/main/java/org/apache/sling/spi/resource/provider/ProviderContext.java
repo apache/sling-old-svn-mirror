@@ -20,7 +20,7 @@ package org.apache.sling.spi.resource.provider;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.api.resource.util.PathSet;
+import org.apache.sling.api.resource.path.PathSet;
 
 import aQute.bnd.annotation.ProviderType;
 
