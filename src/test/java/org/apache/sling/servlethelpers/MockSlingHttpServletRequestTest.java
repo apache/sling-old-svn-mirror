@@ -118,6 +118,8 @@ public class MockSlingHttpServletRequestTest {
     @Test
     public void testLocale() {
         assertEquals(Locale.US, request.getLocale());
+        request.setLocale(Locale.GERMAN);
+        assertEquals(Locale.GERMAN, request.getLocale());
     }
 
     @Test
