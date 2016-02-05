@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.resource.path;
+package org.apache.sling.api.resource.path;
 
 import static org.junit.Assert.assertThat;
 
