@@ -242,7 +242,9 @@ public class ResourceProviderEntryTest {
 
     private ResourceResolver getResolver() throws LoginException {
         if (providersBasedResolver == null) {
-            providersBasedResolver = new ResourceResolverImpl(new CommonResourceResolverFactoryImpl(new ResourceResolverFactoryActivator()), false, null,
+            final ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
+            activator.resourceAccessSecurityTracker = new ResourceAccessSecurityTracker();
+            providersBasedResolver = new ResourceResolverImpl(new CommonResourceResolverFactoryImpl(activator), false, null,
                     new ResourceProviderStorage(providers));
         }
         return providersBasedResolver;

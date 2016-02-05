@@ -88,6 +88,7 @@ public class ResourceResolverImplTest {
         when(resourceProviderTracker.getResourceProviderStorage()).thenReturn(storage);
         ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
         activator.resourceProviderTracker = resourceProviderTracker;
+        activator.resourceAccessSecurityTracker = new ResourceAccessSecurityTracker();
         commonFactory = new CommonResourceResolverFactoryImpl(activator);
         resFac = new ResourceResolverFactoryImpl(commonFactory, /* TODO: using Bundle */ null, null);
         resResolver = resFac.getAdministrativeResourceResolver(null);
@@ -504,7 +505,7 @@ public class ResourceResolverImplTest {
 
     @Test public void testIsResourceType() {
         final PathBasedResourceResolverImpl resolver = getPathBasedResourceResolver();
-        
+
         final Resource r = resolver.add(new SyntheticResourceWithSupertype(resolver, "/a", "a:b", "d:e"));
         resolver.add(new SyntheticResourceWithSupertype(resolver, "/d/e", "x:y", "t:c"));
 
@@ -517,7 +518,7 @@ public class ResourceResolverImplTest {
 
     @Test public void testIsResourceTypeWithPaths() {
         final PathBasedResourceResolverImpl resolver = getPathBasedResourceResolver();
-        
+
         /**
          * prepare resource type hierarchy
          * /types/1
@@ -553,7 +554,7 @@ public class ResourceResolverImplTest {
 
     @Test(expected=SlingException.class)  public void testIsResourceCyclicHierarchyDirect() {
         final PathBasedResourceResolverImpl resolver = getPathBasedResourceResolver();
-        
+
         /**
          * prepare resource type hierarchy
          * /types/1  <---+
@@ -566,14 +567,14 @@ public class ResourceResolverImplTest {
 
         assertTrue(resolver.isResourceType(resource, "/types/1"));
         assertTrue(resolver.isResourceType(resource, "/types/2"));
-        
+
         // this should throw a SlingException when detecting the cyclic hierarchy
         resolver.isResourceType(resource, "/types/unknown");
     }
 
     @Test(expected=SlingException.class) public void testIsResourceCyclicHierarchyIndirect() {
         final PathBasedResourceResolverImpl resolver = getPathBasedResourceResolver();
-        
+
         /**
          * prepare resource type hierarchy
          * /types/1   <----+
@@ -617,9 +618,9 @@ public class ResourceResolverImplTest {
                         Map<String, Object> authenticationInfo) throws LoginException {
                     return resolvers.get(0);
                 }
-            }, resourceProviderTracker);            
+            }, resourceProviderTracker);
         }
-        
+
         public PathBasedResourceResolverImpl(CommonResourceResolverFactoryImpl factory, ResourceProviderTracker resourceProviderTracker) throws LoginException {
             super(factory, false, null, resourceProviderTracker.getResourceProviderStorage());
         }
@@ -642,20 +643,20 @@ public class ResourceResolverImplTest {
     }
 
     private static class SyntheticResourceWithSupertype extends SyntheticResource {
-        
+
         private final String resourceSuperType;
-        
+
         public SyntheticResourceWithSupertype(ResourceResolver resourceResolver, String path,
                 String resourceType, String resourceSuperType) {
             super(resourceResolver, path, resourceType);
             this.resourceSuperType = resourceSuperType;
         }
-     
+
         @Override
         public String getResourceSuperType() {
             return this.resourceSuperType;
         }
-        
+
     }
-    
+
 }

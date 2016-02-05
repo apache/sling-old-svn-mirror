@@ -55,7 +55,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class takes a number of {@link StatefulResourceProvider} objects and
+ * This class takes a number of {@link AuthenticatedResourceProvider} objects and
  * exposes it as one such object. Provider appropriate for the given operation
  * is chosen basing on its {@link ResourceProviderInfo#getPath()} (more specific
  * first) and service ranking.
@@ -65,6 +65,8 @@ import org.slf4j.LoggerFactory;
 public class ResourceResolverControl {
 
     private static final Logger logger = LoggerFactory.getLogger(ResourceResolverControl.class);
+
+    private static final String FORBIDDEN_ATTRIBUTE = ResourceResolverFactory.PASSWORD;
 
     /** Is this a resource resolver for an admin? */
     private final boolean isAdmin;
@@ -308,27 +310,31 @@ public class ResourceResolverControl {
     public Collection<String> getAttributeNames(final ResourceResolverContext context) {
         final Set<String> names = new LinkedHashSet<String>();
         for (final AuthenticatedResourceProvider p : context.getProviderManager().getAllBestEffort(storage.getAttributableHandlers(), this)) {
-            final Collection<String> newNames = p.getAttributeNames(this.authenticationInfo);
-            if (newNames != null) {
-                names.addAll(newNames);
-            }
+            p.getAttributeNames(names);
         }
+        if ( this.authenticationInfo != null ) {
+            names.addAll(authenticationInfo.keySet());
+        }
+        names.remove(FORBIDDEN_ATTRIBUTE);
         return names;
     }
 
     /**
      * Returns the first non-null result of the
-     * {@link StatefulResourceProvider#getAttribute(String)} invocation on
+     * {@link AuthenticatedResourceProvider#getAttribute(String)} invocation on
      * the providers.
      */
     public Object getAttribute(final ResourceResolverContext context, final String name) {
+        if (FORBIDDEN_ATTRIBUTE.equals(name)) {
+            return null;
+        }
         for (final AuthenticatedResourceProvider p : context.getProviderManager().getAllBestEffort(storage.getAttributableHandlers(), this)) {
-            Object attribute = p.getAttribute(name, this.authenticationInfo);
+            final Object attribute = p.getAttribute(name);
             if (attribute != null) {
                 return attribute;
             }
         }
-        return null;
+        return this.authenticationInfo != null ? this.authenticationInfo.get(name) :null;
     }
 
     /**
@@ -459,7 +465,6 @@ public class ResourceResolverControl {
      */
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType adaptTo(final ResourceResolverContext context, Class<AdapterType> type) {
-        // TODO - improve by providing an iterator instead of a list (getAllBestEffort)
         for (AuthenticatedResourceProvider p : context.getProviderManager().getAllBestEffort(storage.getAdaptableHandlers(), this)) {
             final Object adaptee = p.adaptTo(type);
             if (adaptee != null) {
@@ -547,7 +552,7 @@ public class ResourceResolverControl {
 
     /**
      * Tries to find a resource provider accepting both paths and invokes
-     * {@link StatefulResourceProvider#copy(String, String)} method on it.
+     * {@link AuthenticatedResourceProvider#copy(String, String)} method on it.
      * Returns false if there's no such provider.
      */
     public Resource copy(final ResourceResolverContext context,
@@ -575,7 +580,7 @@ public class ResourceResolverControl {
 
     /**
      * Tries to find a resource provider accepting both paths and invokes
-     * {@link StatefulResourceProvider#move(String, String)} method on it.
+     * {@link AuthenticatedResourceProvider#move(String, String)} method on it.
      * Returns false if there's no such provider.
      */
     public Resource move(final ResourceResolverContext context,

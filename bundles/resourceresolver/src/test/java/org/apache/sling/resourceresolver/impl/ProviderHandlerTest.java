@@ -57,7 +57,9 @@ public class ProviderHandlerTest {
         final ResourceProvider<?> leaveProvider = Mockito.mock(ResourceProvider.class);
         Mockito.when(leaveProvider.getResource(Mockito.any(ResolveContext.class), Mockito.eq(servletpath), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(servletResource);
         ResourceProviderHandler h = createRPHandler(leaveProvider, "my-pid", 0, servletpath);
-        ResourceResolver resolver = new ResourceResolverImpl(new CommonResourceResolverFactoryImpl(new ResourceResolverFactoryActivator()), false, null, new ResourceProviderStorage(Arrays.asList(h)));
+        ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
+        activator.resourceAccessSecurityTracker = new ResourceAccessSecurityTracker();
+        ResourceResolver resolver = new ResourceResolverImpl(new CommonResourceResolverFactoryImpl(activator), false, null, new ResourceProviderStorage(Arrays.asList(h)));
 
         final Resource parent = resolver.getResource(ResourceUtil.getParent(servletpath));
         assertNotNull("Parent must be available", parent);

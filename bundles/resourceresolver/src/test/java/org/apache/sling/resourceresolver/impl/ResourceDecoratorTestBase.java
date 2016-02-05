@@ -135,6 +135,11 @@ public abstract class ResourceDecoratorTestBase {
             public ResourceDecoratorTracker getResourceDecoratorTracker() {
                 return t;
             }
+
+            @Override
+            public ResourceAccessSecurityTracker getResourceAccessSecurityTracker() {
+                return new ResourceAccessSecurityTracker();
+            }
         };
 
         List<ResourceProviderHandler> list = Arrays.asList(MockedResourceResolverImplTest.createRPHandler(provider, "A-provider", 0L, "/"));

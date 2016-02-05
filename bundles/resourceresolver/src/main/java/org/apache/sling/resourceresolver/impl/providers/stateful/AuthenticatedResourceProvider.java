@@ -20,7 +20,6 @@ package org.apache.sling.resourceresolver.impl.providers.stateful;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,7 +29,6 @@ import javax.annotation.Nonnull;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.security.AccessSecurityException;
 import org.apache.sling.api.security.ResourceAccessSecurity;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
@@ -52,8 +50,6 @@ import org.slf4j.LoggerFactory;
 public class AuthenticatedResourceProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(ResourceResolverImpl.class);
-
-    private static final String FORBIDDEN_ATTRIBUTE = ResourceResolverFactory.PASSWORD;
 
     public static final AuthenticatedResourceProvider UNAUTHENTICATED_PROVIDER = new AuthenticatedResourceProvider(null, false, null, null);
 
@@ -133,31 +129,19 @@ public class AuthenticatedResourceProvider {
     /**
      * #see {@link ResourceProvider#getAttributeNames(ResolveContext)}
      */
-    public Collection<String> getAttributeNames(final Map<String, Object> authInfo) {
-        Set<String> attributeNames = new LinkedHashSet<String>();
+    public Collection<String> getAttributeNames(final Set<String> attributeNames) {
         Collection<String> rpAttributeNames = this.provider.getAttributeNames(this.resolveContext);
         if (rpAttributeNames != null) {
             attributeNames.addAll(rpAttributeNames);
         }
-        if (authInfo != null) {
-            attributeNames.addAll(authInfo.keySet());
-        }
-        attributeNames.remove(FORBIDDEN_ATTRIBUTE);
         return attributeNames;
     }
 
     /**
      * #see {@link ResourceProvider#getAttribute(ResolveContext, String)}
      */
-    public Object getAttribute(final String name, final Map<String, Object> authInfo) {
-        if (FORBIDDEN_ATTRIBUTE.equals(name)) {
-            return null;
-        }
-        Object attribute = this.provider.getAttribute(this.resolveContext, name);
-        if (attribute == null) {
-            attribute = authInfo.get(name);
-        }
-        return attribute;
+    public Object getAttribute(final String name) {
+        return this.provider.getAttribute(this.resolveContext, name);
     }
 
     /**
