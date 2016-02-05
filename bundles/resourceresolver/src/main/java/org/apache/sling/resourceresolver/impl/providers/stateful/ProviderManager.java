@@ -125,7 +125,7 @@ public class ProviderManager {
             } catch ( final LoginException le ) {
                 // authentication failed, logout from all successful handlers
                 for(final Map.Entry<ResourceProviderHandler, AuthenticatedResourceProvider> entry : this.contextMap.entrySet()) {
-                    if ( entry.getValue() != null ) {
+                    if ( entry.getValue() != AuthenticatedResourceProvider.UNAUTHENTICATED_PROVIDER ) {
                         entry.getKey().getResourceProvider().logout(entry.getValue().getResolveContext().getProviderState());
                     }
                 }
