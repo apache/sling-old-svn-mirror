@@ -117,7 +117,12 @@ public class ParserTest {
                 o.accept(v);
             }
             sw.flush();
-            assertEquals(expected, sw.toString().trim());
+            String actual = sw.toString().trim();
+            
+            // normalize line endings to ensure tests run on windows as well
+            actual = actual.replaceAll("\r\n", "\n");
+            
+            assertEquals(expected, actual);
         } finally {
             tc.close();
         }
