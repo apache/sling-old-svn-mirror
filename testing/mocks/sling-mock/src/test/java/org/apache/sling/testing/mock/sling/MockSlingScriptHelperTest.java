@@ -22,6 +22,8 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
+import java.util.Arrays;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -80,6 +82,7 @@ public class MockSlingScriptHelperTest {
             this.bundleContext.registerService(Integer.class.getName(), service, null);
         }
         Integer[] servicesResult = this.scriptHelper.getServices(Integer.class, null);
+        Arrays.sort(servicesResult);
         assertArrayEquals(services, servicesResult);
     }
 
