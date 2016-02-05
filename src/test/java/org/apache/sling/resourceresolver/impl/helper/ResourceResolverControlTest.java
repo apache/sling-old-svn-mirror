@@ -51,7 +51,6 @@ import org.apache.sling.resourceresolver.impl.SimpleValueMapImpl;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
-import org.apache.sling.resourceresolver.impl.providers.stateful.ResourceProviderAuthenticator;
 import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
 import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
@@ -74,7 +73,6 @@ public class ResourceResolverControlTest {
     // query definitions
     private static final String QUERY_MOCK_FIND_ALL = "FIND ALL";
 
-    private ResourceProviderAuthenticator authenticator;
     private ResourceResolverControl crp;
     private List<ResourceProviderHandler> handlers;
     private ResourceProvider<Object> subProvider;
@@ -140,9 +138,8 @@ public class ResourceResolverControlTest {
 
         handlers = Arrays.asList(rootHandler, handler);
         ResourceProviderStorage storage = new ResourceProviderStorage(handlers);
-        authenticator = new ResourceProviderAuthenticator(rr, authInfo, securityTracker);
 
-        crp = new ResourceResolverControl(false, authInfo, storage, authenticator);
+        crp = new ResourceResolverControl(false, authInfo, storage);
         context = new ResourceResolverContext(rr);
     }
 
@@ -178,7 +175,7 @@ public class ResourceResolverControlTest {
     @Test
     public void loginLogout() throws LoginException {
 
-        authenticator.authenticateAll(handlers, crp);
+        context.getResolveContextManager().authenticateAll(handlers, crp);
 
         verify(subProvider).authenticate(authInfo);
 
@@ -360,7 +357,7 @@ public class ResourceResolverControlTest {
     @Test
     public void queryLanguages() throws PersistenceException {
 
-        assertThat(crp.getSupportedLanguages(), arrayContainingInAnyOrder(QL_NOOP, QL_MOCK, QL_ANOTHER_MOCK));
+        assertThat(crp.getSupportedLanguages(context), arrayContainingInAnyOrder(QL_NOOP, QL_MOCK, QL_ANOTHER_MOCK));
     }
 
     /**
@@ -369,7 +366,7 @@ public class ResourceResolverControlTest {
     @Test
     public void queryResources() throws PersistenceException {
 
-        Iterator<Map<String, Object>> queryResources = crp.queryResources(QUERY_MOCK_FIND_ALL, QL_MOCK);
+        Iterator<Map<String, Object>> queryResources = crp.queryResources(context, QUERY_MOCK_FIND_ALL, QL_MOCK);
 
         int count = 0;
 
@@ -387,7 +384,7 @@ public class ResourceResolverControlTest {
     @Test
     public void findResource() throws PersistenceException {
 
-        Iterator<Resource> resources = crp.findResources(QUERY_MOCK_FIND_ALL, QL_MOCK);
+        Iterator<Resource> resources = crp.findResources(context, QUERY_MOCK_FIND_ALL, QL_MOCK);
 
         int count = 0;
 

@@ -17,22 +17,185 @@
  */
 package org.apache.sling.resourceresolver.impl.providers.stateful;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.resource.runtime.dto.AuthType;
+import org.apache.sling.resourceresolver.impl.helper.ResourceResolverControl;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.spi.resource.provider.ResolveContext;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/**
+ * Manages resolve contexts for each resource provider including
+ * authentication.
+ *
+ * This class is not thread safe (same as the resource resolver).
+ */
 public class ResolveContextManager {
 
-    private final Map<ResourceProviderHandler, ResolveContext<Object>> contextMap;
+    private static final Logger logger = LoggerFactory.getLogger(ResolveContextManager.class);
 
-    public ResolveContextManager(final ResourceResolver resolver) {
-        this.contextMap = new IdentityHashMap<ResourceProviderHandler, ResolveContext<Object>>();
+    private final ResourceResolver resolver;
+
+    private final Map<ResourceProviderHandler, AuthenticatedResourceProvider> contextMap;
+
+    /** Set of authenticated resource providers. */
+    private final List<AuthenticatedResourceProvider> authenticated = new ArrayList<AuthenticatedResourceProvider>();
+
+    /** Set of modifiable resource providers. */
+    private final List<AuthenticatedResourceProvider> modifiable = new ArrayList<AuthenticatedResourceProvider>();
+
+    /** Set of refreshable resource providers. */
+    private final List<AuthenticatedResourceProvider> refreshable = new ArrayList<AuthenticatedResourceProvider>();
+
+    public ResolveContextManager(@Nonnull final ResourceResolver resolver) {
+        this.contextMap = new IdentityHashMap<ResourceProviderHandler, AuthenticatedResourceProvider>();
+        this.resolver = resolver;
     }
 
-    public ResolveContext<Object> getResolveContext(final ResourceProviderHandler handler) {
-        return this.contextMap.get(handler);
+    /**
+     * Get the context
+     * @param handler The resource handler
+     * @return The resource context or {@code null} if authentication failed previously.
+     */
+    public @CheckForNull AuthenticatedResourceProvider getOrCreateProvider(@Nonnull final ResourceProviderHandler handler,
+            @Nonnull final ResourceResolverControl control)
+    throws LoginException {
+        AuthenticatedResourceProvider provider = this.contextMap.get(handler);
+        if (provider == null) {
+            try {
+                provider = authenticate(handler, control);
+                this.contextMap.put(handler, provider);
+                if ( handler.getInfo().getAuthType() == AuthType.lazy || handler.getInfo().getAuthType() == AuthType.required ) {
+                    control.registerAuthenticatedProvider(handler, provider.getResolveContext().getProviderState());
+                }
+            } catch ( final LoginException le) {
+                logger.debug("Authentication to resource provider " + handler.getResourceProvider() + " failed: " + le.getMessage(), le);
+                this.contextMap.put(handler, AuthenticatedResourceProvider.UNAUTHENTICATED_PROVIDER);
+
+                throw le;
+            }
+        }
+
+        return provider == AuthenticatedResourceProvider.UNAUTHENTICATED_PROVIDER ? null : provider;
+    }
+
+    /**
+     * Get the context
+     * @param handler The resource handler
+     * @return The resource context or {@code null}.
+     */
+    public @CheckForNull ResolveContext<Object> getOrCreateResolveContext(@Nonnull final ResourceProviderHandler handler,
+            @Nonnull final ResourceResolverControl control)
+    throws LoginException {
+        AuthenticatedResourceProvider provider = this.getOrCreateProvider(handler, control);
+        return provider == null ? null : provider.getResolveContext();
+    }
+
+    /**
+     * Authenticate all handlers
+     * @param handlers List of handlers
+     * @param control the resource resolver control
+     * @throws LoginException If authentication fails to one provider
+     */
+    public void authenticateAll(@Nonnull final List<ResourceProviderHandler> handlers,
+            @Nonnull final ResourceResolverControl control)
+    throws LoginException {
+        for (final ResourceProviderHandler h : handlers) {
+            try {
+                this.getOrCreateProvider(h, control);
+            } catch ( final LoginException le ) {
+                // authentication failed, logout from all successful handlers
+                for(final Map.Entry<ResourceProviderHandler, AuthenticatedResourceProvider> entry : this.contextMap.entrySet()) {
+                    if ( entry.getValue() != null ) {
+                        entry.getKey().getResourceProvider().logout(entry.getValue().getResolveContext().getProviderState());
+                    }
+                }
+                this.contextMap.clear();
+                control.clearAuthenticatedProviders();
+                throw le;
+            }
+        }
+    }
+
+    /**
+     * Authenticate a single resource provider (handler)
+     * @param handler The resource provider handler
+     * @param control The resource control
+     * @return The resolve context
+     * @throws LoginException If authentication fails
+     */
+    private @Nonnull AuthenticatedResourceProvider authenticate(@Nonnull final ResourceProviderHandler handler,
+            @Nonnull final ResourceResolverControl control) throws LoginException {
+        final ResourceProvider<Object> provider = handler.getResourceProvider();
+        boolean isAuthenticated = false;
+        Object contextData = null;
+        if ( (handler.getInfo().getAuthType() == AuthType.required || handler.getInfo().getAuthType() == AuthType.lazy) ) {
+            try {
+                contextData = provider.authenticate(control.getAuthenticationInfo());
+                isAuthenticated = true;
+            } catch ( final LoginException le ) {
+                logger.debug("Unable to login into resource provider " + provider, le);
+                throw le;
+            }
+        }
+
+        final ResolveContext<Object> context = new BasicResolveContext<Object>(this.resolver,
+                this,
+                control,
+                contextData,
+                ResourceUtil.getParent(handler.getInfo().getPath()));
+        final AuthenticatedResourceProvider rp = new AuthenticatedResourceProvider(provider, context);
+        if ( isAuthenticated ) {
+            this.authenticated.add(rp);
+        }
+        if ( handler.getInfo().isModifiable() ) {
+            this.modifiable.add(rp);
+        }
+        if ( handler.getInfo().isRefreshable() ) {
+            this.refreshable.add(rp);
+        }
+
+        return rp;
+    }
+
+    public Collection<AuthenticatedResourceProvider> getAllAuthenticated() {
+        return authenticated;
+    }
+
+    public Collection<AuthenticatedResourceProvider> getAllUsedModifiable() {
+        return modifiable;
+    }
+
+    public Collection<AuthenticatedResourceProvider> getAllUsedRefreshable() {
+        return refreshable;
+    }
+
+    public Collection<AuthenticatedResourceProvider> getAllBestEffort(@Nonnull final List<ResourceProviderHandler> handlers,
+            @Nonnull final ResourceResolverControl control) {
+        final List<AuthenticatedResourceProvider> result = new ArrayList<AuthenticatedResourceProvider>(handlers.size());
+        for (final ResourceProviderHandler h : handlers) {
+            try {
+                final AuthenticatedResourceProvider rp = this.getOrCreateProvider(h, control);
+                if ( rp != null ) {
+                    result.add(rp);
+                }
+            } catch ( final LoginException le) {
+                // ignore
+            }
+        }
+        return result;
     }
 }

@@ -22,6 +22,8 @@ import org.apache.sling.resourceresolver.impl.providers.stateful.ResolveContextM
 
 /**
  * The resource resolver context.
+ *
+ * This class is not thread safe (same as the resource resolver).
  */
 public class ResourceResolverContext {
 
