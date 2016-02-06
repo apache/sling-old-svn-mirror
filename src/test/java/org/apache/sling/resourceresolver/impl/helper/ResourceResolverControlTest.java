@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -238,6 +239,28 @@ public class ResourceResolverControlTest {
         Resource parent = crp.getParent(context, subProviderResource);
         assertThat(parent, notNullValue());
         assertTrue("parent is a synthetic resource", ResourceUtil.isSyntheticResource(parent));
+    }
+
+    /**
+     * Test parent from a different provider
+     */
+    @Test
+    public void getParent_differentProviders() {
+        final Resource childResource = mock(Resource.class);
+        when(childResource.getPath()).thenReturn("/some/path");
+        when(subProvider.getResource((ResolveContext<Object>) Mockito.anyObject(), Mockito.eq("/some/path"), (ResourceContext) Mockito.anyObject(), (Resource)Mockito.eq(null))).thenReturn(childResource);
+
+        final Resource parentResource = mock(Resource.class);
+        when(parentResource.getPath()).thenReturn("/some");
+        when(rootProvider.getResource((ResolveContext<Object>) Mockito.anyObject(), Mockito.eq("/some"), (ResourceContext) Mockito.anyObject(), (Resource)Mockito.eq(null))).thenReturn(parentResource);
+
+        Resource child = crp.getResource(context, "/some/path", null, null, false);
+        assertNotNull(child);
+        assertTrue(childResource == child);
+
+        Resource parent = crp.getParent(context, child);
+        assertNotNull(parent);
+        assertTrue(parentResource == parent);
     }
 
     /**
