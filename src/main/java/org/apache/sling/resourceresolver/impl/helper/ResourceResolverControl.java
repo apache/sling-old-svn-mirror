@@ -160,20 +160,26 @@ public class ResourceResolverControl {
      * {@link #getResource(String, Resource, Map, boolean)} for more details
      */
     public Resource getParent(final ResourceResolverContext context, final Resource child) {
-        final String path = child.getPath();
-        final AuthenticatedResourceProvider provider = getBestMatchingProvider(context, path);
-        if ( provider != null ) {
-            final Resource parentCandidate = provider.getParent(child);
-            if (parentCandidate != null) {
-                return parentCandidate;
+        final String parentPath = ResourceUtil.getParent(child.getPath());
+        if ( parentPath != null ) {
+            final AuthenticatedResourceProvider childProvider = getBestMatchingProvider(context, child.getPath());
+            final AuthenticatedResourceProvider parentProvider = getBestMatchingProvider(context, parentPath);
+            if ( parentProvider != null ) {
+                final Resource parentCandidate;
+                if ( childProvider == parentProvider ) {
+                    parentCandidate = parentProvider.getParent(child);
+                } else {
+                    parentCandidate = parentProvider.getResource(parentPath, null, null);
+                }
+                if (parentCandidate != null) {
+                    return parentCandidate;
+                }
+            }
+
+            if (isIntermediatePath(parentPath)) {
+                return new SyntheticResource(context.getResourceResolver(), parentPath, ResourceProvider.RESOURCE_TYPE_SYNTHETIC);
             }
         }
-
-        final String parentPath = ResourceUtil.getParent(path);
-        if (parentPath != null && isIntermediatePath(parentPath)) {
-            return new SyntheticResource(context.getResourceResolver(), parentPath, ResourceProvider.RESOURCE_TYPE_SYNTHETIC);
-        }
-
         return null;
     }
 
