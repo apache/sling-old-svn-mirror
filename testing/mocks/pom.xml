@@ -28,38 +28,27 @@
   </parent>
 
   <groupId>org.apache.sling</groupId>
-  <artifactId>org.apache.sling.testing.reactor</artifactId>
+  <artifactId>org.apache.sling.testing.mocks.reactor</artifactId>
   <packaging>pom</packaging>
   <version>1-SNAPSHOT</version>
 
-  <name>Apache Sling Testing Modules Reactor</name>
-  <inceptionYear>2014</inceptionYear>
+  <name>Apache Sling Testing Mocks Modules Reactor</name>
+  <inceptionYear>2016</inceptionYear>
 
   <scm>
-    <connection>
-            scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing
-        </connection>
-    <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing
-        </developerConnection>
-    <url>http://svn.apache.org/viewvc/sling/trunk/testing</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/mocks</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/mocks</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/testing/mocks</url>
   </scm>
 
   <modules>
-    <module>tools</module>
-    <module>hamcrest</module>
-    <module>junit/core</module>
-    <module>junit/scriptable</module>
-    <module>junit/healthcheck</module>
-    <module>junit/remote</module>
-    <module>junit/performance</module>
-    <module>junit/teleporter</module>
-    <module>mocks</module>
-    <module>sling-pax-util</module>
-    <module>samples/sample-tests</module>
-    <module>samples/failing-tests</module>
-    <module>samples/integration-tests</module>
-    <module>samples/bundle-with-it</module>
+    <module>logging-mock</module>
+    <module>resourceresolver-mock</module>
+    <module>jcr-mock</module>
+    <module>osgi-mock</module>
+    <module>sling-mock</module>
+    <module>sling-mock-jackrabbit</module>
+    <module>sling-mock-oak</module>
   </modules>
 
 </project>
