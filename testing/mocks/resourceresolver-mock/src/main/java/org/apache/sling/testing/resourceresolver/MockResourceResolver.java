@@ -371,6 +371,15 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
         return this.listChildren(resource).hasNext();
     }
 
+    // part of Resource API 2.11.0
+    public Resource getParent(Resource child) {
+        final String parentPath = ResourceUtil.getParent(child.getPath());
+        if (parentPath == null) {
+            return null;
+        }
+        return this.getResource(parentPath);
+    }
+
 
     // --- unsupported operations ---
 
@@ -405,18 +414,12 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
         throw new UnsupportedOperationException();
     }
 
-    public Resource getParent(Resource child) {
-        final String parentPath = ResourceUtil.getParent(child.getPath());
-        if (parentPath == null) {
-            return null;
-        }
-        return this.getResource(parentPath);
-    }
-
+    // part of Resource API 2.11.0
     public Resource copy(String srcAbsPath, String destAbsPath) throws PersistenceException {
         throw new UnsupportedOperationException();
     }
 
+    // part of Resource API 2.11.0
     public Resource move(String srcAbsPath, String destAbsPath) throws PersistenceException {
         throw new UnsupportedOperationException();
     }
