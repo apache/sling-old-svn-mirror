@@ -436,8 +436,18 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     @Override
     public void delete(final @Nonnull ResolveContext<JcrProviderState> ctx, final @Nonnull Resource resource)
     throws PersistenceException {
+        // try to adapt to Node
+        Node node = resource.adaptTo(Node.class);
         try {
-            ((JcrItemResource<?>) resource).getItem().remove();
+            if ( node == null ) {
+                final String jcrPath = pathMapper.mapResourcePathToJCRPath(resource.getPath());
+                if (jcrPath == null) {
+                    log.debug("delete: {} maps to an empty JCR path", resource.getPath());
+                    throw new PersistenceException("Unable to delete resource", null, resource.getPath(), null);
+                }
+                node = ctx.getProviderState().getSession().getNode(jcrPath);
+            }
+            node.remove();
         } catch (final RepositoryException e) {
             throw new PersistenceException("Unable to delete resource", e, resource.getPath(), null);
         }
