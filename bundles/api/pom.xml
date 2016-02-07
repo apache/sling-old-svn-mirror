@@ -103,7 +103,6 @@
                 <version>3.0.1</version>
                 <extensions>true</extensions>
                 <configuration>
-                    <comparisonVersion>2.9.0</comparisonVersion>
                     <instructions>
                         <Bundle-DocURL>
                             http://sling.apache.org/site/sling-api.html
