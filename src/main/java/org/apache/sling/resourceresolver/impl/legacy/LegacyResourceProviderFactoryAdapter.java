@@ -130,6 +130,12 @@ public class LegacyResourceProviderFactoryAdapter extends ResourceProvider<Legac
         return ctx.getProviderState().hasChanges((ResolveContext) ctx);
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public <AdapterType> AdapterType adaptTo(final @Nonnull ResolveContext<LegacyResourceProviderAdapter> ctx, final @Nonnull Class<AdapterType> type) {
+        return (AdapterType) ctx.getProviderState().adaptTo((ResolveContext)ctx, type);
+    }
+
     private static class JCRQueryProviderAdapter implements QueryLanguageProvider<LegacyResourceProviderAdapter> {
 
         private final String[] languages;

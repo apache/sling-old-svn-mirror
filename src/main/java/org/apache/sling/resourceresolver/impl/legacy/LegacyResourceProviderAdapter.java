@@ -25,6 +25,7 @@ import java.util.Map;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
+import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.resource.AttributableResourceProvider;
 import org.apache.sling.api.resource.DynamicResourceProvider;
 import org.apache.sling.api.resource.ModifyingResourceProvider;
@@ -201,6 +202,18 @@ public class LegacyResourceProviderAdapter extends ResourceProvider<Object> {
         } else {
             return super.hasChanges(ctx);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <AdapterType> AdapterType adaptTo(final @Nonnull ResolveContext<Object> ctx, final @Nonnull Class<AdapterType> type) {
+        if ( rp instanceof Adaptable ) {
+            final Object value = ((Adaptable)rp).adaptTo(type);
+            if ( value != null ) {
+                return (AdapterType) value;
+            }
+        }
+        return super.adaptTo(ctx, type);
     }
 
     private static class JCRQueryProviderAdapter implements QueryLanguageProvider<Object> {
