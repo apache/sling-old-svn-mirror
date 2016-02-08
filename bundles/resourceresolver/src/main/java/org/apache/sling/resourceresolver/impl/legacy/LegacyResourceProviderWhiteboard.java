@@ -51,8 +51,6 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.References;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.resource.AttributableResourceProvider;
-import org.apache.sling.api.resource.ModifyingResourceProvider;
-import org.apache.sling.api.resource.RefreshableResourceProvider;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.api.resource.runtime.dto.AuthType;
@@ -82,10 +80,10 @@ public class LegacyResourceProviderWhiteboard {
         for (String path : PropertiesUtil.toStringArray(ref.getProperty(ROOTS), new String[0])) {
             Dictionary<String, Object> newProps = new Hashtable<String, Object>();
             newProps.put(PROPERTY_AUTHENTICATE, AuthType.no.toString());
-            newProps.put(PROPERTY_MODIFIABLE, provider instanceof ModifyingResourceProvider);
+            newProps.put(PROPERTY_MODIFIABLE, false);
             newProps.put(PROPERTY_ADAPTABLE, provider instanceof Adaptable);
             newProps.put(PROPERTY_ATTRIBUTABLE, provider instanceof AttributableResourceProvider);
-            newProps.put(PROPERTY_REFRESHABLE, provider instanceof RefreshableResourceProvider);
+            newProps.put(PROPERTY_REFRESHABLE, false);
             newProps.put(PROPERTY_NAME, provider.getClass().getName());
             newProps.put(PROPERTY_ROOT, normalizePath(path));
             if (ArrayUtils.contains(propertyNames, SERVICE_PID)) {
