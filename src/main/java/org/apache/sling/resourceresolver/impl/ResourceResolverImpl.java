@@ -1198,6 +1198,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             }
         }
         final Resource rsrc = this.control.create(this.context, path, properties);
+        rsrc.getResourceMetadata().setResolutionPath(rsrc.getPath());
         return this.factory.getResourceDecoratorTracker().decorate(rsrc);
     }
 
@@ -1298,16 +1299,31 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
     @Override
     public Resource getParent(final Resource child) {
-        return this.control.getParent(this.context, child);
+        Resource rsrc = this.control.getParent(this.context, child);
+        if (rsrc != null ) {
+            rsrc.getResourceMetadata().setResolutionPath(rsrc.getPath());
+            rsrc = this.factory.getResourceDecoratorTracker().decorate(rsrc);
+        }
+        return rsrc;
     }
 
     @Override
     public Resource copy(final String srcAbsPath, final String destAbsPath) throws PersistenceException {
-        return this.control.copy(this.context, srcAbsPath, destAbsPath);
+        Resource rsrc = this.control.copy(this.context, srcAbsPath, destAbsPath);
+        if (rsrc != null ) {
+            rsrc.getResourceMetadata().setResolutionPath(rsrc.getPath());
+            rsrc = this.factory.getResourceDecoratorTracker().decorate(rsrc);
+        }
+        return rsrc;
     }
 
     @Override
     public Resource move(final String srcAbsPath, final String destAbsPath) throws PersistenceException {
-        return this.control.move(this.context, srcAbsPath, destAbsPath);
+        Resource rsrc = this.control.move(this.context, srcAbsPath, destAbsPath);
+        if (rsrc != null ) {
+            rsrc.getResourceMetadata().setResolutionPath(rsrc.getPath());
+            rsrc = this.factory.getResourceDecoratorTracker().decorate(rsrc);
+        }
+        return rsrc;
     }
 }
