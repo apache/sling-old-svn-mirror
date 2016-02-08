@@ -50,14 +50,14 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.sling-mock</artifactId>
-            <version>1.6.0</version>
+            <version>1.6.2</version>
             <scope>compile</scope>
         </dependency>
     
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.sling-mock</artifactId>
-            <version>1.6.0</version>
+            <version>1.6.2</version>
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
