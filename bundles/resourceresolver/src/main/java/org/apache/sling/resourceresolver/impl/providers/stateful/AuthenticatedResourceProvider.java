@@ -34,6 +34,7 @@ import org.apache.sling.api.security.ResourceAccessSecurity;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
 import org.apache.sling.resourceresolver.impl.helper.AbstractIterator;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
 import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
@@ -53,7 +54,7 @@ public class AuthenticatedResourceProvider {
 
     public static final AuthenticatedResourceProvider UNAUTHENTICATED_PROVIDER = new AuthenticatedResourceProvider(null, false, null, null);
 
-    private final ResourceProvider<Object> provider;
+    private final ResourceProviderHandler providerHandler;
 
     private final ResolveContext<Object> resolveContext;
 
@@ -61,11 +62,11 @@ public class AuthenticatedResourceProvider {
 
     private final boolean useRAS;
 
-    public AuthenticatedResourceProvider(@Nonnull final ResourceProvider<Object> provider,
+    public AuthenticatedResourceProvider(@Nonnull final ResourceProviderHandler providerHandler,
             final boolean useRAS,
             @Nonnull final ResolveContext<Object> resolveContext,
             @Nonnull final ResourceAccessSecurityTracker tracker) {
-        this.provider = provider;
+        this.providerHandler = providerHandler;
         this.resolveContext = resolveContext;
         this.tracker = tracker;
         this.useRAS = useRAS;
@@ -83,27 +84,42 @@ public class AuthenticatedResourceProvider {
      * #see {@link ResourceProvider#refresh(ResolveContext)}
      */
     public void refresh() {
-        this.provider.refresh(this.resolveContext);
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            rp.refresh(this.resolveContext);
+        }
     }
 
     /**
      * #see {@link ResourceProvider#isLive(ResolveContext)}
      */
     public boolean isLive() {
-        return this.provider.isLive(this.resolveContext);
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            return rp.isLive(this.resolveContext);
+        }
+        return false;
     }
 
     /**
      * #see {@link ResourceProvider#getParent(ResolveContext, Resource)}
      */
     public Resource getParent(final Resource child) {
-        return wrapResource(this.provider.getParent(this.resolveContext, child));
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            return wrapResource(rp.getParent(this.resolveContext, child));
+        }
+        return null;
     }
 
     /**
      * #see {@link ResourceProvider#getResource(ResolveContext, String, ResourceContext, Resource)}
      */
     public Resource getResource(final String path, final Resource parent, final Map<String, String> parameters) {
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp == null ) {
+            return null;
+        }
         final ResourceContext resourceContext;
         if ( parameters != null ) {
             resourceContext = new ResourceContext() {
@@ -116,32 +132,42 @@ public class AuthenticatedResourceProvider {
         } else {
             resourceContext = ResourceContext.EMPTY_CONTEXT;
         }
-        return wrapResource(this.provider.getResource(this.resolveContext, path, resourceContext, parent));
+        return wrapResource(rp.getResource(this.resolveContext, path, resourceContext, parent));
     }
 
     /**
      * #see {@link ResourceProvider#listChildren(ResolveContext, Resource)}
      */
     public Iterator<Resource> listChildren(final Resource parent) {
-        return wrapIterator(this.provider.listChildren(this.resolveContext, parent));
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            return wrapIterator(rp.listChildren(this.resolveContext, parent));
+        }
+        return null;
     }
 
     /**
      * #see {@link ResourceProvider#getAttributeNames(ResolveContext)}
      */
-    public Collection<String> getAttributeNames(final Set<String> attributeNames) {
-        Collection<String> rpAttributeNames = this.provider.getAttributeNames(this.resolveContext);
-        if (rpAttributeNames != null) {
-            attributeNames.addAll(rpAttributeNames);
+    public void getAttributeNames(final Set<String> attributeNames) {
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            Collection<String> rpAttributeNames = rp.getAttributeNames(this.resolveContext);
+            if (rpAttributeNames != null) {
+                attributeNames.addAll(rpAttributeNames);
+            }
         }
-        return attributeNames;
     }
 
     /**
      * #see {@link ResourceProvider#getAttribute(ResolveContext, String)}
      */
     public Object getAttribute(final String name) {
-        return this.provider.getAttribute(this.resolveContext, name);
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            return rp.getAttribute(this.resolveContext, name);
+        }
+        return null;
     }
 
     /**
@@ -151,19 +177,20 @@ public class AuthenticatedResourceProvider {
             final String path,
             final Map<String, Object> properties)
     throws PersistenceException {
-        if ( this.canCreate(resolver, path) ) {
-            return this.provider.create(this.resolveContext, path, properties);
-        } else {
-            return null;
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null && this.canCreate(resolver, path) ) {
+            return rp.create(this.resolveContext, path, properties);
         }
+        return null;
     }
 
     /**
      * #see {@link ResourceProvider#delete(ResolveContext, Resource)}
      */
     public void delete(final Resource resource) throws PersistenceException {
-        if ( this.canDelete(resource) ) {
-            this.provider.delete(this.resolveContext, resource);
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null && this.canDelete(resource) ) {
+            rp.delete(this.resolveContext, resource);
         } else {
             throw new PersistenceException("Unable to delete resource " + resource.getPath());
         }
@@ -173,28 +200,42 @@ public class AuthenticatedResourceProvider {
      * #see {@link ResourceProvider#revert(ResolveContext)}
      */
     public void revert() {
-        this.provider.revert(this.resolveContext);
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            rp.revert(this.resolveContext);
+        }
     }
 
     /**
      * #see {@link ResourceProvider#commit(ResolveContext)}
      */
     public void commit() throws PersistenceException {
-        this.provider.commit(this.resolveContext);
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            rp.commit(this.resolveContext);
+        }
     }
 
     /**
      * #see {@link ResourceProvider#hasChanges(ResolveContext)}
      */
     public boolean hasChanges() {
-        return this.provider.hasChanges(this.resolveContext);
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            return rp.hasChanges(this.resolveContext);
+        }
+        return false;
     }
 
     /**
      * #see {@link ResourceProvider#getQueryLanguageProvider()}
      */
     private QueryLanguageProvider<Object> getQueryLanguageProvider() {
-        return this.provider.getQueryLanguageProvider();
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            return rp.getQueryLanguageProvider();
+        }
+        return null;
     }
 
     /**
@@ -235,21 +276,33 @@ public class AuthenticatedResourceProvider {
      * #see {@link ResourceProvider#adaptTo(ResolveContext, Class)}
      */
     public <AdapterType> AdapterType adaptTo(final Class<AdapterType> type) {
-        return this.provider.adaptTo(this.resolveContext, type);
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            return rp.adaptTo(this.resolveContext, type);
+        }
+        return null;
     }
 
     /**
      * #see {@link ResourceProvider#copy(ResolveContext, String, String)}
      */
     public boolean copy(final String srcAbsPath, final String destAbsPath) throws PersistenceException {
-        return this.provider.copy(this.resolveContext, srcAbsPath, destAbsPath);
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            return rp.copy(this.resolveContext, srcAbsPath, destAbsPath);
+        }
+        return false;
     }
 
     /**
      * #see {@link ResourceProvider#move(ResolveContext, String, String)}
      */
     public boolean move(final String srcAbsPath, final String destAbsPath) throws PersistenceException {
-        return this.provider.move(this.resolveContext, srcAbsPath, destAbsPath);
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            return rp.move(this.resolveContext, srcAbsPath, destAbsPath);
+        }
+        return false;
     }
 
     private boolean canCreate(final ResourceResolver resolver, final String path) {
@@ -386,6 +439,6 @@ public class AuthenticatedResourceProvider {
 
     @Override
     public String toString() {
-        return "[" + getClass().getSimpleName() + "# rp: " + this.provider + "]";
+        return "[" + getClass().getSimpleName() + "# rp: " + this.providerHandler.getResourceProvider() + "]";
     }
 }
