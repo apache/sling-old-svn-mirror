@@ -49,7 +49,7 @@ public class BasicResolveContext<T> implements ResolveContext<T> {
 
     private volatile boolean parentLookupDone = false;
 
-    private volatile ResourceProvider<Object> parentProvider;
+    private volatile ResourceProviderHandler parentProviderHandler;
 
     private volatile ResolveContext<Object> parentResolveContext;
 
@@ -87,19 +87,19 @@ public class BasicResolveContext<T> implements ResolveContext<T> {
             synchronized ( this ) {
                 if ( this.parentPath != null ) {
                     String path = this.parentPath;
-                    while ( path != null && this.parentProvider != null ) {
+                    while ( path != null && this.parentProviderHandler != null ) {
                         final Node<ResourceProviderHandler> node = this.control.getResourceProviderStorage().getTree().getBestMatchingNode(this.parentPath);
                         if ( node != null ) {
                             final ResourceProviderHandler handler = node.getValue();
                             try {
                                 this.parentResolveContext = this.resolveContextManager.getOrCreateResolveContext(handler, this.control);
                                 if ( this.parentResolveContext != null ) {
-                                    this.parentProvider = handler.getResourceProvider();
+                                    this.parentProviderHandler = handler;
                                 }
                             } catch ( final LoginException se) {
                                 // skip this, try next
                             }
-                            if ( this.parentProvider == null ) {
+                            if ( this.parentProviderHandler == null ) {
                                 path = ResourceUtil.getParent(path);
                             }
                         } else {
@@ -110,7 +110,7 @@ public class BasicResolveContext<T> implements ResolveContext<T> {
                 parentLookupDone = true;
             }
         }
-        return this.parentProvider;
+        return this.parentProviderHandler != null ? this.parentProviderHandler.getResourceProvider() : null;
     }
 
 }

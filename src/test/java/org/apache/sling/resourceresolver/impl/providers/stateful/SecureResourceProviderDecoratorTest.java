@@ -37,7 +37,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.security.AccessSecurityException;
 import org.apache.sling.api.security.ResourceAccessSecurity;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
-import org.apache.sling.resourceresolver.impl.providers.stateful.AuthenticatedResourceProvider;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
 import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
@@ -85,7 +85,10 @@ public class SecureResourceProviderDecoratorTest {
             }
         };
 
-        src = new AuthenticatedResourceProvider(rp, false, resolveContext, securityTracker);
+        final ResourceProviderHandler handler = mock(ResourceProviderHandler.class);
+        when(handler.getResourceProvider()).thenReturn(this.rp);
+
+        src = new AuthenticatedResourceProvider(handler, false, resolveContext, securityTracker);
 
     }
 

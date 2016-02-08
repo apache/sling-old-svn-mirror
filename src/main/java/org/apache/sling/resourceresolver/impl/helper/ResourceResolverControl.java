@@ -125,7 +125,10 @@ public class ResourceResolverControl {
      */
     private void logout() {
         for(final Map.Entry<ResourceProviderHandler, Object> entry : this.authenticatedProviders.entrySet()) {
-            entry.getKey().getResourceProvider().logout(entry.getValue());
+            final ResourceProvider<Object> rp = entry.getKey().getResourceProvider();
+            if ( rp != null ) {
+                rp.logout(entry.getValue());
+            }
         }
         this.authenticatedProviders.clear();
     }

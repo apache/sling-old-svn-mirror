@@ -126,7 +126,10 @@ public class ProviderManager {
                 // authentication failed, logout from all successful handlers
                 for(final Map.Entry<ResourceProviderHandler, AuthenticatedResourceProvider> entry : this.contextMap.entrySet()) {
                     if ( entry.getValue() != AuthenticatedResourceProvider.UNAUTHENTICATED_PROVIDER ) {
-                        entry.getKey().getResourceProvider().logout(entry.getValue().getResolveContext().getProviderState());
+                        final ResourceProvider<Object> provider = entry.getKey().getResourceProvider();
+                        if ( provider != null ) {
+                            provider.logout(entry.getValue().getResolveContext().getProviderState());
+                        }
                     }
                 }
                 this.contextMap.clear();
@@ -163,7 +166,7 @@ public class ProviderManager {
                 control,
                 contextData,
                 ResourceUtil.getParent(handler.getInfo().getPath()));
-        final AuthenticatedResourceProvider rp = new AuthenticatedResourceProvider(provider,
+        final AuthenticatedResourceProvider rp = new AuthenticatedResourceProvider(handler,
                 handler.getInfo().getUseResourceAccessSecurity(),
                 context,
                 this.tracker);
