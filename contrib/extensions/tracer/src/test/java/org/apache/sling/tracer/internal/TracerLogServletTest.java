@@ -109,7 +109,7 @@ public class TracerLogServletTest {
         logServlet.renderContent(request, response);
         JSONObject json = new JSONObject(sw.toString());
         assertEquals("GET", json.getString("method"));
-        assertEquals(2, json.getJSONArray("logs").length());
+        assertEquals(2, json.getJSONArray("requestProgressLogs").length());
     }
 
     @Test

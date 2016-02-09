@@ -63,7 +63,7 @@ public class JSONRecordingTest {
         r.render(sw);
 
         JSONObject json = new JSONObject(sw.toString());
-        assertEquals(2, json.getJSONArray("logs").length());
+        assertEquals(2, json.getJSONArray("requestProgressLogs").length());
     }
 
 }

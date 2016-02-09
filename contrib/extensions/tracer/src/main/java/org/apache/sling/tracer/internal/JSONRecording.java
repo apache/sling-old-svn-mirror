@@ -95,7 +95,7 @@ class JSONRecording implements Recording {
         jw.key("method").value(method);
 
         if (tracker != null) {
-            jw.key("logs");
+            jw.key("requestProgressLogs");
             jw.array();
             Iterator<String> it = tracker.getMessages();
             //Per docs iterator can be null
