@@ -87,7 +87,7 @@ public class BasicResolveContext<T> implements ResolveContext<T> {
             synchronized ( this ) {
                 if ( this.parentPath != null ) {
                     String path = this.parentPath;
-                    while ( path != null && this.parentProviderHandler != null ) {
+                    while ( path != null && this.parentProviderHandler == null ) {
                         final Node<ResourceProviderHandler> node = this.control.getResourceProviderStorage().getTree().getBestMatchingNode(this.parentPath);
                         if ( node != null ) {
                             final ResourceProviderHandler handler = node.getValue();
