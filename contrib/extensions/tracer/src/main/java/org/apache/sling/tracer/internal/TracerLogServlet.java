@@ -74,14 +74,22 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
         } else {
             String requestId = getRequestId(request);
             prepareJSONResponse(response);
-            JSONWriter jw = new JSONWriter(pw);
             try {
-                jw.setTidy(true);
-                jw.object();
+                boolean responseDone = false;
                 if (requestId != null) {
-                    renderRequestData(requestId, jw);
+                    JSONRecording recording = cache.getIfPresent(requestId);
+                    if (recording != null){
+                        recording.render(pw);
+                        responseDone = true;
+                    }
                 }
-                jw.endObject();
+
+                if (!responseDone) {
+                    JSONWriter jw = new JSONWriter(pw);
+                    jw.object();
+                    jw.key("error").value("Not found");
+                    jw.endObject();
+                }
             } catch (JSONException e) {
                 throw new ServletException(e);
             }
@@ -105,15 +113,6 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
     private static void prepareJSONResponse(HttpServletResponse response) {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-    }
-
-    private void renderRequestData(String requestId, JSONWriter jw) throws JSONException {
-        JSONRecording recording = cache.getIfPresent(requestId);
-        if (recording == null){
-            jw.key("error").value("Not found");
-            return;
-        }
-        recording.render(jw);
     }
 
     private void renderStatus(PrintWriter pw) {

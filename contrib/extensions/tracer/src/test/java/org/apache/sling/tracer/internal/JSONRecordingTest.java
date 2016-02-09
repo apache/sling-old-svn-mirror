@@ -24,7 +24,6 @@ import java.io.StringWriter;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.commons.json.io.JSONWriter;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -44,9 +43,7 @@ public class JSONRecordingTest {
         r.log(TracerContext.QUERY_LOGGER, "foo bar", new Object[]{"x" , "y"});
         r.log(TracerContext.QUERY_LOGGER, "foo bar", new Object[]{"x" , "z"});
 
-        JSONWriter jw = new JSONWriter(sw).object();
-        r.render(jw);
-        jw.endObject();
+        r.render(sw);
 
         JSONObject json = new JSONObject(sw.toString());
         assertEquals("GET", json.get("method"));
@@ -60,9 +57,7 @@ public class JSONRecordingTest {
 
         r.registerTracker(TestUtil.createTracker("x", "y"));
 
-        JSONWriter jw = new JSONWriter(sw).object();
-        r.render(jw);
-        jw.endObject();
+        r.render(sw);
 
         JSONObject json = new JSONObject(sw.toString());
         assertEquals(2, json.getJSONArray("logs").length());
