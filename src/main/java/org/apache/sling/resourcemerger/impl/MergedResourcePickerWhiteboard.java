@@ -57,6 +57,7 @@ public class MergedResourcePickerWhiteboard implements ServiceTrackerCustomizer 
         tracker.close();
     }
 
+    @Override
     public Object addingService(final ServiceReference reference) {
         final MergedResourcePicker picker = (MergedResourcePicker) bundleContext.getService(reference);
         if ( picker != null ) {
@@ -85,11 +86,13 @@ public class MergedResourcePickerWhiteboard implements ServiceTrackerCustomizer 
         return null;
     }
 
+    @Override
     public void modifiedService(final ServiceReference reference, final Object service) {
         removedService(reference, service);
         addingService(reference);
     }
 
+    @Override
     public void removedService(final ServiceReference reference, final Object service) {
         final Long key = (Long) reference.getProperty(Constants.SERVICE_ID);
         final ServiceRegistration reg = serviceRegistrations.get(key);
