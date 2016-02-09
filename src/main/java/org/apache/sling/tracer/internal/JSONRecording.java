@@ -19,6 +19,7 @@
 
 package org.apache.sling.tracer.internal;
 
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -38,14 +39,18 @@ class JSONRecording implements Recording {
         this.method = r.getMethod();
     }
 
-    public void render(JSONWriter jw) throws JSONException {
+    public void render(Writer pw) throws JSONException {
+        JSONWriter jw = new JSONWriter(pw);
+        jw.setTidy(true);
+        jw.object();
         jw.key("method").value(method);
 
         if (tracker != null) {
             jw.key("logs");
             jw.array();
             Iterator<String> it = tracker.getMessages();
-            while (it.hasNext()) {
+            //Per docs iterator can be null
+            while (it != null && it.hasNext()) {
                 jw.value(it.next());
             }
             jw.endArray();
@@ -57,6 +62,7 @@ class JSONRecording implements Recording {
             jw.value(q);
         }
         jw.endArray();
+        jw.endObject();
     }
 
     //~---------------------------------------< Recording >
