@@ -651,7 +651,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         checkClosed();
 
         String absolutePath = path;
-        if (absolutePath != null && !absolutePath.startsWith("/") && base != null) {
+        if (absolutePath != null && !absolutePath.startsWith("/") && base != null && base.getPath() != null ) {
             absolutePath = appendToPath(base.getPath(), absolutePath);
         }
 
