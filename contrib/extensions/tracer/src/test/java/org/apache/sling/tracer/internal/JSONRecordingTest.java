@@ -23,6 +23,7 @@ import java.io.StringWriter;
 
 import javax.servlet.http.HttpServletRequest;
 
+import ch.qos.logback.classic.Level;
 import org.apache.sling.commons.json.JSONObject;
 import org.junit.Test;
 
@@ -40,8 +41,8 @@ public class JSONRecordingTest {
         when(request.getMethod()).thenReturn("GET");
         JSONRecording r = new JSONRecording("abc", request);
 
-        r.log(TracerContext.QUERY_LOGGER, "foo bar", new Object[]{"x" , "y"});
-        r.log(TracerContext.QUERY_LOGGER, "foo bar", new Object[]{"x" , "z"});
+        r.log(Level.INFO, TracerContext.QUERY_LOGGER, "foo bar", new Object[]{"x" , "y"});
+        r.log(Level.INFO, TracerContext.QUERY_LOGGER, "foo bar", new Object[]{"x" , "z"});
 
         r.done();
         r.render(sw);

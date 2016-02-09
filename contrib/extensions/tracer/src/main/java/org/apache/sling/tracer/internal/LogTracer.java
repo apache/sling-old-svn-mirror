@@ -384,7 +384,7 @@ public class LogTracer {
                 if (format == null) {
                     return FilterReply.ACCEPT;
                 }
-                if (tracer.log(logger.getName(), format, params)) {
+                if (tracer.log(level, logger.getName(), format, params)) {
                     return FilterReply.ACCEPT;
                 }
             }

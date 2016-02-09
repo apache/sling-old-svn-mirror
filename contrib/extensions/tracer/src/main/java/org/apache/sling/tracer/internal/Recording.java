@@ -19,12 +19,13 @@
 
 package org.apache.sling.tracer.internal;
 
+import ch.qos.logback.classic.Level;
 import org.apache.sling.api.request.RequestProgressTracker;
 
 interface Recording {
     Recording NOOP = new Recording() {
         @Override
-        public void log(String logger, String format, Object[] params) {
+        public void log(Level level, String logger, String format, Object[] params) {
 
         }
 
@@ -39,7 +40,7 @@ interface Recording {
         }
     };
 
-    void log(String logger, String format, Object[] params);
+    void log(Level level, String logger, String format, Object[] params);
 
     /**
      * Register the {@link RequestProgressTracker} associated with

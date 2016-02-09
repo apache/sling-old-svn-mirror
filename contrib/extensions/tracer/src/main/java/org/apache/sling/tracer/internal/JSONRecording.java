@@ -28,6 +28,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import ch.qos.logback.classic.Level;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
@@ -58,7 +59,7 @@ class JSONRecording implements Recording {
     //~---------------------------------------< Recording >
 
     @Override
-    public void log(String logger, String format, Object[] params) {
+    public void log(Level level, String logger, String format, Object[] params) {
         if (TracerContext.QUERY_LOGGER.equals(logger)
                 && params != null && params.length == 2) {
             queries.add((String) params[1]);

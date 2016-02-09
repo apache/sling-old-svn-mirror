@@ -80,8 +80,8 @@ class TracerContext {
         return false;
     }
 
-    public boolean log(String logger, String format, Object[] params) {
-        recording.log(logger, format, params);
+    public boolean log(Level level, String logger, String format, Object[] params) {
+        recording.log(level, logger, format, params);
         if (QUERY_LOGGER.equals(logger)
                 && params != null && params.length == 2) {
             return logQuery((String) params[1]);
