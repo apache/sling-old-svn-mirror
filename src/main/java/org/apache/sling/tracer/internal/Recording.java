@@ -32,6 +32,11 @@ interface Recording {
         public void registerTracker(RequestProgressTracker tracker) {
 
         }
+
+        @Override
+        public void done() {
+
+        }
     };
 
     void log(String logger, String format, Object[] params);
@@ -42,4 +47,9 @@ interface Recording {
      * @param tracker from current request
      */
     void registerTracker(RequestProgressTracker tracker);
+
+    /**
+     * Invoked at the end of request processing
+     */
+    void done();
 }

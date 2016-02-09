@@ -20,6 +20,7 @@
 package org.apache.sling.tracer.internal;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.Collection;
 import java.util.List;
 
@@ -41,6 +42,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestProgressTracker;
+import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContextCallback;
@@ -253,7 +255,13 @@ public class LogTracerTest {
         assertNotNull(requestId);
         Recording r = ((TracerLogServlet)context.getService(Servlet.class)).getRecording(requestId);
         assertTrue(r instanceof JSONRecording);
-        assertNotNull(((JSONRecording)r).getTracker());
+        JSONRecording jr = (JSONRecording) r;
+
+        StringWriter sw = new StringWriter();
+        jr.render(sw);
+        JSONObject json = new JSONObject(sw.toString());
+
+        assertEquals(2, json.getJSONArray("logs").length());
     }
 
 

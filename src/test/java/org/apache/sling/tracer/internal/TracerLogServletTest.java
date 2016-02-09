@@ -95,6 +95,7 @@ public class TracerLogServletTest {
 
         Recording recording = logServlet.startRecording(request, response);
         recording.registerTracker(createTracker("x" ,"y"));
+        recording.done();
 
         ArgumentCaptor<String> requestIdCaptor = ArgumentCaptor.forClass(String.class);
         verify(response).setHeader(eq(TracerLogServlet.HEADER_TRACER_REQUEST_ID), requestIdCaptor.capture());

@@ -38,11 +38,12 @@ public class JSONRecordingTest {
         StringWriter sw = new StringWriter();
 
         when(request.getMethod()).thenReturn("GET");
-        JSONRecording r = new JSONRecording(request);
+        JSONRecording r = new JSONRecording("abc", request);
 
         r.log(TracerContext.QUERY_LOGGER, "foo bar", new Object[]{"x" , "y"});
         r.log(TracerContext.QUERY_LOGGER, "foo bar", new Object[]{"x" , "z"});
 
+        r.done();
         r.render(sw);
 
         JSONObject json = new JSONObject(sw.toString());
@@ -53,10 +54,11 @@ public class JSONRecordingTest {
     @Test
     public void requestTrackerLogs() throws Exception{
         StringWriter sw = new StringWriter();
-        JSONRecording r = new JSONRecording(request);
+        JSONRecording r = new JSONRecording("abc", request);
 
         r.registerTracker(TestUtil.createTracker("x", "y"));
 
+        r.done();
         r.render(sw);
 
         JSONObject json = new JSONObject(sw.toString());

@@ -19,6 +19,8 @@
 
 package org.apache.sling.tracer.internal;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -29,18 +31,64 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class JSONRecording implements Recording {
+    private static final Logger log = LoggerFactory.getLogger(JSONRecording.class);
     private final String method;
+    private final String requestId;
     private final List<String> queries = new ArrayList<String>();
     private RequestProgressTracker tracker;
+    private String json;
 
-    public JSONRecording(HttpServletRequest r) {
+    public JSONRecording(String requestId, HttpServletRequest r) {
+        this.requestId = requestId;
         this.method = r.getMethod();
     }
 
-    public void render(Writer pw) throws JSONException {
-        JSONWriter jw = new JSONWriter(pw);
+    public boolean render(Writer pw) throws IOException {
+        if (json != null) {
+            pw.write(json);
+            return true;
+        }
+        return false;
+    }
+
+    //~---------------------------------------< Recording >
+
+    @Override
+    public void log(String logger, String format, Object[] params) {
+        if (TracerContext.QUERY_LOGGER.equals(logger)
+                && params != null && params.length == 2) {
+            queries.add((String) params[1]);
+        }
+    }
+
+    @Override
+    public void registerTracker(RequestProgressTracker tracker) {
+        this.tracker = tracker;
+    }
+
+    @Override
+    public void done() {
+        try {
+            if (json == null) {
+                json = toJSON();
+
+                //Let the tracker and other references go to
+                //not occupy memory
+                tracker = null;
+                queries.clear();
+            }
+        } catch (JSONException e) {
+            log.warn("Error occurred while converting the log data for request {} to JSON", requestId, e);
+        }
+    }
+
+    private String toJSON() throws JSONException {
+        StringWriter sw = new StringWriter();
+        JSONWriter jw = new JSONWriter(sw);
         jw.setTidy(true);
         jw.object();
         jw.key("method").value(method);
@@ -63,24 +111,6 @@ class JSONRecording implements Recording {
         }
         jw.endArray();
         jw.endObject();
-    }
-
-    //~---------------------------------------< Recording >
-
-    @Override
-    public void log(String logger, String format, Object[] params) {
-        if (TracerContext.QUERY_LOGGER.equals(logger)
-                && params != null && params.length == 2) {
-            queries.add((String) params[1]);
-        }
-    }
-
-    @Override
-    public void registerTracker(RequestProgressTracker tracker) {
-        this.tracker = tracker;
-    }
-
-    RequestProgressTracker getTracker() {
-        return tracker;
+        return sw.toString();
     }
 }
