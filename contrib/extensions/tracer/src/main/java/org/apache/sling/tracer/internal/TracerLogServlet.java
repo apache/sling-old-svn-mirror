@@ -79,8 +79,7 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
                 if (requestId != null) {
                     JSONRecording recording = cache.getIfPresent(requestId);
                     if (recording != null){
-                        recording.render(pw);
-                        responseDone = true;
+                        responseDone = recording.render(pw);
                     }
                 }
 
@@ -184,7 +183,7 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
     }
 
     private JSONRecording record(String requestId, HttpServletRequest request) {
-        JSONRecording data = new JSONRecording(request);
+        JSONRecording data = new JSONRecording(requestId, request);
         cache.put(requestId, data);
         return data;
     }

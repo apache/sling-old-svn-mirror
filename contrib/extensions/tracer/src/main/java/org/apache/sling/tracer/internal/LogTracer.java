@@ -318,6 +318,7 @@ public class LogTracer {
                 if (tracerContext != null) {
                     disableCollector();
                 }
+                recording.done();
             }
         }
 
