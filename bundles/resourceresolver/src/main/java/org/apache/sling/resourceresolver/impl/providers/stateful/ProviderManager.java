@@ -184,15 +184,15 @@ public class ProviderManager {
     }
 
     public Collection<AuthenticatedResourceProvider> getAllAuthenticated() {
-        return authenticated;
+        return new ArrayList<AuthenticatedResourceProvider>(this.authenticated);
     }
 
     public Collection<AuthenticatedResourceProvider> getAllUsedModifiable() {
-        return modifiable;
+        return new ArrayList<AuthenticatedResourceProvider>(modifiable);
     }
 
     public Collection<AuthenticatedResourceProvider> getAllUsedRefreshable() {
-        return refreshable;
+        return new ArrayList<AuthenticatedResourceProvider>(refreshable);
     }
 
     public Iterable<AuthenticatedResourceProvider> getAllBestEffort(@Nonnull final List<ResourceProviderHandler> handlers,
