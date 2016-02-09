@@ -19,10 +19,10 @@
 package org.apache.sling.resourcemerger.impl;
 
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.spi.resource.provider.ResolverContext;
+import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 
-public class BasicResolveContext<T> implements ResolverContext<T> {
+public class BasicResolveContext<T> implements ResolveContext<T> {
 
     private final ResourceResolver resourceResolver;
 
@@ -41,7 +41,7 @@ public class BasicResolveContext<T> implements ResolverContext<T> {
     }
 
     @Override
-    public ResolverContext<?> getParentResolveContext() {
+    public ResolveContext<?> getParentResolveContext() {
         return null;
     }
 
