@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import ch.qos.logback.classic.Level;
 import org.apache.sling.commons.json.JSONObject;
 import org.junit.Test;
+import org.slf4j.helpers.MessageFormatter;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -41,8 +42,8 @@ public class JSONRecordingTest {
         when(request.getMethod()).thenReturn("GET");
         JSONRecording r = new JSONRecording("abc", request);
 
-        r.log(Level.INFO, TracerContext.QUERY_LOGGER, "foo bar", new Object[]{"x" , "y"});
-        r.log(Level.INFO, TracerContext.QUERY_LOGGER, "foo bar", new Object[]{"x" , "z"});
+        r.log(Level.INFO, TracerContext.QUERY_LOGGER, MessageFormatter.arrayFormat("foo bar", new Object[]{"x" , "y"}));
+        r.log(Level.INFO, TracerContext.QUERY_LOGGER, MessageFormatter.arrayFormat("foo bar", new Object[]{"x" , "z"}));
 
         r.done();
         r.render(sw);

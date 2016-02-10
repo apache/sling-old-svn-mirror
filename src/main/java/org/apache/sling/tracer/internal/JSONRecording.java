@@ -34,6 +34,7 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.helpers.FormattingTuple;
 
 class JSONRecording implements Recording {
     private static final Logger log = LoggerFactory.getLogger(JSONRecording.class);
@@ -59,7 +60,8 @@ class JSONRecording implements Recording {
     //~---------------------------------------< Recording >
 
     @Override
-    public void log(Level level, String logger, String format, Object[] params) {
+    public void log(Level level, String logger, FormattingTuple tuple) {
+        Object[] params = tuple.getArgArray();
         if (TracerContext.QUERY_LOGGER.equals(logger)
                 && params != null && params.length == 2) {
             queries.add((String) params[1]);
