@@ -35,6 +35,7 @@ import org.apache.sling.resourcemerger.spi.MergedResourcePicker2;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
@@ -50,10 +51,10 @@ public class MergedResourcePickerWhiteboard implements ServiceTrackerCustomizer 
     private final Map<Long, ServiceRegistration> serviceRegistrations = new ConcurrentHashMap<Long, ServiceRegistration>();
 
     @Activate
-    protected void activate(final BundleContext bundleContext) {
+    protected void activate(final BundleContext bundleContext) throws InvalidSyntaxException {
         this.bundleContext = bundleContext;
-        tracker = new ServiceTracker(bundleContext, "(|(objectClass=" + MergedResourcePicker.class.getName() +
-                ")(objectClass=" + MergedResourcePicker2.class.getName() + "))", this);
+        tracker = new ServiceTracker(bundleContext, bundleContext.createFilter("(|(objectClass=" + MergedResourcePicker.class.getName() +
+                ")(objectClass=" + MergedResourcePicker2.class.getName() + "))"), this);
         tracker.open();
     }
 
