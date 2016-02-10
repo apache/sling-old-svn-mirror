@@ -20,11 +20,11 @@
 <features name="sling-${feature.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.3.0">
   <!-- Apache Sling -->
   <feature name="sling" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.api/2.9.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.api/2.11.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.auth.core/1.3.12</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.engine/2.4.6</bundle>
     <!-- org.apache.sling.resourceresolver requires jcr -->
-    <bundle>mvn:org.apache.sling/org.apache.sling.resourceresolver/1.2.6</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.resourceresolver/1.4.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.serviceusermapper/1.2.2</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.settings/1.3.8</bundle>
     <!-- Apache Sling Commons -->
@@ -199,7 +199,7 @@
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.davex/1.3.0</bundle>
     <!-- (not using org.apache.sling.jcr.jcr-wrapper) -->
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.registration/1.0.2</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.resource/2.5.6</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.resource/2.7.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.webconsole/1.0.2</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.webdav/2.3.2</bundle>
     <!-- dependencies -->
@@ -340,7 +340,7 @@
   <feature name="sling-servlets" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.servlets.get/2.1.14</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.servlets.post/2.3.8</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.servlets.resolver/2.3.8</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.servlets.resolver/2.4.0</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-jcr</feature>
@@ -423,7 +423,7 @@
   <!-- Apache Sling Extensions (contrib) -->
   <feature name="sling-extension-distribution" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.distribution.api/0.3.0</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.distribution.core/0.1.12</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.distribution.core/0.1.14</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-jcr</feature>
@@ -501,9 +501,9 @@
   </feature>
   <!-- Composum -->
   <feature name="composum-sling" version="${feature.version}">
-    <bundle>mvn:com.composum.sling.core/composum-sling-core-commons/1.3.2</bundle>
-    <bundle>mvn:com.composum.sling.core/composum-sling-core-console/1.3.2</bundle>
-    <bundle>mvn:com.composum.sling.core/composum-sling-core-jslibs/1.3.2</bundle>
+    <bundle>mvn:com.composum.sling.core/composum-sling-core-commons/1.3.3</bundle>
+    <bundle>mvn:com.composum.sling.core/composum-sling-core-console/1.3.3</bundle>
+    <bundle>mvn:com.composum.sling.core/composum-sling-core-jslibs/1.3.3</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-jcr</feature>
