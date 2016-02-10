@@ -19,9 +19,12 @@
 
 package org.apache.sling.tracer.internal;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -102,12 +105,12 @@ public class TracerLogServletTest {
         verify(response).setHeader(TracerLogServlet.HEADER_TRACER_PROTOCOL_VERSION,
                 String.valueOf(TracerLogServlet.TRACER_PROTOCOL_VERSION));
 
-        StringWriter sw = new StringWriter();
-        when(response.getWriter()).thenReturn(new PrintWriter(sw));
+        ByteArrayServletOutputStream sos = new ByteArrayServletOutputStream();
+        when(response.getOutputStream()).thenReturn(sos);
         when(request.getRequestURI()).thenReturn("/system/console/" + requestIdCaptor.getValue() + ".json" );
 
         logServlet.renderContent(request, response);
-        JSONObject json = new JSONObject(sw.toString());
+        JSONObject json = new JSONObject(sos.baos.toString("UTF-8"));
         assertEquals("GET", json.getString("method"));
         assertEquals(2, json.getJSONArray("requestProgressLogs").length());
     }
@@ -122,5 +125,18 @@ public class TracerLogServletTest {
         logServlet.renderContent(request, response);
 
         assertThat(sw.toString(), containsString("Log Tracer"));
+    }
+
+    private static class ByteArrayServletOutputStream extends ServletOutputStream {
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        @Override
+        public void write(int b) throws IOException {
+            baos.write(b);
+        }
+
+        @Override
+        public void write(byte[] b, int off, int len) throws IOException {
+            baos.write(b, off, len);
+        }
     }
 }

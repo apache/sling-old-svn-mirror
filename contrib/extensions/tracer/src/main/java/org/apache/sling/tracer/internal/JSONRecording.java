@@ -19,9 +19,16 @@
 
 package org.apache.sling.tracer.internal;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -30,6 +37,7 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
 import ch.qos.logback.classic.Level;
+import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
@@ -45,16 +53,25 @@ class JSONRecording implements Recording {
     private final List<String> queries = new ArrayList<String>();
     private final List<LogEntry> logs = new ArrayList<LogEntry>();
     private RequestProgressTracker tracker;
-    private String json;
+    private byte[] json;
 
     public JSONRecording(String requestId, HttpServletRequest r) {
         this.requestId = requestId;
         this.method = r.getMethod();
     }
 
-    public boolean render(Writer pw) throws IOException {
+    public boolean render(Writer w) throws IOException {
         if (json != null) {
-            pw.write(json);
+            Reader r = new InputStreamReader(new ByteArrayInputStream(json), "UTF-8");
+            IOUtils.copy(r, w);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean render(OutputStream os) throws IOException {
+        if (json != null) {
+            os.write(json);
             return true;
         }
         return false;
@@ -91,12 +108,17 @@ class JSONRecording implements Recording {
             }
         } catch (JSONException e) {
             log.warn("Error occurred while converting the log data for request {} to JSON", requestId, e);
+        } catch (UnsupportedEncodingException e) {
+            log.warn("Error occurred while converting the log data for request {} to JSON", requestId, e);
+        } catch (IOException e) {
+            log.warn("Error occurred while converting the log data for request {} to JSON", requestId, e);
         }
     }
 
-    private String toJSON() throws JSONException {
-        StringWriter sw = new StringWriter();
-        JSONWriter jw = new JSONWriter(sw);
+    private byte[] toJSON() throws JSONException, IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        OutputStreamWriter osw = new OutputStreamWriter(baos, "UTF-8");
+        JSONWriter jw = new JSONWriter(osw);
         jw.setTidy(true);
         jw.object();
         jw.key("method").value(method);
@@ -121,7 +143,8 @@ class JSONRecording implements Recording {
 
         addJson(jw, "logs", logs);
         jw.endObject();
-        return sw.toString();
+        osw.flush();
+        return baos.toByteArray();
     }
 
     private void addJson(JSONWriter jw, String name, List<? extends JsonEntry> entries) throws JSONException {

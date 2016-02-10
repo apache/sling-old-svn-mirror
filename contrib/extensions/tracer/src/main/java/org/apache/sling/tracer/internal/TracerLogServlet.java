@@ -67,8 +67,8 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
 
     @Override
     protected void renderContent(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        final PrintWriter pw = response.getWriter();
         if (isHtmlRequest(request)){
+            PrintWriter pw = response.getWriter();
             renderStatus(pw);
             renderRequests(pw);
         } else {
@@ -79,11 +79,12 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
                 if (requestId != null) {
                     JSONRecording recording = cache.getIfPresent(requestId);
                     if (recording != null){
-                        responseDone = recording.render(pw);
+                        responseDone = recording.render(response.getOutputStream());
                     }
                 }
 
                 if (!responseDone) {
+                    PrintWriter pw = response.getWriter();
                     JSONWriter jw = new JSONWriter(pw);
                     jw.object();
                     jw.key("error").value("Not found");
