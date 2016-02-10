@@ -50,6 +50,7 @@ class JSONRecording implements Recording {
     private static final Logger log = LoggerFactory.getLogger(JSONRecording.class);
     private final String method;
     private final String requestId;
+    private final String uri;
     private final List<String> queries = new ArrayList<String>();
     private final List<LogEntry> logs = new ArrayList<LogEntry>();
     private RequestProgressTracker tracker;
@@ -58,6 +59,7 @@ class JSONRecording implements Recording {
     public JSONRecording(String requestId, HttpServletRequest r) {
         this.requestId = requestId;
         this.method = r.getMethod();
+        this.uri = r.getRequestURI();
     }
 
     public boolean render(Writer w) throws IOException {
@@ -75,6 +77,17 @@ class JSONRecording implements Recording {
             return true;
         }
         return false;
+    }
+
+    public long size() {
+        if (json != null){
+            return json.length;
+        }
+        return 0;
+    }
+
+    public String getUri() {
+        return uri;
     }
 
     //~---------------------------------------< Recording >
