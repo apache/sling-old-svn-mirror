@@ -52,7 +52,8 @@ public class ServletResourceProvider extends ResourceProvider<Object> {
 
         final ResourceProvider parentProvider = ctx.getParentResourceProvider();
         if ( parentProvider != null ) {
-            return parentProvider.getResource(ctx.getParentResolveContext(), path, resourceContext, parent);
+            final Resource useParent = (parent instanceof ServletResource ? null : parent);
+            return parentProvider.getResource(ctx.getParentResolveContext(), path, resourceContext, useParent);
         }
         return null;
     }
