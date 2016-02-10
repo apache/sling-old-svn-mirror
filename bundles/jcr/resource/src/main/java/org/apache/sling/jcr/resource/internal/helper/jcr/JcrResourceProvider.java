@@ -59,7 +59,6 @@ import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
-import org.apache.sling.jcr.resource.internal.HelperData;
 import org.apache.sling.jcr.resource.internal.JcrModifiableValueMap;
 import org.apache.sling.jcr.resource.internal.JcrResourceListener;
 import org.apache.sling.jcr.resource.internal.NodeUtil;
@@ -90,7 +89,7 @@ import org.slf4j.LoggerFactory;
 public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
 
     /** Logger */
-    private static final Logger log = LoggerFactory.getLogger(JcrResourceProvider.class);
+    private final Logger logger = LoggerFactory.getLogger(JcrResourceProvider.class);
 
     private static final String REPOSITORY_REFERNENCE_NAME = "repository";
 
@@ -152,7 +151,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
             // concurrent unregistration of SlingRepository service
             // don't care, this component is going to be deactivated
             // so we just stop working
-            log.warn("activate: Activation failed because SlingRepository may have been unregistered concurrently");
+            logger.warn("activate: Activation failed because SlingRepository may have been unregistered concurrently");
             return;
         }
 
@@ -162,12 +161,13 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
         this.root = PropertiesUtil.toString(context.getProperties().get(ResourceProvider.PROPERTY_ROOT), "/");
         this.bundleCtx = context.getBundleContext();
 
-        HelperData helperData = new HelperData(dynamicClassLoaderManager.getDynamicClassLoader(), pathMapper);
-        this.stateFactory = new JcrProviderStateFactory(repositoryReference, repository, helperData);
+        this.stateFactory = new JcrProviderStateFactory(repositoryReference, repository, dynamicClassLoaderManager, pathMapper);
     }
 
     @Deactivate
     protected void deactivate() {
+        this.bundleCtx = null;
+        this.stateFactory = null;
     }
 
     @Override
@@ -203,7 +203,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
         }
     }
 
-    private void registerListener(ProviderContext ctx) {
+    private void registerListener(final ProviderContext ctx) {
         // check for Oak
         boolean isOak = false;
         if ( optimizeForOak ) {
@@ -212,7 +212,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
                 if ( this.executor != null ) {
                     isOak = true;
                 } else {
-                   log.error("Detected Oak based repository but no executor service available! Unable to use improved JCR Resource listener");
+                    logger.error("Detected Oak based repository but no executor service available! Unable to use improved JCR Resource listener");
                 }
             }
         }
@@ -220,11 +220,11 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
             if (isOak) {
                 try {
                     this.listener = new OakResourceListener(root, ctx, bundleCtx, executor, pathMapper, observationQueueLength, repository);
-                    log.info("Detected Oak based repository. Using improved JCR Resource Listener with observation queue length {}", observationQueueLength);
+                    logger.info("Detected Oak based repository. Using improved JCR Resource Listener with observation queue length {}", observationQueueLength);
                 } catch ( final RepositoryException re ) {
                     throw new SlingException("Can't create the OakResourceListener", re);
                 } catch ( final Throwable t ) {
-                    log.error("Unable to instantiate improved JCR Resource listener for Oak. Using fallback.", t);
+                    logger.error("Unable to instantiate improved JCR Resource listener for Oak. Using fallback.", t);
                 }
             }
             if (this.listener == null) {
@@ -324,7 +324,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
                             ctx.getProviderState().getHelperData());
                 }
             } catch (RepositoryException e) {
-                log.warn("Can't get parent for {}", child, e);
+                logger.warn("Can't get parent for {}", child, e);
                 return null;
             }
         }
@@ -442,7 +442,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
             if ( item == null ) {
                 final String jcrPath = pathMapper.mapResourcePathToJCRPath(resource.getPath());
                 if (jcrPath == null) {
-                    log.debug("delete: {} maps to an empty JCR path", resource.getPath());
+                    logger.debug("delete: {} maps to an empty JCR path", resource.getPath());
                     throw new PersistenceException("Unable to delete resource", null, resource.getPath(), null);
                 }
                 item = ctx.getProviderState().getSession().getItem(jcrPath);
@@ -458,7 +458,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
         try {
             ctx.getProviderState().getSession().refresh(false);
         } catch (final RepositoryException ignore) {
-            log.warn("Unable to revert pending changes.", ignore);
+            logger.warn("Unable to revert pending changes.", ignore);
         }
     }
 
@@ -477,7 +477,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
         try {
             return ctx.getProviderState().getSession().hasPendingChanges();
         } catch (final RepositoryException ignore) {
-            log.warn("Unable to check session for pending changes.", ignore);
+            logger.warn("Unable to check session for pending changes.", ignore);
         }
         return false;
     }
@@ -487,7 +487,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
         try {
             ctx.getProviderState().getSession().refresh(true);
         } catch (final RepositoryException ignore) {
-            log.warn("Unable to refresh session.", ignore);
+            logger.warn("Unable to refresh session.", ignore);
         }
     }
 
@@ -510,9 +510,9 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
                         }
                     }
                 }
-                log.debug("not able to adapto Resource to Principal, let the base class try to adapt");
+                logger.debug("not able to adapto Resource to Principal, let the base class try to adapt");
             } catch (RepositoryException e) {
-                log.warn("error while adapting Resource to Principal, let the base class try to adapt", e);
+                logger.warn("error while adapting Resource to Principal, let the base class try to adapt", e);
             }
         }
         return super.adaptTo(ctx, type);
