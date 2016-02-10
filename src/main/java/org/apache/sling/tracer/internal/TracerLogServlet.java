@@ -21,7 +21,11 @@ package org.apache.sling.tracer.internal;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -174,14 +178,20 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
 
     private void renderRequests(PrintWriter pw) {
         if (cache.size() > 0){
-            pw.println("<ul>");
-            for (Map.Entry<String, JSONRecording> e : cache.asMap().entrySet()){
-                String id = e.getKey();
-                JSONRecording r = e.getValue();
-                pw.printf("<li><a href='%s/%s.json'>%s</a> - %s (%s)</li>", LABEL, id, id, r.getUri(),
-                        humanReadableByteCount(r.size()));
+            pw.println("<ol>");
+            List<JSONRecording> recordings = new ArrayList<JSONRecording>(cache.asMap().values());
+            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+            Collections.sort(recordings);
+            for (JSONRecording r : recordings){
+                String id = r.getRequestId();
+                String date = sdf.format(new Date(r.getStart()));
+                pw.printf("<li>%s - <a href='%s/%s.json'>%s</a> - %s (%s) (%dms)</li>",
+                        date, LABEL, id, id,
+                        r.getUri(),
+                        humanReadableByteCount(r.size()),
+                        r.getTimeTaken());
             }
-            pw.println("</ul>");
+            pw.println("</ol>");
         }
     }
 

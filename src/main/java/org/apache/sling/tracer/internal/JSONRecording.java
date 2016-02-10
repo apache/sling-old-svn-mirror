@@ -37,9 +37,11 @@ import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
 
 import ch.qos.logback.classic.Level;
+import com.google.common.primitives.Longs;
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.commons.json.JSONException;
@@ -49,7 +51,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.FormattingTuple;
 import org.slf4j.helpers.MessageFormatter;
 
-class JSONRecording implements Recording {
+class JSONRecording implements Recording, Comparable<JSONRecording> {
     private static final Logger log = LoggerFactory.getLogger(JSONRecording.class);
     private final String method;
     private final String requestId;
@@ -59,6 +61,8 @@ class JSONRecording implements Recording {
     private final List<LogEntry> logs = new ArrayList<LogEntry>();
     private RequestProgressTracker tracker;
     private byte[] json;
+    private final long start = System.currentTimeMillis();
+    private long timeTaken;
 
     public JSONRecording(String requestId, HttpServletRequest r, boolean compress) {
         this.requestId = requestId;
@@ -97,6 +101,14 @@ class JSONRecording implements Recording {
 
     public String getRequestId() {
         return requestId;
+    }
+
+    public long getTimeTaken() {
+        return timeTaken;
+    }
+
+    public long getStart() {
+        return start;
     }
 
     //~---------------------------------------< Recording >
@@ -148,6 +160,10 @@ class JSONRecording implements Recording {
         jw.object();
         jw.key("method").value(method);
 
+        timeTaken = System.currentTimeMillis() - start;
+        jw.key("time").value(timeTaken);
+        jw.key("timestamp").value(start);
+
         if (tracker != null) {
             jw.key("requestProgressLogs");
             jw.array();
@@ -192,6 +208,11 @@ class JSONRecording implements Recording {
         return is;
     }
 
+    @Override
+    public int compareTo(@Nonnull JSONRecording o) {
+        return Longs.compare(start, o.start);
+    }
+
     private interface JsonEntry {
         void toJson(JSONWriter jw) throws JSONException;
     }
@@ -200,6 +221,7 @@ class JSONRecording implements Recording {
         final Level level;
         final String logger;
         final FormattingTuple tuple;
+        final long timestamp = System.currentTimeMillis();
 
         private LogEntry(Level level, String logger, FormattingTuple tuple) {
             this.level = level != null ? level : Level.INFO;
@@ -220,6 +242,7 @@ class JSONRecording implements Recording {
 
         @Override
         public void toJson(JSONWriter jw) throws JSONException {
+            jw.key("timestamp").value(timestamp);
             jw.key("level").value(level.levelStr);
             jw.key("logger").value(logger);
             jw.key("message").value(tuple.getMessage());
