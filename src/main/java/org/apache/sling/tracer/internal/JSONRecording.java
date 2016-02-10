@@ -48,23 +48,31 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.slf4j.helpers.FormattingTuple;
 import org.slf4j.helpers.MessageFormatter;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 class JSONRecording implements Recording, Comparable<JSONRecording> {
+    private static final String[] QUERY_API_PKGS = {
+            "org.apache.sling.resourceresolver", //Sling package would come first in stack so listed first
+            "org.apache.jackrabbit.oak"
+    };
     private static final Logger log = LoggerFactory.getLogger(JSONRecording.class);
+    public static final String OAK_QUERY_PKG = "org.apache.jackrabbit.oak.query";
     private final String method;
     private final String requestId;
     private final String uri;
     private final boolean compress;
-    private final List<String> queries = new ArrayList<String>();
+    private final List<QueryEntry> queries = new ArrayList<QueryEntry>();
     private final List<LogEntry> logs = new ArrayList<LogEntry>();
     private RequestProgressTracker tracker;
     private byte[] json;
     private final long start = System.currentTimeMillis();
     private long timeTaken;
+    private final QueryLogCollector queryCollector = new QueryLogCollector();
+    private final CallerFinder queryCallerFinder = new CallerFinder(QUERY_API_PKGS);
 
     public JSONRecording(String requestId, HttpServletRequest r, boolean compress) {
         this.requestId = requestId;
@@ -117,10 +125,8 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
 
     @Override
     public void log(TracerConfig tc, Level level, String logger, FormattingTuple tuple) {
-        Object[] params = tuple.getArgArray();
-        if (TracerContext.QUERY_LOGGER.equals(logger)
-                && params != null && params.length == 2) {
-            queries.add((String) params[1]);
+        if (logger.startsWith(OAK_QUERY_PKG)) {
+            queryCollector.record(level, logger, tuple);
         }
         logs.add(new LogEntry(level, logger, tuple));
     }
@@ -177,12 +183,8 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
             jw.endArray();
         }
 
-        jw.key("queries");
-        jw.array();
-        for (String q : queries) {
-            jw.value(q);
-        }
-        jw.endArray();
+        queryCollector.done();
+        addJson(jw, "queries", queries);
 
         addJson(jw, "logs", logs);
         jw.endObject();
@@ -271,6 +273,92 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
                 jw.key("exception").value(getStackTraceAsString(t));
 
             }
+        }
+    }
+
+    private static class QueryEntry implements JsonEntry {
+        final String query;
+        final String plan;
+        final String caller;
+
+        private QueryEntry(String query, String plan, String caller) {
+            this.query = query;
+            this.plan = plan;
+            this.caller = caller;
+        }
+
+        @Override
+        public void toJson(JSONWriter jw) throws JSONException {
+            jw.key("query").value(query);
+            jw.key("plan").value(plan);
+            jw.key("caller").value(caller);
+        }
+    }
+
+    private class QueryLogCollector {
+        /**
+         * The MDC key is used in org.apache.jackrabbit.oak.query.QueryEngineImpl
+         */
+        static final String MDC_QUERY_ID = "oak.query.id";
+        static final String QE_LOGGER = "org.apache.jackrabbit.oak.query.QueryImpl";
+        String query;
+        String plan;
+        String id;
+        String caller;
+
+        public void record(Level level, String logger, FormattingTuple tuple) {
+            String idFromMDC = MDC.get(MDC_QUERY_ID);
+
+            //Use the query id to detect change of query execution
+            //i.e. once query gets executed for current thread and next
+            //query start it would cause the id to change. That would
+            //be a trigger to finish up on current query collection and
+            //switch to new one
+            if (idFromMDC != null && !idFromMDC.equals(id)) {
+                addQueryEntry();
+                id = idFromMDC;
+            }
+
+            String msg = tuple.getMessage();
+            if (Level.DEBUG == level
+                    && QE_LOGGER.equals(logger)
+                    && msg != null){
+
+                //The Log stmt are as present in org.apache.jackrabbit.oak.query.QueryImpl
+                if (msg.startsWith("query execute ")){
+                    query = msg.substring("query execute ".length());
+                    caller = determineCaller();
+                } else if (msg.startsWith("query plan ")){
+                    plan = msg.substring("query plan ".length());
+                }
+            }
+        }
+
+        private String determineCaller() {
+            StackTraceElement caller = queryCallerFinder.determineCaller(Thread.currentThread().getStackTrace());
+            if (caller != null) {
+                return caller.toString();
+            }
+            return null;
+        }
+
+        public void addQueryEntry(){
+            if (query != null){
+                queries.add(new QueryEntry(safeTrim(query), safeTrim(plan), caller));
+                plan = query = null;
+            }
+        }
+
+        public void done(){
+            //Push any last pending entry i.e. last query
+            addQueryEntry();
+        }
+
+        private String safeTrim(String s){
+            if(s == null){
+                return "";
+            }
+            return s.trim();
         }
     }
 

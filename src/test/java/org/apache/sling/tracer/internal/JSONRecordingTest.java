@@ -25,7 +25,9 @@ import javax.servlet.http.HttpServletRequest;
 
 import ch.qos.logback.classic.Level;
 import org.apache.sling.commons.json.JSONObject;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.MDC;
 import org.slf4j.helpers.FormattingTuple;
 import org.slf4j.helpers.MessageFormatter;
 
@@ -37,6 +39,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class JSONRecordingTest {
+    static final String MDC_QUERY_ID = "oak.query.id";
+    static String QE_LOGGER = "org.apache.jackrabbit.oak.query.QueryImpl";
     private HttpServletRequest request = mock(HttpServletRequest.class);
 
     private TracerConfig tc = new TracerConfig(TracerContext.QUERY_LOGGER, Level.INFO);
@@ -48,8 +52,9 @@ public class JSONRecordingTest {
         when(request.getMethod()).thenReturn("GET");
         JSONRecording r = new JSONRecording("abc", request, true);
 
-        r.log(tc, Level.INFO, TracerContext.QUERY_LOGGER, MessageFormatter.arrayFormat("foo bar", new Object[]{"x" , "y"}));
-        r.log(tc, Level.INFO, TracerContext.QUERY_LOGGER, MessageFormatter.arrayFormat("foo bar", new Object[]{"x" , "z"}));
+        MDC.put(MDC_QUERY_ID, "1");
+        r.log(tc, Level.DEBUG, QE_LOGGER, tuple("query execute SELECT FOO"));
+        r.log(tc, Level.DEBUG, QE_LOGGER, tuple("query plan FOO PLAN"));
 
         r.done();
         r.render(sw);
@@ -58,7 +63,7 @@ public class JSONRecordingTest {
         assertEquals("GET", json.get("method"));
         assertTrue(json.has("time"));
         assertTrue(json.has("timestamp"));
-        assertEquals(2, json.getJSONArray("queries").length());
+        assertEquals(1, json.getJSONArray("queries").length());
     }
 
     @Test
@@ -102,5 +107,9 @@ public class JSONRecordingTest {
 
         JSONObject l3 = json.getJSONArray("logs").getJSONObject(2);
         assertNotNull(l3.get("exception"));
+    }
+
+    private static FormattingTuple tuple(String msg){
+        return MessageFormatter.format(msg, null);
     }
 }
