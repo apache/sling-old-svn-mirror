@@ -53,6 +53,8 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
 
     private final Cache<String, JSONRecording> cache;
 
+    private boolean compressRecording = true;
+
     public TracerLogServlet(BundleContext context) {
         super(LABEL, "Sling Tracer", "Sling", null);
         //TODO Make things configurable
@@ -196,7 +198,7 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
     }
 
     private JSONRecording record(String requestId, HttpServletRequest request) {
-        JSONRecording data = new JSONRecording(requestId, request);
+        JSONRecording data = new JSONRecording(requestId, request, compressRecording);
         cache.put(requestId, data);
         return data;
     }

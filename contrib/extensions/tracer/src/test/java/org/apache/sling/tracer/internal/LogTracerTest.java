@@ -235,6 +235,11 @@ public class LogTracerTest {
             public RequestProgressTracker getRequestProgressTracker() {
                 return createTracker("x", "y");
             }
+
+            @Override
+            public String getRequestURI() {
+                return "foo";
+            }
         };
         request.setHeader(TracerLogServlet.HEADER_TRACER_RECORDING, "true");
 
@@ -271,6 +276,11 @@ public class LogTracerTest {
             @Override
             public RequestProgressTracker getRequestProgressTracker() {
                 return createTracker("x", "y");
+            }
+
+            @Override
+            public String getRequestURI() {
+                return "foo";
             }
         };
         request.setHeader(TracerLogServlet.HEADER_TRACER_RECORDING, "true");
