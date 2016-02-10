@@ -32,6 +32,7 @@ import org.slf4j.helpers.MessageFormatter;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -53,6 +54,8 @@ public class JSONRecordingTest {
 
         JSONObject json = new JSONObject(sw.toString());
         assertEquals("GET", json.get("method"));
+        assertTrue(json.has("time"));
+        assertTrue(json.has("timestamp"));
         assertEquals(2, json.getJSONArray("queries").length());
     }
 
@@ -93,6 +96,7 @@ public class JSONRecordingTest {
         assertEquals(tp1.getMessage(), l1.getString("message"));
         assertEquals(1, l1.getJSONArray("params").length());
         assertFalse(l1.has("exception"));
+        assertTrue(l1.has("timestamp"));
 
         JSONObject l3 = json.getJSONArray("logs").getJSONObject(2);
         assertNotNull(l3.get("exception"));
