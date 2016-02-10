@@ -138,6 +138,13 @@ public class LogTracer {
     )
     private static final String PROP_TRACER_SERVLET_COMPRESS = "recordingCompressionEnabled";
 
+    static final boolean PROP_TRACER_SERVLET_GZIP_RESPONSE_DEFAULT = true;
+    @Property(label = "GZip Response",
+            description = "If enabled the response sent would be compressed",
+            boolValue = PROP_TRACER_SERVLET_GZIP_RESPONSE_DEFAULT
+    )
+    private static final String PROP_TRACER_SERVLET_GZIP_RESPONSE = "gzipResponse";
+
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(LogTracer.class);
 
     private final Map<String, TracerSet> tracers = new HashMap<String, TracerSet>();
@@ -177,10 +184,13 @@ public class LogTracer {
                         PROP_TRACER_SERVLET_CACHE_DURATION_DEFAULT);
                 boolean compressionEnabled = PropertiesUtil.toBoolean(config.get(PROP_TRACER_SERVLET_COMPRESS),
                         PROP_TRACER_SERVLET_COMPRESS_DEFAULT);
-                this.logServlet = new TracerLogServlet(context, cacheSize, cacheDuration, compressionEnabled);
+                boolean gzipResponse = PropertiesUtil.toBoolean(config.get(PROP_TRACER_SERVLET_GZIP_RESPONSE),
+                        PROP_TRACER_SERVLET_GZIP_RESPONSE_DEFAULT);
+
+                this.logServlet = new TracerLogServlet(context, cacheSize, cacheDuration, compressionEnabled, gzipResponse);
                 recorder = logServlet;
-                LOG.info("Tracer recoding enabled with cacheSize {} MB, expiry {} secs, compression {}",
-                        cacheSize, cacheDuration, compressionEnabled);
+                LOG.info("Tracer recoding enabled with cacheSize {} MB, expiry {} secs, compression {}, gzip response {}",
+                        cacheSize, cacheDuration, compressionEnabled, gzipResponse);
             }
             LOG.info("Log tracer enabled. Required filters registered. Tracer servlet enabled {}", servletEnabled);
         }

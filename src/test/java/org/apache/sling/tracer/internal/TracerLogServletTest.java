@@ -19,16 +19,19 @@
 
 package org.apache.sling.tracer.internal;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.zip.GZIPInputStream;
 
 import javax.annotation.Nonnull;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
 import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletRequest;
@@ -114,6 +117,35 @@ public class TracerLogServletTest {
         JSONObject json = new JSONObject(sos.baos.toString("UTF-8"));
         assertEquals("GET", json.getString("method"));
         assertEquals(2, json.getJSONArray("requestProgressLogs").length());
+    }
+
+    @Test
+    public void gzipResponse() throws Exception{
+        TracerLogServlet logServlet = new TracerLogServlet(context.bundleContext());
+        when(request.getMethod()).thenReturn("GET");
+        when(request.getHeader(TracerLogServlet.HEADER_TRACER_RECORDING)).thenReturn("true");
+        when(request.getHeader("Accept-Encoding")).thenReturn("gzip, deflate");
+
+        Recording recording = logServlet.startRecording(request, response);
+        recording.registerTracker(createTracker("x" ,"y"));
+        logServlet.endRecording(request, recording);
+
+        ArgumentCaptor<String> requestIdCaptor = ArgumentCaptor.forClass(String.class);
+        verify(response).setHeader(eq(TracerLogServlet.HEADER_TRACER_REQUEST_ID), requestIdCaptor.capture());
+        verify(response).setHeader(TracerLogServlet.HEADER_TRACER_PROTOCOL_VERSION,
+                String.valueOf(TracerLogServlet.TRACER_PROTOCOL_VERSION));
+
+        ByteArrayServletOutputStream sos = new ByteArrayServletOutputStream();
+        when(response.getOutputStream()).thenReturn(sos);
+        when(request.getRequestURI()).thenReturn("/system/console/" + requestIdCaptor.getValue() + ".json" );
+
+        logServlet.renderContent(request, response);
+        byte[] data = IOUtils.toByteArray(new GZIPInputStream(new ByteArrayInputStream(sos.baos.toByteArray())));
+        JSONObject json = new JSONObject(new String(data, "UTF-8"));
+        assertEquals("GET", json.getString("method"));
+        assertEquals(2, json.getJSONArray("requestProgressLogs").length());
+
+        verify(response).setHeader("Content-Encoding" , "gzip");
     }
 
     @Test
