@@ -63,7 +63,7 @@ public class JcrPropertyMap
     /** keep all prefixes for escaping */
     private String[] namespacePrefixes;
 
-    final ClassLoader dynamicClassLoader;
+    private final ClassLoader dynamicClassLoader;
 
     /**
      * Create a new JCR property map based on a node.
@@ -85,6 +85,10 @@ public class JcrPropertyMap
         this.valueCache = new LinkedHashMap<String, Object>();
         this.fullyRead = false;
         this.dynamicClassLoader = dynamicCL;
+    }
+
+    protected ClassLoader getDynamicClassLoader() {
+        return this.dynamicClassLoader;
     }
 
     /**
@@ -111,6 +115,7 @@ public class JcrPropertyMap
     /**
      * @see org.apache.sling.api.resource.ValueMap#get(java.lang.String, java.lang.Class)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public <T> T get(final String aKey, final Class<T> type) {
         final String key = checkKey(aKey);
@@ -122,12 +127,13 @@ public class JcrPropertyMap
         if ( entry == null ) {
             return null;
         }
-        return entry.convertToType(type, this.node, this.dynamicClassLoader);
+        return entry.convertToType(type, this.node, this.getDynamicClassLoader());
     }
 
     /**
      * @see org.apache.sling.api.resource.ValueMap#get(java.lang.String, java.lang.Object)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public <T> T get(final String aKey,final T defaultValue) {
         final String key = checkKey(aKey);
@@ -152,6 +158,7 @@ public class JcrPropertyMap
     /**
      * @see java.util.Map#get(java.lang.Object)
      */
+    @Override
     public Object get(final Object aKey) {
         final String key = checkKey(aKey.toString());
         final JcrPropertyMapCacheEntry entry = this.read(key);
@@ -162,6 +169,7 @@ public class JcrPropertyMap
     /**
      * @see java.util.Map#containsKey(java.lang.Object)
      */
+    @Override
     public boolean containsKey(final Object key) {
         return get(key) != null;
     }
@@ -169,6 +177,7 @@ public class JcrPropertyMap
     /**
      * @see java.util.Map#containsValue(java.lang.Object)
      */
+    @Override
     public boolean containsValue(final Object value) {
         readFully();
         return valueCache.containsValue(value);
@@ -177,6 +186,7 @@ public class JcrPropertyMap
     /**
      * @see java.util.Map#isEmpty()
      */
+    @Override
     public boolean isEmpty() {
         return size() == 0;
     }
@@ -184,6 +194,7 @@ public class JcrPropertyMap
     /**
      * @see java.util.Map#size()
      */
+    @Override
     public int size() {
         readFully();
         return cache.size();
@@ -192,6 +203,7 @@ public class JcrPropertyMap
     /**
      * @see java.util.Map#entrySet()
      */
+    @Override
     public Set<java.util.Map.Entry<String, Object>> entrySet() {
         readFully();
         final Map<String, Object> sourceMap;
@@ -206,6 +218,7 @@ public class JcrPropertyMap
     /**
      * @see java.util.Map#keySet()
      */
+    @Override
     public Set<String> keySet() {
         readFully();
         return cache.keySet();
@@ -214,6 +227,7 @@ public class JcrPropertyMap
     /**
      * @see java.util.Map#values()
      */
+    @Override
     public Collection<Object> values() {
         readFully();
         final Map<String, Object> sourceMap;
@@ -423,18 +437,22 @@ public class JcrPropertyMap
 
     // ---------- Unsupported Modification methods
 
+    @Override
     public void clear() {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public Object put(String key, Object value) {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public void putAll(Map<? extends String, ? extends Object> t) {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public Object remove(Object key) {
         throw new UnsupportedOperationException();
     }

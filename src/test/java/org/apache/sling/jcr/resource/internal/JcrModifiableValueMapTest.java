@@ -18,6 +18,8 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
+import static org.apache.sling.jcr.resource.internal.AssertCalendar.assertEqualsCalendar;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -29,6 +31,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -38,10 +41,9 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
-
-import static org.apache.sling.jcr.resource.internal.AssertCalendar.assertEqualsCalendar;
 
 public class JcrModifiableValueMapTest extends RepositoryTestBase {
 
@@ -76,7 +78,7 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
     }
 
     private HelperData getHelperData() throws Exception {
-        return new HelperData(null, new PathMapperImpl());
+        return new HelperData(new AtomicReference<DynamicClassLoaderManager>(), new PathMapperImpl());
     }
 
     private Map<String, Object> initialSet() {

@@ -29,7 +29,7 @@ public class JcrValueMap extends JcrPropertyMap {
     private final HelperData helper;
 
     public JcrValueMap(final Node node, final HelperData helper) {
-        super(node, helper.dynamicClassLoader);
+        super(node, null);
         this.helper = helper;
     }
 
@@ -38,4 +38,8 @@ public class JcrValueMap extends JcrPropertyMap {
         return this.helper.getNamespacePrefixes(this.getNode().getSession());
     }
 
+    @Override
+    protected ClassLoader getDynamicClassLoader() {
+        return helper.getDynamicClassLoader();
+    }
 }

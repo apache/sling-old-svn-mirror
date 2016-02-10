@@ -22,6 +22,7 @@ import static org.apache.sling.api.resource.ResourceResolverFactory.NEW_PASSWORD
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nonnull;
 import javax.jcr.Credentials;
@@ -51,17 +52,17 @@ public class JcrProviderStateFactory {
 
     private final SlingRepository repository;
 
-    private final DynamicClassLoaderManager dynamicClassLoaderManager;
+    private final AtomicReference<DynamicClassLoaderManager> dynamicClassLoaderManagerReference;
 
     private final PathMapper pathMapper;
 
     public JcrProviderStateFactory(final ServiceReference repositoryReference,
             final SlingRepository repository,
-            final DynamicClassLoaderManager dynamicClassLoaderManager,
+            final AtomicReference<DynamicClassLoaderManager> dynamicClassLoaderManagerReference,
             final PathMapper pathMapper) {
         this.repository = repository;
         this.repositoryReference = repositoryReference;
-        this.dynamicClassLoaderManager = dynamicClassLoaderManager;
+        this.dynamicClassLoaderManagerReference = dynamicClassLoaderManagerReference;
         this.pathMapper = pathMapper;
     }
 
@@ -165,7 +166,7 @@ public class JcrProviderStateFactory {
 
         session = handleImpersonation(session, authenticationInfo, logoutSession);
 
-        final HelperData data = new HelperData(this.dynamicClassLoaderManager.getDynamicClassLoader(), this.pathMapper);
+        final HelperData data = new HelperData(this.dynamicClassLoaderManagerReference, this.pathMapper);
         if (bc == null) {
             return new JcrProviderState(session, data, logoutSession);
         } else {

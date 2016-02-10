@@ -169,7 +169,7 @@ public final class JcrModifiablePropertyMap
             if ( this.changedProperties.contains(NodeUtil.MIXIN_TYPES) ) {
                 if ( cache.containsKey(NodeUtil.MIXIN_TYPES) ) {
                     final JcrPropertyMapCacheEntry entry = cache.get(NodeUtil.MIXIN_TYPES);
-                    NodeUtil.handleMixinTypes(node, entry.convertToType(String[].class, node, dynamicClassLoader));
+                    NodeUtil.handleMixinTypes(node, entry.convertToType(String[].class, node, getDynamicClassLoader()));
                 } else {
                     // remove all mixin types!
                     NodeUtil.handleMixinTypes(node, null);
@@ -182,9 +182,9 @@ public final class JcrModifiablePropertyMap
                     if ( cache.containsKey(key) ) {
                         final JcrPropertyMapCacheEntry entry = cache.get(key);
                         if ( entry.isArray() ) {
-                            node.setProperty(name, entry.convertToType(Value[].class, node, dynamicClassLoader));
+                            node.setProperty(name, entry.convertToType(Value[].class, node, getDynamicClassLoader()));
                         } else {
-                            node.setProperty(name, entry.convertToType(Value.class, node, dynamicClassLoader));
+                            node.setProperty(name, entry.convertToType(Value.class, node, getDynamicClassLoader()));
                         }
                     } else {
                         if ( node.hasProperty(name) ) {

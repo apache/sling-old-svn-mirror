@@ -18,10 +18,13 @@
  */
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.jcr.resource.internal.HelperData;
 import org.apache.sling.jcr.resource.internal.PathMapperImpl;
 
@@ -29,7 +32,7 @@ public class JcrTestNodeResource extends JcrNodeResource {
 
     public JcrTestNodeResource(ResourceResolver resourceResolver, Node node,
             ClassLoader dynamicClassLoader) throws RepositoryException {
-        super(resourceResolver, node.getPath(), null, node, new HelperData(null, new PathMapperImpl()));
+        super(resourceResolver, node.getPath(), null, node, new HelperData(new AtomicReference<DynamicClassLoaderManager>(), new PathMapperImpl()));
     }
 
 }

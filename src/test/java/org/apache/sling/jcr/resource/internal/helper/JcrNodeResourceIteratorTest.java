@@ -19,12 +19,14 @@
 package org.apache.sling.jcr.resource.internal.helper;
 
 import java.util.NoSuchElementException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.testing.jcr.MockNode;
 import org.apache.sling.commons.testing.jcr.MockNodeIterator;
 import org.apache.sling.jcr.resource.internal.HelperData;
@@ -36,7 +38,7 @@ import junit.framework.TestCase;
 public class JcrNodeResourceIteratorTest extends TestCase {
 
     private HelperData getHelperData() {
-        return new HelperData(null, new PathMapperImpl());
+        return new HelperData(new AtomicReference<DynamicClassLoaderManager>(), new PathMapperImpl());
     }
 
     public void testEmpty() {
