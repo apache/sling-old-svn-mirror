@@ -347,7 +347,7 @@ public class LogTracer {
                 if (tracerContext != null) {
                     disableCollector();
                 }
-                recorder.endRecording(recording);
+                recorder.endRecording(httpRequest, recording);
             }
         }
 
