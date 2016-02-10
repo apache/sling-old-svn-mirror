@@ -24,6 +24,7 @@ import java.util.Arrays;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.core.helpers.CyclicBuffer;
 import org.apache.sling.api.request.RequestProgressTracker;
+import org.slf4j.helpers.FormattingTuple;
 import org.slf4j.helpers.MessageFormatter;
 
 class TracerContext {
@@ -81,12 +82,19 @@ class TracerContext {
     }
 
     public boolean log(Level level, String logger, String format, Object[] params) {
-        recording.log(level, logger, format, params);
+        FormattingTuple tuple;
+
         if (QUERY_LOGGER.equals(logger)
                 && params != null && params.length == 2) {
-            return logQuery((String) params[1]);
+            tuple = logQuery((String) params[1]);
+        } else {
+            tuple = logWithLoggerName(logger, format, params);
         }
-        return logWithLoggerName(logger, format, params);
+
+        if (tuple != null) {
+            recording.log(level, logger, tuple);
+        }
+        return tuple != null;
     }
 
     public void done() {
@@ -109,8 +117,9 @@ class TracerContext {
         }
     }
 
-    private boolean logWithLoggerName(String loggerName, String format, Object... params) {
-        String msg = MessageFormatter.arrayFormat(format, params).getMessage();
+    private FormattingTuple logWithLoggerName(String loggerName, String format, Object... params) {
+        FormattingTuple tuple = MessageFormatter.arrayFormat(format, params);
+        String msg = tuple.getMessage();
         msg = "[" + loggerName + "] " + msg;
         if (progressTracker == null) {
             if (buffer == null) {
@@ -120,16 +129,15 @@ class TracerContext {
         } else {
             progressTracker.log(msg);
         }
-        return true;
+        return tuple;
     }
 
-    private boolean logQuery(String query) {
+    private FormattingTuple logQuery(String query) {
         if (ignorableQuery(query)) {
-            return false;
+            return null;
         }
         queryCount++;
-        logWithLoggerName("JCR", " Query {}", query);
-        return true;
+        return logWithLoggerName("JCR", " Query {}", query);
     }
 
     private boolean ignorableQuery(String msg) {

@@ -21,11 +21,12 @@ package org.apache.sling.tracer.internal;
 
 import ch.qos.logback.classic.Level;
 import org.apache.sling.api.request.RequestProgressTracker;
+import org.slf4j.helpers.FormattingTuple;
 
 interface Recording {
     Recording NOOP = new Recording() {
         @Override
-        public void log(Level level, String logger, String format, Object[] params) {
+        public void log(Level level, String logger, FormattingTuple tuple) {
 
         }
 
@@ -40,7 +41,7 @@ interface Recording {
         }
     };
 
-    void log(Level level, String logger, String format, Object[] params);
+    void log(Level level, String logger, FormattingTuple tuple);
 
     /**
      * Register the {@link RequestProgressTracker} associated with
