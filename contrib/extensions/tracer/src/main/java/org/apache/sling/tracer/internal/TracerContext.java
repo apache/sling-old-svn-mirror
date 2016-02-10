@@ -69,19 +69,23 @@ class TracerContext {
         Arrays.sort(tracers);
     }
 
-    public boolean shouldLog(String logger, Level level) {
+    /**
+     * Finds and returns the matching TracerConfig for given logger and level
+     * If non null it indicates that logging should proceed
+     */
+    public TracerConfig findMatchingConfig(String logger, Level level) {
         for (TracerConfig tc : tracers) {
             TracerConfig.MatchResult mr = tc.match(logger, level);
             if (mr == TracerConfig.MatchResult.MATCH_LOG) {
-                return true;
+                return tc;
             } else if (mr == TracerConfig.MatchResult.MATCH_NO_LOG) {
-                return false;
+                return null;
             }
         }
-        return false;
+        return null;
     }
 
-    public boolean log(Level level, String logger, String format, Object[] params) {
+    public boolean log(TracerConfig tc, Level level, String logger, String format, Object[] params) {
         FormattingTuple tuple = null;
         if (QUERY_LOGGER.equals(logger)
                 && params != null && params.length == 2) {
@@ -94,7 +98,7 @@ class TracerContext {
         }
 
         if (tuple != null) {
-            recording.log(level, logger, tuple);
+            recording.log(tc, level, logger, tuple);
         }
         return tuple != null;
     }

@@ -116,7 +116,7 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
     //~---------------------------------------< Recording >
 
     @Override
-    public void log(Level level, String logger, FormattingTuple tuple) {
+    public void log(TracerConfig tc, Level level, String logger, FormattingTuple tuple) {
         Object[] params = tuple.getArgArray();
         if (TracerContext.QUERY_LOGGER.equals(logger)
                 && params != null && params.length == 2) {

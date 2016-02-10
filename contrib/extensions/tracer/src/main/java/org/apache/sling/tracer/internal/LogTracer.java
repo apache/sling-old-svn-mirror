@@ -419,11 +419,12 @@ public class LogTracer {
                 return FilterReply.NEUTRAL;
             }
 
-            if (tracer.shouldLog(logger.getName(), level)) {
+            TracerConfig tc = tracer.findMatchingConfig(logger.getName(), level);
+            if (tc != null) {
                 if (format == null) {
                     return FilterReply.ACCEPT;
                 }
-                if (tracer.log(level, logger.getName(), format, params)) {
+                if (tracer.log(tc, level, logger.getName(), format, params)) {
                     return FilterReply.ACCEPT;
                 }
             }

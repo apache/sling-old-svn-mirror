@@ -39,6 +39,8 @@ import static org.mockito.Mockito.when;
 public class JSONRecordingTest {
     private HttpServletRequest request = mock(HttpServletRequest.class);
 
+    private TracerConfig tc = new TracerConfig(TracerContext.QUERY_LOGGER, Level.INFO);
+
     @Test
     public void logQueries() throws Exception{
         StringWriter sw = new StringWriter();
@@ -46,8 +48,8 @@ public class JSONRecordingTest {
         when(request.getMethod()).thenReturn("GET");
         JSONRecording r = new JSONRecording("abc", request, true);
 
-        r.log(Level.INFO, TracerContext.QUERY_LOGGER, MessageFormatter.arrayFormat("foo bar", new Object[]{"x" , "y"}));
-        r.log(Level.INFO, TracerContext.QUERY_LOGGER, MessageFormatter.arrayFormat("foo bar", new Object[]{"x" , "z"}));
+        r.log(tc, Level.INFO, TracerContext.QUERY_LOGGER, MessageFormatter.arrayFormat("foo bar", new Object[]{"x" , "y"}));
+        r.log(tc, Level.INFO, TracerContext.QUERY_LOGGER, MessageFormatter.arrayFormat("foo bar", new Object[]{"x" , "z"}));
 
         r.done();
         r.render(sw);
@@ -79,9 +81,9 @@ public class JSONRecordingTest {
         JSONRecording r = new JSONRecording("abc", request, true);
 
         FormattingTuple tp1 = MessageFormatter.arrayFormat("{} is going", new Object[]{"Jack"});
-        r.log(Level.INFO, "foo", tp1);
-        r.log(Level.WARN, "foo.bar", MessageFormatter.arrayFormat("Jill is going", null));
-        r.log(Level.ERROR, "foo.bar",
+        r.log(tc, Level.INFO, "foo", tp1);
+        r.log(tc, Level.WARN, "foo.bar", MessageFormatter.arrayFormat("Jill is going", null));
+        r.log(tc, Level.ERROR, "foo.bar",
                 MessageFormatter.arrayFormat("Jack and {} is going", new Object[]{"Jill" , new Exception()}));
 
         r.done();

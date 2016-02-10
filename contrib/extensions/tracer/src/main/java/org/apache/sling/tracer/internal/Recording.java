@@ -26,7 +26,7 @@ import org.slf4j.helpers.FormattingTuple;
 interface Recording {
     Recording NOOP = new Recording() {
         @Override
-        public void log(Level level, String logger, FormattingTuple tuple) {
+        public void log(TracerConfig tc, Level level, String logger, FormattingTuple tuple) {
 
         }
 
@@ -36,7 +36,7 @@ interface Recording {
         }
     };
 
-    void log(Level level, String logger, FormattingTuple tuple);
+    void log(TracerConfig tc, Level level, String logger, FormattingTuple tuple);
 
     /**
      * Register the {@link RequestProgressTracker} associated with
