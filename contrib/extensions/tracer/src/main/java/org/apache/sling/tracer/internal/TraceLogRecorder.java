@@ -35,7 +35,7 @@ interface TraceLogRecorder {
         }
 
         @Override
-        public void endRecording(Recording recording) {
+        public void endRecording(HttpServletRequest httpRequest, Recording recording) {
 
         }
     };
@@ -44,5 +44,5 @@ interface TraceLogRecorder {
 
     Recording getRecordingForRequest(HttpServletRequest request);
 
-    void endRecording(Recording recording);
+    void endRecording(HttpServletRequest httpRequest, Recording recording);
 }

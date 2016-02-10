@@ -227,12 +227,13 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
     }
 
     @Override
-    public void endRecording(Recording recording) {
+    public void endRecording(HttpServletRequest httpRequest, Recording recording) {
         if (recording instanceof JSONRecording) {
             JSONRecording r = (JSONRecording) recording;
             r.done();
             cache.put(r.getRequestId(), r);
         }
+        httpRequest.removeAttribute(ATTR_RECORDING);
     }
 
     Recording getRecording(String requestId) {
