@@ -162,26 +162,23 @@ public class ResourceResolverControl {
      * resource provider returns parent for this child. See
      * {@link #getResource(String, Resource, Map, boolean)} for more details
      */
-    public Resource getParent(final ResourceResolverContext context, final Resource child) {
-        final String parentPath = ResourceUtil.getParent(child.getPath());
-        if ( parentPath != null ) {
-            final AuthenticatedResourceProvider childProvider = getBestMatchingProvider(context, child.getPath());
-            final AuthenticatedResourceProvider parentProvider = getBestMatchingProvider(context, parentPath);
-            if ( parentProvider != null ) {
-                final Resource parentCandidate;
-                if ( childProvider == parentProvider ) {
-                    parentCandidate = parentProvider.getParent(child);
-                } else {
-                    parentCandidate = parentProvider.getResource(parentPath, null, null);
-                }
-                if (parentCandidate != null) {
-                    return parentCandidate;
-                }
+    public Resource getParent(@Nonnull final ResourceResolverContext context, @Nonnull final String parentPath, @Nonnull final Resource child) {
+        final AuthenticatedResourceProvider childProvider = getBestMatchingProvider(context, child.getPath());
+        final AuthenticatedResourceProvider parentProvider = getBestMatchingProvider(context, parentPath);
+        if ( parentProvider != null ) {
+            final Resource parentCandidate;
+            if ( childProvider == parentProvider ) {
+                parentCandidate = parentProvider.getParent(child);
+            } else {
+                parentCandidate = parentProvider.getResource(parentPath, null, null);
             }
+            if (parentCandidate != null) {
+                return parentCandidate;
+            }
+        }
 
-            if (isIntermediatePath(parentPath)) {
-                return new SyntheticResource(context.getResourceResolver(), parentPath, ResourceProvider.RESOURCE_TYPE_SYNTHETIC);
-            }
+        if (isIntermediatePath(parentPath)) {
+            return new SyntheticResource(context.getResourceResolver(), parentPath, ResourceProvider.RESOURCE_TYPE_SYNTHETIC);
         }
         return null;
     }

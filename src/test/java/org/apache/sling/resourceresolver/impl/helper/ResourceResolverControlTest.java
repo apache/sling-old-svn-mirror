@@ -224,7 +224,7 @@ public class ResourceResolverControlTest {
      */
     @Test
     public void getParent_found() {
-        Resource parent = crp.getParent(context, somethingResource);
+        Resource parent = crp.getParent(context, ResourceUtil.getParent(somethingResource.getPath()), somethingResource);
         assertThat(parent, notNullValue());
         assertThat("parent.path", parent.getPath(), equalTo("/"));
     }
@@ -236,7 +236,7 @@ public class ResourceResolverControlTest {
      */
     @Test
     public void getParent_synthetic() {
-        Resource parent = crp.getParent(context, subProviderResource);
+        Resource parent = crp.getParent(context, ResourceUtil.getParent(subProviderResource.getPath()), subProviderResource);
         assertThat(parent, notNullValue());
         assertTrue("parent is a synthetic resource", ResourceUtil.isSyntheticResource(parent));
     }
@@ -258,7 +258,7 @@ public class ResourceResolverControlTest {
         assertNotNull(child);
         assertTrue(childResource == child);
 
-        Resource parent = crp.getParent(context, child);
+        Resource parent = crp.getParent(context, ResourceUtil.getParent(child.getPath()), child);
         assertNotNull(parent);
         assertTrue(parentResource == parent);
     }
