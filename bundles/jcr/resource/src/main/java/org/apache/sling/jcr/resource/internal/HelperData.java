@@ -48,8 +48,4 @@ public class HelperData {
         }
         return this.namespacePrefixes;
     }
-
-    public void clearCache() {
-        this.namespacePrefixes = null;
-    }
 }
