@@ -20,14 +20,18 @@ package org.apache.sling.resourcemerger.impl;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
+import org.apache.sling.resourcemerger.spi.MergedResourcePicker2;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -48,7 +52,8 @@ public class MergedResourcePickerWhiteboard implements ServiceTrackerCustomizer 
     @Activate
     protected void activate(final BundleContext bundleContext) {
         this.bundleContext = bundleContext;
-        tracker = new ServiceTracker(bundleContext, MergedResourcePicker.class.getName(), this);
+        tracker = new ServiceTracker(bundleContext, "(|(objectClass=" + MergedResourcePicker.class.getName() +
+                ")(objectClass=" + MergedResourcePicker2.class.getName() + "))", this);
         tracker.open();
     }
 
@@ -59,12 +64,26 @@ public class MergedResourcePickerWhiteboard implements ServiceTrackerCustomizer 
 
     @Override
     public Object addingService(final ServiceReference reference) {
-        final MergedResourcePicker picker = (MergedResourcePicker) bundleContext.getService(reference);
-        if ( picker != null ) {
-            final String mergeRoot = PropertiesUtil.toString(reference.getProperty(MergedResourcePicker.MERGE_ROOT), null);
+        final Object pickerObj = bundleContext.getService(reference);
+        if ( pickerObj != null ) {
+            final String mergeRoot = PropertiesUtil.toString(reference.getProperty(MergedResourcePicker2.MERGE_ROOT), null);
             if (mergeRoot != null) {
-                boolean readOnly = PropertiesUtil.toBoolean(reference.getProperty(MergedResourcePicker.READ_ONLY), true);
-                boolean traverseParent = PropertiesUtil.toBoolean(reference.getProperty(MergedResourcePicker.TRAVERSE_PARENT), false);
+                boolean readOnly = PropertiesUtil.toBoolean(reference.getProperty(MergedResourcePicker2.READ_ONLY), true);
+                boolean traverseParent = PropertiesUtil.toBoolean(reference.getProperty(MergedResourcePicker2.TRAVERSE_PARENT), false);
+
+                final MergedResourcePicker2 picker;
+                if ( pickerObj instanceof MergedResourcePicker2 ) {
+                    picker = (MergedResourcePicker2)pickerObj;
+                } else {
+                    final MergedResourcePicker deprecatedPicker = (MergedResourcePicker)pickerObj;
+                    picker = new MergedResourcePicker2() {
+
+                        @Override
+                        public List<Resource> pickResources(ResourceResolver resolver, String relativePath, Resource relatedResource) {
+                            return deprecatedPicker.pickResources(resolver, relativePath);
+                        }
+                    };
+                }
 
                 MergingResourceProvider provider = readOnly ?
                         new MergingResourceProvider(mergeRoot, picker, true, traverseParent) :
@@ -81,7 +100,7 @@ public class MergedResourcePickerWhiteboard implements ServiceTrackerCustomizer 
 
                 serviceRegistrations.put(key, reg);
             }
-            return picker;
+            return pickerObj;
         }
         return null;
     }
