@@ -16,9 +16,6 @@
  */
 package org.apache.sling.hamcrest.matchers;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
@@ -26,12 +23,11 @@ import org.apache.sling.api.resource.ValueMap;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
 
-public class ResourceMatcher extends TypeSafeMatcher<Resource> {
+public class ResourcePropertiesMatcher extends TypeSafeMatcher<Resource> {
 
     private final Map<String, Object> properties;
 
-    public ResourceMatcher(Map<String, Object> properties) {
-
+    public ResourcePropertiesMatcher(Map<String, Object> properties) {
         if (properties == null || properties.isEmpty()) {
             throw new IllegalArgumentException("properties is null or empty");
         }
@@ -53,7 +49,6 @@ public class ResourceMatcher extends TypeSafeMatcher<Resource> {
                 return false;
             }
         }
-
         return true;
     }
 
@@ -61,7 +56,7 @@ public class ResourceMatcher extends TypeSafeMatcher<Resource> {
     protected void describeMismatchSafely(Resource item, Description mismatchDescription) {
         Map<String, Object> actualProperties = item.adaptTo(ValueMap.class);
         if (actualProperties == null) {
-            mismatchDescription.appendText("was Resource which does not expose a value map via adaptTo");
+            mismatchDescription.appendText("was Resource which does not expose a value map via adaptTo(ValueMap.class)");
             return;
         }
         mismatchDescription.appendText("was Resource with properties ").appendValueList("[", ",", "]", actualProperties.entrySet()).appendText(" (resource: ").appendValue(item).appendText(")");
