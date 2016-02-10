@@ -26,9 +26,12 @@ import javax.servlet.http.HttpServletRequest;
 import ch.qos.logback.classic.Level;
 import org.apache.sling.commons.json.JSONObject;
 import org.junit.Test;
+import org.slf4j.helpers.FormattingTuple;
 import org.slf4j.helpers.MessageFormatter;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -67,4 +70,31 @@ public class JSONRecordingTest {
         assertEquals(2, json.getJSONArray("requestProgressLogs").length());
     }
 
+    @Test
+    public void logs() throws Exception{
+        StringWriter sw = new StringWriter();
+        JSONRecording r = new JSONRecording("abc", request);
+
+        FormattingTuple tp1 = MessageFormatter.arrayFormat("{} is going", new Object[]{"Jack"});
+        r.log(Level.INFO, "foo", tp1);
+        r.log(Level.WARN, "foo.bar", MessageFormatter.arrayFormat("Jill is going", null));
+        r.log(Level.ERROR, "foo.bar",
+                MessageFormatter.arrayFormat("Jack and {} is going", new Object[]{"Jill" , new Exception()}));
+
+        r.done();
+        r.render(sw);
+
+        JSONObject json = new JSONObject(sw.toString());
+        assertEquals(3, json.getJSONArray("logs").length());
+
+        JSONObject l1 = json.getJSONArray("logs").getJSONObject(0);
+        assertEquals("INFO", l1.getString("level"));
+        assertEquals("foo", l1.getString("logger"));
+        assertEquals(tp1.getMessage(), l1.getString("message"));
+        assertEquals(1, l1.getJSONArray("params").length());
+        assertFalse(l1.has("exception"));
+
+        JSONObject l3 = json.getJSONArray("logs").getJSONObject(2);
+        assertNotNull(l3.get("exception"));
+    }
 }

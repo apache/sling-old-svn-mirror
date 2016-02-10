@@ -20,6 +20,7 @@
 package org.apache.sling.tracer.internal;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -35,12 +36,14 @@ import org.apache.sling.commons.json.io.JSONWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.FormattingTuple;
+import org.slf4j.helpers.MessageFormatter;
 
 class JSONRecording implements Recording {
     private static final Logger log = LoggerFactory.getLogger(JSONRecording.class);
     private final String method;
     private final String requestId;
     private final List<String> queries = new ArrayList<String>();
+    private final List<LogEntry> logs = new ArrayList<LogEntry>();
     private RequestProgressTracker tracker;
     private String json;
 
@@ -66,6 +69,7 @@ class JSONRecording implements Recording {
                 && params != null && params.length == 2) {
             queries.add((String) params[1]);
         }
+        logs.add(new LogEntry(level, logger, tuple));
     }
 
     @Override
@@ -83,6 +87,7 @@ class JSONRecording implements Recording {
                 //not occupy memory
                 tracker = null;
                 queries.clear();
+                logs.clear();
             }
         } catch (JSONException e) {
             log.warn("Error occurred while converting the log data for request {} to JSON", requestId, e);
@@ -113,7 +118,72 @@ class JSONRecording implements Recording {
             jw.value(q);
         }
         jw.endArray();
+
+        addJson(jw, "logs", logs);
         jw.endObject();
         return sw.toString();
     }
+
+    private void addJson(JSONWriter jw, String name, List<? extends JsonEntry> entries) throws JSONException {
+        jw.key(name);
+        jw.array();
+        for (JsonEntry je : entries) {
+            jw.object();
+            je.toJson(jw);
+            jw.endObject();
+        }
+        jw.endArray();
+    }
+
+    private interface JsonEntry {
+        void toJson(JSONWriter jw) throws JSONException;
+    }
+
+    private static class LogEntry implements JsonEntry {
+        final Level level;
+        final String logger;
+        final FormattingTuple tuple;
+
+        private LogEntry(Level level, String logger, FormattingTuple tuple) {
+            this.level = level != null ? level : Level.INFO;
+            this.logger = logger;
+            this.tuple = tuple;
+        }
+
+        private static String toString(Object o) {
+            //Make use of Slf4j null safe toString support!
+            return MessageFormatter.format("{}", o).getMessage();
+        }
+
+        private static String getStackTraceAsString(Throwable throwable) {
+            StringWriter stringWriter = new StringWriter();
+            throwable.printStackTrace(new PrintWriter(stringWriter));
+            return stringWriter.toString();
+        }
+
+        @Override
+        public void toJson(JSONWriter jw) throws JSONException {
+            jw.key("level").value(level.levelStr);
+            jw.key("logger").value(logger);
+            jw.key("message").value(tuple.getMessage());
+
+            Object[] params = tuple.getArgArray();
+            if (params != null) {
+                jw.key("params");
+                jw.array();
+                for (Object o : params) {
+                    jw.value(toString(o));
+                }
+                jw.endArray();
+            }
+
+            Throwable t = tuple.getThrowable();
+            if (t != null) {
+                //Later we can look into using Logback Throwable handling
+                jw.key("exception").value(getStackTraceAsString(t));
+
+            }
+        }
+    }
+
 }

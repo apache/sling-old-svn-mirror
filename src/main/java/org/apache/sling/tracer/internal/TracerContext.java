@@ -82,11 +82,13 @@ class TracerContext {
     }
 
     public boolean log(Level level, String logger, String format, Object[] params) {
-        FormattingTuple tuple;
-
+        FormattingTuple tuple = null;
         if (QUERY_LOGGER.equals(logger)
                 && params != null && params.length == 2) {
-            tuple = logQuery((String) params[1]);
+            if (logQuery((String) params[1])){
+                //Get original log message
+                tuple = logWithLoggerName(logger, format, params);
+            }
         } else {
             tuple = logWithLoggerName(logger, format, params);
         }
@@ -132,12 +134,12 @@ class TracerContext {
         return tuple;
     }
 
-    private FormattingTuple logQuery(String query) {
+    private boolean logQuery(String query) {
         if (ignorableQuery(query)) {
-            return null;
+            return false;
         }
         queryCount++;
-        return logWithLoggerName("JCR", " Query {}", query);
+        return true;
     }
 
     private boolean ignorableQuery(String msg) {

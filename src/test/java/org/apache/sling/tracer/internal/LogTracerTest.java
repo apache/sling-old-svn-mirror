@@ -264,6 +264,46 @@ public class LogTracerTest {
         assertEquals(2, json.getJSONArray("requestProgressLogs").length());
     }
 
+    @Test
+    public void recordingWithTracing() throws Exception{
+        activateTracerAndServlet();
+        MockSlingHttpServletRequest request = new MockSlingHttpServletRequest(){
+            @Override
+            public RequestProgressTracker getRequestProgressTracker() {
+                return createTracker("x", "y");
+            }
+        };
+        request.setHeader(TracerLogServlet.HEADER_TRACER_RECORDING, "true");
+        request.setHeader(LogTracer.HEADER_TRACER_CONFIG, "a.b.c;level=trace,a.b;level=debug");
+
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        FilterChain chain = new FilterChain() {
+            @Override
+            public void doFilter(ServletRequest request, ServletResponse response)
+                    throws IOException, ServletException {
+                assertNotNull(context.getService(TurboFilter.class));
+                getLogContext().addTurboFilter(context.getService(TurboFilter.class));
+                getLogger("a.b").info("a.b-info");
+            }
+        };
+
+        prepareChain(chain).doFilter(request, response);
+
+        String requestId = getRequestId(response);
+        assertNotNull(requestId);
+        Recording r = ((TracerLogServlet)context.getService(Servlet.class)).getRecording(requestId);
+        assertTrue(r instanceof JSONRecording);
+        JSONRecording jr = (JSONRecording) r;
+
+        StringWriter sw = new StringWriter();
+        jr.render(sw);
+        JSONObject json = new JSONObject(sw.toString());
+
+        assertEquals(2, json.getJSONArray("requestProgressLogs").length());
+        assertEquals(1, json.getJSONArray("logs").length());
+    }
+
 
     private void activateTracer() {
         context.registerInjectActivateService(new LogTracer(),
