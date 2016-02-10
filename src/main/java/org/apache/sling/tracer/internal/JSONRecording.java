@@ -84,7 +84,7 @@ class JSONRecording implements Recording {
         return false;
     }
 
-    public long size() {
+    public int size() {
         if (json != null){
             return json.length;
         }

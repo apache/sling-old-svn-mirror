@@ -80,7 +80,7 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
                 .weigher(new Weigher<String, JSONRecording>() {
                     @Override
                     public int weigh(@Nonnull  String key, @Nonnull JSONRecording value) {
-                        return (int)value.size();
+                        return value.size();
                     }
                 })
                 .expireAfterAccess(cacheDurationInSecs, TimeUnit.SECONDS)
