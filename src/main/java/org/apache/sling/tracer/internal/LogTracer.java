@@ -117,6 +117,27 @@ public class LogTracer {
     )
     private static final String PROP_TRACER_SERVLET_ENABLED = "servletEnabled";
 
+    static final int PROP_TRACER_SERVLET_CACHE_SIZE_DEFAULT = 50;
+    @Property(label = "Recording Cache Size",
+            description = "Recording cache size in MB which would be used to temporary cache the recording data",
+            intValue = PROP_TRACER_SERVLET_CACHE_SIZE_DEFAULT
+    )
+    private static final String PROP_TRACER_SERVLET_CACHE_SIZE = "recordingCacheSizeInMB";
+
+    static final long PROP_TRACER_SERVLET_CACHE_DURATION_DEFAULT = 60 * 15;
+    @Property(label = "Recording Cache Duration",
+            description = "Time in seconds upto which the recording data would be held in memory before expiry",
+            longValue = PROP_TRACER_SERVLET_CACHE_DURATION_DEFAULT
+    )
+    private static final String PROP_TRACER_SERVLET_CACHE_DURATION = "recordingCacheDurationInSecs";
+
+    static final boolean PROP_TRACER_SERVLET_COMPRESS_DEFAULT = true;
+    @Property(label = "Compress Recording",
+            description = "Enable compression for recoding held in memory",
+            boolValue = PROP_TRACER_SERVLET_COMPRESS_DEFAULT
+    )
+    private static final String PROP_TRACER_SERVLET_COMPRESS = "recordingCompressionEnabled";
+
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(LogTracer.class);
 
     private final Map<String, TracerSet> tracers = new HashMap<String, TracerSet>();
@@ -150,8 +171,16 @@ public class LogTracer {
                     PROP_TRACER_SERVLET_ENABLED_DEFAULT);
 
             if (servletEnabled) {
-                this.logServlet = new TracerLogServlet(context);
+                int cacheSize = PropertiesUtil.toInteger(config.get(PROP_TRACER_SERVLET_CACHE_SIZE),
+                        PROP_TRACER_SERVLET_CACHE_SIZE_DEFAULT);
+                long cacheDuration = PropertiesUtil.toLong(config.get(PROP_TRACER_SERVLET_CACHE_DURATION),
+                        PROP_TRACER_SERVLET_CACHE_DURATION_DEFAULT);
+                boolean compressionEnabled = PropertiesUtil.toBoolean(config.get(PROP_TRACER_SERVLET_COMPRESS),
+                        PROP_TRACER_SERVLET_COMPRESS_DEFAULT);
+                this.logServlet = new TracerLogServlet(context, cacheSize, cacheDuration, compressionEnabled);
                 recorder = logServlet;
+                LOG.info("Tracer recoding enabled with cacheSize {} MB, expiry {} secs, compression {}",
+                        cacheSize, cacheDuration, compressionEnabled);
             }
             LOG.info("Log tracer enabled. Required filters registered. Tracer servlet enabled {}", servletEnabled);
         }
@@ -318,7 +347,7 @@ public class LogTracer {
                 if (tracerContext != null) {
                     disableCollector();
                 }
-                recording.done();
+                recorder.endRecording(recording);
             }
         }
 

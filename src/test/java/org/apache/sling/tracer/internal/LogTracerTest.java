@@ -110,10 +110,35 @@ public class LogTracerTest {
         assertEquals(2, context.getServices(Filter.class, null).length);
         assertNotNull(context.getService(Servlet.class));
 
+        TracerLogServlet logServlet = (TracerLogServlet) context.getService(Servlet.class);
+        assertEquals(true, logServlet.isCompressRecording());
+        assertEquals(LogTracer.PROP_TRACER_SERVLET_CACHE_SIZE_DEFAULT, logServlet.getCacheSizeInMB());
+        assertEquals(LogTracer.PROP_TRACER_SERVLET_CACHE_DURATION_DEFAULT, logServlet.getCacheDurationInSecs());
+
         MockOsgi.deactivate(tracer);
         assertNull(context.getService(Filter.class));
         assertNull(context.getService(Servlet.class));
     }
+
+    @Test
+    public void enableTracerLogServletWithConfig() throws Exception {
+        LogTracer tracer = context.registerInjectActivateService(new LogTracer(),
+                ImmutableMap.<String, Object>of(
+                        "enabled", "true",
+                        "servletEnabled", "true",
+                        "recordingCacheSizeInMB", "17",
+                        "recordingCacheDurationInSecs", "100",
+                        "recordingCompressionEnabled", "false"
+                ));
+        assertEquals(2, context.getServices(Filter.class, null).length);
+        assertNotNull(context.getService(Servlet.class));
+
+        TracerLogServlet logServlet = (TracerLogServlet) context.getService(Servlet.class);
+        assertEquals(false, logServlet.isCompressRecording());
+        assertEquals(17, logServlet.getCacheSizeInMB());
+        assertEquals(100, logServlet.getCacheDurationInSecs());
+    }
+
 
     @Test
     public void noTurboFilterRegisteredUnlessTracingRequested() throws Exception {

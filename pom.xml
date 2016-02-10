@@ -74,7 +74,7 @@
       <!-- the used logback version is only compatible with SLF4J 1.6 -->
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>1.6.0</version>
+      <version>1.7.5</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
