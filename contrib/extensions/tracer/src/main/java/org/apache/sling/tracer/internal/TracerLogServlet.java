@@ -21,6 +21,7 @@ package org.apache.sling.tracer.internal;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -116,7 +117,8 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
     }
 
     private void renderStatus(PrintWriter pw) {
-        pw.printf("<p class='statline'>Log Tracer Recordings: %d recordings</p>%n", cache.size());
+        pw.printf("<p class='statline'>Log Tracer Recordings: %d recordings, %s memory</p>%n", cache.size(),
+                memorySize());
 
         pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>");
         pw.println("<span style='float: left; margin-left: 1em'>Tracer Recordings</span>");
@@ -124,15 +126,25 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
         pw.println("</div>");
     }
 
+    private String memorySize() {
+        long size = 0;
+        for (JSONRecording r : cache.asMap().values()){
+            size += r.size();
+        }
+        return humanReadableByteCount(size);
+    }
+
     private void renderRequests(PrintWriter pw) {
         if (cache.size() > 0){
             pw.println("<ul>");
-            for (String id : cache.asMap().keySet()){
-                pw.printf("<li><a href='%s/%s.json'>%s</a></li>", LABEL, id, id);
+            for (Map.Entry<String, JSONRecording> e : cache.asMap().entrySet()){
+                String id = e.getKey();
+                JSONRecording r = e.getValue();
+                pw.printf("<li><a href='%s/%s.json'>%s</a> - %s (%s)</li>", LABEL, id, id, r.getUri(),
+                        humanReadableByteCount(r.size()));
             }
             pw.println("</ul>");
         }
-
     }
 
     private static String getRequestId(HttpServletRequest request) {
@@ -191,6 +203,23 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
 
     private static String generateRequestId() {
         return UUID.randomUUID().toString();
+    }
+
+    /**
+     * Returns a human-readable version of the file size, where the input represents
+     * a specific number of bytes. Based on http://stackoverflow.com/a/3758880/1035417
+     */
+    private static String humanReadableByteCount(long bytes) {
+        if (bytes < 0) {
+            return "0";
+        }
+        int unit = 1000;
+        if (bytes < unit) {
+            return bytes + " B";
+        }
+        int exp = (int) (Math.log(bytes) / Math.log(unit));
+        char pre = "kMGTPE".charAt(exp - 1);
+        return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
     }
 
     void resetCache(){
