@@ -242,6 +242,7 @@ public class JcrResourceUtil {
      *         adapting to a string.
      * @deprecated Use {@link ResourceUtil#getResourceSuperType(ResourceResolver, String)}
      */
+    @SuppressWarnings("deprecation")
     @Deprecated
     public static String getResourceSuperType(
             ResourceResolver resourceResolver, String resourceType) {
@@ -266,6 +267,7 @@ public class JcrResourceUtil {
      *         described above does not yield a resource super type.
      * @deprecated Call {@link ResourceUtil#findResourceSuperType(Resource)}
      */
+    @SuppressWarnings("deprecation")
     @Deprecated
     public static String getResourceSuperType(Resource resource) {
         String resourceSuperType = resource.getResourceSuperType();

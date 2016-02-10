@@ -32,6 +32,7 @@ import javax.jcr.SimpleCredentials;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.internal.HelperData;
@@ -44,20 +45,26 @@ import org.slf4j.LoggerFactory;
 
 public class JcrProviderStateFactory {
 
-    private static final Logger log = LoggerFactory.getLogger(JcrProviderStateFactory.class);
+    private final Logger logger = LoggerFactory.getLogger(JcrProviderStateFactory.class);
 
     private final ServiceReference repositoryReference;
 
     private final SlingRepository repository;
 
-    private final HelperData helperData;
+    private final DynamicClassLoaderManager dynamicClassLoaderManager;
 
-    public JcrProviderStateFactory(ServiceReference repositoryReference, SlingRepository repository, HelperData helperData) {
+    private final PathMapper pathMapper;
+
+    public JcrProviderStateFactory(final ServiceReference repositoryReference,
+            final SlingRepository repository,
+            final DynamicClassLoaderManager dynamicClassLoaderManager,
+            final PathMapper pathMapper) {
         this.repository = repository;
         this.repositoryReference = repositoryReference;
-        this.helperData = helperData;
+        this.dynamicClassLoaderManager = dynamicClassLoaderManager;
+        this.pathMapper = pathMapper;
     }
-    
+
     @SuppressWarnings("deprecation")
     JcrProviderState createProviderState(final @Nonnull Map<String, Object> authenticationInfo) throws LoginException {
         // by default any session used by the resource resolver returned is
@@ -87,7 +94,7 @@ public class JcrProviderStateFactory {
 
                         final SlingRepository repo = (SlingRepository) bc.getService(repositoryReference);
                         if (repo == null) {
-                            log.warn(
+                            logger.warn(
                                     "getResourceProviderInternal: Cannot login service because cannot get SlingRepository on behalf of bundle {} ({})",
                                     bc.getBundle().getSymbolicName(), bc.getBundle().getBundleId());
                             throw new LoginException(); // TODO: correct ??
@@ -158,10 +165,11 @@ public class JcrProviderStateFactory {
 
         session = handleImpersonation(session, authenticationInfo, logoutSession);
 
+        final HelperData data = new HelperData(this.dynamicClassLoaderManager.getDynamicClassLoader(), this.pathMapper);
         if (bc == null) {
-            return new JcrProviderState(session, helperData, logoutSession);
+            return new JcrProviderState(session, data, logoutSession);
         } else {
-            return new JcrProviderState(session, helperData, logoutSession, bc, repositoryReference);
+            return new JcrProviderState(session, data, logoutSession, bc, repositoryReference);
         }
     }
 
@@ -208,7 +216,7 @@ public class JcrProviderStateFactory {
      * exception is a {@link javax.jcr.LoginException} a {@link LoginException}
      * is created with the same information. Otherwise a {@link LoginException}
      * is created which wraps the repository exception.
-     * 
+     *
      * @param re
      *            The repository exception.
      * @return The login exception.
@@ -228,7 +236,7 @@ public class JcrProviderStateFactory {
      * <code>null</code> is returned. if a map is provided with a user name but
      * without a credentials object a new credentials object is created and all
      * values from the authentication info are added as attributes.
-     * 
+     *
      * @param authenticationInfo
      *            Optional authentication info
      * @return A credentials object or <code>null</code>
@@ -311,7 +319,7 @@ public class JcrProviderStateFactory {
     /**
      * Return the sudo user information. If the sudo user info is provided, it
      * is returned, otherwise <code>null</code> is returned.
-     * 
+     *
      * @param authenticationInfo
      *            Authentication info (not {@code null}).
      * @return The configured sudo user information or <code>null</code>
@@ -327,7 +335,7 @@ public class JcrProviderStateFactory {
     /**
      * Return the workspace name. If the workspace name is provided, it is
      * returned, otherwise <code>null</code> is returned.
-     * 
+     *
      * @param authenticationInfo
      *            Authentication info (not {@code null}).
      * @return The configured workspace name or <code>null</code>
@@ -344,7 +352,7 @@ public class JcrProviderStateFactory {
      * Returns the session provided as the user.jcr.session property of the
      * <code>authenticationInfo</code> map or <code>null</code> if the property
      * is not contained in the map or is not a <code>javax.jcr.Session</code>.
-     * 
+     *
      * @param authenticationInfo
      *            Authentication info (not {@code null}).
      * @return The user.jcr.session property or <code>null</code>

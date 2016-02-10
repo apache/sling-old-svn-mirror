@@ -23,6 +23,7 @@ import javax.jcr.RepositoryException;
 
 import org.apache.sling.jcr.resource.JcrPropertyMap;
 
+@SuppressWarnings("deprecation")
 public class JcrValueMap extends JcrPropertyMap {
 
     private final HelperData helper;

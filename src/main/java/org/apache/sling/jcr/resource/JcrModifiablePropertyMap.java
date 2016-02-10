@@ -38,6 +38,7 @@ import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
  *
  * @deprecated Resources should be adapted to a modifiable value map instead
  */
+@SuppressWarnings("deprecation")
 @Deprecated
 public final class JcrModifiablePropertyMap
     extends JcrPropertyMap
@@ -142,6 +143,7 @@ public final class JcrModifiablePropertyMap
     /**
      * @see org.apache.sling.api.resource.PersistableValueMap#reset()
      */
+    @Override
     public void reset() {
         if ( this.changedProperties != null ) {
             this.changedProperties = null;
@@ -154,6 +156,7 @@ public final class JcrModifiablePropertyMap
     /**
      * @see org.apache.sling.api.resource.PersistableValueMap#save()
      */
+    @Override
     @SuppressWarnings("javadoc")
     public void save() throws PersistenceException {
         if ( this.changedProperties == null || this.changedProperties.size() == 0 ) {
