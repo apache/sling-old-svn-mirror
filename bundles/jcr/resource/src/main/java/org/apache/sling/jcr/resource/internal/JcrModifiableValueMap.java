@@ -101,7 +101,7 @@ public final class JcrModifiableValueMap
         if ( entry == null ) {
             return null;
         }
-        return entry.convertToType(type, node, helper.dynamicClassLoader);
+        return entry.convertToType(type, node, helper.getDynamicClassLoader());
     }
 
     /**
@@ -446,13 +446,13 @@ public final class JcrModifiableValueMap
             this.cache.put(key, entry);
             final String name = escapeKeyName(key);
             if ( NodeUtil.MIXIN_TYPES.equals(name) ) {
-                NodeUtil.handleMixinTypes(node, entry.convertToType(String[].class, node, this.helper.dynamicClassLoader));
+                NodeUtil.handleMixinTypes(node, entry.convertToType(String[].class, node, this.helper.getDynamicClassLoader()));
             } else if ( "jcr:primaryType".equals(name) ) {
-                node.setPrimaryType(entry.convertToType(String.class, node, this.helper.dynamicClassLoader));
+                node.setPrimaryType(entry.convertToType(String.class, node, this.helper.getDynamicClassLoader()));
             } else if ( entry.isArray() ) {
-                node.setProperty(name, entry.convertToType(Value[].class, node, this.helper.dynamicClassLoader));
+                node.setProperty(name, entry.convertToType(Value[].class, node, this.helper.getDynamicClassLoader()));
             } else {
-                node.setProperty(name, entry.convertToType(Value.class, node, this.helper.dynamicClassLoader));
+                node.setProperty(name, entry.convertToType(Value.class, node, this.helper.getDynamicClassLoader()));
             }
         } catch (final RepositoryException re) {
             throw new IllegalArgumentException("Value for key " + key + " can't be put into node: " + value, re);

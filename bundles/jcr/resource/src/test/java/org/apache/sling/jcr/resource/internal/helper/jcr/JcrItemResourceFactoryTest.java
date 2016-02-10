@@ -18,18 +18,21 @@
  */
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
-import org.apache.jackrabbit.commons.JcrUtils;
-import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
-import org.apache.sling.jcr.resource.internal.HelperData;
-import org.apache.sling.jcr.resource.internal.PathMapperImpl;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
+
+import org.apache.jackrabbit.commons.JcrUtils;
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
+import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
+import org.apache.sling.jcr.resource.internal.HelperData;
+import org.apache.sling.jcr.resource.internal.PathMapperImpl;
 
 public class JcrItemResourceFactoryTest extends RepositoryTestBase {
 
@@ -85,7 +88,7 @@ public class JcrItemResourceFactoryTest extends RepositoryTestBase {
     }
 
     private void compareGetItemOrNull(String path, String expectedPath) throws RepositoryException {
-        HelperData helper = new HelperData(null, new PathMapperImpl());
+        HelperData helper = new HelperData(new AtomicReference<DynamicClassLoaderManager>(), new PathMapperImpl());
         Item item1 = new JcrItemResourceFactory(session, helper).getItemOrNull(path);
         Item item2 = new JcrItemResourceFactory(nonJackrabbitSession, helper).getItemOrNull(path);
         if (expectedPath == null) {

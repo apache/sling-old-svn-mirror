@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -86,6 +87,9 @@ import org.slf4j.LoggerFactory;
         @Property(name = ResourceProvider.PROPERTY_ATTRIBUTABLE, boolValue = true),
         @Property(name = ResourceProvider.PROPERTY_REFRESHABLE, boolValue = true),
 })
+@Reference(name = "dynamicClassLoaderManager",
+           referenceInterface = DynamicClassLoaderManager.class,
+           cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
 public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
 
     /** Logger */
@@ -120,28 +124,26 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     @Reference
     private PathMapper pathMapper;
 
-    /** The dynamic class loader */
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
-    private volatile DynamicClassLoaderManager dynamicClassLoaderManager;
-
     /** This service is only available on OAK, therefore optional and static) */
     @Reference(policy=ReferencePolicy.STATIC, cardinality=ReferenceCardinality.OPTIONAL_UNARY)
     private Executor executor;
 
     /** The JCR observation listener. */
-    private Closeable listener;
+    private volatile Closeable listener;
 
-    private SlingRepository repository;
+    private volatile SlingRepository repository;
 
     private int observationQueueLength;
 
-    private boolean optimizeForOak;
+    private volatile boolean optimizeForOak;
 
-    private String root;
+    private volatile String root;
 
-    private BundleContext bundleCtx;
+    private volatile BundleContext bundleCtx;
 
-    private JcrProviderStateFactory stateFactory;
+    private volatile JcrProviderStateFactory stateFactory;
+
+    private final AtomicReference<DynamicClassLoaderManager> classLoaderManagerReference = new AtomicReference<DynamicClassLoaderManager>();
 
     @Activate
     protected void activate(final ComponentContext context) throws RepositoryException {
@@ -161,13 +163,21 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
         this.root = PropertiesUtil.toString(context.getProperties().get(ResourceProvider.PROPERTY_ROOT), "/");
         this.bundleCtx = context.getBundleContext();
 
-        this.stateFactory = new JcrProviderStateFactory(repositoryReference, repository, dynamicClassLoaderManager, pathMapper);
+        this.stateFactory = new JcrProviderStateFactory(repositoryReference, repository, classLoaderManagerReference, pathMapper);
     }
 
     @Deactivate
     protected void deactivate() {
         this.bundleCtx = null;
         this.stateFactory = null;
+    }
+
+    protected void bindDynamicClassLoaderManager(final DynamicClassLoaderManager dynamicClassLoaderManager) {
+        this.classLoaderManagerReference.set(dynamicClassLoaderManager);
+    }
+
+    protected void unbindDynamicClassLoaderManager(final DynamicClassLoaderManager dynamicClassLoaderManager) {
+        this.classLoaderManagerReference.compareAndSet(dynamicClassLoaderManager, null);
     }
 
     @Override

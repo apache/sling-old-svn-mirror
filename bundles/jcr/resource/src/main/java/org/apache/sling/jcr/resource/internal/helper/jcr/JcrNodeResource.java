@@ -137,7 +137,7 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
             try {
                 getNode().getSession().checkPermission(getPath(),
                     "set_property");
-                return (Type) new JcrModifiablePropertyMap(getNode(), this.helper.dynamicClassLoader);
+                return (Type) new JcrModifiablePropertyMap(getNode(), this.helper.getDynamicClassLoader());
             } catch (AccessControlException ace) {
                 // the user has no write permission, cannot adapt
                 LOGGER.debug(
