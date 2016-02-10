@@ -30,11 +30,11 @@ import aQute.bnd.annotation.ConsumerType;
  * Service interface which can be implemented to define an algorithm used to pick
  * resources to be merged. For each picker service, a separate {@link ResourceProviderFactory}
  * will be exposed at the MERGE_ROOT of the picker.
- * @deprecated
+ *
+ * @since 1.2
  */
-@Deprecated
 @ConsumerType
-public interface MergedResourcePicker {
+public interface MergedResourcePicker2 {
 
     /**
      * Service property name identifying the root path for the merged resources.
@@ -42,7 +42,7 @@ public interface MergedResourcePicker {
      * The value of this service property must be of type String and must not end
      * in a slash.
      */
-    String MERGE_ROOT = MergedResourcePicker2.MERGE_ROOT;
+    String MERGE_ROOT = "merge.root";
 
     /**
      * Service property name specifying whether the resources are read-only
@@ -50,7 +50,7 @@ public interface MergedResourcePicker {
      * to <code>true</code>. The value of this property must be of type
      * Boolean.
      */
-    String READ_ONLY = MergedResourcePicker2.READ_ONLY;
+    String READ_ONLY = "merge.readOnly";
 
     /**
      * Service property name specifying whether the parent hierarchy is
@@ -58,10 +58,17 @@ public interface MergedResourcePicker {
      * property defaults to <code>false</code>. The value of this
      * property must be of type Boolean.
      */
-    String TRAVERSE_PARENT = MergedResourcePicker2.TRAVERSE_PARENT;
+    String TRAVERSE_PARENT = "merge.traverseParent";
 
     /**
-     * @see #pickResources(ResourceResolver, String, Resource)
+     * Method invoked by the MergingResourceProvider to identify the resources to be merged for a given
+     * relative path. The resources returned may be either resources returned from the ResourceResolver
+     * directory or an instance of NonExistingResource.
+     *
+     * @param resolver the ResourceResolver
+     * @param relativePath the path relative to the merge root
+     * @param relatedResource an optional resource which is related to the given path (parent or child)
+     * @return a List of Resource objects
      */
-    List<Resource> pickResources(ResourceResolver resolver, String relativePath);
+    List<Resource> pickResources(ResourceResolver resolver, String relativePath, Resource relatedResource);
 }

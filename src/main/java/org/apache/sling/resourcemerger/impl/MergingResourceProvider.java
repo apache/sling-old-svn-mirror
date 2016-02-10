@@ -26,7 +26,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
+import org.apache.sling.resourcemerger.spi.MergedResourcePicker2;
 import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
@@ -35,14 +35,14 @@ public class MergingResourceProvider extends ResourceProvider<Void> {
 
     protected final String mergeRootPath;
 
-    protected final MergedResourcePicker picker;
+    protected final MergedResourcePicker2 picker;
 
     private final boolean readOnly;
 
     protected final boolean traverseHierarchie;
 
     MergingResourceProvider(final String mergeRootPath,
-            final MergedResourcePicker picker,
+            final MergedResourcePicker2 picker,
             final boolean readOnly,
             final boolean traverseHierarchie) {
         this.mergeRootPath = mergeRootPath;

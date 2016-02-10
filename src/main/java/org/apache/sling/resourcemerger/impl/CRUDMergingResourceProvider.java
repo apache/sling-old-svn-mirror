@@ -29,7 +29,7 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
+import org.apache.sling.resourcemerger.spi.MergedResourcePicker2;
 import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 
@@ -40,7 +40,7 @@ public class CRUDMergingResourceProvider
     extends MergingResourceProvider {
 
     public CRUDMergingResourceProvider(final String mergeRootPath,
-            final MergedResourcePicker picker,
+            final MergedResourcePicker2 picker,
             final boolean traverseHierarchie) {
         super(mergeRootPath, picker, false, traverseHierarchie);
     }
@@ -64,7 +64,7 @@ public class CRUDMergingResourceProvider
 
         // Loop over resources
         boolean isUnderlying = true;
-        final Iterator<Resource> iter = this.picker.pickResources(resolver, relativePath).iterator();
+        final Iterator<Resource> iter = this.picker.pickResources(resolver, relativePath, null).iterator();
         while ( iter.hasNext() ) {
             final Resource rsrc = iter.next();
             holder.count++;
