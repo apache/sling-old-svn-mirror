@@ -72,39 +72,43 @@ public class LegacyResourceProviderWhiteboard {
 
     private Map<Object, List<ServiceRegistration>> registrations = new HashMap<Object, List<ServiceRegistration>>();
 
-    protected void bindResourceProvider(ServiceReference ref) {
-        BundleContext bundleContext = ref.getBundle().getBundleContext();
-        ResourceProvider provider = (ResourceProvider) bundleContext.getService(ref);
-        String[] propertyNames = ref.getPropertyKeys();
-        boolean ownsRoot = toBoolean(ref.getProperty(OWNS_ROOTS), false);
+    protected void bindResourceProvider(final ServiceReference ref) {
+        final BundleContext bundleContext = ref.getBundle().getBundleContext();
+        final ResourceProvider provider = (ResourceProvider) bundleContext.getService(ref);
+        if ( provider != null ) {
+            final String[] propertyNames = ref.getPropertyKeys();
+            final boolean ownsRoot = toBoolean(ref.getProperty(OWNS_ROOTS), false);
 
-        List<ServiceRegistration> newServices = new ArrayList<ServiceRegistration>();
-        for (String path : PropertiesUtil.toStringArray(ref.getProperty(ROOTS), new String[0])) {
-            Dictionary<String, Object> newProps = new Hashtable<String, Object>();
-            newProps.put(PROPERTY_AUTHENTICATE, AuthType.no.toString());
-            newProps.put(PROPERTY_MODIFIABLE, provider instanceof ModifyingResourceProvider);
-            newProps.put(PROPERTY_ADAPTABLE, provider instanceof Adaptable);
-            newProps.put(PROPERTY_ATTRIBUTABLE, provider instanceof AttributableResourceProvider);
-            newProps.put(PROPERTY_REFRESHABLE, provider instanceof RefreshableResourceProvider);
-            newProps.put(PROPERTY_NAME, provider.getClass().getName());
-            newProps.put(PROPERTY_ROOT, normalizePath(path));
-            if (ArrayUtils.contains(propertyNames, SERVICE_PID)) {
-                newProps.put(ORIGINAL_SERVICE_PID, ref.getProperty(SERVICE_PID));
-            }
-            if (ArrayUtils.contains(propertyNames, USE_RESOURCE_ACCESS_SECURITY)) {
-                newProps.put(PROPERTY_USE_RESOURCE_ACCESS_SECURITY, ref.getProperty(USE_RESOURCE_ACCESS_SECURITY));
-            }
-            if (ArrayUtils.contains(propertyNames, SERVICE_RANKING)) {
-                newProps.put(SERVICE_RANKING, ref.getProperty(SERVICE_RANKING));
-            }
+            final List<ServiceRegistration> newServices = new ArrayList<ServiceRegistration>();
+            for (final String path : PropertiesUtil.toStringArray(ref.getProperty(ROOTS), new String[0])) {
+                if ( path != null && !path.isEmpty() ) {
+                    final Dictionary<String, Object> newProps = new Hashtable<String, Object>();
+                    newProps.put(PROPERTY_AUTHENTICATE, AuthType.no.toString());
+                    newProps.put(PROPERTY_MODIFIABLE, provider instanceof ModifyingResourceProvider);
+                    newProps.put(PROPERTY_ADAPTABLE, provider instanceof Adaptable);
+                    newProps.put(PROPERTY_ATTRIBUTABLE, provider instanceof AttributableResourceProvider);
+                    newProps.put(PROPERTY_REFRESHABLE, provider instanceof RefreshableResourceProvider);
+                    newProps.put(PROPERTY_NAME, provider.getClass().getName());
+                    newProps.put(PROPERTY_ROOT, normalizePath(path));
+                    if (ArrayUtils.contains(propertyNames, SERVICE_PID)) {
+                        newProps.put(ORIGINAL_SERVICE_PID, ref.getProperty(SERVICE_PID));
+                    }
+                    if (ArrayUtils.contains(propertyNames, USE_RESOURCE_ACCESS_SECURITY)) {
+                        newProps.put(PROPERTY_USE_RESOURCE_ACCESS_SECURITY, ref.getProperty(USE_RESOURCE_ACCESS_SECURITY));
+                    }
+                    if (ArrayUtils.contains(propertyNames, SERVICE_RANKING)) {
+                        newProps.put(SERVICE_RANKING, ref.getProperty(SERVICE_RANKING));
+                    }
 
-            String[] languages = PropertiesUtil.toStringArray(ref.getProperty(LANGUAGES), new String[0]);
-            ServiceRegistration reg = bundleContext.registerService(
-                    org.apache.sling.spi.resource.provider.ResourceProvider.class.getName(),
-                    new LegacyResourceProviderAdapter(provider, languages, ownsRoot), newProps);
-            newServices.add(reg);
+                    String[] languages = PropertiesUtil.toStringArray(ref.getProperty(LANGUAGES), new String[0]);
+                    ServiceRegistration reg = bundleContext.registerService(
+                            org.apache.sling.spi.resource.provider.ResourceProvider.class.getName(),
+                            new LegacyResourceProviderAdapter(provider, languages, ownsRoot), newProps);
+                    newServices.add(reg);
+                }
+            }
+            registrations.put(provider, newServices);
         }
-        registrations.put(provider, newServices);
     }
 
     protected void unbindResourceProvider(final ResourceProvider provider, final Map<String, Object> props) {
@@ -113,42 +117,46 @@ public class LegacyResourceProviderWhiteboard {
         }
     }
 
-    protected void bindResourceProviderFactory(ServiceReference ref) {
-        BundleContext bundleContext = ref.getBundle().getBundleContext();
-        ResourceProviderFactory factory = (ResourceProviderFactory) bundleContext.getService(ref);
-        String[] propertyNames = ref.getPropertyKeys();
-        boolean ownsRoot = toBoolean(ref.getProperty(OWNS_ROOTS), false);
+    protected void bindResourceProviderFactory(final ServiceReference ref) {
+        final BundleContext bundleContext = ref.getBundle().getBundleContext();
+        final ResourceProviderFactory factory = (ResourceProviderFactory) bundleContext.getService(ref);
+        if ( factory != null ) {
+            final String[] propertyNames = ref.getPropertyKeys();
+            final boolean ownsRoot = toBoolean(ref.getProperty(OWNS_ROOTS), false);
 
-        List<ServiceRegistration> newServices = new ArrayList<ServiceRegistration>();
-        for (String path : PropertiesUtil.toStringArray(ref.getProperty(ROOTS), new String[0])) {
-            Dictionary<String, Object> newProps = new Hashtable<String, Object>();
-            if (PropertiesUtil.toBoolean(ref.getProperty(PROPERTY_REQUIRED), false)) {
-                newProps.put(PROPERTY_AUTHENTICATE, AuthType.required.toString());
-            } else {
-                newProps.put(PROPERTY_AUTHENTICATE, AuthType.lazy.toString());
+            final List<ServiceRegistration> newServices = new ArrayList<ServiceRegistration>();
+            for (final String path : PropertiesUtil.toStringArray(ref.getProperty(ROOTS), new String[0])) {
+                if ( path != null && !path.isEmpty() ) {
+                    final Dictionary<String, Object> newProps = new Hashtable<String, Object>();
+                    if (PropertiesUtil.toBoolean(ref.getProperty(PROPERTY_REQUIRED), false)) {
+                        newProps.put(PROPERTY_AUTHENTICATE, AuthType.required.toString());
+                    } else {
+                        newProps.put(PROPERTY_AUTHENTICATE, AuthType.lazy.toString());
+                    }
+                    newProps.put(PROPERTY_MODIFIABLE, true);
+                    newProps.put(PROPERTY_ADAPTABLE, true);
+                    newProps.put(PROPERTY_ATTRIBUTABLE, true);
+                    newProps.put(PROPERTY_REFRESHABLE, true);
+                    newProps.put(PROPERTY_NAME, factory.getClass().getName());
+                    newProps.put(PROPERTY_ROOT, normalizePath(path));
+                    if (ArrayUtils.contains(propertyNames, SERVICE_PID)) {
+                        newProps.put(ORIGINAL_SERVICE_PID, ref.getProperty(SERVICE_PID));
+                    }
+                    if (ArrayUtils.contains(propertyNames, USE_RESOURCE_ACCESS_SECURITY)) {
+                        newProps.put(PROPERTY_USE_RESOURCE_ACCESS_SECURITY, ref.getProperty(USE_RESOURCE_ACCESS_SECURITY));
+                    }
+                    if (ArrayUtils.contains(propertyNames, SERVICE_RANKING)) {
+                        newProps.put(SERVICE_RANKING, ref.getProperty(SERVICE_RANKING));
+                    }
+                    String[] languages = PropertiesUtil.toStringArray(ref.getProperty(LANGUAGES), new String[0]);
+                    ServiceRegistration reg = bundleContext.registerService(
+                            org.apache.sling.spi.resource.provider.ResourceProvider.class.getName(),
+                            new LegacyResourceProviderFactoryAdapter(factory, languages, ownsRoot), newProps);
+                    newServices.add(reg);
+                }
             }
-            newProps.put(PROPERTY_MODIFIABLE, true);
-            newProps.put(PROPERTY_ADAPTABLE, true);
-            newProps.put(PROPERTY_ATTRIBUTABLE, true);
-            newProps.put(PROPERTY_REFRESHABLE, true);
-            newProps.put(PROPERTY_NAME, factory.getClass().getName());
-            newProps.put(PROPERTY_ROOT, normalizePath(path));
-            if (ArrayUtils.contains(propertyNames, SERVICE_PID)) {
-                newProps.put(ORIGINAL_SERVICE_PID, ref.getProperty(SERVICE_PID));
-            }
-            if (ArrayUtils.contains(propertyNames, USE_RESOURCE_ACCESS_SECURITY)) {
-                newProps.put(PROPERTY_USE_RESOURCE_ACCESS_SECURITY, ref.getProperty(USE_RESOURCE_ACCESS_SECURITY));
-            }
-            if (ArrayUtils.contains(propertyNames, SERVICE_RANKING)) {
-                newProps.put(SERVICE_RANKING, ref.getProperty(SERVICE_RANKING));
-            }
-            String[] languages = PropertiesUtil.toStringArray(ref.getProperty(LANGUAGES), new String[0]);
-            ServiceRegistration reg = bundleContext.registerService(
-                    org.apache.sling.spi.resource.provider.ResourceProvider.class.getName(),
-                    new LegacyResourceProviderFactoryAdapter(factory, languages, ownsRoot), newProps);
-            newServices.add(reg);
+            registrations.put(factory, newServices);
         }
-        registrations.put(factory, newServices);
     }
 
     protected void unbindResourceProviderFactory(final ResourceProviderFactory factory,
@@ -158,7 +166,7 @@ public class LegacyResourceProviderWhiteboard {
         }
     }
 
-    private static String normalizePath(String path) {
+    private static String normalizePath(final String path) {
         String result = path;
         result = StringUtils.removeEnd(path, "/");
         if (result != null && !result.startsWith("/")) {

@@ -1299,10 +1299,19 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
     @Override
     public Resource getParent(final Resource child) {
-        Resource rsrc = this.control.getParent(this.context, child);
-        if (rsrc != null ) {
-            rsrc.getResourceMetadata().setResolutionPath(rsrc.getPath());
-            rsrc = this.factory.getResourceDecoratorTracker().decorate(rsrc);
+        Resource rsrc = null;
+        final String parentPath = ResourceUtil.getParent(child.getPath());
+        if ( parentPath != null ) {
+            // if the parent path is relative, resolve using search paths.
+            if ( !parentPath.startsWith("/") ) {
+                rsrc = context.getResourceResolver().getResource(parentPath);
+            } else {
+                rsrc = this.control.getParent(this.context, parentPath, child);
+                if (rsrc != null ) {
+                    rsrc.getResourceMetadata().setResolutionPath(rsrc.getPath());
+                    rsrc = this.factory.getResourceDecoratorTracker().decorate(rsrc);
+                }
+            }
         }
         return rsrc;
     }
