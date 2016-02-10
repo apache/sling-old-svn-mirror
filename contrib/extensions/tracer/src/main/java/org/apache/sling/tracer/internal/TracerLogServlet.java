@@ -25,19 +25,22 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.Weigher;
+import org.apache.commons.io.FileUtils;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
 import org.osgi.framework.BundleContext;
 
 class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorder {
-    static final String ATTR_REQUEST_ID = TracerLogServlet.class.getName();
+    static final String ATTR_RECORDING = TracerLogServlet.class.getName();
 
     public static final String CLEAR = "clear";
 
@@ -53,17 +56,49 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
 
     private final Cache<String, JSONRecording> cache;
 
-    private boolean compressRecording = true;
+    private final boolean compressRecording;
 
-    public TracerLogServlet(BundleContext context) {
+    private final int cacheSizeInMB;
+
+    private final long cacheDurationInSecs;
+
+    public TracerLogServlet(BundleContext context){
+        this(context,
+                LogTracer.PROP_TRACER_SERVLET_CACHE_SIZE_DEFAULT,
+                LogTracer.PROP_TRACER_SERVLET_CACHE_DURATION_DEFAULT,
+                LogTracer.PROP_TRACER_SERVLET_COMPRESS_DEFAULT
+        );
+    }
+
+    public TracerLogServlet(BundleContext context, int cacheSizeInMB, long cacheDurationInSecs, boolean compressionEnabled) {
         super(LABEL, "Sling Tracer", "Sling", null);
-        //TODO Make things configurable
+        this.compressRecording = compressionEnabled;
+        this.cacheDurationInSecs = cacheDurationInSecs;
+        this.cacheSizeInMB = cacheSizeInMB;
         this.cache = CacheBuilder.newBuilder()
-                .maximumSize(100)
-                .expireAfterAccess(10, TimeUnit.MINUTES)
+                .maximumWeight(cacheSizeInMB * FileUtils.ONE_MB)
+                .weigher(new Weigher<String, JSONRecording>() {
+                    @Override
+                    public int weigh(@Nonnull  String key, @Nonnull JSONRecording value) {
+                        return (int)value.size();
+                    }
+                })
+                .expireAfterAccess(cacheDurationInSecs, TimeUnit.SECONDS)
                 .recordStats()
                 .build();
         register(context);
+    }
+
+    boolean isCompressRecording() {
+        return compressRecording;
+    }
+
+    int getCacheSizeInMB() {
+        return cacheSizeInMB;
+    }
+
+    long getCacheDurationInSecs() {
+        return cacheDurationInSecs;
     }
 
     //~-----------------------------------------------< WebConsole Plugin >
@@ -119,8 +154,9 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
     }
 
     private void renderStatus(PrintWriter pw) {
-        pw.printf("<p class='statline'>Log Tracer Recordings: %d recordings, %s memory</p>%n", cache.size(),
-                memorySize());
+        pw.printf("<p class='statline'>Log Tracer Recordings: %d recordings, %s memory " +
+                "(Max %dMB, Expired in %d secs)</p>%n", cache.size(),
+                memorySize(), cacheSizeInMB, cacheDurationInSecs);
 
         pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>");
         pw.println("<span style='float: left; margin-left: 1em'>Tracer Recordings</span>");
@@ -167,15 +203,13 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
             return Recording.NOOP;
         }
 
-        if (request.getAttribute(ATTR_REQUEST_ID) != null){
+        if (request.getAttribute(ATTR_RECORDING) != null){
             //Already processed
             return getRecordingForRequest(request);
         }
 
         String requestId = generateRequestId();
         JSONRecording recording = record(requestId, request);
-
-        request.setAttribute(ATTR_REQUEST_ID, requestId);
 
         response.setHeader(HEADER_TRACER_REQUEST_ID, requestId);
         response.setHeader(HEADER_TRACER_PROTOCOL_VERSION, String.valueOf(TRACER_PROTOCOL_VERSION));
@@ -185,11 +219,20 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
 
     @Override
     public Recording getRecordingForRequest(HttpServletRequest request) {
-        String requestId = (String) request.getAttribute(ATTR_REQUEST_ID);
-        if (requestId != null){
-            return getRecording(requestId);
+        Recording recording = (Recording) request.getAttribute(ATTR_RECORDING);
+        if (recording == null){
+            recording = Recording.NOOP;
         }
-        return Recording.NOOP;
+        return recording;
+    }
+
+    @Override
+    public void endRecording(Recording recording) {
+        if (recording instanceof JSONRecording) {
+            JSONRecording r = (JSONRecording) recording;
+            r.done();
+            cache.put(r.getRequestId(), r);
+        }
     }
 
     Recording getRecording(String requestId) {
@@ -199,7 +242,7 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
 
     private JSONRecording record(String requestId, HttpServletRequest request) {
         JSONRecording data = new JSONRecording(requestId, request, compressRecording);
-        cache.put(requestId, data);
+        request.setAttribute(ATTR_RECORDING, data);
         return data;
     }
 
@@ -211,6 +254,7 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
      * Returns a human-readable version of the file size, where the input represents
      * a specific number of bytes. Based on http://stackoverflow.com/a/3758880/1035417
      */
+    @SuppressWarnings("Duplicates")
     private static String humanReadableByteCount(long bytes) {
         if (bytes < 0) {
             return "0";

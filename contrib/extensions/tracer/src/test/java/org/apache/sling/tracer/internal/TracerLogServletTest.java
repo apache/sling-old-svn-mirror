@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import javax.annotation.Nonnull;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -98,7 +99,7 @@ public class TracerLogServletTest {
 
         Recording recording = logServlet.startRecording(request, response);
         recording.registerTracker(createTracker("x" ,"y"));
-        recording.done();
+        logServlet.endRecording(recording);
 
         ArgumentCaptor<String> requestIdCaptor = ArgumentCaptor.forClass(String.class);
         verify(response).setHeader(eq(TracerLogServlet.HEADER_TRACER_REQUEST_ID), requestIdCaptor.capture());
@@ -135,7 +136,7 @@ public class TracerLogServletTest {
         }
 
         @Override
-        public void write(byte[] b, int off, int len) throws IOException {
+        public void write(@Nonnull byte[] b, int off, int len) throws IOException {
             baos.write(b, off, len);
         }
     }

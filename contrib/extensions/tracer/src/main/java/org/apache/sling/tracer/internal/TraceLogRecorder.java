@@ -33,9 +33,16 @@ interface TraceLogRecorder {
         public Recording getRecordingForRequest(HttpServletRequest request) {
             return Recording.NOOP;
         }
+
+        @Override
+        public void endRecording(Recording recording) {
+
+        }
     };
 
     Recording startRecording(HttpServletRequest request, HttpServletResponse response);
 
     Recording getRecordingForRequest(HttpServletRequest request);
+
+    void endRecording(Recording recording);
 }

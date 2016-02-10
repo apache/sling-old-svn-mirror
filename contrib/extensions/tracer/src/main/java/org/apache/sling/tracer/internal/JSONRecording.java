@@ -95,6 +95,10 @@ class JSONRecording implements Recording {
         return uri;
     }
 
+    public String getRequestId() {
+        return requestId;
+    }
+
     //~---------------------------------------< Recording >
 
     @Override
@@ -112,7 +116,6 @@ class JSONRecording implements Recording {
         this.tracker = tracker;
     }
 
-    @Override
     public void done() {
         try {
             if (json == null) {
