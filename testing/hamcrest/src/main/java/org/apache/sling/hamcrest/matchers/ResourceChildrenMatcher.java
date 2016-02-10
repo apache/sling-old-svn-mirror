@@ -21,42 +21,60 @@ import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
 import org.hamcrest.Description;
+import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 
+/**
+ * A matcher which matches if the given resource has at least the child resources with the names given in the constructor.
+ * Optionally it can match only if the resource's children match exactly the given child names.
+ * Also you can validate the order in case of exact matching.
+ *
+ */
 public class ResourceChildrenMatcher extends TypeSafeMatcher<Resource> {
-    
-    private final List<String> childNames;
-    
-    public ResourceChildrenMatcher(List<String> childNames) {
+
+    // this should be "Iterable<? extends Resource>" instead of "?" but cannot until https://github.com/hamcrest/JavaHamcrest/issues/107 is solved
+    private final Matcher<?> iterarableMatcher;
+
+    public ResourceChildrenMatcher(List<String> childNames, boolean exactMatch, boolean validateOrder) {
         if ( childNames == null || childNames.isEmpty() ) {
             throw new IllegalArgumentException("childNames is null or empty");
         }
-        
-        this.childNames = childNames;
+
+        if (!exactMatch && validateOrder) {
+            throw new IllegalArgumentException("Can only validate the order for exact matches");
+        }
+
+        List<Matcher<? super Resource>> resourceMatchers = new ArrayList<Matcher<? super Resource>>();
+        for (String childName : childNames) {
+            resourceMatchers.add(new ResourceNameMatcher(childName));
+        }
+
+        if (exactMatch) {
+            if (validateOrder) {
+                this.iterarableMatcher = org.hamcrest.collection.IsIterableContainingInOrder.contains(resourceMatchers);
+            } else {
+                this.iterarableMatcher = org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder(resourceMatchers);
+            }
+        } else {
+            this.iterarableMatcher = org.hamcrest.core.IsCollectionContaining.hasItems(resourceMatchers.toArray(new ResourceNameMatcher[0]));
+        }
     }
 
     @Override
     public void describeTo(Description description) {
-        description.appendText("Resource with children ").appendValueList("[", ",", "]", childNames);
+        iterarableMatcher.describeTo(description);
     }
 
     @Override
     protected boolean matchesSafely(Resource item) {
-        for ( String childName : childNames ) {
-            if ( item.getChild(childName) == null ) {
-                return false;
-            }
-        }
-        return true;
+        return iterarableMatcher.matches(item.getChildren());
     }
 
     @Override
     protected void describeMismatchSafely(Resource item, Description mismatchDescription) {
-        List<String> actualChildNames = new ArrayList<String>();
-        for (Resource child : item.getChildren()) {
-            actualChildNames.add(child.getName());
-        }
-        mismatchDescription.appendText("was Resource with children ").appendValueList("[", ",", "]", actualChildNames).appendText(" (resource: ").appendValue(item).appendText(")");
+        // the default would be something like ".. but item 0 was <Resource.toString()>"
+        // use the iterable matcher here instead
+        iterarableMatcher.describeMismatch(item.getChildren(), mismatchDescription);
     }
 
 }
