@@ -51,6 +51,8 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.FormattingTuple;
 import org.slf4j.helpers.MessageFormatter;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 class JSONRecording implements Recording, Comparable<JSONRecording> {
     private static final Logger log = LoggerFactory.getLogger(JSONRecording.class);
     private final String method;
@@ -73,16 +75,16 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
 
     public boolean render(Writer w) throws IOException {
         if (json != null) {
-            Reader r = new InputStreamReader(getInputStream(), "UTF-8");
+            Reader r = new InputStreamReader(getInputStream(false), "UTF-8");
             IOUtils.copy(r, w);
             return true;
         }
         return false;
     }
 
-    public boolean render(OutputStream os) throws IOException {
+    public boolean render(OutputStream os, boolean compressed) throws IOException {
         if (json != null) {
-            IOUtils.copyLarge(getInputStream(), os);
+            IOUtils.copyLarge(getInputStream(compressed), os);
             return true;
         }
         return false;
@@ -200,8 +202,14 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
         jw.endArray();
     }
 
-    private InputStream getInputStream() throws IOException {
+    private InputStream getInputStream(boolean compressed) throws IOException {
         InputStream is = new ByteArrayInputStream(json);
+
+        if (compressed) {
+            checkArgument(compress, "Cannot provide compressed response with compression disabled");
+            return is;
+        }
+
         if (compress) {
             is = new GZIPInputStream(is);
         }

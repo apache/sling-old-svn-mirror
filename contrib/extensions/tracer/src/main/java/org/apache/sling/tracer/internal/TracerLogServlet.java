@@ -66,19 +66,24 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
 
     private final long cacheDurationInSecs;
 
+    private final boolean gzipResponse;
+
     public TracerLogServlet(BundleContext context){
         this(context,
                 LogTracer.PROP_TRACER_SERVLET_CACHE_SIZE_DEFAULT,
                 LogTracer.PROP_TRACER_SERVLET_CACHE_DURATION_DEFAULT,
-                LogTracer.PROP_TRACER_SERVLET_COMPRESS_DEFAULT
+                LogTracer.PROP_TRACER_SERVLET_COMPRESS_DEFAULT,
+                LogTracer.PROP_TRACER_SERVLET_GZIP_RESPONSE_DEFAULT
         );
     }
 
-    public TracerLogServlet(BundleContext context, int cacheSizeInMB, long cacheDurationInSecs, boolean compressionEnabled) {
+    public TracerLogServlet(BundleContext context, int cacheSizeInMB, long cacheDurationInSecs,
+                            boolean compressionEnabled, boolean gzipResponse) {
         super(LABEL, "Sling Tracer", "Sling", null);
         this.compressRecording = compressionEnabled;
         this.cacheDurationInSecs = cacheDurationInSecs;
         this.cacheSizeInMB = cacheSizeInMB;
+        this.gzipResponse = compressionEnabled && gzipResponse;
         this.cache = CacheBuilder.newBuilder()
                 .maximumWeight(cacheSizeInMB * FileUtils.ONE_MB)
                 .weigher(new Weigher<String, JSONRecording>() {
@@ -95,6 +100,10 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
 
     boolean isCompressRecording() {
         return compressRecording;
+    }
+
+    public boolean isGzipResponse() {
+        return gzipResponse;
     }
 
     int getCacheSizeInMB() {
@@ -121,7 +130,8 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
                 if (requestId != null) {
                     JSONRecording recording = cache.getIfPresent(requestId);
                     if (recording != null){
-                        responseDone = recording.render(response.getOutputStream());
+                        boolean shouldGZip = prepareForGZipResponse(request, response);
+                        responseDone = recording.render(response.getOutputStream(), shouldGZip);
                     }
                 }
 
@@ -150,6 +160,30 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
     @Override
     protected boolean isHtmlRequest(HttpServletRequest request) {
         return request.getRequestURI().endsWith(LABEL);
+    }
+
+    private boolean prepareForGZipResponse(HttpServletRequest request, HttpServletResponse response) {
+        if (!gzipResponse) {
+            return false;
+        }
+
+        String acceptEncoding = request.getHeader("Accept-Encoding");
+        boolean acceptsGzip = acceptEncoding != null && accepts(acceptEncoding, "gzip");
+
+        if (acceptsGzip) {
+            response.setHeader("Content-Encoding", "gzip");
+        }
+        return acceptsGzip;
+    }
+
+    /**
+     * Returns true if the given accept header accepts the given value.
+     * @param acceptHeader The accept header.
+     * @param toAccept The value to be accepted.
+     * @return True if the given accept header accepts the given value.
+     */
+    private static boolean accepts(String acceptHeader, String toAccept) {
+        return acceptHeader.contains(toAccept) || acceptHeader.contains("*/*");
     }
 
     private static void prepareJSONResponse(HttpServletResponse response) {

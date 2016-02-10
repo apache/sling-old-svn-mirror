@@ -123,20 +123,41 @@ public class LogTracerTest {
     @Test
     public void enableTracerLogServletWithConfig() throws Exception {
         LogTracer tracer = context.registerInjectActivateService(new LogTracer(),
-                ImmutableMap.<String, Object>of(
-                        "enabled", "true",
-                        "servletEnabled", "true",
-                        "recordingCacheSizeInMB", "17",
-                        "recordingCacheDurationInSecs", "100",
-                        "recordingCompressionEnabled", "false"
-                ));
+                ImmutableMap.<String, Object>builder()
+                        .put("enabled", "true")
+                        .put("servletEnabled", "true")
+                        .put("recordingCacheSizeInMB", "17")
+                        .put("recordingCacheDurationInSecs", "100")
+                        .put("recordingCompressionEnabled", "false")
+                        .put("gzipResponse", "true")
+                        .build()
+                );
         assertEquals(2, context.getServices(Filter.class, null).length);
         assertNotNull(context.getService(Servlet.class));
 
         TracerLogServlet logServlet = (TracerLogServlet) context.getService(Servlet.class);
         assertEquals(false, logServlet.isCompressRecording());
+        assertEquals(false, logServlet.isGzipResponse());
         assertEquals(17, logServlet.getCacheSizeInMB());
         assertEquals(100, logServlet.getCacheDurationInSecs());
+    }
+
+    @Test
+    public void enableTracerLogServletWithConfigGzip() throws Exception {
+        LogTracer tracer = context.registerInjectActivateService(new LogTracer(),
+                ImmutableMap.<String, Object>builder()
+                        .put("enabled", "true")
+                        .put("servletEnabled", "true")
+                        .put("recordingCompressionEnabled", "true")
+                        .put("gzipResponse", "true")
+                        .build()
+        );
+        assertEquals(2, context.getServices(Filter.class, null).length);
+        assertNotNull(context.getService(Servlet.class));
+
+        TracerLogServlet logServlet = (TracerLogServlet) context.getService(Servlet.class);
+        assertEquals(true, logServlet.isCompressRecording());
+        assertEquals(true, logServlet.isGzipResponse());
     }
 
 
