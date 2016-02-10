@@ -22,6 +22,7 @@ package org.apache.sling.tracer.internal;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -33,6 +34,8 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -51,20 +54,22 @@ class JSONRecording implements Recording {
     private final String method;
     private final String requestId;
     private final String uri;
+    private final boolean compress;
     private final List<String> queries = new ArrayList<String>();
     private final List<LogEntry> logs = new ArrayList<LogEntry>();
     private RequestProgressTracker tracker;
     private byte[] json;
 
-    public JSONRecording(String requestId, HttpServletRequest r) {
+    public JSONRecording(String requestId, HttpServletRequest r, boolean compress) {
         this.requestId = requestId;
+        this.compress = compress;
         this.method = r.getMethod();
         this.uri = r.getRequestURI();
     }
 
     public boolean render(Writer w) throws IOException {
         if (json != null) {
-            Reader r = new InputStreamReader(new ByteArrayInputStream(json), "UTF-8");
+            Reader r = new InputStreamReader(getInputStream(), "UTF-8");
             IOUtils.copy(r, w);
             return true;
         }
@@ -73,7 +78,7 @@ class JSONRecording implements Recording {
 
     public boolean render(OutputStream os) throws IOException {
         if (json != null) {
-            os.write(json);
+            IOUtils.copyLarge(getInputStream(), os);
             return true;
         }
         return false;
@@ -130,7 +135,11 @@ class JSONRecording implements Recording {
 
     private byte[] toJSON() throws JSONException, IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        OutputStreamWriter osw = new OutputStreamWriter(baos, "UTF-8");
+        OutputStream os = baos;
+        if (compress) {
+            os = new GZIPOutputStream(os);
+        }
+        OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
         JSONWriter jw = new JSONWriter(osw);
         jw.setTidy(true);
         jw.object();
@@ -157,6 +166,7 @@ class JSONRecording implements Recording {
         addJson(jw, "logs", logs);
         jw.endObject();
         osw.flush();
+        os.close();
         return baos.toByteArray();
     }
 
@@ -169,6 +179,14 @@ class JSONRecording implements Recording {
             jw.endObject();
         }
         jw.endArray();
+    }
+
+    private InputStream getInputStream() throws IOException {
+        InputStream is = new ByteArrayInputStream(json);
+        if (compress) {
+            is = new GZIPInputStream(is);
+        }
+        return is;
     }
 
     private interface JsonEntry {

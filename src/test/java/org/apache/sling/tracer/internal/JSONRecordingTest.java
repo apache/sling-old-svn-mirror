@@ -43,7 +43,7 @@ public class JSONRecordingTest {
         StringWriter sw = new StringWriter();
 
         when(request.getMethod()).thenReturn("GET");
-        JSONRecording r = new JSONRecording("abc", request);
+        JSONRecording r = new JSONRecording("abc", request, true);
 
         r.log(Level.INFO, TracerContext.QUERY_LOGGER, MessageFormatter.arrayFormat("foo bar", new Object[]{"x" , "y"}));
         r.log(Level.INFO, TracerContext.QUERY_LOGGER, MessageFormatter.arrayFormat("foo bar", new Object[]{"x" , "z"}));
@@ -59,7 +59,7 @@ public class JSONRecordingTest {
     @Test
     public void requestTrackerLogs() throws Exception{
         StringWriter sw = new StringWriter();
-        JSONRecording r = new JSONRecording("abc", request);
+        JSONRecording r = new JSONRecording("abc", request, true);
 
         r.registerTracker(TestUtil.createTracker("x", "y"));
 
@@ -73,7 +73,7 @@ public class JSONRecordingTest {
     @Test
     public void logs() throws Exception{
         StringWriter sw = new StringWriter();
-        JSONRecording r = new JSONRecording("abc", request);
+        JSONRecording r = new JSONRecording("abc", request, true);
 
         FormattingTuple tp1 = MessageFormatter.arrayFormat("{} is going", new Object[]{"Jack"});
         r.log(Level.INFO, "foo", tp1);
