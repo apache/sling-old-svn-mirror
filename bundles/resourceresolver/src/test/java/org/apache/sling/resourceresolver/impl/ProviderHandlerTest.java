@@ -33,6 +33,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorageProvider;
 import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
@@ -56,10 +57,16 @@ public class ProviderHandlerTest {
 
         final ResourceProvider<?> leaveProvider = Mockito.mock(ResourceProvider.class);
         Mockito.when(leaveProvider.getResource(Mockito.any(ResolveContext.class), Mockito.eq(servletpath), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(servletResource);
-        ResourceProviderHandler h = createRPHandler(leaveProvider, "my-pid", 0, servletpath);
+        final ResourceProviderHandler h = createRPHandler(leaveProvider, "my-pid", 0, servletpath);
         ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
         activator.resourceAccessSecurityTracker = new ResourceAccessSecurityTracker();
-        ResourceResolver resolver = new ResourceResolverImpl(new CommonResourceResolverFactoryImpl(activator), false, null, new ResourceProviderStorage(Arrays.asList(h)));
+        ResourceResolver resolver = new ResourceResolverImpl(new CommonResourceResolverFactoryImpl(activator), false, null, new ResourceProviderStorageProvider() {
+                
+                @Override
+                public ResourceProviderStorage getResourceProviderStorage() {
+                    return new ResourceProviderStorage(Arrays.asList(h));
+                }
+            });
 
         final Resource parent = resolver.getResource(ResourceUtil.getParent(servletpath));
         assertNotNull("Parent must be available", parent);

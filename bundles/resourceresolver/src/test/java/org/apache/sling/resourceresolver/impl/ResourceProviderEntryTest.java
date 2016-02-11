@@ -37,6 +37,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorageProvider;
 import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
@@ -245,7 +246,13 @@ public class ResourceProviderEntryTest {
             final ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
             activator.resourceAccessSecurityTracker = new ResourceAccessSecurityTracker();
             providersBasedResolver = new ResourceResolverImpl(new CommonResourceResolverFactoryImpl(activator), false, null,
-                    new ResourceProviderStorage(providers));
+                    new ResourceProviderStorageProvider() {
+
+                        @Override
+                        public ResourceProviderStorage getResourceProviderStorage() {
+                            return new ResourceProviderStorage(providers);
+                        }
+                    });
         }
         return providersBasedResolver;
     }

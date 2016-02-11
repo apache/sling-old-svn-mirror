@@ -60,7 +60,8 @@ import org.apache.sling.resourceresolver.impl.helper.URI;
 import org.apache.sling.resourceresolver.impl.helper.URIException;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntry;
 import org.apache.sling.resourceresolver.impl.params.ParsedParameters;
-import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorageProvider;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,13 +107,13 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     private volatile Exception closedResolverException;
 
     public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo) throws LoginException {
-        this(factory, isAdmin, authenticationInfo, factory.getResourceProviderTracker().getResourceProviderStorage());
+        this(factory, isAdmin, authenticationInfo, factory.getResourceProviderTracker());
     }
 
-    ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo, final ResourceProviderStorage storage) throws LoginException {
+    ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo, final ResourceProviderStorageProvider resourceProviderTracker) throws LoginException {
         this.factory = factory;
         this.context = new ResourceResolverContext(this, factory.getResourceAccessSecurityTracker());
-        this.control = createControl(storage, authenticationInfo, isAdmin);
+        this.control = createControl(resourceProviderTracker, authenticationInfo, isAdmin);
         this.factory.register(this, control);
     }
 
@@ -132,7 +133,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             authInfo.putAll(authenticationInfo);
         }
         this.context = new ResourceResolverContext(this, factory.getResourceAccessSecurityTracker());
-        this.control = createControl(factory.getResourceProviderTracker().getResourceProviderStorage(), authInfo, resolver.control.isAdmin());
+        this.control = createControl(factory.getResourceProviderTracker(), authInfo, resolver.control.isAdmin());
         this.factory.register(this, control);
     }
 
@@ -144,13 +145,13 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      * @return A control
      * @throws LoginException If auth to the required providers fails.
      */
-    private ResourceResolverControl createControl(final ResourceProviderStorage storage,
+    private ResourceResolverControl createControl(final ResourceProviderStorageProvider resourceProviderTracker,
             final Map<String, Object> authenticationInfo,
             final boolean isAdmin)
     throws LoginException {
-        final ResourceResolverControl control = new ResourceResolverControl(isAdmin, authenticationInfo, storage);
+        final ResourceResolverControl control = new ResourceResolverControl(isAdmin, authenticationInfo, resourceProviderTracker);
 
-        this.context.getProviderManager().authenticateAll(storage.getAuthRequiredHandlers(), control);
+        this.context.getProviderManager().authenticateAll(resourceProviderTracker.getResourceProviderStorage().getAuthRequiredHandlers(), control);
 
         return control;
     }

@@ -96,7 +96,7 @@ public class ResourceResolverImplTest {
 
     @SuppressWarnings("deprecation")
     @Test public void testClose() throws Exception {
-        final ResourceResolver rr = new ResourceResolverImpl(commonFactory, false, null, resourceProviderTracker.getResourceProviderStorage());
+        final ResourceResolver rr = new ResourceResolverImpl(commonFactory, false, null, resourceProviderTracker);
         assertTrue(rr.isLive());
         rr.close();
         assertFalse(rr.isLive());
@@ -208,7 +208,7 @@ public class ResourceResolverImplTest {
         ResourceResolverFactoryActivator rrfa = spy(new ResourceResolverFactoryActivator());
         Whitebox.setInternalState(rrfa, "logResourceResolverClosing", true);
         CommonResourceResolverFactoryImpl crrfi = new CommonResourceResolverFactoryImpl(rrfa);
-        final ResourceResolver rr = new ResourceResolverImpl(crrfi, false, null, resourceProviderTracker.getResourceProviderStorage());
+        final ResourceResolver rr = new ResourceResolverImpl(crrfi, false, null, resourceProviderTracker);
         assertTrue(rr.isLive());
         rr.close();
         assertFalse(rr.isLive());
@@ -622,7 +622,7 @@ public class ResourceResolverImplTest {
         }
 
         public PathBasedResourceResolverImpl(CommonResourceResolverFactoryImpl factory, ResourceProviderTracker resourceProviderTracker) throws LoginException {
-            super(factory, false, null, resourceProviderTracker.getResourceProviderStorage());
+            super(factory, false, null, resourceProviderTracker);
         }
 
         public Resource add(final Resource r) {

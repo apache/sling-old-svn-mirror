@@ -52,6 +52,7 @@ import org.apache.sling.resourceresolver.impl.SimpleValueMapImpl;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorageProvider;
 import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
 import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
@@ -138,9 +139,15 @@ public class ResourceResolverControlTest {
         authInfo = Collections.emptyMap();
 
         handlers = Arrays.asList(rootHandler, handler);
-        ResourceProviderStorage storage = new ResourceProviderStorage(handlers);
+        final ResourceProviderStorage storage = new ResourceProviderStorage(handlers);
 
-        crp = new ResourceResolverControl(false, authInfo, storage);
+        crp = new ResourceResolverControl(false, authInfo, new ResourceProviderStorageProvider() {
+            
+            @Override
+            public ResourceProviderStorage getResourceProviderStorage() {
+                return storage;
+            }
+        });
         context = new ResourceResolverContext(rr, securityTracker);
     }
 
