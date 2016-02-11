@@ -19,14 +19,7 @@
 
 package org.apache.sling.tracer.internal;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 import javax.annotation.CheckForNull;
-
-import com.google.common.collect.Iterators;
-import com.google.common.collect.PeekingIterator;
 
 /**
  * Utility to find out the real caller by excluding stack elements belonging to
@@ -36,6 +29,11 @@ import com.google.common.collect.PeekingIterator;
 class CallerFinder {
     private final String[] apiPkgs;
 
+    /**
+     * Array of package names which form the API
+     * @param apiPkgs package names in the order they can appear in caller stack. For e.g.
+     *                Sling API package would always come before Oak api package for query evaluation
+     */
     public CallerFinder(String[] apiPkgs) {
         this.apiPkgs = apiPkgs;
     }
@@ -46,17 +44,13 @@ class CallerFinder {
             return null;
         }
 
-        //Reverse the stack trace so as to start from bottom
-        List<StackTraceElement> stackList = Arrays.asList(stack);
-        Collections.reverse(stackList);
-        PeekingIterator<StackTraceElement> pit = Iterators.peekingIterator(stackList.iterator());
-        while (pit.hasNext()) {
-            StackTraceElement current = pit.next();
+        for (int i = stack.length - 1; i >= 0; i--) {
+            StackTraceElement current = stack[i];
+            if (i > 0) {
+                StackTraceElement next = stack[i - 1];
 
-            //now scan each element and check if the *next* stack element belongs to any
-            //api package. If yes then current stack would be the caller
-            if (pit.hasNext()) {
-                StackTraceElement next = pit.peek();
+                //now scan each element and check if the *next* stack element belongs to any
+                //api package. If yes then current stack would be the caller
                 for (String pkg : apiPkgs) {
                     if (next.getClassName().startsWith(pkg)) {
                         return current;
@@ -64,6 +58,7 @@ class CallerFinder {
                 }
             }
         }
+
         return null;
     }
 }
