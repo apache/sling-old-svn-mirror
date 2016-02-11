@@ -59,7 +59,7 @@ public class TracerSetTest {
 
     @Test
     public void prefixFilter() throws Exception{
-        CallerStackReporter r = TracerSet.createReporter(createEntry("foo;caller=28;callerPrefixFilter=\"a|b\""));
+        CallerStackReporter r = TracerSet.createReporter(createEntry("foo;caller=28;caller-exclude-filter=\"a|b\""));
         assertNotNull(r);
         assertEquals(28, r.getDepth());
         assertTrue(r.getCallerFilter() instanceof PrefixExcludeFilter);
