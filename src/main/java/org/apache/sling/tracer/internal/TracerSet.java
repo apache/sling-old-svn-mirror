@@ -29,7 +29,7 @@ import org.apache.sling.commons.osgi.ManifestHeader;
 class TracerSet {
     public static final String LEVEL = "level";
     public static final String CALLER = "caller";
-    public static final String CALLER_PREFIX_FILTER = "callerPrefixFilter";
+    public static final String CALLER_PREFIX_FILTER = "caller-exclude-filter";
 
     private final String name;
     private final List<TracerConfig> configs;
