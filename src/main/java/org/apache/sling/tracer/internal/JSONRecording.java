@@ -59,6 +59,7 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
             "org.apache.sling.resourceresolver", //Sling package would come first in stack so listed first
             "org.apache.jackrabbit.oak"
     };
+    private static final Object[] EMPTY = new Object[0];
     private static final Logger log = LoggerFactory.getLogger(JSONRecording.class);
     public static final String OAK_QUERY_PKG = "org.apache.jackrabbit.oak.query";
     private final String method;
@@ -300,7 +301,6 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
          * The MDC key is used in org.apache.jackrabbit.oak.query.QueryEngineImpl
          */
         static final String MDC_QUERY_ID = "oak.query.id";
-        static final String QE_LOGGER = "org.apache.jackrabbit.oak.query.QueryImpl";
         String query;
         String plan;
         String id;
@@ -319,17 +319,32 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
                 id = idFromMDC;
             }
 
+            //TODO Query time. Change Oak to provide this information via some
+            //dedicated Audit logging such that below reliance on impl details
+            //can be avoided
             String msg = tuple.getMessage();
-            if (Level.DEBUG == level
-                    && QE_LOGGER.equals(logger)
-                    && msg != null){
+            if (Level.DEBUG == level && msg != null) {
+                Object[] args = tuple.getArgArray() == null ? EMPTY : tuple.getArgArray();
+                if (query == null){
+                    if ("org.apache.jackrabbit.oak.query.QueryEngineImpl".equals(logger)
+                            && msg.contains("Parsing") && args.length == 2){
+                        //LOG.debug("Parsing {} statement: {}", language, statement);
+                        query = nullSafeString(args[1]);
+                        caller = determineCaller();
+                    }
+                }
 
-                //The Log stmt are as present in org.apache.jackrabbit.oak.query.QueryImpl
-                if (msg.startsWith("query execute ")){
-                    query = msg.substring("query execute ".length());
-                    caller = determineCaller();
-                } else if (msg.startsWith("query plan ")){
-                    plan = msg.substring("query plan ".length());
+                //Plan for union query are logged separately
+                if (plan == null){
+                    if ("org.apache.jackrabbit.oak.query.QueryImpl".equals(logger)
+                            && msg.startsWith("query plan ")){
+                        //logDebug("query execute " + statement);
+                        plan = msg.substring("query plan ".length());
+                    } else if ("org.apache.jackrabbit.oak.query.UnionQueryImpl".equals(logger)
+                            && msg.contains("query union plan") && args.length > 0){
+                        // LOG.debug("query union plan {}", getPlan());
+                        plan = nullSafeString(args[0]);
+                    }
                 }
             }
         }
@@ -343,8 +358,8 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
         }
 
         public void addQueryEntry(){
-            if (query != null){
-                queries.add(new QueryEntry(safeTrim(query), safeTrim(plan), caller));
+            if (query != null && plan != null){
+                queries.add(new QueryEntry(nullSafeTrim(query), nullSafeTrim(plan), caller));
                 plan = query = null;
             }
         }
@@ -353,13 +368,20 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
             //Push any last pending entry i.e. last query
             addQueryEntry();
         }
+    }
 
-        private String safeTrim(String s){
-            if(s == null){
-                return "";
-            }
-            return s.trim();
+    private static String nullSafeTrim(String s){
+        if(s == null){
+            return "";
         }
+        return s.trim();
+    }
+
+    private static String nullSafeString(Object o){
+        if (o != null){
+            return o.toString();
+        }
+        return null;
     }
 
 }

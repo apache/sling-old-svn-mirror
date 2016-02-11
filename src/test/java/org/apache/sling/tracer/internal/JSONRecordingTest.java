@@ -53,7 +53,8 @@ public class JSONRecordingTest {
         JSONRecording r = new JSONRecording("abc", request, true);
 
         MDC.put(MDC_QUERY_ID, "1");
-        r.log(tc, Level.DEBUG, QE_LOGGER, tuple("query execute SELECT FOO"));
+        r.log(tc, Level.DEBUG, "org.apache.jackrabbit.oak.query.QueryEngineImpl",
+                tuple("Parsing {} statement: {}",  "XPATH", "SELECT FOO"));
         r.log(tc, Level.DEBUG, QE_LOGGER, tuple("query plan FOO PLAN"));
 
         r.done();
@@ -111,5 +112,9 @@ public class JSONRecordingTest {
 
     private static FormattingTuple tuple(String msg){
         return MessageFormatter.format(msg, null);
+    }
+
+    private static FormattingTuple tuple(String msg, String ... params){
+        return MessageFormatter.arrayFormat(msg, params);
     }
 }
