@@ -86,6 +86,24 @@ public class CallerFinderTest {
         assertNull(cf.determineCaller(null));
     }
 
+    @Test
+    public void nullCaller() throws Exception{
+        CallerFinder cf = new CallerFinder(new String[] {"o.a1.s", "o.a1.j.o"});
+        StackTraceElement[] stack = createStack(
+                "o.a.j.o.a",
+                "o.a.j.o.b",
+                "o.a.s.a",
+                "o.a.s.b",
+                "c.a.g.w",
+                "o.e.j",
+                "o.e.j",
+                "o.e.j"
+        );
+
+        StackTraceElement caller = cf.determineCaller(stack);
+        assertNull(caller);
+    }
+
     private static StackTraceElement[] createStack(String ... stack){
         StackTraceElement[] result = new StackTraceElement[stack.length];
         for (int i = 0; i < stack.length; i++) {
