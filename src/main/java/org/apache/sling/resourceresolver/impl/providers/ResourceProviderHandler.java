@@ -28,11 +28,11 @@ import org.osgi.framework.BundleContext;
  */
 public class ResourceProviderHandler implements Comparable<ResourceProviderHandler>, Pathable {
 
-    private final ResourceProviderInfo info;
+    private volatile ResourceProviderInfo info;
 
-    private final BundleContext bundleContext;
+    private volatile BundleContext bundleContext;
 
-    private final ProviderContextImpl context = new ProviderContextImpl();
+    private volatile ProviderContextImpl context = new ProviderContextImpl();
 
     private volatile ResourceProvider<Object> provider;
 
@@ -55,6 +55,15 @@ public class ResourceProviderHandler implements Comparable<ResourceProviderHandl
         return this.provider != null;
     }
 
+    /**C
+     * Clear all references.
+     */
+    public void dispose() {
+        this.info = null;
+        this.bundleContext = null;
+        this.context = null;
+    }
+
     public ResourceProvider<Object> getResourceProvider() {
         return this.provider;
     }
@@ -70,6 +79,15 @@ public class ResourceProviderHandler implements Comparable<ResourceProviderHandl
 
     @Override
     public int compareTo(final ResourceProviderHandler o) {
+        if ( this.getInfo() == null ) {
+            if ( o.getInfo() == null ) {
+                return 0;
+            }
+            return 1;
+        }
+        if ( o.getInfo() == null ) {
+            return -1;
+        }
         return this.getInfo().compareTo(o.getInfo());
     }
 

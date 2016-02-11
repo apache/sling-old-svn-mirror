@@ -55,7 +55,7 @@ import org.slf4j.LoggerFactory;
 /**
  * This service keeps track of all resource providers.
  */
-public class ResourceProviderTracker {
+public class ResourceProviderTracker implements ResourceProviderStorageProvider {
 
     public interface ObservationReporterGenerator {
 
@@ -244,8 +244,10 @@ public class ResourceProviderTracker {
         Iterator<ResourceProviderHandler> it = infos.iterator();
         boolean removed = false;
         while (it.hasNext()) {
-            if (it.next().getInfo() == info) {
+            final ResourceProviderHandler h = it.next();
+            if (h.getInfo() == info) {
                 it.remove();
+                h.dispose();
                 removed = true;
                 break;
             }
@@ -337,6 +339,7 @@ public class ResourceProviderTracker {
         dto.failedProviders = failures.toArray(new ResourceProviderFailureDTO[failures.size()]);
     }
 
+    @Override
     public ResourceProviderStorage getResourceProviderStorage() {
         ResourceProviderStorage result = storage;
         if (result == null) {

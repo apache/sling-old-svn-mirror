@@ -48,6 +48,7 @@ import org.apache.sling.api.resource.path.PathBuilder;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorageProvider;
 import org.apache.sling.resourceresolver.impl.providers.stateful.AuthenticatedResourceProvider;
 import org.apache.sling.resourceresolver.impl.providers.tree.Node;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
@@ -80,7 +81,7 @@ public class ResourceResolverControl {
     /** Flag for handling multiple calls to close. */
     private final AtomicBoolean isClosed = new AtomicBoolean(false);
 
-    private final ResourceProviderStorage storage;
+    private final ResourceProviderStorageProvider resourceProviderTracker;
 
     private final Map<ResourceProviderHandler, Object> authenticatedProviders;
 
@@ -89,11 +90,11 @@ public class ResourceResolverControl {
      */
     public ResourceResolverControl(final boolean isAdmin,
             final Map<String, Object> authenticationInfo,
-            final ResourceProviderStorage storage) {
+            final ResourceProviderStorageProvider resourceProviderTracker) {
         this.authenticatedProviders = new IdentityHashMap<ResourceProviderHandler, Object>();
         this.authenticationInfo = authenticationInfo;
         this.isAdmin = isAdmin;
-        this.storage = storage;
+        this.resourceProviderTracker = resourceProviderTracker;
     }
 
     /**
@@ -229,7 +230,7 @@ public class ResourceResolverControl {
     }
 
     private boolean isIntermediatePath(final String fullPath) {
-        return storage.getTree().getNode(fullPath) != null;
+        return getResourceProviderStorage().getTree().getNode(fullPath) != null;
     }
 
     /**
@@ -263,7 +264,7 @@ public class ResourceResolverControl {
         }
 
         // synthetic and providers are done in one loop
-        final Node<ResourceProviderHandler> node = storage.getTree().getNode(parent.getPath());
+        final Node<ResourceProviderHandler> node = getResourceProviderStorage().getTree().getNode(parent.getPath());
         if (node != null) {
             final List<Resource> syntheticList = new ArrayList<Resource>();
             final List<Resource> providerList = new ArrayList<Resource>();
@@ -315,7 +316,7 @@ public class ResourceResolverControl {
      */
     public Collection<String> getAttributeNames(final ResourceResolverContext context) {
         final Set<String> names = new LinkedHashSet<String>();
-        for (final AuthenticatedResourceProvider p : context.getProviderManager().getAllBestEffort(storage.getAttributableHandlers(), this)) {
+        for (final AuthenticatedResourceProvider p : context.getProviderManager().getAllBestEffort(getResourceProviderStorage().getAttributableHandlers(), this)) {
             p.getAttributeNames(names);
         }
         if ( this.authenticationInfo != null ) {
@@ -334,7 +335,7 @@ public class ResourceResolverControl {
         if (FORBIDDEN_ATTRIBUTE.equals(name)) {
             return null;
         }
-        for (final AuthenticatedResourceProvider p : context.getProviderManager().getAllBestEffort(storage.getAttributableHandlers(), this)) {
+        for (final AuthenticatedResourceProvider p : context.getProviderManager().getAllBestEffort(getResourceProviderStorage().getAttributableHandlers(), this)) {
             final Object attribute = p.getAttribute(name);
             if (attribute != null) {
                 return attribute;
@@ -421,7 +422,7 @@ public class ResourceResolverControl {
      */
     public String[] getSupportedLanguages(final ResourceResolverContext context) {
         final Set<String> supportedLanguages = new LinkedHashSet<String>();
-        for (AuthenticatedResourceProvider p : context.getProviderManager().getAllBestEffort(storage.getLanguageQueryableHandlers(), this)) {
+        for (AuthenticatedResourceProvider p : context.getProviderManager().getAllBestEffort(getResourceProviderStorage().getLanguageQueryableHandlers(), this)) {
             supportedLanguages.addAll(Arrays.asList(p.getSupportedLanguages()));
         }
         return supportedLanguages.toArray(new String[supportedLanguages.size()]);
@@ -444,7 +445,7 @@ public class ResourceResolverControl {
             final ResourceResolverContext context,
             final String language) {
         final List<AuthenticatedResourceProvider> queryableProviders = new ArrayList<AuthenticatedResourceProvider>();
-        for (final AuthenticatedResourceProvider p : context.getProviderManager().getAllBestEffort(storage.getLanguageQueryableHandlers(), this)) {
+        for (final AuthenticatedResourceProvider p : context.getProviderManager().getAllBestEffort(getResourceProviderStorage().getLanguageQueryableHandlers(), this)) {
             if (ArrayUtils.contains(p.getSupportedLanguages(), language)) {
                 queryableProviders.add(p);
             }
@@ -471,7 +472,7 @@ public class ResourceResolverControl {
      */
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType adaptTo(final ResourceResolverContext context, Class<AdapterType> type) {
-        for (AuthenticatedResourceProvider p : context.getProviderManager().getAllBestEffort(storage.getAdaptableHandlers(), this)) {
+        for (AuthenticatedResourceProvider p : context.getProviderManager().getAllBestEffort(getResourceProviderStorage().getAdaptableHandlers(), this)) {
             final Object adaptee = p.adaptTo(type);
             if (adaptee != null) {
                 return (AdapterType) adaptee;
@@ -483,7 +484,7 @@ public class ResourceResolverControl {
     private AuthenticatedResourceProvider checkSourceAndDest(final ResourceResolverContext context,
             final String srcAbsPath, final String destAbsPath) throws PersistenceException {
         // check source
-        final Node<ResourceProviderHandler> srcNode = storage.getTree().getBestMatchingNode(srcAbsPath);
+        final Node<ResourceProviderHandler> srcNode = getResourceProviderStorage().getTree().getBestMatchingNode(srcAbsPath);
         if ( srcNode == null ) {
             throw new PersistenceException("Source resource does not exist.", null, srcAbsPath, null);
         }
@@ -502,7 +503,7 @@ public class ResourceResolverControl {
         }
 
         // check destination
-        final Node<ResourceProviderHandler> destNode = storage.getTree().getBestMatchingNode(destAbsPath);
+        final Node<ResourceProviderHandler> destNode = getResourceProviderStorage().getTree().getBestMatchingNode(destAbsPath);
         if ( destNode == null ) {
             throw new PersistenceException("Destination resource does not exist.", null, destAbsPath, null);
         }
@@ -613,7 +614,7 @@ public class ResourceResolverControl {
     }
 
     public ResourceProviderStorage getResourceProviderStorage() {
-        return this.storage;
+        return this.resourceProviderTracker.getResourceProviderStorage();
     }
 
     /**
@@ -623,7 +624,7 @@ public class ResourceResolverControl {
     private @CheckForNull AuthenticatedResourceProvider getBestMatchingProvider(final ResourceResolverContext context,
             final String path) {
         try {
-            final Node<ResourceProviderHandler> node = storage.getTree().getBestMatchingNode(path);
+            final Node<ResourceProviderHandler> node = resourceProviderTracker.getResourceProviderStorage().getTree().getBestMatchingNode(path);
             return node == null ? null : context.getProviderManager().getOrCreateProvider(node.getValue(), this);
         } catch ( final LoginException le ) {
             // ignore
@@ -638,7 +639,7 @@ public class ResourceResolverControl {
     private @CheckForNull AuthenticatedResourceProvider getBestMatchingModifiableProvider(
             final ResourceResolverContext context,
             final String path)  {
-        final Node<ResourceProviderHandler> node = storage.getTree().getBestMatchingNode(path);
+        final Node<ResourceProviderHandler> node = resourceProviderTracker.getResourceProviderStorage().getTree().getBestMatchingNode(path);
         if ( node != null && node.getValue().getInfo().isModifiable() ) {
             try {
                 return context.getProviderManager().getOrCreateProvider(node.getValue(), this);
