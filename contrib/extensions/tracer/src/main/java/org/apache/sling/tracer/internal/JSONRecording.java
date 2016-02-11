@@ -32,6 +32,7 @@ import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
@@ -129,7 +130,7 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
         if (logger.startsWith(OAK_QUERY_PKG)) {
             queryCollector.record(level, logger, tuple);
         }
-        logs.add(new LogEntry(level, logger, tuple));
+        logs.add(new LogEntry(tc, level, logger, tuple));
     }
 
     @Override
@@ -233,11 +234,20 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
         final String logger;
         final FormattingTuple tuple;
         final long timestamp = System.currentTimeMillis();
+        final List<StackTraceElement> caller;
 
-        private LogEntry(Level level, String logger, FormattingTuple tuple) {
+        private LogEntry(TracerConfig tc, Level level, String logger, FormattingTuple tuple) {
             this.level = level != null ? level : Level.INFO;
             this.logger = logger;
             this.tuple = tuple;
+            this.caller = getCallerData(tc);
+        }
+
+        private static List<StackTraceElement> getCallerData(TracerConfig tc) {
+            if (tc.isReportCallerStack()){
+                return tc.getCallerReporter().report();
+            }
+            return Collections.emptyList();
         }
 
         private static String toString(Object o) {
@@ -273,6 +283,15 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
                 //Later we can look into using Logback Throwable handling
                 jw.key("exception").value(getStackTraceAsString(t));
 
+            }
+
+            if (!caller.isEmpty()){
+                jw.key("caller");
+                jw.array();
+                for (StackTraceElement o : caller) {
+                    jw.value(o.toString());
+                }
+                jw.endArray();
             }
         }
     }

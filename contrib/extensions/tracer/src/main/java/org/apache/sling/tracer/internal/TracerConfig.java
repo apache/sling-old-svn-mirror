@@ -19,6 +19,9 @@
 
 package org.apache.sling.tracer.internal;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.core.CoreConstants;
 
@@ -37,11 +40,17 @@ class TracerConfig implements Comparable<TracerConfig> {
     private final String loggerName;
     private final Level level;
     private final int depth;
+    private final CallerStackReporter callerReporter;
 
     public TracerConfig(String loggerName, Level level) {
+        this(loggerName, level, null);
+    }
+
+    public TracerConfig(String loggerName, Level level,@Nullable CallerStackReporter reporter) {
         this.loggerName = loggerName;
         this.level = level;
         this.depth = getDepth(loggerName);
+        this.callerReporter = reporter;
     }
 
     public boolean match(String loggerName) {
@@ -59,7 +68,7 @@ class TracerConfig implements Comparable<TracerConfig> {
     }
 
     @Override
-    public int compareTo(TracerConfig o) {
+    public int compareTo(@Nonnull TracerConfig o) {
         int comp = depth > o.depth ? -1 : depth < o.depth ? 1 : 0;
         if (comp == 0) {
             comp = loggerName.compareTo(o.loggerName);
@@ -77,6 +86,14 @@ class TracerConfig implements Comparable<TracerConfig> {
 
     public Level getLevel() {
         return level;
+    }
+
+    public boolean isReportCallerStack(){
+        return callerReporter != null;
+    }
+
+    public CallerStackReporter getCallerReporter() {
+        return callerReporter;
     }
 
     private static int getDepth(String loggerName) {

@@ -30,7 +30,7 @@ public class CallerFinderTest {
     @Test
     public void determineCallerSingle() throws Exception{
         CallerFinder cf = new CallerFinder(new String[] {"o.a.s", "o.a.j.o"});
-        StackTraceElement[] stack = createStack(
+        StackTraceElement[] stack = asStack(
                 "o.a.j.o.a",
                 "o.a.j.o.b",
                 "c.a.g.w",
@@ -47,7 +47,7 @@ public class CallerFinderTest {
     @Test
     public void determineCallerMultipleApi() throws Exception{
         CallerFinder cf = new CallerFinder(new String[] {"o.a.s", "o.a.j.o"});
-        StackTraceElement[] stack = createStack(
+        StackTraceElement[] stack = asStack(
                 "o.a.j.o.a",
                 "o.a.j.o.b",
                 "o.a.s.a",
@@ -62,7 +62,7 @@ public class CallerFinderTest {
         assertNotNull(caller);
         assertEquals("c.a.g.w", caller.getClassName());
 
-        stack = createStack(
+        stack = asStack(
                 "o.a.j.o.a",
                 "o.a.j.o.b",
                 "o.a.s.a",
@@ -89,7 +89,7 @@ public class CallerFinderTest {
     @Test
     public void nullCaller() throws Exception{
         CallerFinder cf = new CallerFinder(new String[] {"o.a1.s", "o.a1.j.o"});
-        StackTraceElement[] stack = createStack(
+        StackTraceElement[] stack = asStack(
                 "o.a.j.o.a",
                 "o.a.j.o.b",
                 "o.a.s.a",
@@ -104,7 +104,7 @@ public class CallerFinderTest {
         assertNull(caller);
     }
 
-    private static StackTraceElement[] createStack(String ... stack){
+    static StackTraceElement[] asStack(String ... stack){
         StackTraceElement[] result = new StackTraceElement[stack.length];
         for (int i = 0; i < stack.length; i++) {
             result[i] = new StackTraceElement(stack[i], "foo", null, 0);

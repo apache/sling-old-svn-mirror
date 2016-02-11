@@ -25,7 +25,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import ch.qos.logback.classic.Level;
 import org.apache.sling.commons.json.JSONObject;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.MDC;
 import org.slf4j.helpers.FormattingTuple;
@@ -104,10 +103,29 @@ public class JSONRecordingTest {
         assertEquals(tp1.getMessage(), l1.getString("message"));
         assertEquals(1, l1.getJSONArray("params").length());
         assertFalse(l1.has("exception"));
+        assertFalse(l1.has("caller"));
         assertTrue(l1.has("timestamp"));
 
         JSONObject l3 = json.getJSONArray("logs").getJSONObject(2);
         assertNotNull(l3.get("exception"));
+    }
+
+    @Test
+    public void logsWithCaller() throws Exception{
+        StringWriter sw = new StringWriter();
+        final JSONRecording r = new JSONRecording("abc", request, true);
+
+        TracerConfig config = new TracerConfig(TracerContext.QUERY_LOGGER,
+                Level.INFO, new CallerStackReporter(20));
+        r.log(config, Level.INFO, "foo", tuple("foo"));
+
+        r.done();
+        r.render(sw);
+
+        JSONObject json = new JSONObject(sw.toString());
+        JSONObject l1 = json.getJSONArray("logs").getJSONObject(0);
+        assertTrue(l1.has("caller"));
+        assertTrue(l1.getJSONArray("caller").length() > 0);
     }
 
     private static FormattingTuple tuple(String msg){
