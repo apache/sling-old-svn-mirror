@@ -324,12 +324,6 @@ public class MergingResourceProvider extends ResourceProvider<Void> {
                             break;
                         }
                     }
-                    for (final ResourceHolder current : candidates) {
-                        if (current.name.equals(rsrcName)) {
-                            holder = current;
-                            break;
-                        }
-                    }
                     if (holder == null) {
                         // remove the hidden child resources from the local resource
                         if (handler != null && handler.isHidden(rsrcName, true)) {
