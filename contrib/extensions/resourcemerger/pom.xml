@@ -93,10 +93,28 @@
             <version>2.2.0</version>
             <scope>provided</scope>
         </dependency>
-    <!-- Testing -->
+        <!-- Testing -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-library</artifactId>
+            <version>1.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.hamcrest</artifactId>
+            <version>0.9.0-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.sling-mock</artifactId>
+            <version>1.6.0</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -108,6 +126,13 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.resourceresolver</artifactId>
             <version>1.4.0</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- only for IteratorIterable used in Tests -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>4.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

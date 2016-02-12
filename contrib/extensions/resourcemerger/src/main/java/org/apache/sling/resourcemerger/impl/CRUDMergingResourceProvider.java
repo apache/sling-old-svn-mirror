@@ -78,7 +78,7 @@ public class CRUDMergingResourceProvider
                 // check parent for hiding
                 // SLING 3521 : if parent is not readable, nothing is hidden
                 final Resource parent = rsrc.getParent();
-                hidden = (parent == null ? false : new ParentHidingHandler(parent, this.traverseHierarchie).isHidden(holder.name));
+                hidden = (parent == null ? false : new ParentHidingHandler(parent, this.traverseHierarchie).isHidden(holder.name, true));
             }
             if (hidden) {
                 holder.resources.clear();
