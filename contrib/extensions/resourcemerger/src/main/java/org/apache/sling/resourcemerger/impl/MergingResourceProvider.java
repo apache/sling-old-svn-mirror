@@ -314,7 +314,16 @@ public class MergingResourceProvider extends ResourceProvider<Void> {
                 for (final Resource child : parentResource.getChildren()) {
                     final String rsrcName = child.getName();
                     ResourceHolder holder = null;
+                    int childPositionInCandidateList = -1;
                     // check if is this an overlaid resource (i.e. has the resource with the same name already be exposed through the underlying resource)
+                    for (int index=0; index < candidates.size(); index++) {
+                        ResourceHolder current = candidates.get(index);
+                        if (current.name.equals(rsrcName)) {
+                            holder = current;
+                            childPositionInCandidateList = index;
+                            break;
+                        }
+                    }
                     for (final ResourceHolder current : candidates) {
                         if (current.name.equals(rsrcName)) {
                             holder = current;
@@ -351,6 +360,12 @@ public class MergingResourceProvider extends ResourceProvider<Void> {
                     if (orderBeforeIndex > -1) {
                         candidates.add(orderBeforeIndex, holder);
                         candidates.remove(candidates.size() - 1);
+                    } else {
+                        // if there was no explicit order, just assume the order given by the overlying resource
+                        if (childPositionInCandidateList != -1) {
+                            candidates.add(holder);
+                            candidates.remove(childPositionInCandidateList);
+                        }
                     }
                 }
                 

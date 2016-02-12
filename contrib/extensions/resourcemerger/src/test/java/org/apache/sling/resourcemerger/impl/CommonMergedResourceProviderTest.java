@@ -238,4 +238,56 @@ public class CommonMergedResourceProviderTest {
         Assert.assertFalse(mergedResource.getValueMap().containsKey(MergedResourceConstants.PN_HIDE_CHILDREN));
         Assert.assertFalse(mergedResource.getValueMap().containsKey(MergedResourceConstants.PN_HIDE_PROPERTIES));
     }
+
+    @Test
+    public void testOrderOfPartiallyOverwrittenChildren() throws PersistenceException {
+        // see https://issues.apache.org/jira/browse/SLING-4915
+        
+        // create new child nodes below base and overlay
+        MockHelper.create(this.resolver)
+            .resource("/apps/base/child1")
+            .resource("/apps/base/child2")
+            .resource("/apps/base/child3")
+            .resource("/apps/overlay/child4")
+            .resource("/apps/overlay/child2")
+            .resource("/apps/overlay/child3")
+            .commit();
+        
+        Resource mergedResource = this.provider.getResource(ctx, "/merged", ResourceContext.EMPTY_CONTEXT, null);
+        // convert the iterator returned by list children into an iterable (to be able to perform some tests)
+        IteratorIterable<Resource> iterable = new IteratorIterable<Resource>(provider.listChildren(ctx, mergedResource), true);
+        
+        Assert.assertThat(iterable, Matchers.contains(ResourceMatchers.resourceWithName("child1"),ResourceMatchers.resourceWithName("child4"), ResourceMatchers.resourceWithName("child2"), ResourceMatchers.resourceWithName("child3")));
+    }
+
+    @Test
+    public void testOrderOfNonOverlappingChildren() throws PersistenceException {
+     // create new child nodes below base and overlay
+        MockHelper.create(this.resolver)
+            .resource("/apps/base/child1")
+            .resource("/apps/base/child2")
+            .resource("/apps/overlay/child3")
+            .resource("/apps/overlay/child4")
+            .commit();
+        Resource mergedResource = this.provider.getResource(ctx, "/merged", ResourceContext.EMPTY_CONTEXT, null);
+        // convert the iterator returned by list children into an iterable (to be able to perform some tests)
+        IteratorIterable<Resource> iterable = new IteratorIterable<Resource>(provider.listChildren(ctx, mergedResource), true);
+        
+        Assert.assertThat(iterable, Matchers.contains(ResourceMatchers.resourceWithName("child1"),ResourceMatchers.resourceWithName("child2"), ResourceMatchers.resourceWithName("child3"), ResourceMatchers.resourceWithName("child4")));
+    }
+
+    @Test
+    public void testOrderBeingModifiedThroughOrderBefore() throws PersistenceException {
+     // create new child nodes below base and overlay
+        MockHelper.create(this.resolver)
+            .resource("/apps/base/child1")
+            .resource("/apps/base/child2")
+            .resource("/apps/overlay/child3").p(MergedResourceConstants.PN_ORDER_BEFORE, "child2")
+            .commit();
+        Resource mergedResource = this.provider.getResource(ctx, "/merged", ResourceContext.EMPTY_CONTEXT, null);
+        // convert the iterator returned by list children into an iterable (to be able to perform some tests)
+        IteratorIterable<Resource> iterable = new IteratorIterable<Resource>(provider.listChildren(ctx, mergedResource), true);
+        
+        Assert.assertThat(iterable, Matchers.contains(ResourceMatchers.resourceWithName("child1"),ResourceMatchers.resourceWithName("child3"), ResourceMatchers.resourceWithName("child2")));
+    }
 }
