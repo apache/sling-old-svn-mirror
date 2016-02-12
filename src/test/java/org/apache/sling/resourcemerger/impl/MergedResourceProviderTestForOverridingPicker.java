@@ -40,7 +40,7 @@ import org.apache.sling.testing.resourceresolver.MockResourceResolverFactoryOpti
 import org.junit.Before;
 import org.junit.Test;
 
-public class OverridingResourceProviderTest {
+public class MergedResourceProviderTestForOverridingPicker {
 
     private static final String SUPER_TYPE = "sling:resourceSuperType";
 

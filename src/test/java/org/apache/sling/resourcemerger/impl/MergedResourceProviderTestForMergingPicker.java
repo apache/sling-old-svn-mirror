@@ -44,7 +44,7 @@ import org.apache.sling.testing.resourceresolver.MockResourceResolverFactoryOpti
 import org.junit.Before;
 import org.junit.Test;
 
-public class MergedResourceProviderTest {
+public class MergedResourceProviderTestForMergingPicker {
 
     private ResourceResolver resolver;
 
@@ -169,7 +169,11 @@ public class MergedResourceProviderTest {
         final Resource rsrcA3 = this.provider.getResource(ctx, "/merged/a/3", ResourceContext.EMPTY_CONTEXT, null);
         final ValueMap vm = rsrcA3.adaptTo(ValueMap.class);
         assertNotNull(vm);
-        assertEquals(0, vm.size());
+        // only the properties from the underlying resource should have been cleared (i.e. the ones from /libs)
+        assertEquals(3, vm.size());
+        assertEquals("2", vm.get("e"));
+        assertEquals("x", vm.get("b"));
+        assertEquals("1", vm.get("d"));
     }
 
     @Test public void testHideProperties() {
