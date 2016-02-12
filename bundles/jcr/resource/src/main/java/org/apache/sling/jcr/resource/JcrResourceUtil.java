@@ -43,7 +43,10 @@ import org.apache.sling.jcr.resource.internal.helper.LazyInputStream;
 /**
  * The <code>JcrResourceUtil</code> class provides helper methods used
  * throughout this bundle.
+ *
+ * @deprecated Use the Resource API instead.
  */
+@Deprecated
 public class JcrResourceUtil {
 
     /**
