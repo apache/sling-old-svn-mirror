@@ -47,12 +47,6 @@ public class BasicResolveContext<T> implements ResolveContext<T> {
 
     private final String parentPath;
 
-    private volatile boolean parentLookupDone = false;
-
-    private volatile ResourceProviderHandler parentProviderHandler;
-
-    private volatile ResolveContext<Object> parentResolveContext;
-
     public BasicResolveContext(@Nonnull final ResourceResolver resolver,
             @Nonnull final ProviderManager resolveContextManager,
             @Nonnull final ResourceResolverControl control,
@@ -77,40 +71,42 @@ public class BasicResolveContext<T> implements ResolveContext<T> {
 
     @Override
     public ResolveContext<?> getParentResolveContext() {
-        this.getParentResourceProvider();
-        return parentResolveContext;
+        final Object[] providerAndContext = getParentProviderAndContext();
+        return (ResolveContext<?>) (providerAndContext != null ? providerAndContext[1] : null);
     }
 
     @Override
     public ResourceProvider<?> getParentResourceProvider() {
-        if ( ! parentLookupDone ) {
-            synchronized ( this ) {
-                if ( this.parentPath != null ) {
-                    String path = this.parentPath;
-                    while ( path != null && this.parentProviderHandler == null ) {
-                        final Node<ResourceProviderHandler> node = this.control.getResourceProviderStorage().getTree().getBestMatchingNode(this.parentPath);
-                        if ( node != null ) {
-                            final ResourceProviderHandler handler = node.getValue();
-                            try {
-                                this.parentResolveContext = this.resolveContextManager.getOrCreateResolveContext(handler, this.control);
-                                if ( this.parentResolveContext != null ) {
-                                    this.parentProviderHandler = handler;
-                                }
-                            } catch ( final LoginException se) {
-                                // skip this, try next
-                            }
-                            if ( this.parentProviderHandler == null ) {
-                                path = ResourceUtil.getParent(path);
-                            }
-                        } else {
-                            path = null;
-                        }
-                    }
-                }
-                parentLookupDone = true;
-            }
-        }
-        return this.parentProviderHandler != null ? this.parentProviderHandler.getResourceProvider() : null;
+        final Object[] providerAndContext = getParentProviderAndContext();
+        return (ResourceProvider<?>) (providerAndContext != null ? providerAndContext[0] : null);
     }
 
+    private Object[] getParentProviderAndContext() {
+        ResourceProvider<?> parentProvider = null;
+        ResolveContext<?> parentResolveContext = null;
+        if ( this.parentPath != null ) {
+            String path = this.parentPath;
+            while ( path != null && parentProvider == null ) {
+                final Node<ResourceProviderHandler> node = this.control.getResourceProviderStorage().getTree().getBestMatchingNode(path);
+                if ( node != null ) {
+                    final ResourceProviderHandler handler = node.getValue();
+                    try {
+                       parentResolveContext = this.resolveContextManager.getOrCreateResolveContext(handler, this.control);
+                       if ( parentResolveContext != null ) {
+                           parentProvider = handler.getResourceProvider();
+                        }
+                    } catch ( final LoginException se) {
+                        // skip this, try next
+                    }
+                    if ( parentProvider == null ) {
+                        parentResolveContext = null;
+                        path = ResourceUtil.getParent(path);
+                    }
+                } else {
+                    path = null;
+                }
+            }
+        }
+        return parentProvider != null ? new Object[] {parentProvider, parentResolveContext} : null;
+    }
 }
