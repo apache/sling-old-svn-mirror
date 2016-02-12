@@ -62,7 +62,7 @@
     org.apache.sling/org.apache.sling.models.impl/1.2.4
     org.apache.sling/org.apache.sling.resourceresolver/1.4.1-SNAPSHOT
     org.apache.sling/org.apache.sling.scripting.api/2.1.8
-    org.apache.sling/org.apache.sling.scripting.core/2.0.34
+    org.apache.sling/org.apache.sling.scripting.core/2.0.36
     org.apache.sling/org.apache.sling.scripting.javascript/2.0.26
     org.apache.sling/org.apache.sling.scripting.jsp/2.1.8
     org.apache.sling/org.apache.sling.scripting.jsp.taglib/2.2.4
