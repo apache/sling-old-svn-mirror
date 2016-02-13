@@ -1206,8 +1206,8 @@ public class ContentDispositionFilterTest {
                 will(returnValue(true));
                 allowing(response).setContentType("text/html");
                 allowing(response).setContentType("text/xml");
-                //CONTENT DISPOSITION IS SET
-                exactly(1).of(response).addHeader("Content-Disposition", "attachment");
+                //CONTENT DISPOSITION IS NOT SET because exclude path is wild card now
+                exactly(0).of(response).addHeader("Content-Disposition", "attachment");
             }
         });   
         final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response) {          
@@ -1216,7 +1216,7 @@ public class ContentDispositionFilterTest {
             }
         };
         rewriterResponse.setContentType("text/html");
-        Assert.assertEquals(1, counter.intValue());
+        Assert.assertEquals(0, counter.intValue());
     }
     
     @Test
