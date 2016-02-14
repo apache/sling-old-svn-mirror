@@ -103,7 +103,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
     private static final String ENCODING = "UTF-8";
 
     /** Default regexp for watched folders */
-    public static final String DEFAULT_FOLDER_NAME_REGEXP = ".*/install$";
+    public static final String DEFAULT_FOLDER_NAME_REGEXP = ".*/install|config$";
 
     /**
      * ComponentContext property that overrides the folder name regexp
