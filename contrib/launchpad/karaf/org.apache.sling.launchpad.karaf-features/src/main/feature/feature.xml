@@ -306,7 +306,7 @@
   <!-- Apache Sling Scripting -->
   <feature name="sling-scripting" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.api/2.1.8</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.core/2.0.34</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.core/2.0.36</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
     <feature>webconsole</feature>
