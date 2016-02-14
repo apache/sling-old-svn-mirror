@@ -104,6 +104,19 @@
     <bundle dependency="true">mvn:org.apache.httpcomponents/httpcore-osgi/4.4.4</bundle>
     <bundle dependency="true">mvn:org.apache.httpcomponents/httpclient-osgi/4.5.1</bundle>
   </feature>
+  <feature name="sling-extension-discovery-oak" version="${feature.version}">
+    <bundle>mvn:org.apache.sling/org.apache.sling.discovery.oak/1.2.6</bundle>
+    <!-- dependencies -->
+    <feature>webconsole</feature>
+    <feature version="${feature.version}">sling-extension-discovery</feature>
+    <feature version="${feature.version}">sling-extension-healthcheck</feature>
+    <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.discovery.base/1.1.2</bundle>
+    <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.discovery.commons/1.0.10</bundle>
+    <bundle dependency="true">mvn:org.apache.httpcomponents/httpcore-osgi/4.4.4</bundle>
+    <bundle dependency="true">mvn:org.apache.httpcomponents/httpclient-osgi/4.5.1</bundle>
+    <!-- TODO: SLING-5485 -->
+    <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.launchpad.api/1.2.0</bundle>
+  </feature>
   <feature name="sling-extension-discovery-standalone" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.discovery.standalone/1.0.2</bundle>
     <!-- dependencies -->
