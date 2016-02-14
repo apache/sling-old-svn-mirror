@@ -26,9 +26,7 @@ import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptException;
 
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingBindings;
-import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
 import org.slf4j.Logger;
@@ -56,16 +54,9 @@ public final class ThymeleafScriptEngine extends AbstractSlingScriptEngine {
             throw new ScriptException("SlingScriptHelper missing from bindings");
         }
 
-        ResourceResolver resourceResolver = (ResourceResolver) scriptContext.getAttribute(SlingScriptConstants.ATTR_SCRIPT_RESOURCE_RESOLVER, SlingScriptConstants.SLING_SCOPE);
-        if (resourceResolver == null) {
-            resourceResolver = helper.getScript().getScriptResource().getResourceResolver();
-        }
         final Locale locale = helper.getResponse().getLocale();
-
         final String scriptName = helper.getScript().getScriptResource().getPath();
         final Writer writer = scriptContext.getWriter();
-
-        bindings.put(SlingScriptConstants.ATTR_SCRIPT_RESOURCE_RESOLVER, resourceResolver); // TODO SlingBindings.RESOLVER
 
         try {
             final IContext context = new Context(locale, bindings);

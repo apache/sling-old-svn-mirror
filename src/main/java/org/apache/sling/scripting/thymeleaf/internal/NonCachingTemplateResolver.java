@@ -22,7 +22,7 @@ import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.scripting.SlingScriptConstants;
+import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.scripting.thymeleaf.TemplateModeProvider;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Activate;
@@ -114,7 +114,7 @@ public class NonCachingTemplateResolver implements ITemplateResolver {
     @Override
     public TemplateResolution resolveTemplate(final IEngineConfiguration engineConfiguration, final IContext context, final String ownerTemplate, final String template, final Map<String, Object> templateResolutionAttributes) {
         logger.debug("resolving template '{}'", template);
-        final ResourceResolver resourceResolver = (ResourceResolver) context.getVariable(SlingScriptConstants.ATTR_SCRIPT_RESOURCE_RESOLVER); // TODO SlingBindings.RESOLVER
+        final ResourceResolver resourceResolver = (ResourceResolver) context.getVariable(SlingBindings.RESOLVER);
         final Resource resource = resourceResolver.getResource(template);
         final ITemplateResource templateResource = new SlingTemplateResource(resource);
         final TemplateMode templateMode = templateModeProvider.provideTemplateMode(resource);
