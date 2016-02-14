@@ -40,15 +40,16 @@ sed -i '' "s/<bundle>mvn:org.apache.sling\/org.apache.sling.jcr.oak.server\/$OAK
 
 
 # Jackrabbit
-JACKRABBIT_VERSION_CURRENT=2.11.2
-JACKRABBIT_VERSION_NEW=2.11.3
+JACKRABBIT_VERSION_CURRENT=2.11.3
+JACKRABBIT_VERSION_NEW=2.12.0
 
 sed -i '' "s/<jackrabbit.version>$JACKRABBIT_VERSION_CURRENT<\/jackrabbit.version>/<jackrabbit.version>$JACKRABBIT_VERSION_NEW<\/jackrabbit.version>/1" "bundles/jcr/it-jackrabbit-oak/pom.xml"
+sed -i '' "s/<jackrabbit.version>$JACKRABBIT_VERSION_CURRENT<\/jackrabbit.version>/<jackrabbit.version>$JACKRABBIT_VERSION_NEW<\/jackrabbit.version>/1" "bundles/jcr/webdav/pom.xml"
 
 sed -i '' "s/jackrabbit.version=$JACKRABBIT_VERSION_CURRENT/jackrabbit.version=$JACKRABBIT_VERSION_NEW/1" "launchpad/builder/src/main/provisioning/sling.txt"
 sed -i '' "s/<org.apache.jackrabbit.version>$JACKRABBIT_VERSION_CURRENT<\/org.apache.jackrabbit.version>/<org.apache.jackrabbit.version>$JACKRABBIT_VERSION_NEW<\/org.apache.jackrabbit.version>/1" "contrib/launchpad/karaf/org.apache.sling.launchpad.karaf-features/pom.xml"
 
-# sed -i '' "s/<jackrabbit.version>$JACKRABBIT_VERSION_CURRENT<\/jackrabbit.version>/<jackrabbit.version>$JACKRABBIT_VERSION_NEW<\/jackrabbit.version>/1" "bundles/commons/testing/pom.xml"
+sed -i '' "s/<jackrabbit.version>$JACKRABBIT_VERSION_CURRENT<\/jackrabbit.version>/<jackrabbit.version>$JACKRABBIT_VERSION_NEW<\/jackrabbit.version>/1" "bundles/commons/testing/pom.xml"
 
 # Tika
 TIKA_VERSION_CURRENT=1.10
