@@ -52,7 +52,7 @@
             WARNING make sure oak.version and sling.oak.server.version 
             are in sync with bundles/jcr/oak-server
         -->
-        <oak.version>1.3.11</oak.version>
+        <oak.version>1.3.14</oak.version>
         <sling.oak.server.version>1.0.1-SNAPSHOT</sling.oak.server.version>
         
         <!-- optionally activate the webconsole -->
