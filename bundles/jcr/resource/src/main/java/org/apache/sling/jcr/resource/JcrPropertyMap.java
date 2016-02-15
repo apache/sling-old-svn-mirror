@@ -37,6 +37,7 @@ import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
+import org.slf4j.LoggerFactory;
 
 /**
  * An implementation of the value map based on a JCR node.
@@ -47,6 +48,8 @@ import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
 @Deprecated
 public class JcrPropertyMap
     implements ValueMap {
+
+    private static volatile boolean LOG_DEPRECATED = true;
 
     /** The underlying node. */
     private final Node node;
@@ -85,6 +88,10 @@ public class JcrPropertyMap
         this.valueCache = new LinkedHashMap<String, Object>();
         this.fullyRead = false;
         this.dynamicClassLoader = dynamicCL;
+        if ( LOG_DEPRECATED ) {
+            LOG_DEPRECATED = false;
+            LoggerFactory.getLogger(this.getClass()).warn("DEPRECATION WARNING: JcrPropertyMap is deprecated. Please switch to resource API.");
+        }
     }
 
     protected ClassLoader getDynamicClassLoader() {
