@@ -17,6 +17,7 @@
  */
 package org.apache.sling.resourceresolver.impl.helper;
 
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -126,9 +127,15 @@ public class ResourceResolverControl {
      */
     private void logout() {
         for(final Map.Entry<ResourceProviderHandler, Object> entry : this.authenticatedProviders.entrySet()) {
-            final ResourceProvider<Object> rp = entry.getKey().getResourceProvider();
-            if ( rp != null ) {
-                rp.logout(entry.getValue());
+            try {
+                final ResourceProvider<Object> rp = entry.getKey().getResourceProvider();
+                if ( rp != null ) {
+                    rp.logout(entry.getValue());
+                } else if ( entry.getValue() instanceof Closeable ) {
+                    ((Closeable)entry.getValue()).close();
+                }
+            } catch ( final Throwable t ) {
+                // we ignore everything from there to not stop this thread
             }
         }
         this.authenticatedProviders.clear();

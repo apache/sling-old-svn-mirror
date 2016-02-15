@@ -18,6 +18,8 @@
  */
 package org.apache.sling.resourceresolver.impl.legacy;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
@@ -42,7 +44,7 @@ import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 
 @SuppressWarnings("deprecation")
-public class LegacyResourceProviderAdapter extends ResourceProvider<Object> {
+public class LegacyResourceProviderAdapter extends ResourceProvider<Object> implements Closeable {
 
     private final org.apache.sling.api.resource.ResourceProvider rp;
 
@@ -150,6 +152,11 @@ public class LegacyResourceProviderAdapter extends ResourceProvider<Object> {
         if (rp instanceof DynamicResourceProvider) {
             ((DynamicResourceProvider) rp).close();
         }
+    }
+
+    @Override
+    public void close() throws IOException {
+        logout(null);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
