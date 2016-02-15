@@ -31,6 +31,7 @@ import org.apache.sling.api.resource.PersistableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.jcr.resource.internal.NodeUtil;
 import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
+import org.slf4j.LoggerFactory;
 
 /**
  * This implementation of the value map allows to change
@@ -44,6 +45,8 @@ public final class JcrModifiablePropertyMap
     extends JcrPropertyMap
     implements PersistableValueMap {
 
+    private static volatile boolean LOG_DEPRECATED = true;
+
     /** Set of removed and changed properties. */
     private Set<String> changedProperties;
 
@@ -53,6 +56,10 @@ public final class JcrModifiablePropertyMap
      */
     public JcrModifiablePropertyMap(final Node node) {
         super(node);
+        if ( LOG_DEPRECATED ) {
+            LOG_DEPRECATED = false;
+            LoggerFactory.getLogger(this.getClass()).warn("DEPRECATION WARNING: JcrModifiablePropertyMap is deprecated. Please switch to resource API.");
+        }
     }
 
     /**
@@ -63,6 +70,10 @@ public final class JcrModifiablePropertyMap
      */
     public JcrModifiablePropertyMap(final Node node, final ClassLoader dynamicCL) {
         super(node, dynamicCL);
+        if ( LOG_DEPRECATED ) {
+            LOG_DEPRECATED = false;
+            LoggerFactory.getLogger(this.getClass()).warn("DEPRECATION WARNING: JcrModifiablePropertyMap is deprecated. Please switch to resource API.");
+        }
     }
 
     // ---------- Map
