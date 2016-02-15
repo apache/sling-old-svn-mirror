@@ -295,7 +295,11 @@ public abstract class ResourceProvider<T> {
      * If such permission is missing, a {@code LoginException} is thrown.
      * <p>
      * The resource resolver implementation will call the {@link #logout(Object)}
-     * method once the resource resolver is closed.
+     * method once the resource resolver is closed. However, if the resource
+     * provider is already unregistered when the resource resolver is closed,
+     * logout can't be called. Therefore the returned state object might
+     * implement {@link java.io.Closeable}. In this case close is called
+     * on the state object.
      *
      * @param authenticationInfo A map of further credential information which
      *            may be used by the implementation to parameterize how the
