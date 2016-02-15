@@ -49,7 +49,6 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.slf4j.helpers.FormattingTuple;
 import org.slf4j.helpers.MessageFormatter;
 
@@ -323,27 +322,17 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
     }
 
     private class QueryLogCollector {
-        /**
-         * The MDC key is used in org.apache.jackrabbit.oak.query.QueryEngineImpl
-         */
-        static final String MDC_QUERY_ID = "oak.query.id";
         String query;
         String plan;
-        String id;
         String caller;
 
         public void record(Level level, String logger, FormattingTuple tuple) {
-            String idFromMDC = MDC.get(MDC_QUERY_ID);
-
-            //Use the query id to detect change of query execution
-            //i.e. once query gets executed for current thread and next
-            //query start it would cause the id to change. That would
-            //be a trigger to finish up on current query collection and
-            //switch to new one
-            if (idFromMDC != null && !idFromMDC.equals(id)) {
-                addQueryEntry();
-                id = idFromMDC;
-            }
+            //Assuming in a series of log statement from query package we see 'query'
+            //and then 'plan' then once both are not null then it means that one query
+            //execution is complete and we push the entry and reset the state
+            //This is done as we do not have a definitive way to determine when
+            //a given query processing is done
+            attemptQueryEntry();
 
             //TODO Query time. Change Oak to provide this information via some
             //dedicated Audit logging such that below reliance on impl details
@@ -383,7 +372,11 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
             return null;
         }
 
-        public void addQueryEntry(){
+        /**
+         * Checks if both plan and query are determined. If yes then pushes them to list
+         * and resets the state.
+         */
+        public void attemptQueryEntry(){
             if (query != null && plan != null){
                 queries.add(new QueryEntry(nullSafeTrim(query), nullSafeTrim(plan), caller));
                 plan = query = null;
@@ -392,7 +385,7 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
 
         public void done(){
             //Push any last pending entry i.e. last query
-            addQueryEntry();
+            attemptQueryEntry();
         }
     }
 
