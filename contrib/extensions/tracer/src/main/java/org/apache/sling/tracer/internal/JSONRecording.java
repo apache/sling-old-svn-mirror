@@ -174,16 +174,7 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
         jw.key("time").value(timeTaken);
         jw.key("timestamp").value(start);
 
-        if (tracker != null) {
-            jw.key("requestProgressLogs");
-            jw.array();
-            Iterator<String> it = tracker.getMessages();
-            //Per docs iterator can be null
-            while (it != null && it.hasNext()) {
-                jw.value(it.next());
-            }
-            jw.endArray();
-        }
+        addRequestProgressLogs(jw);
 
         queryCollector.done();
         addJson(jw, "queries", queries);
@@ -193,6 +184,22 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
         osw.flush();
         os.close();
         return baos.toByteArray();
+    }
+
+    private void addRequestProgressLogs(JSONWriter jw) throws JSONException {
+        if (tracker != null) {
+            jw.key("requestProgressLogs");
+            jw.array();
+            Iterator<String> it = tracker.getMessages();
+            //Per docs iterator can be null
+            while (it != null && it.hasNext()) {
+                String entry = it.next();
+                if (entry != null){
+                    jw.value(entry.trim());
+                }
+            }
+            jw.endArray();
+        }
     }
 
     private void addJson(JSONWriter jw, String name, List<? extends JsonEntry> entries) throws JSONException {
