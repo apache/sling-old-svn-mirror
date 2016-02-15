@@ -18,13 +18,16 @@
  */
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
+import java.io.Closeable;
+import java.io.IOException;
+
 import javax.jcr.Session;
 
 import org.apache.sling.jcr.resource.internal.HelperData;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
-class JcrProviderState {
+class JcrProviderState implements Closeable {
 
     private final Session session;
 
@@ -63,12 +66,22 @@ class JcrProviderState {
         return helperData;
     }
 
+    @Override
+    public void close() throws IOException {
+        logout();
+    }
+
     void logout() {
         if (logout) {
             session.logout();
         }
         if (bundleContext != null) {
-            bundleContext.ungetService(repositoryRef);
+            try {
+                bundleContext.ungetService(repositoryRef);
+            } catch ( final IllegalStateException ise ) {
+                // this might happen on shutdown / updates (bundle is invalid)
+                // we can ignore this.
+            }
         }
     }
 }
