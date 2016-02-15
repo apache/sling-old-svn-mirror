@@ -77,7 +77,7 @@
 
         <!-- Options for the jar to execute. $JAREXEC_SERVER_PORT$ is replaced by the
             selected port number -->
-        <jar.executor.jar.options>-p $JAREXEC_SERVER_PORT$</jar.executor.jar.options>
+        <jar.executor.jar.options>-p $JAREXEC_SERVER_PORT$ -D sling.run.modes=oak</jar.executor.jar.options>
 
         <!-- Change this to run selected tests only -->
         <tests.to.run>**/**Test.java</tests.to.run>
