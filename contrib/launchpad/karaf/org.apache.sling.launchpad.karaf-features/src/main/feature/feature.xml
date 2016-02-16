@@ -198,7 +198,7 @@
     <feature version="${feature.version}">sling-installer</feature>
   </feature>
   <feature name="sling-installer-provider-jcr" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.installer.provider.jcr/3.1.16</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.installer.provider.jcr/3.1.18</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling-installer</feature>
     <feature version="${feature.version}">sling-jcr</feature>
@@ -462,7 +462,7 @@
     <feature version="${feature.version}">sling</feature>
   </feature>
   <feature name="sling-extension-resourcemerger" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.resourcemerger/1.2.10</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.resourcemerger/1.3.0</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
   </feature>
@@ -514,9 +514,9 @@
   </feature>
   <!-- Composum -->
   <feature name="composum-sling" version="${feature.version}">
-    <bundle>mvn:com.composum.sling.core/composum-sling-core-commons/1.3.3</bundle>
-    <bundle>mvn:com.composum.sling.core/composum-sling-core-console/1.3.3</bundle>
-    <bundle>mvn:com.composum.sling.core/composum-sling-core-jslibs/1.3.3</bundle>
+    <bundle>mvn:com.composum.sling.core/composum-sling-core-commons/1.3.4</bundle>
+    <bundle>mvn:com.composum.sling.core/composum-sling-core-console/1.3.4</bundle>
+    <bundle>mvn:com.composum.sling.core/composum-sling-core-jslibs/1.3.4</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-jcr</feature>
