@@ -23,10 +23,10 @@
     oak.version=1.3.14
 
 # The segment node store is used via a configuration
-[artifacts startLevel=10 runModes=oak]
+[artifacts startLevel=10]
     org.apache.felix/org.apache.felix.jaas/0.0.4
 
-[artifacts startLevel=15 runModes=oak]
+[artifacts startLevel=15]
     org.apache.jackrabbit/oak-core/${oak.version}
     org.apache.jackrabbit/oak-commons/${oak.version}
     org.apache.jackrabbit/oak-lucene/${oak.version}
@@ -37,10 +37,10 @@
 
 # start the Oak server instance after all components have been configured
 # and started to avoid restarting that component ( see SLING-4556 )
-[artifacts startLevel=16 runModes=oak]
+[artifacts startLevel=16]
     org.apache.sling/org.apache.sling.jcr.oak.server/1.0.1-SNAPSHOT
 
-[configurations runModes=oak]
+[configurations]
   org.apache.felix.jaas.Configuration.factory-GuestLoginModule
     jaas.controlFlag="optional"
     jaas.classname="org.apache.jackrabbit.oak.spi.security.authentication.GuestLoginModule"
