@@ -40,5 +40,13 @@
     "update": {
         "jcr:primaryType": "nt:unstructured",
         "sling:resourceType": "/apps/sightly/scripts/update"
+    },
+    "use-someresource": {
+        "jcr:primaryType": "nt:unstructured",
+        "data": "foobar-someresource"
+    },
+    "use-somefolder": {
+        "jcr:primaryType": "sling:Folder",
+        "data": "foobar-somefolder"
     }
 }
