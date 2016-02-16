@@ -25,7 +25,7 @@
 # oak_tar and oak_mongo run modes are mutually exclusive,
 # and cannot be changed after the first startup
 [settings]
-    sling.run.mode.install.options=oak|oak_tar,oak_mongo
+    sling.run.mode.install.options=oak_tar,oak_mongo
 
 [artifacts]
     org.slf4j/slf4j-api/1.7.6
