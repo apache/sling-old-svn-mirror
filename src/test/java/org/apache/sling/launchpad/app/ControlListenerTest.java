@@ -26,9 +26,9 @@ import java.net.ServerSocket;
 import java.util.HashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
-import junit.framework.TestCase;
-
 import org.apache.sling.launchpad.base.shared.SharedConstants;
+
+import junit.framework.TestCase;
 
 public class ControlListenerTest extends TestCase {
 
@@ -247,6 +247,8 @@ public class ControlListenerTest extends TestCase {
         TestCase.assertEquals(0, new ControlListener(main1, null).statusServer());
         TestCase.assertEquals(0, new ControlListener(main1, null).shutdownServer());
 
+        delay();
+
         TestCase.assertTrue(main1.stopCalled);
 
         delay();
@@ -258,6 +260,8 @@ public class ControlListenerTest extends TestCase {
 
         TestCase.assertEquals(0, new ControlListener(main2, null).statusServer());
         TestCase.assertEquals(0, new ControlListener(main2, null).shutdownServer());
+
+        delay();
 
         TestCase.assertTrue(main2.stopCalled);
 
@@ -283,6 +287,8 @@ public class ControlListenerTest extends TestCase {
 
         TestCase.assertEquals(3, new ControlListener(main, null).shutdownServer());
 
+        delay();
+
         TestCase.assertFalse(main.stopCalled);
 
         TestCase.assertTrue(ctlFile1.exists());
@@ -297,6 +303,8 @@ public class ControlListenerTest extends TestCase {
         TestCase.assertEquals(4, new ControlListener(main, String.valueOf(port)).statusServer());
 
         TestCase.assertEquals(4, new ControlListener(main, String.valueOf(port)).shutdownServer());
+
+        delay();
 
         TestCase.assertFalse(main.stopCalled);
 
@@ -319,6 +327,8 @@ public class ControlListenerTest extends TestCase {
         TestCase.assertEquals(4, new ControlListener(main, null).statusServer());
 
         TestCase.assertEquals(4, new ControlListener(main, null).shutdownServer());
+
+        delay();
 
         TestCase.assertFalse(main.stopCalled);
 
