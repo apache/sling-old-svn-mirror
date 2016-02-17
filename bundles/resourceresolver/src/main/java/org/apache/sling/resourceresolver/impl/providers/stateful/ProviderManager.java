@@ -81,17 +81,22 @@ public class ProviderManager {
     throws LoginException {
         AuthenticatedResourceProvider provider = this.contextMap.get(handler);
         if (provider == null) {
-            try {
-                provider = authenticate(handler, control);
-                this.contextMap.put(handler, provider);
-                if ( handler.getInfo().getAuthType() == AuthType.lazy || handler.getInfo().getAuthType() == AuthType.required ) {
-                    control.registerAuthenticatedProvider(handler, provider.getResolveContext().getProviderState());
-                }
-            } catch ( final LoginException le) {
-                logger.debug("Authentication to resource provider " + handler.getResourceProvider() + " failed: " + le.getMessage(), le);
-                this.contextMap.put(handler, AuthenticatedResourceProvider.UNAUTHENTICATED_PROVIDER);
+            final ResourceProvider<Object> resourceProvider = handler.getResourceProvider();
+            if ( resourceProvider != null ) {
+                try {
+                    provider = authenticate(handler, resourceProvider, control);
+                    this.contextMap.put(handler, provider);
+                    if ( handler.getInfo().getAuthType() == AuthType.lazy || handler.getInfo().getAuthType() == AuthType.required ) {
+                        control.registerAuthenticatedProvider(handler, provider.getResolveContext().getProviderState());
+                    }
+                } catch ( final LoginException le) {
+                    logger.debug("Authentication to resource provider " + resourceProvider + " failed: " + le.getMessage(), le);
+                    this.contextMap.put(handler, AuthenticatedResourceProvider.UNAUTHENTICATED_PROVIDER);
 
-                throw le;
+                    throw le;
+                }
+            } else {
+                this.contextMap.put(handler, AuthenticatedResourceProvider.UNAUTHENTICATED_PROVIDER);
             }
         }
 
@@ -147,8 +152,8 @@ public class ProviderManager {
      * @throws LoginException If authentication fails
      */
     private @Nonnull AuthenticatedResourceProvider authenticate(@Nonnull final ResourceProviderHandler handler,
+            @Nonnull final ResourceProvider<Object> provider,
             @Nonnull final ResourceResolverControl control) throws LoginException {
-        final ResourceProvider<Object> provider = handler.getResourceProvider();
         boolean isAuthenticated = false;
         Object contextData = null;
         if ( (handler.getInfo().getAuthType() == AuthType.required || handler.getInfo().getAuthType() == AuthType.lazy) ) {
