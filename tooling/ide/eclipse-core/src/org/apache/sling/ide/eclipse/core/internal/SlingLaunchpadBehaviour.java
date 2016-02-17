@@ -49,6 +49,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.jdt.core.IJavaProject;
@@ -82,7 +83,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
 
         boolean success = false;
         Result<ResourceProxy> result = null;
-        monitor.beginTask("Starting server", 7);
+        monitor = SubMonitor.convert(monitor, "Starting server", 10).setWorkRemaining(50);
         
         Repository repository;
         RepositoryInfo repositoryInfo;
@@ -99,11 +100,12 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
             throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
         }
 
-        monitor.worked(2); // 2/7 done
+        monitor.worked(10); // 10/50 done
 
         try {
             if (getServer().getMode().equals(ILaunchManager.DEBUG_MODE)) {
                 debuggerConnection = new JVMDebuggerConnection(client);
+                
                 success = debuggerConnection.connectInDebugMode(launch, getServer(), monitor);
 
                 monitor.worked(5); // 7/7 done
@@ -114,15 +116,15 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                 result = command.execute();
                 success = result.isSuccess();
                 
-                monitor.worked(1); // 3/7 done
+                monitor.worked(10); // 20/50 done
                 
                 try {
                     EmbeddedArtifactLocator artifactLocator = Activator.getDefault().getArtifactLocator();
                     
                     installBundle(monitor, client, artifactLocator.loadToolingSupportBundle(), 
-                            EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME); // 5/7 done
+                            EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME); // 35/50 done
                     installBundle(monitor, client, artifactLocator.loadSourceSupportBundle(), 
-                            EmbeddedArtifactLocator.SUPPORT_SOURCE_BUNDLE_SYMBOLIC_NAME); // 7/7 done
+                            EmbeddedArtifactLocator.SUPPORT_SOURCE_BUNDLE_SYMBOLIC_NAME); // 50/50 done
                     
                 } catch ( IOException | OsgiClientException e) {
                     Activator.getDefault().getPluginLogger()
@@ -140,6 +142,9 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                 }
                 throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, message));
             }
+        } catch ( CoreException | RuntimeException e ) {
+            setServerState(IServer.STATE_STOPPED);
+            throw e;
         } finally {
             monitor.done();
         }
@@ -150,7 +155,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
         
         Version remoteVersion = client.getBundleVersion(bundleSymbolicName);
         
-        monitor.worked(1);
+        monitor.worked(7);
         
         final Version embeddedVersion = new Version(bundle.getOsgiFriendlyVersion());
         
@@ -167,7 +172,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
         launchpadServer.setBundleVersion(bundleSymbolicName, remoteVersion,
                 monitor);
         
-        monitor.worked(1);
+        monitor.worked(8);
     }
 
     // TODO refine signature

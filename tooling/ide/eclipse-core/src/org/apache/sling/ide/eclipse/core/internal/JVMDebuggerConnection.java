@@ -24,6 +24,7 @@ import java.util.Map;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadConfiguration;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.launch.SourceReferenceResolver;
+import org.apache.sling.ide.eclipse.core.progress.ProgressUtils;
 import org.apache.sling.ide.osgi.OsgiClient;
 import org.apache.sling.ide.osgi.OsgiClientException;
 import org.apache.sling.ide.osgi.SourceReference;
@@ -31,6 +32,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.debug.core.DebugException;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
@@ -55,6 +57,9 @@ public class JVMDebuggerConnection {
 
     boolean connectInDebugMode(ILaunch launch, IServer iServer, IProgressMonitor monitor)
 			throws CoreException {
+        
+        long start = System.currentTimeMillis();
+        
 		this.launch = launch;
 		boolean success = false;
 		IVMConnector connector = null;
@@ -104,20 +109,27 @@ public class JVMDebuggerConnection {
         }
 		
         // 2. add the other modules deployed on server
+        ProgressUtils.advance(monitor, 10); // 20/50
+        
         SourceReferenceResolver resolver = Activator.getDefault().getSourceReferenceResolver();
         if ( resolver != null ) {
             try {
-                for ( SourceReference reference :  osgiClient.findSourceReferences() ) {
+                List<SourceReference> references = osgiClient.findSourceReferences();
+                SubMonitor subMonitor = SubMonitor.convert(monitor, "Resolving source references", 29).setWorkRemaining(references.size());
+                for ( SourceReference reference :  references ) {
                     try {
                         IRuntimeClasspathEntry classpathEntry = resolver.resolve(reference);
                         if ( classpathEntry != null ) {
                             classpathEntries.add(classpathEntry);
                         }
+                        ProgressUtils.advance(subMonitor, 1);
+                        
                     } catch (CoreException e) {
                         // don't fail the debug launch for artifact resolution errors
                         Activator.getDefault().getPluginLogger().warn("Failed resolving source reference", e);
                     }
                 }
+                subMonitor.done(); // 49/50
             } catch (OsgiClientException e1) {
                 throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e1.getMessage(), e1));
             }
@@ -132,12 +144,13 @@ public class JVMDebuggerConnection {
 		sourceLocator.initializeParticipants();
 		launch.setSourceLocator(sourceLocator);
 
-		monitor.worked(1);		
-		
 		// connect to remote VM
 		try{
-			connector.connect(connectMap, monitor, launch);
+			connector.connect(connectMap, monitor, launch); // 50/50
 			success = true;
+			
+			long elapsedMillis = System.currentTimeMillis() - start;
+			Activator.getDefault().getPluginLogger().tracePerformance("Debug connection to {0}", elapsedMillis, iServer.getName());
 		} catch(Exception e) {
 			throw new CoreException(new Status(IStatus.ERROR, "org.apache.sling.ide.eclipse.wst",
 		            "could not establish debug connection to "+iServer.getHost()+" : "+debugPort, e));
