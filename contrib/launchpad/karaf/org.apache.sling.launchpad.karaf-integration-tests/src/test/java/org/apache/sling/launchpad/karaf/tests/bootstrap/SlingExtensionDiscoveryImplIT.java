@@ -50,18 +50,4 @@ public class SlingExtensionDiscoveryImplIT extends KarafTestSupport {
         assertEquals(Bundle.ACTIVE, bundle.getState());
     }
 
-    @Test
-    public void testOrgApacheHttpcomponentsHttpcore() {
-        final Bundle bundle = findBundle("org.apache.httpcomponents.httpcore");
-        assertNotNull(bundle);
-        assertEquals(Bundle.ACTIVE, bundle.getState());
-    }
-
-    @Test
-    public void testOrgApacheHttpcomponentsHttpclient() {
-        final Bundle bundle = findBundle("org.apache.httpcomponents.httpclient");
-        assertNotNull(bundle);
-        assertEquals(Bundle.ACTIVE, bundle.getState());
-    }
-
 }
