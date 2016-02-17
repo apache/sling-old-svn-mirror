@@ -86,6 +86,7 @@
         <!-- Tooling Support -->
         <module>tooling/support/install</module>
         <module>tooling/support/provisioning-model</module>
+        <module>tooling/support/source</module>
 
         <!-- The Sling API -->
         <module>bundles/api</module>
