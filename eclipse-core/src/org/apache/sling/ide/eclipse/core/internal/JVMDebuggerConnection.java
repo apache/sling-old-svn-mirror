@@ -17,38 +17,36 @@
 package org.apache.sling.ide.eclipse.core.internal;
 
 import java.io.File;
-import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadConfiguration;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
-import org.apache.sling.ide.eclipse.core.ServerUtil;
+import org.apache.sling.ide.eclipse.core.launch.SourceReferenceResolver;
 import org.apache.sling.ide.osgi.MavenSourceReference;
 import org.apache.sling.ide.osgi.OsgiClient;
 import org.apache.sling.ide.osgi.OsgiClientException;
 import org.apache.sling.ide.osgi.SourceReference;
 import org.apache.sling.ide.osgi.SourceReference.Type;
-import org.apache.sling.ide.transport.RepositoryInfo;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.DebugException;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.debug.core.model.IProcess;
-import org.eclipse.debug.core.sourcelookup.ISourceContainer;
 import org.eclipse.debug.core.sourcelookup.ISourceLookupDirector;
-import org.eclipse.debug.core.sourcelookup.containers.ExternalArchiveSourceContainer;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.internal.launching.JavaSourceLookupDirector;
+import org.eclipse.jdt.launching.IRuntimeClasspathEntry;
 import org.eclipse.jdt.launching.IVMConnector;
 import org.eclipse.jdt.launching.JavaRuntime;
-import org.eclipse.jdt.launching.sourcelookup.containers.JavaProjectSourceContainer;
 import org.eclipse.wst.server.core.IServer;
 
 public class JVMDebuggerConnection {
@@ -102,59 +100,33 @@ public class JVMDebuggerConnection {
 				.setSourcePathComputer(DebugPlugin.getDefault().getLaunchManager()
 						.getSourcePathComputer(
 								"org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer")); //$NON-NLS-1$
-		List<ISourceContainer> l = new LinkedList<>();
-		IJavaProject[] javaProjects = ProjectHelper.getAllJavaProjects();
+		List<IRuntimeClasspathEntry> classpathEntries = new ArrayList<>();
 		
+		// TODO - only add the projects which are deployed as modules on the server
+		// 1. add java projects first
+        for (IJavaProject javaProject : ProjectHelper.getAllJavaProjects()) {
+            classpathEntries.add(JavaRuntime.newProjectRuntimeClasspathEntry(javaProject));
+        }
+		
+        // 2. then add the other modules deployed on server
+        SourceReferenceResolver resolver = new SimpleSourceReferenceResolver();
         try {
             for ( SourceReference reference :  osgiClient.findSourceReferences() ) {
-                
-                if ( reference.getType() != Type.MAVEN) {
-                    continue;
-                    // unsupported
-                }
-                MavenSourceReference sr = (MavenSourceReference) reference;
-                
-                // TODO - delegate to m2e and move to eclipse-m2e-core
-                StringBuilder path = new StringBuilder();
-                path.append(System.getProperty("user.home"))
-                    .append(File.separator).append(".m2").append(File.separator).append("repository").append(File.separator);
-                
-                for (String segment : sr.getGroupId().split("\\.") ) {
-                    path.append(segment).append(File.separator);
-                }
-                path.append(sr.getArtifactId()).append(File.separator).append(sr.getVersion()).append(File.separator);
-                path.append(sr.getArtifactId()).append("-").append(sr.getVersion()).append("-sources.jar");
-                
-                l.add(new ExternalArchiveSourceContainer(path.toString(), false));
+                classpathEntries.add(resolver.resolve(reference));
             }
-
         } catch (OsgiClientException e1) {
             throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e1.getMessage(), e1));
         }
+        
+        // 3. add the JRE entry
+		classpathEntries.add(JavaRuntime.computeJREEntry(launch.getLaunchConfiguration()));
 		
-		if (javaProjects!=null) {
-			for (int i = 0; i < javaProjects.length; i++) {
-				IJavaProject javaProject = javaProjects[i];
-				JavaProjectSourceContainer sc = new JavaProjectSourceContainer(javaProject);
-				l.add(sc);
-//					ISourceContainer[] scs = sc.getSourceContainers();
-//					if (scs!=null && scs.length>0) {
-//						for (int j = 0; j < scs.length; j++) {
-//							ISourceContainer iSourceContainer = scs[j];
-//							l.add(iSourceContainer);
-//						}
-//					} else {
-//					}
-			}
-			
-			ISourceContainer[] containers = l.toArray(new ISourceContainer[l.size()]);
-			sourceLocator.setSourceContainers(containers);
-			sourceLocator.initializeParticipants();
-//			sourceLocator.initializeDefaults(configuration);
-			launch.setSourceLocator(sourceLocator);
-		}
+		IRuntimeClasspathEntry[] resolved = JavaRuntime.resolveSourceLookupPath(classpathEntries.toArray(new IRuntimeClasspathEntry[0]), launch.getLaunchConfiguration());
+		
+		sourceLocator.setSourceContainers(JavaRuntime.getSourceContainers(resolved));
+		sourceLocator.initializeParticipants();
+		launch.setSourceLocator(sourceLocator);
 
-//			setDefaultSourceLocator(getServer().getLaunch(), null);
 		monitor.worked(1);		
 		
 		// connect to remote VM
@@ -205,5 +177,39 @@ public class JVMDebuggerConnection {
 	}
 
 
+	class SimpleSourceReferenceResolver implements SourceReferenceResolver {
 
+        @Override
+        public IRuntimeClasspathEntry resolve(SourceReference reference) {
+            if ( reference == null || reference.getType() != SourceReference.Type.MAVEN) {
+                return null;
+            }
+            
+            MavenSourceReference sr = (MavenSourceReference) reference;
+            
+            // TODO - delegate to m2e and move to eclipse-m2e-core
+            StringBuilder path = new StringBuilder();
+            path.append(System.getProperty("user.home"))
+                .append(File.separator).append(".m2").append(File.separator).append("repository").append(File.separator);
+            
+            for (String segment : sr.getGroupId().split("\\.") ) {
+                path.append(segment).append(File.separator);
+            }
+            path.append(sr.getArtifactId()).append(File.separator).append(sr.getVersion()).append(File.separator);
+            path.append(sr.getArtifactId()).append("-").append(sr.getVersion());
+            
+            IPath jarPath = Path.fromOSString(path.toString() + ".jar");
+            IPath sourcePath = Path.fromOSString(path.toString() + "-sources.jar");
+            // TODO - ensure exists
+            if ( !jarPath.toFile().exists() || !sourcePath.toFile().exists()) {
+                return null;
+            }
+            
+            IRuntimeClasspathEntry mavenEntry = JavaRuntime.newArchiveRuntimeClasspathEntry(jarPath);
+            mavenEntry.setSourceAttachmentPath(sourcePath);
+            
+            return mavenEntry;
+        }
+	    
+	}
 }
