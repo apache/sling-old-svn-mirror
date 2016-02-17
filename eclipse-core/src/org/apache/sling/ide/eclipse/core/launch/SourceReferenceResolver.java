@@ -17,6 +17,7 @@
 package org.apache.sling.ide.eclipse.core.launch;
 
 import org.apache.sling.ide.osgi.SourceReference;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.launching.IRuntimeClasspathEntry;
 
 /**
@@ -29,6 +30,6 @@ public interface SourceReferenceResolver {
      * @param reference the reference, must not be null
      * @return the classspath entry, possibly null
      */
-    IRuntimeClasspathEntry resolve(SourceReference reference);
+    IRuntimeClasspathEntry resolve(SourceReference reference) throws CoreException;
     
 }

@@ -16,7 +16,6 @@
  */
 package org.apache.sling.ide.eclipse.core.internal;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,16 +24,12 @@ import java.util.Map;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadConfiguration;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.launch.SourceReferenceResolver;
-import org.apache.sling.ide.osgi.MavenSourceReference;
 import org.apache.sling.ide.osgi.OsgiClient;
 import org.apache.sling.ide.osgi.OsgiClientException;
 import org.apache.sling.ide.osgi.SourceReference;
-import org.apache.sling.ide.osgi.SourceReference.Type;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.DebugException;
 import org.eclipse.debug.core.DebugPlugin;
@@ -113,9 +108,14 @@ public class JVMDebuggerConnection {
         if ( resolver != null ) {
             try {
                 for ( SourceReference reference :  osgiClient.findSourceReferences() ) {
-                    IRuntimeClasspathEntry classpathEntry = resolver.resolve(reference);
-                    if ( classpathEntry != null ) {
-                        classpathEntries.add(classpathEntry);
+                    try {
+                        IRuntimeClasspathEntry classpathEntry = resolver.resolve(reference);
+                        if ( classpathEntry != null ) {
+                            classpathEntries.add(classpathEntry);
+                        }
+                    } catch (CoreException e) {
+                        // don't fail the debug launch for artifact resolution errors
+                        Activator.getDefault().getPluginLogger().warn("Failed resolving source reference", e);
                     }
                 }
             } catch (OsgiClientException e1) {
