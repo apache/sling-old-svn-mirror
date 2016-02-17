@@ -44,8 +44,11 @@ Import-Package: org.apache.commons.httpclient;version="3.1.0",
  org.eclipse.wst.validation,
  org.json,
  org.osgi.service.component;version="1.1.0"
-Export-Package: org.apache.sling.ide.eclipse.core,org.apache.sling.ide
- .eclipse.core.debug,org.apache.sling.ide.eclipse.core.internal,org.ap
- ache.sling.ide.eclipse.core.progress,org.apache.sling.ide.eclipse.int
- ernal.validation;x-friends:="org.apache.sling.ide.eclipse-test",org.apache.sling.ide.eclipse.core.facet
+Export-Package: org.apache.sling.ide.eclipse.core,
+ org.apache.sling.ide.eclipse.core.debug,
+ org.apache.sling.ide.eclipse.core.facet,
+ org.apache.sling.ide.eclipse.core.internal,
+ org.apache.sling.ide.eclipse.core.launch,
+ org.apache.sling.ide.eclipse.core.progress,
+ org.apache.sling.ide.eclipse.internal.validation;x-friends:="org.apache.sling.ide.eclipse-test"
 Service-Component: OSGI-INF/TraceCommandExecutionEventsHandler.xml
