@@ -75,6 +75,12 @@
                                     <version>1.0.2</version>
                                     <outputDirectory>${project.build.directory}/artifacts/sling-tooling-support-install</outputDirectory>
                                 </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>org.apache.sling.tooling.support.source</artifactId>
+                                    <version>0.9.0-SNAPSHOT</version>
+                                    <outputDirectory>${project.build.directory}/artifacts/sling-tooling-support-source</outputDirectory>
+                                </artifactItem>
                             </artifactItems>
                             <overWriteReleases>false</overWriteReleases>
                             <overWriteSnapshots>true</overWriteSnapshots>
