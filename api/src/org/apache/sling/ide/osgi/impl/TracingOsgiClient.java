@@ -18,10 +18,12 @@ package org.apache.sling.ide.osgi.impl;
 
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.ide.osgi.OsgiClient;
 import org.apache.sling.ide.osgi.OsgiClientException;
+import org.apache.sling.ide.osgi.SourceReference;
 import org.apache.sling.ide.transport.CommandExecutionProperties;
 import org.osgi.framework.Version;
 import org.osgi.service.event.Event;
@@ -101,6 +103,11 @@ public class TracingOsgiClient implements OsgiClient {
     public void installLocalBundle(InputStream jarredBundle, String sourceLocation) throws OsgiClientException {
 
         logInstallLocalBundle(jarredBundle, sourceLocation);
+    }
+    
+    @Override
+    public List<SourceReference> findSourceReferences() throws OsgiClientException {
+        return osgiClient.findSourceReferences();
     }
 
 }
