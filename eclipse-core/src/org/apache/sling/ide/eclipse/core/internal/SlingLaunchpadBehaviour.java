@@ -85,18 +85,25 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
         monitor.beginTask("Starting server", 7);
         
         Repository repository;
+        RepositoryInfo repositoryInfo;
+        OsgiClient client;
         try {
             repository = ServerUtil.connectRepository(getServer(), monitor);
+            repositoryInfo = ServerUtil.getRepositoryInfo(getServer(), monitor);
+            client = Activator.getDefault().getOsgiClientFactory().createOsgiClient(repositoryInfo);
         } catch (CoreException e) {
             setServerState(IServer.STATE_STOPPED);
             throw e;
+        } catch (URISyntaxException e) {
+            setServerState(IServer.STATE_STOPPED);
+            throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
         }
 
         monitor.worked(2); // 2/7 done
 
         try {
             if (getServer().getMode().equals(ILaunchManager.DEBUG_MODE)) {
-                debuggerConnection = new JVMDebuggerConnection();
+                debuggerConnection = new JVMDebuggerConnection(client);
                 success = debuggerConnection.connectInDebugMode(launch, getServer(), monitor);
 
                 monitor.worked(5); // 7/7 done
@@ -109,10 +116,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                 
                 monitor.worked(1); // 3/7 done
                 
-                RepositoryInfo repositoryInfo;
                 try {
-                    repositoryInfo = ServerUtil.getRepositoryInfo(getServer(), monitor);
-                    OsgiClient client = Activator.getDefault().getOsgiClientFactory().createOsgiClient(repositoryInfo);
                     EmbeddedArtifactLocator artifactLocator = Activator.getDefault().getArtifactLocator();
                     
                     installBundle(monitor, client, artifactLocator.loadToolingSupportBundle(), 
@@ -120,15 +124,9 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                     installBundle(monitor, client, artifactLocator.loadSourceSupportBundle(), 
                             EmbeddedArtifactLocator.SUPPORT_SOURCE_BUNDLE_SYMBOLIC_NAME); // 7/7 done
                     
-                } catch ( IOException e) {
+                } catch ( IOException | OsgiClientException e) {
                     Activator.getDefault().getPluginLogger()
                         .warn("Failed reading the installation support bundle", e);
-                } catch (URISyntaxException e) {
-                    Activator.getDefault().getPluginLogger()
-                            .warn("Failed retrieving information about the installation support bundle", e);
-                } catch (OsgiClientException e) {
-                    Activator.getDefault().getPluginLogger()
-                            .warn("Failed retrieving information about the installation support bundle", e);
                 }
             }
 
