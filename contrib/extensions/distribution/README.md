@@ -19,7 +19,7 @@ The Sling Content Distribution module consists of the following bundles:
 
  - org.apache.sling.distribution.api: this is where the APIs are defined
  - org.apache.sling.distribution.core: this is where the basic infrastructure for distributing content is implemented
- - org.apache.sling.distribution.core: this is where some additional (optional) extensions for distributing content are implemented
+ - org.apache.sling.distribution.extensions: this is where some additional (optional) extensions for distributing content are implemented
  - org.apache.sling.distribution.sample: this is a set of sample configurations and implementations for demo purpose 
  - org.apache.sling.distribution.it: this is the integration testing suite
  
