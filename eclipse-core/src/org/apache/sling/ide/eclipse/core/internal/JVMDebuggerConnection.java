@@ -108,14 +108,19 @@ public class JVMDebuggerConnection {
             classpathEntries.add(JavaRuntime.newProjectRuntimeClasspathEntry(javaProject));
         }
 		
-        // 2. then add the other modules deployed on server
-        SourceReferenceResolver resolver = new SimpleSourceReferenceResolver();
-        try {
-            for ( SourceReference reference :  osgiClient.findSourceReferences() ) {
-                classpathEntries.add(resolver.resolve(reference));
+        // 2. add the other modules deployed on server
+        SourceReferenceResolver resolver = Activator.getDefault().getSourceReferenceResolver();
+        if ( resolver != null ) {
+            try {
+                for ( SourceReference reference :  osgiClient.findSourceReferences() ) {
+                    IRuntimeClasspathEntry classpathEntry = resolver.resolve(reference);
+                    if ( classpathEntry != null ) {
+                        classpathEntries.add(classpathEntry);
+                    }
+                }
+            } catch (OsgiClientException e1) {
+                throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e1.getMessage(), e1));
             }
-        } catch (OsgiClientException e1) {
-            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e1.getMessage(), e1));
         }
         
         // 3. add the JRE entry
@@ -174,42 +179,5 @@ public class JVMDebuggerConnection {
 				e.printStackTrace();
 			}
 		}
-	}
-
-
-	class SimpleSourceReferenceResolver implements SourceReferenceResolver {
-
-        @Override
-        public IRuntimeClasspathEntry resolve(SourceReference reference) {
-            if ( reference == null || reference.getType() != SourceReference.Type.MAVEN) {
-                return null;
-            }
-            
-            MavenSourceReference sr = (MavenSourceReference) reference;
-            
-            // TODO - delegate to m2e and move to eclipse-m2e-core
-            StringBuilder path = new StringBuilder();
-            path.append(System.getProperty("user.home"))
-                .append(File.separator).append(".m2").append(File.separator).append("repository").append(File.separator);
-            
-            for (String segment : sr.getGroupId().split("\\.") ) {
-                path.append(segment).append(File.separator);
-            }
-            path.append(sr.getArtifactId()).append(File.separator).append(sr.getVersion()).append(File.separator);
-            path.append(sr.getArtifactId()).append("-").append(sr.getVersion());
-            
-            IPath jarPath = Path.fromOSString(path.toString() + ".jar");
-            IPath sourcePath = Path.fromOSString(path.toString() + "-sources.jar");
-            // TODO - ensure exists
-            if ( !jarPath.toFile().exists() || !sourcePath.toFile().exists()) {
-                return null;
-            }
-            
-            IRuntimeClasspathEntry mavenEntry = JavaRuntime.newArchiveRuntimeClasspathEntry(jarPath);
-            mavenEntry.setSourceAttachmentPath(sourcePath);
-            
-            return mavenEntry;
-        }
-	    
 	}
 }
