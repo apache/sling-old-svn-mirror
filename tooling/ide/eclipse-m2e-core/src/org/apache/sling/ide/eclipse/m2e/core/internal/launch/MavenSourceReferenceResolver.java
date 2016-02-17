@@ -1,41 +1,36 @@
 package org.apache.sling.ide.eclipse.m2e.core.internal.launch;
 
-import java.io.File;
+import java.util.List;
 
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.sling.ide.eclipse.core.launch.SourceReferenceResolver;
 import org.apache.sling.ide.osgi.MavenSourceReference;
 import org.apache.sling.ide.osgi.SourceReference;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.launching.IRuntimeClasspathEntry;
 import org.eclipse.jdt.launching.JavaRuntime;
+import org.eclipse.m2e.core.MavenPlugin;
 
 public class MavenSourceReferenceResolver implements SourceReferenceResolver {
     @Override
-    public IRuntimeClasspathEntry resolve(SourceReference reference) {
+    public IRuntimeClasspathEntry resolve(SourceReference reference) throws CoreException {
         if ( reference == null || reference.getType() != SourceReference.Type.MAVEN) {
             return null;
         }
         
         MavenSourceReference sr = (MavenSourceReference) reference;
         
-        // TODO - delegate to m2e and move to eclipse-m2e-core
-        StringBuilder path = new StringBuilder();
-        path.append(System.getProperty("user.home"))
-            .append(File.separator).append(".m2").append(File.separator).append("repository").append(File.separator);
+        List<ArtifactRepository> repos = MavenPlugin.getMaven().getArtifactRepositories();
         
-        for (String segment : sr.getGroupId().split("\\.") ) {
-            path.append(segment).append(File.separator);
-        }
-        path.append(sr.getArtifactId()).append(File.separator).append(sr.getVersion()).append(File.separator);
-        path.append(sr.getArtifactId()).append("-").append(sr.getVersion());
+        Artifact jarArtifact = MavenPlugin.getMaven().resolve(sr.getGroupId(), sr.getArtifactId(), sr.getVersion(), "jar", "", repos, new NullProgressMonitor());
+        Artifact sourcesArtifact = MavenPlugin.getMaven().resolve(sr.getGroupId(), sr.getArtifactId(), sr.getVersion(), "jar", "sources", repos, new NullProgressMonitor());
         
-        IPath jarPath = Path.fromOSString(path.toString() + ".jar");
-        IPath sourcePath = Path.fromOSString(path.toString() + "-sources.jar");
-        // TODO - ensure exists
-        if ( !jarPath.toFile().exists() || !sourcePath.toFile().exists()) {
-            return null;
-        }
+        IPath jarPath = Path.fromOSString(jarArtifact.getFile().getAbsolutePath());
+        IPath sourcePath = Path.fromOSString(sourcesArtifact.getFile().getAbsolutePath());
         
         IRuntimeClasspathEntry mavenEntry = JavaRuntime.newArchiveRuntimeClasspathEntry(jarPath);
         mavenEntry.setSourceAttachmentPath(sourcePath);
