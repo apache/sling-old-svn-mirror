@@ -52,7 +52,6 @@ import org.apache.sling.discovery.impl.cluster.voting.VotingHelper;
 import org.apache.sling.discovery.impl.cluster.voting.VotingView;
 import org.apache.sling.discovery.impl.common.View;
 import org.apache.sling.discovery.impl.common.ViewHelper;
-import org.apache.sling.launchpad.api.StartupListener;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleException;
 import org.osgi.service.http.HttpService;
@@ -65,7 +64,7 @@ import org.osgi.service.http.HttpService;
  * remote TopologyConnectorServlets.
  */
 @Component
-@Service(value = { HeartbeatHandler.class, StartupListener.class })
+@Service(value = HeartbeatHandler.class)
 @Reference(referenceInterface=HttpService.class,
            cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
            policy=ReferencePolicy.DYNAMIC)
