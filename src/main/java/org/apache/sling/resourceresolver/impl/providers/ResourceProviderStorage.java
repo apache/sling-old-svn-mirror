@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.sling.api.resource.runtime.dto.AuthType;
 import org.apache.sling.resourceresolver.impl.providers.tree.PathTree;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
 
 /**
  * The resource provider storage contains all available handlers
@@ -60,7 +61,8 @@ public class ResourceProviderStorage {
             if (info.isAttributable()) {
                 this.attributableHandlers.add(h);
             }
-            if (h.getResourceProvider().getQueryLanguageProvider() != null) {
+            final ResourceProvider<Object> rp = h.getResourceProvider();
+            if (rp != null && rp.getQueryLanguageProvider() != null) {
                 this.languageQueryableHandlers.add(h);
             }
         }
