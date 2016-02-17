@@ -82,7 +82,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
 
         boolean success = false;
         Result<ResourceProxy> result = null;
-        monitor.beginTask("Starting server", 5);
+        monitor.beginTask("Starting server", 7);
         
         Repository repository;
         try {
@@ -92,14 +92,14 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
             throw e;
         }
 
-        monitor.worked(2); // 2/5 done
+        monitor.worked(2); // 2/7 done
 
         try {
             if (getServer().getMode().equals(ILaunchManager.DEBUG_MODE)) {
                 debuggerConnection = new JVMDebuggerConnection();
                 success = debuggerConnection.connectInDebugMode(launch, getServer(), monitor);
 
-                monitor.worked(3); // 5/5 done
+                monitor.worked(5); // 7/7 done
 
             } else {
                 
@@ -107,34 +107,18 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                 result = command.execute();
                 success = result.isSuccess();
                 
-                monitor.worked(1); // 3/5 done
+                monitor.worked(1); // 3/7 done
                 
                 RepositoryInfo repositoryInfo;
                 try {
                     repositoryInfo = ServerUtil.getRepositoryInfo(getServer(), monitor);
                     OsgiClient client = Activator.getDefault().getOsgiClientFactory().createOsgiClient(repositoryInfo);
                     EmbeddedArtifactLocator artifactLocator = Activator.getDefault().getArtifactLocator();
-                    Version remoteVersion = client.getBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME);
                     
-                    monitor.worked(1); // 4/5 done
-                    
-                    final EmbeddedArtifact supportBundle = artifactLocator.loadToolingSupportBundle();
-
-                    final Version embeddedVersion = new Version(supportBundle.getVersion());
-                    
-                    ISlingLaunchpadServer launchpadServer = (ISlingLaunchpadServer) getServer().loadAdapter(SlingLaunchpadServer.class,
-                            monitor);
-                    if (remoteVersion == null || remoteVersion.compareTo(embeddedVersion) < 0) {
-                        try ( InputStream contents = supportBundle.openInputStream() ){
-                            client.installBundle(contents, supportBundle.getName());
-                        }
-                        remoteVersion = embeddedVersion;
-
-                    }
-                    launchpadServer.setBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME, remoteVersion,
-                            monitor);
-                    
-                    monitor.worked(1); // 5/5 done
+                    installBundle(monitor, client, artifactLocator.loadToolingSupportBundle(), 
+                            EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME); // 5/7 done
+                    installBundle(monitor, client, artifactLocator.loadSourceSupportBundle(), 
+                            EmbeddedArtifactLocator.SUPPORT_SOURCE_BUNDLE_SYMBOLIC_NAME); // 7/7 done
                     
                 } catch ( IOException e) {
                     Activator.getDefault().getPluginLogger()
@@ -161,6 +145,31 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
         } finally {
             monitor.done();
         }
+    }
+
+    private void installBundle(IProgressMonitor monitor, OsgiClient client, final EmbeddedArtifact bundle,
+            String bundleSymbolicName) throws OsgiClientException, IOException {
+        
+        Version remoteVersion = client.getBundleVersion(bundleSymbolicName);
+        
+        monitor.worked(1);
+        
+        final Version embeddedVersion = new Version(bundle.getOsgiFriendlyVersion());
+        
+        ISlingLaunchpadServer launchpadServer = (ISlingLaunchpadServer) getServer().loadAdapter(SlingLaunchpadServer.class,
+                monitor);
+        if (remoteVersion == null || remoteVersion.compareTo(embeddedVersion) < 0 
+                || ( remoteVersion.equals(embeddedVersion) || "SNAPSHOT".equals(embeddedVersion.getQualifier()))) {
+            try ( InputStream contents = bundle.openInputStream() ){
+                client.installBundle(contents, bundle.getName());
+            }
+            remoteVersion = embeddedVersion;
+
+        }
+        launchpadServer.setBundleVersion(bundleSymbolicName, remoteVersion,
+                monitor);
+        
+        monitor.worked(1);
     }
 
     // TODO refine signature
