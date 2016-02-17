@@ -17,6 +17,7 @@
 package org.apache.sling.ide.osgi;
 
 import java.io.InputStream;
+import java.util.List;
 
 import org.osgi.framework.Version;
 
@@ -51,5 +52,13 @@ public interface OsgiClient {
      * @throws OsgiClientException
      */
     void installLocalBundle(InputStream jarredBundle, String sourceLocation) throws OsgiClientException;
+    
+    /**
+     * Finds source references for all bundles deployed in the Sling instance
+     * 
+     * @return the source references, possibly empty
+     * @throws OsgiClientException
+     */
+    List<SourceReference> findSourceReferences() throws OsgiClientException;
 
 }
