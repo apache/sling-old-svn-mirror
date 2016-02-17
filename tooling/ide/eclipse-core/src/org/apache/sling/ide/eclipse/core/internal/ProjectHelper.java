@@ -146,13 +146,10 @@ public class ProjectHelper {
 	
 	static IJavaProject[] getAllJavaProjects() {
 		IJavaModel model = JavaCore.create(ResourcesPlugin.getWorkspace().getRoot());
-		IJavaProject[] jps;
 		try {
-			jps = model.getJavaProjects();
-			return jps;
+			return model.getJavaProjects();
 		} catch (JavaModelException e) {
-			e.printStackTrace();
-			return null;
+			throw new RuntimeException(e);
 		}
 	}
 
