@@ -72,7 +72,6 @@ public class SetupServerWizardPage extends WizardPage {
     private Text newServerUsername;
     private Text newServerPassword;
 	private Text newServerDebugPort;
-	private Button installToolingSupportBundle;
 	
     private IServer server;
 
@@ -158,16 +157,6 @@ public class SetupServerWizardPage extends WizardPage {
         newLabel(container, "Debug Port:");
         newServerDebugPort = newText(container);
 	    
-	    {
-	    	installToolingSupportBundle = new Button(container, SWT.CHECK);
-		    GridData installToolingSupportBundleData = new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1);
-            installToolingSupportBundleData.horizontalIndent = HORIZONTAL_INDENT;
-		    installToolingSupportBundle.setLayoutData(installToolingSupportBundleData);
-		    installToolingSupportBundle.setText("Check/Install org.apache.sling.tooling.support.install bundle");
-		    installToolingSupportBundle.setSelection(true);
-	    }
-	    
-	    
 	    SelectionAdapter radioListener = new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
                 updateEnablements();
@@ -209,7 +198,6 @@ public class SetupServerWizardPage extends WizardPage {
         existingServerCombo.getWidget().setEnabled(existingServerCombo.hasServers());
         startExistingServerButton.setEnabled(existingServerCombo.hasServers());
         setupNewServer.setSelection(!existingServerCombo.hasServers());
-        installToolingSupportBundle.setSelection(true);
 
         updateEnablements();
 
@@ -281,31 +269,12 @@ public class SetupServerWizardPage extends WizardPage {
         newServerDebugPort.setEnabled(setupNewServer.getSelection());
         newServerUsername.setEnabled(setupNewServer.getSelection());
         newServerPassword.setEnabled(setupNewServer.getSelection());
-        installToolingSupportBundle.setEnabled(setupNewServer.getSelection());
     }
 
 	private void updateStatus(String message) {
 		setErrorMessage(message);
 		setPageComplete(message == null);
 	}
-	
-
-    private Version getToolingSupportBundleVersion() throws OsgiClientException {
-
-        return newOsgiClient().getBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME);
-    }
-    
-    private OsgiClient newOsgiClient() {
-
-        String hostname = getHostname();
-        int launchpadPort = getPort();
-
-        OsgiClientFactory factory = Activator.getDefault().getOsgiClientFactory();
-
-        // TODO remove credential hardcoding
-        return factory.createOsgiClient(new RepositoryInfo("admin", "admin", "http://" + hostname + ":" + launchpadPort
-                + "/"));
-    }
     
     public boolean getStartServer() {
         if (!useExistingServer.getSelection()) {
@@ -344,35 +313,6 @@ public class SetupServerWizardPage extends WizardPage {
 				}
 			}
 			
-            Version finalVersion = null;
-			
-			if (installToolingSupportBundle.getSelection()) {
-                Version installedVersion;
-                try {
-                    installedVersion = getToolingSupportBundleVersion();
-                } catch (OsgiClientException e) {
-                    throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
-                            "Failed reading the tooling support bundle version", e));
-                }
-                finalVersion = installedVersion;
-                EmbeddedArtifactLocator artifactsLocator = Activator.getDefault().getArtifactLocator();
-                EmbeddedArtifact toolingSupportBundle = artifactsLocator.loadToolingSupportBundle();
-                Version ourVersion = new Version(toolingSupportBundle.getVersion());
-
-                if (installedVersion == null || ourVersion.compareTo(installedVersion) > 0) {
-					// then auto-install it if possible
-					try {
-                        try (InputStream contents = toolingSupportBundle.openInputStream()) {
-                            newOsgiClient().installBundle(contents, toolingSupportBundle.getName());
-                        }
-                        finalVersion = ourVersion;
-					} catch (IOException | OsgiClientException e) {
-                        throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
-                                "Failed installing the tooling support bundle version", e));
-                    }
-				}
-			}
-			
 			IRuntimeType serverRuntime = ServerCore.findRuntimeType("org.apache.sling.ide.launchpadRuntimeType");
 			try {
                 // TODO there should be a nicer API for creating this, and also a central place for defaults
@@ -389,10 +329,6 @@ public class SetupServerWizardPage extends WizardPage {
                 
                 SlingLaunchpadConfigurationDefaults.applyDefaultValues(wc);
                 
-                if (finalVersion != null) {
-                    wc.setAttribute(String.format(ISlingLaunchpadServer.PROP_BUNDLE_VERSION_FORMAT,
-                        EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME), finalVersion.toString());
-                }
 				wc.setRuntime(runtime);
                 server = wc.save(true, monitor);
                 return server;
