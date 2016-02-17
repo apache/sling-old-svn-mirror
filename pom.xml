@@ -50,6 +50,7 @@
 		<module>eclipse-core</module>
 		<module>eclipse-ui</module>
 		<module>feature</module>
+		<module>eclipse-m2e-core</module>
 		<module>eclipse-m2e-ui</module>
 		<module>eclipse-m2e-test</module>
 		<module>m2e-feature</module>
