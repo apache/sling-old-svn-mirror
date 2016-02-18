@@ -32,6 +32,7 @@ import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.annotation.CheckForNull;
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -61,7 +62,6 @@ import org.apache.sling.resourceresolver.impl.helper.URIException;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntry;
 import org.apache.sling.resourceresolver.impl.params.ParsedParameters;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorageProvider;
-import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1039,7 +1039,12 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * Creates a resource with the given path if existing
      */
-    private Resource getAbsoluteResourceInternal(final Resource parent, final String path, final Map<String, String> parameters, final boolean isResolve) {
+    private Resource getAbsoluteResourceInternal(@CheckForNull final Resource parent, @CheckForNull final String path, final Map<String, String> parameters, final boolean isResolve) {
+        if (path == null || path.length() == 0 || path.charAt(0) != '/') {
+            logger.debug("getResourceInternal: Path must be absolute {}", path);
+            return null; // path must be absolute
+        }
+
         final Resource parentToUse;
         if (parent != null && path.startsWith(parent.getPath())) {
             parentToUse = parent;
