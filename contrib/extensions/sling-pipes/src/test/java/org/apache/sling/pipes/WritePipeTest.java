@@ -98,7 +98,12 @@ public class WritePipeTest extends AbstractPipeTest {
         Resource resource = it.next();
         assertEquals("path should be the one configured in first pipe", pipePath + "/conf/fruit/conf/apple", resource.getPath());
         context.resourceResolver().commit();
-        assertEquals("Configured value should be written", "apple is a fruit and its color is green", resource.adaptTo(ValueMap.class).get("jcr:description", ""));
+        ValueMap properties = resource.adaptTo(ValueMap.class);
+        assertEquals("Configured value should be written", "apple is a fruit and its color is green", properties.get("jcr:description", ""));
+        assertEquals("Worm has been removed", "", properties.get("worm", ""));
+        Resource archive = resource.getChild("archive/wasthereworm");
+        assertNotNull("there is an archive of the worm value", archive);
+        assertEquals("Worm value has been written at the same time", "true", archive.adaptTo(String.class));
     }
 
     @Test

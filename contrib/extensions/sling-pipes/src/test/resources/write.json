@@ -45,7 +45,7 @@
         "sling:resourceType":"slingPipes/dummySearch",
         "conf":{
           "jcr:primaryType":"nt:unstructured",
-            "apple":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apple"},
+            "apple":{"jcr:primaryType":"nt:unstructured","worm":"true","color":"green", "name":"apple"},
             "banana":{"jcr:primaryType":"nt:unstructured", "color":"yellow", "name":"banana"}
           }
         },
@@ -55,7 +55,12 @@
         "jcr:description":"written resource is here is coming from previous pipe",
         "conf":{
           "jcr:primaryType":"nt:unstructured",
-          "jcr:description":"${fruit.name} is a fruit and its color is ${fruit.color}"
+          "jcr:description":"${fruit.name} is a fruit and its color is ${fruit.color}",
+          "worm":"${null}",
+          "archive":{
+            "jcr:primaryType":"nt:unstructured",
+            "wasthereworm":"${fruit.worm}"
+          }
         }
       }
     }
