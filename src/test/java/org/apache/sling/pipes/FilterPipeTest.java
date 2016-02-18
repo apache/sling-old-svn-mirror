@@ -17,6 +17,8 @@
 package org.apache.sling.pipes;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.api.resource.ModifiableValueMap;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.junit.Test;
@@ -81,6 +83,29 @@ public class FilterPipeTest extends AbstractPipeTest {
     @Test
     public void testTestFails() {
         Resource resource = context.resourceResolver().getResource(PATH_PIPE + "/" + NN_TEST_FAILS);
+        Pipe pipe = plumber.getPipe(resource);
+        Iterator<Resource> resourceIterator = pipe.getOutput();
+        assertFalse("output has no resource...", resourceIterator.hasNext());
+    }
+
+    @Test
+    public void testTestPassesWithNot() throws PersistenceException {
+        Resource resource = context.resourceResolver().getResource(PATH_PIPE + "/" + NN_TEST_FAILS);
+        //we modify the pipe with the value NOT
+        resource.adaptTo(ModifiableValueMap.class).put(FilterPipe.PN_NOT, true);
+        context.resourceResolver().commit();
+
+        Pipe pipe = plumber.getPipe(resource);
+        Iterator<Resource> resourceIterator = pipe.getOutput();
+        assertTrue("output has one resource...", resourceIterator.hasNext());
+    }
+
+    @Test
+    public void testTestFailsWithNot() throws PersistenceException {
+        Resource resource = context.resourceResolver().getResource(PATH_PIPE + "/" + NN_TEST);
+        //we modify the pipe with the value NOT
+        resource.adaptTo(ModifiableValueMap.class).put(FilterPipe.PN_NOT, true);
+        context.resourceResolver().commit();
         Pipe pipe = plumber.getPipe(resource);
         Iterator<Resource> resourceIterator = pipe.getOutput();
         assertFalse("output has no resource...", resourceIterator.hasNext());

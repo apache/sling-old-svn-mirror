@@ -34,6 +34,7 @@ public class FilterPipe extends BasePipe {
     private static Logger logger = LoggerFactory.getLogger(FilterPipe.class);
     public static final String RESOURCE_TYPE = "slingPipes/filter";
     public static final String PREFIX_FILTER = "slingPipesFilter_";
+    public static final String PN_NOT = PREFIX_FILTER + "not";
     public static final String PN_NOCHILDREN = PREFIX_FILTER + "noChildren";
     public static final String PN_TEST = PREFIX_FILTER + "test";
 
@@ -91,7 +92,12 @@ public class FilterPipe extends BasePipe {
     public Iterator<Resource> getOutput() {
         Resource resource = getInput();
         if (resource != null){
-            if (filterPasses(resource, getConfiguration())){
+            boolean not = properties.get(PN_NOT, false);
+            //the not does a exclusive or with the filter:
+            // - true filter with "true" not is false,
+            // - false filter with false not is false,
+            // - all the other combinations should pass
+            if (filterPasses(resource, getConfiguration()) ^ not){
                 logger.debug("filter passes for {}", resource.getPath());
                 return super.getOutput();
             } else {
