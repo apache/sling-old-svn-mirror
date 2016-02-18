@@ -43,6 +43,7 @@ public class WritePipe extends BasePipe {
     public static final String RESOURCE_TYPE = "slingPipes/write";
     Node confTree;
     String resourceExpression;
+    private List<Resource> propertiesToRemove;
     Pattern addPatch = Pattern.compile("\\+\\[(.*)\\]");
     Pattern multi = Pattern.compile("\\[(.*)\\]");
 
@@ -112,16 +113,7 @@ public class WritePipe extends BasePipe {
                     if (value == null) {
                         //null value are not handled by modifiable value maps,
                         //removing the property if it exists
-                        Resource propertyResource = target.getChild(key);
-                        if (propertyResource != null) {
-                            logger.info("removing {}", propertyResource.getPath());
-                            if (!isDryRun()){
-                                Property property = propertyResource.adaptTo(Property.class);
-                                if (property != null) {
-                                    property.remove();
-                                }
-                            }
-                        }
+                        addPropertyToRemove(target.getChild(key));
                     } else {
                         logger.info("writing {}={}",target.getPath() + "@" + key, value);
                         if (!isDryRun()){
@@ -130,6 +122,19 @@ public class WritePipe extends BasePipe {
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * we store all property to remove for very last moment (in order to potentially reuse their value)
+     * @param property
+     */
+    private void addPropertyToRemove(Resource property){
+        if (property != null) {
+            if (propertiesToRemove == null) {
+                propertiesToRemove = new ArrayList<>();
+            }
+            propertiesToRemove.add(property);
         }
     }
 
@@ -162,10 +167,25 @@ public class WritePipe extends BasePipe {
             Resource resource = getInput();
             if (resource != null) {
                 writeTree(confTree, resource);
+                if (propertiesToRemove != null && !propertiesToRemove.isEmpty()){
+                    for (Resource propertyResource : propertiesToRemove) {
+                        logger.info("removing {}", propertyResource.getPath());
+                        if (!isDryRun()){
+                            Property property = propertyResource.adaptTo(Property.class);
+                            if (property != null) {
+                                property.remove();
+                            }
+                        }
+                    }
+                }
                 return super.getOutput();
             }
         } catch (Exception e) {
             logger.error("unable to write values, cutting pipe", e);
+        } finally {
+            if (propertiesToRemove != null){
+                propertiesToRemove.clear();
+            }
         }
         return EMPTY_ITERATOR;
     }
