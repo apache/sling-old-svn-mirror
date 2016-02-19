@@ -286,7 +286,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
             }
 
             final Session session = repository.login(credentials, workspace);
-            return session;
+            return getNamespaceAwareSession(session);
 
         } catch (final RuntimeException re) {
             // SLING-702: Jackrabbit throws IllegalStateException if the
@@ -393,7 +393,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
         }
 
         logger.debug("SlingRepository.loginAdministrative is deprecated. Please use SlingRepository.loginService.");
-        return createAdministrativeSession(workspace);
+        return getNamespaceAwareSession(createAdministrativeSession(workspace));
     }
 
     // Remaining Repository service methods all backed by the actual
