@@ -134,31 +134,50 @@ public class JobConsolePlugin {
             Session s = null;
             try {
                 s = repository.loginAdministrative(repository.getDefaultWorkspace());
-                processCommands(req, pw, s, jobConsole);
                 renderJobs(req, pw, s, jobConsole);
             } catch(RepositoryException re) {
-                throw new ServletException("RepositoryExceptio in renderContent()", re);
+                throw new ServletException("RepositoryException in renderContent()", re);
             } finally {
                 if(s != null) {
                     s.logout();
                 }
             }
         }
-        
-        private void processCommands(HttpServletRequest req, PrintWriter pw, Session s, JobConsole console) {
-            // TODO should use POST
-            final String jobPath = req.getParameter("jobPath");
-            if (jobPath != null) {
-                final JobStatus job = console.getJobStatus(s, jobPath);
-                if (job != null) {
-                    final String action = req.getParameter("action");
-                    if ("suspend".equals(action)) {
-                        job.requestStateChange(JobStatus.State.SUSPENDED);
-                    } else if ("stop".equals(action)) {
-                        job.requestStateChange(JobStatus.State.STOPPED);
-                    } else if ("resume".equals(action)) {
-                        job.requestStateChange(JobStatus.State.RUNNING);
+
+        @Override
+        protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+            final PrintWriter pw = resp.getWriter();
+
+            // Access required services
+            final SlingRepository repository = (SlingRepository)repositoryTracker.getService();
+            if(repository == null) {
+                pw.println("No SlingRepository service found");
+                return;
+            }
+            Session s = null;
+            try {
+                s = repository.loginAdministrative(repository.getDefaultWorkspace());
+                final String jobPath = req.getParameter("jobPath");
+                if (jobPath != null) {
+                    final JobStatus job = jobConsole.getJobStatus(s, jobPath);
+                    if (job != null) {
+                        final String action = req.getParameter("action");
+                        if ("suspend".equals(action)) {
+                            job.requestStateChange(JobStatus.State.SUSPENDED);
+                        } else if ("stop".equals(action)) {
+                            job.requestStateChange(JobStatus.State.STOPPED);
+                        } else if ("resume".equals(action)) {
+                            job.requestStateChange(JobStatus.State.RUNNING);
+                        }
                     }
+                }
+
+                resp.sendRedirect(req.getServletPath() + req.getPathInfo());
+            } catch(RepositoryException re) {
+                throw new ServletException("RepositoryException in doPost()", re);
+            } finally {
+                if(s != null) {
+                    s.logout();
                 }
             }
         }
@@ -199,7 +218,7 @@ public class JobConsolePlugin {
 
         private void renderJobStatus(HttpServletRequest request, PrintWriter pw, JobConsole console, JobStatus job) {
             pw.println("<tr class='content'>");
-            pw.println("<td><form action='./" + LABEL + "' method='GET'>");
+            pw.println("<td><form action='./" + LABEL + "' method='POST'>");
             final String[] actions = { "suspend", "resume", "stop" };
             for (String action : actions) {
                 pw.println("<input type='submit' name='action' value='"
