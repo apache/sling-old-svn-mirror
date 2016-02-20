@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.IServer;
@@ -65,6 +66,27 @@ public abstract class SelectionUtils {
 
         return servers;
 	}
+	
+    /**
+     * Returns the first object contained in the specified <tt>sel</tt>
+     * 
+     * @param selection the selection object
+     * @param type the type of the selected object
+     * @return the selected value, or <code>null</code>
+     */
+    @SuppressWarnings("unchecked") // cast guarded by type.isInstance
+    public static <T> T getFirst(ISelection selection, Class<T> type) {
+
+        if ( selection instanceof IStructuredSelection) {
+            Object selected = ((IStructuredSelection) selection).getFirstElement();
+            
+            if ( type.isInstance(selected)) {
+                return (T) selected;
+            }
+        }
+        
+        return null;
+    }	
 
     private SelectionUtils() {
 

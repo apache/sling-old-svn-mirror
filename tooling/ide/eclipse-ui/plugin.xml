@@ -345,6 +345,7 @@
    
    <extension
    		point="org.eclipse.ui.menus">
+   		<!-- Convert to ... contributions -->
    		<menuContribution
            locationURI="popup:org.eclipse.ui.projectConfigure?after=additions">
            <command
@@ -373,6 +374,7 @@
            </command>
            <command
                  commandId="org.apache.sling.ide.eclipse.ui.wizards.convertToBundleProjectCommand"
+                 icon="org.apache.sling.ide.eclipse-ui.command4"
                  label="Convert to Bundle Project...">
                  <!-- 
                  	don't enable for sling.content or sling.bundle projects
@@ -398,10 +400,41 @@
                  </visibleWhen>                 
            </command>
    		</menuContribution>
+   		
+   		<!-- Package Explorer contributions -->
+   		
+   		<menuContribution
+           locationURI="popup:org.eclipse.ui.popup.any?after=group.edit">
+           <command
+                 commandId="org.eclipse.ui.edit.delete">
+                 <visibleWhen
+                       checkEnabled="false">
+                     <iterate ifEmpty="false">
+                         <adapt
+                               type="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
+                         </adapt> 	 
+                     </iterate>
+                 </visibleWhen>
+           </command>
+           <command
+                 commandId="org.eclipse.ui.edit.rename">
+                 <visibleWhen
+                       checkEnabled="false">
+                     <iterate ifEmpty="false">
+                         <adapt
+                               type="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
+                         </adapt>
+                     </iterate>
+                 </visibleWhen>
+           </command>
+           
+        </menuContribution>
+        
    	</extension>
    	
    	<extension
    	      point="org.eclipse.ui.commands">
+   	      <!-- conversion commands -->
    	      <command
                 id="org.apache.sling.ide.eclipse.ui.wizards.convertToBundleProjectCommand"
                 defaultHandler="org.apache.sling.ide.eclipse.ui.wizards.ConvertToBundleProjectHandler"
@@ -412,6 +445,46 @@
                 defaultHandler="org.apache.sling.ide.eclipse.ui.wizards.ConvertToContentProjectHandler"
                 name="Convert to Content Project...">
    	      </command>
+   	      
+ 		  <!-- Node commands -->
+   	      <command
+   	      		id="org.apache.sling.ide.eclipse.ui.actions.jcrNodeDeleteHandler"
+   	      		defaultHandler="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteHandler"
+   	      		name="Delete Node...">
+         </command>   	      
+   	      <command
+   	      		id="org.apache.sling.ide.eclipse.ui.actions.jcrNodeRenameHandler"
+   	      		defaultHandler="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameHandler"
+   	      		name="Rename Node...">
+         </command>   	      
+   	</extension>
+   	
+   	<extension
+   		point="org.eclipse.ui.handlers">
+   		
+   		<!-- handlers overiding standard commands: delete, rename, etc -->
+   		<handler
+           commandId="org.eclipse.ui.edit.delete"
+           class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteHandler">
+           <activeWhen>
+             <iterate ifEmpty="false">
+             <adapt
+                   type="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
+             </adapt>        
+             </iterate>        
+           </activeWhen>
+   		</handler>
+   		<handler
+           commandId="org.eclipse.ui.edit.rename"
+           class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameHandler">
+           <activeWhen>
+             <iterate ifEmpty="false">
+             <adapt
+                   type="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
+             </adapt>        
+             </iterate>        
+           </activeWhen>
+   		</handler>
    	</extension>
 
    <extension
@@ -449,21 +522,6 @@
                id="org.apache.sling.ide.eclipse.ui.nav.NewJcrNodeAction"
                label="&amp;Node..."
                menubarPath="common.new.menu/jcr">
-         </action>
-         <action
-               class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameAction"
-               id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameAction"
-               definitionId="org.eclipse.ui.edit.rename"
-               label="&amp;Rename..."
-               menubarPath="group.edit">
-         </action>
-         <action
-               class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteAction"
-               definitionId="org.eclipse.ui.edit.delete"
-               icon="icons/ovr16/delete_obj.gif"
-               id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteAction"
-               label="&amp;Delete..."
-               menubarPath="group.edit">
          </action>
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNodePasteAction"
@@ -511,7 +569,7 @@
          </visibility>
       </objectContribution>
    </extension>
-
+   
    <extension
          id="org.apache.sling.ide.eclipse.ui.pluginNonJcrNodeToolSet"
          point="org.eclipse.ui.popupMenus">
@@ -539,23 +597,6 @@
                icon="icons/obj16/sling_misc.gif"
                label="Import from server..."
                menubarPath="jcr">
-         </action>
-         <action
-               class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameAction"
-               definitionId="org.eclipse.ui.edit.rename"
-               id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameAction"
-               label="&amp;Rename..."
-               menubarPath="group.edit"
-               toolbarPath="common.new.menu/jcr">
-         </action>
-         <action
-               class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteAction"
-               definitionId="org.eclipse.ui.edit.delete"
-               icon="icons/ovr16/delete_obj.gif"
-               id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteAction"
-               label="&amp;Delete..."
-               menubarPath="group.edit"
-               toolbarPath="common.new.menu/jcr">
          </action>
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNodePasteAction"
@@ -650,6 +691,7 @@
    </extension>
    <extension
          point="org.eclipse.ui.bindings">
+      <!-- Import/Export -->
       <key
             commandId="org.apache.sling.ide.commands.importContent"
             contextId="org.eclipse.ui.contexts.window"
@@ -661,7 +703,7 @@
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+M2+X">
-      </key>      
+      </key>
    </extension>
 
     <extension
