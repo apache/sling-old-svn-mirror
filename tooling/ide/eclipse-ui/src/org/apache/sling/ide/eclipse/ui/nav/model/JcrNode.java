@@ -573,6 +573,12 @@ public class JcrNode implements IAdaptable {
 			} else {
 				return null;
 			}
+		} else if ( adapter == IFolder.class) {
+		    if ( resource instanceof IFolder ) {
+		        return (IFolder) resource;
+		    } else {
+		        return null;
+		    }
 		} else if (adapter == IContributorResourceAdapter.class) {
 			//if (resource==null) {
 			//	return null;
