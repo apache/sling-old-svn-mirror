@@ -298,6 +298,7 @@
     <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.webconsole.plugins.packageadmin/1.0.2</bundle>
   </feature>
   <feature name="sling-launchpad-oak-tar" version="${feature.version}">
+    <bundle>mvn:org.apache.jackrabbit/oak-segment/${org.apache.jackrabbit.oak.version}</bundle>
     <config name="org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService">
       name=Default\ NodeStore
       repository.home=sling/repository
@@ -388,7 +389,6 @@
     <bundle>mvn:org.apache.jackrabbit/oak-commons/${org.apache.jackrabbit.oak.version}</bundle>
     <bundle>mvn:org.apache.jackrabbit/oak-lucene/${org.apache.jackrabbit.oak.version}</bundle>
     <bundle>mvn:org.apache.jackrabbit/oak-blob/${org.apache.jackrabbit.oak.version}</bundle>
-    <bundle>mvn:org.apache.jackrabbit/oak-segment/${org.apache.jackrabbit.oak.version}</bundle>
     <!-- dependencies -->
     <feature>scr</feature>
     <feature version="${feature.version}">jackrabbit-sling</feature>

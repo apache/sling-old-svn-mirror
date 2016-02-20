@@ -72,13 +72,6 @@ public class OakSlingIT extends KarafTestSupport {
     }
 
     @Test
-    public void testOrgApacheJackrabbitOakSegment() {
-        final Bundle bundle = findBundle("org.apache.jackrabbit.oak-segment");
-        assertNotNull(bundle);
-        assertEquals(Bundle.ACTIVE, bundle.getState());
-    }
-
-    @Test
     public void testComGoogleGuava() {
         final Bundle bundle = findBundle("com.google.guava");
         assertNotNull(bundle);
