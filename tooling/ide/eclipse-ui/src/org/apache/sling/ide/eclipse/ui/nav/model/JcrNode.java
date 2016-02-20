@@ -556,7 +556,7 @@ public class JcrNode implements IAdaptable {
 	}
 	
 	private Object doGetAdapter(Class adapter) {
-	    if (adapter==ITabbedPropertySheetPageContributor.class && "christmas".equals("christmas")) {
+	    if (adapter==ITabbedPropertySheetPageContributor.class) {
 			return new ITabbedPropertySheetPageContributor() {
 
 				@Override
