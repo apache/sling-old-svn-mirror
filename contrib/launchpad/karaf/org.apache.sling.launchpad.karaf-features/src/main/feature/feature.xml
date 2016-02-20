@@ -266,9 +266,6 @@
       jaas.defaultRealmName=jackrabbit.oak
       jaas.configProviderName=FelixJaasProvider
     </config>
-    <config name="org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService">
-      localIndexDir=sling/repository/index
-    </config>
     <config name="org.apache.jackrabbit.oak.security.authentication.AuthenticationConfigurationImpl">
       org.apache.jackrabbit.oak.authentication.configSpiName=FelixJaasProvider
     </config>
@@ -282,6 +279,9 @@
       enabledActions=["org.apache.jackrabbit.oak.spi.security.user.action.AccessControlAction"]
       userPrivilegeNames=["jcr:all"]
       groupPrivilegeNames=["jcr:read"]
+    </config>
+    <config name="org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService">
+      localIndexDir=sling/repository/index
     </config>
     <!-- dependencies -->
     <feature>webconsole</feature>
