@@ -113,10 +113,7 @@ public class RepositoryInitializersTest {
         
         assertStart(true);
         
-        // TODO this should really be 1,2,3 but the Sling OSGi mocks sort 
-        // in the wrong order w.r.t service ranking, see SLING-5462,
-        // will be fixed in osgi-mock 2.0.2
-        assertTestInitializerProperty("3,2,1,");
+        assertTestInitializerProperty("1,2,3,");
         assertAdditionalRepositoryServices(1);
     }
     
@@ -128,9 +125,7 @@ public class RepositoryInitializersTest {
         
         assertStart(true);
         
-        // TODO see comment in inOrderInitializers, this should really
-        // be 3,2,1, caused by SLING-5462
-        assertTestInitializerProperty("1,2,3,");
+        assertTestInitializerProperty("3,2,1,");
         assertAdditionalRepositoryServices(1);
     }
     
