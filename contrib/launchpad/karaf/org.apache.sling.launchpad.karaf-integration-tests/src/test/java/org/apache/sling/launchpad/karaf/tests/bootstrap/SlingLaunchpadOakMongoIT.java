@@ -20,9 +20,6 @@ package org.apache.sling.launchpad.karaf.tests.bootstrap;
 
 import java.io.IOException;
 
-import javax.inject.Inject;
-import javax.jcr.Session;
-
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
 import de.flapdoodle.embed.mongo.MongodStarter;
@@ -31,8 +28,6 @@ import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.mongo.distribution.Version;
 import de.flapdoodle.embed.process.runtime.Network;
-import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.launchpad.karaf.testing.KarafTestSupport;
 import org.junit.AfterClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,7 +37,6 @@ import org.ops4j.pax.exam.OptionUtils;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
-import org.ops4j.pax.exam.util.Filter;
 import org.osgi.framework.Bundle;
 
 import static org.junit.Assert.assertEquals;
@@ -53,11 +47,7 @@ import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfi
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class SlingLaunchpadOakMongoIT extends KarafTestSupport {
-
-    @Inject
-    @Filter(timeout = 300000)
-    public SlingRepository slingRepository;
+public class SlingLaunchpadOakMongoIT extends AbstractSlingLaunchpadOakTestSupport {
 
     private static MongodExecutable executable;
 
@@ -101,18 +91,6 @@ public class SlingLaunchpadOakMongoIT extends KarafTestSupport {
         final Bundle bundle = findBundle("org.mongodb.mongo-java-driver");
         assertNotNull(bundle);
         assertEquals(Bundle.ACTIVE, bundle.getState());
-    }
-
-    @Test
-    public void testSlingRepository() throws Exception {
-        assertNotNull(slingRepository);
-    }
-
-    @Test
-    public void testVarSlingExists() throws Exception {
-        final Session session = slingRepository.loginAdministrative(null);
-        session.getRootNode().getNode("var/sling");
-        session.logout();
     }
 
 }
