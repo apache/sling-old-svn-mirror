@@ -20,10 +20,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.eclipse.core.expressions.IEvaluationContext;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.ui.ISources;
 import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.ServerCore;
@@ -86,7 +88,21 @@ public abstract class SelectionUtils {
         }
         
         return null;
-    }	
+    }
+    
+    public static ISelection getSelectionFromEvaluationContext(Object evaluationContext) {
+        if ( !(evaluationContext instanceof IEvaluationContext)) {
+            return null;
+        }
+        
+        IEvaluationContext ctx = (IEvaluationContext) evaluationContext;
+        Object selection = ctx.getVariable(ISources.ACTIVE_CURRENT_SELECTION_NAME);
+        if ( !(selection instanceof ISelection)) {
+            return null;
+        }
+        
+        return (ISelection) selection;
+    }
 
     private SelectionUtils() {
 

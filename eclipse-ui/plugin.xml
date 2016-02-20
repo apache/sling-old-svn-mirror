@@ -406,6 +406,28 @@
    		<menuContribution
            locationURI="popup:org.eclipse.ui.popup.any?after=group.edit">
            <command
+                 commandId="org.eclipse.ui.edit.copy">
+                 <visibleWhen
+                       checkEnabled="false">
+                     <iterate ifEmpty="false">
+                         <adapt
+                               type="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
+                         </adapt> 	 
+                     </iterate>
+                 </visibleWhen>
+           </command>
+           <command
+                 commandId="org.eclipse.ui.edit.paste">
+                 <visibleWhen
+                       checkEnabled="false">
+                     <iterate ifEmpty="false">
+                         <adapt
+                               type="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
+                         </adapt> 	 
+                     </iterate>
+                 </visibleWhen>
+           </command>
+           <command
                  commandId="org.eclipse.ui.edit.delete">
                  <visibleWhen
                        checkEnabled="false">
@@ -427,7 +449,6 @@
                      </iterate>
                  </visibleWhen>
            </command>
-           
         </menuContribution>
         
    	</extension>
@@ -456,7 +477,17 @@
    	      		id="org.apache.sling.ide.eclipse.ui.actions.jcrNodeRenameHandler"
    	      		defaultHandler="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameHandler"
    	      		name="Rename Node...">
-         </command>   	      
+         </command>
+   	      <command
+   	      		id="org.apache.sling.ide.eclipse.ui.actions.jcrNodeCopyHandler"
+   	      		defaultHandler="org.apache.sling.ide.eclipse.ui.actions.JcrNodeCopyHandler"
+   	      		name="Copy Node...">
+         </command>
+   	      <command
+   	      		id="org.apache.sling.ide.eclipse.ui.actions.jcrNodePasteHandler"
+   	      		defaultHandler="org.apache.sling.ide.eclipse.ui.actions.JcrNodePasteHandler"
+   	      		name="Paste Node...">
+         </command>
    	</extension>
    	
    	<extension
@@ -477,6 +508,28 @@
    		<handler
            commandId="org.eclipse.ui.edit.rename"
            class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameHandler">
+           <activeWhen>
+             <iterate ifEmpty="false">
+             <adapt
+                   type="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
+             </adapt>        
+             </iterate>        
+           </activeWhen>
+   		</handler>
+   		<handler
+           commandId="org.eclipse.ui.edit.copy"
+           class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeCopyHandler">
+           <activeWhen>
+             <iterate ifEmpty="false">
+             <adapt
+                   type="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
+             </adapt>        
+             </iterate>        
+           </activeWhen>
+   		</handler>
+   		<handler
+           commandId="org.eclipse.ui.edit.paste"
+           class="org.apache.sling.ide.eclipse.ui.actions.JcrNodePasteHandler">
            <activeWhen>
              <iterate ifEmpty="false">
              <adapt
@@ -522,22 +575,6 @@
                id="org.apache.sling.ide.eclipse.ui.nav.NewJcrNodeAction"
                label="&amp;Node..."
                menubarPath="common.new.menu/jcr">
-         </action>
-         <action
-               class="org.apache.sling.ide.eclipse.ui.actions.JcrNodePasteAction"
-               definitionId="org.eclipse.ui.edit.paste"
-               icon="icons/ovr16/paste_edit.gif"
-               id="org.apache.sling.ide.eclipse.ui.actions.JcrNodePasteAction"
-               label="&amp;Paste..."
-               menubarPath="group.edit">
-         </action>
-         <action
-               class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeCopyAction"
-               icon="icons/ovr16/copy.gif"
-               id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeCopyAction"
-               definitionId="org.eclipse.ui.edit.copy"
-               label="&amp;Copy..."
-               menubarPath="group.edit">
          </action>
          <visibility>
                <objectState
@@ -597,24 +634,6 @@
                icon="icons/obj16/sling_misc.gif"
                label="Import from server..."
                menubarPath="jcr">
-         </action>
-         <action
-               class="org.apache.sling.ide.eclipse.ui.actions.JcrNodePasteAction"
-               definitionId="org.eclipse.ui.edit.paste"
-               icon="icons/ovr16/paste_edit.gif"
-               id="org.apache.sling.ide.eclipse.ui.actions.JcrNodePasteAction"
-               label="&amp;Paste..."
-               menubarPath="group.edit"
-               toolbarPath="common.new.menu/jcr">
-         </action>
-         <action
-               class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeCopyAction"
-               definitionId="org.eclipse.ui.edit.copy"
-               icon="icons/ovr16/copy.gif"
-               id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeCopyAction"
-               label="&amp;Copy..."
-               menubarPath="group.edit"
-               toolbarPath="common.new.menu/jcr">
          </action>
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.OpenHtmlInBrowserAction"
