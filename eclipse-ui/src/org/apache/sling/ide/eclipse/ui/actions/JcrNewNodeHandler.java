@@ -20,40 +20,41 @@ import javax.jcr.nodetype.NodeType;
 
 import org.apache.sling.ide.eclipse.core.ServerUtil;
 import org.apache.sling.ide.eclipse.ui.internal.Activator;
+import org.apache.sling.ide.eclipse.ui.internal.SelectionUtils;
 import org.apache.sling.ide.eclipse.ui.nav.model.JcrNode;
 import org.apache.sling.ide.transport.NodeTypeRegistry;
 import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryException;
+import org.eclipse.core.commands.AbstractHandler;
+import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.IObjectActionDelegate;
-import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.handlers.HandlerUtil;
 
-public class JcrNewNodeAction implements IObjectActionDelegate {
+public class JcrNewNodeHandler extends AbstractHandler {
 
-	private ISelection selection;
-	private Shell shell;
     private boolean doNotAskAgain;
 
-	public JcrNewNodeAction() {
-	}
-
-	@Override
-    public void run(IAction action) {
-        if (selection==null || !(selection instanceof IStructuredSelection)) {
-            return;
+    @Override
+    public Object execute(ExecutionEvent event) throws ExecutionException {
+        
+        ISelection sel = HandlerUtil.getCurrentSelection(event);
+        
+        JcrNode node = SelectionUtils.getFirst(sel, JcrNode.class);
+        if ( node == null ) {
+            return null;
         }
-        IStructuredSelection ss = (IStructuredSelection)selection;
-        JcrNode node = (JcrNode) ss.getFirstElement();
+        
+        Shell shell = HandlerUtil.getActiveShell(event);
+        
         if (!node.canCreateChild()) {
             MessageDialog.openInformation(shell, "Cannot create node",
                     "Node is not covered by the workspace filter as defined in filter.xml");
-            return;
+            return null;
         }
         Repository repository = ServerUtil.getDefaultRepository(node.getProject());
         NodeTypeRegistry ntManager = (repository==null) ? null : repository.getNodeTypeRegistry();
@@ -72,7 +73,7 @@ public class JcrNewNodeAction implements IObjectActionDelegate {
                 };
                 int choice = dialog.open();
                 if (choice <= 0) {
-                    return;
+                    return null;
                 }
                 if (choice==1) {
                     doNotAskAgain = true;
@@ -83,30 +84,21 @@ public class JcrNewNodeAction implements IObjectActionDelegate {
         final NodeType nodeType = node.getNodeType();
         if (nodeType!=null && nodeType.getName()!=null && nodeType.getName().equals("nt:file")) {
             MessageDialog.openInformation(shell, "Cannot create node", "Node of type nt:file cannot have children");
-            return;
+            return null;
         }
         
         try {
             final NewNodeDialog nnd = new NewNodeDialog(shell, node, ntManager);
             if (nnd.open() == IStatus.OK) {
                 node.createChild(nnd.getValue(), nnd.getChosenNodeType());
-                return;
+                return null;
             }
         } catch (RepositoryException e1) {
             Activator.getDefault().getPluginLogger().warn(
                     "Could not open NewNodeDialog due to "+e1, e1);
         }
         
+        return null;
     }
-
-	@Override
-	public void selectionChanged(IAction action, ISelection selection) {
-		this.selection = selection;
-	}
-
-	@Override
-	public void setActivePart(IAction action, IWorkbenchPart targetPart) {
-		this.shell = targetPart.getSite().getWorkbenchWindow().getShell();
-	}
 
 }
