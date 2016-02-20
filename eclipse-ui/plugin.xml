@@ -445,6 +445,24 @@
         <menuContribution
               locationURI="popup:org.eclipse.ui.popup.any?after=additions">
               <command
+              	commandId="org.apache.sling.ide.eclipse.ui.actions.jcrNodeImportContentHandler"
+              	icon="icons/obj16/sling_misc.gif"
+              	label="Import from server...">
+                 <visibleWhen
+                       checkEnabled="false">
+					<reference definitionId="org.apache.sling.ide.eclipse.jcrNode"/>
+                 </visibleWhen>
+              </command>
+              <command
+              	commandId="org.apache.sling.ide.eclipse.ui.actions.jcrNodeExportContentHandler"
+              	icon="icons/obj16/sling_misc.gif"
+              	label="Export to server...">
+                 <visibleWhen
+                       checkEnabled="false">
+					<reference definitionId="org.apache.sling.ide.eclipse.jcrNode"/>
+                 </visibleWhen>
+              </command>
+              <command
               	commandId="org.apache.sling.ide.eclipse.ui.actions.openHtmlInBrowserHandler"
               	icon="platform:/plugin/org.eclipse.ui.browser/icons/obj16/internal_browser.gif"
               	label="&amp;Open .html (on server) in browser">
@@ -495,6 +513,16 @@
    	      		id="org.apache.sling.ide.eclipse.ui.actions.openHtmlInBrowserHandler"
    	      		defaultHandler="org.apache.sling.ide.eclipse.ui.actions.OpenHtmlInBrowserHandler"
    	      		name="Open Node in Browser...">
+         </command>
+   	      <command
+   	      		id="org.apache.sling.ide.eclipse.ui.actions.jcrNodeExportContentHandler"
+   	      		defaultHandler="org.apache.sling.ide.eclipse.ui.actions.JcrNodeExportContentHandler"
+   	      		name="Export JCR content to server...">
+         </command>
+   	      <command
+   	      		id="org.apache.sling.ide.eclipse.ui.actions.jcrNodeImportContentHandler"
+   	      		defaultHandler="org.apache.sling.ide.eclipse.ui.actions.JcrNodeImportContentHandler"
+   	      		name="Import JCR content from server...">
          </command>
    	</extension>
    	
@@ -548,20 +576,6 @@
             </separator>
          </menu>
          <action
-               class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeExportContentAction"
-               icon="icons/obj16/sling_misc.gif"
-               id="org.apache.sling.ide.menu.exportContentAction"
-               label="Export to server..."
-               menubarPath="jcr">
-         </action>
-         <action
-               class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeImportContentAction"
-               id="org.apache.sling.ide.menu.importContentAction"
-               icon="icons/obj16/sling_misc.gif"
-               label="Import from server..."
-               menubarPath="jcr">
-         </action>
-         <action
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNewNodeAction"
                icon="icons/obj16/sling_misc.gif"
                id="org.apache.sling.ide.eclipse.ui.nav.NewJcrNodeAction"
@@ -590,20 +604,6 @@
                id="org.apache.sling.ide.eclipse.ui.nav.NewNonJcrNodeAction"
                label="Node..."
                menubarPath="common.new.menu/jcr">
-         </action>
-         <action
-               class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeExportContentAction"
-               icon="icons/obj16/sling_misc.gif"
-               id="org.apache.sling.ide.menu.exportContentAction"
-               label="Export to server..."
-               menubarPath="jcr">
-         </action>
-         <action
-               class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeImportContentAction"
-               id="org.apache.sling.ide.menu.importContentAction"
-               icon="icons/obj16/sling_misc.gif"
-               label="Import from server..."
-               menubarPath="jcr">
          </action>
          <visibility>
                <objectState
