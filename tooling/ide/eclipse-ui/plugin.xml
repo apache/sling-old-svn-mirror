@@ -451,6 +451,31 @@
            </command>
         </menuContribution>
         
+        <!-- Other actions -->
+        <menuContribution
+              locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+              <command
+              	commandId="org.apache.sling.ide.eclipse.ui.actions.openHtmlInBrowserHandler"
+              	icon="platform:/plugin/org.eclipse.ui.browser/icons/obj16/internal_browser.gif"
+              	label="&amp;Open .html (on server) in browser">
+                 <visibleWhen
+                       checkEnabled="false">
+                     <iterate ifEmpty="false">
+                         <adapt
+                               type="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
+                         </adapt>
+                         <!--
+         <visibility>
+               <objectState
+                     name="browseableNode"
+                     value="true">
+               </objectState>
+         </visibility>                         
+                         -->
+                     </iterate>
+                 </visibleWhen>
+              </command>
+        </menuContribution>
    	</extension>
    	
    	<extension
@@ -487,6 +512,11 @@
    	      		id="org.apache.sling.ide.eclipse.ui.actions.jcrNodePasteHandler"
    	      		defaultHandler="org.apache.sling.ide.eclipse.ui.actions.JcrNodePasteHandler"
    	      		name="Paste Node...">
+         </command>
+   	      <command
+   	      		id="org.apache.sling.ide.eclipse.ui.actions.openHtmlInBrowserHandler"
+   	      		defaultHandler="org.apache.sling.ide.eclipse.ui.actions.OpenHtmlInBrowserHandler"
+   	      		name="Open Node in Browser...">
          </command>
    	</extension>
    	
@@ -586,28 +616,6 @@
    </extension>
 
    <extension
-         point="org.eclipse.ui.popupMenus">
-      <objectContribution
-            adaptable="true"
-            id="org.apache.sling.ide.eclipse.ui.pluginGeneralToolSet"
-            objectClass="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
-         <action
-               class="org.apache.sling.ide.eclipse.ui.actions.OpenHtmlInBrowserAction"
-               icon="platform:/plugin/org.eclipse.ui.browser/icons/obj16/internal_browser.gif"
-               id="org.apache.sling.ide.eclipse.ui.actionsOpenHtmlInBrowserAction"
-               label="&amp;Open .html (on server) in browser"
-               menubarPath="jcr">
-         </action>
-         <visibility>
-               <objectState
-                     name="browseableNode"
-                     value="true">
-               </objectState>
-         </visibility>
-      </objectContribution>
-   </extension>
-   
-   <extension
          id="org.apache.sling.ide.eclipse.ui.pluginNonJcrNodeToolSet"
          point="org.eclipse.ui.popupMenus">
       <objectContribution
@@ -634,13 +642,6 @@
                icon="icons/obj16/sling_misc.gif"
                label="Import from server..."
                menubarPath="jcr">
-         </action>
-         <action
-               class="org.apache.sling.ide.eclipse.ui.actions.OpenHtmlInBrowserAction"
-               icon="platform:/plugin/org.eclipse.ui.browser/icons/obj16/internal_browser.gif"
-               id="org.apache.sling.ide.eclipse.ui.actionsOpenHtmlInBrowserAction"
-               label="&amp;Open .html (on server) in browser"
-               toolbarPath="common.open.menu/jcr">
          </action>
          <visibility>
                <objectState

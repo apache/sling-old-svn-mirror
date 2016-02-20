@@ -20,50 +20,51 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.apache.sling.ide.eclipse.ui.internal.Activator;
+import org.apache.sling.ide.eclipse.ui.internal.SelectionUtils;
 import org.apache.sling.ide.eclipse.ui.nav.model.JcrNode;
+import org.eclipse.core.commands.AbstractHandler;
+import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.IObjectActionDelegate;
-import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
+import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.statushandlers.StatusManager;
 import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.ServerUtil;
 
 /**
- * The <tt>AbstractOpenInBrowserAction</tt> offers support for easily opening a node in a browser
+ * The <tt>AbstractOpenInBrowserHandler</tt> offers support for easily opening a node in a browser
  *
  */
-public abstract class AbstractOpenInBrowserAction implements IObjectActionDelegate {
-
-    private ISelection selection;
-    private Shell shell;
-    private IWorkbenchPart targetPart;
+public abstract class AbstractOpenInBrowserHandler extends AbstractHandler {
 
     @Override
-    public void run(IAction action) {
-    	if (selection==null || !(selection instanceof IStructuredSelection)) {
-    		return;
-    	}
-    	IStructuredSelection ss = (IStructuredSelection)selection;
-    	JcrNode node = (JcrNode) ss.getFirstElement();
-    	
+    public Object execute(ExecutionEvent event) throws ExecutionException {
+
+        ISelection sel = HandlerUtil.getCurrentSelection(event);
+        
+        JcrNode node = SelectionUtils.getFirst(sel, JcrNode.class);
+        if ( node == null ) {
+            return null;
+        }
+        
+        Shell shell = HandlerUtil.getActiveShell(event);
+        
         IModule module = ServerUtil.getModule(node.getProject());
         if (module==null) {
     		MessageDialog.openWarning(shell, "Cannot open browser", "Not configured for any server");
-        	return;
+        	return null;
         }
         IServer[] servers = ServerUtil.getServersByModule(module, new NullProgressMonitor());
         if (servers==null || servers.length==0) {
     		MessageDialog.openWarning(shell, "Cannot open browser", "Not configured for any server");
-        	return;
+        	return null;
         }
         IServer server = servers[0];
         URL url;
@@ -72,29 +73,20 @@ public abstract class AbstractOpenInBrowserAction implements IObjectActionDelega
         } catch (MalformedURLException e) {
             StatusManager.getManager().handle(new Status(Status.WARNING, Activator.PLUGIN_ID, "Url is invalid", e),
                     StatusManager.SHOW);
-            return;
+            return null;
         }
+        
     	try {
-            IWorkbenchBrowserSupport browserSupport = targetPart.getSite().getWorkbenchWindow().getWorkbench()
-                    .getBrowserSupport();
+            IWorkbenchBrowserSupport browserSupport = HandlerUtil.getActiveWorkbenchWindow(event)
+                    .getWorkbench().getBrowserSupport();
             browserSupport.createBrowser("org.apache.sling.ide.openOnServer").openURL(url);
         } catch (PartInitException e) {
             StatusManager.getManager().handle(
                     new Status(Status.WARNING, Activator.PLUGIN_ID, "Failed creating browser instance", e),
                     StatusManager.SHOW | StatusManager.LOG);
         }
-    }
-
-    @Override
-    public void selectionChanged(IAction action, ISelection selection) {
-    	this.selection = selection;
-    	action.setEnabled(true);
-    }
-
-    @Override
-    public void setActivePart(IAction action, IWorkbenchPart targetPart) {
-    	this.targetPart = targetPart;
-    	this.shell = targetPart.getSite().getWorkbenchWindow().getShell();
+    	
+    	return null;
     }
 
     protected abstract URL getUrlToOpen(JcrNode node, IServer server) throws MalformedURLException;
