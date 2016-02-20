@@ -18,16 +18,20 @@
  */
 package org.apache.sling.jcr.base;
 
+import java.util.Arrays;
 import java.util.Dictionary;
 
 import javax.jcr.Repository;
 
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.api.SlingRepositoryInitializer;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,7 +96,7 @@ public abstract class AbstractSlingRepositoryManager extends NamespaceMappingSup
 
     private volatile boolean disableLoginAdministrative;
 
-//    private volatile ServiceTracker repoInitializerTracker;
+    private volatile ServiceTracker repoInitializerTracker;
 
     /**
      * Returns the default workspace, which may be <code>null</code> meaning to
@@ -303,8 +307,8 @@ public abstract class AbstractSlingRepositoryManager extends NamespaceMappingSup
         this.defaultWorkspace = defaultWorkspace;
         this.disableLoginAdministrative = disableLoginAdministrative;
 
-//        this.repoInitializerTracker = new ServiceTracker(bundleContext, SlingRepositoryInitializer.class.getName(), null);
-//        this.repoInitializerTracker.open();
+        this.repoInitializerTracker = new ServiceTracker(bundleContext, SlingRepositoryInitializer.class.getName(), null);
+        this.repoInitializerTracker.open();
 
         try {
             log.debug("start: calling acquireRepository()");
@@ -318,7 +322,7 @@ public abstract class AbstractSlingRepositoryManager extends NamespaceMappingSup
 
                 log.debug("start: setting up NamespaceMapping support");
                 this.setup(this.bundleContext, this.masterSlingRepository);
-/*
+
                 log.debug("start: calling SlingRepositoryInitializer");
                 Throwable t = null;
                 try {
@@ -332,7 +336,7 @@ public abstract class AbstractSlingRepositoryManager extends NamespaceMappingSup
                     log.error("Exception in a SlingRepositoryInitializer, SlingRepository service registration aborted", t);
                     return false;
                 }
-*/
+
                 log.debug("start: calling registerService()");
                 this.repositoryService = registerService();
 
@@ -350,7 +354,7 @@ public abstract class AbstractSlingRepositoryManager extends NamespaceMappingSup
         // fallback to failure to start the repository
         return false;
     }
-/*
+
     private void executeRepositoryInitializers(SlingRepository repo) throws Exception {
         final ServiceReference [] refs = repoInitializerTracker.getServiceReferences();
         if(refs == null || refs.length == 0) {
@@ -368,15 +372,15 @@ public abstract class AbstractSlingRepositoryManager extends NamespaceMappingSup
             }
         }
     }
-*/
+
     /**
      * This method must be called if overwritten by implementations !!
      */
     protected final void stop() {
-//        if(repoInitializerTracker != null) {
-//            repoInitializerTracker.close();
-//            repoInitializerTracker = null;
-//        }
+        if(repoInitializerTracker != null) {
+            repoInitializerTracker.close();
+            repoInitializerTracker = null;
+        }
 
         // ensure the repository is really disposed off
         if (repository != null || repositoryService != null) {

@@ -18,10 +18,16 @@
  */
 package org.apache.sling.jcr.base;
 
+import javax.jcr.Node;
+import javax.jcr.Session;
+
+import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.api.SlingRepositoryInitializer;
+
 /** SlingRepositoryInitializer used to test that all initializers are
  *  called in the right order.
  */
-class TestInitializer { //implements SlingRepositoryInitializer {
+class TestInitializer implements SlingRepositoryInitializer {
 
     private final String id;
     private static final String NODE_NAME = TestInitializer.class.getName();
@@ -31,7 +37,7 @@ class TestInitializer { //implements SlingRepositoryInitializer {
     TestInitializer(String id) {
         this.id = id;
     }
-    /*
+
     @Override
     public void processRepository(SlingRepository repo) throws Exception {
         if(id.equals("EXCEPTION")) {
@@ -56,7 +62,7 @@ class TestInitializer { //implements SlingRepositoryInitializer {
             s.logout();
         }
     }
-    */
+
     static String getPropertyPath() {
         return NODE_PATH + "/" + PROP;
     }
