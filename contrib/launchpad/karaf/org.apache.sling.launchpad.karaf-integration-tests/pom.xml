@@ -36,6 +36,7 @@
   <description>Integration Tests for Apache Sling Launchpad Karaf</description>
 
   <properties>
+    <org.apache.jackrabbit.version>2.12.0</org.apache.jackrabbit.version>
     <org.apache.karaf.version>4.0.4</org.apache.karaf.version>
     <org.ops4j.pax.exam.version>4.8.0</org.ops4j.pax.exam.version>
   </properties>
@@ -74,6 +75,12 @@
     <!-- Apache Sling -->
     <dependency>
       <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.api</artifactId>
+      <version>2.11.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.jcr.api</artifactId>
       <version>2.3.0</version>
       <scope>test</scope>
@@ -91,6 +98,12 @@
       <type>xml</type>
       <classifier>features</classifier>
       <scope>test</scope>
+    </dependency>
+    <!-- Apache Jackrabbit -->
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-jcr-commons</artifactId>
+      <version>${org.apache.jackrabbit.version}</version>
     </dependency>
     <!-- bnd -->
     <dependency>
