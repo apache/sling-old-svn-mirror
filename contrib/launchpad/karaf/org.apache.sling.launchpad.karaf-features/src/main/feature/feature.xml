@@ -388,6 +388,7 @@
     <bundle>mvn:org.apache.jackrabbit/oak-commons/${org.apache.jackrabbit.oak.version}</bundle>
     <bundle>mvn:org.apache.jackrabbit/oak-lucene/${org.apache.jackrabbit.oak.version}</bundle>
     <bundle>mvn:org.apache.jackrabbit/oak-blob/${org.apache.jackrabbit.oak.version}</bundle>
+    <bundle>mvn:org.apache.jackrabbit/oak-segment/${org.apache.jackrabbit.oak.version}</bundle>
     <!-- dependencies -->
     <feature>scr</feature>
     <feature version="${feature.version}">jackrabbit-sling</feature>

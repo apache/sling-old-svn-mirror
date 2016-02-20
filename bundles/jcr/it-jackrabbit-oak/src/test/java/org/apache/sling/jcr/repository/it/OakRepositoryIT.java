@@ -67,6 +67,7 @@ public class OakRepositoryIT extends CommonTests {
 
         opt.add(mavenBundle("org.apache.jackrabbit", "oak-lucene", oakVersion));
         opt.add(mavenBundle("org.apache.jackrabbit", "oak-blob", oakVersion));
+        opt.add(mavenBundle("org.apache.jackrabbit", "oak-segment", oakVersion));
         opt.add(mavenBundle("org.apache.felix", "org.apache.felix.jaas", "0.0.2"));
 
         return opt.toArray(new Option[]{});
