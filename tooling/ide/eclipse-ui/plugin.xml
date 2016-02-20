@@ -342,30 +342,77 @@
             label="Sling Console">
       </consoleFactory>
    </extension>
+   
    <extension
-         point="org.eclipse.ui.popupMenus">
-      <objectContribution
-            objectClass="org.eclipse.core.resources.IProject"
-            adaptable="true"
-            id="org.apache.sling.ide.eclipse.ui.pluginProjectToolSet">
-
-         <action
-            label="Convert to Content Project..."
-            class="org.apache.sling.ide.eclipse.ui.wizards.ConvertToContentPackageAction"
-            menubarPath="org.eclipse.ui.projectConfigure/additions"
-            enablesFor="+"
-            id="org.apache.sling.ide.eclipse.ui.wizards.ConvertToContentPackageAction">
-      	</action>
-         <action
-            label="Convert to Bundle Project..."
-            class="org.apache.sling.ide.eclipse.ui.wizards.ConvertToBundleAction"
-            menubarPath="org.eclipse.ui.projectConfigure/additions"
-            enablesFor="+"
-            id="org.apache.sling.ide.eclipse.ui.wizards.ConvertToBundleAction">
-      	</action>
-      </objectContribution>
-         
-   </extension>
+   		point="org.eclipse.ui.menus">
+   		<menuContribution
+           locationURI="popup:org.eclipse.ui.projectConfigure?after=additions">
+           <command
+                 commandId="org.apache.sling.ide.eclipse.ui.wizards.convertToContentProjectCommand"
+                 label="Convert to Content Project...">
+                 <!-- 
+                   don't enable for sling.content or sling.bundle projects 
+                   Described in depth at http://help.eclipse.org/luna/index.jsp?topic=%2Forg.eclipse.platform.doc.isv%2Fguide%2Fworkbench_cmd_expressions.htm
+                 -->
+                 <visibleWhen
+                       checkEnabled="false">
+                   	 <iterate ifEmpty="false">
+                   	   <instanceof value="org.eclipse.core.resources.IProject"/>
+                 	   <not>
+                   	   	  <or>
+                          	<test
+	        	    			property="org.eclipse.wst.common.project.facet.core.projectFacet" 
+	            				value="sling.content"/>
+                          	<test
+	        	    			property="org.eclipse.wst.common.project.facet.core.projectFacet" 
+	            				value="sling.bundle"/>
+	            		  </or>
+            			</not>
+                   	 </iterate>
+                 </visibleWhen>
+           </command>
+           <command
+                 commandId="org.apache.sling.ide.eclipse.ui.wizards.convertToBundleProjectCommand"
+                 label="Convert to Bundle Project...">
+                 <!-- 
+                 	don't enable for sling.content or sling.bundle projects
+                 	but require the Java nature
+             	 -->
+                 <visibleWhen
+                       checkEnabled="false">
+                   	 <iterate ifEmpty="false">
+                   	   <instanceof value="org.eclipse.core.resources.IProject"/>
+                   	   <test property="org.eclipse.core.resources.projectNature"
+                   	   		value="org.eclipse.jdt.core.javanature"/>
+                 	   <not>
+                   	   	  <or>
+                          	<test
+	        	    			property="org.eclipse.wst.common.project.facet.core.projectFacet" 
+	            				value="sling.content"/>
+                          	<test
+	        	    			property="org.eclipse.wst.common.project.facet.core.projectFacet" 
+	            				value="sling.bundle"/>
+	            		  </or>
+            			</not>
+                   	 </iterate>
+                 </visibleWhen>                 
+           </command>
+   		</menuContribution>
+   	</extension>
+   	
+   	<extension
+   	      point="org.eclipse.ui.commands">
+   	      <command
+                id="org.apache.sling.ide.eclipse.ui.wizards.convertToBundleProjectCommand"
+                defaultHandler="org.apache.sling.ide.eclipse.ui.wizards.ConvertToBundleProjectHandler"
+                name="Convert to Bundle Project...">
+   	      </command>
+   	      <command
+                id="org.apache.sling.ide.eclipse.ui.wizards.convertToContentProjectCommand"
+                defaultHandler="org.apache.sling.ide.eclipse.ui.wizards.ConvertToContentProjectHandler"
+                name="Convert to Content Project...">
+   	      </command>
+   	</extension>
 
    <extension
          point="org.eclipse.ui.popupMenus">
