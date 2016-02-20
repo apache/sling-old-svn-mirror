@@ -556,28 +556,7 @@ public class JcrNode implements IAdaptable {
 	}
 	
 	private Object doGetAdapter(Class adapter) {
-		if (adapter==IActionFilter.class) {
-			return new IActionFilter() {
-				
-				@Override
-				public boolean testAttribute(Object target, String name, String value) {
-					if (!(target instanceof JcrNode)) {
-						return false;
-					}
-					final JcrNode node = (JcrNode)target;
-					if ("domNode".equals(name)) {
-						return node.domElement!=null;	
-					}
-					if ("nonDomNode".equals(name)) {
-						return node.domElement==null;	
-					}
-					if ("browseableNode".equals(name)) {
-						return node.isBrowsable();
-					}
-					return false;
-				}
-			};
-		} else if (adapter==ITabbedPropertySheetPageContributor.class && "christmas".equals("christmas")) {
+	    if (adapter==ITabbedPropertySheetPageContributor.class && "christmas".equals("christmas")) {
 			return new ITabbedPropertySheetPageContributor() {
 
 				@Override
