@@ -18,19 +18,20 @@ package org.apache.sling.ide.eclipse.ui.wizards;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.sling.ide.eclipse.core.ConfigurationHelper;
 import org.apache.sling.ide.eclipse.core.internal.ProjectHelper;
+import org.eclipse.core.commands.AbstractHandler;
+import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.ISelection;
@@ -38,30 +39,17 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.IObjectActionDelegate;
-import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.handlers.HandlerUtil;
 
-public class ConvertToBundleAction implements IObjectActionDelegate {
-
-	private ISelection fSelection;
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction,
-	 *      org.eclipse.ui.IWorkbenchPart)
-	 */
-	public void setActivePart(IAction action, IWorkbenchPart targetPart) {
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
-	 */
-	public void run(IAction action) {
-		if (fSelection instanceof IStructuredSelection) {
+public class ConvertToBundleProjectHandler extends AbstractHandler {
+    
+    @Override
+    public Object execute(ExecutionEvent event) throws ExecutionException {
+        
+        ISelection selection = HandlerUtil.getCurrentSelection(event);
+        
+		if (selection instanceof IStructuredSelection) {
 			List<IProject> applicableProjects = new LinkedList<>();
 			IProject[] allProjects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
 			for (IProject p : allProjects) {
@@ -69,7 +57,7 @@ public class ConvertToBundleAction implements IObjectActionDelegate {
 					applicableProjects.add(p);
 				}
 			}
-			Object[] elems = ((IStructuredSelection) fSelection).toArray();
+			Object[] elems = ((IStructuredSelection) selection).toArray();
 			List<IProject> initialSelection = new ArrayList<>(elems.length);
 
 			for (Object elem : elems) {
@@ -100,12 +88,12 @@ public class ConvertToBundleAction implements IObjectActionDelegate {
 			});
 			if (dialog.getReturnCode()!=WizardDialog.OK) {
 				// user did not click OK
-				return;
+				return null;
 			}
 			final List<IProject> selectedProjects = wizard.getSelectedProjects();
 			if (selectedProjects == null || selectedProjects.size()==0) {
 				// no project was selected
-				return;
+			    return null;
 			}
 			IRunnableWithProgress r = new IRunnableWithProgress() {
 				
@@ -131,44 +119,8 @@ public class ConvertToBundleAction implements IObjectActionDelegate {
 						e.getMessage());
 			}
 		}
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction,
-	 *      org.eclipse.jface.viewers.ISelection)
-	 */
-	public void selectionChanged(IAction action, ISelection selection) {
-		fSelection = selection;
-		if (selection instanceof IStructuredSelection) {
-			final IStructuredSelection iss = (IStructuredSelection) selection;
-			Iterator<?> it = iss.iterator();
-			if (!it.hasNext()) {
-				action.setEnabled(false);
-				return;
-			}
-			while(it.hasNext()) {
-				Object elem = it.next();
-				if (elem!=null && (elem instanceof IProject)) {
-					final IProject project = (IProject) elem;
-					if (ProjectHelper.isBundleProject(project) || ProjectHelper.isContentProject(project)) {
-						action.setEnabled(false);
-						return;
-					} else {
-					    // SLING-3651 : always show action -
-					    //              allows to provide more filter detail infos
-						continue;
-					}
-				} else {
-					action.setEnabled(false);
-					return;
-				}
-			}
-			action.setEnabled(true);
-		} else {
-			action.setEnabled(false);
-		}
+		
+		return null;
 	}
 
 	public Display getDisplay() {

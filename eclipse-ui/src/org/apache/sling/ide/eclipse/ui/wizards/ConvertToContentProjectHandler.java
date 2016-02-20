@@ -18,11 +18,13 @@ package org.apache.sling.ide.eclipse.ui.wizards;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
-import java.util.Iterator;
 
 import org.apache.sling.ide.eclipse.core.ConfigurationHelper;
 import org.apache.sling.ide.eclipse.core.internal.ProjectHelper;
 import org.apache.sling.ide.eclipse.ui.internal.Activator;
+import org.eclipse.core.commands.AbstractHandler;
+import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -31,7 +33,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -40,38 +41,24 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.IObjectActionDelegate;
-import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.ContainerSelectionDialog;
 import org.eclipse.ui.dialogs.ElementTreeSelectionDialog;
 import org.eclipse.ui.dialogs.ISelectionStatusValidator;
+import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.model.BaseWorkbenchContentProvider;
 import org.eclipse.ui.model.IWorkbenchAdapter;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
-public class ConvertToContentPackageAction implements IObjectActionDelegate {
+public class ConvertToContentProjectHandler extends AbstractHandler {
+    
+    @Override
+    public Object execute(ExecutionEvent event) throws ExecutionException {
+        
+        ISelection selection = HandlerUtil.getCurrentSelection(event);
 
-    private ISelection fSelection;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.
-     * action.IAction, org.eclipse.ui.IWorkbenchPart)
-     */
-    public void setActivePart(IAction action, IWorkbenchPart targetPart) {
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
-     */
-    public void run(IAction action) {
-        if (fSelection instanceof IStructuredSelection) {
-            final IProject project = (IProject) ((IStructuredSelection) fSelection)
+        if (selection instanceof IStructuredSelection) {
+            final IProject project = (IProject) ((IStructuredSelection) selection)
                     .getFirstElement();
 
             ElementTreeSelectionDialog dialog = new ElementTreeSelectionDialog(
@@ -195,45 +182,8 @@ public class ConvertToContentPackageAction implements IObjectActionDelegate {
                 }
             }
         }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action
-     * .IAction, org.eclipse.jface.viewers.ISelection)
-     */
-    public void selectionChanged(IAction action, ISelection selection) {
-        fSelection = selection;
-        if (selection instanceof IStructuredSelection) {
-            final IStructuredSelection iss = (IStructuredSelection) selection;
-            Iterator<?> it = iss.iterator();
-            if (!it.hasNext()) {
-                action.setEnabled(false);
-                return;
-            }
-            while (it.hasNext()) {
-                Object elem = it.next();
-                if (elem != null && (elem instanceof IProject)) {
-                    final IProject project = (IProject) elem;
-                    if (ProjectHelper.isContentProject(project) || ProjectHelper.isBundleProject(project)) {
-                        action.setEnabled(false);
-                        return;
-                    } else {
-                        // SLING-3651 : always show action -
-                        //              allows to provide more filter detail infos
-                        continue;
-                    }
-                } else {
-                    action.setEnabled(false);
-                    return;
-                }
-            }
-            action.setEnabled(true);
-        } else {
-            action.setEnabled(false);
-        }
+        
+        return null;
     }
 
     public Display getDisplay() {
