@@ -344,6 +344,29 @@
    </extension>
    
    <extension
+         point="org.eclipse.core.expressions.definitions">
+         <definition
+               id="org.apache.sling.ide.eclipse.jcrNode">
+            <iterate ifEmpty="false">
+ 	           <adapt type="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode"/>
+ 	         </iterate>
+         </definition>
+         <definition
+               id="org.apache.sling.ide.eclipse.nonSlingProject">
+     	   <not>
+       	   	  <or>
+              	<test
+	    			property="org.eclipse.wst.common.project.facet.core.projectFacet" 
+    				value="sling.content"/>
+              	<test
+	    			property="org.eclipse.wst.common.project.facet.core.projectFacet" 
+    				value="sling.bundle"/>
+    		  </or>
+			</not>               
+         </definition>
+   </extension>
+    
+   <extension
    		point="org.eclipse.ui.menus">
    		<!-- Convert to ... contributions -->
    		<menuContribution
@@ -359,22 +382,13 @@
                        checkEnabled="false">
                    	 <iterate ifEmpty="false">
                    	   <instanceof value="org.eclipse.core.resources.IProject"/>
-                 	   <not>
-                   	   	  <or>
-                          	<test
-	        	    			property="org.eclipse.wst.common.project.facet.core.projectFacet" 
-	            				value="sling.content"/>
-                          	<test
-	        	    			property="org.eclipse.wst.common.project.facet.core.projectFacet" 
-	            				value="sling.bundle"/>
-	            		  </or>
-            			</not>
+                   	   <reference
+                             definitionId="org.apache.sling.ide.eclipse.nonSlingProject"/>
                    	 </iterate>
                  </visibleWhen>
            </command>
            <command
                  commandId="org.apache.sling.ide.eclipse.ui.wizards.convertToBundleProjectCommand"
-                 icon="org.apache.sling.ide.eclipse-ui.command4"
                  label="Convert to Bundle Project...">
                  <!-- 
                  	don't enable for sling.content or sling.bundle projects
@@ -386,16 +400,8 @@
                    	   <instanceof value="org.eclipse.core.resources.IProject"/>
                    	   <test property="org.eclipse.core.resources.projectNature"
                    	   		value="org.eclipse.jdt.core.javanature"/>
-                 	   <not>
-                   	   	  <or>
-                          	<test
-	        	    			property="org.eclipse.wst.common.project.facet.core.projectFacet" 
-	            				value="sling.content"/>
-                          	<test
-	        	    			property="org.eclipse.wst.common.project.facet.core.projectFacet" 
-	            				value="sling.bundle"/>
-	            		  </or>
-            			</not>
+                   	   <reference
+                             definitionId="org.apache.sling.ide.eclipse.nonSlingProject"/>
                    	 </iterate>
                  </visibleWhen>                 
            </command>
@@ -409,44 +415,28 @@
                  commandId="org.eclipse.ui.edit.copy">
                  <visibleWhen
                        checkEnabled="false">
-                     <iterate ifEmpty="false">
-                         <adapt
-                               type="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
-                         </adapt> 	 
-                     </iterate>
+					<reference definitionId="org.apache.sling.ide.eclipse.jcrNode"/>
                  </visibleWhen>
            </command>
            <command
                  commandId="org.eclipse.ui.edit.paste">
                  <visibleWhen
                        checkEnabled="false">
-                     <iterate ifEmpty="false">
-                         <adapt
-                               type="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
-                         </adapt> 	 
-                     </iterate>
+                    <reference definitionId="org.apache.sling.ide.eclipse.jcrNode"/>
                  </visibleWhen>
            </command>
            <command
                  commandId="org.eclipse.ui.edit.delete">
                  <visibleWhen
                        checkEnabled="false">
-                     <iterate ifEmpty="false">
-                         <adapt
-                               type="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
-                         </adapt> 	 
-                     </iterate>
+                       <reference definitionId="org.apache.sling.ide.eclipse.jcrNode"/>
                  </visibleWhen>
            </command>
            <command
                  commandId="org.eclipse.ui.edit.rename">
                  <visibleWhen
                        checkEnabled="false">
-                     <iterate ifEmpty="false">
-                         <adapt
-                               type="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
-                         </adapt>
-                     </iterate>
+                       <reference definitionId="org.apache.sling.ide.eclipse.jcrNode"/>
                  </visibleWhen>
            </command>
         </menuContribution>
@@ -460,19 +450,7 @@
               	label="&amp;Open .html (on server) in browser">
                  <visibleWhen
                        checkEnabled="false">
-                     <iterate ifEmpty="false">
-                         <adapt
-                               type="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
-                         </adapt>
-                         <!--
-         <visibility>
-               <objectState
-                     name="browseableNode"
-                     value="true">
-               </objectState>
-         </visibility>                         
-                         -->
-                     </iterate>
+					<reference definitionId="org.apache.sling.ide.eclipse.jcrNode"/>
                  </visibleWhen>
               </command>
         </menuContribution>
@@ -528,44 +506,28 @@
            commandId="org.eclipse.ui.edit.delete"
            class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteHandler">
            <activeWhen>
-             <iterate ifEmpty="false">
-             <adapt
-                   type="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
-             </adapt>        
-             </iterate>        
+             <reference definitionId="org.apache.sling.ide.eclipse.jcrNode"/>
            </activeWhen>
    		</handler>
    		<handler
            commandId="org.eclipse.ui.edit.rename"
            class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameHandler">
            <activeWhen>
-             <iterate ifEmpty="false">
-             <adapt
-                   type="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
-             </adapt>        
-             </iterate>        
+             <reference definitionId="org.apache.sling.ide.eclipse.jcrNode"/>
            </activeWhen>
    		</handler>
    		<handler
            commandId="org.eclipse.ui.edit.copy"
            class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeCopyHandler">
            <activeWhen>
-             <iterate ifEmpty="false">
-             <adapt
-                   type="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
-             </adapt>        
-             </iterate>        
+             <reference definitionId="org.apache.sling.ide.eclipse.jcrNode"/>
            </activeWhen>
    		</handler>
    		<handler
            commandId="org.eclipse.ui.edit.paste"
            class="org.apache.sling.ide.eclipse.ui.actions.JcrNodePasteHandler">
            <activeWhen>
-             <iterate ifEmpty="false">
-             <adapt
-                   type="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
-             </adapt>        
-             </iterate>        
+             <reference definitionId="org.apache.sling.ide.eclipse.jcrNode"/>
            </activeWhen>
    		</handler>
    	</extension>
