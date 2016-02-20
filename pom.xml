@@ -66,6 +66,7 @@
                         <Import-Package>
                           org.apache.jackrabbit.test;resolution:=optional,
                           com.mongodb;resolution:=optional,
+                          org.apache.jackrabbit.oak,
                           org.apache.jackrabbit.oak.security.user;resolution:=optional,
                           org.apache.jackrabbit.oak.spi.security.authentication,
                           org.apache.felix.jaas.boot,
