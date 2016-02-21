@@ -326,6 +326,7 @@
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.javascript/2.0.28</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling-scripting</feature>
+    <!-- TODO obsolete for 2.0.30, see SLING-5514 -->
     <feature version="${feature.version}">sling-jcr</feature>
   </feature>
   <feature name="sling-scripting-jsp" version="${feature.version}">
