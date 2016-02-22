@@ -75,13 +75,22 @@
 		<author.jar.executor.work.folder>${project.build.directory}/author</author.jar.executor.work.folder>
         <!-- Options for the jar to execute. $JAREXEC_SERVER_PORT$ is replaced by the
         selected port number -->
-        <author.jar.executor.jar.options>-p $JAREXEC_SERVER_PORT$ -Dsling.run.modes=author
+        <author.jar.executor.jar.options>-p $JAREXEC_SERVER_PORT$ -Dsling.run.modes=author,notshared
         </author.jar.executor.jar.options>
 	
 		<publish.jar.executor.work.folder>${project.build.directory}/publish</publish.jar.executor.work.folder>
-        <publish.jar.executor.jar.options>-p $JAREXEC_SERVER_PORT$ -Dsling.run.modes=publish
+        <publish.jar.executor.jar.options>-p $JAREXEC_SERVER_PORT$ -Dsling.run.modes=publish,notshared
         </publish.jar.executor.jar.options>
-
+		
+		<author-shared.jar.executor.work.folder>${project.build.directory}/author-shared</author-shared.jar.executor.work.folder>
+        <author-shared.jar.executor.jar.options>-p $JAREXEC_SERVER_PORT$ -Dsling.run.modes=author,shared -Dsling.fileinstall.dir=sling/install
+        </author-shared.jar.executor.jar.options>
+		
+		
+		<publish-shared.jar.executor.work.folder>${project.build.directory}/publish-shared</publish-shared.jar.executor.work.folder>
+        <publish-shared.jar.executor.jar.options>-p $JAREXEC_SERVER_PORT$ -Dsling.run.modes=publish,shared -Dsling.fileinstall.dir=sling/install
+        </publish-shared.jar.executor.jar.options>
+        
         <!-- Change this to run selected tests only -->
         <tests.to.run>**/**Test.java</tests.to.run>
     </properties>
@@ -124,7 +133,8 @@
                 <configuration>
                     <excludes>
                         <exclude>derby.log</exclude>
-                        <exclude>src/main/resources/SLING-CONTENT/libs/test/install.author/*.json</exclude>
+                        <exclude>src/main/resources/**/*.*</exclude>
+                        <exclude>src/test/resources/**/*.*</exclude>
                     </excludes>
                 </configuration>
             </plugin>
@@ -143,6 +153,24 @@
                             <tasks>
                                 <mkdir dir="${project.build.directory}/author" />
                                 <mkdir dir="${project.build.directory}/publish" />
+                                
+                                <mkdir dir="${project.build.directory}/author-shared/sling/install" />
+                                <mkdir dir="${project.build.directory}/publish-shared/sling/install" />
+                                
+                                
+                                <!-- Author FileDataStore configuration -->
+                                 <copy todir="${project.build.directory}/author-shared/sling/install">
+								    <fileset dir="${project.build.directory}/classes/install">
+								        <include name="**/*.cfg"/>
+								    </fileset>
+								</copy>
+								
+								<!-- Publish FileDataStore configuration -->
+								<copy todir="${project.build.directory}/publish-shared/sling/install">
+								    <fileset dir="${project.build.directory}/classes/install">
+								        <include name="**/*.cfg"/>
+								    </fileset>
+								</copy>
                             </tasks>
                         </configuration>
                         <goals>
@@ -204,6 +232,9 @@
                             <portNames>
                                 <portName>author.http.port</portName>
                                 <portName>publish.http.port</portName>
+                                
+                                <portName>author-shared.http.port</portName>
+                                <portName>publish-shared.http.port</portName>
                             </portNames>
                         </configuration>
                     </execution>
@@ -248,6 +279,8 @@
                         <test.server.password>${test.server.password}</test.server.password>
                         <author.jar.executor.server.port>${author.http.port}</author.jar.executor.server.port>
                         <publish.jar.executor.server.port>${publish.http.port}</publish.jar.executor.server.port>
+                        <author-shared.jar.executor.server.port>${author-shared.http.port}</author-shared.jar.executor.server.port>
+                        <publish-shared.jar.executor.server.port>${publish-shared.http.port}</publish-shared.jar.executor.server.port>
                         <jar.executor.vm.options>${jar.executor.vm.options}</jar.executor.vm.options>
                         <jar.executor.jar.folder>${project.basedir}/target/dependency</jar.executor.jar.folder>
                         <jar.executor.jar.name.regexp>org.apache.sling.launchpad.*jar$</jar.executor.jar.name.regexp>
@@ -258,8 +291,16 @@
                         <publish.jar.executor.jar.options>${publish.jar.executor.jar.options}
                         </publish.jar.executor.jar.options>
                         
+                        <author-shared.jar.executor.jar.options>${author-shared.jar.executor.jar.options}
+                        </author-shared.jar.executor.jar.options>
+                        <publish-shared.jar.executor.jar.options>${publish-shared.jar.executor.jar.options}
+                        </publish-shared.jar.executor.jar.options>
+                        
 						<author.jar.executor.work.folder>${author.jar.executor.work.folder}</author.jar.executor.work.folder>
 						<publish.jar.executor.work.folder>${publish.jar.executor.work.folder}</publish.jar.executor.work.folder>
+                        
+                        <author-shared.jar.executor.work.folder>${author-shared.jar.executor.work.folder}</author-shared.jar.executor.work.folder>
+						<publish-shared.jar.executor.work.folder>${publish-shared.jar.executor.work.folder}</publish-shared.jar.executor.work.folder>
                         
                         <additional.bundles.path>
                             ${project.build.directory},${project.build.directory}/sling/additional-bundles
@@ -353,7 +394,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad</artifactId>
-            <version>8</version>
+            <version>9-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

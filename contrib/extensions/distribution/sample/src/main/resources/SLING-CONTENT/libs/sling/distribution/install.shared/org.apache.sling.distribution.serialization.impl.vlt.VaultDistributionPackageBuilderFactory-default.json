@@ -1,0 +1,7 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "default",
+    "type": "jcrvlt",
+    "package.filters": ["/content|-.*/excluded"],
+    "useBinaryReferences": true
+}
