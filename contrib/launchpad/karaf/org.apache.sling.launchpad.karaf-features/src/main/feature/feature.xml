@@ -470,6 +470,12 @@
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
   </feature>
+  <feature name="sling-extension-rewriter" version="${feature.version}">
+    <bundle>mvn:org.apache.sling/org.apache.sling.rewriter/1.1.2</bundle>
+    <!-- dependencies -->
+    <feature version="${feature.version}">sling</feature>
+    <feature version="${feature.version}">sling-commons-html</feature>
+  </feature>
   <feature name="sling-extension-security" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.security/1.0.18</bundle>
     <!-- dependencies -->
