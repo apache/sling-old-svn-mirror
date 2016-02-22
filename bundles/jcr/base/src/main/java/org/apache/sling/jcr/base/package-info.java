@@ -24,16 +24,8 @@
  * manage the actual JCR repository instance and
  * {@link org.apache.sling.jcr.base.AbstractSlingRepository2} being the
  * basis for the repository service instance handed to using bundles.
- * <p>
- * The old {@link org.apache.sling.jcr.base.AbstractSlingRepository}
- * class is being deprecated in favor of the new method of providing access
- * to JCR repositories. Likewise the
- * {@link org.apache.sling.jcr.base.AbstractNamespaceMappingRepository} is
- * deprecated in favor of the new
- * {@link org.apache.sling.jcr.base.NamespaceMappingSupport} abstract class
- * and said repository manager.
  */
-@Version("2.4")
+@Version("3.0")
 package org.apache.sling.jcr.base;
 
 import aQute.bnd.annotation.Version;
