@@ -1,0 +1,258 @@
+{
+  "jcr:primaryType": "app:Page",
+  "jcr:createdBy": "admin",
+  "jcr:created": "Thu Aug 07 2014 16:32:59 GMT+0200",
+  "jcr:content": {
+    "jcr:primaryType": "app:PageContent",
+    "jcr:createdBy": "admin",
+    "jcr:title": "English",
+    "app:template": "/apps/sample/templates/homepage",
+    "jcr:created": "Thu Aug 07 2014 16:32:59 GMT+0200",
+    "app:lastModified": "Tue Apr 22 2014 15:11:24 GMT+0200",
+    "dateISO8601String": "2014-04-22T15:11:24.000+02:00",
+    "pageTitle": "Sample Homepage",
+    "sling:resourceType": "sample/components/homepage",
+    "app:designPath": "/etc/designs/sample",
+    "app:lastModifiedBy": "admin",
+    "utf8Property": "äöüß€",
+    "par": {
+      "jcr:primaryType": "nt:unstructured",
+      "sling:resourceType": "foundation/components/parsys",
+      "colctrl": {
+        "jcr:primaryType": "nt:unstructured",
+        "jcr:createdBy": "admin",
+        "jcr:lastModifiedBy": "admin",
+        "layout": "2;colctrl-lt0",
+        "jcr:created": "Mon Aug 23 2010 22:02:24 GMT+0200",
+        "jcr:lastModified": "Mon Aug 23 2010 22:02:35 GMT+0200",
+        "sling:resourceType": "foundation/components/parsys/colctrl"
+      },
+      "image": {
+        "jcr:primaryType": "nt:unstructured",
+        "jcr:createdBy": "admin",
+        "fileReference": "/content/dam/sample/portraits/jane_doe.jpg",
+        "jcr:lastModifiedBy": "admin",
+        "jcr:created": "Mon Aug 23 2010 22:03:39 GMT+0200",
+        "width": "340",
+        "jcr:lastModified": "Sun Oct 31 2010 21:39:50 GMT+0100",
+        "sling:resourceType": "foundation/components/image",
+        "file": {
+          "jcr:primaryType": "nt:file",
+          "jcr:createdBy": "admin",
+          "jcr:created": "Thu Aug 07 2014 16:32:59 GMT+0200",
+          "jcr:content": {
+            "jcr:primaryType": "nt:resource",
+            "jcr:lastModifiedBy": "anonymous",
+            "jcr:mimeType": "image/jpeg",
+            "jcr:lastModified": "Thu Aug 07 2014 16:32:59 GMT+0200",
+            ":jcr:data": 24377,
+            "jcr:uuid": "eda76d00-b2cd-4b59-878f-c33f71ceaddc"
+          }
+        }
+      },
+      "title_1": {
+        "jcr:primaryType": "nt:unstructured",
+        "jcr:createdBy": "admin",
+        "jcr:title": "Strategic Consulting",
+        "jcr:lastModifiedBy": "admin",
+        "jcr:created": "Mon Aug 23 2010 22:12:08 GMT+0200",
+        "jcr:lastModified": "Wed Oct 27 2010 21:33:24 GMT+0200",
+        "sling:resourceType": "sample/components/title"
+      },
+      "text_1": {
+        "jcr:primaryType": "nt:unstructured",
+        "jcr:createdBy": "admin",
+        "jcr:lastModifiedBy": "admin",
+        "jcr:created": "Sun Oct 31 2010 21:48:04 GMT+0100",
+        "text": "<p><span class=\"Apple-style-span\" style=\"font-size: 12px;\">In&nbsp;today's competitive market, organizations can face several key geometric challenges:<\/span><\/p>\n<ul>\n<li><span class=\"Apple-style-span\" style=\"font-size: 12px;\">Polyhedral Sectioning<\/span><\/li>\n<li><span class=\"Apple-style-span\" style=\"font-size: 12px;\">Triangulation&nbsp;<\/span><\/li>\n<li><span class=\"Apple-style-span\" style=\"font-size: 12px;\">Trigonometric Calculation<\/span><\/li>\n<li><span class=\"Apple-style-span\" style=\"font-size: 12px;\">Ruler and Compass Construction<\/span><\/li>\n<\/ul>\n<p><span class=\"Apple-style-span\" style=\"font-size: 12px;\"><br>\nSample is ready to help your organization deal effectively with all these challenges through our award winning geometric consulting services.<\/span><\/p>\n<p style=\"font-family: tahoma, arial, helvetica, sans-serif; font-size: 12px;\"><\/p>\n",
+        "jcr:lastModified": "Sun Oct 31 2010 21:49:06 GMT+0100",
+        "sling:resourceType": "foundation/components/text",
+        "textIsRich": "true"
+      },
+      "col_break12825937554040": {
+        "jcr:primaryType": "nt:unstructured",
+        "controlType": "break",
+        "sling:resourceType": "foundation/components/parsys/colctrl"
+      },
+      "image_0": {
+        "jcr:primaryType": "nt:unstructured",
+        "jcr:createdBy": "admin",
+        "fileReference": "/content/dam/sample/offices/clean_room.jpg",
+        "height": "226",
+        "jcr:lastModifiedBy": "admin",
+        "jcr:created": "Mon Aug 23 2010 22:04:46 GMT+0200",
+        "jcr:lastModified": "Fri Nov 05 2010 10:38:15 GMT+0100",
+        "sling:resourceType": "foundation/components/image",
+        "imageRotate": "0",
+        "file": {
+          "jcr:primaryType": "nt:file",
+          "jcr:createdBy": "admin",
+          "jcr:created": "Thu Aug 07 2014 16:32:59 GMT+0200",
+          "jcr:content": {
+            "jcr:primaryType": "nt:resource",
+            "jcr:lastModifiedBy": "anonymous",
+            "jcr:mimeType": "image/jpeg",
+            "jcr:lastModified": "Thu Aug 07 2014 16:32:59 GMT+0200",
+            ":jcr:data": 21142,
+            "jcr:uuid": "6139077f-191f-4337-aaef-55456ebe6784"
+          }
+        }
+      },
+      "title_2": {
+        "jcr:primaryType": "nt:unstructured",
+        "jcr:createdBy": "admin",
+        "jcr:title": "Shape Technology",
+        "jcr:lastModifiedBy": "admin",
+        "jcr:created": "Mon Aug 23 2010 22:12:13 GMT+0200",
+        "jcr:lastModified": "Tue Oct 26 2010 21:16:29 GMT+0200",
+        "sling:resourceType": "sample/components/title"
+      },
+      "text_0": {
+        "jcr:primaryType": "nt:unstructured",
+        "jcr:createdBy": "admin",
+        "jcr:lastModifiedBy": "admin",
+        "jcr:created": "Mon Aug 23 2010 22:16:30 GMT+0200",
+        "text": "<p>The Sample investment in R&amp;D has done more than solidify our industry leadership role, we have now outpaced our competitors to such an extent that we are in an altogether new space.<\/p>\n<p>This is why our high quality polygons and polyhedra provide the only turnkey solutions across the whole range of euclidean geometry. And our mathematicians are working on the next generation of fractal curves to bring you shapes that are unthinkable today.<\/p>\n<p><\/p>\n<p><\/p>\n",
+        "jcr:lastModified": "Mon Nov 08 2010 20:39:00 GMT+0100",
+        "sling:resourceType": "foundation/components/text",
+        "textIsRich": "true"
+      },
+      "col_end12825937444810": {
+        "jcr:primaryType": "nt:unstructured",
+        "controlType": "end",
+        "sling:resourceType": "foundation/components/parsys/colctrl"
+      }
+    },
+    "header": {
+      "jcr:primaryType": "nt:unstructured",
+      "jcr:title": "trust our experience\r\nto manage your business",
+      "imageReference": "/content/dam/sample/header.png",
+      "text": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Nunc eget neque. Nunc condimentum ipsum et orci. Aenean est. Cras eget diam. read more",
+      "sling:resourceType": "sample/components/header"
+    },
+    "newslist": {
+      "jcr:primaryType": "nt:unstructured",
+      "headline": "trust our experience\nto manage your business",
+      "text": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Nunc eget neque. Nunc condimentum ipsum et orci. Aenean est. Cras eget diam. read more",
+      "sling:resourceType": "sample/components/listchildren",
+      "listroot": "/content/sample/en/about/news"
+    },
+    "lead": {
+      "jcr:primaryType": "nt:unstructured",
+      "jcr:title": "World Leader in Applied Geometry ",
+      "jcr:lastModifiedBy": "admin",
+      "text": "Lead Text",
+      "title": "Lead Title",
+      "jcr:description": "Sample has been selling and servicing shapes for over 2000 years. From our beginnings as a small vendor of squares and rectangles we have grown our business into a leading global provider of platonic solids and fractals. Join us as we lead geometry into the future.",
+      "jcr:lastModified": "Wed Jan 19 2011 14:35:29 GMT+0100",
+      "sling:resourceType": "sample/components/lead",
+      "app:annotations": {"jcr:primaryType": "nt:unstructured"}
+    },
+    "image": {
+      "jcr:primaryType": "nt:unstructured",
+      "jcr:lastModifiedBy": "admin",
+      "jcr:lastModified": "Wed Oct 27 2010 21:30:59 GMT+0200",
+      "imageRotate": "0"
+    },
+    "carousel": {
+      "jcr:primaryType": "nt:unstructured",
+      "playSpeed": "6000",
+      "jcr:lastModifiedBy": "admin",
+      "pages": [
+        "/content/sample/en/events/techsummit",
+        "/content/sample/en/events/userconf",
+        "/content/sample/en/events/shapecon",
+        "/content/sample/en/events/dsc"
+      ],
+      "jcr:lastModified": "Tue Oct 05 2010 14:14:27 GMT+0200",
+      "transTime": "1000",
+      "sling:resourceType": "foundation/components/carousel",
+      "listFrom": "static"
+    },
+    "rightpar": {
+      "jcr:primaryType": "nt:unstructured",
+      "sling:resourceType": "foundation/components/parsys",
+      "teaser": {
+        "jcr:primaryType": "nt:unstructured",
+        "jcr:createdBy": "admin",
+        "jcr:lastModifiedBy": "admin",
+        "jcr:created": "Tue Jan 25 2011 11:30:09 GMT+0100",
+        "campaignpath": "/content/campaigns/sample",
+        "jcr:lastModified": "Wed Feb 02 2011 08:40:30 GMT+0100",
+        "sling:resourceType": "personalization/components/teaser"
+      }
+    }
+  },
+  "toolbar": {
+    "jcr:primaryType": "app:Page",
+    "jcr:createdBy": "admin",
+    "jcr:created": "Thu Aug 07 2014 16:33:00 GMT+0200",
+    "jcr:content": {
+      "jcr:primaryType": "app:PageContent",
+      "subtitle": "Contains the toolbar",
+      "jcr:createdBy": "admin",
+      "jcr:title": "Toolbar",
+      "app:template": "/apps/sample/templates/contentpage",
+      "jcr:created": "Thu Aug 07 2014 16:33:00 GMT+0200",
+      "app:lastModified": "Wed Aug 25 2010 22:51:02 GMT+0200",
+      "hideInNav": "true",
+      "sling:resourceType": "sample/components/contentpage",
+      "app:lastModifiedBy": "admin",
+      "par": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "foundation/components/parsys"
+      },
+      "rightpar": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "foundation/components/iparsys",
+        "iparsys_fake_par": {
+          "jcr:primaryType": "nt:unstructured",
+          "sling:resourceType": "foundation/components/iparsys/par"
+        }
+      }
+    },
+    "profiles": {
+      "jcr:primaryType": "app:Page",
+      "jcr:createdBy": "admin",
+      "jcr:created": "Thu Aug 07 2014 16:33:00 GMT+0200",
+      "jcr:content": {
+        "jcr:primaryType": "app:PageContent",
+        "jcr:createdBy": "admin",
+        "jcr:title": "Profiles",
+        "app:template": "/apps/sample/templates/contentpage",
+        "jcr:created": "Thu Aug 07 2014 16:33:00 GMT+0200",
+        "app:lastModified": "Thu Nov 05 2009 20:27:13 GMT+0100",
+        "hideInNav": true,
+        "sling:resourceType": "sample/components/contentpage",
+        "app:lastModifiedBy": "admin",
+        "longProp": 1234567890123,
+        "decimalProp": 1.2345,
+        "booleanProp": true,
+        "longPropMulti": [1234567890123,55],
+        "decimalPropMulti": [1.2345,1.1],
+        "booleanPropMulti": [true,false],
+        "par": {
+          "jcr:primaryType": "nt:unstructured",
+          "sling:resourceType": "foundation/components/parsys",
+          "textimage": {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "foundation/components/textimage"
+          },
+          "mygadgets": {
+            "jcr:primaryType": "nt:unstructured",
+            "gadgets": "http://customer.meteogroup.de/meteogroup/gadgets/wetter24.xml\nhttp://germanweatherradar.googlecode.com/svn/trunk/german-weather-radar.xml\nhttp://www.digitalpowered.info/gadget/ski.pictures.xml\nhttp://www.canbuffi.de/gadgets/clock/clock.xml",
+            "sling:resourceType": "personalization/components/mygadgets"
+          }
+        },
+        "rightpar": {
+          "jcr:primaryType": "nt:unstructured",
+          "sling:resourceType": "foundation/components/iparsys",
+          "iparsys_fake_par": {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "foundation/components/iparsys/par"
+          }
+        }
+      }
+    }
+  }
+}
