@@ -76,6 +76,13 @@
             id="org.apache.sling.ide.eclipse.sightly.ui.internal.newSightlyFileWizard"
             name="Sightly File">
       </wizard>
+      <wizard
+            category="org.apache.sling.ide.eclipse.sightly.ui"
+            class="org.apache.sling.ide.eclipse.sightly.ui.internal.NewSightlyJsUseScriptWizard"
+            icon="icons/obj16/sightly.gif"
+            id="org.apache.sling.ide.eclipse.sightly.ui.internal.newSightlyJsUseWizard"
+            name="Sightly JS Use-Script">
+      </wizard>
    </extension>
    
    <!-- Menu contributions -->
@@ -97,6 +104,19 @@
                    </iterate>
                  </visibleWhen>
               </command>              
+              <command
+              	commandId="org.apache.sling.ide.eclipse.sightly.ui.internal.newSightlyJsUseScriptHandler"
+              	icon="icons/obj16/sightly.gif"
+              	label="&amp;Sightly JS Use-Script">
+                 <visibleWhen
+                       checkEnabled="false">
+                   <iterate ifEmpty="false">
+                        <test
+                            property="org.apache.sling.ide.eclipse.sightly.sightlyNature">
+                        </test>
+                   </iterate>
+                 </visibleWhen>
+              </command>              
         </menuContribution>         
    </extension>
    
@@ -107,6 +127,11 @@
    	      		id="org.apache.sling.ide.eclipse.sightly.ui.internal.newSightlyFileHandler"
    	      		defaultHandler="org.apache.sling.ide.eclipse.sightly.ui.internal.NewSightlyFileHandler"
    	      		name="New Sightly File...">
+         </command>
+   	      <command
+   	      		id="org.apache.sling.ide.eclipse.sightly.ui.internal.newSightlyJsUseScriptHandler"
+   	      		defaultHandler="org.apache.sling.ide.eclipse.sightly.ui.internal.NewSightlyJsUseScriptHandler"
+   	      		name="New Sightly Javascript Use-Object...">
          </command>
    </extension>
 </plugin>

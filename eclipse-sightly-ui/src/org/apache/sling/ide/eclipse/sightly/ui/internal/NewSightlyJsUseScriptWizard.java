@@ -16,25 +16,22 @@
  */
 package org.apache.sling.ide.eclipse.sightly.ui.internal;
 
-public class NewSightlyFileWizard extends AbstractNewSightlyFileWizard {
+public class NewSightlyJsUseScriptWizard extends AbstractNewSightlyFileWizard {
 
-    public NewSightlyFileWizard() {
-        super("New Sightly File", "Create a new Sightly file");
+    public NewSightlyJsUseScriptWizard() {
+        super("New Sightly Javascript Use-Script", "Create a new Sightly Javascript Use-Script");
     }
     
+    @Override
     protected String getInitialContents() {
-        return ""
-                + "<!DOCTYPE html!>\n"
-                + "<!--/* A simple sightly script */-->\n"
-                + "<html>\n"
-                + " <head>\n"
-                + "   <title>${properties.jcr:title}</title>\n"
-                + "  </head>\n"
-                + "  <body>\n"
-                + "    <h1 data-sly-test=\"${properties.jcr:title}\">${properties.jcr:title}</h1>\n"
-                + "  </body>\n"
-                + "</html>"
-                + "";
+
+        return "" +
+                "\"use strict\";\n" + 
+                "use(function() {\n" + 
+                "    return {\n" +
+                "        date: new Date().toString()\n" +
+                "    }\n" + 
+                "});";
     }
 
 }
