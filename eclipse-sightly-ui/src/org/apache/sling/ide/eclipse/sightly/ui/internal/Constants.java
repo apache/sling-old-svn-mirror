@@ -16,17 +16,7 @@
  */
 package org.apache.sling.ide.eclipse.sightly.ui.internal;
 
-import org.eclipse.core.runtime.FileLocator;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.jface.resource.ImageDescriptor;
-import org.osgi.framework.FrameworkUtil;
-
-public class SharedImages {
-
-    public static final ImageDescriptor SIGHTLY_ICON = ImageDescriptor.createFromURL(
-            FileLocator.find(FrameworkUtil.getBundle(SharedImages.class), Path.fromPortableString("icons/obj16/sightly.gif"), null));
-
-    public static final ImageDescriptor SIGHTLY_WIZARD_BANNER = ImageDescriptor.createFromURL(
-            FileLocator.find(FrameworkUtil.getBundle(SharedImages.class), Path.fromPortableString("icons/wizban/sightly.gif"), null));
-
+public class Constants {
+    public static final String PLUGIN_ID = "org.apache.sling.ide.eclipse-sightly-ui";
+    
 }
