@@ -36,7 +36,7 @@ import org.eclipse.ui.statushandlers.StatusManager;
 public abstract class AbstractNewSightlyFileWizard extends Wizard implements INewWizard {
 
     private IWorkbench workbench;
-    private WizardNewFileCreationPage fileCreationPage;
+    protected WizardNewFileCreationPage fileCreationPage;
 
     private String pageTitle;
     private String wizardDescription;
