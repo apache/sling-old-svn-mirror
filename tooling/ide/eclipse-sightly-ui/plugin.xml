@@ -60,5 +60,53 @@
 	<!-- Facet images  --> 
     <extension point="org.eclipse.wst.common.project.facet.ui.images">
         <image facet="sightly" path="icons/obj16/sightly.gif" />
-  </extension>	
+  </extension>
+  
+   <!-- Wizards -->
+   <extension
+         point="org.eclipse.ui.newWizards">
+      <category
+            id="org.apache.sling.ide.eclipse.sightly.ui"
+            name="Sightly">
+      </category>
+      <wizard
+            category="org.apache.sling.ide.eclipse.sightly.ui"
+            class="org.apache.sling.ide.eclipse.sightly.ui.internal.NewSightlyFileWizard"
+            icon="icons/obj16/sightly.gif"
+            id="org.apache.sling.ide.eclipse.sightly.ui.internal.newSightlyFileWizard"
+            name="Sightly File">
+      </wizard>
+   </extension>
+   
+   <!-- Menu contributions -->
+   <extension
+         point="org.eclipse.ui.menus">
+        <menuContribution
+              locationURI="popup:common.new.menu?after=new">
+              <!-- enabled for all resources part of a Sightly Project -->
+              <command
+              	commandId="org.apache.sling.ide.eclipse.sightly.ui.internal.newSightlyFileHandler"
+              	icon="icons/obj16/sightly.gif"
+              	label="&amp;Sightly File">
+                 <visibleWhen
+                       checkEnabled="false">
+                   <iterate ifEmpty="false">
+                        <test
+                            property="org.apache.sling.ide.eclipse.sightly.sightlyNature">
+                        </test>
+                   </iterate>
+                 </visibleWhen>
+              </command>              
+        </menuContribution>         
+   </extension>
+   
+   <!-- commands -->
+   <extension
+         point="org.eclipse.ui.commands">
+   	      <command
+   	      		id="org.apache.sling.ide.eclipse.sightly.ui.internal.newSightlyFileHandler"
+   	      		defaultHandler="org.apache.sling.ide.eclipse.sightly.ui.internal.NewSightlyFileHandler"
+   	      		name="New Sightly File...">
+         </command>
+   </extension>
 </plugin>
