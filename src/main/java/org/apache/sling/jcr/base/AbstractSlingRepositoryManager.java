@@ -25,6 +25,7 @@ import javax.jcr.Repository;
 
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.api.SlingRepositoryInitializer;
+import org.apache.sling.jcr.base.internal.loader.Loader;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -77,7 +78,7 @@ import aQute.bnd.annotation.ProviderType;
  * @since API version 2.3 (bundle version 2.2.2)
  */
 @ProviderType
-public abstract class AbstractSlingRepositoryManager extends NamespaceMappingSupport {
+public abstract class AbstractSlingRepositoryManager {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -97,6 +98,8 @@ public abstract class AbstractSlingRepositoryManager extends NamespaceMappingSup
     private volatile boolean disableLoginAdministrative;
 
     private volatile ServiceTracker repoInitializerTracker;
+
+    private volatile Loader loader;
 
     /**
      * Returns the default workspace, which may be <code>null</code> meaning to
@@ -320,8 +323,8 @@ public abstract class AbstractSlingRepositoryManager extends NamespaceMappingSup
                 this.repository = newRepo;
                 this.masterSlingRepository = this.create(this.bundleContext.getBundle());
 
-                log.debug("start: setting up NamespaceMapping support");
-                this.setup(this.bundleContext, this.masterSlingRepository);
+                log.debug("start: setting up Loader");
+                this.loader = new Loader(this.masterSlingRepository, this.bundleContext);
 
                 log.debug("start: calling SlingRepositoryInitializer");
                 Throwable t = null;
@@ -401,8 +404,12 @@ public abstract class AbstractSlingRepositoryManager extends NamespaceMappingSup
                     Repository oldRepo = repository;
                     repository = null;
 
-                    // stop namespace support
-                    this.tearDown();
+                    // stop loader
+                    if ( this.loader != null ) {
+                        this.loader.dispose();
+                        this.loader = null;
+                    }
+                    // destroy repository
                     this.destroy(this.masterSlingRepository);
 
                     try {

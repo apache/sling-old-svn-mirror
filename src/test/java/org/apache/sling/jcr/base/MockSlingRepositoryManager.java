@@ -26,19 +26,18 @@ import java.util.Hashtable;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 
-import org.apache.sling.jcr.api.NamespaceMapper;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.framework.Bundle;
 
-/** Minimal AbstractSlingRepositoryManager used for testing */ 
+/** Minimal AbstractSlingRepositoryManager used for testing */
 class MockSlingRepositoryManager extends AbstractSlingRepositoryManager {
-    
+
     private final Repository repository;
-    
+
     MockSlingRepositoryManager(Repository repository) {
         this.repository = repository;
     }
-    
+
     @Override
     protected ServiceUserMapper getServiceUserMapper() {
         return null;
@@ -72,10 +71,5 @@ class MockSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
     @Override
     protected void disposeRepository(Repository repository) {
-    }
-
-    @Override
-    protected NamespaceMapper[] getNamespaceMapperServices() {
-        return new NamespaceMapper[0];
     }
 }
