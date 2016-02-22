@@ -431,6 +431,12 @@
     <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.auth.xing.api/0.0.2</bundle>
   </feature>
   -->
+  <!-- Apache Sling Commons (contrib) -->
+  <feature name="sling-commons-html" version="${feature.version}">
+    <bundle>mvn:org.apache.sling/org.apache.sling.commons.html/1.0.0</bundle>
+    <!-- dependencies -->
+    <feature>scr</feature>
+  </feature>
   <!-- Apache Sling Extensions (contrib) -->
   <feature name="sling-extension-distribution" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.distribution.api/0.3.0</bundle>
