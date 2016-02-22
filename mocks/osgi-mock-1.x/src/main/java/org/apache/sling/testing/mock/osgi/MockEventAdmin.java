@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -69,12 +70,18 @@ public final class MockEventAdmin implements EventAdmin {
 
     @Override
     public void postEvent(final Event event) {
-        asyncHandler.execute(new Runnable() {
-            @Override
-            public void run() {
-                distributeEvent(event);
-            }
-        });
+        try {
+            asyncHandler.execute(new Runnable() {
+                @Override
+                public void run() {
+                    distributeEvent(event);
+                }
+            });
+        }
+        catch (RejectedExecutionException ex) {
+            // ignore
+            log.debug("Ignore rejected execution: " + ex.getMessage(), ex);;
+        }
     }
 
     @Override
