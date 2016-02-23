@@ -406,7 +406,7 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
                 for(final ProviderEvent e : events) {
                     postOSGiEvent(e);
                     postResourceProviderChange(e);
-                    if ( e.pid != null ) {
+                    if ( e.pid != null && listener != null ) {
                         listener.providerChanged(e.pid);
                     }
                 }
