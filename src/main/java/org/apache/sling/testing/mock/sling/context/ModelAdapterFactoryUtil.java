@@ -44,6 +44,10 @@ import org.reflections.Reflections;
  */
 final class ModelAdapterFactoryUtil {
     
+    static {
+        Reflections.log = null;
+    }
+    
     private ModelAdapterFactoryUtil() {
         // static methods only
     }
