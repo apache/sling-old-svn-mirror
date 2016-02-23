@@ -69,9 +69,9 @@ public final class MockSling {
     public static ResourceResolverFactory newResourceResolverFactory(final ResourceResolverType type,
             final BundleContext bundleContext) {
         ResourceResolverTypeAdapter adapter = getResourceResolverTypeAdapter(type);
-        ResourceResolverFactory factory = adapter.newResourceResolverFactory(bundleContext);
+        ResourceResolverFactory factory = adapter.newResourceResolverFactory();
         if (factory == null) {
-            SlingRepository repository = adapter.newSlingRepository(bundleContext);
+            SlingRepository repository = adapter.newSlingRepository();
             factory = ResourceResolverFactoryInitializer.setUp(repository, bundleContext, type.getNodeTypeMode());
         }
         else {

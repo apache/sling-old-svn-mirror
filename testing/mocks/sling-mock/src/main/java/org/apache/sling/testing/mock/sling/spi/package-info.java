@@ -19,5 +19,5 @@
 /**
  * SPI for hooking in alternative resource type adapter implementations.
  */
-@aQute.bnd.annotation.Version("2.0")
+@aQute.bnd.annotation.Version("1.0")
 package org.apache.sling.testing.mock.sling.spi;
