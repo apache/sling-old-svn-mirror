@@ -47,7 +47,6 @@
     <module>jcr-mock</module>
     <module>osgi-mock</module>
     <module>sling-mock</module>
-    <module>sling-mock-jackrabbit</module>
     <module>sling-mock-oak</module>
   </modules>
 
