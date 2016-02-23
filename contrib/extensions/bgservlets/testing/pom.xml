@@ -25,7 +25,7 @@
   </parent>
 
   <artifactId>org.apache.sling.bgservlets.testing</artifactId>
-  <version>0.9.9-SNAPSHOT</version>
+  <version>1.0.0</version>
   <packaging>slingstart</packaging>
 
   <name>Apache Sling Background Servlets Integration Tests</name>
@@ -59,9 +59,9 @@
   </properties>
   
   <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/bgservlets/testing</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/bgservlets/testing</developerConnection>
-    <url>http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/bgservlets/testing</url>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.bgservlets.testing-1.0.0</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.bgservlets.testing-1.0.0</developerConnection>
+    <url>http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.bgservlets.testing-1.0.0</url>
   </scm>
 
   <build>
