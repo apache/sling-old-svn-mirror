@@ -21,7 +21,6 @@ package org.apache.sling.testing.mock.sling;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.testing.mock.sling.spi.ResourceResolverTypeAdapter;
-import org.osgi.framework.BundleContext;
 
 /**
  * Resource resolver type adapter for JCR Mocks implementation.
@@ -29,12 +28,12 @@ import org.osgi.framework.BundleContext;
 class MockJcrResourceResolverAdapter implements ResourceResolverTypeAdapter {
 
     @Override
-    public ResourceResolverFactory newResourceResolverFactory(BundleContext bundleContext) {
+    public ResourceResolverFactory newResourceResolverFactory() {
         return null;
     }
 
     @Override
-    public SlingRepository newSlingRepository(BundleContext bundleContext) {
+    public SlingRepository newSlingRepository() {
         return new MockJcrSlingRepository();
     }
 

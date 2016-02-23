@@ -23,7 +23,6 @@ import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.testing.mock.sling.spi.ResourceResolverTypeAdapter;
 import org.apache.sling.testing.resourceresolver.MockResourceResolverFactory;
 import org.apache.sling.testing.resourceresolver.MockResourceResolverFactoryOptions;
-import org.osgi.framework.BundleContext;
 
 /**
  * Resource resolver type adapter for Sling Resource Resolver Mock implementation.
@@ -41,12 +40,12 @@ class RRMockMockResourceResolverAdapter implements ResourceResolverTypeAdapter {
     }
 
     @Override
-    public ResourceResolverFactory newResourceResolverFactory(BundleContext bundleContext) {
+    public ResourceResolverFactory newResourceResolverFactory() {
         return new MockResourceResolverFactory(options);
     }
 
     @Override
-    public SlingRepository newSlingRepository(BundleContext bundleContext) {
+    public SlingRepository newSlingRepository() {
         return null;
     }
 

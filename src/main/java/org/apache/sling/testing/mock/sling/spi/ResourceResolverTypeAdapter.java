@@ -20,7 +20,6 @@ package org.apache.sling.testing.mock.sling.spi;
 
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.osgi.framework.BundleContext;
 
 /**
  * SPI interface for resource resolver type implementations to provide a mock
@@ -34,7 +33,7 @@ public interface ResourceResolverTypeAdapter {
      * {@link #newSlingRepository()} has to return a value.
      * @return Resource resolver factory instance or null
      */
-    ResourceResolverFactory newResourceResolverFactory(BundleContext bundleContext);
+    ResourceResolverFactory newResourceResolverFactory();
 
     /**
      * Get SlingRepository instance. Can be null if a resource resolver factory
@@ -42,6 +41,6 @@ public interface ResourceResolverTypeAdapter {
      * {@link #newResourceResolverFactory()} has to return a value.
      * @return Sling repository instance or null
      */
-    SlingRepository newSlingRepository(BundleContext bundleContext);
+    SlingRepository newSlingRepository();
 
 }
