@@ -116,4 +116,10 @@ public final class MockJcrSlingRepository implements SlingRepository {
         return this.repository.login();
     }
 
+    @Override
+    public Session impersonateFromService(String subServiceName, Credentials credentials, String workspaceName)
+            throws LoginException, RepositoryException {
+        return this.repository.login(credentials);
+    }
+
 }

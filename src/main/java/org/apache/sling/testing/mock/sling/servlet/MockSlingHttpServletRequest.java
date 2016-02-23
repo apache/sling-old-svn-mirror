@@ -84,7 +84,7 @@ public class MockSlingHttpServletRequest extends org.apache.sling.servlethelpers
     public ResourceBundle getResourceBundle(String baseName, Locale locale) {
         // check of ResourceBundleProvider is registered in mock OSGI context
         ResourceBundle resourceBundle = null;
-        ServiceReference serviceReference = bundleContext.getServiceReference(ResourceBundleProvider.class.getName());
+        ServiceReference<ResourceBundleProvider> serviceReference = bundleContext.getServiceReference(ResourceBundleProvider.class);
         if (serviceReference != null) {
             ResourceBundleProvider provider = (ResourceBundleProvider)bundleContext.getService(serviceReference);
             resourceBundle = provider.getResourceBundle(baseName, locale);

@@ -16,8 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * Mock implementation of selected Sling APIs.
- */
-@aQute.bnd.annotation.Version("1.6")
 package org.apache.sling.testing.mock.sling;
+
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
+
+/**
+ * Mock implementation of {@link DynamicClassLoaderManager}.
+ */
+class MockDynamicClassLoaderManager implements DynamicClassLoaderManager {
+
+    @Override
+    public ClassLoader getDynamicClassLoader() {
+        return MockDynamicClassLoaderManager.class.getClassLoader();
+    }
+
+}
