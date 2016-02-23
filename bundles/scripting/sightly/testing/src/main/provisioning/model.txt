@@ -21,7 +21,7 @@
 [artifacts]
   org.apache.sling/org.apache.sling.launchpad/8/slingstart
   org.apache.sling/org.apache.sling.scripting.javascript/2.0.29-SNAPSHOT
-  org.apache.sling/org.apache.sling.scripting.sightly/1.0.13-SNAPSHOT
+  org.apache.sling/org.apache.sling.scripting.sightly/1.0.15-SNAPSHOT
   org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.11-SNAPSHOT
   org.apache.sling/org.apache.sling.scripting.sightly.models.provider/1.0.1-SNAPSHOT
   org.apache.sling/org.apache.sling.scripting.sightly.repl/1.0.3-SNAPSHOT
