@@ -39,6 +39,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
+import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +54,7 @@ public class Loader implements BundleListener {
     public static final String NAMESPACES_BUNDLE_HEADER = "Sling-Namespaces";
 
     /** default log */
-    private final Logger log = LoggerFactory.getLogger(Loader.class);
+    private final Logger logger = LoggerFactory.getLogger(Loader.class);
 
     private final BundleContext bundleContext;
 
@@ -85,9 +86,21 @@ public class Loader implements BundleListener {
         }
     }
 
+    private String getBundleIdentifier(final Bundle bundle) {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(bundle.getSymbolicName());
+        sb.append(':');
+        sb.append(bundle.getHeaders().get(Constants.BUNDLE_VERSION));
+        sb.append(" (");
+        sb.append(bundle.getBundleId());
+        sb.append(')');
+
+        return sb.toString();
+    }
+
     //---------- NamespaceMapper interface
 
-    private void defineNamespacePrefixes(final Session session, final List<NamespaceEntry> entries)
+    private void defineNamespacePrefixes(final Bundle bundle, final Session session, final List<NamespaceEntry> entries)
     throws RepositoryException {
         for(final NamespaceEntry entry : entries) {
 
@@ -96,30 +109,17 @@ public class Loader implements BundleListener {
             // first, we check if the namespace is registered with a prefix
             try {
                 mappedPrefix = session.getNamespacePrefix(entry.namespace);
-            } catch (NamespaceException ne) {
-                // the namespace is not registered yet, so we should do this
-                // can we directly use the desired prefix?
-                mappedPrefix = entry.prefix + "_new";
+            } catch (final NamespaceException ne) {
                 try {
-                    session.getNamespaceURI(entry.prefix);
-                } catch (NamespaceException ne2) {
-                    // as an exception occured we can directly use the new prefix
-                    mappedPrefix = entry.prefix;
+                    session.getWorkspace().getNamespaceRegistry().registerNamespace(entry.prefix, entry.namespace);
+                } catch (final NamespaceException ne2) {
+                    logger.warn("Unable to register namespace {}:{} from bundle {} : {}",
+                            new Object[] {entry.prefix, entry.namespace, entry.prefix, getBundleIdentifier(bundle), ne2.getMessage()});
                 }
-                session.getWorkspace().getNamespaceRegistry().registerNamespace(mappedPrefix, entry.namespace);
             }
-            // do we have to remap?
             if ( mappedPrefix != null && !mappedPrefix.equals(entry.prefix ) ) {
-                // check if the prefix is already used?
-                String oldUri = null;
-                try {
-                    oldUri = session.getNamespaceURI(entry.prefix);
-                    session.setNamespacePrefix(entry.prefix + "_old", oldUri);
-                } catch (NamespaceException ne) {
-                    // ignore: prefix is not used
-                }
-                // finally set prefix
-                session.setNamespacePrefix(entry.prefix, entry.namespace);
+                logger.warn("Namespace for {} is already registered with prefix {}. Ignoring prefix {} from bundle {}",
+                        new Object[] {entry.namespace, mappedPrefix, entry.prefix, getBundleIdentifier(bundle)});
             }
         }
     }
@@ -189,11 +189,11 @@ public class Loader implements BundleListener {
      * Register namespaces defined in the bundle in the namespace table.
      * @param bundle The bundle.
      */
-    private void registerNamespaces(Bundle bundle) throws RepositoryException {
+    private void registerNamespaces(final Bundle bundle) throws RepositoryException {
         final String definition = (String) bundle.getHeaders().get(NAMESPACES_BUNDLE_HEADER);
         if ( definition != null ) {
-            log.debug("registerNamespaces: Bundle {} tries to register: {}",
-                    bundle.getSymbolicName(), definition);
+            logger.debug("registerNamespaces: Bundle {} tries to register: {}",
+                    getBundleIdentifier(bundle), definition);
             final StringTokenizer st = new StringTokenizer(definition, ",");
             final List<NamespaceEntry>entries = new ArrayList<NamespaceEntry>();
 
@@ -201,8 +201,8 @@ public class Loader implements BundleListener {
                 final String token = st.nextToken().trim();
                 int pos = token.indexOf('=');
                 if ( pos == -1 ) {
-                    log.warn("registerNamespaces: Bundle {} has an invalid namespace manifest header entry: {}",
-                            bundle.getSymbolicName(), token);
+                    logger.warn("registerNamespaces: Bundle {} has an invalid namespace manifest header entry: {}",
+                            getBundleIdentifier(bundle), token);
                 } else {
                     final String prefix = token.substring(0, pos).trim();
                     final String namespace = token.substring(pos+1).trim();
@@ -212,7 +212,7 @@ public class Loader implements BundleListener {
             if ( entries.size() > 0 ) {
                 final Session session = this.getSession();
                 try {
-                    this.defineNamespacePrefixes(session, entries);
+                    this.defineNamespacePrefixes(bundle, session, entries);
                 } finally {
                     this.ungetSession(session);
                 }
@@ -228,11 +228,11 @@ public class Loader implements BundleListener {
             }
         } catch (RepositoryException re) {
             if ( isRetry ) {
-                log.error("Cannot register node types for bundle {}: {}",
-                    bundle.getSymbolicName(), re);
+                logger.error("Cannot register node types for bundle {}: {}",
+                    getBundleIdentifier(bundle), re);
             } else {
-                log.debug("Retrying to register node types failed for bundle {}: {}",
-                        bundle.getSymbolicName(), re);
+                logger.debug("Retrying to register node types failed for bundle {}: {}",
+                        getBundleIdentifier(bundle), re);
             }
         }
 
@@ -244,8 +244,8 @@ public class Loader implements BundleListener {
         String typesHeader = (String) bundle.getHeaders().get(NODETYPES_BUNDLE_HEADER);
         if (typesHeader == null) {
             // no node types in the bundle, return with success
-            log.debug("registerNodeTypes: Bundle {} has no nodetypes",
-                bundle.getSymbolicName());
+            logger.debug("registerNodeTypes: Bundle {} has no nodetypes",
+                getBundleIdentifier(bundle));
             return true;
         }
 
@@ -271,7 +271,7 @@ public class Loader implements BundleListener {
                 if (mappingURL == null) {
                     // if we are retrying we already logged this message once, so we won't log it again
                     if ( !isRetry ) {
-                        log.warn("Custom node type definition {} not found in bundle {}", nodeTypeFile, bundle.getSymbolicName());
+                        logger.warn("Custom node type definition {} not found in bundle {}", nodeTypeFile, getBundleIdentifier(bundle));
                     }
                     continue;
                 }
@@ -285,24 +285,24 @@ public class Loader implements BundleListener {
                     NodeTypeLoader.registerNodeType(session, mappingURL.toString(), new InputStreamReader(ins), reregisterBool);
                     // log a message if retry is successful
                     if ( isRetry ) {
-                        log.info("Retrying to register node types from {} in bundle {} succeeded.",
-                           new Object[]{ nodeTypeFile, bundle.getSymbolicName()});
+                        logger.info("Retrying to register node types from {} in bundle {} succeeded.",
+                           new Object[]{ nodeTypeFile, getBundleIdentifier(bundle)});
                     }
                 } catch (IOException ioe) {
                     success = false;
                     // if we are retrying we already logged this message once, so we won't log it again
                     if ( !isRetry ) {
-                        log.warn("Cannot read node types {} from bundle {}: {}",
-                            new Object[]{ nodeTypeFile, bundle.getSymbolicName(), ioe });
-                        log.warn("Stacktrace ", ioe);
+                        logger.warn("Cannot read node types {} from bundle {}: {}",
+                            new Object[]{ nodeTypeFile, getBundleIdentifier(bundle), ioe });
+                        logger.warn("Stacktrace ", ioe);
                     }
                 } catch (Exception e) {
                     success = false;
                     // if we are retrying we already logged this message once, so we won't log it again
                     if ( !isRetry ) {
-                        log.error("Error loading node types {} from bundle {}: {}",
-                            new Object[]{ nodeTypeFile, bundle.getSymbolicName(), e });
-                        log.error("Stacktrace ", e);
+                        logger.error("Error loading node types {} from bundle {}: {}",
+                            new Object[]{ nodeTypeFile, getBundleIdentifier(bundle), e });
+                        logger.error("Stacktrace ", e);
                     }
                 } finally {
                     if (ins != null) {
@@ -326,7 +326,7 @@ public class Loader implements BundleListener {
         return this.slingRepository.loginAdministrative(null);
     }
 
-    private void ungetSession(Session session) {
+    private void ungetSession(final Session session) {
         if (session != null) {
             session.logout();
         }
@@ -337,7 +337,7 @@ public class Loader implements BundleListener {
         public final String prefix;
         public final String namespace;
 
-        public NamespaceEntry(String p, String n) {
+        public NamespaceEntry(final String p, final String n) {
             this.prefix = p;
             this.namespace = n;
         }
