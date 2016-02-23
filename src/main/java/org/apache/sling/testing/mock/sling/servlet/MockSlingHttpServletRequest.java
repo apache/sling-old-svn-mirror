@@ -50,7 +50,7 @@ public class MockSlingHttpServletRequest extends org.apache.sling.servlethelpers
      * @param bundleContext Bundle context
      */
     public MockSlingHttpServletRequest(BundleContext bundleContext) {
-        this(MockSling.newResourceResolver(bundleContext));
+        this(MockSling.newResourceResolver(bundleContext), bundleContext);
     }
 
     /**
