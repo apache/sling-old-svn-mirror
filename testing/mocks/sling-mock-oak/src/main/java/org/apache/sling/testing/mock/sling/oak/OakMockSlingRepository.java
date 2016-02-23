@@ -18,6 +18,7 @@
  */
 package org.apache.sling.testing.mock.sling.oak;
 
+import java.lang.reflect.Field;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -42,6 +43,8 @@ import org.apache.jackrabbit.oak.jcr.Jcr;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 @Service(SlingRepository.class)
@@ -53,6 +56,8 @@ public final class OakMockSlingRepository implements SlingRepository {
     private Repository repository;
     private ExecutorService executor;
     private ScheduledExecutorService scheduledExecutor;
+    
+    private static final Logger log = LoggerFactory.getLogger(OakMockSlingRepository.class);
     
     @Activate
     protected void activate(BundleContext bundleContext) {
@@ -77,12 +82,26 @@ public final class OakMockSlingRepository implements SlingRepository {
 
     @Deactivate
     protected void deactivate(ComponentContext componentContext) {
-        // shutdown OAK JCR repository
-        ((JackrabbitRepository)repository).shutdown();
-        
         // shutdown executors
+        // force immediate shutdown for all executors without waiting for tasks for completion - we're only in unit tests! 
         executor.shutdownNow();
         scheduledExecutor.shutdownNow();
+        shutdownExecutorService(repository, "scheduledExecutor");
+
+        // shutdown OAK JCR repository
+        ((JackrabbitRepository)repository).shutdown();
+    }
+
+    private void shutdownExecutorService(Object instance, String fieldName) {
+        try {
+            Field executorField = instance.getClass().getDeclaredField(fieldName); 
+            executorField.setAccessible(true);
+            ExecutorService executor = (ExecutorService)executorField.get(instance);
+            executor.shutdownNow();
+        }
+        catch (Throwable ex) {
+            log.error("Potential Memory leak: Unable to shutdown executor service from field '" + fieldName + "' in " + instance, ex);
+        }
     }
     
     public String getDescriptor(String key) {
