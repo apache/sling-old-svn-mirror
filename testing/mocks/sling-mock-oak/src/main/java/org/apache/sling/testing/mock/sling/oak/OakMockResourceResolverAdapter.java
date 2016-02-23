@@ -18,9 +18,13 @@
  */
 package org.apache.sling.testing.mock.sling.oak;
 
+import java.util.concurrent.Executor;
+
+import org.apache.jackrabbit.oak.spi.whiteboard.WhiteboardExecutor;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.testing.mock.sling.spi.ResourceResolverTypeAdapter;
+import org.osgi.framework.BundleContext;
 
 /**
  * Resource resolver type adapter for Jackrabbit Oak repository.
@@ -28,12 +32,15 @@ import org.apache.sling.testing.mock.sling.spi.ResourceResolverTypeAdapter;
 public class OakMockResourceResolverAdapter implements ResourceResolverTypeAdapter {
 
     @Override
-    public ResourceResolverFactory newResourceResolverFactory() {
+    public ResourceResolverFactory newResourceResolverFactory(BundleContext bundleContext) {
         return null;
     }
 
     @Override
-    public SlingRepository newSlingRepository() {
+    public SlingRepository newSlingRepository(BundleContext bundleContext) {
+        if (bundleContext.getServiceReference(Executor.class) == null) {
+            bundleContext.registerService(Executor.class, new WhiteboardExecutor(), null);
+        }
         return new OakMockSlingRepository();
     }
 

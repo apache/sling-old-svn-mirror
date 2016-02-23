@@ -143,4 +143,10 @@ public final class OakMockSlingRepository implements SlingRepository {
         return repository.isStandardDescriptor(key);
     }
 
+    @Override
+    public Session impersonateFromService(String subServiceName, Credentials credentials, String workspaceName)
+            throws LoginException, RepositoryException {
+        return repository.login(credentials, (workspaceName == null ? getDefaultWorkspace() : workspaceName));
+    }
+
 }
