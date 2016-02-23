@@ -32,5 +32,9 @@
     "attributequotes": {
         "jcr:primaryType": "nt:unstructured",
         "sling:resourceType": "/apps/sightly/scripts/attributequotes"
+    },
+    "crlf": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "/apps/sightly/scripts/crlf"
     }
 }

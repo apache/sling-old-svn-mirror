@@ -68,7 +68,7 @@ public class SightlyJavaCompilerService {
 
     private static final Logger LOG = LoggerFactory.getLogger(SightlyJavaCompilerService.class);
 
-    public static final Pattern PACKAGE_DECL_PATTERN = Pattern.compile("(.*)(package\\s+([a-zA-Z_$][a-zA-Z\\d_$]*\\.?)*;)(.*)");
+    public static final Pattern PACKAGE_DECL_PATTERN = Pattern.compile("package\\s+([a-zA-Z_$][a-zA-Z\\d_$]*\\.?)+;");
 
     @Reference
     private ClassLoaderWriter classLoaderWriter = null;
@@ -163,24 +163,27 @@ public class SightlyJavaCompilerService {
             IOUtils.closeQuietly(os);
         }
 
-        StringBuilder sourceCodeSB = new StringBuilder();
-        String[] sourceCodeLines = sourceCode.split("\n");
+        String[] sourceCodeLines = sourceCode.split("\\r\\n|[\\n\\x0B\\x0C\\r\\u0085\\u2028\\u2029]");
         boolean foundPackageDeclaration = false;
         for (String line : sourceCodeLines) {
             Matcher matcher = PACKAGE_DECL_PATTERN.matcher(line);
             if (matcher.matches()) {
-                line = matcher.group(1) + "package " + Utils.getPackageNameFromFQCN(fqcn) + ";" + matcher.group(4);
+                /**
+                 * This matching might return false positives like:
+                 * // package a.b.c;
+                 *
+                 * where from a syntactic point of view the source code doesn't have a package declaration and the expectancy is that our
+                 * SightlyJavaCompilerService will add one.
+                 */
                 foundPackageDeclaration = true;
             }
-            sourceCodeSB.append(line).append("\n");
         }
 
         if (!foundPackageDeclaration) {
-            sourceCodeSB.insert(0, "package " + Utils.getPackageNameFromFQCN(fqcn) + ";\n");
+            sourceCode = "package " + Utils.getPackageNameFromFQCN(fqcn) + ";\n" + sourceCode;
         }
 
-        CompilationUnit compilationUnit = new SightlyCompilationUnit(sourceCodeSB.toString(), fqcn);
-
+        CompilationUnit compilationUnit = new SightlyCompilationUnit(sourceCode, fqcn);
         long start = System.currentTimeMillis();
         CompilationResult compilationResult = javaCompiler.compile(new CompilationUnit[]{compilationUnit}, options);
         long end = System.currentTimeMillis();

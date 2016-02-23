@@ -52,6 +52,11 @@ public class SlingSpecificsSightlyIT {
     private static final String SLING_USE_INHERITANCE_WITHOUTOVERLAY = "/sightly/useinheritance.notoverlaid.html";
     private static final String SLING_JAVA_USE_POJO_UPDATE = "/sightly/use.repopojo.html";
     private static final String SLING_ATTRIBUTE_QUOTES = "/sightly/attributequotes.html";
+    private static final String SLING_CRLF = "/sightly/crlf";
+    private static final String SLING_CRLF_NOPKG = SLING_CRLF + ".nopkg.html";
+    private static final String SLING_CRLF_PKG = SLING_CRLF + ".pkg.html";
+    private static final String SLING_CRLF_WRONGPKG = SLING_CRLF + ".wrongpkg.html";
+
 
     @BeforeClass
     public static void init() {
@@ -187,6 +192,27 @@ public class SlingSpecificsSightlyIT {
         assertTrue(pageContent.contains("<span data-resource='{\"resource\" : \"/sightly/attributequotes\"}'>/sightly/attributequotes</span>"));
         assertTrue(pageContent.contains("<span data-resource=\"/sightly/attributequotes\">/sightly/attributequotes</span>"));
         assertTrue(pageContent.contains("<span data-resource=\"/sightly/attributequotes\">/sightly/attributequotes</span>"));
+    }
+
+    @Test
+    public void testCRLFNoPkg() {
+        String url = launchpadURL + SLING_CRLF_NOPKG;
+        String pageContent = client.getStringContent(url, 200);
+        assertEquals("nopkg", HTMLExtractor.innerHTML(url, pageContent, "#repopojocrlf-nopkg"));
+    }
+
+    @Test
+    public void testCRLFPkg() {
+        String url = launchpadURL + SLING_CRLF_PKG;
+        String pageContent = client.getStringContent(url, 200);
+        assertEquals("pkg", HTMLExtractor.innerHTML(url, pageContent, "#repopojocrlf-pkg"));
+    }
+
+    @Test
+    public void testCRLFWrongPkg() {
+        String url = launchpadURL + SLING_CRLF_WRONGPKG;
+        String pageContent = client.getStringContent(url, 500);
+        assertTrue(pageContent.contains("CompilerException"));
     }
 
     private void uploadFile(String fileName, String serverFileName, String url) throws IOException {
