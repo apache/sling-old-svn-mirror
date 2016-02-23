@@ -56,30 +56,42 @@ public class DistributionPackageUtils {
 
 
     /**
-     * Acquires the package if it's a {@link SharedDistributionPackage}, via {@link SharedDistributionPackage#acquire(String)}
+     * Acquires the package if it's a {@link SharedDistributionPackage}, via {@link SharedDistributionPackage#acquire(String[])}
      * @param distributionPackage a distribution package
-     * @param queueName the name of the queue in which the package should be acquired
+     * @param queueNames the name of the queue in which the package should be acquired
      */
-    public static void acquire(DistributionPackage distributionPackage, String queueName) {
+    public static void acquire(DistributionPackage distributionPackage, String... queueNames) {
         if (distributionPackage instanceof SharedDistributionPackage) {
-            ((SharedDistributionPackage) distributionPackage).acquire(queueName);
+            ((SharedDistributionPackage) distributionPackage).acquire(queueNames);
+        }
+    }
+
+
+    /**
+     * Releases the package if it's a {@link SharedDistributionPackage}, via {@link SharedDistributionPackage#release(String[])}
+     * @param distributionPackage a distribution package
+     * @param queueNames the name of the queue in which the package should be released
+     */
+    public static void release(DistributionPackage distributionPackage, String... queueNames) {
+        if (distributionPackage instanceof SharedDistributionPackage) {
+            ((SharedDistributionPackage) distributionPackage).release(queueNames);
         }
     }
 
     /**
      * Releases a distribution package if it's a {@link SharedDistributionPackage}, otherwise deletes it.
      * @param distributionPackage a distribution package
-     * @param queueName the name of the queue from which it should be eventually released
+     * @param queueNames the name of the queue from which it should be eventually released
      */
-    public static void releaseOrDelete(DistributionPackage distributionPackage, String queueName) {
+    public static void releaseOrDelete(DistributionPackage distributionPackage, String... queueNames) {
         if (distributionPackage == null) {
             return;
         }
         try {
             if (distributionPackage instanceof SharedDistributionPackage) {
-                if (queueName != null) {
-                    ((SharedDistributionPackage) distributionPackage).release(queueName);
-                    log.debug("package {} released from queue {}", distributionPackage.getId(), queueName);
+                if (queueNames != null) {
+                    ((SharedDistributionPackage) distributionPackage).release(queueNames);
+                    log.debug("package {} released from queue {}", distributionPackage.getId(), queueNames);
                 } else {
                     log.error("package {} cannot be released from null queue", distributionPackage.getId());
                 }
