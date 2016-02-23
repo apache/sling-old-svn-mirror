@@ -18,13 +18,16 @@
  */
 package org.apache.sling.testing.mock.sling.context;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.cert.X509Certificate;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
@@ -59,7 +62,6 @@ final class ModelAdapterFactoryUtil {
         MockOsgi.sendBundleEvent(bundleContext, event);
     }
 
-    @SuppressWarnings("unused")
     private static class ModelsPackageBundle implements Bundle {
 
         private final String packageName;
@@ -78,14 +80,14 @@ final class ModelAdapterFactoryUtil {
         }
 
         @Override
-        public Dictionary getHeaders() {
-            Dictionary<String, Object> headers = new Hashtable<String, Object>();
+        public Dictionary<String,String> getHeaders() {
+            Dictionary<String, String> headers = new Hashtable<String, String>();
             headers.put("Sling-Model-Packages", this.packageName);
             return headers;
         }
 
         @Override
-        public Enumeration findEntries(String path, String filePattern, boolean recurse) {
+        public Enumeration<URL> findEntries(String path, String filePattern, boolean recurse) {
             Reflections reflections = new Reflections(this.packageName);
             Set<Class<?>> types = reflections.getTypesAnnotatedWith(Model.class);
             Vector<URL> urls = new Vector<URL>(); // NOPMD
@@ -100,7 +102,7 @@ final class ModelAdapterFactoryUtil {
         }
 
         @Override
-        public Class loadClass(String name) throws ClassNotFoundException {
+        public Class<?> loadClass(String name) throws ClassNotFoundException {
             return getClass().getClassLoader().loadClass(name);
         }
 
@@ -155,12 +157,12 @@ final class ModelAdapterFactoryUtil {
         }
 
         @Override
-        public ServiceReference[] getRegisteredServices() { // NOPMD
+        public ServiceReference<?>[] getRegisteredServices() { // NOPMD
             return null;
         }
 
         @Override
-        public ServiceReference[] getServicesInUse() { // NOPMD
+        public ServiceReference<?>[] getServicesInUse() { // NOPMD
             return null;
         }
 
@@ -175,7 +177,7 @@ final class ModelAdapterFactoryUtil {
         }
 
         @Override
-        public Dictionary getHeaders(String locale) {
+        public Dictionary<String,String> getHeaders(String locale) {
             return null;
         }
 
@@ -185,12 +187,12 @@ final class ModelAdapterFactoryUtil {
         }
 
         @Override
-        public Enumeration getResources(String name) throws IOException {
+        public Enumeration<URL> getResources(String name) throws IOException {
             return null;
         }
 
         @Override
-        public Enumeration getEntryPaths(String path) {
+        public Enumeration<String> getEntryPaths(String path) {
             return null;
         }
 
@@ -204,13 +206,28 @@ final class ModelAdapterFactoryUtil {
             return 0;
         }
 
-        // this is part of org.osgi 4.2.0
-        public Map getSignerCertificates(int signersType) {
+        @Override
+        public Map<X509Certificate, List<X509Certificate>> getSignerCertificates(int signersType) {
             return null;
         }
 
-        // this is part of org.osgi 4.2.0
+        @Override
         public Version getVersion() {
+            return null;
+        }
+
+        @Override
+        public int compareTo(Bundle o) {
+            return 0;
+        }
+
+        @Override
+        public <A> A adapt(Class<A> type) {
+            return null;
+        }
+
+        @Override
+        public File getDataFile(String filename) {
             return null;
         }
 

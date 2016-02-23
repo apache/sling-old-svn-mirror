@@ -603,9 +603,9 @@ public final class ContentLoader {
         String mimeType = null;
         String fileExtension = StringUtils.substringAfterLast(name, ".");
         if (bundleContext != null && StringUtils.isNotEmpty(fileExtension)) {
-            ServiceReference ref = bundleContext.getServiceReference(MimeTypeService.class.getName());
+            ServiceReference<MimeTypeService> ref = bundleContext.getServiceReference(MimeTypeService.class);
             if (ref != null) {
-                MimeTypeService mimeTypeService = (MimeTypeService) bundleContext.getService(ref);
+                MimeTypeService mimeTypeService = (MimeTypeService)bundleContext.getService(ref);
                 mimeType = mimeTypeService.getMimeType(fileExtension);
             }
         }
