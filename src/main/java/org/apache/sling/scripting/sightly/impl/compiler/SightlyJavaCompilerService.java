@@ -68,7 +68,7 @@ public class SightlyJavaCompilerService {
 
     private static final Logger LOG = LoggerFactory.getLogger(SightlyJavaCompilerService.class);
 
-    public static final Pattern PACKAGE_DECL_PATTERN = Pattern.compile("package\\s+([a-zA-Z_$][a-zA-Z\\d_$]*\\.?)+;");
+    public static final Pattern PACKAGE_DECL_PATTERN = Pattern.compile("(\\s*)package\\s+([a-zA-Z_$][a-zA-Z\\d_$]*\\.?)+;");
 
     @Reference
     private ClassLoaderWriter classLoaderWriter = null;
@@ -176,6 +176,7 @@ public class SightlyJavaCompilerService {
                  * SightlyJavaCompilerService will add one.
                  */
                 foundPackageDeclaration = true;
+                break;
             }
         }
 
