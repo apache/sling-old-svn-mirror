@@ -63,10 +63,15 @@ public class BackgroundRequestIT {
     }
     
     @Test
+    public void testGetRequestFails() throws IOException,InterruptedException, JSONException {
+        T.assertHttpStatus(HttpTest.HTTP_BASE_URL + "/tmp.json?sling:bg=true", 500);
+    }
+    
+    @Test
     public void testTmpRequestCreatesJob() throws IOException,InterruptedException, JSONException {
         final int initialJobs = countStoredJobs();
-        T.getContent(HttpTest.HTTP_BASE_URL + "/tmp.json?sling:bg=true", "application/json");
-        
+        T.assertPostStatus(HttpTest.HTTP_BASE_URL + "/tmp.json?sling:bg=true", 302, null, null);
+
         // Request must have created a job
         final long timeout = System.currentTimeMillis() + 10000L;
         while(true) {
