@@ -145,7 +145,6 @@ public abstract class AbstractSlingCrudResourceResolverTest {
         // TODO: enable this test when JCR resource implementation supports
         // writing Date objects (SLING-3846)
         if (getResourceResolverType() != ResourceResolverType.JCR_MOCK
-                && getResourceResolverType() != ResourceResolverType.JCR_JACKRABBIT 
                 && getResourceResolverType() != ResourceResolverType.JCR_OAK ) {
             assertEquals(DATE_VALUE, props.get("dateProp", Date.class));
         }
@@ -158,7 +157,6 @@ public abstract class AbstractSlingCrudResourceResolverTest {
         // TODO: enable this test when JCR resource implementation supports
         // writing Date objects (SLING-3846)
         if (getResourceResolverType() != ResourceResolverType.JCR_MOCK
-                && getResourceResolverType() != ResourceResolverType.JCR_JACKRABBIT
                 && getResourceResolverType() != ResourceResolverType.JCR_OAK ) {
             Calendar calendarValue = props.get("dateProp", Calendar.class);
             assertNotNull(calendarValue);
