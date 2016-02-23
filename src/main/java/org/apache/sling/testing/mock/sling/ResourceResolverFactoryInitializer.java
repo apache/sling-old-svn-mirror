@@ -85,10 +85,10 @@ class ResourceResolverFactoryInitializer {
      * @param bundleContext Bundle context
      */
     private static void ensureJcrResourceProviderDependencies(BundleContext bundleContext) {
-        bundleContext.registerService(DynamicClassLoaderManager.class, new MockDynamicClassLoaderManager(), null);
-        // setup PathMapper which is a mandatory service for JcrProviderFactory (since org.apache.sling.jcr.resource 2.5.4)
-        // use reflection to not depend on it if running with older version of org.apache.sling.jcr.resource
-        registerServiceIfFoundInClasspath(bundleContext, PathMapper.class.getName(), PathMapper.class.getName());
+        if (bundleContext.getServiceReference(DynamicClassLoaderManager.class) == null) {
+            bundleContext.registerService(DynamicClassLoaderManager.class, new MockDynamicClassLoaderManager(), null);
+        }
+        registerServiceIfNotPresent(bundleContext, PathMapper.class, new PathMapper());
     }
  
     /**
@@ -135,10 +135,11 @@ class ResourceResolverFactoryInitializer {
      * @param serviceClass Service class
      * @param instance Service instance
      */
-    private static void registerServiceIfNotPresent(BundleContext bundleContext, Class<?> serviceClass, 
-            Object instance) {
+    private static <T> void registerServiceIfNotPresent(BundleContext bundleContext, Class<T> serviceClass, 
+            T instance) {
         registerServiceIfNotPresent(bundleContext, serviceClass, instance, new Hashtable<String, Object>());
     }
+    
     /**
      * Registers a service if the service class is found in classpath,
      * and if no service with this class is already registered.
@@ -147,35 +148,12 @@ class ResourceResolverFactoryInitializer {
      * @param instance Service instance
      * @param config OSGi config
      */
-    private static void registerServiceIfNotPresent(BundleContext bundleContext, Class<?> serviceClass, 
-            Object instance, Dictionary<String, Object> config) {
+    private static <T> void registerServiceIfNotPresent(BundleContext bundleContext, Class<T> serviceClass, 
+            T instance, Dictionary<String, Object> config) {
         if (bundleContext.getServiceReference(serviceClass.getName()) == null) {
             MockOsgi.injectServices(instance, bundleContext);
             MockOsgi.activate(instance, bundleContext, config);
-            bundleContext.registerService(serviceClass.getName(), instance, config);
-        }
-    }
-    
-    /**
-     * Registers a service if the service class is found in classpath,
-     * and if no service with this class is already registered.
-     * @param className Service class name
-     */
-    private static void registerServiceIfFoundInClasspath(BundleContext bundleContext, String serviceClassName, String implClassName) {
-        try {
-            Class<?> serviceClass = Class.forName(serviceClassName);
-            Class<?> implClass = Class.forName(implClassName);
-            Object instance = implClass.newInstance();
-            registerServiceIfNotPresent(bundleContext, serviceClass, instance);
-        }
-        catch (ClassNotFoundException ex) {
-            // skip service registration
-        }
-        catch (InstantiationException e) {
-            // skip service registration
-        }
-        catch (IllegalAccessException e) {
-            // skip service registration
+            bundleContext.registerService(serviceClass, instance, config);
         }
     }
     

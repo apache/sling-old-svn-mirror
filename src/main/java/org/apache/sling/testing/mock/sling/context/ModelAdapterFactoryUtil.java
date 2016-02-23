@@ -47,6 +47,11 @@ import org.reflections.Reflections;
  */
 final class ModelAdapterFactoryUtil {
     
+    static {
+        // disable logging of reflections library to avoid spamming log files during unit tests
+        Reflections.log = null;
+    }
+    
     private ModelAdapterFactoryUtil() {
         // static methods only
     }
