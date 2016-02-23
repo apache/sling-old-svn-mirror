@@ -25,7 +25,7 @@
   </parent>
 
   <artifactId>org.apache.sling.bgservlets</artifactId>
-  <version>1.0.4</version>
+  <version>1.0.5-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
   <name>Apache Sling Background Servlets Engine</name>
@@ -35,9 +35,9 @@
   </description>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.bgservlets-1.0.4</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.bgservlets-1.0.4</developerConnection>
-    <url>http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.bgservlets-1.0.4</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/bgservlets</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/bgservlets</developerConnection>
+    <url>http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/bgservlets</url>
   </scm>
 
   <build>
