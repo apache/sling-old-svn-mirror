@@ -80,7 +80,7 @@ public class LocalDistributionPackageImporterFactory implements DistributionPack
     @Activate
     public void activate(Map<String, Object> config) {
         name = PropertiesUtil.toString(config.get(NAME), null);
-        importer = new LocalDistributionPackageImporter(new DefaultSharedDistributionPackageBuilder(packageBuilder));
+        importer = new LocalDistributionPackageImporter(packageBuilder);
     }
 
 

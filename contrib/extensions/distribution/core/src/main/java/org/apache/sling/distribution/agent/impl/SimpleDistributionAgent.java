@@ -276,8 +276,6 @@ public class SimpleDistributionAgent implements DistributionAgent {
             distributionResponses.add(new SimpleDistributionResponse(DistributionRequestState.DROPPED, e.toString()));
         }
 
-        log.debug("PACKAGE-QUEUED {}: packageId={}, info={}", requestId, distributionPackage.getId(), distributionPackage.getInfo());
-
         return distributionResponses;
     }
 
@@ -616,7 +614,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
                 final long endTime = System.currentTimeMillis();
 
 
-                log.debug("[{}] ITEM-PROCESSED item={}, status={}, processingTime={}", queueName, queueItem, success, endTime - startTime);
+                log.debug("[{}] ITEM-PROCESSED item={}, status={}, processingTime={}ms", queueName, queueItem, success, endTime - startTime);
 
                 return success;
 
@@ -635,7 +633,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
         private final String callingUser;
         private final String requestId;
-        private final long startTime;
+        private final long requestStartTime;
         private final AtomicInteger packagesCount = new AtomicInteger();
         private final AtomicLong packagesSize = new AtomicLong();
         private final List<DistributionResponse> allResponses = new ArrayList<DistributionResponse>();
@@ -652,19 +650,25 @@ public class SimpleDistributionAgent implements DistributionAgent {
             return packagesSize.get();
         }
 
-        PackageExporterProcessor(String callingUser, String requestId, long startTime) {
+        PackageExporterProcessor(String callingUser, String requestId, long requestStartTime) {
             this.callingUser = callingUser;
             this.requestId = requestId;
-            this.startTime = startTime;
+            this.requestStartTime = requestStartTime;
         }
 
         @Override
         public void process(DistributionPackage distributionPackage) {
+            final long startTime = System.currentTimeMillis();
+
             Collection<SimpleDistributionResponse> responses = scheduleImportPackage(distributionPackage, callingUser,
-                    requestId, startTime);
+                    requestId, requestStartTime);
             packagesCount.incrementAndGet();
             packagesSize.addAndGet(distributionPackage.getSize());
             allResponses.addAll(responses);
+
+            final long endTime = System.currentTimeMillis();
+
+            log.debug("PACKAGE-QUEUED {}: packageId={}, queueTime={}ms, responses={}", requestId, distributionPackage.getId(), endTime - startTime, responses.size());
         }
     }
 

@@ -21,6 +21,7 @@ package org.apache.sling.distribution.serialization.impl;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -50,29 +51,29 @@ public class DefaultSharedDistributionPackage implements SharedDistributionPacka
         this.distributionPackage = distributionPackage;
     }
 
-    public void acquire(@Nonnull String holderName) {
-        if (holderName.length() == 0) {
+    public void acquire(@Nonnull String[] holderNames) {
+        if (holderNames.length == 0) {
             throw new IllegalArgumentException("holder name cannot be null or empty");
         }
 
         try {
-            createHolderResource(holderName);
+            createHolderResource(holderNames);
 
-            log.debug("acquired package {} for holder {}", new Object[]{packagePath, holderName});
+            log.debug("acquired package {} for holder {}", new Object[]{packagePath, Arrays.toString(holderNames)});
 
         } catch (PersistenceException e) {
             log.error("cannot acquire package", e);
         }
     }
 
-    public void release(@Nonnull String holderName) {
+    public void release(@Nonnull String[] holderNames) {
 
-        if (holderName.length() == 0) {
+        if (holderNames.length == 0) {
             throw new IllegalArgumentException("holder name cannot be null or empty");
         }
 
         try {
-            boolean doPackageDelete = deleteHolderResource(holderName);
+            boolean doPackageDelete = deleteHolderResource(holderNames);
 
 
             if (doPackageDelete) {
@@ -83,7 +84,7 @@ public class DefaultSharedDistributionPackage implements SharedDistributionPacka
                 resourceResolver.commit();
             }
 
-            log.debug("released package {} from holder {} delete {}", new Object[]{packagePath, holderName, doPackageDelete});
+            log.debug("released package {} from holder {} delete {}", new Object[]{packagePath, Arrays.toString(holderNames), doPackageDelete});
         } catch (PersistenceException e) {
             log.error("cannot release package", e);
         }
@@ -153,7 +154,7 @@ public class DefaultSharedDistributionPackage implements SharedDistributionPacka
         return null;
     }
 
-    private void createHolderResource(String holderName) throws PersistenceException {
+    private void createHolderResource(String[] holderNames) throws PersistenceException {
 
         Resource holderRoot = getHolderRootResource();
 
@@ -161,25 +162,30 @@ public class DefaultSharedDistributionPackage implements SharedDistributionPacka
             return;
         }
 
-        Resource holder = holderRoot.getChild(holderName);
+        for (String holderName : holderNames) {
+            Resource holder = holderRoot.getChild(holderName);
 
-        if (holder != null) {
-            return;
+            if (holder != null) {
+                return;
+            }
+
+            resourceResolver.create(holderRoot, holderName, Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object) "sling:Folder"));
         }
 
-        resourceResolver.create(holderRoot, holderName, Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object) "sling:Folder"));
         resourceResolver.commit();
     }
 
-    private boolean deleteHolderResource(String holderName) throws PersistenceException {
+    private boolean deleteHolderResource(String[] holderNames) throws PersistenceException {
         boolean doPackageDelete = false;
         Resource holderRoot = getHolderRootResource();
 
         if (holderRoot != null) {
-            Resource holder = holderRoot.getChild(holderName);
+            for (String holderName : holderNames) {
+                Resource holder = holderRoot.getChild(holderName);
 
-            if (holder != null) {
-                resourceResolver.delete(holder);
+                if (holder != null) {
+                    resourceResolver.delete(holder);
+                }
             }
         }
 
