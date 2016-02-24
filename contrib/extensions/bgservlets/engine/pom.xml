@@ -35,9 +35,9 @@
   </description>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/bgservlets</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/bgservlets</developerConnection>
-    <url>http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/bgservlets</url>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/bgservlets/engine</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/bgservlets/engine</developerConnection>
+    <url>http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/bgservlets/engine</url>
   </scm>
 
   <build>
