@@ -33,4 +33,5 @@ Import-Package: org.apache.sling.ide.eclipse.core,
  org.eclipse.wst.xml.core.internal.regions
 Export-Package: org.apache.sling.ide.eclipse.sightly,
  org.apache.sling.ide.eclipse.sightly.model,
- org.apache.sling.ide.eclipse.sightly.validation
+ org.apache.sling.ide.eclipse.sightly.validation,
+ org.apache.sling.ide.eclipse.sightly.internal;x-friends:="org.apache.sling.ide.eclipse-test"
