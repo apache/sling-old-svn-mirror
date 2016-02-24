@@ -18,7 +18,6 @@
  */
 package org.apache.sling.nosql.generic.resource.impl;
 
-import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -53,7 +52,6 @@ import org.osgi.service.event.EventAdmin;
 public class NoSqlResourceProvider implements ResourceProvider, ModifyingResourceProvider, QueriableResourceProvider {
     
     private static final String ROOT_PATH = "/";
-    private static final NoSqlData ROOT_DATA = new NoSqlData(ROOT_PATH, Collections.<String, Object>emptyMap());
     
     private final NoSqlAdapter adapter;
     private final EventAdmin eventAdmin;
@@ -69,10 +67,6 @@ public class NoSqlResourceProvider implements ResourceProvider, ModifyingResourc
     // ### READONLY ACCESS ###
     
     public Resource getResource(ResourceResolver resourceResolver, String path) {
-        if (ROOT_PATH.equals(path)) {
-            return new NoSqlResource(ROOT_DATA, resourceResolver, this);
-        }
-        
         if (!adapter.validPath(path)) {
             return null;
         }
@@ -90,6 +84,11 @@ public class NoSqlResourceProvider implements ResourceProvider, ModifyingResourc
         NoSqlData data = adapter.get(path);
         if (data != null) {
             return new NoSqlResource(data, resourceResolver, this);
+        }
+        else if (ROOT_PATH.equals(path)) {
+            // root path exists implicitly - bot not yet in nosql store - return a "virtual" resource until something is stored in it
+            NoSqlData rootData = new NoSqlData(ROOT_PATH, new HashMap<String, Object>());
+            return new NoSqlResource(rootData, resourceResolver, this);
         }
         return null;
     }
@@ -196,9 +195,6 @@ public class NoSqlResourceProvider implements ResourceProvider, ModifyingResourc
                notifyRemoved(path);
             }
             for (NoSqlData item : changedResources.values()) {
-                if (ROOT_PATH.equals(item.getPath())) {
-                    throw new PersistenceException("Unable to store resource at {}" + item.getPath(), null, item.getPath(), null);
-                }
                 boolean created = adapter.store(item);
                 if (created) {
                     notifyAdded(item.getPath());

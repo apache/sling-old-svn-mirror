@@ -18,8 +18,10 @@
  */
 package org.apache.sling.nosql.generic.resource.impl;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -117,12 +119,15 @@ public abstract class AbstractNoSqlResourceProviderRootTest {
         context.resourceResolver().delete(root);
     }
 
-    @Test(expected = Throwable.class)
+    @Test
     public void testUpdateRootPath() throws PersistenceException {
         Resource root = context.resourceResolver().getResource("/");
         ModifiableValueMap props = root.adaptTo(ModifiableValueMap.class);
         props.put("prop1", "value1");
         context.resourceResolver().commit();
+        
+        root = context.resourceResolver().getResource("/");
+        assertThat(root.getValueMap().get("prop1", String.class), equalTo("value1"));
     }
 
 }
