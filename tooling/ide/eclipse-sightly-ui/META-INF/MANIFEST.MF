@@ -34,3 +34,4 @@ Import-Package: org.apache.sling.ide.eclipse.core,
  org.eclipse.wst.xml.core.internal.provisional.document,
  org.eclipse.wst.xml.core.internal.regions,
  org.eclipse.wst.xml.ui.internal.contentassist
+Export-Package: org.apache.sling.ide.eclipse.sightly.ui.internal;x-friends:="org.apache.sling.ide.eclipse-test"
