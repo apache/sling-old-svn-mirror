@@ -24,6 +24,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
+import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
@@ -57,6 +58,11 @@ public abstract class AbstractNewSightlyFileWizard extends Wizard implements INe
                 String contents = AbstractNewSightlyFileWizard.this.getInitialContents();
 
                 return new ByteArrayInputStream(contents.getBytes());
+            }
+            
+            @Override
+            protected boolean validatePage() {
+                return super.validatePage() && validateFileToBeCreated() ;
             }
         };
 
@@ -97,4 +103,17 @@ public abstract class AbstractNewSightlyFileWizard extends Wizard implements INe
     }
 
     protected abstract String getInitialContents();
+    
+    /**
+     * Allows sub-classes to hook in the validation process for the file
+     * 
+     * <p>Only invoked if the superclass validation is successful. If this method
+     * returns false it <b>must</b> invoke {@link WizardPage#setErrorMessage(String)}
+     * on the <tt>fileCreationPage</tt> field to notify the user of what must be changed</tt>.
+     * 
+     * @return true if the file to be created is valid, false otherwise
+     */
+    protected boolean validateFileToBeCreated() {
+        return true;
+    }
 }

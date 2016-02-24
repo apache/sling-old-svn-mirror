@@ -47,5 +47,15 @@ public class NewSightlyJavaUseScriptWizard extends AbstractNewSightlyFileWizard 
                "    }\n" +
                "}";
     }
+    
+    @Override
+    protected boolean validateFileToBeCreated() {
+        if ( ! fileCreationPage.getFileName().endsWith(".java") ) {
+            fileCreationPage.setErrorMessage("File extension must be 'java'");
+            return false;
+        }
+        
+        return true;
+    }
 
 }
