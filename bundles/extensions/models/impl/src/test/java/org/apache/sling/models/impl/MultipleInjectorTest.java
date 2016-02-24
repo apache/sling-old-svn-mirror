@@ -16,10 +16,11 @@
  */
 package org.apache.sling.models.impl;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.when;
 
-import java.lang.reflect.AnnotatedElement;
 import java.util.Hashtable;
 
 import javax.inject.Inject;
@@ -28,9 +29,9 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.Source;
+import org.apache.sling.models.factory.ModelClassException;
 import org.apache.sling.models.impl.injectors.BindingsInjector;
 import org.apache.sling.models.impl.injectors.RequestAttributeInjector;
-import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -77,7 +78,8 @@ public class MultipleInjectorTest {
         factory.bindStaticInjectAnnotationProcessorFactory(bindingsInjector, new ServicePropertiesMap(1, 1));
 
         when(request.getAttribute(SlingBindings.class.getName())).thenReturn(bindings);
-        factory.adapterImplementations.addClassesAsAdapterAndImplementation(ForTwoInjectorsWithSource.class, ForTwoInjectors.class);
+        factory.adapterImplementations.addClassesAsAdapterAndImplementation(
+                ForTwoInjectorsWithSource.class, ForTwoInjectors.class, ForTwoInjectorsWithInvalidSource.class);
     }
 
     @Test
@@ -108,6 +110,17 @@ public class MultipleInjectorTest {
         assertEquals(obj.firstAttribute, attributeValue);
     }
 
+    @Test
+    public void testInjectorWithInvalidSource() {
+        ForTwoInjectorsWithInvalidSource obj = factory.getAdapter(request, ForTwoInjectorsWithInvalidSource.class);
+        assertNull(obj);
+    }
+
+    @Test(expected=ModelClassException.class)
+    public void testInjectorWithInvalidSourceWithException() {
+        factory.createModel(request, ForTwoInjectorsWithInvalidSource.class);
+    }
+
     @Model(adaptables = SlingHttpServletRequest.class)
     public static class ForTwoInjectors {
 
@@ -121,6 +134,15 @@ public class MultipleInjectorTest {
 
         @Inject
         @Source("request-attributes")
+        private String firstAttribute;
+
+    }
+
+    @Model(adaptables = SlingHttpServletRequest.class)
+    public static class ForTwoInjectorsWithInvalidSource {
+
+        @Inject
+        @Source("this-is-an-invalid-source")
         private String firstAttribute;
 
     }

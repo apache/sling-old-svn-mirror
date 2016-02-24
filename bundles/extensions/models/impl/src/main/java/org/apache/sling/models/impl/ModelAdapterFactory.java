@@ -420,6 +420,9 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             }
             else {
                 injectorsToProcess = injectors.get(source);
+                if (injectorsToProcess == null) {
+                    throw new IllegalArgumentException("No Sling Models Injector registered for source '" + source + "'.");
+                }
             }
             
             // find the right injector
