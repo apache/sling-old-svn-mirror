@@ -28,16 +28,16 @@
     </parent>
 
     <artifactId>org.apache.sling.nosql.couchbase-resourceprovider</artifactId>
-    <version>1.1.0-SNAPSHOT</version>
+    <version>1.1.0</version>
     <packaging>bundle</packaging>
   
     <name>Apache Sling NoSQL Couchbase Resource Provider</name>
     <description>Resource Provider with Couchbase Persistence for Apache Sling.</description>
   
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/nosql/couchbase-resourceprovider</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/nosql/couchbase-resourceprovider</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/nosql/couchbase-resourceprovider</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.nosql.couchbase-resourceprovider-1.1.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.nosql.couchbase-resourceprovider-1.1.0</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.nosql.couchbase-resourceprovider-1.1.0</url>
     </scm>
 
     <properties>
