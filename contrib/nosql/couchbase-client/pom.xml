@@ -42,7 +42,7 @@
 
     <properties>
         <sling.java.version>7</sling.java.version>
-        <couchbase.client.version>2.2.0</couchbase.client.version>
+        <couchbase.client.version>2.2.4</couchbase.client.version>
     </properties>
 
     <dependencies>
