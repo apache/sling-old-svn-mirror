@@ -97,7 +97,7 @@
                         <!-- use _exportcontents instead of Export-Package to avoid conflict with Embed-Dependency an inline=true -->
                         <_exportcontents>
                             com.couchbase.client.java.*;version=${couchbase.client.version},
-                            org.apache.sling.nosql.couchbase.client;version=${project.version}
+                            org.apache.sling.nosql.couchbase.client
                         </_exportcontents>
                         <Import-Package>
                             com.barchart.udt.*;resolution:=optional,
