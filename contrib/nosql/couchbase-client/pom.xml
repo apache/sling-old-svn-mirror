@@ -28,16 +28,16 @@
     </parent>
 
     <artifactId>org.apache.sling.nosql.couchbase-client</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
   
     <name>Apache Sling NoSQL Couchbase Client</name>
     <description>Couchbase client provider using Couchbase SDK 2.</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.nosql.couchbase-client-1.0.2</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.nosql.couchbase-client-1.0.2</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.nosql.couchbase-client-1.0.2</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/nosql/couchbase-client</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/nosql/couchbase-client</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/nosql/couchbase-client</url>
     </scm>
 
     <properties>
