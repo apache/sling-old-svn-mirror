@@ -155,6 +155,7 @@
                         <excludes combine.children="append">
                             <!-- Exclude sling instance -->
                             <exclude>sling/**</exclude>
+                            <exclude>README.md</exclude>
                         </excludes>
                     </configuration>
                 </plugin>
