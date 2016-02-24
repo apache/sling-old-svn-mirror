@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>org.apache.sling.nosql.generic</artifactId>
-    <version>1.1.1-SNAPSHOT</version>
+    <version>1.1.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling NoSQL Generic Resource Provider</name>
