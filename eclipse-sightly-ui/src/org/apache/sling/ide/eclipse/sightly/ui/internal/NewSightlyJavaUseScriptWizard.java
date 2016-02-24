@@ -16,10 +16,6 @@
  */
 package org.apache.sling.ide.eclipse.sightly.ui.internal;
 
-import org.apache.sling.ide.eclipse.core.ProjectUtil;
-import org.eclipse.core.resources.IFolder;
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 
 public class NewSightlyJavaUseScriptWizard extends AbstractNewSightlyFileWizard {
@@ -35,13 +31,9 @@ public class NewSightlyJavaUseScriptWizard extends AbstractNewSightlyFileWizard 
         
         String className = fileCreationPage.getFileName().replace(".java", "");
         
-        IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(fullPath.segment(0));
-        
-        // we could make this dependency optional if needed, but I don't see a great need right now 
-        IFolder contentSyncRoot = ProjectUtil.getSyncDirectory(project);
-        String inferredPackage = "unknown // TODO - replace with actual path";
-        if ( contentSyncRoot != null ) {
-            inferredPackage = fullPath.makeRelativeTo(contentSyncRoot.getFullPath()).toPortableString().replace('/', '.');
+        String inferredPackage = JavaUtils.inferPackage(fullPath);
+        if ( inferredPackage == null ) {
+            inferredPackage = "unknown // TODO - replace with actual path";
         }
         
         return "" +
