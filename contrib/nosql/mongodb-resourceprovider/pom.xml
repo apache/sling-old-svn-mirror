@@ -28,16 +28,16 @@
     </parent>
 
     <artifactId>org.apache.sling.nosql.mongodb-resourceprovider</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
   
     <name>Apache Sling NoSQL MongoDB Resource Provider</name>
     <description>Resource Provider with MongoDB Persistence for Apache Sling.</description>
   
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.nosql.mongodb-resourceprovider-1.1.0</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.nosql.mongodb-resourceprovider-1.1.0</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.nosql.mongodb-resourceprovider-1.1.0</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/nosql/mongodb-resourceprovider</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/nosql/mongodb-resourceprovider</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/nosql/mongodb-resourceprovider</url>
     </scm>
 
     <properties>
