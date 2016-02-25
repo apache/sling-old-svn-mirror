@@ -53,6 +53,7 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.osgi.ManifestHeader;
 import org.apache.sling.commons.osgi.ManifestHeader.Entry;
+import org.codehaus.plexus.util.StringUtils;
 
 abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
 
@@ -61,12 +62,12 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
     /** The fs resource provider factory. */
     private static final String FS_FACTORY = "org.apache.sling.fsprovider.internal.FsResourceProvider";
     /** Mime type for json response. */
-    private static final String JSON_MIME_TYPE = "application/json";
+    protected static final String JSON_MIME_TYPE = "application/json";
     /** Http header for content type. */
     private static final String HEADER_CONTENT_TYPE = "Content-Type";
 
     /**
-     * The URL of the running Sling instance.
+     * The URL of the running Sling instance. The default is only useful for <strong>WebConsole</strong> deployment (see {@link #deploymentMethod}).
      */
     @Parameter(property="sling.url", defaultValue="http://localhost:8080/system/console", required = true)
     protected String slingUrl;
@@ -77,28 +78,63 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
      * in each POM, while using the same common <code>sling.url</code> in a parent
      * POM (eg. <code>sling.url=http://localhost:8080</code> and
      * <code>sling.urlSuffix=/project/specific/path</code>). This is typically used
-     * in conjunction with a HTTP PUT (<code>sling.usePut=true</code>).
+     * in conjunction with WebDAV or SlingPostServlet deployment methods.
      */
     @Parameter(property="sling.urlSuffix")
     protected String slingUrlSuffix;
 
     /**
-     * If a simple HTTP PUT should be used instead of the standard POST to the
-     * felix console. In the <code>uninstall</code> goal, a HTTP DELETE will be
+     * If a PUT via WebDAV should be used instead of the standard POST to the
+     * Felix Web Console. In the <code>uninstall</code> goal, a HTTP DELETE will be
      * used.
+     * 
+     * @deprecated Use {@link #deployMethod} instead.
      */
-    @Parameter(property="sling.usePut", defaultValue = "false", required = true)
+    @Parameter(property="sling.usePut", defaultValue = "false")
     protected boolean usePut;
-    
+
     /**
-     * The jcr:primaryType to be used when creating intermediate paths for HTTP PUT deployment
+     * Possible methodologies for deploying (installing and uninstalling)
+     * bundles from the remote server.
+     * Use camel-case values because those are used when you configure the plugin (and uppercase with separators "_" just looks ugly in that context)
+     */
+    enum BundleDeploymentMethod {
+        /** Via POST to Felix Web Console */
+        WebConsole,
+
+        /** Via WebDAV */
+        WebDAV,
+
+        /** Via POST to Sling directly */
+        SlingPostServlet;
+    }
+
+    /**
+     * Bundle deployment method. One of the following three values are allowed
+     * <ol>
+     *  <li><strong>WebConsole</strong>, uses the <a href="http://felix.apache.org/documentation/subprojects/apache-felix-web-console/web-console-restful-api.html#post-requests">
+     *  Felix Web Console REST API</a> for deployment (HTTP POST). This is the default. 
+     *  Make sure that {@link #slingUrl} points to the Felix Web Console in that case.</li>
+     *  <li><strong>WebDAV</strong>, uses <a href="https://sling.apache.org/documentation/development/repository-based-development.html">
+     *  WebDAV</a> for deployment (HTTP PUT). Make sure that {@link #slingUrl} points to the entry path of 
+     *  the Sling WebDAV bundle (usually below regular Sling root URL). Issues a HTTP Delete for the uninstall goal.
+     *  <li><strong>SlingPostServlet</strong>, uses the <a href="">Sling Post Servlet</a> for deployment (HTTP POST).
+     *  Make sure that {@link #slingUrl} points a path which is handled by the Sling POST Servlet (usually below regular Sling root URL).</li>
+     * </ol>
+     * 
+     * This has precedence over the deprecated parameter {@link #usePut}.
+     */
+    @Parameter(property="sling.deploy.method", required = false)
+    protected BundleDeploymentMethod deploymentMethod;
+
+    /**
+     * The jcr:primaryType to be used when creating intermediate paths. Only applies to WebDAV deployment
      */
     @Parameter(property = "sling.deploy.intermediatePathPrimaryType" , defaultValue = "sling:Folder")
     protected String intermediatePathPrimaryType;
-    
+
     /**
-     * The content type / mime type used for the HTTP PUT (if
-     * <code>sling.usePut=true</code>).
+     * The content type / mime type used for WebDAV or Sling POST deployment.
      */
     @Parameter(property="sling.mimeType", defaultValue = "application/java-archive", required = true)
     protected String mimeType;
@@ -116,19 +152,22 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
     private String password;
 
     /**
-     * The startlevel for the uploaded bundle
+     * The startlevel for the uploaded bundle. Only applies when POSTing to
+     * Felix Web Console.
      */
     @Parameter(property="sling.bundle.startlevel", defaultValue = "20", required = true)
     private String bundleStartLevel;
 
     /**
-     * Whether to start the uploaded bundle or not
+     * Whether to start the uploaded bundle or not. Only applies when POSTing
+     * to Felix Web Console
      */
     @Parameter(property="sling.bundle.start", defaultValue = "true", required = true)
     private boolean bundleStart;
 
     /**
-     * Whether to refresh the packages after installing the uploaded bundle
+     * Whether to refresh the packages after installing the uploaded bundle.
+     * Only applies when POSTing to Felix Web Console
      */
     @Parameter(property="sling.refreshPackages", defaultValue = "true", required = true)
     private boolean refreshPackages;
@@ -144,7 +183,7 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
      */
     @Parameter(defaultValue = "${project}", required = true, readonly = true)
     protected MavenProject project;
-    
+
     public AbstractBundleInstallMojo() {
         super();
     }
@@ -164,13 +203,15 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
     }
 
     /**
-     * Returns the URL for PUT or DELETE by appending the filename to the
-     * targetURL.
+     * Returns the URL with the filename appended to it.
+     * @param targetURL the original requested targetURL to append fileName to
+     * @param fileName the name of the file to append to the targetURL.
      */
-    protected String getPutURL(String targetURL, String fileName) {
+    protected String getURLWithFilename(String targetURL, String fileName) {
         return targetURL + (targetURL.endsWith("/") ? "" : "/") + fileName;
     }
 
+    @Override
     public void execute() throws MojoExecutionException {
 
         // get the file to upload
@@ -192,18 +233,46 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
 
         String targetURL = getTargetURL();
 
+        BundleDeploymentMethod deploymentMethod = getDeploymentMethod();
         getLog().info(
             "Installing Bundle " + bundleName + "(" + bundleFile + ") to "
-                + targetURL + " via " + (usePut ? "PUT" : "POST"));
+                + targetURL + " via " + deploymentMethod);
 
-        if (usePut) {
-            put(targetURL, bundleFile);
-        } else {
-            post(targetURL, bundleFile);
+
+        switch (deploymentMethod) {
+        case SlingPostServlet:
+            postToSling(targetURL, bundleFile);
+            break;
+        case WebConsole:
+            postToFelix(targetURL, bundleFile);
+            break;
+        case WebDAV:
+            putViaWebDav(targetURL, bundleFile);
+            break;
+        // sanity check to make sure it gets handled in some fashion
+        default:
+            throw new MojoExecutionException("Unrecognized BundleDeployMethod " + deploymentMethod);
         }
 
         if ( mountByFS ) {
             configure(targetURL, bundleFile);
+        }
+    }
+
+    /**
+     * Retrieve the bundle deployment method matching the configuration.
+     * @return bundle deployment method matching the plugin configuration.
+     */
+    protected BundleDeploymentMethod getDeploymentMethod() throws MojoExecutionException {
+        if (this.deploymentMethod == null) {
+            if (usePut) {
+                getLog().warn("Using deprecated configuration parameter 'usePut=true', please instead use the new parameter 'deploymentMethod=WebDAV'!");
+                return BundleDeploymentMethod.WebDAV;
+            } else {
+                return BundleDeploymentMethod.WebConsole;
+            }
+        } else {
+            return deploymentMethod;
         }
     }
 
@@ -236,7 +305,15 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
         return client;
     }
 
-    protected void post(String targetURL, File file)
+    /**
+     * Install the bundle via POST to the Felix Web Console
+     * @param targetURL the URL to the Felix Web Console Bundles listing
+     * @param file the file to POST
+     * @throws MojoExecutionException
+     * @see <a href="http://felix.apache.org/documentation/subprojects/apache-felix-web-console/web-console-restful-api.html#post-requests">Webconsole RESTful API</a>
+     * @see <a href="https://github.com/apache/felix/blob/trunk/webconsole/src/main/java/org/apache/felix/webconsole/internal/core/BundlesServlet.java">BundlesServlet@Github</a>
+     */
+    protected void postToFelix(String targetURL, File file)
             throws MojoExecutionException {
 
         // append pseudo path after root URL to not get redirected for nothing
@@ -286,28 +363,87 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
         }
     }
 
-    protected void put(String targetURL, File file) throws MojoExecutionException {
+    /**
+     * Perform the operation via POST to SlingPostServlet
+     * @param targetURL the URL of the Sling instance to post the file to.
+     * @param file the file being interacted with the POST to Sling.
+     * @throws MojoExecutionException
+     */
+    protected void postToSling(String targetURL, File file) throws MojoExecutionException {
+
+        /* truncate off trailing slash as this has special behaviorisms in
+         * the SlingPostServlet around created node name conventions */
+        if (targetURL.endsWith("/")) {
+            targetURL = targetURL.substring(0, targetURL.length()-1);
+        }
+        // append pseudo path after root URL to not get redirected for nothing
+        final PostMethod filePost = new PostMethod(targetURL);
+
+        try {
+
+            Part[] parts = new Part[2];
+            // Add content type to force the configured mimeType value
+            parts[0] = new FilePart("*", new FilePartSource(
+                file.getName(), file), mimeType, null);
+            // Add TypeHint to have jar be uploaded as file (not as resource)
+            parts[1] = new StringPart("*@TypeHint", "nt:file");
+
+            /* Request JSON response from Sling instead of standard HTML, to
+             * reduce the payload size (if the PostServlet supports it). */
+            filePost.setRequestHeader("Accept", JSON_MIME_TYPE);
+            filePost.setRequestEntity(new MultipartRequestEntity(parts,
+                filePost.getParams()));
+
+            int status = getHttpClient().executeMethod(filePost);
+            // SlingPostServlet may return 200 or 201 on creation, accept both
+            if (status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED) {
+                getLog().info("Bundle installed");
+            } else {
+                String msg = "Installation failed, cause: "
+                    + HttpStatus.getStatusText(status);
+                if (failOnError) {
+                    throw new MojoExecutionException(msg);
+                } else {
+                    getLog().error(msg);
+                }
+            }
+        } catch (Exception ex) {
+            throw new MojoExecutionException("Installation on " + targetURL
+                + " failed, cause: " + ex.getMessage(), ex);
+        } finally {
+            filePost.releaseConnection();
+        }
+    }
+
+    /**
+     * Puts the file via PUT (leveraging WebDAV). Creates the intermediate folders as well.
+     * @param targetURL
+     * @param file
+     * @throws MojoExecutionException
+     * @see <a href="https://tools.ietf.org/html/rfc4918#section-9.7.1">RFC 4918</a>
+     */
+    protected void putViaWebDav(String targetURL, File file) throws MojoExecutionException {
 
         boolean success = false;
         int status;
-        
+
         try {
             status = performPut(targetURL, file);
             if (status >= 200 && status < 300) {
                 success = true;
-            } else if ( status == HttpStatus.SC_CONFLICT) {
-                
+            } else if (status == HttpStatus.SC_CONFLICT) {
+
                 getLog().debug("Bundle not installed due missing parent folders. Attempting to create parent structure.");
                 createIntermediaryPaths(targetURL);
-                
+
                 getLog().debug("Re-attempting bundle install after creating parent folders.");
                 status = performPut(targetURL, file);
                 if (status >= 200 && status < 300) {
                     success = true;
                 }
             }
-            
-            if ( !success ) {
+
+            if (!success) {
                 String msg = "Installation failed, cause: "
                     + HttpStatus.getStatusText(status);
                 if (failOnError) {
@@ -321,10 +457,10 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
                 + " failed, cause: " + ex.getMessage(), ex);
         }
     }
-    
+
     private int performPut(String targetURL, File file) throws HttpException, IOException {
-        
-        PutMethod filePut = new PutMethod(getPutURL(targetURL, file.getName()));
+
+        PutMethod filePut = new PutMethod(getURLWithFilename(targetURL, file.getName()));
         try {
             filePut.setRequestEntity(new FileRequestEntity(file, mimeType));
             return getHttpClient().executeMethod(filePut);
@@ -334,10 +470,10 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
     }
 
     private void createIntermediaryPaths(String targetURL) throws HttpException, IOException, MojoExecutionException {
-        
+
         for ( String intermediatePath : IntermediatePathsExtractor.extractIntermediatePaths(targetURL)) {
             getLog().debug("Creating intermediate path at " + intermediatePath);
-            
+
             // verify if the path exists by calling the JSON servlet
             // this should always return a 200 OK status if it exists or a 4040 otherwise
             GetMethod get = new GetMethod(intermediatePath + ".json");
@@ -350,11 +486,11 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
             } finally {
                 get.releaseConnection();
             }
-            
+
             // create the path if it does not exist
             PostMethod post = new PostMethod(intermediatePath);
             try {
-                post.addParameter(new NameValuePair("jcr:primaryType", intermediatePathPrimaryType)); 
+                post.addParameter(new NameValuePair("jcr:primaryType", intermediatePathPrimaryType));
                 int result = getHttpClient().executeMethod(post);
                 if ( result != HttpStatus.SC_CREATED && result != HttpStatus.SC_OK) {
                     throw new MojoExecutionException("Failed creating intermediate path at " + intermediatePath + "."

@@ -36,6 +36,10 @@
         Maven Plugin supporting various Sling Development Tasks
     </description>
 
+    <prerequisites>
+       <maven>3.0.0</maven> <!-- for supporting enums as parameters (https://issues.apache.org/jira/browse/MNG-4292) -->
+    </prerequisites>
+
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/maven/maven-sling-plugin</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/maven/maven-sling-plugin</developerConnection>
