@@ -26,6 +26,9 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
+import org.apache.commons.httpclient.methods.multipart.Part;
+import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -50,6 +53,7 @@ public class BundleUninstallMojo extends AbstractBundleInstallMojo {
     /**
      * @see org.apache.maven.plugin.AbstractMojo#execute()
      */
+    @Override
     public void execute() throws MojoExecutionException {
         // only upload if packaging as an osgi-bundle
         final File bundleFile = new File(bundleFileName);
@@ -60,24 +64,34 @@ public class BundleUninstallMojo extends AbstractBundleInstallMojo {
         }
 
         String targetURL = getTargetURL();
-        
+
+        BundleDeployMethod deployMethod = getDeployMethod();
         getLog().info(
-            "Unistalling Bundle " + bundleName + ") from "
-                + targetURL + " via " + (usePut ? "DELETE" : "POST"));
-        
+            "Unistalling Bundle " + bundleName + " from "
+                + targetURL + " via " + deployMethod.value);
+
         configure(targetURL, bundleFile);
-        
-        if (usePut) {
+
+        switch (deployMethod) {
+        case POST_SERVLET:
+            postToSling(targetURL, bundleFile);
+            break;
+        case WEBCONSOLE:
+            postToFelix(targetURL, bundleName);
+            break;
+        case WEBDAV:
             delete(targetURL, bundleFile);
-        } else {
-            post(targetURL, bundleName);
+            break;
+        // sanity check to make sure it gets handled in some fashion
+        default:
+            throw new MojoExecutionException("Unrecognized BundleDeployMethod " + deployMethod);
         }
     }
 
     protected void delete(String targetURL, File file)
         throws MojoExecutionException {
-        
-        final DeleteMethod delete = new DeleteMethod(getPutURL(targetURL, file.getName()));
+
+        final DeleteMethod delete = new DeleteMethod(getURLWithFilename(targetURL, file.getName()));
 
         try {
 
@@ -97,7 +111,38 @@ public class BundleUninstallMojo extends AbstractBundleInstallMojo {
         }
     }
 
-    protected void post(String targetURL, String symbolicName)
+    @Override
+    protected void postToSling(String targetURL, File file)
+        throws MojoExecutionException {
+        final PostMethod post = new PostMethod(getURLWithFilename(targetURL, file.getName()));
+
+        try {
+            // Add SlingPostServlet operation flag for deleting the content
+            Part[] parts = new Part[1];
+            parts[0] = new StringPart(":operation", "delete");
+            post.setRequestEntity(new MultipartRequestEntity(parts,
+                    post.getParams()));
+
+            // Request JSON response from Sling instead of standard HTML
+            post.setRequestHeader("Accept", JSON_MIME_TYPE);
+
+            int status = getHttpClient().executeMethod(post);
+            if (status == HttpStatus.SC_OK) {
+                getLog().info("Bundle uninstalled");
+            } else {
+                getLog().error(
+                    "Uninstall failed, cause: "
+                        + HttpStatus.getStatusText(status));
+            }
+        } catch (Exception ex) {
+            throw new MojoExecutionException("Uninstall from " + targetURL
+                + " failed, cause: " + ex.getMessage(), ex);
+        } finally {
+            post.releaseConnection();
+        }
+    }
+
+    protected void postToFelix(String targetURL, String symbolicName)
     throws MojoExecutionException {
         final PostMethod post = new PostMethod(targetURL + "/bundles/" + symbolicName);
         post.addParameter("action", "uninstall");
@@ -126,6 +171,7 @@ public class BundleUninstallMojo extends AbstractBundleInstallMojo {
      * @param file The artifact (bundle)
      * @throws MojoExecutionException
      */
+    @Override
     protected void configure(String targetURL, File file)
     throws MojoExecutionException {
         getLog().info("Removing file system provider configurations...");
