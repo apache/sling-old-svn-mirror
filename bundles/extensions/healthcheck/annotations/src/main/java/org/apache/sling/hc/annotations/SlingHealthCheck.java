@@ -64,6 +64,9 @@ public @interface SlingHealthCheck {
      * file for this component. Otherwise no Metatype Service data is generated for this component. */
     boolean metatype() default true;
 
+    /** Whether immediate is set on the SCR component.  */
+    boolean immediate() default false;
+
     /** Set the metatype factory pid property (only for non factory components). */
     boolean configurationFactory() default false;
 

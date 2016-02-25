@@ -54,6 +54,7 @@ public class SlingHealthCheckProcessor implements AnnotationProcessor {
 
         final boolean generateComponent = cad.getBooleanValue("generateComponent", true);
         final boolean metatype = cad.getBooleanValue("metatype", true);
+        final boolean immediate = cad.getBooleanValue("immediate", false);
 
         // generate ComponentDescription if required
         if (generateComponent) {
@@ -71,6 +72,7 @@ public class SlingHealthCheckProcessor implements AnnotationProcessor {
             cd.setDescription(cad.getStringValue("description", "Health Check Configuration"));
 
             cd.setCreateMetatype(metatype);
+            cd.setImmediate(immediate);
 
             classDescription.add(cd);
         }
