@@ -36,5 +36,10 @@ public class NewSightlyFileWizard extends AbstractNewSightlyFileWizard {
                 + "</html>"
                 + "";
     }
+    
+    @Override
+    protected String getInitialFileName() {
+        return "script.html";
+    }
 
 }

@@ -65,6 +65,9 @@ public abstract class AbstractNewSightlyFileWizard extends Wizard implements INe
                 return super.validatePage() && validateFileToBeCreated() ;
             }
         };
+        if ( getInitialFileName() != null ) {
+            fileCreationPage.setFileName(getInitialFileName());
+        }
 
         fileCreationPage.setTitle("Sightly");
         fileCreationPage.setDescription(wizardDescription);
@@ -115,5 +118,9 @@ public abstract class AbstractNewSightlyFileWizard extends Wizard implements INe
      */
     protected boolean validateFileToBeCreated() {
         return true;
+    }
+    
+    protected String getInitialFileName() {
+        return null;
     }
 }
