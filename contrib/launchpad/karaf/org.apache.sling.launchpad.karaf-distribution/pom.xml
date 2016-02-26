@@ -168,6 +168,13 @@
             <feature>sling-extension-resourcemerger</feature>
             <feature>sling-extension-security</feature>
             <feature>sling-extension-urlrewriter</feature>
+            <!-- Apache Sling Launchpad (contrib) -->
+            <feature>sling-launchpad-nosql-couchbase</feature>
+            <feature>sling-launchpad-nosql-mongodb</feature>
+            <!-- Apache Sling NoSQL (contrib) -->
+            <feature>sling-nosql-generic</feature>
+            <feature>sling-nosql-couchbase</feature>
+            <feature>sling-nosql-mongodb</feature>
             <!-- Apache Sling Scripting (contrib) -->
             <feature>sling-scripting-groovy</feature>
             <feature>sling-scripting-java</feature>

@@ -487,6 +487,50 @@
     <feature version="${feature.version}">sling</feature>
     <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.urlrewritefilter/4.0.4_1</bundle>
   </feature>
+  <!-- Apache Sling Launchpad (contrib) -->
+  <feature name="sling-launchpad-nosql-couchbase" version="${feature.version}">
+    <config name="org.apache.sling.nosql.couchbase.resourceprovider.CouchbaseNoSqlResourceProviderFactory.factory.config">
+      provider.roots=["/"]
+    </config>
+    <config name="org.apache.sling.nosql.couchbase.client.CouchbaseClient.factory.config">
+      clientId=sling-resourceprovider-couchbase
+      couchbaseHosts=localhost:8091
+      bucketName=sling
+      enabled=B"true"
+    </config>
+    <!-- dependencies -->
+    <feature version="${feature.version}">sling-nosql-couchbase</feature>
+  </feature>
+  <feature name="sling-launchpad-nosql-mongodb" version="${feature.version}">
+    <config name="org.apache.sling.nosql.mongodb.resourceprovider.MongoDBNoSqlResourceProviderFactory.factory.config">
+      provider.roots=["/"]
+      connectionString=localhost:27017
+      database=sling
+      collection=resources
+    </config>
+    <!-- dependencies -->
+    <feature version="${feature.version}">sling-nosql-mongodb</feature>
+  </feature>
+  <!-- Apache Sling NoSQL (contrib) -->
+  <feature name="sling-nosql-generic" version="${feature.version}">
+    <bundle>mvn:org.apache.sling/org.apache.sling.nosql.generic/1.0.0</bundle>
+    <!-- dependencies -->
+    <feature version="${feature.version}">sling</feature>
+    <bundle dependency="true">mvn:org.apache.commons/commons-lang3/3.4</bundle>
+  </feature>
+  <feature name="sling-nosql-couchbase" version="${feature.version}">
+    <bundle>mvn:org.apache.sling/org.apache.sling.nosql.couchbase-client/1.0.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.nosql.couchbase-resourceprovider/1.0.0</bundle>
+    <!-- dependencies -->
+    <feature version="${feature.version}">sling-nosql-generic</feature>
+    <bundle dependency="true">mvn:io.wcm.osgi.wrapper/io.wcm.osgi.wrapper.rxjava/1.0.14-0000</bundle>
+  </feature>
+  <feature name="sling-nosql-mongodb" version="${feature.version}">
+    <bundle>mvn:org.apache.sling/org.apache.sling.nosql.mongodb-resourceprovider/1.0.0</bundle>
+    <!-- dependencies -->
+    <feature version="${feature.version}">sling-nosql-generic</feature>
+    <bundle dependency="true">mvn:org.mongodb/mongo-java-driver/3.2.2</bundle>
+  </feature>
   <!-- Apache Sling Scripting (contrib) -->
   <feature name="sling-scripting-groovy" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.groovy/1.0.2</bundle>
