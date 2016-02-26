@@ -33,5 +33,10 @@ public class NewSightlyJsUseScriptWizard extends AbstractNewSightlyFileWizard {
                 "    }\n" + 
                 "});";
     }
+    
+    @Override
+    protected String getInitialFileName() {
+        return "script.js";
+    }
 
 }
