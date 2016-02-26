@@ -88,7 +88,7 @@ Principal userPrincipal = ((HttpServletRequest)pageContext.getRequest()).getUser
 <c:set var="userPrincipal" value='<%=userPrincipal %>'/>
 
 <script type="text/javascript">
-var ntManager = new de.sandroboehme.NodeTypeManager();
+var ntManager = new org.apache.sling.jcr.js.nodetypes.NodeTypeManager();
 
 var mainControllerSettings = {
 		contextPath: "<%= request.getContextPath() %>",
