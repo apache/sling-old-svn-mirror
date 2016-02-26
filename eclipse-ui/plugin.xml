@@ -222,6 +222,7 @@
 			point="org.eclipse.ui.navigator.viewer">
 		<viewerContentBinding viewerId="org.eclipse.ui.navigator.ProjectExplorer">
 			<includes>
+				<contentExtension pattern="org.apache.sling.ide.eclipse-ui.javaEEFilter" />
 				<contentExtension pattern="org.apache.sling.ide.eclipse-ui.navigatorJcrContent" />
 				<contentExtension pattern="org.apache.sling.ide.eclipse-ui.linkHelper"/>	
 			</includes>
@@ -229,6 +230,13 @@
 	</extension>
    <extension
          point="org.eclipse.ui.navigator.navigatorContent">
+      <commonFilter
+     	   name="Sling content project Java EE filter"
+     	   class="org.apache.sling.ide.eclipse.ui.nav.ContentViewerFilter"
+           id="org.apache.sling.ide.eclipse-ui.javaEEFilter"
+           description="Hides Java EE deployment descriptors for content projects."
+           activeByDefault="true">
+      </commonFilter>
       <navigatorContent
             appearsBefore="org.eclipse.jst.jee.ui.ejb"
             contentProvider="org.apache.sling.ide.eclipse.ui.nav.JcrContentContentProvider"
