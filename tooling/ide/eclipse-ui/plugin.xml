@@ -723,4 +723,11 @@
           </propertySection>
        </propertySections>
     </extension>
+    
+	<!-- JSP templates -->
+    <extension point="org.eclipse.ui.editors.templates">
+        <include
+            file="templates/jsp-templates.xml"
+            translations="templates/jsp-templates.properties"/>
+    </extension>    
 </plugin>    
