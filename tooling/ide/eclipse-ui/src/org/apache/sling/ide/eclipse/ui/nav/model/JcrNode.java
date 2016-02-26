@@ -342,6 +342,12 @@ public class JcrNode implements IAdaptable {
                             it.remove();
                             continue;
                         }
+                        
+                        if (childShouldNotBeShown(iResource)) {
+                            it.remove();
+                            continue;
+                        }
+                        
 						if (isVaultFile(iResource)) {
 							GenericJcrRootFile gjrf;
                             try {
@@ -406,6 +412,10 @@ public class JcrNode implements IAdaptable {
         return Activator.getDefault().getSerializationManager()
                 .isSerializationFile(iResource.getLocation().toOSString());
 	}
+    
+    protected boolean childShouldNotBeShown(IResource resource) {
+        return false;
+    }
 
 	public void setResource(IResource resource) {
 		if (this.resource!=null) {
