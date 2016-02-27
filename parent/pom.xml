@@ -192,7 +192,6 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                                 <script language="javascript"> <![CDATA[
                                     var System = java.lang.System;
                                     var bree = "JavaSE-1.6";
-                                    var skipAnimalSniffer = false;
                                     var animalSnifferSignaturesVersion = "6";
                                     var slingJavaVersion = System.getProperty("sling.java.version");
                                     if (!slingJavaVersion) {
@@ -203,18 +202,14 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                                         bree = "JavaSE-1.7";
 	                                    System.out.println("Setting Bundle-RequiredExecutionEnvironment=" + bree + " from sling.java.version=" + slingJavaVersion);
 	                                } else if ( slingJavaVersion == "8") {
-                                        // there are no published signatures for Java 1.8, so skip execution. However, we also need a valid
-                                        // artifact in the signature, so fallback to the 1.6 signatures and skip checking entirely
-                                        // see also https://github.com/mojohaus/animal-sniffer/issues/1
-	                                    skipAnimalSniffer = true;
-	                                    bree = "JavaSE-1.8";
+                                        animalSnifferSignaturesVersion = "8";
+                                        bree = "JavaSE-1.8";
 	                                    System.out.println("Setting Bundle-RequiredExecutionEnvironment=" + bree + " from sling.java.version=" + slingJavaVersion);
 	                                } else if (slingJavaVersion != "6") {
                                         System.out.println("Unsupported sling.java.version=" + slingJavaVersion + "; must be 6, 7 or 8.");
                                         throw "sling.java.version must be 6, 7 or 8";
                                     }
                                     project.setProperty("sling.bree", bree);
-                                    project.setProperty("animal.sniffer.skip", skipAnimalSniffer);
                                     project.setProperty("sling.animalSignatures.version", animalSnifferSignaturesVersion);
                                 ]]></script>
                             </target>
