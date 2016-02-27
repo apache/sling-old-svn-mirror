@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 @SlingHealthCheck(
         configurationFactory=true,
+        immediate = true, // to ensure same instance is kept between calls of HC (required to keep state in counter)
         configurationPolicy=ConfigurationPolicy.REQUIRE,
         metatype=true)
 @Service
