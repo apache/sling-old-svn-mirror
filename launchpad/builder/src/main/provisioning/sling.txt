@@ -23,7 +23,7 @@
     jackrabbit.version=2.12.0
 
 [artifacts]
-    commons-collections/commons-collections/3.2.1
+    commons-collections/commons-collections/3.2.2
     commons-codec/commons-codec/1.9
     commons-lang/commons-lang/2.6
     org.apache.commons/commons-math/2.2
