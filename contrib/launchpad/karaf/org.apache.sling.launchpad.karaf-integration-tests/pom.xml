@@ -104,6 +104,7 @@
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-commons</artifactId>
       <version>${org.apache.jackrabbit.version}</version>
+      <scope>test</scope>
     </dependency>
     <!-- bnd -->
     <dependency>
