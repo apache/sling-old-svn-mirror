@@ -112,6 +112,7 @@
             <!-- Apache Sling Auth -->
             <feature>sling-auth-form</feature>
             <!-- Apache Sling Commons -->
+            <feature>sling-commons-metrics</feature>
             <feature>sling-commons-scheduler</feature>
             <feature>sling-commons-threads</feature>
             <!-- Apache Sling Extensions -->
@@ -162,6 +163,8 @@
             <!-- Apache Sling Auth (contrib) -->
             <feature>sling-auth-openid</feature>
             <feature>sling-auth-selector</feature>
+            <!-- Apache Sling Commons (contrib) -->
+            <feature>sling-commons-html</feature>
             <!-- Apache Sling Extensions (contrib) -->
             <feature>sling-extension-distribution</feature>
             <feature>sling-extension-healthcheck</feature>
