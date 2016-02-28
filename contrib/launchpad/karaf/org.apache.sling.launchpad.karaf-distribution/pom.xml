@@ -119,6 +119,7 @@
             <feature>sling-extension-bundleresource</feature>
             <feature>sling-extension-discovery</feature>
             <feature>sling-extension-discovery-impl</feature>
+            <feature>sling-extension-discovery-oak</feature>
             <feature>sling-extension-discovery-standalone</feature>
             <feature>sling-extension-event</feature>
             <feature>sling-extension-explorer</feature>
