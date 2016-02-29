@@ -37,7 +37,7 @@
     </description>
 
     <properties>
-        <jackrabbit.version>2.12.0</jackrabbit.version>
+        <jackrabbit.version>2.12.1</jackrabbit.version>
     </properties>
 
     <scm>
