@@ -26,6 +26,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -169,14 +170,15 @@ public class HealthCheckExecutorImplTest {
     }
     
     
-	private int getLogEntryCount(HealthCheckExecutionResult result) {
-		int logEntryCount = 0;
-        for (Entry entry : result.getHealthCheckResult()) {
-        	logEntryCount++;
-		}
+    private int getLogEntryCount(HealthCheckExecutionResult result) {
+        int logEntryCount = 0;
+        final Iterator<Entry> it = result.getHealthCheckResult().iterator();
+        while(it.hasNext()) {
+            it.next();
+            logEntryCount++;
+        }
         return logEntryCount;
-	}
-	
+    }
 
 	private void addResultToCache(Status status) {
 		healthCheckResultCache.updateWith(new ExecutionResult(HealthCheckMetadata, new Result(status, "Status "+status), 1000));
