@@ -16,6 +16,11 @@
         "jcr:primaryType" : "sling:MessageEntry",
         "sling:key" : "world",
         "sling:message" : "Welt"
+    },
+    "bun" : {
+        "jcr:primaryType" : "sling:MessageEntry",
+        "sling:key" : "bun",
+        "sling:message" : "Brötchen"
     }
 
 }
