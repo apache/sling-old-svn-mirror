@@ -36,7 +36,7 @@
   <description>Integration Tests for Apache Sling Launchpad Karaf</description>
 
   <properties>
-    <org.apache.jackrabbit.version>2.12.0</org.apache.jackrabbit.version>
+    <org.apache.jackrabbit.version>2.12.1</org.apache.jackrabbit.version>
     <org.apache.karaf.version>4.0.4</org.apache.karaf.version>
     <org.ops4j.pax.exam.version>4.8.0</org.ops4j.pax.exam.version>
   </properties>
