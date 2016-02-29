@@ -69,9 +69,7 @@ public class HealthCheckExecutorImplTest {
         healthCheckExecutorImpl.setTimeoutInMs(2000L);
         // 10 sec timeout for critical
         healthCheckExecutorImpl.setLongRunningFutureThresholdForRedMs(10000L);
-
     }
-
 
     @Test
     public void testCollectResultsFromFutures() throws Exception {
@@ -90,7 +88,6 @@ public class HealthCheckExecutorImplTest {
 
         assertEquals(1, results.size());
         assertTrue(results.contains(testResult));
-
     }
 
     @Test
@@ -118,7 +115,6 @@ public class HealthCheckExecutorImplTest {
         
         // 3 because previous result exists and is part of log
         assertEquals(3, getLogEntryCount(result));
-
     }
 
     @Test
@@ -183,5 +179,4 @@ public class HealthCheckExecutorImplTest {
 	private void addResultToCache(Status status) {
 		healthCheckResultCache.updateWith(new ExecutionResult(HealthCheckMetadata, new Result(status, "Status "+status), 1000));
 	}
-    
 }
