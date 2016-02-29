@@ -64,16 +64,28 @@ public class JmxAdjustableStatusForTestingTest {
 	public Option[] config() {
 		return U.config();
 	}
+	
+	private void assertResult(String tag, Result.Status expected) {
+        final Result result = getOverallResult(executor.execute(tag));
+        assertEquals("Expected status " + expected + " for tag " + tag, expected, result.getStatus());
+	}
 
 	@Before
 	public void setup() {
 		U.expectHealthChecks(0, executor, testTag);
 		registerHC(testTag);
+        U.expectHealthChecks(1, executor, testTag);
+        assertResult(testTag, Result.Status.OK);
 	}
 
 	@After
 	@SuppressWarnings("rawtypes")
-	public void cleanup() {
+	public void cleanup() throws Exception {
+        invokeMBean("reset", new Object[] {}, new String[] {});
+
+        U.expectHealthChecks(1, executor, testTag);
+        assertResult(testTag, Result.Status.OK);
+        
 		for (ServiceRegistration r : regs) {
 			r.unregister();
 		}
@@ -82,39 +94,30 @@ public class JmxAdjustableStatusForTestingTest {
 	}
 
 	@Test
-	public void testJmxAdjustableStatusForTesting() throws Exception {
-
-		U.expectHealthChecks(1, executor, testTag);
-
-		Result result = getOverallResult(executor.execute(testTag));
-		assertEquals(Result.Status.OK, result.getStatus());
-
+	public void testWarnStatus() throws Exception {
 		invokeMBean("addWarnResultForTags", new Object[] { testTag }, new String[] { String.class.getName() });
-
 		U.expectHealthChecks(2, executor, testTag);
-		result = getOverallResult(executor.execute(testTag));
-		assertEquals(Result.Status.WARN, result.getStatus());
-
-		invokeMBean("reset", new Object[] {}, new String[] {});
-
-		U.expectHealthChecks(1, executor, testTag);
-		result = getOverallResult(executor.execute(testTag));
-		assertEquals(Result.Status.OK, result.getStatus());
-
-		invokeMBean("addCriticalResultForTags", new Object[] { "anotherTag," + testTag },
-				new String[] { String.class.getName() });
-
-		U.expectHealthChecks(2, executor, testTag);
-		result = getOverallResult(executor.execute(testTag));
-		assertEquals(Result.Status.CRITICAL, result.getStatus());
-
-		invokeMBean("reset", new Object[] {}, new String[] {});
-
-		U.expectHealthChecks(1, executor, testTag);
-		result = getOverallResult(executor.execute(testTag));
-		assertEquals(Result.Status.OK, result.getStatus());
-
+        assertResult(testTag, Result.Status.WARN);
 	}
+
+    @Test
+    public void testCriticalStatus() throws Exception {
+        invokeMBean("addCriticalResultForTags", new Object[] { "anotherTag," + testTag },
+                new String[] { String.class.getName() });
+
+        final String [] tags = { "anotherTag", testTag };
+        for(String tag : tags) {
+            U.expectHealthChecks(2, executor, testTag);
+            assertResult(tag, Result.Status.CRITICAL);
+        }
+    }
+
+    @Test
+    public void testAnotherTag() throws Exception {
+        // Selecting an unused tag returns WARN - not sure why but
+        // if that changes we should detect it.
+        assertResult("some_unused_tag", Result.Status.WARN);
+    }
 
 	private void registerHC(final String... tags) {
 		final HealthCheck hc = new HealthCheck() {
@@ -149,5 +152,4 @@ public class JmxAdjustableStatusForTestingTest {
 		}
 		return new Result(resultLog);
 	}
-
 }
