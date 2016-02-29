@@ -63,10 +63,10 @@
     org.apache.sling/org.apache.sling.resourceresolver/1.4.5-SNAPSHOT
     org.apache.sling/org.apache.sling.scripting.api/2.1.8
     org.apache.sling/org.apache.sling.scripting.core/2.0.36
-    org.apache.sling/org.apache.sling.scripting.javascript/2.0.26
+    org.apache.sling/org.apache.sling.scripting.javascript/2.0.28
     org.apache.sling/org.apache.sling.scripting.jsp/2.1.8
     org.apache.sling/org.apache.sling.scripting.jsp.taglib/2.2.4
-    org.apache.sling/org.apache.sling.scripting.sightly/1.0.10
+    org.apache.sling/org.apache.sling.scripting.sightly/1.0.14
     org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.10
     org.apache.sling/org.apache.sling.scripting.sightly.models.provider/1.0.0
     org.apache.sling/org.apache.sling.scripting.sightly.repl/1.0.2
