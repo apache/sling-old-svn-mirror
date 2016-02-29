@@ -16,13 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-
 package org.apache.sling.scripting.sightly.impl.filter;
 
 import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.scripting.sightly.impl.compiler.expression.Expression;
+import org.apache.sling.scripting.sightly.impl.compiler.expression.ExpressionNode;
 import org.osgi.service.component.ComponentContext;
 
 /**
@@ -45,7 +48,7 @@ public abstract class FilterComponent implements Filter {
         if (this.priority < o.priority()) {
             return -1;
         } else if (this.priority == o.priority()) {
-            return  0;
+            return 0;
         }
         return 1;
     }
@@ -54,5 +57,22 @@ public abstract class FilterComponent implements Filter {
     protected void activate(ComponentContext componentContext) {
         Dictionary properties = componentContext.getProperties();
         priority = PropertiesUtil.toInteger(properties.get(PRIORITY), DEFAULT_PRIORITY);
+    }
+
+    /**
+     * Collects the options passed in the {@code options} array into a new map while removing them from the original expression.
+     * @param expression the expression providing the options to be processed
+     * @param options the options of interest for the {@link Filter}
+     * @return a map with the retrieved options; the map can be empty if none of the options were found
+     */
+    protected Map<String, ExpressionNode> getFilterOptions(Expression expression, String... options) {
+        Map<String, ExpressionNode> collector = new HashMap<String, ExpressionNode>();
+        for (String option : options) {
+            ExpressionNode optionNode = expression.removeOption(option);
+            if (optionNode != null) {
+                collector.put(option, optionNode);
+            }
+        }
+        return collector;
     }
 }
