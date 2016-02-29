@@ -50,7 +50,7 @@ import org.osgi.service.component.ComponentContext;
 @Component
 @Service
 @Properties({
-		@Property(name = "service.description", value = "JSP Script Handler"),
+		@Property(name = "service.description", value = "Web Console for the FileSystem Class Loader"),
 		@Property(name = "service.vendor", value = "The Apache Software Foundation"),
 		@Property(name = "felix.webconsole.label", value = FSClassLoaderWebConsole.APP_ROOT),
 		@Property(name = "felix.webconsole.title", value = "File System Class Loader"),
@@ -150,10 +150,11 @@ public class FSClassLoaderWebConsole extends AbstractWebConsolePlugin {
 	/**
 	 * Activate this component. Create the root directory.
 	 * 
-	 * @param componentContext
+	 * @param componentContext the component context
 	 * @throws MalformedURLException
 	 */
 	@Activate
+	@SuppressWarnings("unused")
 	protected void activate(final ComponentContext componentContext)
 			throws MalformedURLException {
 		// get the file root
@@ -293,8 +294,11 @@ public class FSClassLoaderWebConsole extends AbstractWebConsolePlugin {
 	private void readFiles(File file, Map<String, ScriptFiles> scripts)
 			throws IOException {
 		if (file.isDirectory()) {
-			for (File f : file.listFiles()) {
-				readFiles(f, scripts);
+			File[] children = file.listFiles();
+			if (children != null) {
+				for (File f : children) {
+					readFiles(f, scripts);
+				}
 			}
 		} else {
 			String script = ScriptFiles.getScript(file);
@@ -325,7 +329,7 @@ public class FSClassLoaderWebConsole extends AbstractWebConsolePlugin {
 		w.write("<script type=\"text/javascript\" src=\"" + RES_LOC
 				+ "/prettify.js\"></script>");
 		w.write("<script>$(document).ready(prettyPrint);</script>");
-		w.write("<style>.prettyprint ol.linenums > li { list-style-type: decimal; }</style>");
+		w.write("<style>.prettyprint ol.linenums > li { list-style-type: decimal; } pre.prettyprint { white-space: pre-wrap; }</style>");
 		String file = request.getParameter("view");
 		File toView = new File(root + file);
 		if (!StringUtils.isEmpty(file)) {
@@ -360,9 +364,9 @@ public class FSClassLoaderWebConsole extends AbstractWebConsolePlugin {
 				try {
 					is = new FileInputStream(toView);
 					String contents = IOUtils.toString(is);
-					w.write("<pre class=\"prettyprint linenums\"><code>");
+					w.write("<pre class=\"prettyprint linenums\">");
 					StringEscapeUtils.escapeHtml(w, contents);
-					w.write("</pre></code>");
+					w.write("</pre>");
 				} finally {
 					IOUtils.closeQuietly(is);
 				}
