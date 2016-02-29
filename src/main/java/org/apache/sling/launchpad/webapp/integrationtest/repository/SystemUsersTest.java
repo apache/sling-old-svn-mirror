@@ -17,6 +17,7 @@
 package org.apache.sling.launchpad.webapp.integrationtest.repository;
 
 import static org.junit.Assert.fail;
+
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -24,10 +25,12 @@ import javax.jcr.SimpleCredentials;
 
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.junit.rules.TeleporterRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 /** Verify that required system users have been created */
+@Ignore("TODO reactivate once jcr.base 2.3.2 is released")
 public class SystemUsersTest {
 
     @Rule
