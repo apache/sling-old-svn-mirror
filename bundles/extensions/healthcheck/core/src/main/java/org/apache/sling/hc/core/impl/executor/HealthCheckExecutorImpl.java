@@ -103,7 +103,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
 
     private long resultCacheTtlInMs;
 
-    private final HealthCheckResultCache healthCheckResultCache = new HealthCheckResultCache();
+    private HealthCheckResultCache healthCheckResultCache = new HealthCheckResultCache();
 
     private final Map<HealthCheckMetadata, HealthCheckFuture> stillRunningFutures = new HashMap<HealthCheckMetadata, HealthCheckFuture>();
 
