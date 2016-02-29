@@ -55,22 +55,22 @@ public class URIManipulationFilter extends FilterComponent implements RuntimeExt
 
     public static final String URI_MANIPULATION_FUNCTION = "uriManipulation";
 
-    private static final String SCHEME = "scheme";
-    private static final String DOMAIN = "domain";
-    private static final String PATH = "path";
-    private static final String APPEND_PATH = "appendPath";
-    private static final String PREPEND_PATH = "prependPath";
-    private static final String SELECTORS = "selectors";
-    private static final String ADD_SELECTORS = "addSelectors";
-    private static final String REMOVE_SELECTORS = "removeSelectors";
-    private static final String EXTENSION = "extension";
-    private static final String SUFFIX = "suffix";
-    private static final String PREPEND_SUFFIX = "prependSuffix";
-    private static final String APPEND_SUFFIX = "appendSuffix";
-    private static final String FRAGMENT = "fragment";
-    private static final String QUERY = "query";
-    private static final String ADD_QUERY = "addQuery";
-    private static final String REMOVE_QUERY = "removeQuery";
+    public static final String SCHEME = "scheme";
+    public static final String DOMAIN = "domain";
+    public static final String PATH = "path";
+    public static final String APPEND_PATH = "appendPath";
+    public static final String PREPEND_PATH = "prependPath";
+    public static final String SELECTORS = "selectors";
+    public static final String ADD_SELECTORS = "addSelectors";
+    public static final String REMOVE_SELECTORS = "removeSelectors";
+    public static final String EXTENSION = "extension";
+    public static final String SUFFIX = "suffix";
+    public static final String PREPEND_SUFFIX = "prependSuffix";
+    public static final String APPEND_SUFFIX = "appendSuffix";
+    public static final String FRAGMENT = "fragment";
+    public static final String QUERY = "query";
+    public static final String ADD_QUERY = "addQuery";
+    public static final String REMOVE_QUERY = "removeQuery";
 
     @Override
     public Expression apply(Expression expression, ExpressionContext expressionContext) {
