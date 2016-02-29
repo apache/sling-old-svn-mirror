@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.hc.it.core;
+package org.apache.sling.hc.core.it;
 
 import static org.junit.Assert.assertTrue;
 
@@ -38,7 +38,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 @RunWith(PaxExam.class)
-public class AsyncHealthCheckTest {
+public class AsyncHealthCheckIT {
 
     @Inject
     private HealthCheckExecutor executor;
@@ -70,7 +70,7 @@ public class AsyncHealthCheckTest {
         props.put(HealthCheck.ASYNC_CRON_EXPRESSION, "*/1 * * * * ?");
         
         @SuppressWarnings("rawtypes")
-        final ServiceRegistration reg = bundleContext.registerService(HealthCheck.class, hc, props);
+        final ServiceRegistration reg = bundleContext.registerService(HealthCheck.class.getName(), hc, props);
         
         try {
             // Wait for HC to be registered

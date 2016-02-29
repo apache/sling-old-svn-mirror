@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.hc.it.core;
+package org.apache.sling.hc.core.it;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -46,7 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @RunWith(PaxExam.class)
-public class HealthCheckFilterTest {
+public class HealthCheckFilterIT {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -61,7 +61,7 @@ public class HealthCheckFilterTest {
     class TestHealthCheck implements HealthCheck {
 
         private final int id;
-        private final ServiceRegistration<?> reg;
+        private final ServiceRegistration reg;
         final String[] tags;
 
         TestHealthCheck(String... tags) {

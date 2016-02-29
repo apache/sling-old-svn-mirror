@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.hc.it.core;
+package org.apache.sling.hc.core.it;
 
 import static org.junit.Assert.assertEquals;
 
@@ -45,7 +45,7 @@ import org.osgi.service.http.HttpService;
  *  after creating the corresponding config
  */
 @RunWith(PaxExam.class)
-public class HealthCheckServletTest {
+public class HealthCheckServletIT {
 
     @Inject
     private ConfigurationAdmin configAdmin;
@@ -62,7 +62,7 @@ public class HealthCheckServletTest {
     }
     
     private int countServletServices(String packageNamePrefix) throws InvalidSyntaxException {
-        final ServiceReference<?> [] refs = bundleContext.getServiceReferences("javax.servlet.Servlet", null);
+        final ServiceReference [] refs = bundleContext.getServiceReferences("javax.servlet.Servlet", null);
         int count = 0;
         if(refs != null) {
             for(ServiceReference ref : refs) {
@@ -79,7 +79,7 @@ public class HealthCheckServletTest {
     @Before
     public void setup() {
         httpService = new MockHttpService();
-        reg = bundleContext.registerService(HttpService.class, httpService, null);
+        reg = bundleContext.registerService(HttpService.class.getName(), httpService, null);
     }
 
     @After

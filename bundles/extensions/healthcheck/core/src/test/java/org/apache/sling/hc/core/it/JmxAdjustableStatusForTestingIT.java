@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.hc.it.core;
+package org.apache.sling.hc.core.it;
 
 import static org.junit.Assert.assertEquals;
 
@@ -47,7 +47,7 @@ import org.osgi.framework.ServiceRegistration;
 
 /** Test jmx-adjustable status for testing HC. */
 @RunWith(PaxExam.class)
-public class JmxAdjustableStatusForTestingTest {
+public class JmxAdjustableStatusForTestingIT {
 
 	@Inject
 	private HealthCheckExecutor executor;
@@ -131,12 +131,12 @@ public class JmxAdjustableStatusForTestingTest {
 		props.put(HealthCheck.NAME, "name_" + tags[0]);
 		props.put(HealthCheck.TAGS, tags);
 
-		regs.add(bundleContext.registerService(HealthCheck.class, hc, props));
+		regs.add(bundleContext.registerService(HealthCheck.class.getName(), hc, props));
 	}
 
 	private void invokeMBean(String operation, Object[] args, String[] signature) throws Exception {
 
-		ServiceReference<?>[] serviceReference = bundleContext.getServiceReferences(DynamicMBean.class.getName(),
+		ServiceReference[] serviceReference = bundleContext.getServiceReferences(DynamicMBean.class.getName(),
 				"(jmx.objectname=org.apache.sling.healthcheck:type=AdjustableHealthCheckForTesting)");
 		DynamicMBean mBean = (DynamicMBean) bundleContext.getService(serviceReference[0]);
 		mBean.invoke(operation, args, signature);

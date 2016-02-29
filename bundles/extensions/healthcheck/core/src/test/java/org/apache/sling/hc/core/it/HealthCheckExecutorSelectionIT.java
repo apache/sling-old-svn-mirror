@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.hc.it.core;
+package org.apache.sling.hc.core.it;
 
 import java.util.ArrayList;
 import java.util.Dictionary;
@@ -42,7 +42,7 @@ import org.osgi.framework.ServiceRegistration;
 
 /** Test the HealthCheckExecutor selection mechanism */
 @RunWith(PaxExam.class)
-public class HealthCheckExecutorSelectionTest {
+public class HealthCheckExecutorSelectionIT {
 
     @Inject
     private HealthCheckExecutor executor;
@@ -75,7 +75,7 @@ public class HealthCheckExecutorSelectionTest {
         props.put(HealthCheck.NAME, "name_" + tags[0]);
         props.put(HealthCheck.TAGS, tags);
         
-        regs.add(bundleContext.registerService(HealthCheck.class, hc, props));
+        regs.add(bundleContext.registerService(HealthCheck.class.getName(), hc, props));
     }
 
     @BeforeClass
