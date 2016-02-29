@@ -47,7 +47,9 @@ public class I18nFilter extends FilterComponent {
                 == ExpressionContext.PLUGIN_DATA_SLY_TEMPLATE || expressionContext == ExpressionContext.PLUGIN_DATA_SLY_CALL) {
             return expression;
         }
-        ExpressionNode translation = new RuntimeCall(FUNCTION, expression.getRoot(), new MapLiteral(expression.getOptions()));
-        return expression.withNode(translation).withRemovedOptions(HINT_OPTION, LOCALE_OPTION);
+        ExpressionNode translation = new RuntimeCall(FUNCTION, expression.getRoot(), new MapLiteral(getFilterOptions(expression,
+                HINT_OPTION, LOCALE_OPTION)));
+        expression.removeOption(I18N_OPTION);
+        return expression.withNode(translation);
     }
 }

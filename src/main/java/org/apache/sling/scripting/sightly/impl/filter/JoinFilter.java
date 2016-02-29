@@ -19,7 +19,6 @@
 
 package org.apache.sling.scripting.sightly.impl.filter;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -31,6 +30,7 @@ import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.Expression;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.ExpressionNode;
+import org.apache.sling.scripting.sightly.impl.compiler.expression.node.MapLiteral;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.node.RuntimeCall;
 import org.apache.sling.scripting.sightly.impl.utils.RenderUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
@@ -54,9 +54,8 @@ public class JoinFilter extends FilterComponent implements RuntimeExtension {
                 == ExpressionContext.PLUGIN_DATA_SLY_TEMPLATE || expressionContext == ExpressionContext.PLUGIN_DATA_SLY_CALL) {
             return expression;
         }
-        ExpressionNode argumentNode = expression.getOption(JOIN_OPTION);
-        ExpressionNode joinResult = new RuntimeCall(JOIN_FUNCTION, expression.getRoot(), argumentNode);
-        return expression.withNode(joinResult).withRemovedOptions(JOIN_OPTION);
+        ExpressionNode translation = new RuntimeCall(JOIN_FUNCTION, expression.getRoot(), expression.removeOption(JOIN_OPTION));
+        return expression.withNode(translation);
     }
 
     @Override
@@ -66,11 +65,6 @@ public class JoinFilter extends FilterComponent implements RuntimeExtension {
         }
         Object joinArgument = arguments[0];
         Collection<?> collection = RenderUtils.toCollection(joinArgument);
-        if (joinArgument != null && collection.isEmpty()) {
-            collection = Arrays.asList(new Object[] {
-                joinArgument
-            });
-        }
         String joinString = RenderUtils.toString(arguments[1]);
         return join(collection, joinString);
     }

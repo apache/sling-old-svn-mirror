@@ -31,7 +31,6 @@ import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.Expression;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.ExpressionNode;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.node.RuntimeCall;
-import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.impl.utils.RenderUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 
@@ -58,9 +57,8 @@ public class FormatFilter extends FilterComponent implements RuntimeExtension {
                 == ExpressionContext.PLUGIN_DATA_SLY_TEMPLATE || expressionContext == ExpressionContext.PLUGIN_DATA_SLY_CALL) {
             return expression;
         }
-        ExpressionNode argNode = expression.getOption(FORMAT_OPTION);
-        ExpressionNode formattedNode = new RuntimeCall(FORMAT_FUNCTION, expression.getRoot(), argNode);
-        return expression.withNode(formattedNode).withRemovedOptions(FORMAT_OPTION);
+        ExpressionNode translation = new RuntimeCall(FORMAT_FUNCTION, expression.getRoot(), expression.removeOption(FORMAT_OPTION));
+        return expression.withNode(translation);
     }
 
     @Override

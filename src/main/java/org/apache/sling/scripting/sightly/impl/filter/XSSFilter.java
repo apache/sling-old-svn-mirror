@@ -18,8 +18,6 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.impl.filter;
 
-import java.util.Map;
-
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
@@ -44,11 +42,9 @@ public class XSSFilter extends FilterComponent {
                 || expressionContext == ExpressionContext.PLUGIN_DATA_SLY_CALL) {
             return expression;
         }
-        ExpressionNode node = expression.getRoot();
-        Map<String, ExpressionNode> options = expression.getOptions();
-        ExpressionNode context = options.get(Syntax.CONTEXT_OPTION);
+        ExpressionNode context = expression.removeOption(Syntax.CONTEXT_OPTION);
         if (context != null) {
-            return new Expression(new RuntimeCall(FUNCTION_NAME, node, context), options);
+            return expression.withNode(new RuntimeCall(FUNCTION_NAME, expression.getRoot(), context));
         }
         return expression;
     }
