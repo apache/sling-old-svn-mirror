@@ -175,6 +175,7 @@ public class HttpTestBase extends TestCase {
         httpClient.getState().setCredentials(new AuthScope(url.getHost(), url.getPort(), AuthScope.ANY_REALM), defaultcreds);
 
         testClient = new SlingIntegrationTestClient(httpClient);
+        testClient.setFolderExistsTestExtension(readinessCheckExtension);
 
         waitForSlingStartup();
     }
