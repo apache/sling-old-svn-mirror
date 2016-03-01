@@ -43,6 +43,10 @@
         <url>http://svn.apache.org/viewvc/sling/trunk/bundles/commons/compiler</url>
     </scm>
 
+    <properties>
+        <sling.java.version>7</sling.java.version>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
