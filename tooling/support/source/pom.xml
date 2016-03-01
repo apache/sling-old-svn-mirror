@@ -27,15 +27,15 @@
     </parent>
 
     <artifactId>org.apache.sling.tooling.support.source</artifactId>
-    <version>0.9.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Tooling Support Source</name>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/support/source</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/support/source</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/support/source</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.tooling.support.source-1.0.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.tooling.support.source-1.0.0</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.tooling.support.source-1.0.0</url>
     </scm>
 
     <build>
