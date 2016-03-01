@@ -58,6 +58,8 @@ public class HttpTestBase extends TestCase {
     public static final String HTTP_BASE_URL = removePath(HTTP_URL);
     public static final String WEBDAV_BASE_URL = removeEndingSlash(System.getProperty("launchpad.webdav.server.url", HTTP_BASE_URL));
     public static final String SERVLET_CONTEXT = removeEndingSlash(System.getProperty("launchpad.servlet.context", getPath(HTTP_URL)));
+    public static final String READINESS_MEDIA_TYPE_PROP = "launchpad.readiness.mediatype";
+    public static final String DEFAULT_READINESS_MEDIA_TYPE = ".txt:text/plain";
     
     public static final String READY_URL_PROP_PREFIX = "launchpad.ready.";
     public static final int MAX_READY_URL_INDEX = 50;
@@ -80,8 +82,8 @@ public class HttpTestBase extends TestCase {
     public static final String SLING_POST_SERVLET_CREATE_SUFFIX = "/";
 	public static final String DEFAULT_EXT = ".txt";
 	
-	private String readinessCheckExtension = ".txt";
-	private String readinessCheckContentTypePrefix = "text/plain";
+	private String readinessCheckExtension;
+	private String readinessCheckContentTypePrefix;
 
 	public static final String EXECUTE_RESOURCE_TYPE = "SlingTesting" + HttpTestBase.class.getSimpleName();
 	private static int executeCounter;
@@ -106,6 +108,13 @@ public class HttpTestBase extends TestCase {
 
     public HttpTestBase() {
         super("");
+        
+        final String rmt = System.getProperty(READINESS_MEDIA_TYPE_PROP, DEFAULT_READINESS_MEDIA_TYPE);
+        final String [] s = rmt.split(":");
+        if(s.length != 2) {
+            throw new IllegalStateException("Invalid " + READINESS_MEDIA_TYPE_PROP + ": " + rmt); 
+        }
+        setReadinessContentType(s[0].trim(), s[1].trim());
     }
 
     /** Class that creates a test node under the given parentPath, and
@@ -214,7 +223,11 @@ public class HttpTestBase extends TestCase {
         }
 
         System.err.println("Checking if the required Sling services are started (timeout " + READY_TIMEOUT_SECONDS + " seconds)...");
-        System.err.println("(base URLs=" + HTTP_BASE_URL + " and " + WEBDAV_BASE_URL + "; servlet context="+ SERVLET_CONTEXT +")");
+        System.err.println(
+                "(base URLs=" + HTTP_BASE_URL + " and " + WEBDAV_BASE_URL 
+                + "; servlet context="+ SERVLET_CONTEXT
+                + "; readiness type=" + readinessCheckExtension + " : " + readinessCheckContentTypePrefix
+                );
 
         // Try creating a node on server, every 500msec, until ok, with timeout
         final List<String> exceptionMessages = new LinkedList<String>();
