@@ -105,7 +105,7 @@
         <dependency>
             <groupId>org.eclipse.jdt.core.compiler</groupId>
             <artifactId>ecj</artifactId>
-            <version>P20140317-1600</version>
+            <version>4.5.1</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
