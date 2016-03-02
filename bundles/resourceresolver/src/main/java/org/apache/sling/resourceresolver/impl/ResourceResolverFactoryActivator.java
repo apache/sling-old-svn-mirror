@@ -26,7 +26,6 @@ import java.util.Map;
 
 import org.apache.commons.collections.BidiMap;
 import org.apache.commons.collections.bidimap.TreeBidiMap;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
@@ -488,8 +487,16 @@ public class ResourceResolverFactoryActivator implements Runnable {
                     new ChangeListener() {
 
                         @Override
-                        public void providerChanged(final String pid) {
-                            if (ArrayUtils.contains(requiredResourceProviders, pid)) {
+                        public void providerAdded() {
+                            if ( factoryRegistration == null ) {
+                                checkFactoryPreconditions();
+                            }
+
+                        }
+
+                        @Override
+                        public void providerRemoved(final String pid) {
+                            if ( factoryRegistration != null ) {
                                 checkFactoryPreconditions();
                             }
                         }
