@@ -45,6 +45,7 @@
         <pax-link.version>2.4.3</pax-link.version>
         <org.ops4j.pax.logging.DefaultServiceLog.level>INFO</org.ops4j.pax.logging.DefaultServiceLog.level>
         <felix.shell>false</felix.shell>
+        <project.bundle.file>${project.build.directory}/${project.build.finalName}.jar</project.bundle.file>
     </properties>
     
     <scm>
@@ -93,9 +94,9 @@
               <configuration>
                   <systemProperties>
                       <org.ops4j.pax.logging.DefaultServiceLog.level>${org.ops4j.pax.logging.DefaultServiceLog.level}</org.ops4j.pax.logging.DefaultServiceLog.level>
-                      <sling.hc.core.version>${project.version}</sling.hc.core.version>
                       <felix.shell>${felix.shell}</felix.shell>
                       <coverage.command>${coverage.command}</coverage.command>
+                      <project.bundle.file>${project.bundle.file}</project.bundle.file>
                   </systemProperties>
               </configuration>
             </plugin>
