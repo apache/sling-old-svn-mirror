@@ -277,6 +277,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         } catch (final Exception e) {
             logger.error("activate: Cannot access repository, failed setting up Mapping Support", e);
         }
+        isActive.set(true);
     }
 
     /**
