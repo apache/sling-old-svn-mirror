@@ -39,7 +39,7 @@ public class FactoryPreconditions {
         public Filter filter;
     };
 
-    private ResourceProviderTracker tracker;
+    private volatile ResourceProviderTracker tracker;
 
     private volatile List<RequiredProvider> requiredProviders;
 
@@ -74,16 +74,19 @@ public class FactoryPreconditions {
 
     public void deactivate() {
         this.requiredProviders = null;
+        this.tracker = null;
     }
 
     public boolean checkPreconditions() {
         synchronized ( this ) {
-            boolean canRegister = false;
-            if (this.requiredProviders != null) {
-                canRegister = false;
-                for (ResourceProviderHandler h : this.tracker.getResourceProviderStorage().getAllHandlers()) {
-                    for (final RequiredProvider rp : this.requiredProviders) {
-                        ServiceReference ref = h.getInfo().getServiceReference();
+            final List<RequiredProvider> localRequiredProviders = this.requiredProviders;
+            final ResourceProviderTracker localTracker = this.tracker;
+            boolean canRegister = localTracker != null;
+            if (localRequiredProviders != null && localTracker != null ) {
+                for (final RequiredProvider rp : localRequiredProviders) {
+                    canRegister = false;
+                    for (final ResourceProviderHandler h : localTracker.getResourceProviderStorage().getAllHandlers()) {
+                        final ServiceReference ref = h.getInfo().getServiceReference();
                         if (rp.filter != null && rp.filter.match(ref)) {
                             canRegister = true;
                             break;
@@ -94,6 +97,9 @@ public class FactoryPreconditions {
                             canRegister = true;
                             break;
                         }
+                    }
+                    if ( !canRegister ) {
+                        break;
                     }
                 }
             }
