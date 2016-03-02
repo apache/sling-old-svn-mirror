@@ -111,11 +111,13 @@ public class JVMDebuggerConnection {
         // 2. add the other modules deployed on server
         ProgressUtils.advance(monitor, 5); // 5/30
         
+        int workTicksForReferences = 24; // 30 - 5 - 1
+        
         SourceReferenceResolver resolver = Activator.getDefault().getSourceReferenceResolver();
-        if ( resolver != null ) {
+        if ( resolver != null  && configuration.resolveSourcesInDebugMode()) {
             try {
                 List<SourceReference> references = osgiClient.findSourceReferences();
-                SubMonitor subMonitor = SubMonitor.convert(monitor, "Resolving source references", 24).setWorkRemaining(references.size());
+                SubMonitor subMonitor = SubMonitor.convert(monitor, "Resolving source references", workTicksForReferences).setWorkRemaining(references.size());
                 for ( SourceReference reference :  references ) {
                     try {
                         subMonitor.setTaskName("Resolving source reference: " + reference);
@@ -134,6 +136,8 @@ public class JVMDebuggerConnection {
             } catch (OsgiClientException e1) {
                 throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e1.getMessage(), e1));
             }
+        } else {
+            monitor.worked(workTicksForReferences);
         }
         
         // 3. add the JRE entry

@@ -70,6 +70,13 @@
          typeIds="org.apache.sling.ide.launchpadServer"
          class="org.apache.sling.ide.eclipse.ui.internal.InstallEditorSection">
       </section>
+      <section
+         id="org.apache.sling.ide.launchpadConfigurationEditorSection"
+         order="15"
+         insertionId="org.eclipse.wst.server.editor.overview.right"
+         typeIds="org.apache.sling.ide.launchpadServer"
+         class="org.apache.sling.ide.eclipse.ui.internal.DebugEditorSection">
+      </section>
    </extension>
    
    <!-- hook in the server creation wizard -->

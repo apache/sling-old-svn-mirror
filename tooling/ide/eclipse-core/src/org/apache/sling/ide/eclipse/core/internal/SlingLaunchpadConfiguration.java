@@ -88,4 +88,9 @@ public class SlingLaunchpadConfiguration implements ISlingLaunchpadConfiguration
         workingCopy().setAttribute(ISlingLaunchpadServer.PROP_PASSWORD, password);
     }
 
+    @Override
+    public boolean resolveSourcesInDebugMode() {
+        return workingCopy().getAttribute(ISlingLaunchpadServer.PROP_RESOLVE_SOURCES, true);
+    }
+
 }
