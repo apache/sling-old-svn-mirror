@@ -489,7 +489,7 @@ public class ResourceResolverFactoryActivator implements Runnable {
                         @Override
                         public void providerAdded() {
                             if ( factoryRegistration == null ) {
-                                checkFactoryPreconditions();
+                                checkFactoryPreconditions(null);
                             }
 
                         }
@@ -497,7 +497,7 @@ public class ResourceResolverFactoryActivator implements Runnable {
                         @Override
                         public void providerRemoved(final String pid) {
                             if ( factoryRegistration != null ) {
-                                checkFactoryPreconditions();
+                                checkFactoryPreconditions(pid);
                             }
                         }
                     });
@@ -564,7 +564,7 @@ public class ResourceResolverFactoryActivator implements Runnable {
         requiredResourceProviders = PropertiesUtil.toStringArray(properties.get(PROP_REQUIRED_PROVIDERS));
         this.preconds.activate(bc, requiredResourceProviders, resourceProviderTracker);
 
-        this.checkFactoryPreconditions();
+        this.checkFactoryPreconditions(null);
 
         final Thread t = new Thread(this);
         t.setDaemon(true);
@@ -664,10 +664,10 @@ public class ResourceResolverFactoryActivator implements Runnable {
     /**
      * Check the preconditions and if it changed, either register factory or unregister
      */
-    private void checkFactoryPreconditions() {
+    private void checkFactoryPreconditions(final String unavailableServicePid) {
         final ComponentContext localContext = this.componentContext;
         if ( localContext != null ) {
-            final boolean result = this.preconds.checkPreconditions();
+            final boolean result = this.preconds.checkPreconditions(unavailableServicePid);
             if ( result && this.factoryRegistration == null ) {
                 this.registerFactory(localContext);
             } else if ( !result && this.factoryRegistration != null ) {
@@ -729,7 +729,7 @@ public class ResourceResolverFactoryActivator implements Runnable {
             }
 
             if ( isRunning ) {
-                this.checkFactoryPreconditions();
+                this.checkFactoryPreconditions(null);
             }
         }
         this.unregisterFactory();
