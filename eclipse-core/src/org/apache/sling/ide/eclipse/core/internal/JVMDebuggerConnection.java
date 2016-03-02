@@ -109,7 +109,7 @@ public class JVMDebuggerConnection {
         }
 		
         // 2. add the other modules deployed on server
-        ProgressUtils.advance(monitor, 10); // 20/50
+        ProgressUtils.advance(monitor, 5); // 5/30
         
         SourceReferenceResolver resolver = Activator.getDefault().getSourceReferenceResolver();
         if ( resolver != null ) {
@@ -130,7 +130,7 @@ public class JVMDebuggerConnection {
                         Activator.getDefault().getPluginLogger().warn("Failed resolving source reference", e);
                     }
                 }
-                subMonitor.done(); // 49/50
+                subMonitor.done(); // 29/30
             } catch (OsgiClientException e1) {
                 throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e1.getMessage(), e1));
             }
@@ -147,7 +147,7 @@ public class JVMDebuggerConnection {
 
 		// connect to remote VM
 		try{
-			connector.connect(connectMap, monitor, launch); // 50/50
+			connector.connect(connectMap, monitor, launch); // 30/30
 			success = true;
 			
 			long elapsedMillis = System.currentTimeMillis() - start;
