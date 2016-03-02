@@ -21,10 +21,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Helper which extracts intermediate paths from an URL 
+ * Helper which extracts intermediate URIs from an URI 
  *
  */
-abstract class IntermediatePathsExtractor {
+abstract class IntermediateUrisExtractor {
 
     /**
      * Extracts a list of intermediate paths from an URL.
@@ -32,16 +32,16 @@ abstract class IntermediatePathsExtractor {
      * <p>For instance, <tt>http://localhost:8080/apps/slingshot/install</tt> would have the following intermediate
      * paths:
      * <ol>
-     *   <li>/apps</li>
-     *   <li>/apps/slingshot</li>
-     *   <li>/apps/slingshot/install</li>
+     *   <li>http://localhost:8080/apps</li>
+     *   <li>http://localhost:8080/apps/slingshot</li>
+     *   <li>http://localhost:8080/apps/slingshot/install</li>
      * </ol>
      * </p>
      * 
      * @param url the url to extract paths from
      * @return the intermediate paths, possibly empty
      */
-    public static List<String> extractIntermediatePaths(String url) {
+    public static List<String> extractIntermediateUris(String url) {
         
         List<String> paths = new ArrayList<String>();
         
@@ -60,7 +60,7 @@ abstract class IntermediatePathsExtractor {
             
             // don't add the root segment ( / ) 
             if ( segment.length() != 0 ) {
-                paths.add(uri.resolve(accu.toString()).toString());    
+                paths.add(0, uri.resolve(accu.toString()).toString());
             }
             
         }
@@ -68,7 +68,7 @@ abstract class IntermediatePathsExtractor {
         return paths;
     }
     
-    private IntermediatePathsExtractor() {
+    private IntermediateUrisExtractor() {
         
     }
 }
