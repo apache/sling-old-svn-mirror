@@ -25,13 +25,13 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>26</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.hc.annotations</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.4</version>
 
     <name>Apache Sling Health Check Annotations</name>
     <inceptionYear>2013</inceptionYear>
@@ -41,9 +41,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/healthcheck/annotations</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/healthcheck/annotations</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/healthcheck/annotations</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.hc.annotations-1.0.4</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.hc.annotations-1.0.4</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.hc.annotations-1.0.4</url>
     </scm>
 
     <dependencies>
