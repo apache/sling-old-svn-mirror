@@ -118,6 +118,7 @@ public class JVMDebuggerConnection {
                 SubMonitor subMonitor = SubMonitor.convert(monitor, "Resolving source references", 29).setWorkRemaining(references.size());
                 for ( SourceReference reference :  references ) {
                     try {
+                        subMonitor.setTaskName("Resolving source reference: " + reference);
                         IRuntimeClasspathEntry classpathEntry = resolver.resolve(reference);
                         if ( classpathEntry != null ) {
                             classpathEntries.add(classpathEntry);
