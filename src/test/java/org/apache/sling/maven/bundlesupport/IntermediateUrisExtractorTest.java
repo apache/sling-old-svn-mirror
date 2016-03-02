@@ -25,18 +25,18 @@ import java.util.List;
 
 import org.junit.Test;
 
-public class IntermediatePathsExtractorTest {
+public class IntermediateUrisExtractorTest {
     
     @Test
     public void extractPaths() {
 
         doTest("http://localhost:8080/apps/slingshot/install", 
-                Arrays.asList("http://localhost:8080/apps", "http://localhost:8080/apps/slingshot", "http://localhost:8080/apps/slingshot/install"));
+                Arrays.asList("http://localhost:8080/apps/slingshot/install", "http://localhost:8080/apps/slingshot", "http://localhost:8080/apps" ));
     }
     
     private void doTest(String input, List<String> expectedOutput) {
 
-        List<String> paths = IntermediatePathsExtractor.extractIntermediatePaths(input);
+        List<String> paths = IntermediateUrisExtractor.extractIntermediateUris(input);
         
         assertThat(paths, equalTo(expectedOutput));
     }
@@ -45,8 +45,7 @@ public class IntermediatePathsExtractorTest {
     public void extractPaths_trailingSlash() {
         
         doTest("http://localhost:8080/apps/slingshot/install/", 
-                Arrays.asList("http://localhost:8080/apps", "http://localhost:8080/apps/slingshot", "http://localhost:8080/apps/slingshot/install"));
-
+                Arrays.asList("http://localhost:8080/apps/slingshot/install", "http://localhost:8080/apps/slingshot", "http://localhost:8080/apps" ));
     }
 
     @Test
