@@ -25,6 +25,7 @@ import static org.ops4j.pax.exam.CoreOptions.provision;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import static org.ops4j.pax.exam.CoreOptions.when;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
@@ -37,6 +38,9 @@ import org.ops4j.pax.exam.Option;
 /** Test utilities */
 public class U {
 
+    // the name of the system property providing the bundle file to be installed and tested
+    private static final String BUNDLE_JAR_SYS_PROP = "project.bundle.file";
+    
     /** Wait until the specified number of health checks are seen by supplied executor */
     static void expectHealthChecks(int howMany, HealthCheckExecutor executor, String ... tags) {
         expectHealthChecks(howMany, executor, new HealthCheckExecutionOptions(), tags);
@@ -62,9 +66,15 @@ public class U {
     }
     
     static Option[] config() {
-        final String coreVersion = System.getProperty("sling.hc.core.version");
         final String localRepo = System.getProperty("maven.repo.local", "");
         final boolean felixShell = "true".equals(System.getProperty("felix.shell", "false"));
+        
+        final String bundleFileName = System.getProperty(BUNDLE_JAR_SYS_PROP);
+        final File bundleFile = new File(bundleFileName);
+        if (!bundleFile.canRead()) {
+            throw new IllegalArgumentException( "Cannot read from bundle file " + bundleFileName + " specified in the "
+                + BUNDLE_JAR_SYS_PROP + " system property" );
+        }
         
         // As we're using the forked pax exam container, we need to add a VM
         // option to activate the jacoco test coverage agent.
@@ -87,10 +97,10 @@ public class U {
                     )
             ),
             provision(
+                    CoreOptions.bundle(bundleFile.toURI().toString()),
                     mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.6.2"),
                     mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.8"),
                     mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", "1.1.0"),
-                    mavenBundle("org.apache.sling", "org.apache.sling.hc.core", coreVersion),
                     mavenBundle("org.apache.sling", "org.apache.sling.commons.osgi", "2.2.0"),
                     mavenBundle("org.apache.sling", "org.apache.sling.commons.json", "2.0.10"),
                     mavenBundle("org.apache.sling", "org.apache.sling.jcr.jcr-wrapper", "2.0.0"),
