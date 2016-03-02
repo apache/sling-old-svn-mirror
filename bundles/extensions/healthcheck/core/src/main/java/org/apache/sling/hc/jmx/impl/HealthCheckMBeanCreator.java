@@ -41,7 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Creates an {@link HealthCheckMbean} for every {@link HealthCheckMBean} service
+ * Creates an {@link HealthCheckMBean} for every {@link HealthCheckMBean} service
  *
  */
 @Component
