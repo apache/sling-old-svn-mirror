@@ -57,12 +57,10 @@
       <section
          id="org.apache.sling.ide.launchpadConfigurationEditorSection"
          order="10"
-         insertionId="org.eclipse.wst.server.editor.overview.right"
+         insertionId="org.eclipse.wst.server.editor.overview.left"
          typeIds="org.apache.sling.ide.launchpadServer"
          class="org.apache.sling.ide.eclipse.ui.internal.ConnectionEditorSection">
       </section>
-   </extension>   
-   <extension point="org.eclipse.wst.server.ui.editorPageSections">      
       <section
          id="org.apache.sling.ide.launchpadConfigurationEditorSection"
          order="10"
