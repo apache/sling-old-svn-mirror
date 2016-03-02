@@ -45,7 +45,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.event.EventAdmin;
 
 public class ResourceProviderTrackerTest {
-    
+
     private ResourceProviderInfo rp2Info;
     private ResourceProviderTracker tracker;
     private Fixture fixture;
@@ -53,59 +53,59 @@ public class ResourceProviderTrackerTest {
     @Before
     public void prepare() throws Exception {
         BundleContext bundleContext = MockOsgi.newBundleContext();
-        
+
         fixture = new Fixture(bundleContext);
-        
+
         EventAdmin eventAdmin = mock(EventAdmin.class);
-        
+
         @SuppressWarnings("unchecked")
         ResourceProvider<Object> rp = mock(ResourceProvider.class);
         @SuppressWarnings("unchecked")
         ResourceProvider<Object> rp2 = mock(ResourceProvider.class);
         @SuppressWarnings("unchecked")
         ResourceProvider<Object> rp3 = mock(ResourceProvider.class);
-        
+
         fixture.registerResourceProvider(rp, "/", AuthType.no);
         rp2Info = fixture.registerResourceProvider(rp2, "/path", AuthType.lazy);
         fixture.registerResourceProvider(rp3, "invalid", AuthType.no);
-        
+
         tracker = new ResourceProviderTracker();
-        
+
         tracker.setObservationReporterGenerator(new SimpleObservationReporterGenerator(new NoDothingObservationReporter()));
         tracker.activate(bundleContext, eventAdmin, new DoNothingChangeListener());
     }
 
     @Test
     public void activate() {
-        
+
         // since the OSGi mocks are asynchronous we don't have to wait for the changes to propagate
-        
+
         assertThat(tracker.getResourceProviderStorage().getAllHandlers().size(), equalTo(2));
-        
+
         fixture.unregisterResourceProvider(rp2Info);
-        
+
         assertThat(tracker.getResourceProviderStorage().getAllHandlers().size(), equalTo(1));
     }
 
     @Test
     public void deactivate() {
-        
+
         tracker.deactivate();
-        
+
         assertThat(tracker.getResourceProviderStorage().getAllHandlers(), hasSize(0));
     }
-    
+
     @Test
     public void fillDto() throws Exception {
-        
+
         RuntimeDTO dto = new RuntimeDTO();
-        
+
         tracker.fill(dto);
-        
+
         assertThat( dto.providers, arrayWithSize(2));
         assertThat( dto.failedProviders, arrayWithSize(1));
     }
-    
+
     static final class NoDothingObservationReporter implements ObservationReporter {
         @Override
         public void reportChanges(Iterable<ResourceChange> changes, boolean distribute) {
@@ -116,7 +116,7 @@ public class ResourceProviderTrackerTest {
             return Collections.emptyList();
         }
     }
-    
+
     static final class SimpleObservationReporterGenerator implements ObservationReporterGenerator {
         private final ObservationReporter reporter;
 
@@ -134,11 +134,19 @@ public class ResourceProviderTrackerTest {
             return reporter;
         }
     }
-    
+
     static final class DoNothingChangeListener implements ChangeListener {
+
         @Override
-        public void providerChanged(String pid) {
-            
+        public void providerAdded() {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void providerRemoved(String pid) {
+            // TODO Auto-generated method stub
+
         }
     }
 }

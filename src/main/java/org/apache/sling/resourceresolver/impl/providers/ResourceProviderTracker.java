@@ -66,7 +66,9 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
 
     public interface ChangeListener {
 
-        void providerChanged(String pid);
+        void providerAdded();
+
+        void providerRemoved(String pid);
     }
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -104,7 +106,7 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
                 final ServiceReference ref = (ServiceReference)service;
                 final ResourceProviderInfo info = infos.remove(ref);
                 if ( info != null ) {
-                    unregister(info);
+                    unregister(info, (String)ref.getProperty(Constants.SERVICE_PID));
                 }
             }
 
@@ -194,7 +196,7 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
      * Unregister a resource provider.
      * @param info The resource provider info.
      */
-    private void unregister(final ResourceProviderInfo info) {
+    private void unregister(final ResourceProviderInfo info, final String pid) {
         final boolean isInvalid;
         synchronized ( this.invalidProviders ) {
             isInvalid = this.invalidProviders.remove(info) != null;
@@ -207,16 +209,25 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
                 final List<ResourceProviderHandler> matchingHandlers = this.handlers.get(info.getPath());
                 if ( matchingHandlers != null ) {
                     boolean doActivateNext = false;
-                    if ( matchingHandlers.get(0).getInfo() == info ) {
+                    final ResourceProviderHandler firstHandler = matchingHandlers.get(0);
+                    if ( firstHandler.getInfo() == info ) {
                         doActivateNext = true;
-                        this.deactivate(matchingHandlers.get(0));
-                        events.add(new ProviderEvent(false, matchingHandlers.get(0).getInfo()));
+                        final ChangeListener cl = this.listener;
+                        if ( cl != null ) {
+                            cl.providerRemoved(pid);
+                        }
+                        this.deactivate(firstHandler);
+                        events.add(new ProviderEvent(false, firstHandler.getInfo()));
                     }
                     if (removeHandlerByInfo(info, matchingHandlers)) {
                         while (doActivateNext && !matchingHandlers.isEmpty()) {
                             if (this.activate(matchingHandlers.get(0))) {
                                 doActivateNext = false;
                                 events.add(new ProviderEvent(true, matchingHandlers.get(0).getInfo()));
+                                final ChangeListener cl = this.listener;
+                                if ( cl != null ) {
+                                    cl.providerAdded();
+                                }
                             } else {
                                 matchingHandlers.remove(0);
                             }
@@ -406,9 +417,6 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
                 for(final ProviderEvent e : events) {
                     postOSGiEvent(e);
                     postResourceProviderChange(e);
-                    if ( e.pid != null && listener != null ) {
-                        listener.providerChanged(e.pid);
-                    }
                 }
             }
         });
