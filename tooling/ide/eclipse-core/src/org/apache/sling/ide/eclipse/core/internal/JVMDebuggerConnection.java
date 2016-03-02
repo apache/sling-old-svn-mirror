@@ -115,7 +115,7 @@ public class JVMDebuggerConnection {
         if ( resolver != null ) {
             try {
                 List<SourceReference> references = osgiClient.findSourceReferences();
-                SubMonitor subMonitor = SubMonitor.convert(monitor, "Resolving source references", 29).setWorkRemaining(references.size());
+                SubMonitor subMonitor = SubMonitor.convert(monitor, "Resolving source references", 24).setWorkRemaining(references.size());
                 for ( SourceReference reference :  references ) {
                     try {
                         subMonitor.setTaskName("Resolving source reference: " + reference);
