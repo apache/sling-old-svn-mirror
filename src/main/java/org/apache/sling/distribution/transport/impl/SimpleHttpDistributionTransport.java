@@ -89,7 +89,6 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
             log.debug("skipping distribution of package {} to same origin {}", distributionPackage.getId(), hostAndPort);
         } else {
 
-            Response response = null;
             try {
                 Executor executor = getExecutor(distributionContext);
 
@@ -101,18 +100,10 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
 
                     req = req.bodyStream(inputStream, ContentType.APPLICATION_OCTET_STREAM);
 
-                    response = executor.execute(req);
+                    Response response = executor.execute(req);
+                    response.returnContent();
 
-                    HttpResponse httpResponse = response.returnResponse();
-                    StatusLine statusLine = httpResponse.getStatusLine();
-
-                    if (statusLine.getStatusCode() != 200) {
-                        throw new DistributionException(statusLine.toString());
-                    }
                 } finally {
-                    if (response != null) {
-                        response.discardContent();
-                    }
                     IOUtils.closeQuietly(inputStream);
                 }
 
