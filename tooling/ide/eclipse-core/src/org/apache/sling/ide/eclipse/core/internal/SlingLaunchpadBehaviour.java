@@ -231,13 +231,11 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                 // SLING-3655 : when doing PUBLISH_CLEAN, the bundle deployment mechanism should 
                 // still be triggered
                 publishBundleModule(module, monitor);
-                BundleStateHelper.resetBundleState(getServer(), module[0].getProject());
             }
         } else if (ProjectHelper.isContentProject(module[0].getProject())) {
 
             try {
                 publishContentModule(kind, deltaKind, module, monitor);
-                BundleStateHelper.resetBundleState(getServer(), module[0].getProject());
             } catch (SerializationException e) {
                 throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Serialization error for "
                         + traceOperation(kind, deltaKind, module).toString(), e));
