@@ -101,7 +101,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
                     req = req.bodyStream(inputStream, ContentType.APPLICATION_OCTET_STREAM);
 
                     Response response = executor.execute(req);
-                    response.returnContent();
+                    response.returnContent(); // throws an error if HTTP status is >= 300
 
                 } finally {
                     IOUtils.closeQuietly(inputStream);
