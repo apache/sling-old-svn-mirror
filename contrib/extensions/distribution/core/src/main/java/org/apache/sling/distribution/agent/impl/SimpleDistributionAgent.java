@@ -58,6 +58,7 @@ import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
 import org.apache.sling.distribution.queue.DistributionQueueStatus;
 import org.apache.sling.distribution.queue.impl.DistributionQueueWrapper;
+import org.apache.sling.distribution.queue.impl.SimpleAgentDistributionQueue;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
@@ -305,18 +306,8 @@ public class SimpleDistributionAgent implements DistributionAgent {
         }
 
         if (queue != null) {
-            queue = new DistributionQueueWrapper(queue) {
-                @Nonnull
-                @Override
-                public DistributionQueueStatus getStatus() {
-                    DistributionQueueStatus status = super.getStatus();
-                    if (!queueProcessingEnabled && (processingQueues != null && processingQueues.contains(queueName))) {
-                        return new DistributionQueueStatus(status.getItemsCount(), DistributionQueueState.PAUSED);
-                    } else {
-                        return status;
-                    }
-                }
-            };
+            boolean isPausedQueue = !queueProcessingEnabled && (processingQueues != null && processingQueues.contains(queueName));
+            queue = new SimpleAgentDistributionQueue(queue, isPausedQueue, name);
         }
 
         return queue;
