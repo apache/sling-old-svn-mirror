@@ -44,6 +44,7 @@
     <!-- marker to tell m2e that this plugin contains a lifecycle-mapping-metadata.xml -->
     <extension point="org.eclipse.m2e.core.lifecycleMappingMetadataSource">
     </extension>
+
     <extension
             point="org.eclipse.m2e.core.projectConfigurators">
         <configurator
@@ -52,7 +53,19 @@
                 name="Sling Bundle Configurator"
                 secondaryTo="maven-bundle-plugin">
         </configurator>
+        <configurator 
+                id="org.apache.sling.ide.eclipse.m2e.configurator"
+                class="org.apache.sling.ide.eclipse.m2e.internal.ContentPackageProjectConfigurator"
+                name="Sling Content Package Configurator" />        
     </extension>
+    
+    <extension point="org.eclipse.m2e.core.lifecycleMappings">  
+	    <lifecycleMapping
+	      id="org.apache.sling.ide.eclipse.m2e.contentPackageLifecycleMapping"
+	            class="org.apache.sling.ide.eclipse.m2e.internal.ContentPackageLifecycleMapping"
+	            name="Sling Content Content Package Build Lifecycle Mapping">
+	    </lifecycleMapping>            
+    </extension>         
 	<extension point="org.eclipse.m2e.core.archetypeCatalogs">
 		<remote url="http://repo1.maven.org/maven2/"
 			description="Maven Central"/>
