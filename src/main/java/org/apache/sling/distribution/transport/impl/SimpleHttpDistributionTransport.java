@@ -30,8 +30,9 @@ import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
 import org.apache.http.client.HttpResponseException;
-import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
@@ -88,6 +89,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
             log.debug("skipping distribution of package {} to same origin {}", distributionPackage.getId(), hostAndPort);
         } else {
 
+            Response response = null;
             try {
                 Executor executor = getExecutor(distributionContext);
 
@@ -99,10 +101,18 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
 
                     req = req.bodyStream(inputStream, ContentType.APPLICATION_OCTET_STREAM);
 
-                    Response response = executor.execute(req);
+                    response = executor.execute(req);
 
-                    response.discardContent();
+                    HttpResponse httpResponse = response.returnResponse();
+                    StatusLine statusLine = httpResponse.getStatusLine();
+
+                    if (statusLine.getStatusCode() != 200) {
+                        throw new DistributionException(statusLine.toString());
+                    }
                 } finally {
+                    if (response != null) {
+                        response.discardContent();
+                    }
                     IOUtils.closeQuietly(inputStream);
                 }
 
