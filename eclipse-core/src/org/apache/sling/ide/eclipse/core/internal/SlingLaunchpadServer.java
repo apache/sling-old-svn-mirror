@@ -16,6 +16,7 @@
  */
 package org.apache.sling.ide.eclipse.core.internal;
 
+import org.apache.sling.ide.eclipse.core.DefaultSlingLaunchpadConfiguration;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadConfiguration;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.eclipse.core.runtime.CoreException;
@@ -117,11 +118,11 @@ public class SlingLaunchpadServer extends ServerDelegate implements ISlingLaunch
     @Override
     public void setDefaults(IProgressMonitor monitor) {
 
-        setAttribute(PROP_PORT, 8080);
-        setAttribute(PROP_DEBUG_PORT, 30303);
+        setAttribute(PROP_PORT, DefaultSlingLaunchpadConfiguration.INSTANCE.getPort());
+        setAttribute(PROP_DEBUG_PORT, DefaultSlingLaunchpadConfiguration.INSTANCE.getDebugPort());
         setAttribute(PROP_CONTEXT_PATH, "/");
-        setAttribute(PROP_USERNAME, "admin");
-        setAttribute(PROP_PASSWORD, "admin");
+        setAttribute(PROP_USERNAME, DefaultSlingLaunchpadConfiguration.INSTANCE.getUsername());
+        setAttribute(PROP_PASSWORD, DefaultSlingLaunchpadConfiguration.INSTANCE.getPassword());
     }
 
     @Override

@@ -19,6 +19,7 @@ package org.apache.sling.ide.eclipse.ui.actions;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import org.apache.sling.ide.eclipse.core.DefaultSlingLaunchpadConfiguration;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.ui.browser.AbstractOpenInBrowserHandler;
 import org.apache.sling.ide.eclipse.ui.nav.model.JcrNode;
@@ -28,8 +29,8 @@ public class OpenHtmlInBrowserHandler extends AbstractOpenInBrowserHandler {
 
 	protected URL getUrlToOpen(JcrNode node, IServer server) throws MalformedURLException {
 
-        return new URL("http", server.getHost(), server.getAttribute(ISlingLaunchpadServer.PROP_PORT, 8080),
-                node.getJcrPath() + ".html");
+        return new URL("http", server.getHost(), server.getAttribute(ISlingLaunchpadServer.PROP_PORT, 
+                DefaultSlingLaunchpadConfiguration.INSTANCE.getPort()), node.getJcrPath() + ".html");
     }
 
 }

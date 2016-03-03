@@ -22,7 +22,7 @@ import org.eclipse.wst.server.core.IServerWorkingCopy;
 public class SetServerUsernameCommand extends SetServerStringPropertyCommand {
 
     public SetServerUsernameCommand(IServerWorkingCopy server, String newValue) {
-        super(server, ISlingLaunchpadServer.PROP_USERNAME, newValue, "admin");
+        super(server, ISlingLaunchpadServer.PROP_USERNAME, newValue, DefaultSlingLaunchpadConfiguration.INSTANCE.getPassword());
     }
 
 }
