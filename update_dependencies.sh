@@ -44,6 +44,7 @@ JACKRABBIT_VERSION_CURRENT=2.12.0
 JACKRABBIT_VERSION_NEW=2.12.1
 
 sed -i '' "s/<jackrabbit.version>$JACKRABBIT_VERSION_CURRENT<\/jackrabbit.version>/<jackrabbit.version>$JACKRABBIT_VERSION_NEW<\/jackrabbit.version>/1" "bundles/jcr/it-jackrabbit-oak/pom.xml"
+sed -i '' "s/<jackrabbit.version>$JACKRABBIT_VERSION_CURRENT<\/jackrabbit.version>/<jackrabbit.version>$JACKRABBIT_VERSION_NEW<\/jackrabbit.version>/1" "bundles/jcr/davex/pom.xml"
 sed -i '' "s/<jackrabbit.version>$JACKRABBIT_VERSION_CURRENT<\/jackrabbit.version>/<jackrabbit.version>$JACKRABBIT_VERSION_NEW<\/jackrabbit.version>/1" "bundles/jcr/webdav/pom.xml"
 
 sed -i '' "s/jackrabbit.version=$JACKRABBIT_VERSION_CURRENT/jackrabbit.version=$JACKRABBIT_VERSION_NEW/1" "launchpad/builder/src/main/provisioning/sling.txt"
