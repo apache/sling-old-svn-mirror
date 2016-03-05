@@ -168,7 +168,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
      */
     @Override
     @Nonnull
-    public Collection<ValidationModel> getModel(@Nonnull String relativeResourceType, @Nonnull Map<String, Validator<?>> validatorsMap, @Nonnull ResourceResolver resourceResolver) {
+    public Collection<ValidationModel> getModels(@Nonnull String relativeResourceType, @Nonnull Map<String, Validator<?>> validatorsMap, @Nonnull ResourceResolver resourceResolver) {
         ValidationModelImpl vm;
         Collection<ValidationModel> validationModels = new ArrayList<ValidationModel>();
         String[] searchPaths = resourceResolver.getSearchPath();
