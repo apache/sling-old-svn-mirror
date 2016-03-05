@@ -34,7 +34,7 @@ public interface ResourceProperty {
 
     /**
      * Returns the name of this property. This must match the name of the property which is validated through this section of the validation model.
-     * In case {@link getNamePattern} is not {@code null} this name is not relevant for matching the property.
+     * In case {@link #getNamePattern()} is not {@code null} this name is not relevant for matching the property.
      *
      * @return the name
      */
@@ -43,7 +43,7 @@ public interface ResourceProperty {
     /**
      * Returns the name pattern for this property. In case this is not returning {@code null}, this pattern is used for finding the properties which should be validated.
      *
-     * @return the name pattern (if one is set) or {@code null)
+     * @return the name pattern (if one is set) or {@code null}
      */
     @CheckForNull Pattern getNamePattern();
 
