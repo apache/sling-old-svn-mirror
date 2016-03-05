@@ -37,7 +37,7 @@ public interface Validator <T> {
      * 
      * The validator can enforce the type of the given data just by setting the appropriate parameter type {@code T} which can be any non-primitive class. 
      * Depending on whether this type is an array or not the {@code validate} method is called differently:
-     * <table> 
+     * <table summary="">
      *  <tr>
      *    <th>T is array type</th>
      *    <th>Valuemap contains array value</th>

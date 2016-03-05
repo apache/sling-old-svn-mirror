@@ -30,8 +30,8 @@ import org.apache.sling.validation.spi.Validator;
 import aQute.bnd.annotation.ProviderType;
 
 /**
- * All providers of {@link ValidationModel}s must implement this interface. In addition if the model might become
- * invalid after some time it is also the obligatation of the provider implementation to invalidate the cache via the
+ * All providers of {@link ValidationModel}s must implement this interface. In addition, if the model might become
+ * invalid after some time, it is also the obligation of the provider implementation to invalidate the cache via the
  * {@link ValidationModelCache} OSGi service.
  */
 @ProviderType

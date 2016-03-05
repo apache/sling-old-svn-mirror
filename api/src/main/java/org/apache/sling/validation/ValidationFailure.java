@@ -28,7 +28,7 @@ import aQute.bnd.annotation.ProviderType;
 public interface ValidationFailure {
 
     /**
-     * @param ResourceBundle resourceBundle in which to look up the according message (used for i18n)
+     * @param resourceBundle ResourceBundle in which to look up the according message (used for i18n)
      * @return the failure message
      */
     public @Nonnull String getMessage(@Nonnull ResourceBundle resourceBundle);
