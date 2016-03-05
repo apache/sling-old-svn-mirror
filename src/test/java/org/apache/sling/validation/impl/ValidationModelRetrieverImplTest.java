@@ -69,7 +69,7 @@ public class ValidationModelRetrieverImplTest {
         int counter = 0;
 
         @Override
-        public @Nonnull Collection<ValidationModel> getModel(@Nonnull String relativeResourceType,
+        public @Nonnull Collection<ValidationModel> getModels(@Nonnull String relativeResourceType,
                 @Nonnull Map<String, Validator<?>> validatorsMap, @Nonnull ResourceResolver resourceResolver) {
             // make sure the date validator is passed along
             Assert.assertThat(validatorsMap,
