@@ -51,7 +51,7 @@ public interface ValidationModelProvider {
      * @throws IllegalStateException
      *             in case a validation model was found but it is invalid
      */
-    public @Nonnull Collection<ValidationModel> getModel(@Nonnull String relativeResourceType,
+    public @Nonnull Collection<ValidationModel> getModels(@Nonnull String relativeResourceType,
             @Nonnull Map<String, Validator<?>> validatorsMap, @Nonnull ResourceResolver resourceResolver)
             throws IllegalStateException;
 }
