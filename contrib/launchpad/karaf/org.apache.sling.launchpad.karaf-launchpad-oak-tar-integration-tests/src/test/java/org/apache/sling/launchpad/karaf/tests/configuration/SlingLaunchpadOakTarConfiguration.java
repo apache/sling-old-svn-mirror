@@ -43,6 +43,7 @@ public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
             editConfigurationFilePut("etc/org.apache.sling.servlets.resolver.SlingServletResolver.cfg", "servletresolver.cacheSize", "0"),
             // TODO PAXWEB-935 editConfigurationFilePut("etc/org.apache.sling.jcr.webdav.impl.servlets.SimpleWebDavServlet.cfg", "dav.root", "/dav"),
             editConfigurationFilePut("etc/org.apache.sling.jcr.davex.impl.servlets.SlingDavExServlet.cfg", "alias", "/server"),
+            editConfigurationFilePut("etc/org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge.cfg", "enabled", "true"),
             addSlingFeatures(
                 "sling-launchpad-oak-tar",
                 "sling-extension-discovery-standalone",
