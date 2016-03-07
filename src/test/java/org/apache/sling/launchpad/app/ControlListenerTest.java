@@ -25,10 +25,14 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.util.HashMap;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.sling.launchpad.base.shared.SharedConstants;
+import org.junit.Assert;
 
 import junit.framework.TestCase;
+import junitx.util.PrivateAccessor;
 
 public class ControlListenerTest extends TestCase {
 
@@ -334,6 +338,22 @@ public class ControlListenerTest extends TestCase {
 
         TestCase.assertTrue(ctlFile1.exists());
     }
+    
+    public void test_generateKey() throws Throwable {
+        Pattern pattern = Pattern.compile("([a-zA-Z0-9-_=]+)");
+        MyMain main = new MyMain(SLING1);
+        ControlListener cl = new ControlListener(main, null);
+        
+        String secretkey = (String) PrivateAccessor.invoke(cl, "generateKey", new Class[] {}, new Object[] {});
+        Assert.assertEquals(32, secretkey.length());
+        System.out.println(secretkey);
+        Matcher matcher = pattern.matcher(secretkey);
+        if (!matcher.matches()) {
+            Assert.fail();
+        }
+    }
+    
+    //-------------------- private section -----------------------------
 
     private int getPort() {
         ServerSocket s = null;
