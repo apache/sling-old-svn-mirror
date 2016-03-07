@@ -31,7 +31,7 @@ public interface ValidationFailure {
      * @param resourceBundle ResourceBundle in which to look up the according message (used for i18n)
      * @return the failure message
      */
-    public @Nonnull String getMessage(@Nonnull ResourceBundle resourceBundle);
+    @Nonnull String getMessage(@Nonnull ResourceBundle resourceBundle);
     
     /**
      * Returns the relative location of the property/resource/value which triggered this validation failure.
@@ -42,5 +42,6 @@ public interface ValidationFailure {
      * </ul>
      * @return the location (usually the validated resource's property path).
      */
-    public @Nonnull String getLocation();
+    @Nonnull String getLocation();
+
 }

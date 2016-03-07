@@ -25,5 +25,7 @@ import aQute.bnd.annotation.ProviderType;
  */
 @ProviderType
 public interface ValidationModelCache {
-    public void invalidate();
+
+    void invalidate();
+
 }
