@@ -213,7 +213,7 @@ public class ValidationServiceImpl implements ValidationService{
     }    
 
     @Override
-    public @Nonnull ValidationResult validateResourceRecursively(@Nonnull Resource resource, boolean enforceValidation, Predicate filter,  boolean considerResourceSuperTypeModels) 
+    public @Nonnull ValidationResult validateResourceRecursively(@Nonnull Resource resource, boolean enforceValidation, Predicate filter, boolean considerResourceSuperTypeModels)
             throws IllegalStateException, IllegalArgumentException, SlingValidationException {
         ValidationResourceVisitor visitor = new ValidationResourceVisitor(this, resource.getPath(), enforceValidation, filter, considerResourceSuperTypeModels);
         visitor.accept(resource);
