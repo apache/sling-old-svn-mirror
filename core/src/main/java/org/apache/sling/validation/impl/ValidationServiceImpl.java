@@ -40,7 +40,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.ValidationResult;
 import org.apache.sling.validation.ValidationService;
-import org.apache.sling.validation.exceptions.SlingValidationException;
+import org.apache.sling.validation.SlingValidationException;
 import org.apache.sling.validation.model.ChildResource;
 import org.apache.sling.validation.model.ParameterizedValidator;
 import org.apache.sling.validation.model.ResourceProperty;
