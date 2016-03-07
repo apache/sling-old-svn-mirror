@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Slingclipse-M2Eclipse-based-WST-plugin
 Bundle-SymbolicName: org.apache.sling.ide.eclipse-m2e-ui;singleton:=true
 Bundle-Activator: org.apache.sling.ide.eclipse.m2e.internal.Activator
-Bundle-Version: 1.1.0
+Bundle-Version: 1.1.1.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ClassPath: .
 Require-Bundle: org.eclipse.m2e.core;bundle-version="1.4.0",
