@@ -43,7 +43,7 @@ import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.apache.sling.validation.ValidationFailure;
 import org.apache.sling.validation.ValidationResult;
-import org.apache.sling.validation.exceptions.SlingValidationException;
+import org.apache.sling.validation.SlingValidationException;
 import org.apache.sling.validation.impl.model.ChildResourceImpl;
 import org.apache.sling.validation.impl.model.ResourcePropertyBuilder;
 import org.apache.sling.validation.impl.model.ValidationModelBuilder;

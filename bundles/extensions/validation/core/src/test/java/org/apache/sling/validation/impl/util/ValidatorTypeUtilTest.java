@@ -24,7 +24,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.ValidationResult;
-import org.apache.sling.validation.exceptions.SlingValidationException;
+import org.apache.sling.validation.SlingValidationException;
 import org.apache.sling.validation.impl.util.examplevalidators.DerivedStringValidator;
 import org.apache.sling.validation.impl.util.examplevalidators.ExtendedStringValidator;
 import org.apache.sling.validation.impl.util.examplevalidators.GenericTypeParameterBaseClass;
