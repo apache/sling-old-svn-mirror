@@ -25,7 +25,6 @@ import org.apache.commons.collections.Predicate;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.validation.exceptions.SlingValidationException;
 import org.apache.sling.validation.model.ValidationModel;
 
 import aQute.bnd.annotation.ProviderType;
