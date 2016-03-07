@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.exceptions;
+package org.apache.sling.validation;
 
 /**
  * Exception that is thrown for Validator inconsistencies, e.g. if a mandatory parameter for a validator is missing.
