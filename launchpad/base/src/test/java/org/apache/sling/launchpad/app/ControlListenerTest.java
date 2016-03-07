@@ -345,8 +345,7 @@ public class ControlListenerTest extends TestCase {
         ControlListener cl = new ControlListener(main, null);
         
         String secretkey = (String) PrivateAccessor.invoke(cl, "generateKey", new Class[] {}, new Object[] {});
-        Assert.assertEquals(32, secretkey.length());
-        System.out.println(secretkey);
+        Assert.assertTrue(secretkey.length() >= 32);
         Matcher matcher = pattern.matcher(secretkey);
         if (!matcher.matches()) {
             Assert.fail();

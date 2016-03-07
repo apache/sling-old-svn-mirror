@@ -32,14 +32,15 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MonitorInfo;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
+import java.math.BigInteger;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Random;
 import java.util.Set;
 
 /**
@@ -565,14 +566,7 @@ class ControlListener implements Runnable {
     }
 
     private static String generateKey() {
-        String keys = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz0123456789";
-        int len = keys.length();
-        Random r = new Random(System.currentTimeMillis() + 33 * System.nanoTime());
-        char[] c = new char[32];
-        for (int i = 0; i < c.length; i++) {
-            c[i] = keys.charAt(r.nextInt(len));
-        }
-        return new String(c);
+         return new BigInteger(165, new SecureRandom()).toString(32);
     }
 
     /**
