@@ -24,7 +24,6 @@ import java.util.ResourceBundle;
 
 import javax.annotation.Nonnull;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.sling.validation.ValidationFailure;
 
 /**
@@ -63,7 +62,7 @@ public class DefaultValidationFailure implements ValidationFailure {
 
     @Override
     public String toString() {
-        return "DefaultValidationFailure [location=" + location + ", messageKey=" + messageKey + ", messageArguments=" + StringUtils.join(messageArguments) + "]";
+        return "DefaultValidationFailure [location=" + location + ", messageKey=" + messageKey + ", messageArguments=" + Arrays.toString(messageArguments) + "]";
     }
 
     @Override
