@@ -26,7 +26,7 @@
     </parent>
 
     <artifactId>org.apache.sling.installer.it</artifactId>
-    <version>3.6.7-SNAPSHOT</version>
+    <version>3.6.9-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Apache Sling Installer Integration Tests</name>
