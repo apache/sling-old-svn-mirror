@@ -144,13 +144,13 @@ public class PersistentResourceList {
         for(final EntityResourceList group : this.data.values()) {
             for(final RegisteredResource rr : group.getResources()) {
                 if ( ((RegisteredResourceImpl)rr).hasDataFile() ) {
-                    FileDataStore.SHARED.updateDigestCache(rr.getURL(), rr.getDigest());
+                    FileDataStore.SHARED.updateDigestCache(rr.getURL(), ((RegisteredResourceImpl)rr).getDataFile(), rr.getDigest());
                 }
             }
         }
         for(final RegisteredResource rr : this.untransformedResources ) {
             if ( ((RegisteredResourceImpl)rr).hasDataFile() ) {
-                FileDataStore.SHARED.updateDigestCache(rr.getURL(), rr.getDigest());
+                FileDataStore.SHARED.updateDigestCache(rr.getURL(), ((RegisteredResourceImpl)rr).getDataFile(), rr.getDigest());
             }
         }
     }
