@@ -21,11 +21,14 @@ package org.apache.sling.resourceresolver.impl.providers;
 import static org.hamcrest.Matchers.arrayWithSize;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.path.Path;
@@ -93,6 +96,150 @@ public class ResourceProviderTrackerTest {
         tracker.deactivate();
 
         assertThat(tracker.getResourceProviderStorage().getAllHandlers(), hasSize(0));
+    }
+
+    @Test
+    public void testActivationDeactivation() throws Exception {
+        final BundleContext bundleContext = MockOsgi.newBundleContext();
+        final EventAdmin eventAdmin = mock(EventAdmin.class);
+
+        final Fixture fixture = new Fixture(bundleContext);
+        final ResourceProviderTracker tracker = new ResourceProviderTracker();
+        tracker.setObservationReporterGenerator(new SimpleObservationReporterGenerator(new NoDothingObservationReporter()));
+
+        // create boolean markers for the listener
+        final AtomicBoolean addedCalled = new AtomicBoolean(false);
+        final AtomicBoolean removedCalled = new AtomicBoolean(false);
+
+        final ChangeListener listener = new ChangeListener() {
+
+            @Override
+            public void providerAdded() {
+                addedCalled.set(true);
+            }
+
+            @Override
+            public void providerRemoved(String pid) {
+                removedCalled.set(true);
+            }
+
+        };
+        // activate and check that no listener is called yet
+        tracker.activate(bundleContext, eventAdmin, listener);
+        assertFalse(addedCalled.get());
+        assertFalse(removedCalled.get());
+
+        // add a new resource provider
+        @SuppressWarnings("unchecked")
+        ResourceProvider<Object> rp = mock(ResourceProvider.class);
+        final ResourceProviderInfo info = fixture.registerResourceProvider(rp, "/", AuthType.no);
+
+        // check added is called but not removed
+        assertTrue(addedCalled.get());
+        assertFalse(removedCalled.get());
+
+        // verify a single provider
+        assertThat(tracker.getResourceProviderStorage().getAllHandlers().size(), equalTo(1));
+
+        // reset boolean markers
+        addedCalled.set(false);
+        removedCalled.set(false);
+
+        // remove provider
+        fixture.unregisterResourceProvider(info);
+
+        // verify removed is called but not added
+        assertTrue(removedCalled.get());
+        assertFalse(addedCalled.get());
+
+        // no provider anymore
+        assertThat(tracker.getResourceProviderStorage().getAllHandlers().size(), equalTo(0));
+    }
+
+    @Test
+    public void testReactivation() throws Exception {
+        final BundleContext bundleContext = MockOsgi.newBundleContext();
+        final EventAdmin eventAdmin = mock(EventAdmin.class);
+
+        final Fixture fixture = new Fixture(bundleContext);
+        final ResourceProviderTracker tracker = new ResourceProviderTracker();
+        tracker.setObservationReporterGenerator(new SimpleObservationReporterGenerator(new NoDothingObservationReporter()));
+
+        // create boolean markers for the listener
+        final AtomicBoolean addedCalled = new AtomicBoolean(false);
+        final AtomicBoolean removedCalled = new AtomicBoolean(false);
+
+        final ChangeListener listener = new ChangeListener() {
+
+            @Override
+            public void providerAdded() {
+                addedCalled.set(true);
+            }
+
+            @Override
+            public void providerRemoved(String pid) {
+                removedCalled.set(true);
+            }
+
+        };
+        // activate and check that no listener is called yet
+        tracker.activate(bundleContext, eventAdmin, listener);
+        assertFalse(addedCalled.get());
+        assertFalse(removedCalled.get());
+
+        // activate and check that no listener is called yet
+        @SuppressWarnings("unchecked")
+        ResourceProvider<Object> rp = mock(ResourceProvider.class);
+        final ResourceProviderInfo info = fixture.registerResourceProvider(rp, "/", AuthType.no);
+
+        // check added is called but not removed
+        assertTrue(addedCalled.get());
+        assertFalse(removedCalled.get());
+
+        // verify a single provider
+        assertThat(tracker.getResourceProviderStorage().getAllHandlers().size(), equalTo(1));
+
+        // reset boolean markers
+        addedCalled.set(false);
+        removedCalled.set(false);
+
+        // add overlay provider
+        final ResourceProviderInfo infoOverlay = fixture.registerResourceProvider(rp, "/", AuthType.no);
+
+        // check added and removed is called
+        assertTrue(addedCalled.get());
+        assertTrue(removedCalled.get());
+
+        // verify a single provider
+        assertThat(tracker.getResourceProviderStorage().getAllHandlers().size(), equalTo(1));
+
+        // reset boolean markers
+        addedCalled.set(false);
+        removedCalled.set(false);
+
+        // unregister overlay provider
+        fixture.unregisterResourceProvider(infoOverlay);
+
+        // check added and removed is called
+        assertTrue(addedCalled.get());
+        assertTrue(removedCalled.get());
+
+        // verify a single provider
+        assertThat(tracker.getResourceProviderStorage().getAllHandlers().size(), equalTo(1));
+
+        // reset boolean markers
+        addedCalled.set(false);
+        removedCalled.set(false);
+
+        // unregister first provider
+        fixture.unregisterResourceProvider(info);
+
+        // check removed is called but not added
+        assertTrue(removedCalled.get());
+        assertFalse(addedCalled.get());
+
+        // verify no provider
+        assertThat(tracker.getResourceProviderStorage().getAllHandlers().size(), equalTo(0));
     }
 
     @Test
