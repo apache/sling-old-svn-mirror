@@ -24,11 +24,11 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>26</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.installer.core</artifactId>
-    <version>3.6.7-SNAPSHOT</version>
+    <version>3.6.8</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Installer</name>
@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/installer/core</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/installer/core</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/installer/core</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.installer.core-3.6.8</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.installer.core-3.6.8</developerConnection>
+        <url>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.installer.core-3.6.8</url>
     </scm>
 
 	<build>
