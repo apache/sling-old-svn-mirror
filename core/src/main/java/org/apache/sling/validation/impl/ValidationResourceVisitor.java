@@ -18,9 +18,10 @@
  */
 package org.apache.sling.validation.impl;
 
+import java.util.function.Predicate;
+
 import javax.annotation.Nonnull;
 
-import org.apache.commons.collections.Predicate;
 import org.apache.sling.api.resource.AbstractResourceVisitor;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -79,7 +80,7 @@ public class ValidationResourceVisitor extends AbstractResourceVisitor {
             return false;
         }
         if (filter != null) {
-            return filter.evaluate(resource);
+            return filter.test(resource);
         }
         return true;
     }
