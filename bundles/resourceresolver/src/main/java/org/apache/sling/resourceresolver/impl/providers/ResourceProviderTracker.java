@@ -176,8 +176,15 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
                            this.handlers.remove(info.getPath());
                        }
                    } else {
+                       final ChangeListener cl = this.listener;
+                       if ( cl != null ) {
+                           cl.providerAdded();
+                       }
                        events.add(new ProviderEvent(true, info));
                        if ( matchingHandlers.size() > 1 ) {
+                           if ( cl != null ) {
+                               cl.providerRemoved((String)matchingHandlers.get(1).getInfo().getServiceReference().getProperty(Constants.SERVICE_PID));
+                           }
                            this.deactivate(matchingHandlers.get(1));
                            events.add(new ProviderEvent(false, matchingHandlers.get(1).getInfo()));
                        }
