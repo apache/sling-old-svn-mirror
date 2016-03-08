@@ -79,7 +79,7 @@
             <plugin>
                 <groupId>org.apache.sling</groupId>
                 <artifactId>slingstart-maven-plugin</artifactId>
-                <version>1.4.1-SNAPSHOT</version>
+                <version>1.4.2</version>
                 <extensions>true</extensions>
                 <configuration>
                     <createWebapp>true</createWebapp>
