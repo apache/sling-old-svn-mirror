@@ -30,6 +30,10 @@
     <packaging>bundle</packaging>
     <version>1.0.0-SNAPSHOT</version>
 
+    <properties>
+        <sling.java.version>8</sling.java.version>
+    </properties>
+
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/validation/core</connection>
         <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/validation/core</developerConnection>
@@ -130,12 +134,6 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>3.3.2</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-            <version>3.2.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

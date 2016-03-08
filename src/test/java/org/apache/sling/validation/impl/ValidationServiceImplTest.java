@@ -23,12 +23,12 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.collections.Predicate;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifiableValueMap;
@@ -429,14 +429,10 @@ public class ValidationServiceImplTest {
         properties.put(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY, "resourcetype3");
         rr.create(testResource, "child3", properties);
 
-        Predicate ignoreResourceType3Filter = new Predicate() {
+        final Predicate ignoreResourceType3Filter = new Predicate<Resource>() {
             @Override
-            public boolean evaluate(Object object) {
-                Resource resource = (Resource) object;
-                if ("resourcetype3".equals(resource.getResourceType())) {
-                    return false;
-                }
-                return true;
+            public boolean test(final Resource resource) {
+                return !"resourcetype3".equals(resource.getResourceType());
             }
         };
         
