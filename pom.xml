@@ -182,9 +182,6 @@
         <module>bundles/extensions/healthcheck</module>
         <module>bundles/resourceaccesssecurity/core</module>
         <module>bundles/resourceaccesssecurity/it</module>
-        <!--
-        <module>bundles/extensions/validation</module>
-        -->
         <module>bundles/extensions/models/api</module>
         <module>bundles/extensions/models/impl</module>
         <module>bundles/extensions/models/validation-impl</module>
@@ -218,6 +215,16 @@
     </modules>
 
     <profiles>
+        <profile>
+            <!-- build modules depending on Java 8 also -->
+            <id>java8</id>
+            <activation>
+                <jdk>[1.8,)</jdk>
+            </activation>
+            <modules>
+                <module>bundles/extensions/validation</module>
+            </modules>
+        </profile>
         <profile>
             <!--
               Allow the integration tests to be excluded, as they might be slow
