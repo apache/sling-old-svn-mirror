@@ -28,8 +28,8 @@
     commons-lang/commons-lang/2.6
     org.apache.commons/commons-math/2.2
     org.apache.geronimo.bundles/commons-httpclient/3.1_1
-    org.apache.httpcomponents/httpcore-osgi/4.4
-    org.apache.httpcomponents/httpclient-osgi/4.4
+    org.apache.httpcomponents/httpcore-osgi/4.4.1
+    org.apache.httpcomponents/httpclient-osgi/4.4.1
     com.google.guava/guava/15.0
     org.apache.sling/org.apache.sling.adapter/2.1.6
     org.apache.sling/org.apache.sling.api/2.11.0
