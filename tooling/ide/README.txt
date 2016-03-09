@@ -8,7 +8,7 @@ Getting Started
 ===============
 
 This component uses a Maven 3 (http://maven.apache.org/) build environment. 
-It requires a Java 6 JDK (or higher) and Maven (http://maven.apache.org/)
+It requires a Java 7 JDK (or higher) and Maven (http://maven.apache.org/)
 3.0.4 or later. We recommend to use the latest Maven version.
 
 You can can compile and package the p2 update site using the following command:
