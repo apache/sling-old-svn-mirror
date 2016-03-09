@@ -19,6 +19,7 @@
 package org.apache.sling.event.it;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
@@ -30,6 +31,8 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.sling.event.impl.jobs.config.ConfigurationConstants;
@@ -82,6 +85,7 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
     public void testSimpleClassloading() throws Exception {
         final AtomicInteger processedJobsCount = new AtomicInteger(0);
         final List<Event> finishedEvents = Collections.synchronizedList(new ArrayList<Event>());
+        final CountDownLatch latch = new CountDownLatch(1);
         this.registerJobConsumer(TOPIC,
                 new JobConsumer() {
                     @Override
@@ -96,6 +100,7 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
                     @Override
                     public void handleEvent(Event event) {
                         finishedEvents.add(event);
+                        latch.countDown();
                     }
                 });
         final JobManager jobManager = this.getJobManager();
@@ -117,39 +122,21 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
         props.put("map", map);
 
         final String jobId = jobManager.addJob(TOPIC, props).getId();
+        try {
+            latch.await(5, TimeUnit.SECONDS);
+            assertFalse("At least one finished job", finishedEvents.isEmpty());
+            assertEquals(1, processedJobsCount.get());
 
-        new RetryLoop(Conditions.collectionIsNotEmptyCondition(finishedEvents,
-                "Waiting for finishedEvents to have at least one element"), 5, 50);
-
-        // no jobs queued, none processed and no available
-        new RetryLoop(new RetryLoop.Condition() {
-
-            @Override
-            public String getDescription() {
-                return "Waiting for job to be processed. Conditions: queuedJobs=" + jobManager.getStatistics().getNumberOfQueuedJobs() +
-                        ", jobsCount=" + processedJobsCount + ", findJobs=" +
-                        jobManager.findJobs(JobManager.QueryType.ALL, TOPIC, -1, (Map<String, Object>[]) null)
-                        .size();
-            }
-
-            @Override
-            public boolean isTrue() throws Exception {
-                return jobManager.getStatistics().getNumberOfQueuedJobs() == 0
-                        && processedJobsCount.get() == 1
-                        && jobManager.findJobs(JobManager.QueryType.ALL, TOPIC, -1, (Map<String, Object>[]) null)
-                                .size() == 0;
-            }
-        }, CONDITION_TIMEOUT_SECONDS, CONDITION_INTERVAL_MILLIS);
-
-        final String jobTopic = (String)finishedEvents.get(0).getProperty(NotificationConstants.NOTIFICATION_PROPERTY_JOB_TOPIC);
-        assertNotNull(jobTopic);
-        assertEquals("Hello", finishedEvents.get(0).getProperty("string"));
-        assertEquals(new Integer(5), Integer.valueOf(finishedEvents.get(0).getProperty("int").toString()));
-        assertEquals(new Long(7), Long.valueOf(finishedEvents.get(0).getProperty("long").toString()));
-        assertEquals(list, finishedEvents.get(0).getProperty("list"));
-        assertEquals(map, finishedEvents.get(0).getProperty("map"));
-
-        jobManager.removeJobById(jobId);
+            final String jobTopic = (String)finishedEvents.get(0).getProperty(NotificationConstants.NOTIFICATION_PROPERTY_JOB_TOPIC);
+            assertNotNull(jobTopic);
+            assertEquals("Hello", finishedEvents.get(0).getProperty("string"));
+            assertEquals(new Integer(5), Integer.valueOf(finishedEvents.get(0).getProperty("int").toString()));
+            assertEquals(new Long(7), Long.valueOf(finishedEvents.get(0).getProperty("long").toString()));
+            assertEquals(list, finishedEvents.get(0).getProperty("list"));
+            assertEquals(map, finishedEvents.get(0).getProperty("map"));
+        } finally {
+            jobManager.removeJobById(jobId);
+        }
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -185,35 +172,37 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
 
         final String id = jobManager.addJob(TOPIC + "/failed", props).getId();
 
-        // wait until the conditions are met
-        new RetryLoop(new RetryLoop.Condition() {
+        try {
+            // wait until the conditions are met
+            new RetryLoop(new RetryLoop.Condition() {
 
-            @Override
-            public boolean isTrue() throws Exception {
-                return failedJobsCount.get() == 0
-                        && finishedEvents.size() == 0
-                        && jobManager.findJobs(JobManager.QueryType.ALL, TOPIC + "/failed", -1,
-                                (Map<String, Object>[]) null).size() == 1
-                        && jobManager.getStatistics().getNumberOfQueuedJobs() == 0
-                        && jobManager.getStatistics().getNumberOfActiveJobs() == 0;
-            }
+                @Override
+                public boolean isTrue() throws Exception {
+                    return failedJobsCount.get() == 0
+                            && finishedEvents.size() == 0
+                            && jobManager.findJobs(JobManager.QueryType.ALL, TOPIC + "/failed", -1,
+                                    (Map<String, Object>[]) null).size() == 1
+                            && jobManager.getStatistics().getNumberOfQueuedJobs() == 0
+                            && jobManager.getStatistics().getNumberOfActiveJobs() == 0;
+                }
 
-            @Override
-            public String getDescription() {
-                return "Waiting for job failure to be recorded. Conditions " +
-                       "faildJobsCount=" + failedJobsCount.get() +
-                       ", finishedEvents=" + finishedEvents.size() +
-                       ", findJobs= " + jobManager.findJobs(JobManager.QueryType.ALL, TOPIC + "/failed", -1,
-                               (Map<String, Object>[]) null).size()
-                       +", queuedJobs=" + jobManager.getStatistics().getNumberOfQueuedJobs()
-                       +", activeJobs=" + jobManager.getStatistics().getNumberOfActiveJobs();
-            }
-        }, CONDITION_TIMEOUT_SECONDS, CONDITION_INTERVAL_MILLIS);
+                @Override
+                public String getDescription() {
+                    return "Waiting for job failure to be recorded. Conditions " +
+                           "faildJobsCount=" + failedJobsCount.get() +
+                           ", finishedEvents=" + finishedEvents.size() +
+                           ", findJobs= " + jobManager.findJobs(JobManager.QueryType.ALL, TOPIC + "/failed", -1,
+                                   (Map<String, Object>[]) null).size()
+                           +", queuedJobs=" + jobManager.getStatistics().getNumberOfQueuedJobs()
+                           +", activeJobs=" + jobManager.getStatistics().getNumberOfActiveJobs();
+                }
+            }, CONDITION_TIMEOUT_SECONDS, CONDITION_INTERVAL_MILLIS);
 
-        jobManager.removeJobById(id); // moves the job to the history section
-        assertEquals(0, jobManager.findJobs(JobManager.QueryType.ALL, TOPIC + "/failed", -1, (Map<String, Object>[])null).size());
-
-        jobManager.removeJobById(id); // removes the job permanently
+            jobManager.removeJobById(id); // moves the job to the history section
+            assertEquals(0, jobManager.findJobs(JobManager.QueryType.ALL, TOPIC + "/failed", -1, (Map<String, Object>[])null).size());
+        } finally {
+            jobManager.removeJobById(id); // removes the job permanently
+        }
     }
 
     private static final class DataObject implements Serializable {
