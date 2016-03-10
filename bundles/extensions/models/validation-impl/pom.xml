@@ -32,6 +32,10 @@
     <name>Apache Sling Models Validation Implementation</name>
     <description>Validation Implementation which leverages Sling Validation</description>
 
+    <properties>
+        <sling.java.version>8</sling.java.version>
+    </properties>
+
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/models/validation-impl</connection>
         <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/models/validation-impl</developerConnection>
